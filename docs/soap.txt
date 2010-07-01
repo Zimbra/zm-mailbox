@@ -44,7 +44,7 @@ urn:zimbra  -- top-level namespace for global attributes/elements
   <soap:Header>
     <context xmlns="urn:zimbra">
        <authToken>...</authToken>
-       [<session [id="{returned-from-server-in-last-response}" [seq="{highest_notification_received}"]]/>]
+       [<session [id="{returned-from-server-in-last-response}" [seq="{highest_notification_received}"] [type="admin"]/>]
        [<account by="name|id">{account-name-or-id}</account>]
        [<change token="{change-id}" [type="mod|new"]/>]
        [<targetServer>{proxy-target-server-id}</targetServer>]
@@ -416,7 +416,7 @@ global soap/system errors used with zimbra:Error/Code:
    <session .../>
    <refer>{mail-host}</refer>  
    [<prefs><pref name="{name}" modified="{modified-time}">{value}</pref>...</prefs>]
-   [<attrs><attr name="{name}">{value}</a>...</attrs>]
+   [<attrs><attr name="{name}">{value}</attr>...</attrs>]
    [<skin>{skin-name}</skin>]
  </AuthResponse>
 
