@@ -68,7 +68,7 @@ import com.zimbra.cs.zclient.ZFilterCondition.BodyOp;
 import com.zimbra.cs.zclient.ZFilterCondition.DateOp;
 import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
 import com.zimbra.cs.zclient.ZFilterCondition.ZAttachmentExistsCondition;
-import com.zimbra.cs.zclient.ZFilterCondition.ZAttachmentHeaderCondition;
+import com.zimbra.cs.zclient.ZFilterCondition.ZMimeHeaderCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZBodyCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZDateCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
@@ -384,10 +384,10 @@ extends TestCase {
         assertEquals(script, convertedScript);
     }
     
-    public void disabledTestAttachmentHeader()
+    public void testMimeHeader()
     throws Exception {
         // Create a text/plain message with a text/html attachment.
-        String subject = NAME_PREFIX + " testAttachmentHeader";
+        String subject = NAME_PREFIX + " testMimeHeader";
         String attachmentData = "<html><body>I'm so attached to you.</body></html>";
         String content = new MessageBuilder().withSubject(subject).withRecipient(USER_NAME)
             .withAttachment(attachmentData, "attachment.html", "text/html").create();
@@ -397,13 +397,13 @@ extends TestCase {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         
-        conditions.add(new ZAttachmentHeaderCondition("Content-Type", HeaderOp.CONTAINS, "text/plain"));
+        conditions.add(new ZMimeHeaderCondition("Content-Type", HeaderOp.CONTAINS, "text/plain"));
         actions.add(new ZTagAction(mTag1.getName()));
         rules.add(new ZFilterRule("testMarkRead 1", true, false, conditions, actions));
         
         conditions = new ArrayList<ZFilterCondition>();
         actions = new ArrayList<ZFilterAction>();
-        conditions.add(new ZAttachmentHeaderCondition("Content-Type", HeaderOp.CONTAINS, "text/html"));
+        conditions.add(new ZMimeHeaderCondition("Content-Type", HeaderOp.CONTAINS, "text/html"));
         actions.add(new ZTagAction(mTag2.getName()));
         rules.add(new ZFilterRule("testMarkRead 2", true, false, conditions, actions));
         
@@ -412,7 +412,13 @@ extends TestCase {
         // Deliver message and make sure that tag 2 was applied, but not tag 1.
         TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, content);
         ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
-        assertEquals(mTag2.getId(), msg.getTagIds());
+        Set<String> tagIds = new HashSet<String>();
+        for (String tagId : msg.getTagIds().split(",")) {
+            tagIds.add(tagId);
+        }
+        assertEquals(2, tagIds.size());
+        assertTrue(tagIds.contains(mTag1.getId()));
+        assertTrue(tagIds.contains(mTag2.getId()));
     }
     
     public void testMarkRead()

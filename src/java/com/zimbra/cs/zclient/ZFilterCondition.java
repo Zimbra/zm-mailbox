@@ -43,7 +43,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     public static final String C_EXISTS = "exists";
     public static final String C_NOT_EXISTS = "not exists";
     public static final String C_HEADER = "header";
-    public static final String C_ATTACHMENT_HEADER = "attachment_header";
+    public static final String C_MIME_HEADER = "mime_header";
     public static final String C_NOT_ATTACHMENT = "not attachment";
     public static final String C_SIZE = "size";
     public static final String C_INVITE = "invite";
@@ -182,13 +182,13 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             StringComparison comparison = StringComparison.fromString(s);
             String value = condEl.getAttribute(MailConstants.A_VALUE);
             return new ZHeaderCondition(header, HeaderOp.fromStringComparison(comparison, isNegative), value);
-        } else if (name.equals(MailConstants.E_ATTACHMENT_HEADER_TEST)) {
+        } else if (name.equals(MailConstants.E_MIME_HEADER_TEST)) {
             String header = condEl.getAttribute(MailConstants.A_HEADER);
             String s = condEl.getAttribute(MailConstants.A_STRING_COMPARISON);
             s = s.toLowerCase();
             StringComparison comparison = StringComparison.fromString(s);
             String value = condEl.getAttribute(MailConstants.A_VALUE);
-            return new ZAttachmentHeaderCondition(header, HeaderOp.fromStringComparison(comparison, isNegative), value);
+            return new ZMimeHeaderCondition(header, HeaderOp.fromStringComparison(comparison, isNegative), value);
         } else if (name.equals(MailConstants.E_HEADER_EXISTS_TEST)) {
             String header = condEl.getAttribute(MailConstants.A_HEADER);
             return new ZHeaderExistsCondition(header, !isNegative);
@@ -463,12 +463,12 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         
     }
 
-    public static class ZAttachmentHeaderCondition extends ZFilterCondition {
+    public static class ZMimeHeaderCondition extends ZFilterCondition {
         private HeaderOp mHeaderOp;
         private String mHeaderName;
         private String mValue;
 
-        public ZAttachmentHeaderCondition(String headerName, HeaderOp op, String value) {
+        public ZMimeHeaderCondition(String headerName, HeaderOp op, String value) {
             mHeaderName = headerName;
             mHeaderOp = op;
             mValue = value;
@@ -479,17 +479,17 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         public String getHeaderValue()  { return mValue; }
 
         public String toConditionString() {
-            return "attachment_header " + ZFilterRule.quotedString(getHeaderName()) + " " + mHeaderOp.name().toLowerCase() + " " + ZFilterRule.quotedString(getHeaderValue());
+            return "mime_header " + ZFilterRule.quotedString(getHeaderName()) + " " + mHeaderOp.name().toLowerCase() + " " + ZFilterRule.quotedString(getHeaderValue());
         }
 
         @Override
         public String getName() {
-            return C_ATTACHMENT_HEADER;
+            return C_MIME_HEADER;
         }
 
         @Override
         Element toElement(Element parent) {
-            Element test = parent.addElement(MailConstants.E_ATTACHMENT_HEADER_TEST);
+            Element test = parent.addElement(MailConstants.E_MIME_HEADER_TEST);
             test.addAttribute(MailConstants.A_HEADER, mHeaderName);
             test.addAttribute(MailConstants.A_STRING_COMPARISON, mHeaderOp.toStringComparison().toString());
             if (mHeaderOp.isNegative()) {

@@ -268,7 +268,7 @@ public class ZMailboxUtil implements DebugListener {
                         "  {conditions}:\n" +
                         "    header \"name\" is|not_is|contains|not_contains|matches|not_matches \"value\"\n" +
                         "    header \"name\" exists|not_exists\n" +
-                        "    attachment_header \"name\" is|not_is|contains|not_contains|matches|not_matches \"value\"\n" +
+                        "    mime_header \"name\" is|not_is|contains|not_contains|matches|not_matches \"value\"\n" +
                         "    date before|not_before|after|not_after \"YYYYMMDD\"\n" +
                         "    size under|not_under|over|not_over \"1|1K|1M\"\n" +
                         "    body contains|not_contains \"text\"\n" +

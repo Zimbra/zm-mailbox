@@ -65,7 +65,7 @@ public abstract class SieveVisitor {
     throws ServiceException { }
     
     @SuppressWarnings("unused")
-    protected void visitAttachmentHeaderTest(Node node, VisitPhase phase, RuleProperties props,
+    protected void visitMimeHeaderTest(Node node, VisitPhase phase, RuleProperties props,
         String header, StringComparison comparison, String value)
     throws ServiceException { }
     
@@ -204,15 +204,15 @@ public abstract class SieveVisitor {
                 visitHeaderTest(node, VisitPhase.begin, props, header, comparison, value);
                 accept(node, props);
                 visitHeaderTest(node, VisitPhase.end, props, header, comparison, value);
-            } else if ("attachment_header".equalsIgnoreCase(nodeName)) {
+            } else if ("mime_header".equalsIgnoreCase(nodeName)) {
                 String s = stripLeadingColon(getValue(node, 0, 0));
                 StringComparison comparison = StringComparison.fromString(s);
                 String header = getValue(node, 0, 1, 0, 0);
                 String value = getValue(node, 0, 2, 0, 0);
 
-                visitAttachmentHeaderTest(node, VisitPhase.begin, props, header, comparison, value);
+                visitMimeHeaderTest(node, VisitPhase.begin, props, header, comparison, value);
                 accept(node, props);
-                visitAttachmentHeaderTest(node, VisitPhase.end, props, header, comparison, value);
+                visitMimeHeaderTest(node, VisitPhase.end, props, header, comparison, value);
             } else if ("exists".equalsIgnoreCase(nodeName)) {
                 String header = getValue(node, 0, 0, 0, 0);
 

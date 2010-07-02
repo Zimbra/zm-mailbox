@@ -2588,7 +2588,7 @@ Tests:
 
   <headerTest header="{header-name}" stringComparison="{type}" value="{value}" />
   <headerExistsTest header="{header-name}" />
-  <attachmentHeaderTest header="{header-name}" stringComparison="{type}" value="{value}" />
+  <mimeHeaderTest header="{header-name}" stringComparison="{type}" value="{value}" />
   <sizeTest numberComparison="{over|under}" s="{size}" />
   <dateTest dateComparison="{before|after}" d="{date}" />
   <bodyTest value="{value}" />
@@ -2628,6 +2628,9 @@ method values: anyrequest, anyreply, publish, request, reply, add, cancel, refre
   declinecounter.  anyreply matches reply, refresh, counter.  If no methods are
   specified, the test returns true for all invites.
  
+<mimeHeaderTest> behaves just like <headerTest>, but matches headers on
+  all MIME parts, instead of just the top-level headers.
+
 ---------------------------
 
 <ApplyFilterRulesRequest>

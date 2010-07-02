@@ -461,10 +461,10 @@ public class ZimbraMailAdapter implements MailAdapter
     }
     
     /**
-     * Scans all attachments and returns the values of any headers with
+     * Scans all MIME parts and returns the values of any headers that
      * match the given name.
      */
-    public Set<String> getMatchingAttachmentHeader(String name)
+    public Set<String> getMatchingHeaderFromAllParts(String name)
     throws SieveMailException {
         MimeMessage msg = null;
         Set<String> values = new HashSet<String>();
@@ -473,10 +473,8 @@ public class ZimbraMailAdapter implements MailAdapter
             msg = mHandler.getMimeMessage();
             for (MPartInfo partInfo : Mime.getParts(msg)) {
                 MimePart part = partInfo.getMimePart();
-                if (part != msg) {
-                    for (String value : Mime.getHeaders(part, name)) {
-                        values.add(value);
-                    }
+                for (String value : Mime.getHeaders(part, name)) {
+                    values.add(value);
                 }
             }
         } catch (Exception e) {

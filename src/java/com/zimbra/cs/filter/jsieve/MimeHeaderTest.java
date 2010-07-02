@@ -29,9 +29,9 @@ import com.zimbra.cs.filter.ZimbraMailAdapter;
 
 /**
  * Acts just like the original header test, but tests the headers
- * of attachments instead of the top-level message.
+ * of all MIME parts instead of just the top-level message.
  */
-public class AttachmentHeaderTest extends Header {
+public class MimeHeaderTest extends Header {
 
     @SuppressWarnings("unchecked")
     @Override
@@ -46,7 +46,7 @@ public class AttachmentHeaderTest extends Header {
         boolean isMatched = false;
         Iterator<String> headerNamesIter = headerNames.iterator();
         while (!isMatched && headerNamesIter.hasNext()) {
-            Set<String> values = zma.getMatchingAttachmentHeader(headerNamesIter.next());
+            Set<String> values = zma.getMatchingHeaderFromAllParts(headerNamesIter.next());
             isMatched = match(comparator, matchType, new ArrayList<String>(values), keys, context);
         }
         return isMatched;
