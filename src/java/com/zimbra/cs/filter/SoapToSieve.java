@@ -112,8 +112,8 @@ public class SoapToSieve {
         
         if (name.equals(MailConstants.E_HEADER_TEST)) {
             snippet = generateHeaderTest(test, "header");
-        } else if (name.equals(MailConstants.E_ATTACHMENT_HEADER_TEST)) {
-            snippet = generateHeaderTest(test, "attachment_header");
+        } else if (name.equals(MailConstants.E_MIME_HEADER_TEST)) {
+            snippet = generateHeaderTest(test, "mime_header");
         } else if (name.equals(MailConstants.E_HEADER_EXISTS_TEST)) {
             String header = test.getAttribute(MailConstants.A_HEADER);
             snippet = String.format("exists \"%s\"", FilterUtil.escape(header));
