@@ -304,7 +304,7 @@ public class MailConstants {
     
     public static final String E_HEADER_TEST = "headerTest";
     public static final String E_HEADER_EXISTS_TEST = "headerExistsTest";
-    public static final String E_ATTACHMENT_HEADER_TEST = "attachmentHeaderTest";
+    public static final String E_MIME_HEADER_TEST = "mimeHeaderTest";
     public static final String E_SIZE_TEST = "sizeTest";
     public static final String E_DATE_TEST = "dateTest";
     public static final String E_BODY_TEST = "bodyTest";
