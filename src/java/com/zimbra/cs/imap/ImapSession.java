@@ -142,8 +142,9 @@ public class ImapSession extends Session {
         return mFolder.getSize();
     }
 
-    synchronized boolean requiresReload() {
-        return mFolder instanceof ImapFolder ? false : ((PagedFolderData) mFolder).notificationsFull();
+    boolean requiresReload() {
+        ImapFolderData fdata = mFolder;
+        return fdata instanceof ImapFolder ? false : ((PagedFolderData) fdata).notificationsFull();
     }
 
     void inactivate() {
@@ -398,7 +399,7 @@ public class ImapSession extends Session {
             return mPagedSessionData == null ? false : mPagedSessionData.mOriginalSessionData.mWritable;
         }
 
-        public boolean hasExpunges() {
+        public synchronized boolean hasExpunges() {
             // hugely overbroad, but this should never be called in the first place...
             if (mPagedSessionData != null && mPagedSessionData.mOriginalSessionData.mExpungedCount > 0)
                 return true;
@@ -419,7 +420,7 @@ public class ImapSession extends Session {
             return mQueuedChanges != null && !mQueuedChanges.isEmpty();
         }
 
-        boolean notificationsFull() {
+        synchronized boolean notificationsFull() {
             if (mQueuedChanges == null || mQueuedChanges.isEmpty())
                 return false;
 
@@ -441,7 +442,7 @@ public class ImapSession extends Session {
             mPagedSessionData = null;
         }
 
-        void restore(ImapFolder i4folder) throws ServiceException {
+        synchronized void restore(ImapFolder i4folder) throws ServiceException {
             ImapFolder.SessionData sdata = mPagedSessionData == null ? null : mPagedSessionData.asFolderData(i4folder);
             i4folder.restore(ImapSession.this, sdata);
             if (mPagedSessionData != null && mPagedSessionData.mSessionFlags != null) {
@@ -476,7 +477,7 @@ public class ImapSession extends Session {
             getQueuedNotifications(changeId).recordModified((MailItem) chg.what, chg.why);
         }
 
-        void replay() {
+        synchronized void replay() {
             // it's an error if we're replaying changes back into this same queuer...
             assert(mFolder != this);
 
