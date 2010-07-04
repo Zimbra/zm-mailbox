@@ -1426,13 +1426,15 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         // update mailbox and folder sizes
         if (isLeafNode()) {
-            mMailbox.updateSize(mData.size);
-            folder.updateSize(1, mData.size);
-        }
+            boolean isDeleted = isTagged(Flag.ID_FLAG_DELETED);
 
-        // let the folder and tags know if the new item is unread
-        folder.updateUnread(mData.unreadCount);
-        updateTagUnread(mData.unreadCount);
+            mMailbox.updateSize(mData.size);
+            folder.updateSize(1, isDeleted ? 1 : 0, mData.size);
+            
+            // let the folder and tags know if the new item is unread
+            folder.updateUnread(mData.unreadCount, isDeleted ? mData.unreadCount : 0);
+            updateTagUnread(mData.unreadCount, isDeleted ? mData.unreadCount : 0);
+        }
     }
 
     /** Changes the item's color.  Color is specified in RGB, with
@@ -1548,7 +1550,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             mMailbox.updateSize(size - mData.size);
             mData.size = size;
         }
-        getFolder().updateSize(0, size - mData.size);
+        getFolder().updateSize(0, 0, size - mData.size);
 
         mData.setBlobDigest(staged == null ? null : staged.getStagedDigest());
         mData.date   = mMailbox.getOperationTimestamp();
@@ -1628,7 +1630,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             mRevisions.add(constructItem(mMailbox, data));
 
             mMailbox.updateSize(mData.size);
-            folder.updateSize(0, mData.size);
+            folder.updateSize(0, 0, mData.size);
 
             ZimbraLog.mailop.debug("saving revision %d for %s", mVersion, getMailopContext(this));
 
@@ -1662,7 +1664,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 for (MailItem revision : toPurge) {
                     if (revision.getSavedSequence() < oldestRemainingSavedSequence) {
                         mMailbox.updateSize(-revision.getSize());
-                        folder.updateSize(0, -revision.getSize());
+                        folder.updateSize(0, 0, -revision.getSize());
                         revision.markBlobForDeletion();
                     }
                 }
@@ -1728,8 +1730,9 @@ public abstract class MailItem implements Comparable<MailItem> {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
 
         markItemModified(Change.MODIFIED_UNREAD);
+        int delta = unread ? 1 : -1;
         mData.metadataChanged(mMailbox);
-        updateUnread(unread ? 1 : -1);
+        updateUnread(delta, isTagged(Flag.ID_FLAG_DELETED) ? delta : 0);
         DbMailItem.alterUnread(this, unread);
     }
 
@@ -1742,8 +1745,8 @@ public abstract class MailItem implements Comparable<MailItem> {
      * 
      *  You must use {@link #alterUnread} to change an item's unread state.
      * 
-     * @param tag       The tag or flag to add or remove from the item.
-     * @param newValue  <tt>true</tt> to tag the item, <tt>false</tt> to untag it.
+     * @param tag  The tag or flag to add or remove from the item.
+     * @param add  <tt>true</tt> to tag the item, <tt>false</tt> to untag it.
      * @perms {@link ACL#RIGHT_WRITE} on the item
      * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><tt>mail.CANNOT_TAG</tt> - if the item can't be tagged with the
@@ -1753,10 +1756,10 @@ public abstract class MailItem implements Comparable<MailItem> {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul>
      * @see #alterUnread(boolean) */
-    void alterTag(Tag tag, boolean newValue) throws ServiceException {
+    void alterTag(Tag tag, boolean add) throws ServiceException {
         if (tag == null)
             throw ServiceException.FAILURE("no tag supplied when trying to tag item " + mId, null);
-        if (!isTaggable() || (newValue && !tag.canTag(this)))
+        if (!isTaggable() || (add && !tag.canTag(this)))
             throw MailServiceException.CANNOT_TAG(tag, this);
         if (tag.getId() == Flag.ID_FLAG_UNREAD)
             throw ServiceException.FAILURE("unread state must be set with alterUnread", null);
@@ -1764,7 +1767,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
 
         // detect NOOPs and bail
-        if (newValue == isTagged(tag))
+        if (add == isTagged(tag))
             return;
         // don't let the user tag things as "has attachments" or "draft"
         if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
@@ -1774,21 +1777,30 @@ public abstract class MailItem implements Comparable<MailItem> {
         MailItem parent = getParent();
 
         // change our cached tags
-        tagChanged(tag, newValue);
+        tagChanged(tag, add);
 
         // since we're adding/removing a tag, the tag's unread count may change
-        if (tag.trackUnread() && mData.unreadCount > 0)
-            tag.updateUnread((newValue ? 1 : -1) * mData.unreadCount);
+        int unreadDelta = add ? mData.unreadCount : -mData.unreadCount;
+        if (tag.trackUnread() && unreadDelta != 0)
+            tag.updateUnread(unreadDelta, isTagged(Flag.ID_FLAG_DELETED) ? unreadDelta : 0);
+
+        // if we're adding/removing the \Deleted flag, update the folder and tag "deleted" and "deleted unread" counts
+        if (tag.getId() == Flag.ID_FLAG_DELETED) {
+            getFolder().updateSize(0, add ? 1 : -1, 0);
+            // note that Message.updateUnread() calls updateTagUnread()
+            if (unreadDelta != 0)
+                updateUnread(0, unreadDelta);
+        }
 
         if (ZimbraLog.mailop.isDebugEnabled())
             ZimbraLog.mailop.debug("Setting %s for %s.", getMailopContext(tag), getMailopContext(this));
 
         // alter our tags in the DB
-        DbMailItem.alterTag(this, tag, newValue);
+        DbMailItem.alterTag(this, tag, add);
 
         // tell our parent about the tag change (note: must happen after DbMailItem.alterTag)
         if (parent != null)
-            parent.inheritedTagChanged(tag, newValue);
+            parent.inheritedTagChanged(tag, add);
     }
 
     final void alterSystemFlag(Flag flag, boolean newValue) throws ServiceException {
@@ -1842,15 +1854,15 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     /** Updates the in-memory unread count for the item.  The base-class
      *  implementation does not cascade the change to the item's parent,
-     *  folder, and tags, as {@link Message#updateUnread(int)} does.
+     *  folder, and tags, as {@link Message#updateUnread(int,int)} does.
      * 
      * @param delta  The change in unread count for this item. */
-    protected void updateUnread(int delta) throws ServiceException {
+    protected void updateUnread(int delta, int deletedDelta) throws ServiceException {
         if (delta == 0 || !trackUnread())
             return;
-        markItemModified(Change.MODIFIED_UNREAD);
 
         // update our unread count (should we check that we don't have too many unread?)
+        markItemModified(Change.MODIFIED_UNREAD);
         mData.unreadCount += delta;
         if (mData.unreadCount < 0)
             throw ServiceException.FAILURE("inconsistent state: unread < 0 for item " + mId, null);
@@ -1863,9 +1875,10 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><tt>mail.NO_SUCH_FOLDER</tt> - if there's an error fetching the
      *        item's {@link Folder}</ul> */
-    protected void updateTagUnread(int delta) throws ServiceException {
-        if (delta == 0 || !isTaggable() || mData.tags == 0)
+    protected void updateTagUnread(int delta, int deletedDelta) throws ServiceException {
+        if ((delta == 0 && deletedDelta == 0) || !isTaggable() || mData.tags == 0)
             return;
+
         long tags = mData.tags;
         for (int i = 0; tags != 0 && i < MAX_TAG_COUNT; i++) {
             long mask = 1L << i;
@@ -1877,7 +1890,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                     ZimbraLog.mailbox.warn("item " + mId + " has nonexistent tag " + (i + TAG_ID_OFFSET));
                     continue;
                 }
-                tag.updateUnread(delta);
+                tag.updateUnread(delta, deletedDelta);
                 tags &= ~mask;
             }
         }
@@ -2303,8 +2316,9 @@ public abstract class MailItem implements Comparable<MailItem> {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
 
         if (isLeafNode()) {
-            oldFolder.updateSize(-1, -getTotalSize());
-            target.updateSize(1, getTotalSize());
+            boolean isDeleted = isTagged(Flag.ID_FLAG_DELETED);
+            oldFolder.updateSize(-1, isDeleted ? -1 : 0, -getTotalSize());
+            target.updateSize(1, isDeleted ? 1 : 0, getTotalSize());
         }
 
         if (!inTrash() && target.inTrash()) {
@@ -2312,8 +2326,9 @@ public abstract class MailItem implements Comparable<MailItem> {
             if (mData.unreadCount > 0)
                 alterUnread(false);
         } else {
-            oldFolder.updateUnread(-mData.unreadCount);
-            target.updateUnread(mData.unreadCount);
+            boolean isDeleted = isTagged(Flag.ID_FLAG_DELETED);
+            oldFolder.updateUnread(-mData.unreadCount, isDeleted ? -mData.unreadCount : 0);
+            target.updateUnread(mData.unreadCount, isDeleted? mData.unreadCount : 0);
         }
         // moving a message (etc.) to Spam removes it from its conversation
         if (!inSpam() && target.inSpam())
@@ -2508,15 +2523,17 @@ public abstract class MailItem implements Comparable<MailItem> {
             item.propagateDeletion(info);
         } else {
             // update message counts
+            List<UnderlyingData> unreadData = DbMailItem.getById(mbox, info.unreadIds, TYPE_MESSAGE);
+            for (UnderlyingData data : unreadData) {
+                MailItem unread = mbox.getItem(data);
+                unread.updateUnread(-data.unreadCount, unread.isTagged(Flag.ID_FLAG_DELETED) ? -data.unreadCount : 0);
+            }
+
             for (Map.Entry<Integer, DbMailItem.LocationCount> entry : info.messages.entrySet()) {
                 int folderID = entry.getKey();
                 DbMailItem.LocationCount lcount = entry.getValue();
-                mbox.getFolderById(folderID).updateSize(-lcount.count, -lcount.size);
+                mbox.getFolderById(folderID).updateSize(-lcount.count, -lcount.deleted, -lcount.size);
             }
-
-            List<UnderlyingData> unreadData = DbMailItem.getById(mbox, info.unreadIds, TYPE_MESSAGE);
-            for (UnderlyingData data : unreadData)
-                mbox.getItem(data).updateUnread(-1);
         }
 
         // Log mailop statements if necessary
@@ -2631,7 +2648,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (mData.unreadCount != 0 && mMailbox.getFlagById(Flag.ID_FLAG_UNREAD).canTag(this))
             info.unreadIds.add(id);
 
-        info.messages.put(new Integer(getFolderId()), new DbMailItem.LocationCount(1, getTotalSize()));
+        boolean isDeleted = isTagged(Flag.ID_FLAG_DELETED);
+        info.messages.put(getFolderId(), new DbMailItem.LocationCount(1, isDeleted ? 1 : 0, getTotalSize()));
 
         if (mData.indexId != null) {
             if (!isTagged(Flag.ID_FLAG_COPIED))
@@ -2656,23 +2674,22 @@ public abstract class MailItem implements Comparable<MailItem> {
     private static final int UNREAD_ITEM_BATCH_SIZE = 500;
 
     void propagateDeletion(PendingDelete info) throws ServiceException {
+        if (!info.unreadIds.isEmpty()) {
+            for (int i = 0, count = info.unreadIds.size(); i < count; i += UNREAD_ITEM_BATCH_SIZE) {
+                List<Integer> batch = info.unreadIds.subList(i, Math.min(i + UNREAD_ITEM_BATCH_SIZE, count));
+                for (UnderlyingData data : DbMailItem.getById(mMailbox, batch, TYPE_MESSAGE)) {
+                    Message msg = (Message) mMailbox.getItem(data);
+                    if (msg.isUnread())
+                        msg.updateUnread(-1, msg.isTagged(Flag.ID_FLAG_DELETED) ? -1 : 0);
+                    mMailbox.uncache(msg);
+                }
+            }
+        }
+
         for (Map.Entry<Integer, DbMailItem.LocationCount> entry : info.messages.entrySet()) {
             Folder folder = mMailbox.getFolderById(entry.getKey());
             DbMailItem.LocationCount lcount = entry.getValue();
-            folder.updateSize(-lcount.count, -lcount.size);
-        }
-
-        if (info.unreadIds.isEmpty())
-            return;
-
-        for (int i = 0, count = info.unreadIds.size(); i < count; i += UNREAD_ITEM_BATCH_SIZE) {
-            List<Integer> batch = info.unreadIds.subList(i, Math.min(i + UNREAD_ITEM_BATCH_SIZE, count));
-            for (UnderlyingData data : DbMailItem.getById(mMailbox, batch, TYPE_MESSAGE)) {
-                Message msg = (Message) mMailbox.getItem(data);
-                if (msg.isUnread())
-                    msg.updateUnread(-1);
-                mMailbox.uncache(msg);
-            }
+            folder.updateSize(-lcount.count, -lcount.deleted, -lcount.size);
         }
     }
 

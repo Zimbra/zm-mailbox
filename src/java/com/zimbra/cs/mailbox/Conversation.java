@@ -300,7 +300,8 @@ public class Conversation extends MailItem {
                 continue;
             }
 
-            msg.updateUnread(unread ? 1 : -1);
+            int delta = unread ? 1 : -1;
+            msg.updateUnread(delta, msg.isTagged(Flag.ID_FLAG_DELETED) ? delta : 0);
             msg.mData.metadataChanged(mMailbox);
             targets.add(msg.getId());
         }
@@ -362,15 +363,21 @@ public class Conversation extends MailItem {
                 throw MailServiceException.CANNOT_TAG(tag, this);
             }
 
-            // don't let the user tag things as "has attachments" or "draft"
-            if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
-                throw MailServiceException.CANNOT_TAG(tag, msg);
-            // since we're adding/removing a tag, the tag's unread count may change
-        	if (tag.trackUnread() && msg.isUnread())
-                tag.updateUnread(add ? 1 : -1);
-
             targets.add(msg.getId());
             msg.tagChanged(tag, add);
+
+            // since we're adding/removing a tag, the tag's unread count may change
+            int delta = add ? 1 : -1;
+            if (tag.trackUnread() && msg.isUnread())
+                tag.updateUnread(delta, isTagged(Flag.ID_FLAG_DELETED) ? delta : 0);
+
+            // if we're adding/removing the \Deleted flag, update the folder and tag "deleted" and "deleted unread" counts
+            if (tag.getId() == Flag.ID_FLAG_DELETED) {
+                getFolder().updateSize(0, delta, 0);
+                // note that Message.updateUnread() calls updateTagUnread()
+                if (msg.isUnread())
+                    msg.updateUnread(0, delta);
+            }
         }
 
         if (targets.isEmpty()) {
@@ -468,14 +475,15 @@ public class Conversation extends MailItem {
                 continue;
             }
 
+            boolean isDeleted = msg.isTagged(Flag.ID_FLAG_DELETED);
             if (msg.isUnread()) {
                 if (!toTrash || msg.inTrash()) {
-                    source.updateUnread(-1);
-                    target.updateUnread(1);
+                    source.updateUnread(-1, isDeleted ? -1 : 0);
+                    target.updateUnread(1, isDeleted ? 1 : 0);
                 } else {
                     // unread messages moved from Mailbox to Trash need to be marked read:
                     //   update cached unread counts (message, conversation, folder, tags)
-                    msg.updateUnread(-1);
+                    msg.updateUnread(-1, isDeleted ? -1 : 0);
                     //   note that we need to update this message in the DB
                     markedRead.add(msg.getId());
                 }
@@ -490,8 +498,8 @@ public class Conversation extends MailItem {
             }
 
             // handle folder message counts
-            source.updateSize(-1, -msg.getTotalSize());
-            target.updateSize(1, msg.getTotalSize());
+            source.updateSize(-1, isDeleted ? -1 : 0, -msg.getTotalSize());
+            target.updateSize(1, isDeleted ? 1 : 0, msg.getTotalSize());
 
             moved.add(msg);
             msg.folderChanged(target, 0);
@@ -555,7 +563,7 @@ public class Conversation extends MailItem {
         // update unread counts
         if (msg.isUnread()) {
             markItemModified(Change.MODIFIED_UNREAD);
-            updateUnread(child.mData.unreadCount);
+            updateUnread(child.mData.unreadCount, child.isTagged(Flag.ID_FLAG_DELETED) ? child.mData.unreadCount : 0);
         }
 
         markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_SENDERS | Change.MODIFIED_METADATA);
@@ -606,7 +614,7 @@ public class Conversation extends MailItem {
             // update unread counts
             if (child.isUnread()) {
                 markItemModified(Change.MODIFIED_UNREAD);
-                updateUnread(-child.mData.unreadCount);
+                updateUnread(-child.mData.unreadCount, child.isTagged(Flag.ID_FLAG_DELETED) ? -child.mData.unreadCount : 0);
             }
 
             // update inherited tags, if applicable

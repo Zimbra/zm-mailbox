@@ -121,7 +121,7 @@ public class Document extends MailItem {
         if (mData.size != pd.getSize()) {
             markItemModified(Change.MODIFIED_SIZE);
             mMailbox.updateSize(pd.getSize() - mData.size, false);
-            getFolder().updateSize(0, pd.getSize() - mData.size);
+            getFolder().updateSize(0, 0, pd.getSize() - mData.size);
             mData.size = pd.getSize();
         }
 
@@ -222,8 +222,8 @@ public class Document extends MailItem {
         sb.append(CN_FILE_NAME).append(": ").append(getName()).append(", ");
         sb.append(CN_EDITOR).append(": ").append(getCreator()).append(", ");
         sb.append(CN_MIME_TYPE).append(": ").append(mContentType).append(", ");
-        sb.append(CN_FRAGMENT).append(": ").append(mFragment);
         appendCommonMembers(sb).append(", ");
+        sb.append(CN_FRAGMENT).append(": ").append(mFragment);
         sb.append("}");
         return sb.toString();
     }

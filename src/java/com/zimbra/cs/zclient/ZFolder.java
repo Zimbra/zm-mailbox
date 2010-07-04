@@ -55,10 +55,12 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     private String mId;
     private String mName;
     private int mUnreadCount;
+    private int mImapUnreadCount;
     private long mSize;
     private View mDefaultView;
     private String mFlags;
     private int mMessageCount;
+    private int mImapMessageCount;
     private String mParentId;
     private int mModifiedSequence;
     private int mContentSequence;
@@ -203,7 +205,9 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
             mColor = ZFolder.Color.orange;
         }
         mUnreadCount = (int) e.getAttributeLong(MailConstants.A_UNREAD, 0);
+        mImapUnreadCount = (int) e.getAttributeLong(MailConstants.A_IMAP_UNREAD, mUnreadCount);
         mMessageCount = (int) e.getAttributeLong(MailConstants.A_NUM, 0);
+        mImapMessageCount = (int) e.getAttributeLong(MailConstants.A_IMAP_NUM, mMessageCount);
         mDefaultView = View.fromString(e.getAttribute(MailConstants.A_DEFAULT_VIEW, View.conversation.name()));
         mModifiedSequence = (int) e.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, -1);
         mContentSequence = (int) e.getAttributeLong(MailConstants.A_REVISION, -1);
@@ -261,7 +265,9 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
             mFlags = fevent.getFlags(mFlags);
             mColor = fevent.getColor(mColor);
             mUnreadCount = fevent.getUnreadCount(mUnreadCount);
+            mImapUnreadCount = fevent.getImapUnreadCount(mImapUnreadCount);
             mMessageCount = fevent.getMessageCount(mMessageCount);
+            mImapMessageCount = fevent.getImapMessageCount(mImapMessageCount);
             mDefaultView = fevent.getDefaultView(mDefaultView);
             mModifiedSequence = fevent.getModifiedSequence(mModifiedSequence);
             mContentSequence = fevent.getContentSequence(mContentSequence);
@@ -390,32 +396,45 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     }
 
     /**
+     * @return number of unread items in folder, including IMAP \Deleted items
+     */
+    public int getImapUnreadCount() {
+        return mImapUnreadCount; 
+    }
+
+    /**
      * Sets unread count.
-	 * @param count unread count.
+     * @param count unread count.
      */
     void setUnreadCount(int count) {
         mUnreadCount = count;
     }
 
     /**
-     *
      * @return size of all items in folder (not including sub folders) in bytes
      */
-
     public long getSize() {
         return mSize;
     }
+
     /**
-     * @return number of unread items in folder
+     * @return number of items in folder
      */
     public int getMessageCount() {
         return mMessageCount;
     }
 
-	/**
-	 * Sets message count.
-	 * @param count message count.
-	 */
+    /**
+     * @return number of items in folder, including IMAP \Deleted item
+     */
+    public int getImapMessageCount() {
+        return mImapMessageCount;
+    }
+
+    /**
+     * Sets message count.
+     * @param count message count.
+     */
     void setMessageCount(int count) {
         mMessageCount = count;
     }
@@ -568,7 +587,12 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         jo.put("flags", mFlags);
         jo.put("color", mColor.name());
         jo.put("unreadCount", mUnreadCount);
+        jo.put("imapUnreadCount", mImapUnreadCount);
         jo.put("itemCount", mMessageCount);
+        jo.put("imapItemCount", mImapMessageCount);
+        jo.put("defaultView", mDefaultView.name());
+        jo.put("imapUIDNEXT", mImapUIDNEXT);
+        jo.put("imapMODSEQ", mImapMODSEQ);
         jo.put("defaultView", mDefaultView.name());
         jo.put("remoteUrl", mRemoteURL);
         jo.put("effectivePermissions", mEffectivePerms);

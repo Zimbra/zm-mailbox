@@ -19,7 +19,7 @@ import com.zimbra.common.service.ServiceException;
 public class MailboxVersion {
     // These should be incremented with changes to serialization format.
     private static final short CURRENT_MAJOR = 1;  // range: 0 - Short.MAX_VALUE
-    private static final short CURRENT_MINOR = 8;  // range: 0 - Short.MAX_VALUE
+    private static final short CURRENT_MINOR = 9;  // range: 0 - Short.MAX_VALUE
 
     private short mMajorVer;
     private short mMinorVer;
@@ -98,7 +98,7 @@ public class MailboxVersion {
                 (mMajorVer == CURRENT_MAJOR && mMinorVer > CURRENT_MINOR));
     }
 
-    public String toString() {
+    @Override public String toString() {
         return Integer.toString(mMajorVer) + "." + Integer.toString(mMinorVer);
     }
 }

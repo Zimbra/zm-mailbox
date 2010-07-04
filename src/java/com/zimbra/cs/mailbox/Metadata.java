@@ -64,6 +64,8 @@ public class Metadata {
     static final String FN_FIRST           = "f";
     static final String FN_FIELDS          = "fld";
 //    static final String FN_IMAP_ID         = "i4";
+    static final String FN_DELETED         = "i4d";
+    static final String FN_DELETED_UNREAD  = "i4du";
     static final String FN_RECENT          = "i4l";
     static final String FN_RECENT_CUTOFF   = "i4r";
     static final String FN_REMOTE_ID       = "id";

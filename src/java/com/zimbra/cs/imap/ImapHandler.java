@@ -2040,11 +2040,11 @@ abstract class ImapHandler extends ProtocolHandler {
             if (zfolder == null)
                 throw MailServiceException.NO_SUCH_FOLDER(path.asImapPath());
 
-            messages = zfolder.getMessageCount();
+            messages = zfolder.getImapMessageCount();
             recent = 0;
             uidnext = zfolder.getImapUIDNEXT();
             uvv = ImapFolder.getUIDValidity(zfolder);
-            unread = zfolder.getUnreadCount();
+            unread = zfolder.getImapUnreadCount();
             modseq = zfolder.getImapMODSEQ();
         } else {
             throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());

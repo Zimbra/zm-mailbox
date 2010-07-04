@@ -1149,7 +1149,7 @@ Conversations:
 Folders:
 
   <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"]
-  		 u="{unread}" n="{msg-count}" s="{total-size}" [view="{default-type}"]
+  		 u="{unread}" [i4u="{imap-unread}"] n="{msg-count}" [i4n="{imap-count}"] s="{total-size}" [view="{default-type}"]
   		 [url="{remote-url}"] [perm="{effective-perms}"] [rest="{rest-url}"]>
     [<acl> <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" d="{grantee-name}" [pw="{password-for-guest}"] [key=="{access-key}"]/>* </acl>]
   </folder>
@@ -1160,7 +1160,9 @@ Folders:
   {flags}        = checked in UI (#), exclude free/(b)usy info, IMAP subscribed (*), does not (i)nherit rights from parent, is a s(y)nc folder with external data source, sync is turned on(~), folder does n(o)t allow inferiors / children
   {color}        = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
   {unread}       = number of unread messages in folder
+  {imap-unread}  = number of unread messages with this tag, *including* those with the IMAP \Deleted flag set
   {msg-count}    = number of non-subfolder items in folder
+  {imap-count}   = number of non-subfolder items in folder, *including* those with the IMAP \Deleted flag set
   {total-size}   = total size of all of non-subfolder items in folder
   {default-type} = (optional) default type for the folder; used by web client to decide which view to use;
                    possible values are the same as <SearchRequest>'s {types}: conversation|message|contact|etc
@@ -1203,14 +1205,15 @@ Mountpoints:
 
 Tags:
 
-  <tag id="{tag-id}" name="{tag-name}" [color="{color}"] u="{unread}"/>
+  <tag id="{tag-id}" name="{tag-name}" [color="{color}"] u="{unread}" [i4u="{imap-unread}"]/>
 
-  {tag-name} = name of tag; max length 128; whitespace is trimmed by server;
-               cannot contain ':', '"', '/', or any character below 0x20;
-               cannot begin with '\' (avoid collsions with IMAP)
-  {color}    = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
-  {unread}   = number of unread messages with this tag
- 
+  {tag-name}    = name of tag; max length 128; whitespace is trimmed by server;
+                  cannot contain ':', '"', '/', or any character below 0x20;
+                  cannot begin with '\' (avoid collsions with IMAP)
+  {color}       = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
+  {unread}      = number of unread messages with this tag
+  {imap-unread} = number of unread messages with this tag, *including* those with the IMAP \Deleted flag set
+
 ----------
 
 <SearchRequest [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"]

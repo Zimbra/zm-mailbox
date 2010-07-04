@@ -170,7 +170,10 @@ public class ToXML {
         Element elem = parent.addElement(MailConstants.E_FOLDER);
         encodeFolderCommon(elem, ifmt, folder, fields);
         if (needToOutput(fields, Change.MODIFIED_SIZE)) {
-            elem.addAttribute(MailConstants.A_NUM, folder.getItemCount());
+            int deleted = folder.getDeletedCount();
+            elem.addAttribute(MailConstants.A_NUM, folder.getItemCount() - deleted);
+            if (deleted > 0)
+                elem.addAttribute(MailConstants.A_IMAP_NUM, folder.getItemCount());
             elem.addAttribute(MailConstants.A_SIZE, folder.getTotalSize());
             elem.addAttribute(MailConstants.A_IMAP_MODSEQ, folder.getImapMODSEQ());
             elem.addAttribute(MailConstants.A_IMAP_UIDNEXT, folder.getImapUIDNEXT());
@@ -312,21 +315,25 @@ public class ToXML {
                 elem.addAttribute(MailConstants.A_FLAGS, flags);
         }
         if (needToOutput(fields, Change.MODIFIED_COLOR)) {
-			MailItem.Color color = folder.getRgbColor();
-			if (color.hasMapping()) {
-				byte mappedColor = color.getMappedColor();
-				if (mappedColor != MailItem.DEFAULT_COLOR || fields != NOTIFY_FIELDS) {
-					elem.addAttribute(MailConstants.A_COLOR, color.getMappedColor());
-				}
-			}
-			if (color.getValue() != 0) {
-				elem.addAttribute(MailConstants.A_RGB, color.toString());
-			}
+            MailItem.Color color = folder.getRgbColor();
+            if (color.hasMapping()) {
+                byte mappedColor = color.getMappedColor();
+                if (mappedColor != MailItem.DEFAULT_COLOR || fields != NOTIFY_FIELDS) {
+                    elem.addAttribute(MailConstants.A_COLOR, color.getMappedColor());
+                }
+            }
+            if (color.getValue() != 0) {
+                elem.addAttribute(MailConstants.A_RGB, color.toString());
+            }
         }
         if (needToOutput(fields, Change.MODIFIED_UNREAD)) {
             int unread = folder.getUnreadCount();
-            if (unread > 0 || fields != NOTIFY_FIELDS)
-                elem.addAttribute(MailConstants.A_UNREAD, unread);
+            if (unread > 0 || fields != NOTIFY_FIELDS) {
+                int deletedUnread = folder.getDeletedUnreadCount();
+                elem.addAttribute(MailConstants.A_UNREAD, unread - deletedUnread);
+                if (deletedUnread > 0)
+                    elem.addAttribute(MailConstants.A_IMAP_UNREAD, unread);
+            }
         }
         if (needToOutput(fields, Change.MODIFIED_VIEW)) {
             byte view = folder.getDefaultView();
@@ -580,8 +587,12 @@ public class ToXML {
         }
         if (needToOutput(fields, Change.MODIFIED_UNREAD)) {
             int unreadCount = tag.getUnreadCount();
-            if (unreadCount > 0 || fields != NOTIFY_FIELDS)
-                elem.addAttribute(MailConstants.A_UNREAD, unreadCount);
+            if (unreadCount > 0 || fields != NOTIFY_FIELDS) {
+                int deletedUnread = tag.getDeletedUnreadCount();
+                elem.addAttribute(MailConstants.A_UNREAD, unreadCount - deletedUnread);
+                if (deletedUnread > 0)
+                    elem.addAttribute(MailConstants.A_IMAP_UNREAD, unreadCount);
+            }
         }
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             elem.addAttribute(MailConstants.A_DATE, tag.getDate());
@@ -2117,30 +2128,30 @@ public class ToXML {
         Element resp = parent.addElement(MailConstants.E_FREEBUSY_USER);
         resp.addAttribute(MailConstants.A_ID, fb.getName());
         for (Iterator<FreeBusy.Interval> iter = fb.iterator(); iter.hasNext(); ) {
-        	FreeBusy.Interval cur = iter.next();
-        	String status = cur.getStatus();
-        	Element elt;
-        	if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
-        		elt = resp.addElement(MailConstants.E_FREEBUSY_FREE);
-        	} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY)) {
-        		elt = resp.addElement(MailConstants.E_FREEBUSY_BUSY);
-        	} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE)) {
-        		elt = resp.addElement(MailConstants.E_FREEBUSY_BUSY_TENTATIVE);
-        	} else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE)) {
-        		elt = resp.addElement(MailConstants.E_FREEBUSY_BUSY_UNAVAILABLE);
+            FreeBusy.Interval cur = iter.next();
+            String status = cur.getStatus();
+            Element elt;
+            if (status.equals(IcalXmlStrMap.FBTYPE_FREE)) {
+                elt = resp.addElement(MailConstants.E_FREEBUSY_FREE);
+            } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY)) {
+                elt = resp.addElement(MailConstants.E_FREEBUSY_BUSY);
+            } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE)) {
+                elt = resp.addElement(MailConstants.E_FREEBUSY_BUSY_TENTATIVE);
+            } else if (status.equals(IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE)) {
+                elt = resp.addElement(MailConstants.E_FREEBUSY_BUSY_UNAVAILABLE);
             } else if (status.equals(IcalXmlStrMap.FBTYPE_NODATA)) {
                 elt = resp.addElement(MailConstants.E_FREEBUSY_NODATA);
-        	} else {
-        		assert(false);
-        		elt = null;
-        	}
+            } else {
+                assert(false);
+                elt = null;
+            }
 
-        	if (elt != null) {
-            	elt.addAttribute(MailConstants.A_CAL_START_TIME, cur.getStart());
-            	elt.addAttribute(MailConstants.A_CAL_END_TIME, cur.getEnd());
-        	}
+            if (elt != null) {
+                elt.addAttribute(MailConstants.A_CAL_START_TIME, cur.getStart());
+                elt.addAttribute(MailConstants.A_CAL_END_TIME, cur.getEnd());
+            }
         }
-    	
+
         return resp;
     }
 

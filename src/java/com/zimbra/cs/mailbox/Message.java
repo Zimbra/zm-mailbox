@@ -877,7 +877,7 @@ public class Message extends MailItem {
             return;
 
         mMailbox.updateSize(size - mData.size, true);
-        getFolder().updateSize(0, size - mData.size);
+        getFolder().updateSize(0, 0, size - mData.size);
 
         mData.size    = size;
         mData.locator = mblob.getLocator();
@@ -898,8 +898,8 @@ public class Message extends MailItem {
      *  uncached {@link Conversation}s when a {@link Message} changes state.
      * 
      * @param delta  The change in unread count for this item. */
-    @Override protected void updateUnread(int delta) throws ServiceException {
-        if (delta == 0 || !trackUnread())
+    @Override protected void updateUnread(int delta, int deletedDelta) throws ServiceException {
+        if ((delta == 0 && deletedDelta == 0) || !trackUnread())
             return;
         markItemModified(Change.MODIFIED_UNREAD);
         
@@ -912,14 +912,14 @@ public class Message extends MailItem {
             throw ServiceException.FAILURE("inconsistent state: unread < 0 for " + getClass().getName() + " " + mId, null);
 
         // update the folder's unread count
-        getFolder().updateUnread(delta);
+        getFolder().updateUnread(delta, deletedDelta);
 
         // update the conversation's unread count
         if (parent != null)
-            parent.updateUnread(delta);
+            parent.updateUnread(delta, deletedDelta);
 
         // tell the tags about the new read/unread item
-        updateTagUnread(delta);
+        updateTagUnread(delta, deletedDelta);
     }
 
     /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
@@ -1040,7 +1040,7 @@ public class Message extends MailItem {
         if (mData.size != size) {
             markItemModified(Change.MODIFIED_SIZE);
             mMailbox.updateSize(size - mData.size, false);
-            getFolder().updateSize(0, size - mData.size);
+            getFolder().updateSize(0, 0, size - mData.size);
             mData.size = size;
         }
 
