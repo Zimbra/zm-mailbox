@@ -2200,30 +2200,30 @@ public class Mailbox {
      *  This can return anything with a name; at present, that is limited to
      *  {@link Folder}s, {@link Tag}s, and {@link Document}s. */
     public synchronized MailItem getItemByPath(OperationContext octxt, String name, int folderId) throws ServiceException {
+        if (name != null) {
+            while (name.startsWith("/")) {
+                folderId = ID_FOLDER_USER_ROOT;
+                name = name.substring(1);
+            }
+            while (name.endsWith("/"))
+                name = name.substring(0, name.length() - 1);
+        }        
         if (name == null || name.equals(""))
             return getFolderById(octxt, folderId);
 
-        if (name.equals("/"))
-            return getFolderById(octxt, ID_FOLDER_USER_ROOT);
-        
-        if (name.startsWith("/")) {
-            folderId = ID_FOLDER_USER_ROOT;
-            name = name.substring(1);
-        }
-        if (name.endsWith("/"))
-            name = name.substring(0, name.length() - 1);
-
-        Folder parent = getFolderById(null, folderId);
         boolean success = false;
         try {
             // tag/folder caches are populated in beginTransaction...
-            beginTransaction("getItemByName", octxt);
+            beginTransaction("getItemByPath", octxt);
+
+            Folder parent = (Folder) getItemById(folderId, MailItem.TYPE_FOLDER);
 
             int slash = name.lastIndexOf('/');
             if (slash != -1) {
-                for (String segment : name.substring(0, slash).split("/"))
+                for (String segment : name.substring(0, slash).split("/")) {
                     if ((parent = parent.findSubfolder(segment)) == null)
                         throw MailServiceException.NO_SUCH_FOLDER(name);
+                }
                 name = name.substring(slash + 1);
             }
 
@@ -2233,10 +2233,8 @@ public class Mailbox {
             } else {
                 // check for the specified item -- folder first, then document
                 item = parent.findSubfolder(name);
-                if (item == null) {
-                    checkAccess(parent);
+                if (item == null)
                     item = getItem(DbMailItem.getByName(this, parent.getId(), name, MailItem.TYPE_DOCUMENT));
-                }
             }
             // make sure the item is visible to the requester
             if (checkAccess(item) == null)
