@@ -87,7 +87,7 @@ public class ZModifyFolderEvent implements ZModifyItemEvent, ToZJSONObject {
 
     /**
      * @param defaultValue value to return if unchanged
-     * @return new unread count, or defaultVslue if unchanged
+     * @return new unread count, or defaultValue if unchanged
      * @throws ServiceException on error
      */
     public int getUnreadCount(int defaultValue) throws ServiceException {
@@ -96,7 +96,16 @@ public class ZModifyFolderEvent implements ZModifyItemEvent, ToZJSONObject {
 
     /**
      * @param defaultValue value to return if unchanged
-     * @return new size count, or defaultVslue if unchanged
+     * @return new unread count (including IMAP \Deleted items), or defaultValue if unchanged
+     * @throws ServiceException on error
+     */
+    public int getImapUnreadCount(int defaultValue) throws ServiceException {
+        return (int) mFolderEl.getAttributeLong(MailConstants.A_IMAP_UNREAD, defaultValue);
+    }
+
+    /**
+     * @param defaultValue value to return if unchanged
+     * @return new size count, or defaultValue if unchanged
      * @throws ServiceException on error
      */
     public long getSize(long defaultValue) throws ServiceException {
@@ -110,6 +119,15 @@ public class ZModifyFolderEvent implements ZModifyItemEvent, ToZJSONObject {
      */
     public int getMessageCount(int defaultValue) throws ServiceException {
         return (int) mFolderEl.getAttributeLong(MailConstants.A_NUM, defaultValue);
+    }
+
+    /**
+     * @param defaultValue value to return if unchanged
+     * @return new message count (including IMAP \Deleted ones), or defaultValue if unchanged
+     * @throws ServiceException on error
+     */
+    public int getImapMessageCount(int defaultValue) throws ServiceException {
+        return (int) mFolderEl.getAttributeLong(MailConstants.A_IMAP_NUM, defaultValue);
     }
 
     /**
@@ -200,7 +218,9 @@ public class ZModifyFolderEvent implements ZModifyItemEvent, ToZJSONObject {
             if (getFlags(null) != null) zjo.put("flags", getFlags(null));
             if (getColor(null) != null) zjo.put("color", getColor(null).name());
             if (getUnreadCount(-1) != -1) zjo.put("unreadCount", getUnreadCount(-1));
+            if (getImapUnreadCount(-1) != -1) zjo.put("imapUnreadCount", getImapUnreadCount(-1));
             if (getMessageCount(-1) != -1) zjo.put("messageCount", getMessageCount(-1));
+            if (getImapMessageCount(-1) != -1) zjo.put("imapMessageCount", getImapMessageCount(-1));
             if (getDefaultView(null) != null) zjo.put("view", getDefaultView(null).name());
             if (getImapUIDNEXT(-1) != -1) zjo.put("imapUIDNEXT", getImapUIDNEXT(-1));
             if (getImapMODSEQ(-1) != -1) zjo.put("imapMODSEQ", getImapMODSEQ(-1));

@@ -470,13 +470,18 @@ public class Mailbox {
             if (!getVersion().atLeast(1, 7)) {
                 MailboxUpgrade.upgradeTo1_7(this);
                 mIndexHelper.upgradeMailboxTo1_7();
-                updateVersion(new MailboxVersion((short)1, (short)7));
+                updateVersion(new MailboxVersion((short) 1, (short) 7));
             }
 
             // bug 41850: revert tag colors back to mapped value
             if (!getVersion().atLeast(1, 8)) {
                 MailboxUpgrade.upgradeTo1_8(this);
-                updateVersion(new MailboxVersion((short)1, (short)8));
+                updateVersion(new MailboxVersion((short) 1, (short) 8));
+            }
+
+            if (!getVersion().atLeast(1, 9)) {
+                purgeImapDeleted(null);
+                updateVersion(new MailboxVersion((short) 1, (short) 9));
             }
 
             // done!
@@ -1496,8 +1501,8 @@ public class Mailbox {
         ZimbraLog.cache.info("initializing folder and tag caches for mailbox " + getId());
 
         try {
-            Map<MailItem.UnderlyingData, Long> folderData = new HashMap<MailItem.UnderlyingData, Long>();
-            Map<MailItem.UnderlyingData, Long> tagData    = new HashMap<MailItem.UnderlyingData, Long>();
+            DbMailItem.FolderTagMap folderData = new DbMailItem.FolderTagMap();
+            DbMailItem.FolderTagMap tagData    = new DbMailItem.FolderTagMap();
             MailboxData stats = null;
 
             // Load folders and tags from memcached if we can.
@@ -1510,13 +1515,13 @@ public class Mailbox {
                     for (Metadata meta : foldersMeta) {
                         UnderlyingData ud = new UnderlyingData();
                         ud.deserialize(meta);
-                        folderData.put(ud, -1L);
+                        folderData.put(ud, null);
                     }
                     List<Metadata> tagsMeta = ftData.getTags();
                     for (Metadata meta : tagsMeta) {
                         UnderlyingData ud = new UnderlyingData();
                         ud.deserialize(meta);
-                        tagData.put(ud, -1L);
+                        tagData.put(ud, null);
                     }
                     loadedFromMemcached = true;
                 }
@@ -1541,10 +1546,11 @@ public class Mailbox {
 
             mFolderCache = new HashMap<Integer, Folder>();
             // create the folder objects and, as a side-effect, populate the new cache
-            for (Map.Entry<MailItem.UnderlyingData, Long> entry : folderData.entrySet()) {
+            for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : folderData.entrySet()) {
                 Folder folder = (Folder) MailItem.constructItem(this, entry.getKey());
-                if (entry.getValue() > 0)
-                    folder.setSize(folder.getItemCount(), entry.getValue());
+                DbMailItem.FolderTagCounts fcounts = entry.getValue();
+                if (fcounts != null)
+                    folder.setSize(folder.getItemCount(), fcounts.deletedCount, fcounts.totalSize, fcounts.deletedUnreadCount);
             }
             // establish the folder hierarchy
             for (Folder folder : mFolderCache.values()) {
@@ -1565,8 +1571,12 @@ public class Mailbox {
 
             mTagCache = new HashMap<Object, Tag>(tagData.size() * 3);
             // create the tag objects and, as a side-effect, populate the new cache
-            for (MailItem.UnderlyingData ud : tagData.keySet()) {
-                Tag tag = new Tag(this, ud);
+            for (Map.Entry<MailItem.UnderlyingData, DbMailItem.FolderTagCounts> entry : tagData.entrySet()) {
+                Tag tag = new Tag(this, entry.getKey());
+                DbMailItem.FolderTagCounts tcounts = entry.getValue();
+                if (tcounts != null)
+                    tag.setSize(tcounts.deletedUnreadCount);
+
                 if (persist)
                     tag.saveTagCounts();
             }
@@ -1725,7 +1735,7 @@ public class Mailbox {
         }
     }
 
-    public synchronized MailboxVersion getVersion() { return mVersion; }
+    public synchronized MailboxVersion getVersion()  { return mVersion; }
     
     synchronized void updateVersion(MailboxVersion vers) throws ServiceException {
         mVersion = new MailboxVersion(vers);
@@ -1738,9 +1748,7 @@ public class Mailbox {
         setConfig(null, Mailbox.MD_CONFIG_VERSION, md);
     }
     
-    /**
-     * Status of current batched indexing operation 
-     */
+    /** Status of current batched indexing operation. */
     public static class BatchedIndexStatus {
         public int mNumProcessed = 0;
         public int mNumToProcess = 0;

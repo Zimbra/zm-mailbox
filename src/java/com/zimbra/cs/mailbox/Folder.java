@@ -79,6 +79,8 @@ public class Folder extends MailItem {
     private int       mImapMODSEQ;
     private int       mImapRECENT;
     private int       mImapRECENTCutoff;
+    private int       mDeletedCount;
+    private int       mDeletedUnreadCount;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
@@ -123,6 +125,14 @@ public class Folder extends MailItem {
      *  subfolders.)</i> */
     public long getItemCount() {
         return getSize();
+    }
+
+    public int getDeletedCount() {
+        return mDeletedCount;
+    }
+
+    public int getDeletedUnreadCount() {
+        return mDeletedUnreadCount;
     }
 
     /** Returns the sum of the sizes of all items in the folder.  <i>(Note
@@ -494,28 +504,37 @@ public class Folder extends MailItem {
     /** Updates the number of items in the folder and their total size.  Only
      *  "leaf node" items in the folder are summed; items in subfolders are
      *  included only in the size of the subfolder.
-     * @param countDelta  The change in item count, negative or positive.
-     * @param sizeDelta   The change in total size, negative or positive. */
-    void updateSize(int countDelta, long sizeDelta) throws ServiceException {
+     * @param countDelta    The change in item count, negative or positive.
+     * @param deletedDelta  The change in number of IMAP \Deleted items. 
+     * @param sizeDelta     The change in total size, negative or positive.*/
+    void updateSize(int countDelta, int deletedDelta, long sizeDelta) throws ServiceException {
         if (!trackSize())
             return;
-        // if we go negative, that's OK!  just pretend we're at 0.
+
         markItemModified(Change.MODIFIED_SIZE);
         if (countDelta > 0)
             updateUIDNEXT();
         if (countDelta != 0)
             updateHighestMODSEQ();
+        // reset the RECENT count unless it's just a change of \Deleted flags
+        if (countDelta != 0 || sizeDelta != 0 || deletedDelta == 0)
+            mImapRECENT = -1;
+
+        // if we go negative, that's OK!  just pretend we're at 0.
         mData.size = Math.max(0, mData.size + countDelta);
         mTotalSize = Math.max(0, mTotalSize + sizeDelta);
-        mImapRECENT = -1;
+        mDeletedCount = (int) Math.min(Math.max(0, mDeletedCount + deletedDelta), mData.size);
     }
 
     /** Sets the number of items in the folder and their total size.
-     * @param count      The folder's new item count.
-     * @param totalSize  The folder's new total size. */
-    void setSize(long count, long totalSize) throws ServiceException {
+     * @param count          The folder's new item count.
+     * @param deletedCount   The folder's number of IMAP \Deleted items.
+     * @param totalSize      The folder's new total size.
+     * @param deletedUnread  The folder's number of unread \Deleted items. */
+    void setSize(long count, int deletedCount, long totalSize, int deletedUnread) throws ServiceException {
         if (!trackSize())
             return;
+
         markItemModified(Change.MODIFIED_SIZE);
         if (count > mData.size)
             updateUIDNEXT();
@@ -523,13 +542,25 @@ public class Folder extends MailItem {
             updateHighestMODSEQ();
             mImapRECENT = -1;
         }
+
         mData.size = count;
         mTotalSize = totalSize;
+        mDeletedCount = deletedCount;
+        mDeletedUnreadCount = deletedUnread;
     }
 
-    @Override protected void updateUnread(int delta) throws ServiceException {
-        super.updateUnread(delta);
-        if (delta != 0 && trackUnread())
+    @Override protected void updateUnread(int delta, int deletedDelta) throws ServiceException {
+        if (!trackUnread())
+            return;
+
+        super.updateUnread(delta, deletedDelta);
+
+        if (deletedDelta != 0) {
+            markItemModified(Change.MODIFIED_UNREAD);
+            mDeletedUnreadCount = Math.min(Math.max(0, mDeletedUnreadCount + deletedDelta), mData.unreadCount);
+        }
+
+        if (delta != 0)
             updateHighestMODSEQ();
     }
 
@@ -576,6 +607,8 @@ public class Folder extends MailItem {
             mImapMODSEQ  = mMailbox.getLastChangeID();
         }
         DbMailItem.persistCounts(this, encodeMetadata());
+        ZimbraLog.mailbox.debug("\"%s\": updating folder counts (c%d/d%d/u%d/du%d/s%d)", getName(),
+                                mData.size, mDeletedCount, mData.unreadCount, mDeletedUnreadCount, mTotalSize);
     }
 
     @Override boolean isTaggable()       { return false; }
@@ -702,7 +735,7 @@ public class Folder extends MailItem {
         data.flags    = flags & Flag.FLAGS_FOLDER;
         data.name     = name;
         data.subject  = name;
-        data.metadata = encodeMetadata(color, 1, custom, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID(), -1, 0);
+        data.metadata = encodeMetadata(color, 1, custom, attributes, view, null, new SyncData(url), id + 1, 0, mbox.getOperationChangeID(), -1, 0, 0, 0);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
         DbMailItem.create(mbox, data, null);
@@ -805,9 +838,10 @@ public class Folder extends MailItem {
     
     private void recursiveAlterUnread(boolean unread) throws ServiceException {
         alterUnread(unread);
-        if (mSubfolders != null)
+        if (mSubfolders != null) {
             for (Folder subfolder : mSubfolders)
                 subfolder.recursiveAlterUnread(unread);
+        }
     }
     
     /** Updates the unread state of all items in the folder.  Persists the
@@ -845,7 +879,7 @@ public class Folder extends MailItem {
         for (UnderlyingData data : unreaddata) {
             Message msg = mMailbox.getMessage(data);
             if (msg.checkChangeID() || !msg.canAccess(ACL.RIGHT_WRITE)) {
-                msg.updateUnread(-1);
+                msg.updateUnread(-1, msg.isTagged(Flag.ID_FLAG_DELETED) ? -1 : 0);
                 msg.mData.metadataChanged(mMailbox);
                 targets.add(msg.getId());
             } else {
@@ -1097,11 +1131,9 @@ public class Folder extends MailItem {
         super.purgeCache(info, purgeItem);
     }
 
-    /**
-     * @return the number of messages that were purged
-     */
+    /** @return the number of messages that were purged */
     static int purgeMessages(Mailbox mbox, Folder folder, int beforeDate, Boolean unread,
-                              boolean useChangeDate, boolean deleteEmptySubfolders, Integer maxItems)
+                             boolean useChangeDate, boolean deleteEmptySubfolders, Integer maxItems)
     throws ServiceException {
         if (beforeDate <= 0 || beforeDate >= mbox.getOperationTimestamp())
             return 0;
@@ -1151,6 +1183,8 @@ public class Folder extends MailItem {
         mImapMODSEQ  = (int) meta.getLong(Metadata.FN_MODSEQ, 0);
         mImapRECENT  = (int) meta.getLong(Metadata.FN_RECENT, -1);
         mImapRECENTCutoff = (int) meta.getLong(Metadata.FN_RECENT_CUTOFF, 0);
+        mDeletedCount       = (int) meta.getLong(Metadata.FN_DELETED, 0);
+        mDeletedUnreadCount = (int) meta.getLong(Metadata.FN_DELETED_UNREAD, 0);
 
         if (meta.containsKey(Metadata.FN_URL) || meta.containsKey(Metadata.FN_SYNC_DATE))
             mSyncData = new SyncData(meta.get(Metadata.FN_URL, null), meta.get(Metadata.FN_SYNC_GUID, null), meta.getLong(Metadata.FN_SYNC_DATE, 0));
@@ -1165,21 +1199,21 @@ public class Folder extends MailItem {
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mAttributes, mDefaultView, mRights,
-                              mSyncData, mImapUIDNEXT, mTotalSize, mImapMODSEQ, mImapRECENT, mImapRECENTCutoff);
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mAttributes, mDefaultView, mRights, mSyncData, mImapUIDNEXT,
+                              mTotalSize, mImapMODSEQ, mImapRECENT, mImapRECENTCutoff, mDeletedCount, mDeletedUnreadCount);
     }
 
-    private static String encodeMetadata(Color color, int version, CustomMetadata custom, byte attributes, byte hint, ACL rights,
-                                         SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff) {
+    private static String encodeMetadata(Color color, int version, CustomMetadata custom, byte attributes, byte view, ACL rights, SyncData fsd, int uidnext,
+                                         long totalSize, int modseq, int imapRecent, int imapRecentCutoff, int deleted, int deletedUnread) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
-        return encodeMetadata(new Metadata(), color, version, extended, attributes, hint, rights,
-                              fsd, uidnext, totalSize, modseq, imapRecent, imapRecentCutoff).toString();
+        return encodeMetadata(new Metadata(), color, version, extended, attributes, view, rights, fsd, uidnext,
+                              totalSize, modseq, imapRecent, imapRecentCutoff, deleted, deletedUnread).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, byte attributes, byte hint, ACL rights,
-                                   SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff) {
-        if (hint != TYPE_UNKNOWN)
-            meta.put(Metadata.FN_VIEW, hint);
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, byte attributes, byte view, ACL rights,
+                                   SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff, int deleted, int deletedUnread) {
+        if (view != TYPE_UNKNOWN)
+            meta.put(Metadata.FN_VIEW, view);
         if (attributes != 0)
             meta.put(Metadata.FN_ATTRS, attributes);
         if (totalSize > 0)
@@ -1200,16 +1234,25 @@ public class Folder extends MailItem {
         }
         if (fsd != null && fsd.lastDate > 0)
             meta.put(Metadata.FN_SYNC_DATE, fsd.lastDate);
+        if (deleted > 0)
+            meta.put(Metadata.FN_DELETED, deleted);
+        if (deletedUnread > 0)
+            meta.put(Metadata.FN_DELETED_UNREAD, deletedUnread);
         return MailItem.encodeMetadata(meta, color, version, extended);
     }
 
-    protected static final String CN_ATTRIBUTES = "attributes";
+    protected static final String CN_NAME         = "n";
+    protected static final String CN_ATTRIBUTES   = "attributes";
+    private static final String CN_DELETED        = "deleted";
+    private static final String CN_DELETED_UNREAD = "del_unread";
 
     @Override public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("folder: {");
-        sb.append("n:\"").append(getName()).append("\", ");
+        sb.append(CN_NAME).append(": \"").append(getName()).append("\", ");
         appendCommonMembers(sb).append(", ");
+        sb.append(CN_DELETED).append(": ").append(mDeletedCount).append(", ");
+        sb.append(CN_DELETED_UNREAD).append(": ").append(mDeletedUnreadCount).append(", ");
         sb.append(CN_ATTRIBUTES).append(": ").append(mAttributes);
         sb.append("}");
         return sb.toString();

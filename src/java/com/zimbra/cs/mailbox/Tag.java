@@ -24,13 +24,13 @@ import java.util.List;
 
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
-/**
- * @author dkarp
- */
 public class Tag extends MailItem {
+
+    private int mDeletedUnreadCount;
 
     Tag(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
@@ -38,8 +38,7 @@ public class Tag extends MailItem {
             throw new IllegalArgumentException();
     }
 
-    @Override
-    public String getSender() {
+    @Override public String getSender() {
         return "";
     }
 
@@ -65,8 +64,22 @@ public class Tag extends MailItem {
         return 1L << getIndex();
     }
 
-    boolean canTag(MailItem item) {
-        return item.isTaggable();
+    public int getDeletedUnreadCount() {
+        return mDeletedUnreadCount;
+    }
+
+    void setSize(int deletedUnread) {
+        // we don't track number of tagged items, total size of tagged items, or number of \Deleted items
+        mDeletedUnreadCount = deletedUnread;
+    }
+
+    @Override protected void updateUnread(int delta, int deletedDelta) throws ServiceException {
+        super.updateUnread(delta, deletedDelta);
+
+        if (deletedDelta != 0 && trackUnread()) {
+            markItemModified(Change.MODIFIED_UNREAD);
+            mDeletedUnreadCount = Math.min(Math.max(0, mDeletedUnreadCount + deletedDelta), mData.unreadCount);
+        }
     }
 
 
@@ -128,6 +141,10 @@ public class Tag extends MailItem {
     @Override boolean isIndexed()       { return false; }
     @Override boolean canHaveChildren() { return false; }
 
+    boolean canTag(MailItem item) {
+        return item.isTaggable();
+    }
+
 
     static Tag create(Mailbox mbox, int id, String name, Color color)
     throws ServiceException {
@@ -150,7 +167,7 @@ public class Tag extends MailItem {
         data.date        = mbox.getOperationTimestamp();
         data.name        = name;
         data.subject     = name;
-        data.metadata    = encodeMetadata(color, 1);
+        data.metadata    = encodeMetadata(color, 1, 0);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Tag %s: id=%d.", name, data.id);
         DbMailItem.create(mbox, data, null);
@@ -167,8 +184,7 @@ public class Tag extends MailItem {
      * 
      * @perms {@link ACL#RIGHT_READ} on the folder,
      *        {@link ACL#RIGHT_WRITE} on all affected messages. */
-    @Override
-    void alterUnread(boolean unread) throws ServiceException {
+    @Override void alterUnread(boolean unread) throws ServiceException {
         if (unread)
             throw ServiceException.INVALID_REQUEST("tags can only be marked read", null);
         if (!canAccess(ACL.RIGHT_READ))
@@ -184,11 +200,13 @@ public class Tag extends MailItem {
         for (UnderlyingData data : DbMailItem.getUnreadMessages(this)) {
             Message msg = mMailbox.getMessage(data);
             if (msg.checkChangeID() || !msg.canAccess(ACL.RIGHT_WRITE)) {
-                msg.updateUnread(unread ? 1 : -1);
+                int delta = unread ? 1 : -1;
+                msg.updateUnread(delta, isTagged(Flag.ID_FLAG_DELETED) ? delta : 0);
                 msg.mData.metadataChanged(mMailbox);
                 targets.add(msg.getId());
-            } else
+            } else {
                 missed = true;
+            }   
         }
 
         // Mark all messages with this tag as read in the database
@@ -209,8 +227,7 @@ public class Tag extends MailItem {
 
     /** Overrides {@link MailItem#rename(String, Folder) to update filter rules
      *  if necessary. */
-    @Override
-    void rename(String name, Folder target) throws ServiceException {
+    @Override void rename(String name, Folder target) throws ServiceException {
         String originalName = getName();
         super.rename(name, target);
 
@@ -223,12 +240,10 @@ public class Tag extends MailItem {
         }
     }
 
-    @Override
-    void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
-        // remove the tag from all items in the database
-        if (ZimbraLog.mailop.isDebugEnabled()) {
+    @Override void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
+        if (ZimbraLog.mailop.isDebugEnabled())
             ZimbraLog.mailop.debug("Removing %s from all items.", getMailopContext(this));
-        }
+        // remove the tag from all items in the database
         DbMailItem.clearTag(this);
         // dump entire item cache (necessary now because we reuse tag ids)
         mMailbox.purge(TYPE_MESSAGE);
@@ -239,32 +254,36 @@ public class Tag extends MailItem {
     /** Persists the tag's current unread count to the database. */
     protected void saveTagCounts() throws ServiceException {
         DbMailItem.persistCounts(this, encodeMetadata());
+        ZimbraLog.mailbox.debug("\"%s\": updating tag counts (u%d/du%d)", getName(), mData.unreadCount, mDeletedUnreadCount);
     }
 
 
-    @Override
-    void decodeMetadata(Metadata meta) throws ServiceException {
+    @Override void decodeMetadata(Metadata meta) throws ServiceException {
+        mDeletedUnreadCount = (int) meta.getLong(Metadata.FN_DELETED_UNREAD, 0);
         super.decodeMetadata(meta);
     }
 
-    @Override
-    Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion);
+    @Override Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mRGBColor, mVersion, mDeletedUnreadCount);
     }
 
-    private static String encodeMetadata(Color color, int version) {
-        return encodeMetadata(new Metadata(), color, version).toString();
+    private static String encodeMetadata(Color color, int version, int deletedUnread) {
+        return encodeMetadata(new Metadata(), color, version, deletedUnread).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version) {
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, int deletedUnread) {
+        if (deletedUnread > 0)
+            meta.put(Metadata.FN_DELETED_UNREAD, deletedUnread);
         return MailItem.encodeMetadata(meta, color, version, null);
     }
 
-    @Override
-    public String toString() {
+    private static final String CN_DELETED_UNREAD = "del_unread";
+
+    @Override public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("tag: {");
-        appendCommonMembers(sb);
+        appendCommonMembers(sb).append(", ");
+        sb.append(CN_DELETED_UNREAD).append(": ").append(mDeletedUnreadCount);
         sb.append("}");
         return sb.toString();
     }
