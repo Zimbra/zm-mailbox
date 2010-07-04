@@ -479,6 +479,7 @@ public class Mailbox {
                 updateVersion(new MailboxVersion((short) 1, (short) 8));
             }
 
+            // bug 20620: track \Deleted counts separately
             if (!getVersion().atLeast(1, 9)) {
                 purgeImapDeleted(null);
                 updateVersion(new MailboxVersion((short) 1, (short) 9));
@@ -6498,8 +6499,20 @@ public class Mailbox {
             beginTransaction("purgeImapDeleted", octxt, redoRecorder);
 
             Set<Folder> purgeable = getAccessibleFolders((short) (ACL.RIGHT_READ | ACL.RIGHT_DELETE));
-            PendingDelete info = DbMailItem.getImapDeleted(this, purgeable);
-            MailItem.delete(this, info, null, MailItem.DeleteScope.ENTIRE_ITEM, true);
+
+            // short-circuit the DB call if we're tracking \Deleted counts and they're all 0
+            boolean skipDB = false;
+            if (getVersion().atLeast(1, 9)) {
+                int deleted = 0;
+                for (Folder folder : purgeable != null ? purgeable : listAllFolders())
+                    deleted += folder.getDeletedCount();
+                skipDB = deleted == 0;
+            }
+
+            if (!skipDB) {
+                PendingDelete info = DbMailItem.getImapDeleted(this, purgeable);
+                MailItem.delete(this, info, null, MailItem.DeleteScope.ENTIRE_ITEM, true);
+            }
             success = true;
         } finally {
             endTransaction(success);
