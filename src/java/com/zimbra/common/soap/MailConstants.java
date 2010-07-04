@@ -381,6 +381,7 @@ public class MailConstants {
     public static final String A_ESTIMATE_SIZE = "estimateSize";
     public static final String A_URL = "url";
     public static final String A_NUM = "n";
+    public static final String A_IMAP_NUM = "i4n";
     public static final String A_IMAP_MODSEQ = "i4ms";
     public static final String A_IMAP_UIDNEXT = "i4next";
     public static final String A_TOTAL_SIZE = "total";
@@ -388,6 +389,7 @@ public class MailConstants {
     public static final String A_RECURSIVE = "recursive";
     public static final String A_DEFAULT_VIEW = "view";
     public static final String A_UNREAD = "u";
+    public static final String A_IMAP_UNREAD = "i4u";
     public static final String A_COLOR = "color";
     public static final String A_RGB = "rgb";
     public static final String A_CREATED_DATE = "cd";
