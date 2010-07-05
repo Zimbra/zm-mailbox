@@ -47,6 +47,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.tnef.TNEFtoIcalendarServiceException.UnsupportedTnefCalendaringMsgException;
 import com.zimbra.cs.util.tnef.mapi.AppointmentStateFlags;
 import com.zimbra.cs.util.tnef.mapi.BusyStatus;
+import com.zimbra.cs.util.tnef.mapi.ChangedInstanceInfo;
 import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
 import com.zimbra.cs.util.tnef.mapi.TimeZoneDefinition;
 import java.util.EnumSet;
@@ -54,6 +55,7 @@ import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.SentBy;
 import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.CalScale;
+import net.fortuna.ical4j.model.property.DtStamp;
 import net.fortuna.ical4j.model.property.Organizer;
 import net.fortuna.ical4j.model.property.XProperty;
 
@@ -69,6 +71,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
 
     static Log sLog = ZimbraLog.tnef;
 
+    private RecurrenceDefinition recurDef;
     /* (non-Javadoc)
      * @see com.zimbra.cs.util.tnef.TnefToICalendar#convert(java.io.InputStream, net.fortuna.ical4j.data.ContentHandler)
      */
@@ -76,6 +79,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             throws ServiceException {
 
         boolean conversionSuccessful = false;
+        recurDef = null;
         TNEFInputStream tnefStream = null;
         SchedulingViewOfTnef schedView = null;
 
@@ -107,7 +111,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             TimeZoneDefinition startTimeTZinfo = schedView.getStartDateTimezoneInfo();
             TimeZoneDefinition endTimeTZinfo = schedView.getEndDateTimezoneInfo();
             TimeZoneDefinition recurrenceTZinfo = schedView.getRecurrenceTimezoneInfo();
-            RecurrenceDefinition recurDef = schedView.getRecurrenceDefinition(recurrenceTZinfo);
+            recurDef = schedView.getRecurrenceDefinition(recurrenceTZinfo);
 
             DateTime icalStartDate = schedView.getStartTime();
             DateTime icalEndDate = schedView.getEndTime();
@@ -235,15 +239,18 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             }
 
             IcalUtil.addProperty(icalOutput, Property.UID, uid);
+            DtStamp dtstamp;
             if ( (attendeeCriticalChange != null) &&
                     ( method.equals(Method.REPLY) ||
                       method.equals(Method.COUNTER) ) ) {
-                IcalUtil.addProperty(icalOutput, Property.DTSTAMP, attendeeCriticalChange, false);
+                dtstamp = new DtStamp(attendeeCriticalChange);
             } else if (ownerCriticalChange != null) {
-                IcalUtil.addProperty(icalOutput, Property.DTSTAMP, ownerCriticalChange, false);
+                dtstamp = new DtStamp(ownerCriticalChange);
             } else {
-                IcalUtil.addProperty(icalOutput, Property.DTSTAMP, "20000101T000000Z");
+                DateTime stampTime = new DateTime("20000101T000000Z");
+                dtstamp = new DtStamp(stampTime);
             }
+            IcalUtil.addProperty(icalOutput, dtstamp);
             IcalUtil.addProperty(icalOutput, Property.CREATED, icalCreateDate, false);
             IcalUtil.addProperty(icalOutput, Property.LAST_MODIFIED, icalLastModDate, false);
             IcalUtil.addProperty(icalOutput, Property.SEQUENCE, sequenceNum, false);
@@ -278,7 +285,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 Property recurrenceProp =
                         recurDef.icalRecurrenceProperty(isAllDayEvent, false);
                 IcalUtil.addProperty(icalOutput, recurrenceProp);
-                for (DateTime exDate : recurDef.getDeletedInstances()) {
+                for (DateTime exDate : recurDef.getExdates()) {
                     IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.EXDATE,
                             exDate, startTimeTZinfo, isAllDayEvent);
                 }
@@ -299,6 +306,8 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
 
             if ( (busyStatus != null) && (busyStatus.equals(BusyStatus.FREE)) ) {
                 IcalUtil.addProperty(icalOutput, Transp.TRANSPARENT);
+            } else {
+                IcalUtil.addProperty(icalOutput, Transp.OPAQUE);
             }
 
             // ATTENDEEs
@@ -476,6 +485,54 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             }
             icalOutput.endComponent(Component.VEVENT);
             // TODO:  Want VALARM too "for completeness"
+            if (recurDef != null) {
+                for (ChangedInstanceInfo cInst : recurDef.getChangedInstances()) {
+                    icalOutput.startComponent(Component.VEVENT);
+                    Boolean exceptIsAllDayEvent = cInst.isAllDayEvent();
+                    if (exceptIsAllDayEvent == null) {
+                        exceptIsAllDayEvent = isAllDayEvent;
+                    }
+                    String exceptSumm = cInst.getSubject();
+                    if (exceptSumm == null) {
+                        exceptSumm = summary;
+                    }
+                    IcalUtil.addProperty(icalOutput, Property.SUMMARY, exceptSumm, false);
+                    String exceptLocation = cInst.getLocation();
+                    if (exceptLocation == null) {
+                        exceptLocation = location;
+                    }
+                    IcalUtil.addProperty(icalOutput, Property.LOCATION, exceptLocation, false);
+                    IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTSTART,
+                            cInst.getStartDate(), startTimeTZinfo, exceptIsAllDayEvent);
+                    IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTEND,
+                            cInst.getEndDate(), startTimeTZinfo, exceptIsAllDayEvent);
+                    IcalUtil.addProperty(icalOutput, Property.UID, uid);
+                    IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.RECURRENCE_ID,
+                            cInst.getOriginalStartDate(), startTimeTZinfo, exceptIsAllDayEvent);
+                    IcalUtil.addProperty(icalOutput, dtstamp);
+                    BusyStatus exceptBusyStatus = cInst.getBusyStatus();
+                    if (exceptBusyStatus != null) {
+                        if (exceptBusyStatus.equals(BusyStatus.FREE)) {
+                            IcalUtil.addProperty(icalOutput, Transp.TRANSPARENT);
+                        } else {
+                            IcalUtil.addProperty(icalOutput, Transp.OPAQUE);
+                        }
+                    }
+                    IcalUtil.addProperty(icalOutput, Property.SEQUENCE, sequenceNum, false);
+                    if (method.equals(Method.REQUEST)) {
+                        IcalUtil.addProperty(icalOutput,
+                                "X-MICROSOFT-CDO-INTENDEDSTATUS",
+                                exceptBusyStatus, false);
+                    }
+                    IcalUtil.addProperty(icalOutput, "X-MICROSOFT-CDO-OWNERAPPTID",
+                            schedView.getOwnerAppointmentId(), false);
+                    IcalUtil.addProperty(icalOutput,
+                            "X-MICROSOFT-CDO-ALLDAYEVENT",
+                            exceptIsAllDayEvent ? "TRUE" : "FALSE");
+                    icalOutput.endComponent(Component.VEVENT);
+                }
+            }
+
             icalOutput.endCalendar();
             conversionSuccessful = true;
             sLog.info("Calendaring TNEF message mapped to ICALENDAR with UID=%s", uid);
@@ -525,5 +582,12 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             attendee.getParameters().add(partstat);
         }
         IcalUtil.addProperty(icalOutput, attendee);
+    }
+
+    /**
+     * @return the recurDef
+     */
+    public RecurrenceDefinition getRecurDef() {
+        return recurDef;
     }
 }

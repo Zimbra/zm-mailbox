@@ -45,6 +45,7 @@ import com.zimbra.cs.util.tnef.TnefToICalendar;
 import com.zimbra.common.util.Log;
 import com.zimbra.cs.util.tnef.TNEFtoIcalendarServiceException;
 import com.zimbra.cs.util.tnef.TNEFtoIcalendarServiceException.UnsupportedTnefCalendaringMsgException;
+import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
@@ -158,10 +159,13 @@ public class TestMain {
     private static final String UTF8 = "utf-8";
 
     private static void usage() {
-        System.err.println("Usage: java com.zimbra.cs.util.tnef.TestMain [-v] -i <MIME file> [-o <iCalendar file>] [-t <tnef file>]");
+        System.err.println("Usage: java com.zimbra.cs.util.tnef.TestMain [-v] \n");
+        System.err.println("            -i <MIME file> [-o <iCalendar file>] [-t <tnef file>] [-r <recurInfo file>]");
         System.err.println("-v: verbose output");
         System.err.println("-i: MIME input file TNEF part");
         System.err.println("-o: iCalendar output file; if unspecified, output goes to stdout");
+        System.err.println("-t: TNEF output file; The main TNEF attachment will be written here if present");
+        System.err.println("-r: A diagnostic string representing any recurrence property will be written here");
         System.exit(1);
     }
 
@@ -173,6 +177,7 @@ public class TestMain {
         File mimeFile = null;
         File icalFile = null;
         File tnefFile = null;
+        File recurInfoFile = null;
         // Thread.sleep(30000);
         for (int i = 0; i < args.length; ++i) {
             String arg = args[i];
@@ -196,6 +201,12 @@ public class TestMain {
                         usage();
                     }
                     tnefFile = new File(args[i+1]);
+                    ++i;
+                } else if (arg.equalsIgnoreCase("-r")) {
+                    if (i >= args.length - 1) {
+                        usage();
+                    }
+                    recurInfoFile = new File(args[i+1]);
                     ++i;
                 } else {
                     usage();
@@ -223,6 +234,25 @@ public class TestMain {
                 MimeMessage mm = new MimeMessage(JMSession.getSession(), sfisMime);
                 TnefToICalendar converter = getConverter();
                 doneConversion = doConversion(mm, baosOut, converter, tnefFile, verbose);
+                if (recurInfoFile != null) {
+                    if (converter instanceof DefaultTnefToICalendar) {
+                        DefaultTnefToICalendar tnef2ical = (DefaultTnefToICalendar) converter;
+                        RecurrenceDefinition recurDef = tnef2ical.getRecurDef();
+                        if (recurDef != null) {
+                            FileWriter rsFileWriter = null;
+                            try {
+                                rsFileWriter = new FileWriter(recurInfoFile);
+                                rsFileWriter.write(recurDef.toString());
+                            } finally {
+                                try {
+                                    if (rsFileWriter != null) {
+                                        rsFileWriter.close();
+                                    }
+                                } catch (IOException e) {sLog.error("Problem writing to recurInfo file", e);}
+                            }
+                        }
+                    }
+                }
             } else {
                 // Input was an ics file.  Pass it through, so we can test the parse/verify step.
                 ByteUtil.copy(sfisMime, false, baos, true);

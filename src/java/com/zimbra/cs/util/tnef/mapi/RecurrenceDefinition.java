@@ -25,9 +25,11 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.EnumSet;
 import java.util.GregorianCalendar;
+import java.util.List;
 
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
@@ -38,6 +40,7 @@ import net.fortuna.ical4j.model.WeekDayList;
 import net.fortuna.ical4j.model.property.RRule;
 import net.fortuna.ical4j.util.TimeZones;
 import net.freeutils.tnef.RawInputStream;
+import net.freeutils.tnef.TNEFUtils;
 
 /**
  * From MS-OXCOCAL this is used for :
@@ -99,32 +102,53 @@ public class RecurrenceDefinition {
     }
 
     private TimeZoneDefinition tzDef;
+
+    private long readerVersion;
+    private long writerVersion;
     public RecurrenceFrequency recurrenceFrequency;
     public PatternType patternType;
     public MsCalScale calScale;
-    private EndType endType;
-    private DayOfWeek FirstDayOfWeek;
-    private EnumSet <DayOfWeek> DayOfWeekMask;
-
-    long Period;
     private long firstDateTime;
+    private long period;
+    private long slidingFlag;
+    private long dayMask;
+    private boolean haveDayMask;
     private long dayOfMonth;
+    private boolean haveDayOfMonth;
     private long weekDayOccurrenceNumber;
+    private boolean haveWeekDayOccurNum;
     private long occurrenceCount;
-
+    private EndType endType;
+    private DayOfWeek firstDayOfWeek;
+    private EnumSet <DayOfWeek> dayOfWeekMask;
+    int deletedInstanceCount;
+    long delMidnightMinsSince1601[];
+    int modifiedInstanceCount;
+    long modMidnightMinsSince1601[];
     // Minutes since 1601 Date portion of DTSTART in local time
-    private long StartDate;
-
+    private long startMinsSince1601;
     // Minutes since 1601 Date portion of Start of LAST instance in local time
     // Infinite if set to 0x5AE980DF.
-    private long EndDate;
+    private long endMinsSince1601;
+    private long readerVersion2;
+    // writerVersion2 relates approximately to version of Outlook
+    // (or equivalent support level) that created this.
+    // e.g. Outlook 2000 --> 0x3006, XP -->0x3007, 2003 --> 0x3008
+    private long writerVersion2;
 
     // The number of minutes, since day start 00:00, after which each occurrence starts.
-    // e.g. the value for midnight is 0 (zero) and the value for 12:00 P.M.
-    // is 720.
-    private long StartTimeOffset;  // localtime minutes since start of current day
-    private DateTime deletedInstances[];
-    private DateTime modifiedInstances[];
+    // e.g. the value for midnight is 0 (zero) and the value for 12:00 P.M. is 720.
+    private long startTimeOffset;             // localtime minutes since start of current day
+    private long endTimeOffset;               // localtime minutes since start of current day
+    private int exceptionCount;               // Should be same as modifiedInstanceCount?
+    private long rsrvdBlock1Size;
+    private byte [] rsrvdBlock1;
+    private long rsrvdBlock2Size;
+    private byte [] rsrvdBlock2;
+    private long unprocessedByteCount;
+    private byte [] unprocessedBytes;
+    private  List <DateTime> exdateTimes;
+    private  List <ChangedInstanceInfo> changedInstances;
 
     /**
      *
@@ -134,191 +158,117 @@ public class RecurrenceDefinition {
      */
     public RecurrenceDefinition(RawInputStream ris,
             TimeZoneDefinition tz) throws IOException {
-        boolean haveDayMask = false;
-        boolean haveDayOfMonth = false;
-        boolean haveWeekDayOccurNum = false;
+        exdateTimes = null;
+        rsrvdBlock1Size = -1;
+        rsrvdBlock2Size = -1;
+        haveDayMask = false;
+        haveDayOfMonth = false;
+        haveWeekDayOccurNum = false;
         this.tzDef = tz;
-        int ReaderVersion = ris.readU16();  // Should be 0x3004
-        int WriterVersion = ris.readU16();  // Should be 0x3004
-        readRecurrenceFrequency(ris);
-        readPatternType(ris);
-        readMsCalScale(ris);
-        readFirstDateTime(ris);
-
-        // This field is the interval at which the meeting pattern specified in PatternTypeSpecific field
-        // repeats. The Period value MUST be between 0 (zero) and the MaximumRecurrenceInterval, which is
-        // 999 days for daily recurrences, 99 weeks for weekly recurrences, and 99 months for monthly
-        // recurrences. The following table lists the values for this field based on recurrence type.
-        Period = ris.readU32();
-        long SlidingFlag = ris.readU32(); // Should be 0 unless this is a task
-        long dayMask = 0;
-        dayOfMonth = 0;
-        weekDayOccurrenceNumber = 0;
-
-        // Process PatternSpecificType data
-        switch (patternType) {
-            case DAY:
-                break; // no PatternTypeSpecific data in this case
-            case WEEK:
-                dayMask = ris.readU32();
-                haveDayMask = true;
-                break;
-            case MONTH:
-            case MONTH_END:
-            case HJ_MONTH:
-            case HJ_MONTH_END:
-                dayOfMonth = ris.readU32();
-                haveDayOfMonth = true;
-                break;
-            case MONTH_NTH:
-            case HJ_MONTH_NTH:
-                dayMask = ris.readU32();
-                haveDayMask = true;
-                weekDayOccurrenceNumber = ris.readU32(); // 5 means last one
-                haveWeekDayOccurNum = true;
-                break;
-            default:
-                throw new IOException("Unexpected PatternType in Recurrence Definition");
+        try {
+            readerVersion = ris.readU16();  // Should be 0x3004
+            writerVersion = ris.readU16();  // Should be 0x3004
+            readRecurrenceFrequency(ris);
+            readPatternType(ris);
+            readMsCalScale(ris);
+            readFirstDateTime(ris);
+    
+            // This field is the interval at which the meeting pattern specified in PatternTypeSpecific field
+            // repeats. The Period value MUST be between 0 (zero) and the MaximumRecurrenceInterval, which is
+            // 999 days for daily recurrences, 99 weeks for weekly recurrences, and 99 months for monthly
+            // recurrences. The following table lists the values for this field based on recurrence type.
+            period = ris.readU32();
+            slidingFlag = ris.readU32(); // Should be 0 unless this is a task
+            dayMask = 0;
+            dayOfMonth = 0;
+            weekDayOccurrenceNumber = 0;
+    
+            // Process PatternSpecificType data
+            switch (patternType) {
+                case DAY:
+                    break; // no PatternTypeSpecific data in this case
+                case WEEK:
+                    dayMask = ris.readU32();
+                    haveDayMask = true;
+                    break;
+                case MONTH:
+                case MONTH_END:
+                case HJ_MONTH:
+                case HJ_MONTH_END:
+                    dayOfMonth = ris.readU32();
+                    haveDayOfMonth = true;
+                    break;
+                case MONTH_NTH:
+                case HJ_MONTH_NTH:
+                    dayMask = ris.readU32();
+                    haveDayMask = true;
+                    weekDayOccurrenceNumber = ris.readU32(); // 5 means last one
+                    haveWeekDayOccurNum = true;
+                    break;
+                default:
+                    // TODO: Use custom ServiceException?
+                    throw new IOException("Unexpected PatternType in Recurrence Definition");
+            }
+    
+            readEndType(ris);
+            occurrenceCount = ris.readU32();
+            readFirstDayOfWeek(ris);
+            deletedInstanceCount = (int) ris.readU32();
+            delMidnightMinsSince1601 = new long[deletedInstanceCount];
+            for (int cnt = 0;cnt < deletedInstanceCount; cnt++) {
+                delMidnightMinsSince1601[cnt] = ris.readU32();
+            }
+            modifiedInstanceCount = (int) ris.readU32();
+            modMidnightMinsSince1601 = new long[modifiedInstanceCount];
+            for (int cnt = 0;cnt < modifiedInstanceCount; cnt++) {
+                modMidnightMinsSince1601[cnt] = ris.readU32();
+            }
+            
+            startMinsSince1601 = ris.readU32();
+            endMinsSince1601 = ris.readU32();
+    
+            readerVersion2 = ris.readU32();
+            writerVersion2 = ris.readU32();
+            
+            startTimeOffset = ris.readU32();
+            endTimeOffset = ris.readU32();
+            exceptionCount = ris.readU16();  // Should be same as modifiedInstanceCount?
+            //        For each modified instance, expect to find an ExceptionInfo structure.
+    
+            changedInstances = new ArrayList <ChangedInstanceInfo>();
+            for (int cnt = 1; cnt <= modifiedInstanceCount; cnt++) {
+                ChangedInstanceInfo cInst = new ChangedInstanceInfo(cnt);
+                cInst.readExceptionInfo(ris, tzDef);
+                unprocessedByteCount = ris.available();
+                changedInstances.add(cInst);
+            }
+            unprocessedByteCount = ris.available();
+            rsrvdBlock1 = null;
+            if (unprocessedByteCount > 0) {
+                rsrvdBlock1Size = ris.readU32();
+                rsrvdBlock1 = ris.readBytes((int)rsrvdBlock1Size);
+            }
+            unprocessedByteCount = ris.available();
+            if (unprocessedByteCount == 0L) {
+                return;
+            }
+            boolean hasChangeHL = (writerVersion2 >= 0x00003009L);
+            for (ChangedInstanceInfo cInst : changedInstances) {
+                cInst.readExtendedException(ris, tzDef, hasChangeHL);
+            }
+            unprocessedByteCount = ris.available();
+            if (unprocessedByteCount > 0) {
+                rsrvdBlock2Size = ris.readU32();
+                rsrvdBlock2 = ris.readBytes((int)rsrvdBlock2Size);
+            }
+            unprocessedByteCount = ris.available();
+            if (unprocessedByteCount > 0) {
+                unprocessedBytes = ris.readBytes((int)unprocessedByteCount);
+            }
+        } catch (IOException e) {
+            sLog.debug("Problem processing PidLidAppointmentRecur property", e);
+            throw e;
         }
-
-        // valid combinations?  Single bit/ weekend bits/ weekday bits
-        DayOfWeekMask = EnumSet.noneOf(DayOfWeek.class);
-        if (haveDayMask) {
-            if ( (dayMask & 0x00000001) == 0x00000001) {
-                DayOfWeekMask.add(DayOfWeek.SU);
-            }
-            if ( (dayMask & 0x00000002) == 0x00000002) {
-                DayOfWeekMask.add(DayOfWeek.MO);
-            }
-            if ( (dayMask & 0x00000004) == 0x00000004) {
-                DayOfWeekMask.add(DayOfWeek.TU);
-            }
-            if ( (dayMask & 0x00000008) == 0x00000008) {
-                DayOfWeekMask.add(DayOfWeek.WE);
-            }
-            if ( (dayMask & 0x00000010) == 0x00000010) {
-                DayOfWeekMask.add(DayOfWeek.TH);
-            }
-            if ( (dayMask & 0x00000020) == 0x00000020) {
-                DayOfWeekMask.add(DayOfWeek.FR);
-            }
-            if ( (dayMask & 0x00000040) == 0x00000040) {
-                DayOfWeekMask.add(DayOfWeek.SA);
-            }
-        }
-
-        readEndType(ris);
-        occurrenceCount = ris.readU32();
-        readFirstDayOfWeek(ris);
-        int DeletedInstanceCount = (int) ris.readU32();
-        long delMidnightMinsSince1601[] = new long[DeletedInstanceCount];
-        for (int cnt = 0;cnt < DeletedInstanceCount; cnt++) {
-            delMidnightMinsSince1601[cnt] = ris.readU32();
-        }
-        int ModifiedInstanceCount = (int) ris.readU32();
-        long modMidnightMinsSince1601[] = new long[ModifiedInstanceCount];
-        for (int cnt = 0;cnt < ModifiedInstanceCount; cnt++) {
-            modMidnightMinsSince1601[cnt] = ris.readU32();
-        }
-        
-        StartDate = ris.readU32();
-        EndDate = ris.readU32();
-        Date sDate = IcalUtil.localMinsSince1601toDate(StartDate, tzDef);
-        Date eDate = IcalUtil.localMinsSince1601toDate(EndDate, tzDef);
-
-        long ReaderVersion2 = ris.readU32();
-        // WriterVersion2 relates approximately to version of Outlook
-        // (or equivalent support level) that created this.
-        // e.g. Outlook 2000 --> 0x3006, XP -->0x3007, 2003 --> 0x3008
-        long WriterVersion2 = ris.readU32();
-        
-        StartTimeOffset = ris.readU32();
-        long EndTimeOffset = ris.readU32();
-        int ExceptionCount = ris.readU16();  // Should be same as ModifiedInstanceCount?
-
-        deletedInstances = new DateTime[(int) DeletedInstanceCount];
-        for (int cnt = 0;cnt < DeletedInstanceCount; cnt++) {
-            deletedInstances[cnt] = IcalUtil.localMinsSince1601toDate(
-                    delMidnightMinsSince1601[cnt] + StartTimeOffset, tzDef);
-        }
-
-        modifiedInstances = new DateTime[(int) ModifiedInstanceCount];
-        for (int cnt = 0;cnt < ModifiedInstanceCount; cnt++) {
-            modifiedInstances[cnt] = IcalUtil.localMinsSince1601toDate(
-                    modMidnightMinsSince1601[cnt] + StartTimeOffset, tzDef);
-        }
-
-        if (sLog.isDebugEnabled()) {
-            StringBuffer debugInfo = new StringBuffer("RecurrenceDefinition\n");
-            if (ReaderVersion != 0x3004) {
-                debugInfo.append("    Unexpected ReaderVersion=")
-                        .append(ReaderVersion).append("\n");
-            }
-            if (WriterVersion != 0x3004) {
-                debugInfo.append("    Unexpected WriterVersion=")
-                        .append(WriterVersion).append("\n");
-            }
-            debugInfo.append("    RecurFrequency=")
-                    .append(getRecurrenceFrequency()).append("\n");
-            debugInfo.append("    PatternType=")
-                    .append(getPatternType()).append("\n");
-            debugInfo.append("    MsCalScale=")
-                    .append(getMsCalScale()).append("\n");
-            debugInfo.append("    FirstDateTime=")
-                    .append(getFirstDateTime()).append("\n");
-            debugInfo.append("    Period=")
-                    .append(Period).append("\n");
-            debugInfo.append("    SlidingFlag=")
-                    .append(SlidingFlag).append("\n");
-            if (haveDayMask) {
-                debugInfo.append("    dayMask=0x")
-                        .append(Long.toHexString(dayMask)).append(" - ")
-                        .append(DayOfWeekMask).append("\n");
-            }
-            if (haveDayOfMonth) {
-                    debugInfo.append("    dayOfMonth=")
-                            .append(dayOfMonth).append("\n");
-            }
-            if (haveWeekDayOccurNum) {
-                debugInfo.append("    weekDayOccurrenceNumber=")
-                        .append(weekDayOccurrenceNumber).append("\n");
-            }
-            debugInfo.append("    EndType=")
-                    .append(getEndType()).append("\n");
-            debugInfo.append("    occurrenceCount=")
-                    .append(occurrenceCount).append("\n");
-            debugInfo.append("    firstDayOfWeek=")
-                    .append(getFirstDayOfWeek()).append("\n");
-            debugInfo.append("    DeletedInstanceCount=")
-                    .append(DeletedInstanceCount).append("\n");
-            for (Date currDate : deletedInstances) {
-                debugInfo.append("        DeletedInstance=")
-                        .append(currDate).append("\n");
-            }
-            debugInfo.append("    ModifedInstanceCount=")
-                    .append(ModifiedInstanceCount).append("\n");
-            for (Date currDate : modifiedInstances) {
-                debugInfo.append("        ModifiedInstance=")
-                        .append(currDate).append("\n");
-            }
-            debugInfo.append("    StartDate=").append(sDate)
-                    .append("[").append(StartDate).append("]\n");
-            debugInfo.append("    EndDate(Start of last instance)=")
-                    .append(eDate).append("[").append(EndDate).append("]\n");
-            debugInfo.append("    ReaderVersion2=0x")
-                    .append(Long.toHexString(ReaderVersion2)).append("\n");
-            debugInfo.append("    WriterVersion2=0x")
-                    .append(Long.toHexString(WriterVersion2)).append("\n");
-            debugInfo.append("    StartTimeOffset=").append(StartTimeOffset).append("\n");
-            debugInfo.append("    EndTimeOffset=").append(EndTimeOffset).append("\n");
-            debugInfo.append("    ExceptionCount=").append(ExceptionCount).append("\n");
-            sLog.debug(debugInfo);
-        }
-
-        //        For each modified instance, expect to find an ExceptionInfo structure.
-        //        Then possibly some more info followed by Extended ExceptionInfo structures.
-        //        For scheduling messages, we probably do not need to look at any of that.
-
     }
 
     /**
@@ -331,24 +281,10 @@ public class RecurrenceDefinition {
     }
 
     /**
-     * @param recurrenceFrequency the recurrenceFrequency to set
-     */
-    public void setRecurrenceFrequency(RecurrenceFrequency recurrenceFrequency) {
-        this.recurrenceFrequency = recurrenceFrequency;
-    }
-
-    /**
      * @return the recurrenceFrequency
      */
     public RecurrenceFrequency getRecurrenceFrequency() {
         return recurrenceFrequency;
-    }
-
-    /**
-     * @param patternType the MAPI PatternType to set
-     */
-    public void setPatternType(PatternType patternType) {
-        this.patternType = patternType;
     }
 
     /**
@@ -359,24 +295,10 @@ public class RecurrenceDefinition {
     }
 
     /**
-     * @param calendarType the calendarType to set
-     */
-    public void setMsCalScale(MsCalScale calendarType) {
-        this.calScale = calendarType;
-    }
-
-    /**
      * @return the calendarType
      */
     public MsCalScale getMsCalScale() {
         return calScale;
-    }
-
-    /**
-     * @param endType the endType to set
-     */
-    public void setEndType(EndType endType) {
-        this.endType = endType;
     }
 
     /**
@@ -387,24 +309,54 @@ public class RecurrenceDefinition {
     }
 
     /**
-     * @param firstDayOfWeek the firstDayOfWeek to set
-     */
-    public void setFirstDayOfWeek(DayOfWeek firstDayOfWeek) {
-        FirstDayOfWeek = firstDayOfWeek;
-    }
-
-    /**
      * @return the firstDayOfWeek
      */
     public DayOfWeek getFirstDayOfWeek() {
-        return FirstDayOfWeek;
+        return firstDayOfWeek;
     }
 
-    /**
-     * @param firstDateTime the firstDateTime to set
-     */
-    public void setFirstDateTime(long firstDateTime) {
-        this.firstDateTime = firstDateTime;
+    public DateTime getStartDate() {
+        return IcalUtil.localMinsSince1601toDate(startMinsSince1601, tzDef);
+    }
+
+    public DateTime getEndDate() {
+        if (endMinsSince1601 == 0x5AE980DF) {
+            // Means Infinite
+            return null;
+        }
+        return IcalUtil.localMinsSince1601toDate(endMinsSince1601, tzDef);
+    }
+
+    public EnumSet <DayOfWeek> getDayOfWeekMask() {
+        if (dayOfWeekMask != null) {
+            return dayOfWeekMask;
+        }
+        // valid combinations?  Single bit/ weekend bits/ weekday bits
+        dayOfWeekMask = EnumSet.noneOf(DayOfWeek.class);
+        if (haveDayMask) {
+            if ( (dayMask & 0x00000001) == 0x00000001) {
+                dayOfWeekMask.add(DayOfWeek.SU);
+            }
+            if ( (dayMask & 0x00000002) == 0x00000002) {
+                dayOfWeekMask.add(DayOfWeek.MO);
+            }
+            if ( (dayMask & 0x00000004) == 0x00000004) {
+                dayOfWeekMask.add(DayOfWeek.TU);
+            }
+            if ( (dayMask & 0x00000008) == 0x00000008) {
+                dayOfWeekMask.add(DayOfWeek.WE);
+            }
+            if ( (dayMask & 0x00000010) == 0x00000010) {
+                dayOfWeekMask.add(DayOfWeek.TH);
+            }
+            if ( (dayMask & 0x00000020) == 0x00000020) {
+                dayOfWeekMask.add(DayOfWeek.FR);
+            }
+            if ( (dayMask & 0x00000040) == 0x00000040) {
+                dayOfWeekMask.add(DayOfWeek.SA);
+            }
+        }
+        return dayOfWeekMask;
     }
 
     /**
@@ -415,10 +367,37 @@ public class RecurrenceDefinition {
     }
 
     /**
-     * @return the deletedInstances
+     * @return the dates suitable for use as EXDATEs
      */
-    public DateTime[] getDeletedInstances() {
-        return deletedInstances;
+    public List <DateTime> getExdates() {
+        if (exdateTimes != null) {
+            return exdateTimes;
+        }
+        exdateTimes = new ArrayList <DateTime>();
+        for (long delSince1601 : delMidnightMinsSince1601) {
+            //  Outlook XP uses NEW times in modMidnightMinsSince1601
+            // rather than original times - so, cannot mine that
+            // to prune modifications from delMidnightMinsSince1601
+            boolean canceledInstance = true;
+            for (ChangedInstanceInfo cInst : changedInstances) {
+                if (delSince1601 == cInst.getOrigStartMidnightMinsSince1601()) {
+                    canceledInstance = false;
+                    break;
+                }
+            }
+            if (canceledInstance) {
+                exdateTimes.add(IcalUtil.localMinsSince1601toDate(
+                            delSince1601 + startTimeOffset, tzDef));
+            }
+        }
+        return exdateTimes;
+    }
+
+    /**
+     * @return the changedInstances
+     */
+    public List <ChangedInstanceInfo> getChangedInstances() {
+        return changedInstances;
     }
 
     /**
@@ -445,18 +424,18 @@ public class RecurrenceDefinition {
         switch (patternType) {
             case DAY:
                 recurrenceRule.append(Recur.DAILY);
-                interval = new Long(Period).intValue() / 1440;
+                interval = new Long(period).intValue() / 1440;
                 break;
             case WEEK:
                 recurrenceRule.append(Recur.WEEKLY);
-                interval = new Long(Period).intValue();
+                interval = new Long(period).intValue();
                 hasBYDAY = true;
                 if (interval > 1) {
-                    weekStartDay = this.getFirstDayOfWeek().toString();
+                    weekStartDay = firstDayOfWeek.toString();
                 }
                 break;
             case MONTH:
-                interval = new Long(Period).intValue();
+                interval = new Long(period).intValue();
                 if ((interval % 12) == 0) {
                     isYearly = true;
                     recurrenceRule.append(Recur.YEARLY);
@@ -490,7 +469,7 @@ public class RecurrenceDefinition {
                 }
                 break;
             case MONTH_NTH:
-                interval = new Long(Period).intValue();
+                interval = new Long(period).intValue();
                 if ((interval % 12) == 0) {
                     isYearly = true;
                     recurrenceRule.append(Recur.YEARLY);
@@ -536,7 +515,7 @@ public class RecurrenceDefinition {
                 recurrenceRule.append(occurrenceCount);
             } else if (endType.equals(EndType.END_BY_DATE)) {
                 // MS-OXCICAL :
-                //    set to (EndDate + StartTimeOffset), converted from the
+                //    set to (EndDate + startTimeOffset), converted from the
                 //    time zone specified by PidLidTimeZoneStruct to the UTC time zone
                 //  From RFC 5545 :
                 //    The UNTIL rule part defines a DATE or DATE-TIME value that bounds
@@ -551,7 +530,7 @@ public class RecurrenceDefinition {
                 //    If the "DTSTART" property is specified as a date with UTC
                 //    time or a date with local time and time zone reference, then the
                 //    UNTIL rule part MUST be specified as a date with UTC time.
-                long minsSince1601 = this.EndDate + this.StartTimeOffset;
+                long minsSince1601 = this.endMinsSince1601 + this.startTimeOffset;
                 DateTime untilDateTime = null;
                 recurrenceRule.append(";UNTIL=");
                 if (isFloating) {
@@ -565,7 +544,8 @@ public class RecurrenceDefinition {
             }
             if (hasBYDAY) {
                 WeekDayList weekDayList = new WeekDayList();
-                for (DayOfWeek dow : this.DayOfWeekMask) {
+                dayOfWeekMask = getDayOfWeekMask();
+                for (DayOfWeek dow : dayOfWeekMask) {
                     weekDayList.add(dow.iCal4JWeekDay());
                 }
                 if (!weekDayList.isEmpty()) {
@@ -597,7 +577,8 @@ public class RecurrenceDefinition {
 
         for (RecurrenceFrequency curr : RecurrenceFrequency.values()) {
             if (curr.mapiPropValue() == mapiFrequency) {
-                setRecurrenceFrequency(curr); return;
+                this.recurrenceFrequency = curr;
+                return;
             }
         }
 
@@ -612,7 +593,8 @@ public class RecurrenceDefinition {
 
         for (PatternType curr : PatternType.values()) {
             if (curr.mapiPropValue() == pattType) {
-                setPatternType(curr); return;
+                this.patternType = curr;
+                return;
             }
         }
 
@@ -627,17 +609,19 @@ public class RecurrenceDefinition {
 
         if (calType == 0) {
             if (patternType.equals(PatternType.HJ_MONTH)) {
-                setMsCalScale(MsCalScale.HIJRI);
+                this.calScale = 
+                MsCalScale.HIJRI;
                 return;
             }
             if (patternType.equals(PatternType.HJ_MONTH_NTH)) {
-                setMsCalScale(MsCalScale.HIJRI);
+                this.calScale = MsCalScale.HIJRI;
                 return;
             }
         }
         for (MsCalScale curr : MsCalScale.values()) {
             if (curr.mapiPropValue() == calType) {
-                setMsCalScale(curr); return;
+                this.calScale = curr;
+                return;
             }
         }
 
@@ -653,9 +637,9 @@ public class RecurrenceDefinition {
         for (EndType curr : EndType.values()) {
             if (curr.mapiPropValue() == endTyp) {
                 if (curr.equals(EndType.NEVER_END_OLD)) {
-                    setEndType(EndType.NEVER_END);
+                    this.endType = EndType.NEVER_END;
                 } else {
-                    setEndType(curr);
+                    this.endType = curr;
                 }
                 return;
             }
@@ -672,7 +656,7 @@ public class RecurrenceDefinition {
 
         for (DayOfWeek curr : DayOfWeek.values()) {
             if (curr.mapiPropValue() == dow) {
-                setFirstDayOfWeek(curr);
+                firstDayOfWeek = curr;
                 return;
             }
         }
@@ -693,7 +677,121 @@ public class RecurrenceDefinition {
      * @throws IOException
      */
     private void readFirstDateTime(RawInputStream ris) throws IOException {
-        setFirstDateTime(ris.readU32());
-        // RecurrenceFrequency DAILY -->
+        this.firstDateTime = ris.readU32();
+    }
+
+    public String toString() {
+        StringBuffer buf = new StringBuffer("PidLidAppointmentRecur\n");
+        if (readerVersion != 0x3004) {
+            buf.append("    Unexpected ReaderVersion=")
+                    .append(readerVersion).append("\n");
+        }
+        if (writerVersion != 0x3004) {
+            buf.append("    Unexpected WriterVersion=")
+                    .append(writerVersion).append("\n");
+        }
+        buf.append("    RecurFrequency=")
+                .append(getRecurrenceFrequency()).append("\n");
+        buf.append("    PatternType=")
+                .append(getPatternType()).append("\n");
+        buf.append("    MsCalScale=")
+                .append(getMsCalScale()).append("\n");
+        buf.append("    FirstDateTime=")
+                .append(getFirstDateTime()).append("\n");
+        buf.append("    Period=")
+                .append(period).append("\n");
+        buf.append("    SlidingFlag=")
+                .append(slidingFlag).append("\n");
+        if (haveDayMask) {
+            dayOfWeekMask = getDayOfWeekMask();
+            buf.append("    dayMask=0x")
+                    .append(Long.toHexString(dayMask)).append(" - ")
+                    .append(dayOfWeekMask).append("\n");
+        }
+        if (haveDayOfMonth) {
+                buf.append("    dayOfMonth=")
+                        .append(dayOfMonth).append("\n");
+        }
+        if (haveWeekDayOccurNum) {
+            buf.append("    weekDayOccurrenceNumber=")
+                    .append(weekDayOccurrenceNumber).append("\n");
+        }
+        buf.append("    EndType=")
+                .append(getEndType()).append("\n");
+        buf.append("    occurrenceCount=")
+                .append(occurrenceCount).append("\n");
+        buf.append("    firstDayOfWeek=")
+                .append(getFirstDayOfWeek()).append("\n");
+        buf.append("    DeletedInstanceCount=")
+                .append(deletedInstanceCount).append("\n");
+        for (long since1601 : delMidnightMinsSince1601) {
+            DateTime currDate = IcalUtil.localMinsSince1601toDate(
+                                    since1601 + startTimeOffset, tzDef);
+            buf.append("        DeletedInstance=").append(currDate)
+                    .append(" (").append(since1601).append(")");
+            for (long modSince1601 : modMidnightMinsSince1601) {
+                if (since1601 == modSince1601) {
+                    buf.append(" [isModification]");
+                    break;
+                }
+            }
+            buf.append("\n");
+        }
+        buf.append("    ModifedInstanceCount=")
+                .append(modifiedInstanceCount).append("\n");
+        for (long since1601 : modMidnightMinsSince1601) {
+            DateTime currDate = IcalUtil.localMinsSince1601toDate(
+                                    since1601 + startTimeOffset, tzDef);
+            buf.append("        ModifiedInstance=").append(currDate)
+                    .append(" (").append(since1601).append(")\n");
+        }
+        DateTime sDate = getStartDate();
+        buf.append("    StartDate=");
+        if (sDate != null) {
+            buf.append(sDate);
+        } else {
+            buf.append("<null>");
+        }
+        buf.append("[").append(startMinsSince1601).append("]\n");
+
+        DateTime eDate = getEndDate();
+        buf.append("    EndDate(Start of last instance)=");
+        if (eDate != null) {
+            buf.append(eDate);
+        } else {
+            buf.append("<null>");
+        }
+        buf.append("[").append(endMinsSince1601).append("]\n");
+        buf.append("    ReaderVersion2=0x")
+                .append(Long.toHexString(readerVersion2)).append("\n");
+        buf.append("    WriterVersion2=0x")
+                .append(Long.toHexString(writerVersion2)).append("\n");
+        buf.append("    StartTimeOffset=").append(startTimeOffset).append("\n");
+        buf.append("    EndTimeOffset=").append(endTimeOffset).append("\n");
+        buf.append("    ExceptionCount=").append(exceptionCount).append("\n");
+        if (changedInstances != null) {
+            for (ChangedInstanceInfo cInst : changedInstances) {
+                buf.append(cInst.toString());
+            }
+        }
+        if (rsrvdBlock1Size != -1) {
+            buf.append("    rsrvdBlock1Size=").append(rsrvdBlock1Size).append("\n");
+            buf.append("    rsrvdBlock1=")
+                .append(TNEFUtils.toHexString((byte[])rsrvdBlock1, (int)rsrvdBlock1Size))
+                .append("\n");
+        }
+        if (rsrvdBlock2Size != -1) {
+            buf.append("    rsrvdBlock2Size=").append(rsrvdBlock2Size).append("\n");
+            buf.append("    rsrvdBlock2=")
+                .append(TNEFUtils.toHexString((byte[])rsrvdBlock2, (int)rsrvdBlock2Size))
+                .append("\n");
+        }
+        if (unprocessedByteCount != 0L) {
+            buf.append("    unprocessedByteCount=").append(unprocessedByteCount).append("\n");
+            buf.append("    unprocessedBytes=")
+                .append(TNEFUtils.toHexString((byte[])unprocessedBytes, (int)unprocessedByteCount))
+                .append("\n");
+        }
+        return buf.toString();
     }
 }

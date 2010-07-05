@@ -22,7 +22,7 @@ package com.zimbra.cs.util.tnef.mapi;
 public enum AppointmentStateFlags {
     ASF_MEETING (0x00000001),
     ASF_RECEIVED (0x00000002),
-    ASF_CANCELED (0x00000003);
+    ASF_CANCELED (0x00000004);
 
     private final int MapiPropValue;
 
