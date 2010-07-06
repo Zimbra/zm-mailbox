@@ -45,12 +45,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.tnef.TNEFtoIcalendarServiceException.UnsupportedTnefCalendaringMsgException;
-import com.zimbra.cs.util.tnef.mapi.AppointmentStateFlags;
 import com.zimbra.cs.util.tnef.mapi.BusyStatus;
 import com.zimbra.cs.util.tnef.mapi.ChangedInstanceInfo;
 import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
 import com.zimbra.cs.util.tnef.mapi.TimeZoneDefinition;
-import java.util.EnumSet;
 import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.SentBy;
 import net.fortuna.ical4j.model.property.Attendee;
@@ -71,21 +69,10 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
 
     static Log sLog = ZimbraLog.tnef;
 
-    private SchedulingViewOfTnef schedView;
     private RecurrenceDefinition recurDef;
-    private Integer sequenceNum;
     private DtStamp dtstamp;
     private String uid;
     private Method method;
-    private String summary;
-    private String location;
-    private BusyStatus busyStatus;
-    private BusyStatus intendedBusyStatus;
-    private Boolean isAllDayEvent;
-    private Boolean isCounterProposal;
-    private TimeZoneDefinition startTimeTZinfo;
-    private TimeZoneDefinition endTimeTZinfo;
-    private TimeZoneDefinition recurrenceTZinfo;
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.util.tnef.TnefToICalendar#convert(java.io.InputStream, net.fortuna.ical4j.data.ContentHandler)
@@ -96,8 +83,8 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
         boolean conversionSuccessful = false;
         recurDef = null;
         TNEFInputStream tnefStream = null;
-        schedView = null;
-        sequenceNum = 0;
+        SchedulingViewOfTnef schedView = null;
+        Integer sequenceNum = 0;
 
         try {
             tnefStream = new TNEFInputStream(tnefInput);
@@ -105,37 +92,31 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
 
             // String oemCodePage = schedView.getOEMCodePage();
             String msgClass = schedView.getMessageClass();
+            if (msgClass == null) {
+                sLog.debug("Unable to determine Class of TNEF - cannot generate ICALENDER equivalent");
+                // throw TNEFtoIcalendarServiceException.NON_CALENDARING_CLASS(msgClass);
+                return false;
+            }
             uid = schedView.getIcalUID();
             sequenceNum = schedView.getSequenceNumber();
             boolean replyWanted = schedView.getResponseRequested();
-            location = schedView.getLocation();
-            isAllDayEvent = schedView.isAllDayEvent();
-            isCounterProposal = schedView.isCounterProposal();
+            String location = schedView.getLocation();
+            Boolean isAllDayEvent = schedView.isAllDayEvent();
+            Boolean isCounterProposal = schedView.isCounterProposal();
             Integer importance = schedView.getMapiImportance();
             Clazz  icalClass = schedView.getIcalClass();
-            busyStatus = schedView.getBusyStatus();
-            intendedBusyStatus = schedView.getIntendedBusyStatus();
-            // TODO: MS-OXCICAL says attendee properties SHOULD NOT be exported if asfMeeting not set.
-            EnumSet <AppointmentStateFlags> appointmentStateFlags = schedView.getAppointmentStateFlags();
-            // MS-OXCICAL says attendee properties SHOULD NOT be exported if asfMeeting not set.
-            // However - if you do this, an acceptance seems to end up with
-            // no ATTENDEE, which seems wrong.
-            // boolean addAttendees = (appointmentStateFlags == null) ||
-            //              appointmentStateFlags.contains(AppointmentStateFlags.ASF_MEETING);
-            boolean addAttendees = true;
-
-            startTimeTZinfo = schedView.getStartDateTimezoneInfo();
-            endTimeTZinfo = schedView.getEndDateTimezoneInfo();
-            recurrenceTZinfo = schedView.getRecurrenceTimezoneInfo();
+            Integer ownerApptId = schedView.getOwnerAppointmentId();
+            BusyStatus busyStatus = schedView.getBusyStatus();
+            BusyStatus intendedBusyStatus = schedView.getIntendedBusyStatus();
+            TimeZoneDefinition startTimeTZinfo = schedView.getStartDateTimezoneInfo();
+            TimeZoneDefinition endTimeTZinfo = schedView.getEndDateTimezoneInfo();
+            TimeZoneDefinition recurrenceTZinfo = schedView.getRecurrenceTimezoneInfo();
             recurDef = schedView.getRecurrenceDefinition(recurrenceTZinfo);
 
             DateTime icalStartDate = schedView.getStartTime();
             DateTime icalEndDate = schedView.getEndTime();
             DateTime icalCreateDate = schedView.getUtcDateTime(null, MAPIProp.PR_CREATION_TIME);
             DateTime icalLastModDate = schedView.getUtcDateTime(null, MAPIProp.PR_LAST_MODIFICATION_TIME);
-            // TODO: Only do these gets if is a COUNTER proposal
-            DateTime proposedStartDate = schedView.getProposedStartTime();
-            DateTime proposedEndDate = schedView.getProposedEndTime();
             DateTime recurrenceIdDateTime = schedView.getRecurrenceIdTime();
             DateTime attendeeCriticalChange = schedView.getAttendeeCriticalChange();
             DateTime ownerCriticalChange = schedView.getOwnerCriticalChange();
@@ -143,27 +124,12 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             method = null;
             PartStat partstat = null;
             String descriptionText = null;
-            summary = null;
-            javax.mail.Address[] toRecips = null;
-            javax.mail.Address[] ccRecips = null;
-            javax.mail.Address[] bccRecips = null;
-            javax.mail.Address[] msgFroms = null;
-            javax.mail.Address msgSender = null;
+            String summary = null;
             if (mimeMsg != null) {
                 summary = mimeMsg.getSubject();
-                toRecips = mimeMsg.getRecipients(javax.mail.Message.RecipientType.TO);
-                ccRecips = mimeMsg.getRecipients(javax.mail.Message.RecipientType.CC);
-                bccRecips = mimeMsg.getRecipients(javax.mail.Message.RecipientType.BCC);
-                msgFroms = mimeMsg.getFrom();
-                msgSender = mimeMsg.getSender();
                 PlainTextFinder finder = new PlainTextFinder();
                 finder.accept(mimeMsg);
                 descriptionText = finder.getPlainText();
-            }
-            if (msgClass == null) {
-                sLog.debug("Unable to determine Class of TNEF - cannot generate ICALENDER equivalent");
-                // throw TNEFtoIcalendarServiceException.NON_CALENDARING_CLASS(msgClass);
-                return false;
             }
             if (msgClass != null) {
                 // IPM.Microsoft Schedule.MtgRespP IPM.Schedule.Meeting.Resp.Pos
@@ -274,9 +240,9 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             IcalUtil.addProperty(icalOutput, Property.DESCRIPTION, descriptionText, false);
             if ( method.equals(Method.COUNTER) ) {
                 IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTSTART,
-                        proposedStartDate, startTimeTZinfo, isAllDayEvent);
+                        schedView.getProposedStartTime(), startTimeTZinfo, isAllDayEvent);
                 IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTEND,
-                        proposedEndDate, endTimeTZinfo, isAllDayEvent);
+                        schedView.getProposedEndTime(), endTimeTZinfo, isAllDayEvent);
                 IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput,
                         "X-MS-OLK-ORIGINALSTART",
                         icalStartDate, startTimeTZinfo, isAllDayEvent);
@@ -325,146 +291,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 IcalUtil.addProperty(icalOutput, Transp.OPAQUE);
             }
 
-            // ATTENDEEs
-            InternetAddress firstFromIA = null;
-            String firstFromEmailAddr = null;
-            String senderMailto = null;  // Use for SENT-BY if applicable
-            String senderCn = null;
-            if (msgFroms != null) {
-                if (msgFroms.length != 1) {
-                    sLog.debug(msgFroms.length + " From: recipients for " + method.getValue());
-                }
-                if (msgFroms.length >= 1) {
-                    firstFromIA = (InternetAddress) msgFroms[0];
-                    firstFromEmailAddr = firstFromIA.getAddress();
-                }
-                if (msgSender != null) {
-                    String senderAddr = msgSender.toString();
-                    if (msgSender instanceof InternetAddress) {
-                        InternetAddress senderIA = (InternetAddress) msgSender;
-                        senderAddr = senderIA.getAddress();
-                        senderCn = senderIA.getPersonal();
-                        if (!firstFromIA.equals(senderIA)) {
-                            senderMailto = "Mailto:" + senderAddr;
-                        }
-                    }
-                }
-            }
-
-            if ( method.equals(Method.REPLY) || method.equals(Method.COUNTER) ) {
-                // from ATTENDEE to ORGANIZER
-                if (toRecips != null) {
-                    if (toRecips.length != 1) {
-                        sLog.debug(toRecips.length + " To: recipients for " + method.getValue());
-                    }
-                    if (toRecips.length >= 1) {
-                        InternetAddress ia = (InternetAddress) toRecips[0];
-                        String email = ia.getAddress();
-                        String displayName = ia.getPersonal();
-                        icalOutput.startProperty(Property.ORGANIZER);
-                        icalOutput.propertyValue("Mailto:" + email);
-                        if (displayName != null) {
-                            icalOutput.parameter(Parameter.CN, displayName);
-                        }
-                        icalOutput.endProperty(Property.ORGANIZER);
-                    }
-                }
-                if ( addAttendees && (firstFromEmailAddr != null)) {
-                    String displayName = firstFromIA.getPersonal();
-                    icalOutput.startProperty(Property.ATTENDEE);
-                    icalOutput.propertyValue("Mailto:" + firstFromEmailAddr);
-                    if (displayName != null) {
-                        icalOutput.parameter(Parameter.CN, displayName);
-                    }
-                    // TODO: possibly only output if a RESOURCE - MS-OXCICAL :
-                    // For attendees exported from the recipient table, this parameter SHOULD only
-                    // be exported if the PidTagRecipientType is 0x00000003. In this case, the
-                    // CUTYPE SHOULD be set to resource. For attendees exported from
-                    // PidLidNonSendableTo and PidLidNonSendableCc, this parameter SHOULD be omitted.
-                    icalOutput.parameter(Parameter.CUTYPE, CuType.INDIVIDUAL.getValue());
-                    if (partstat != null) {
-                        icalOutput.parameter(Parameter.PARTSTAT, partstat.getValue());
-                    }
-                    if (senderMailto != null) {
-                        icalOutput.parameter(Parameter.SENT_BY, senderMailto);
-                    }
-                    icalOutput.endProperty(Property.ATTENDEE);
-                }
-            } else {
-                // ORGANIZER to ATTENDEEs - REQUEST or CANCEL
-                InternetAddress organizerEmail = null;
-                if (firstFromEmailAddr != null) {
-                    SentBy sentBy = null;
-                    Cn cn = null;
-                    if (senderMailto != null) {
-                        sentBy = new SentBy(senderMailto);
-                    }
-                    organizerEmail = firstFromIA;
-                    String displayName = firstFromIA.getPersonal();
-                    if ((displayName != null)&& (!displayName.equals(firstFromEmailAddr))) {
-                        cn = new Cn(displayName);
-                    }
-                    Organizer organizer = new Organizer();
-                    organizer.setValue("Mailto:" + firstFromEmailAddr);
-                    if (cn != null) {
-                        organizer.getParameters().add(cn);
-                    }
-                    if (sentBy != null) {
-                        organizer.getParameters().add(sentBy);
-                    }
-                    IcalUtil.addProperty(icalOutput, organizer);
-                    // Assumption - ORGANIZER is an attendee and is attending.
-                    if (addAttendees) {
-                        Attendee attendee = new Attendee("Mailto:" + firstFromEmailAddr);
-                        if (cn != null) {
-                            attendee.getParameters().add(cn);
-                        }
-                        attendee.getParameters().add(CuType.INDIVIDUAL);
-                        PartStat orgPartstat = PartStat.ACCEPTED;
-                        if (ccRecips != null) {
-                            for (Address a : ccRecips) {
-                                InternetAddress ia = (InternetAddress) a;
-                                if ( organizerEmail.equals(ia) ) {
-                                    orgPartstat = PartStat.TENTATIVE;
-                                    break;
-                                }
-                            }
-                        }
-                        attendee.getParameters().add(Role.REQ_PARTICIPANT);
-                        attendee.getParameters().add(orgPartstat);
-                        // Was including SENT-BY but probably not appropriate
-                        // for a request
-                        IcalUtil.addProperty(icalOutput, attendee);
-                    }
-                }
-                if (addAttendees && (toRecips != null)) {
-                    for (Address a : toRecips) {
-                        InternetAddress ia = (InternetAddress) a;
-                        if ( (organizerEmail != null) && organizerEmail.equals(ia) ) {
-                            continue;  // No need to add the information twice
-                        }
-                        addAttendee(icalOutput, ia, Role.REQ_PARTICIPANT,
-                                    CuType.INDIVIDUAL, partstat, replyWanted);
-                    }
-                }
-                if (addAttendees && (ccRecips != null)) {
-                    for (Address a : ccRecips) {
-                        InternetAddress ia = (InternetAddress) a;
-                        if ( (organizerEmail != null) && organizerEmail.equals(ia) ) {
-                            continue;  // No need to add the information twice
-                        }
-                        addAttendee(icalOutput, ia, Role.OPT_PARTICIPANT,
-                                    CuType.INDIVIDUAL, partstat, replyWanted);
-                    }
-                }
-                if (addAttendees && (bccRecips != null)) {
-                    for (Address a : bccRecips) {
-                        InternetAddress ia = (InternetAddress) a;
-                        addAttendee(icalOutput, ia, Role.NON_PARTICIPANT,
-                                    CuType.RESOURCE, partstat, replyWanted);
-                    }
-                }
-            }
+            addAttendees(icalOutput, mimeMsg, partstat, replyWanted);
             // TODO RESOURCES from PidLidNonSendableBcc with ';' replaced
             // with ','.  These are resources without a mail address
             IcalUtil.addProperty(icalOutput,
@@ -478,7 +305,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                         intendedBusyStatus, false);
             }
             IcalUtil.addProperty(icalOutput, "X-MICROSOFT-CDO-OWNERAPPTID",
-                    schedView.getOwnerAppointmentId(), false);
+                        ownerApptId, false);
             IcalUtil.addProperty(icalOutput, "X-MICROSOFT-CDO-REPLYTIME",
                     schedView.getAppointmentReplyTime(), false);
             IcalUtil.addProperty(icalOutput,
@@ -490,17 +317,10 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                         "X-MICROSOFT-CDO-DISALLOW-COUNTER",
                         disallowCounter ? "TRUE" : "FALSE");
             }
-            if (addAttendees && (senderMailto != null)) {
-                XProperty msOlkSender = new XProperty("X-MS-OLK-SENDER", senderMailto);
-                if (senderCn != null) {
-                    Cn cn = new Cn(senderCn);
-                    msOlkSender.getParameters().add(cn);
-                }
-                IcalUtil.addProperty(icalOutput, msOlkSender);
-            }
             icalOutput.endComponent(Component.VEVENT);
             // TODO:  Want VALARM too "for completeness"
-            addExceptions(icalOutput);
+            addExceptions(icalOutput, recurDef, recurrenceTZinfo,
+                sequenceNum, ownerApptId, summary, location, isAllDayEvent);
 
             icalOutput.endCalendar();
             conversionSuccessful = true;
@@ -531,31 +351,51 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
         return conversionSuccessful;
     }
 
-    private void addExceptions(ContentHandler icalOutput) throws ParserException, URISyntaxException, IOException, ParseException {
+    /**
+     * 
+     * @param icalOutput
+     * @param recurDef
+     * @param tzDef
+     * @param sequenceNum
+     * @param ownerApptId
+     * @param seriesSummary
+     * @param seriesLocation
+     * @param seriesIsAllDay
+     * @throws ParserException
+     * @throws URISyntaxException
+     * @throws IOException
+     * @throws ParseException
+     */
+    private void addExceptions(ContentHandler icalOutput,
+                RecurrenceDefinition recurDef, TimeZoneDefinition tzDef,
+                int sequenceNum, Integer ownerApptId, 
+                String seriesSummary, String seriesLocation,
+                boolean seriesIsAllDay)
+            throws ParserException, URISyntaxException, IOException, ParseException {
         if (recurDef != null) {
             for (ChangedInstanceInfo cInst : recurDef.getChangedInstances()) {
                 icalOutput.startComponent(Component.VEVENT);
                 Boolean exceptIsAllDayEvent = cInst.isAllDayEvent();
                 if (exceptIsAllDayEvent == null) {
-                    exceptIsAllDayEvent = isAllDayEvent;
+                    exceptIsAllDayEvent = seriesIsAllDay;
                 }
-                String exceptSumm = cInst.getSubject();
+                String exceptSumm = cInst.getSummary();
                 if (exceptSumm == null) {
-                    exceptSumm = summary;
+                    exceptSumm = seriesSummary;
                 }
                 IcalUtil.addProperty(icalOutput, Property.SUMMARY, exceptSumm, false);
                 String exceptLocation = cInst.getLocation();
                 if (exceptLocation == null) {
-                    exceptLocation = location;
+                    exceptLocation = seriesLocation;
                 }
                 IcalUtil.addProperty(icalOutput, Property.LOCATION, exceptLocation, false);
                 IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTSTART,
-                        cInst.getStartDate(), startTimeTZinfo, exceptIsAllDayEvent);
+                        cInst.getStartDate(), tzDef, exceptIsAllDayEvent);
                 IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTEND,
-                        cInst.getEndDate(), startTimeTZinfo, exceptIsAllDayEvent);
+                        cInst.getEndDate(), tzDef, exceptIsAllDayEvent);
                 IcalUtil.addProperty(icalOutput, Property.UID, uid);
                 IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.RECURRENCE_ID,
-                        cInst.getOriginalStartDate(), startTimeTZinfo, exceptIsAllDayEvent);
+                        cInst.getOriginalStartDate(), tzDef, exceptIsAllDayEvent);
                 IcalUtil.addProperty(icalOutput, dtstamp);
                 BusyStatus exceptBusyStatus = cInst.getBusyStatus();
                 if (exceptBusyStatus != null) {
@@ -572,7 +412,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                             exceptBusyStatus, false);
                 }
                 IcalUtil.addProperty(icalOutput, "X-MICROSOFT-CDO-OWNERAPPTID",
-                        schedView.getOwnerAppointmentId(), false);
+                            ownerApptId, false);
                 IcalUtil.addProperty(icalOutput,
                         "X-MICROSOFT-CDO-ALLDAYEVENT",
                         exceptIsAllDayEvent ? "TRUE" : "FALSE");
@@ -581,6 +421,195 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
         }
     }
 
+    /**
+     * 
+     * @param icalOutput
+     * @param mimeMsg
+     * @param partstat
+     * @param replyWanted
+     * @throws ParserException
+     * @throws URISyntaxException
+     * @throws IOException
+     * @throws ParseException
+     * @throws MessagingException
+     */
+    private void addAttendees(ContentHandler icalOutput, MimeMessage mimeMsg,
+            PartStat partstat, boolean replyWanted)
+            throws ParserException, URISyntaxException, IOException, ParseException, MessagingException {
+        // ATTENDEEs
+        InternetAddress firstFromIA = null;
+        String firstFromEmailAddr = null;
+        String senderMailto = null;  // Use for SENT-BY if applicable
+        String senderCn = null;
+        
+        javax.mail.Address[] toRecips = null;
+        javax.mail.Address[] ccRecips = null;
+        javax.mail.Address[] bccRecips = null;
+        javax.mail.Address[] msgFroms = null;
+        javax.mail.Address msgSender = null;
+        if (mimeMsg != null) {
+            toRecips = mimeMsg.getRecipients(javax.mail.Message.RecipientType.TO);
+            ccRecips = mimeMsg.getRecipients(javax.mail.Message.RecipientType.CC);
+            bccRecips = mimeMsg.getRecipients(javax.mail.Message.RecipientType.BCC);
+            msgFroms = mimeMsg.getFrom();
+            msgSender = mimeMsg.getSender();
+        }
+        if (msgFroms != null) {
+            if (msgFroms.length != 1) {
+                sLog.debug(msgFroms.length + " From: recipients for " + method.getValue());
+            }
+            if (msgFroms.length >= 1) {
+                firstFromIA = (InternetAddress) msgFroms[0];
+                firstFromEmailAddr = firstFromIA.getAddress();
+            }
+            if (msgSender != null) {
+                String senderAddr = msgSender.toString();
+                if (msgSender instanceof InternetAddress) {
+                    InternetAddress senderIA = (InternetAddress) msgSender;
+                    senderAddr = senderIA.getAddress();
+                    senderCn = senderIA.getPersonal();
+                    if (!firstFromIA.equals(senderIA)) {
+                        senderMailto = "Mailto:" + senderAddr;
+                    }
+                }
+            }
+        }
+
+        if ( method.equals(Method.REPLY) || method.equals(Method.COUNTER) ) {
+            // from ATTENDEE to ORGANIZER
+            if (toRecips != null) {
+                if (toRecips.length != 1) {
+                    sLog.debug(toRecips.length + " To: recipients for " + method.getValue());
+                }
+                if (toRecips.length >= 1) {
+                    InternetAddress ia = (InternetAddress) toRecips[0];
+                    String email = ia.getAddress();
+                    String displayName = ia.getPersonal();
+                    icalOutput.startProperty(Property.ORGANIZER);
+                    icalOutput.propertyValue("Mailto:" + email);
+                    if (displayName != null) {
+                        icalOutput.parameter(Parameter.CN, displayName);
+                    }
+                    icalOutput.endProperty(Property.ORGANIZER);
+                }
+            }
+            if ( firstFromEmailAddr != null) {
+                String displayName = firstFromIA.getPersonal();
+                icalOutput.startProperty(Property.ATTENDEE);
+                icalOutput.propertyValue("Mailto:" + firstFromEmailAddr);
+                if (displayName != null) {
+                    icalOutput.parameter(Parameter.CN, displayName);
+                }
+                // TODO: possibly only output if a RESOURCE - MS-OXCICAL :
+                // For attendees exported from the recipient table, this parameter SHOULD only
+                // be exported if the PidTagRecipientType is 0x00000003. In this case, the
+                // CUTYPE SHOULD be set to resource. For attendees exported from
+                // PidLidNonSendableTo and PidLidNonSendableCc, this parameter SHOULD be omitted.
+                icalOutput.parameter(Parameter.CUTYPE, CuType.INDIVIDUAL.getValue());
+                if (partstat != null) {
+                    icalOutput.parameter(Parameter.PARTSTAT, partstat.getValue());
+                }
+                if (senderMailto != null) {
+                    icalOutput.parameter(Parameter.SENT_BY, senderMailto);
+                }
+                icalOutput.endProperty(Property.ATTENDEE);
+            }
+        } else {
+            // ORGANIZER to ATTENDEEs - REQUEST or CANCEL
+            InternetAddress organizerEmail = null;
+            if (firstFromEmailAddr != null) {
+                SentBy sentBy = null;
+                Cn cn = null;
+                if (senderMailto != null) {
+                    sentBy = new SentBy(senderMailto);
+                }
+                organizerEmail = firstFromIA;
+                String displayName = firstFromIA.getPersonal();
+                if ((displayName != null)&& (!displayName.equals(firstFromEmailAddr))) {
+                    cn = new Cn(displayName);
+                }
+                Organizer organizer = new Organizer();
+                organizer.setValue("Mailto:" + firstFromEmailAddr);
+                if (cn != null) {
+                    organizer.getParameters().add(cn);
+                }
+                if (sentBy != null) {
+                    organizer.getParameters().add(sentBy);
+                }
+                IcalUtil.addProperty(icalOutput, organizer);
+                // Assumption - ORGANIZER is an attendee and is attending.
+                Attendee attendee = new Attendee("Mailto:" + firstFromEmailAddr);
+                if (cn != null) {
+                    attendee.getParameters().add(cn);
+                }
+                attendee.getParameters().add(CuType.INDIVIDUAL);
+                PartStat orgPartstat = PartStat.ACCEPTED;
+                if (ccRecips != null) {
+                    for (Address a : ccRecips) {
+                        InternetAddress ia = (InternetAddress) a;
+                        if ( organizerEmail.equals(ia) ) {
+                            orgPartstat = PartStat.TENTATIVE;
+                            break;
+                        }
+                    }
+                }
+                attendee.getParameters().add(Role.REQ_PARTICIPANT);
+                attendee.getParameters().add(orgPartstat);
+                // Was including SENT-BY but probably not appropriate
+                // for a request
+                IcalUtil.addProperty(icalOutput, attendee);
+            }
+            if (toRecips != null) {
+                for (Address a : toRecips) {
+                    InternetAddress ia = (InternetAddress) a;
+                    if ( (organizerEmail != null) && organizerEmail.equals(ia) ) {
+                        continue;  // No need to add the information twice
+                    }
+                    addAttendee(icalOutput, ia, Role.REQ_PARTICIPANT,
+                                CuType.INDIVIDUAL, partstat, replyWanted);
+                }
+            }
+            if (ccRecips != null) {
+                for (Address a : ccRecips) {
+                    InternetAddress ia = (InternetAddress) a;
+                    if ( (organizerEmail != null) && organizerEmail.equals(ia) ) {
+                        continue;  // No need to add the information twice
+                    }
+                    addAttendee(icalOutput, ia, Role.OPT_PARTICIPANT,
+                                CuType.INDIVIDUAL, partstat, replyWanted);
+                }
+            }
+            if (bccRecips != null) {
+                for (Address a : bccRecips) {
+                    InternetAddress ia = (InternetAddress) a;
+                    addAttendee(icalOutput, ia, Role.NON_PARTICIPANT,
+                                CuType.RESOURCE, partstat, replyWanted);
+                }
+            }
+        }
+        if (senderMailto != null) {
+            XProperty msOlkSender = new XProperty("X-MS-OLK-SENDER", senderMailto);
+            if (senderCn != null) {
+                Cn cn = new Cn(senderCn);
+                msOlkSender.getParameters().add(cn);
+            }
+            IcalUtil.addProperty(icalOutput, msOlkSender);
+        }
+    }
+
+    /**
+     * 
+     * @param icalOutput
+     * @param ia
+     * @param role
+     * @param cuType
+     * @param partstat
+     * @param rsvp
+     * @throws URISyntaxException
+     * @throws ParserException
+     * @throws IOException
+     * @throws ParseException
+     */
 private void addAttendee(ContentHandler icalOutput, InternetAddress ia,
             Role role, CuType cuType, PartStat partstat, boolean rsvp)
             throws URISyntaxException, ParserException, IOException, ParseException {

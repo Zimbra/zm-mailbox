@@ -276,9 +276,24 @@ public class ChangedInstanceInfo {
     }
 
     /**
+     * @return the subject
+     */
+    public String getSummary() {
+        // Any unicodeSubject is likely to be higher fidelity.
+        if (unicodeSubject != null) {
+            return unicodeSubject;
+        }
+        return subject;
+    }
+
+    /**
      * @return the location
      */
     public String getLocation() {
+        // Any unicodeLocation is likely to be higher fidelity.
+        if (unicodeLocation != null) {
+            return unicodeLocation;
+        }
         return location;
     }
 
@@ -301,13 +316,6 @@ public class ChangedInstanceInfo {
      */
     public long getReminderSet() {
         return reminderSet;
-    }
-
-    /**
-     * @return the subject
-     */
-    public String getSubject() {
-        return subject;
     }
 
     /**
