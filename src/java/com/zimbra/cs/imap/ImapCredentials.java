@@ -55,6 +55,7 @@ class ImapCredentials implements java.io.Serializable {
     private final String      mUsername;
     private final boolean     mIsLocal;
     private final EnabledHack mEnabledHack;
+    private Set<ImapPath>     mHiddenFolders;
 
     ImapCredentials(Account acct, EnabledHack hack) throws ServiceException {
         mAccountId = acct.getId();
@@ -154,5 +155,15 @@ class ImapCredentials implements java.io.Serializable {
         if (!found)
             return;
         saveConfig(subscriptions);
+    }
+
+    void hideFolder(ImapPath path) {
+        if (mHiddenFolders == null)
+            mHiddenFolders = new HashSet<ImapPath>();
+        mHiddenFolders.add(path);
+    }
+
+    boolean isFolderHidden(ImapPath path) {
+        return mHiddenFolders == null ? false : mHiddenFolders.contains(path);
     }
 }

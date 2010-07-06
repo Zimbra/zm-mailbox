@@ -328,7 +328,7 @@ public class ImapPath implements Comparable<ImapPath> {
         return mFolder;
     }
 
-    private boolean useReferent() throws ServiceException {
+    boolean useReferent() throws ServiceException {
         if (getReferent() == this)
             return false;
         if (mScope == Scope.CONTENT)
@@ -509,10 +509,15 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
     boolean isVisible() throws ServiceException {
-        if (mCredentials != null && mCredentials.isHackEnabled(ImapCredentials.EnabledHack.WM5)) {
-            String lcname = mPath.toLowerCase();
-            if (lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/'))
+        if (mCredentials != null) {
+            if (mCredentials.isFolderHidden(this))
                 return false;
+
+            if (mCredentials.isHackEnabled(ImapCredentials.EnabledHack.WM5)) {
+                String lcname = mPath.toLowerCase();
+                if (lcname.startsWith("sent items") && (lcname.length() == 10 || lcname.charAt(10) == '/'))
+                    return false;
+            }
         }
 
         try {
