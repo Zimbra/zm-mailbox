@@ -305,17 +305,24 @@ public class ChangedInstanceInfo {
     }
 
     /**
-     * @return the reminderDelta
+     * @return the reminderDelta value or null if same as for series
      */
-    public long getReminderDelta() {
-        return reminderDelta;
+    public Integer getReminderDelta() {
+        if (!overrideFlags.contains(ExceptionInfoOverrideFlag.ARO_REMINDERDELTA)) {
+            return null;
+        }
+        int newDelta = (int) reminderDelta;
+        return newDelta;
     }
 
     /**
-     * @return the reminderSet
+     * @return whether a reminder was set or null if same as for series
      */
-    public long getReminderSet() {
-        return reminderSet;
+    public Boolean getReminderSet() {
+        if (!overrideFlags.contains(ExceptionInfoOverrideFlag.ARO_REMINDER)) {
+            return null;
+        }
+        return (reminderSet != 0);
     }
 
     /**

@@ -412,6 +412,38 @@ public class SchedulingViewOfTnef extends Message {
     }
 
     /**
+     * PidLidReminderDelta is the Time before the start of an appointment in minutes
+     * at which an alarm should be raised.
+     * If PidLidReminderDelta is set to 0x5AE980E1, this is a synonym for
+     * 15 minutes before the start.
+     *
+     * @return
+     * @throws IOException
+     */
+    public Integer getReminderDelta() throws IOException {
+        MAPIPropName PidLidReminderDelta
+                = PSETID_CommonPropName(0x8501);
+        Integer reminderDelta = this.getIntegerValue(PidLidReminderDelta, 0);
+        if ( (reminderDelta != null) && (reminderDelta == 0x5AE980E1) ) {
+            reminderDelta= 15;
+        }
+        return reminderDelta;
+    }
+
+    /**
+     * 
+     * @return value of PidLidReminderSet property which specifies whether
+     * a reminder is set on the object.
+     * @throws IOException
+     */
+    public boolean getReminderSet() throws IOException {
+        // Specifies the start date and time of the event in UTC
+        MAPIPropName PidLidReminderSet
+                = PSETID_CommonPropName(0x8503);
+        return this.getBooleanValue(PidLidReminderSet, 0, false);
+    }
+
+    /**
      * PidLidAppointmentStartWhole - Specifies the start date and time for the event.
      * @return the time in UTC that the meeting object was sent or null
      * @throws IOException
@@ -781,6 +813,14 @@ public class SchedulingViewOfTnef extends Message {
      */
     public MAPIPropName PSETID_MeetingPropName(int LID) {
         return new MAPIPropName(MSGUID.PSETID_Meeting.getJtnefGuid(), LID);
+    }
+
+    /**
+     * @param LID - Property Long ID
+     * @return MAPIPropName for set PSETID_Common with this Property Long ID
+     */
+    public MAPIPropName PSETID_CommonPropName(int LID) {
+        return new MAPIPropName(MSGUID.PSETID_Common.getJtnefGuid(), LID);
     }
 
     /**

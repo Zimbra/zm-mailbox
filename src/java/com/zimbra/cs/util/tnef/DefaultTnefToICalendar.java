@@ -29,10 +29,13 @@ import net.fortuna.ical4j.data.ContentHandler;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.DateTime;
+import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Parameter;
+import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.parameter.CuType;
 import net.fortuna.ical4j.model.parameter.PartStat;
+import net.fortuna.ical4j.model.parameter.Related;
 import net.fortuna.ical4j.model.parameter.Role;
 import net.fortuna.ical4j.model.parameter.Rsvp;
 import net.fortuna.ical4j.model.property.Clazz;
@@ -51,10 +54,12 @@ import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
 import com.zimbra.cs.util.tnef.mapi.TimeZoneDefinition;
 import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.SentBy;
+import net.fortuna.ical4j.model.property.Action;
 import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.CalScale;
 import net.fortuna.ical4j.model.property.DtStamp;
 import net.fortuna.ical4j.model.property.Organizer;
+import net.fortuna.ical4j.model.property.Trigger;
 import net.fortuna.ical4j.model.property.XProperty;
 
 /**
@@ -100,6 +105,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             uid = schedView.getIcalUID();
             sequenceNum = schedView.getSequenceNumber();
             boolean replyWanted = schedView.getResponseRequested();
+            boolean reminderSet = schedView.getReminderSet();
             String location = schedView.getLocation();
             Boolean isAllDayEvent = schedView.isAllDayEvent();
             Boolean isCounterProposal = schedView.isCounterProposal();
@@ -317,8 +323,10 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                         "X-MICROSOFT-CDO-DISALLOW-COUNTER",
                         disallowCounter ? "TRUE" : "FALSE");
             }
+            if (reminderSet) {
+                addAlarmComponent(icalOutput, schedView.getReminderDelta());
+            }
             icalOutput.endComponent(Component.VEVENT);
-            // TODO:  Want VALARM too "for completeness"
             addExceptions(icalOutput, recurDef, recurrenceTZinfo,
                 sequenceNum, ownerApptId, summary, location, isAllDayEvent);
 
@@ -395,7 +403,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                         cInst.getEndDate(), tzDef, exceptIsAllDayEvent);
                 IcalUtil.addProperty(icalOutput, Property.UID, uid);
                 IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.RECURRENCE_ID,
-                        cInst.getOriginalStartDate(), tzDef, exceptIsAllDayEvent);
+                        cInst.getOriginalStartDate(), tzDef, seriesIsAllDay);
                 IcalUtil.addProperty(icalOutput, dtstamp);
                 BusyStatus exceptBusyStatus = cInst.getBusyStatus();
                 if (exceptBusyStatus != null) {
@@ -416,6 +424,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 IcalUtil.addProperty(icalOutput,
                         "X-MICROSOFT-CDO-ALLDAYEVENT",
                         exceptIsAllDayEvent ? "TRUE" : "FALSE");
+                addAlarmComponent(icalOutput, cInst.getReminderDelta());
                 icalOutput.endComponent(Component.VEVENT);
             }
         }
@@ -630,6 +639,43 @@ private void addAttendee(ContentHandler icalOutput, InternetAddress ia,
             attendee.getParameters().add(partstat);
         }
         IcalUtil.addProperty(icalOutput, attendee);
+    }
+
+    /**
+     * 
+     * @param icalOutput
+     * @param reminderDelta number of minutes before Start
+     * @throws ParserException
+     * @throws URISyntaxException
+     * @throws IOException
+     * @throws ParseException
+     */
+    private void addAlarmComponent(ContentHandler icalOutput, Integer reminderDelta)
+                throws ParserException, URISyntaxException, IOException, ParseException {
+        if (reminderDelta == null) {
+            return;
+        }
+
+        icalOutput.startComponent(Component.VALARM);
+        IcalUtil.addProperty(icalOutput, Action.DISPLAY);
+        IcalUtil.addProperty(icalOutput, Property.DESCRIPTION, "Reminder", false);
+        String trigStr;
+        if (reminderDelta % 60 == 0) {
+            reminderDelta = reminderDelta / 60;
+            if (reminderDelta % 24 == 0) {
+                reminderDelta = reminderDelta / 24;
+                trigStr = String.format("-PT%dD", reminderDelta);
+            } else {
+                trigStr = String.format("-PT%dH", reminderDelta);
+            }
+        } else {
+            trigStr = String.format("-PT%dM", reminderDelta);
+        }
+        ParameterList trigParams = new ParameterList();
+        trigParams.add(Related.START);
+        Trigger trigger = new Trigger(trigParams, trigStr);
+        IcalUtil.addProperty(icalOutput, trigger);
+        icalOutput.endComponent(Component.VALARM);
     }
 
     /**
