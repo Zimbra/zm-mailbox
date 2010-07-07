@@ -836,7 +836,14 @@ public abstract class Provisioning extends ZAttrProvisioning {
     
     public abstract void removeAlias(Account acct, String alias) throws ServiceException;
     
-    
+    /**
+     * search alias target - will always do a search
+     * 
+     * @param alias
+     * @param mustFind
+     * @return
+     * @throws ServiceException
+     */
     public NamedEntry searchAliasTarget(Alias alias, boolean mustFind) throws ServiceException {
         String targetId = alias.getAttr(Provisioning.A_zimbraAliasTargetId);
         SearchOptions options = new SearchOptions();
@@ -864,6 +871,18 @@ public abstract class Provisioning extends ZAttrProvisioning {
             return null;
         else
             return entries.get(0);
+    }
+    
+    /**
+     * search alias target - implementation can return cached entry
+     * 
+     * @param alias
+     * @param mustFind
+     * @return
+     * @throws ServiceException
+     */
+    public NamedEntry getAliasTarget(Alias alias, boolean mustFind) throws ServiceException {
+        return searchAliasTarget(alias, mustFind);
     }
 
     /**

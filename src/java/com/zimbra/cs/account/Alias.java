@@ -54,9 +54,8 @@ public class Alias extends MailTarget {
         if (mTarget != null)
             return mTarget;
         
-        // search for it
         try {
-            mTarget = prov.searchAliasTarget(this, false);
+            mTarget = prov.getAliasTarget(this, false);
         } catch (ServiceException e) {
             ZimbraLog.account.warn("cannot find target " +  getId() + " for alias " + getName(), e);
         }
@@ -95,11 +94,6 @@ public class Alias extends MailTarget {
             return TargetType.dl;
         else
             throw ServiceException.FAILURE("invalid target type for alias " + getName(), null);
-    }
-    
-    public boolean isDangling(Provisioning prov) throws ServiceException {
-        NamedEntry target = getTarget(prov);
-        return (target == null);
     }
 
 }
