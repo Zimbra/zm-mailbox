@@ -19,6 +19,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Timer;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.smtpserver.SmtpToLmtp;
+import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -38,12 +44,6 @@ import com.zimbra.cs.mailbox.PurgeThread;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.memcached.MemcachedConnector;
-import com.zimbra.cs.mime.TnefFileCache;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapTransport;
-import com.zimbra.common.util.ZimbraHttpConnectionManager;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.servlet.FirstServlet;
@@ -254,6 +254,12 @@ public class Zimbra {
 
             if (app.supports(PurgeThread.class.getName()))
                 PurgeThread.startup();
+            
+            if (LC.smtp_to_lmtp_enabled.booleanValue()) {
+                int smtpPort = LC.smtp_to_lmtp_port.intValue();
+                int lmtpPort = Provisioning.getInstance().getLocalServer().getLmtpBindPort();
+                SmtpToLmtp.startup(smtpPort, "localhost", lmtpPort);
+            }
 
             // should be last, so that other subsystems can add dynamic stats counters
             if (app.supports(ZimbraPerf.class.getName()))
