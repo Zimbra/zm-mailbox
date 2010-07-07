@@ -18,9 +18,11 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Set;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.mail.MessagingException;
 import javax.security.auth.login.LoginException;
 
 import com.zimbra.common.localconfig.LC;
@@ -234,7 +236,13 @@ public class Pop3Sync extends MailItemImport {
             mc = MessageContent.read(cis, size);
             ParsedMessage pm = mc.getParsedMessage(null, indexAttachments);
             Message msg = null;
-
+	    // bug 47796: Set received date to sent date if available otherwise use current time
+            try {
+                Date sentDate = pm.getMimeMessage().getSentDate();
+                pm.setReceivedDate(sentDate != null ? sentDate.getTime() : System.currentTimeMillis());
+            } catch (MessagingException e) {
+                pm.setReceivedDate(System.currentTimeMillis());
+            }
             DeliveryContext dc = mc.getDeliveryContext();
             if (isOffline()) {
                 msg = addMessage(null, pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD, dc);
