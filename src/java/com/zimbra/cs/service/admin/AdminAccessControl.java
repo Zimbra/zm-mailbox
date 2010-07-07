@@ -844,9 +844,12 @@ public abstract class AdminAccessControl {
      */
     public static class SearchDirectoryRightChecker extends BulkRightChecker {
         
+        protected boolean mAllowAll; // short cut for global admin
+        
         public SearchDirectoryRightChecker(AdminAccessControl accessControl, Provisioning prov, Set<String> reqAttrs) throws ServiceException {
             // reqAttrs is no longer needed, TODO, cleanup from all callsites 
             super(accessControl, prov);
+            mAllowAll = allowAll();
         }
         
         private boolean hasRightsToListDanglingAlias(Alias alias) throws ServiceException {
@@ -869,12 +872,12 @@ public abstract class AdminAccessControl {
             // if an admin can list the account/cr/dl, he can do the same on their aliases
             // don't need any getAttrs rights on the account/cr/dl, because the returned alias
             // entry contains only attrs on the alias, not the target entry.
-            TargetType tt = alias.getTargetType(mProv);
+            NamedEntry aliasTarget = alias.getTarget(mProv);
             
-            if (tt == null) // we have a dangling alias, can't check right, allows only system admin
+            if (aliasTarget == null) // we have a dangling alias, can't check right, allows only system admin
                 hasRight = hasRightsToListDanglingAlias(alias);
             else 
-                hasRight = allow(alias.getTarget(mProv));
+                hasRight = allow(aliasTarget);
             
             return hasRight;
         }
@@ -898,6 +901,9 @@ public abstract class AdminAccessControl {
          * returns if entry is allowed.
          */
         public boolean allow(NamedEntry entry) throws ServiceException {
+            
+            if (mAllowAll)
+                return true;
             
             if (entry instanceof Alias)
                 return hasRightsToListAlias((Alias)entry);

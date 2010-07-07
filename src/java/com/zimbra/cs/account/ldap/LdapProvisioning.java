@@ -1687,6 +1687,33 @@ public class LdapProvisioning extends Provisioning {
         
     }
 
+    /**
+     * search alias target - implementation can return cached entry
+     * 
+     * @param alias
+     * @param mustFind
+     * @return
+     * @throws ServiceException
+     */
+    @Override
+    public NamedEntry getAliasTarget(Alias alias, boolean mustFind) throws ServiceException {
+        
+        String targetId = alias.getAttr(Provisioning.A_zimbraAliasTargetId);
+        NamedEntry target;
+        
+        // maybe it's an account/cr
+        target = get(AccountBy.id, targetId);
+        if (target != null)
+            return target;
+        
+        
+        // maybe it's a group
+        // (note, entries in this DL cache contains only minimal attrs)
+        target = getGroup(DistributionListBy.id, targetId);
+        
+        return target;
+    }
+    
     /*
      * (non-Javadoc)
      *
@@ -2965,7 +2992,7 @@ public class LdapProvisioning extends Provisioning {
             case name:
                 return getDistributionListByNameInternal(key);
             default:
-                    return null;
+                return null;
         }
     }
 
@@ -4365,23 +4392,14 @@ public class LdapProvisioning extends Provisioning {
             directGroups = new ArrayList<DistributionList>();
             Set<String> idsToRemove = null;
             for (String groupId : directGroupIds) {
-                DistributionList group = sDLCache.getById(groupId);
+                DistributionList group = prov.getGroup(DistributionListBy.id, groupId);
                 if (group == null) {
-                    // fetch from LDAP
-                    group = prov.getDistributionListByQuery(prov.mDIT.mailBranchBaseDN(),
-                                LdapFilter.distributionListById(groupId),
-                                null, sMinimalDlAttrs);
-                    if (group == null) {
-                        // the group could have been deleted
-                        // remove it from our direct group id cache on the entry
-                        if (idsToRemove == null)
-                            idsToRemove = new HashSet<String>();
-                        idsToRemove.add(groupId);
-                    } else  { 
-                        sDLCache.put(group);
-                    }
-                } 
-                if (group != null)
+                    // the group could have been deleted
+                    // remove it from our direct group id cache on the entry
+                    if (idsToRemove == null)
+                        idsToRemove = new HashSet<String>();
+                    idsToRemove.add(groupId);
+                } else
                     directGroups.add(group);
             }
             
@@ -4400,6 +4418,51 @@ public class LdapProvisioning extends Provisioning {
         }
         
         return directGroups;
+    }
+    
+    // like get(DistributionListBy keyType, String key)
+    // the difference are:
+    //     - cached
+    //     - entry returned only contains minimal DL attrs
+    //
+    // TODO: generalize it to be a Provisioning method
+    private DistributionList getGroup(DistributionListBy keyType, String key) throws ServiceException {
+        switch(keyType) {
+        case id:
+            return getGroupById(key);
+        case name:
+            return getGroupByName(key);
+        default:
+           return null;
+        }
+    }
+    
+    private DistributionList getGroupById(String groupId) throws ServiceException {
+        DistributionList group = sDLCache.getById(groupId);
+        if (group == null) {
+            // fetch from LDAP
+            group = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
+                        LdapFilter.distributionListById(groupId),
+                        null, sMinimalDlAttrs);
+            if (group != null)
+                sDLCache.put(group);
+        } 
+        
+        return group;
+    }
+    
+    private DistributionList getGroupByName(String groupName) throws ServiceException {
+        DistributionList group = sDLCache.getByName(groupName);
+        if (group == null) {
+            // fetch from LDAP
+            group = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
+                        LdapFilter.distributionListByName(groupName),
+                        null, sMinimalDlAttrs);
+            if (group != null)
+                sDLCache.put(group);
+        } 
+        
+        return group;
     }
     
     private static List<DistributionList> getGroupsInternal(Entry entry, boolean directOnly, Map<String, String> via)
