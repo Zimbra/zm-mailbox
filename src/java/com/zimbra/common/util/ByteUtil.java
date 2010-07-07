@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.Reader;
+import java.io.Writer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.zip.GZIPInputStream;
@@ -288,6 +289,21 @@ public class ByteUtil {
             r.close();
         } catch (IOException e) {
             ZimbraLog.misc.debug("ignoring exception while closing reader", e);
+        }
+    }
+    
+    /**
+     * Closes the given writer and ignores any exceptions.
+     * @param w the <tt>Writer</tt>, may be <tt>null</tt>
+     */
+    public static void closeWriter(Writer w) {
+        if (w == null) {
+            return;
+        }
+        try {
+            w.close();
+        } catch (IOException e) {
+            ZimbraLog.misc.debug("ignoring exception while closing writer", e);
         }
     }
 
