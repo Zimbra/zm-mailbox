@@ -148,6 +148,7 @@ public class RecurrenceDefinition {
     private long unprocessedByteCount;
     private byte [] unprocessedBytes;
     private  List <DateTime> exdateTimes;
+    private  List <DateTime> rdateTimes;
     private  List <ChangedInstanceInfo> changedInstances;
 
     /**
@@ -378,19 +379,46 @@ public class RecurrenceDefinition {
             //  Outlook XP uses NEW times in modMidnightMinsSince1601
             // rather than original times - so, cannot mine that
             // to prune modifications from delMidnightMinsSince1601
+            long minsSince1601 = delSince1601 + startTimeOffset;
             boolean canceledInstance = true;
             for (ChangedInstanceInfo cInst : changedInstances) {
-                if (delSince1601 == cInst.getOrigStartMidnightMinsSince1601()) {
-                    canceledInstance = false;
-                    break;
+                if (minsSince1601 == cInst.getOrigStartMinsSince1601()) {
+                    EnumSet <ExceptionInfoOverrideFlag> overrideFlags = cInst.getOverrideFlags();
+                    // Note that modifications which are just a new time are represented
+                    // in the ICALENDAR as an EXDATE/RDATE pair
+                    if ( (overrideFlags != null) && (!overrideFlags.isEmpty()) ) {
+                        canceledInstance = false;
+                        break;
+                    }
                 }
             }
             if (canceledInstance) {
                 exdateTimes.add(IcalUtil.localMinsSince1601toDate(
-                            delSince1601 + startTimeOffset, tzDef));
+                            minsSince1601, tzDef));
             }
         }
         return exdateTimes;
+    }
+
+    /**
+     * Note that according to MS-OXCICAL, recurrences only support RDATEs
+     * if there is a corresponding EXDATE for an item in the series.
+     * @return the dates suitable for use as RDATEs
+     */
+    public List <DateTime> getRdates() {
+        if (rdateTimes != null) {
+            return rdateTimes;
+        }
+        rdateTimes = new ArrayList <DateTime>();
+        for (ChangedInstanceInfo cInst : changedInstances) {
+            EnumSet <ExceptionInfoOverrideFlag> overrideFlags = cInst.getOverrideFlags();
+            // Note that modifications which are just a new time are represented
+            // in the ICALENDAR as an EXDATE/RDATE pair
+            if ( (overrideFlags == null) || (overrideFlags.isEmpty()) ) {
+                rdateTimes.add(cInst.getStartDate());
+            }
+        }
+        return rdateTimes;
     }
 
     /**
@@ -725,14 +753,18 @@ public class RecurrenceDefinition {
         buf.append("    DeletedInstanceCount=")
                 .append(deletedInstanceCount).append("\n");
         for (long since1601 : delMidnightMinsSince1601) {
+            long timeSince1601 = since1601 + startTimeOffset;
             DateTime currDate = IcalUtil.localMinsSince1601toDate(
-                                    since1601 + startTimeOffset, tzDef);
-            buf.append("        DeletedInstance=").append(currDate)
-                    .append(" (").append(since1601).append(")");
-            for (long modSince1601 : modMidnightMinsSince1601) {
-                if (since1601 == modSince1601) {
-                    buf.append(" [isModification]");
-                    break;
+                                    timeSince1601, tzDef);
+            buf.append("        DeletedInstance=").append(since1601);
+            buf.append(" (+startOffset-->").append(timeSince1601).append("-->");
+            buf.append(currDate).append(")");
+            if (changedInstances != null) {
+                for (ChangedInstanceInfo cInst : changedInstances) {
+                    if (cInst.getOrigStartMinsSince1601() == timeSince1601) {
+                        buf.append(" [changed]");
+                        break;
+                    }
                 }
             }
             buf.append("\n");
@@ -740,10 +772,12 @@ public class RecurrenceDefinition {
         buf.append("    ModifedInstanceCount=")
                 .append(modifiedInstanceCount).append("\n");
         for (long since1601 : modMidnightMinsSince1601) {
+            long timeSince1601 = since1601 + startTimeOffset;
             DateTime currDate = IcalUtil.localMinsSince1601toDate(
-                                    since1601 + startTimeOffset, tzDef);
-            buf.append("        ModifiedInstance=").append(currDate)
-                    .append(" (").append(since1601).append(")\n");
+                                    timeSince1601, tzDef);
+            buf.append("        ModifiedInstance=").append(since1601);
+            buf.append(" (+startOffset-->").append(timeSince1601).append("-->");
+            buf.append(currDate).append(")\n");
         }
         DateTime sDate = getStartDate();
         buf.append("    StartDate=");

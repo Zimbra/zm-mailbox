@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.util.EnumSet;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -50,6 +51,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.tnef.TNEFtoIcalendarServiceException.UnsupportedTnefCalendaringMsgException;
 import com.zimbra.cs.util.tnef.mapi.BusyStatus;
 import com.zimbra.cs.util.tnef.mapi.ChangedInstanceInfo;
+import com.zimbra.cs.util.tnef.mapi.ExceptionInfoOverrideFlag;
 import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
 import com.zimbra.cs.util.tnef.mapi.TimeZoneDefinition;
 import net.fortuna.ical4j.model.parameter.Cn;
@@ -276,6 +278,10 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                     IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.EXDATE,
                             exDate, startTimeTZinfo, isAllDayEvent);
                 }
+                for (DateTime rDate : recurDef.getRdates()) {
+                    IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.RDATE,
+                            rDate, startTimeTZinfo, isAllDayEvent);
+                }
             }
 
             if (importance != null) {
@@ -382,6 +388,12 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             throws ParserException, URISyntaxException, IOException, ParseException {
         if (recurDef != null) {
             for (ChangedInstanceInfo cInst : recurDef.getChangedInstances()) {
+                EnumSet <ExceptionInfoOverrideFlag> overrideFlags = cInst.getOverrideFlags();
+                // Note that modifications which are just a new time are represented
+                // in the ICALENDAR as an EXDATE/RDATE pair
+                if ( (overrideFlags == null) || (overrideFlags.isEmpty()) ) {
+                    continue;
+                }
                 icalOutput.startComponent(Component.VEVENT);
                 Boolean exceptIsAllDayEvent = cInst.isAllDayEvent();
                 if (exceptIsAllDayEvent == null) {

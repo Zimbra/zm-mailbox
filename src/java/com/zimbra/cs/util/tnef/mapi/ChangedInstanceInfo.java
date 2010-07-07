@@ -16,9 +16,9 @@ public class ChangedInstanceInfo {
     static Log sLog = ZimbraLog.tnef;
 
     private int exceptionNum;
-    private long startMidnightMinsSince1601;
-    private long endMidnightMinsSince1601;
-    private long origStartMidnightMinsSince1601;
+    private long startMinsSince1601;
+    private long endMinsSince1601;
+    private long origStartMinsSince1601;
     private DateTime startDate;
     private DateTime endDate;
     private DateTime originalStartDate;
@@ -31,27 +31,27 @@ public class ChangedInstanceInfo {
     private long reminderSet;
     private long reminderDelta;
     private long meetingType;
-    EnumSet <ExceptionInfoOverrideFlag> overrideFlags;
-    long changeHighlightSize;
-    long changeHighlightValue;
-    byte[] chgHLReserved;
-    long rsrvBlockEE1Size;
-    byte[] rsrvBlockEE1;
+    private EnumSet <ExceptionInfoOverrideFlag> overrideFlags;
+    private long changeHighlightSize;
+    private long changeHighlightValue;
+    private byte[] chgHLReserved;
+    private long rsrvBlockEE1Size;
+    private byte[] rsrvBlockEE1;
     private DateTime eeStartDate;
     private DateTime eeEndDate;
     private DateTime eeOriginalStartDate;
-    int unicodeSubjectLen;
-    String unicodeSubject;
-    int unicodeLocationLen;
-    String unicodeLocation;
-    long rsrvBlockEE2Size;
-    byte[] rsrvBlockEE2;
+    private int unicodeSubjectLen;
+    private String unicodeSubject;
+    private int unicodeLocationLen;
+    private String unicodeLocation;
+    private long rsrvBlockEE2Size;
+    private byte[] rsrvBlockEE2;
 
     public  ChangedInstanceInfo(int num) {
         this.exceptionNum = num;
-        startMidnightMinsSince1601 = 0;
-        endMidnightMinsSince1601 = 0;
-        origStartMidnightMinsSince1601 = 0;
+        startMinsSince1601 = 0;
+        endMinsSince1601 = 0;
+        origStartMinsSince1601 = 0;
         startDate = null;
         endDate = null;
         originalStartDate = null;
@@ -83,13 +83,13 @@ public class ChangedInstanceInfo {
  
     public void readExceptionInfo(RawInputStream ris,
             TimeZoneDefinition tz) throws IOException {
-        startMidnightMinsSince1601 = ris.readU32();
-        startDate = IcalUtil.localMinsSince1601toDate(startMidnightMinsSince1601, tz);
-        endMidnightMinsSince1601 = ris.readU32();
-        endDate = IcalUtil.localMinsSince1601toDate(endMidnightMinsSince1601, tz);
-        origStartMidnightMinsSince1601 = ris.readU32();
+        startMinsSince1601 = ris.readU32();
+        startDate = IcalUtil.localMinsSince1601toDate(startMinsSince1601, tz);
+        endMinsSince1601 = ris.readU32();
+        endDate = IcalUtil.localMinsSince1601toDate(endMinsSince1601, tz);
+        origStartMinsSince1601 = ris.readU32();
         originalStartDate = IcalUtil.localMinsSince1601toDate(
-                                origStartMidnightMinsSince1601, tz);
+                                origStartMinsSince1601, tz);
         int overrides = ris.readU16();
         for (ExceptionInfoOverrideFlag flag : ExceptionInfoOverrideFlag.values()) {
             if ( (overrides & flag.mapiPropValue()) == flag.mapiPropValue()) {
@@ -173,15 +173,15 @@ public class ChangedInstanceInfo {
                 .append(exceptionNum).append("\n");
         if (startDate != null) {
             buf.append("        StartDate:").append(startDate).append(" (");
-            buf.append(startMidnightMinsSince1601).append(")\n");
+            buf.append(startMinsSince1601).append(")\n");
         }
         if (endDate != null) {
             buf.append("        EndDate:").append(endDate).append(" (");
-            buf.append(endMidnightMinsSince1601).append(")\n");
+            buf.append(endMinsSince1601).append(")\n");
         }
         if (originalStartDate != null) {
             buf.append("        OriginalStartDate:").append(originalStartDate).append(" (");
-            buf.append(origStartMidnightMinsSince1601).append(")\n");
+            buf.append(origStartMinsSince1601).append(")\n");
         }
         buf.append("        OverrideFlags:").append(overrideFlags).append("\n");
 
@@ -244,6 +244,13 @@ public class ChangedInstanceInfo {
             .append(TNEFUtils.toHexString((byte[])rsrvBlockEE2, (int)rsrvBlockEE2Size))
             .append("\n");
         return buf.toString();
+    }
+
+    /**
+     * @return the overrideFlags
+     */
+    public EnumSet <ExceptionInfoOverrideFlag> getOverrideFlags() {
+        return overrideFlags;
     }
 
     /**
@@ -359,7 +366,7 @@ public class ChangedInstanceInfo {
     /**
      * @return the origStartMidnightMinsSince1601
      */
-    public long getOrigStartMidnightMinsSince1601() {
-        return origStartMidnightMinsSince1601;
+    public long getOrigStartMinsSince1601() {
+        return origStartMinsSince1601;
     }
 }
