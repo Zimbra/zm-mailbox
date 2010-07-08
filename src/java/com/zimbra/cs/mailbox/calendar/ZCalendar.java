@@ -348,8 +348,8 @@ public class ZCalendar {
 
     // these are the characters that MUST be escaped: , ; " \n and \ -- note that \
     // becomes \\\\ here because it is double-unescaped during the compile process!
-    private static final Pattern MUST_ESCAPE = Pattern.compile("[,;\"\n\\\\]");
-    private static final Pattern SIMPLE_ESCAPE = Pattern.compile("([,;\"\\\\])");
+    private static final Pattern MUST_ESCAPE = Pattern.compile("[,;\n\\\\]");
+    private static final Pattern SIMPLE_ESCAPE = Pattern.compile("([,;\\\\])");
     private static final Pattern NEWLINE_CRLF_ESCAPE = Pattern.compile("\r\n");
     private static final Pattern NEWLINE_BARE_CR_OR_LF_ESCAPE = Pattern.compile("[\r\n]");
     
@@ -370,7 +370,7 @@ public class ZCalendar {
         return str;
     }
     
-    private static final Pattern SIMPLE_ESCAPED = Pattern.compile("\\\\([,;\"\\\\])");
+    private static final Pattern SIMPLE_ESCAPED = Pattern.compile("\\\\([,;\\\\])");
     private static final Pattern NEWLINE_ESCAPED = Pattern.compile("\\\\[nN]");
 
 
@@ -378,14 +378,6 @@ public class ZCalendar {
         if (str != null && str.indexOf('\\') >= 0) {
             String toRet = SIMPLE_ESCAPED.matcher(str).replaceAll("$1"); 
             return NEWLINE_ESCAPED.matcher(toRet).replaceAll("\r\n"); 
-        }
-        return str;
-    }
-
-    public static String unquote(String str) {
-        if (str != null && str.length()>2) {
-            if ((str.charAt(0) == '\"') && (str.charAt(str.length()-1) == '\"'))
-                return str.substring(1, str.length()-1);
         }
         return str;
     }
@@ -621,7 +613,7 @@ public class ZCalendar {
             mName = name.toUpperCase();
         }
         public void setValue(String value) {
-            maValue = value;
+            maValue = unquote(value);
         }
 
         public String toString() {
@@ -742,6 +734,14 @@ public class ZCalendar {
             else
                 return sb.substring(1, sb.length() - 1);
         }
+
+        public static String unquote(String str) {
+            if (str != null && str.length() >= 2) {
+                if ((str.charAt(0) == '\"') && (str.charAt(str.length() - 1) == '\"'))
+                    return str.substring(1, str.length() - 1);
+            }
+            return str;
+        }
     }
 
     static ZProperty findProp(List <ZProperty> list, ICalTok tok)
@@ -846,7 +846,7 @@ public class ZCalendar {
 
         public void endProperty(String name) { mCurProperty = null; }
 
-        public void parameter(String name, String value) { 
+        public void parameter(String name, String value) {
             ZParameter param = new ZParameter(name, value);
             if (mCurProperty != null) {
                 mCurProperty.mParameters.add(param);
@@ -974,12 +974,12 @@ public class ZCalendar {
                 System.out.println("\n\n\n");
                 
                 s = "\"Foo Bar Gub\"";
-                System.out.println("Unquoted:"+s+"\nQuoted:"+unquote(s));
+                System.out.println("Unquoted:"+s+"\nQuoted:"+ZParameter.unquote(s));
                 
                 System.out.println("\n\n\n");
                 
                 s = "Blah Bar Blah";
-                System.out.println("Unquoted:"+s+"\nQuoted:"+unquote(s));
+                System.out.println("Unquoted:"+s+"\nQuoted:"+ZParameter.unquote(s));
                 System.out.println("\n\n\n");
 
                 {
