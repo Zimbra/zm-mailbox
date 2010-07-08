@@ -284,7 +284,7 @@
         <mkdir dir="${base.dir}/wiki"/>
     </target>
 
-    <target name="build-init" description="Creates directories required for compiling">
+    <target name="build-init">
         <mkdir dir="${build.classes.dir}"/>
         <mkdir dir="${generated.java.dir}"/>
         <mkdir dir="${build.dir}/wiki"/>
@@ -395,7 +395,7 @@
         <echo>Version: ${zimbra.buildinfo.version} Date: ${zimbra.buildinfo.date}</echo>
     </target>
 
-    <target name="generate-buildinfo" depends="set-buildinfo-vars,build-init">
+    <target name="generate-buildinfo" depends="set-buildinfo-vars">
         <if>
             <not><available file="${build.dir}/buildinfo/com/zimbra/cs/util/BuildInfoGenerated.java"/></not>
             <then>
@@ -424,7 +424,7 @@
         <javac destdir="${build.classes.dir}" debug="true" target="${javac.target}" srcdir="${build.dir}/buildinfo">
         </javac>
     </target>
-
+	
     <target name="setup-ldap-config">
         <!-- copy attrs source files to build dir -->
         <delete dir="${build.dir}/attrs-src"/>
@@ -560,7 +560,7 @@
         </java>
     </target>
 
-    <target name="db-versions-init" depends="mysql-versions-init,sqlite-versions-init,derby-versions-init"/>
+    <target name="db-versions-init" depends="generate-buildinfo,mysql-versions-init,sqlite-versions-init,derby-versions-init"/>
 
     <target name="compile" depends="build-init">
         <ant dir="${common.dir}" target="jar" inheritAll="false"/>
@@ -572,7 +572,7 @@
         <antcall target="db-versions-init"/>
     </target>
 
-    <target name="jar" depends="generate-buildinfo,compile">
+    <target name="jar" depends="compile">
         <echo>Hostname: ${zimbra.server.hostname}</echo>
         <jar destfile="${jarfile}" basedir="${build.classes.dir}">
             <manifest>
@@ -588,13 +588,13 @@
         <antcall target="generate-ldap-config"/>
     </target>
 
-    <target name="clean" description="Deletes classes from build directories">
+    <target name="clean" description="Removes any temporary files">
         <ant dir="${common.dir}" target="clean" inheritAll="false"/>
         <ant dir="${im.dir}" target="clean" inheritAll="false"/>
         <delete dir="${build.dir}"/>
     </target>
 	
-    <target name="clean-opt-zimbra" description="Deletes deployed jars, classes, and zimlets">
+    <target name="clean-opt-zimbra">
 	<!-- Delete jars, so that we don't leave cruft if a jar is upgraded with a new name. -->
     	<delete dir="${zimbra.home.dir}/lib/jars" failonerror="false"/>
     	<delete dir="${zimbra.home.dir}/zimlets-deployed" failonerror="false"/>
@@ -622,9 +622,13 @@
     <target name="service-deploy" depends="refresh-opt-zimbra,deploy-war"
             description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
-    <target name="deploy-war" depends="stop-jetty,war,copy-war,start-jetty"/>
+    <target name="deploy-war" depends="stop-jetty,war">
+        <antcall target="copy-war"/>
+        <antcall target="start-jetty"/>
+    </target>
 
-    <target name="copy-war">
+    <target name="copy-war-internal">
+        <!-- do all the work for the copy-war target, without the dependencies -->
         <delete dir="${jetty.home.dir}/webapps/service"/>
         <delete file="${jetty.home.dir}/webapps/service.war"/>
         <copy file="${warfile}" todir="${jetty.home.dir}/webapps"/>
@@ -632,7 +636,11 @@
         <unzip dest="${jetty.home.dir}/webapps/service" src="${jetty.home.dir}/webapps/${warfilename}"/>
     </target>
 
-    <target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert" description="Copies build/dist to /opt/zimbra">
+    <target name="copy-war" depends="stop-jetty,war">
+        <antcall target="copy-war-internal"/>
+    </target>
+
+    <target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert">
         <copy todir="${zimbra.home.dir}">
             <fileset dir="${dist.dir}"/>
         </copy>
@@ -689,7 +697,7 @@
         <antcall target="start-webserver"/>
     </target>
 
-    <target name="dev-dist" depends="war,dev-dist-unix,dev-dist-jetty,choose-db-schema" description="Initializes build/dist">
+    <target name="dev-dist" depends="war,dev-dist-unix,dev-dist-jetty,choose-db-schema">
         <!-- bin, libexec -->
         <copy todir="${dist.dir}/bin" overwrite="true">
             <fileset dir="${src.dir}/bin" excludes="*.production,zmmailboxdctl,jetty"/>
@@ -732,11 +740,6 @@
                 <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
                     <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
                     <arg line="-e mailboxd_keystore=/opt/zimbra/jetty/etc/keystore"/>
-                </java>
-            	<!-- Enable SMTP to LMTP bridge for development. -->
-                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-                    <arg line="-e smtp_to_lmtp_enabled=true"/>
                 </java>
             </then>
         </if>
@@ -881,7 +884,7 @@
         </copy>
     </target>
 
-    <target name="reset-jetty" depends="stop-webserver" description="Resets jetty">
+    <target name="reset-jetty" description="Resets jetty">
         <delete dir="${jetty.home.dir}"/>
         <delete dir="${zimbra.home.dir}/data/tmp/jetty"/>
         <gunzip src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" dest="${build.dir}/jetty-${jetty.version}.tar"/>
@@ -898,6 +901,7 @@
         <mkdir dir="${jetty.home.dir}/work/zimbraAdmin"/>
         <mkdir dir="${jetty.home.dir}/webapps/zimlet"/>
         <mkdir dir="${zimbra.home.dir}/data/tmp/jetty"/>
+        <mkdir dir="${zimbra.home.dir}/zimlets-deployed"/>
     </target>
 
     <target name="reset-open-ldap" description="Resets OpenLDAP" if="is-unix">
@@ -907,7 +911,25 @@
         </exec>
     </target>
 
-    <target name="reset-all" depends="reset-jetty,reset-open-ldap,reset-the-world" description="Reset the world plus jetty and OpenLDAP">
+    <target name="clean-all" description="Clean everything in prep for reset-all">
+        <if>
+            <isset property="jetty.start.jar.exists"/>
+            <then>
+                <antcall target="stop-webserver"/>
+            </then>
+        </if>
+    	<antcall target="stop-ldap"/>
+    	<antcall target="clean"/>
+    	<antcall target="clean-opt-zimbra"/>
+        <mkdir dir="${build.dir}"/>
+
+        <antcall target="reset-open-ldap"/>
+        <delete dir="${zimbra.home.dir}/lib"/>
+        <antcall target="reset-jetty"/>
+    </target>    
+
+    <target name="reset-all" description="Reset the world plus jetty" depends="clean-all">
+        <antcall target="reset-the-world"/>
         <ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="admin-deploy" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
@@ -929,17 +951,16 @@
         <antcall target="reset-the-world-stage2"/>
     </target>
 
-    <target name="reset-the-world-stage1" depends="clean-opt-zimbra,clean,init"
-    	description="Cleans deployed files, compiles, and initializes /opt/zimbra."/>
+    <target name="reset-the-world-stage1" depends="clean,jar,init" description="Run when web server is stopped."/>
 
-    <target name="reset-the-world-stage2" depends="deploy-war,import-wiki-templates,init-unittest"
+    <target name="reset-the-world-stage2" depends="service-deploy,import-wiki-templates,init-unittest"
             description="Run when web server is running.">
         <antcall target="inject">
             <param name="account-to-inject.email" value="user1@${defaultdomain.name}"/>
         </antcall>
     </target>
 
-    <target name="init" depends="stop-servers,stop-ldap,dir-init,init-opt-zimbra,db-init,start-ldap,ldap-load"/>
+    <target name="init" depends="stop-servers,dir-init,init-opt-zimbra,db-init,start-ldap,ldap-load"/>
     
     <target name="inject" depends="compile">
         <if>
@@ -1070,7 +1091,7 @@
         <copy file="${zimbra.home.dir}/conf/keystore-backup/keystore.backup" tofile="${jetty.conf.dir}/keystore" overwrite="true"/>
     </target>
 
-    <target name="dir-init" description="Creates directories in /opt/zimbra">
+    <target name="dir-init">
         <echo message="If the following deletes fail, wait for your web server"/>
         <echo message="to stop (or stop jetty manually)"/>
         <echo message="and try again later."/>
@@ -1111,7 +1132,6 @@
         <mkdir dir="${zimbra.home.dir}/redolog"/>
         <mkdir dir="${zimbra.home.dir}/redolog/archive"/>
         <mkdir dir="${zimbra.home.dir}/backup"/>
-        <mkdir dir="${zimbra.home.dir}/zimlets-deployed"/>
         <antcall target="make-dirs">
             <param name="base.dir" value="${zimbra.home.dir}"/>
         </antcall>
@@ -1293,7 +1313,7 @@
 		</java>
 	</target>
 	
-    <target name="zmprov-commands">
+    <target name="zmprov-commands" depends="build-init">
         <antcall target="generate-zmprov-commands"/>
     </target>
 
@@ -1313,7 +1333,6 @@
             ModifyConfig zimbraBackupReportEmailSender '"Backup Daemon" &lt;admin@${defaultdomain.name}&gt;'
             CreateServer ${zimbra.server.hostname} \
             zimbraSmtpHostname ${zimbra.smtp.host} \
-            zimbraSmtpPort 7024 \
             zimbraMailPort 7070 \
             zimbraMailMode http \
             zimbraImapCleartextLoginEnabled TRUE \
@@ -1692,13 +1711,8 @@
         <antcall target="start-jetty"/>
     </target>
 
-    <target name="stop-webserver" description="Stops Jetty.  If Jetty is not installed, does nothing.">
-        <if>
-            <isset property="jetty.start.jar.exists"/>
-            <then>
-                <antcall target="stop-jetty"/>
-            </then>
-        </if>
+    <target name="stop-webserver">
+        <antcall target="stop-jetty"/>
     </target>
 
     <target name="restart-webserver" depends="stop-webserver,start-webserver"/>
