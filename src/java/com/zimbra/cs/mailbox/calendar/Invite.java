@@ -1173,7 +1173,7 @@ public class Invite {
 
     public String getEffectivePartStat() throws ServiceException {
         if (mCalItem == null) return getPartStat();
-        Instance inst = Instance.fromInvite(mCalItem.getId(), this);
+        Instance inst = isRecurrence() ? null : Instance.fromInvite(mCalItem.getId(), this);
         return mCalItem.getEffectivePartStat(this, inst);
     }
 
