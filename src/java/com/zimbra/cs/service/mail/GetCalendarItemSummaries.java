@@ -219,13 +219,8 @@ public class GetCalendarItemSummaries extends CalendarRequest {
 
                         if (!inst.isTimeless()) {
                             instElt.addAttribute(MailConstants.A_CAL_START_TIME, instStart);
-                            if (inv.getStartTime() != null) {
-                                ICalTimeZone instTz = inv.getStartTime().getTimeZone();
-                                if (inv.isAllDayEvent()) {
-                                    long offset = instTz.getOffset(instStart);
-                                    instElt.addAttribute(MailConstants.A_CAL_TZ_OFFSET, offset);
-                                }
-                            }
+                            if (inv.isAllDayEvent())
+                                instElt.addAttribute(MailConstants.A_CAL_TZ_OFFSET, inst.getTzOffset());
                         }
 
 

@@ -394,9 +394,10 @@ public class Recurrence
             for (DateValue val : mDates) {
                 ParsedDateTime valStart = val.getStartTime();
                 ParsedDateTime valEnd = val.getEndTime();
+                boolean allDay = !valStart.hasTime() || (valStart.hasZeroTime() && mDefaultDuration != null && mDefaultDuration.isMultipleOfDays());
                 list.add(new Instance(calItemId, mInvId, false,
                                       valStart.getUtcTime(), valEnd.getUtcTime(),
-                                      !valStart.hasTime(), valStart.getOffset(), 
+                                      allDay, valStart.getOffset(), 
                                       true, true));
             }
             Collections.sort(list);
@@ -692,7 +693,8 @@ public class Recurrence
                     }
                     if (instStart < end && instEnd > start) {
                         int tzOffset = tz.getOffset(instStart);
-                        toRet.add(num++, new Instance(calItemId, mInvId, false, instStart, instEnd, !mDtStart.hasTime(), tzOffset, false, false));
+                        boolean allDay = !mDtStart.hasTime() || (mDtStart.hasZeroTime() && mDuration != null && mDuration.isMultipleOfDays());
+                        toRet.add(num++, new Instance(calItemId, mInvId, false, instStart, instEnd, allDay, tzOffset, false, false));
                     }
                 }
             } catch (ServiceException se) {
@@ -888,8 +890,9 @@ public class Recurrence
                     first = (CalendarItem.Instance)toAdd.get(0);
                 }
 
+                boolean allDay = !mDtStart.hasTime() || (mDtStart.hasZeroTime() && mDuration != null && mDuration.isMultipleOfDays());
                 CalendarItem.Instance dtstartInst = new CalendarItem.Instance(
-                        calItemId, mInvId, false, firstStart, firstEnd, !mDtStart.hasTime(), mDtStart.getOffset(), false, true);
+                        calItemId, mInvId, false, firstStart, firstEnd, allDay, mDtStart.getOffset(), false, true);
                 if (first == null || first.compareTo(dtstartInst) != 0) {
                     assert(first == null || first.compareTo(dtstartInst) > 0); // first MUST be after dtstart!
                     toAdd.add(0,dtstartInst);
@@ -1369,16 +1372,27 @@ public class Recurrence
             for (Iterator<Instance> iter = stdInstances.iterator(); iter.hasNext(); ) {
                 Instance inst = iter.next();
                 if (inst != null) {
-                    long st = inst.getStart();
-                    long et = inst.getEnd();
-                    if (et < start || st >= end) {
+                    if (inst.getEnd() < start || inst.getStart() >= end) {
                         // Restrict to [start, end) range.
                         iter.remove();
                     } else {
                         for (IException except : mExceptions) {
-                            if (except != null && except.matches(inst.getStart())) {
-                                iter.remove();
-                                break;
+                            if (except != null) {
+                                long instStart = inst.getStart();
+                                if (inst.isAllDay()) {
+                                    // Adjust start time value from instance's TZ to exception's TZ.
+                                    RecurId eRid = except.getRecurId();
+                                    if (eRid != null && eRid.getDt() != null) {
+                                        long eOffset = eRid.getDt().getOffset();
+                                        long iOffset = inst.getTzOffset();
+                                        if (iOffset != eOffset)
+                                            instStart += iOffset - eOffset;
+                                    }
+                                }
+                                if (except.matches(instStart)) {
+                                    iter.remove();
+                                    break;
+                                }
                             }
                         }
                     }

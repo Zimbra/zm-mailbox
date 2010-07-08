@@ -65,6 +65,7 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
+import com.zimbra.cs.mailbox.calendar.Recurrence.RecurrenceRule;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
@@ -1459,6 +1460,76 @@ public abstract class CalendarItem extends MailItem {
             }
         }
 
+        // Check if exception instances are made obsolete by updated recurrence rule.  (bug 47061)
+        Set<String> obsoletedRecurIdZs = new HashSet<String>();
+        if (!isCancel && newInvite.isRecurrence()) {
+            Invite seriesInv = null;
+            // Find the range of existing exception instances.
+            long rangeStart = Long.MAX_VALUE;
+            long rangeEnd = Long.MIN_VALUE;
+            for (Invite inv : mInvites) {
+                if (inv.hasRecurId()) {
+                    RecurId rid = inv.getRecurId();
+                    ParsedDateTime ridDt = rid.getDt();
+                    if (ridDt != null) {
+                        // Turn Outlook-style all-day RecurId to standard-style.
+                        if (inv.isAllDayEvent() && ridDt.hasTime() && ridDt.hasZeroTime()) {
+                            ParsedDateTime ridDtFixed = (ParsedDateTime) ridDt.clone();
+                            ridDtFixed.setHasTime(false);
+                            rid = new RecurId(ridDtFixed, rid.getRange());
+                            ridDt = rid.getDt();
+                        }
+                        // Adjust start time if necessary.
+                        RecurId adjustedRid;
+                        long adjustedT;
+                        if (dtStartMovedBy != null) {
+                            ParsedDateTime dt = ridDt.add(dtStartMovedBy);
+                            adjustedRid = new RecurId(dt, rid.getRange());
+                            adjustedT = dt.getUtcTime();
+                        } else {
+                            adjustedRid = rid;
+                            adjustedT = ridDt.getUtcTime();
+                        }
+                        rangeStart = Math.min(rangeStart, adjustedT);
+                        rangeEnd = Math.max(rangeEnd, adjustedT);
+                        obsoletedRecurIdZs.add(adjustedRid.getDtZ());  // initially all instances considered obsolete
+                    }
+                } else {
+                    seriesInv = inv;
+                }
+            }
+            // Extend the range by a day on both ends to compensate for all-day appointments.
+            long millisIn25Hours = 25 * 60 * 60 * 1000;  // 25 hours to accommodate DST onset dates
+            if (rangeStart != Long.MAX_VALUE)
+                rangeStart -= millisIn25Hours;
+            if (rangeEnd != Long.MIN_VALUE)
+                rangeEnd += millisIn25Hours;
+            if (rangeStart != Long.MAX_VALUE && rangeEnd != Long.MIN_VALUE && rangeStart <= rangeEnd) {
+                ++rangeEnd;  // so the final instance is included in the range
+                IRecurrence recur = newInvite.getRecurrence();
+                if (recur instanceof RecurrenceRule) {
+                    RecurrenceRule rrule = (RecurrenceRule) recur;
+                    List<Instance> instances = rrule.expandInstances(getId(), rangeStart, rangeEnd);
+                    if (instances != null) {
+                        for (Instance inst : instances) {
+                            Invite refInv = seriesInv != null ? seriesInv : newInvite;
+                            RecurId rid = inst.makeRecurId(refInv);
+                            // Turn Outlook-style all-day RecurId to standard-style.
+                            if (refInv.isAllDayEvent() && rid.getDt() != null) {
+                                ParsedDateTime ridDtFixed = (ParsedDateTime) rid.getDt().clone();
+                                ridDtFixed.setHasTime(false);
+                                rid = new RecurId(ridDtFixed, rid.getRange());
+                            }
+                            obsoletedRecurIdZs.remove(rid.getDtZ());  // "Un-obsolete" the surviving recurrence ids.
+                        }
+                    }
+                } else {
+                    // This shouldn't happen.
+                    ZimbraLog.calendar.warn("Expected RecurrenceRule object, but got " + recur.getClass().getName());
+                }
+            }
+        }
+
         boolean addNewOne = true;
         boolean replaceExceptionBodyWithSeriesBody = false;
         boolean modifiedCalItem = false;
@@ -1486,6 +1557,33 @@ public abstract class CalendarItem extends MailItem {
                     toRemove.add(cur);
                     idxsToRemove.add(0, i);
                     continue;
+                }
+            }
+            // Remove exceptions obsoleted by changed RRULE.  (bug 47061)
+            if (cur.hasRecurId() && !obsoletedRecurIdZs.isEmpty()) {
+                RecurId rid = cur.getRecurId();
+                if (rid != null && rid.getDt() != null) {
+                    // Turn Outlook-style all-day RecurId to standard-style.
+                    ParsedDateTime ridDt = rid.getDt();
+                    if (cur.isAllDayEvent() && ridDt.hasTime() && ridDt.hasZeroTime()) {
+                        ParsedDateTime ridDtFixed = (ParsedDateTime) ridDt.clone();
+                        ridDtFixed.setHasTime(false);
+                        rid = new RecurId(ridDtFixed, rid.getRange());
+                    }
+                    // Adjust start time if necessary.
+                    RecurId adjustedRid;
+                    if (dtStartMovedBy != null) {
+                        ParsedDateTime dt = rid.getDt().add(dtStartMovedBy);
+                        adjustedRid = new RecurId(dt, rid.getRange());
+                    } else {
+                        adjustedRid = rid;
+                    }
+                    if (obsoletedRecurIdZs.contains(adjustedRid.getDtZ())) {
+                        modifiedCalItem = true;
+                        toRemove.add(cur);
+                        idxsToRemove.add(0, i);
+                        continue;
+                    }
                 }
             }
 
