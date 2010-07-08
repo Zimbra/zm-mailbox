@@ -866,7 +866,8 @@ public abstract class AdminAccessControl {
             return mAC.hasRightsToList(alias, AdminRight.PR_SYSTEM_ADMIN_ONLY, null);
         }
         
-        private boolean hasRightsToListAlias(Alias alias) throws ServiceException {
+        // no longer used for perf reason, for bug 46205
+        private boolean hasRightsToListAlias_old(Alias alias) throws ServiceException {
             boolean hasRight;
             
             // if an admin can list the account/cr/dl, he can do the same on their aliases
@@ -882,6 +883,21 @@ public abstract class AdminAccessControl {
             return hasRight;
         }
         
+        // bug 46205.  
+        // 
+        // list alias is now a domain right.
+        //
+        // the old way of checking the list*** right on the target object(account/cr/dl) 
+        // of the alias has perf issue, because we will have to load the target object 
+        // if it is not in cache - for all aliases returned by the LDAP search.
+        private boolean hasRightsToListAlias(Alias alias) throws ServiceException {
+            Domain domain = mProv.getDomain(alias);
+            if (domain == null)
+                return false;
+            else
+                return hasRight(domain, Admin.R_listAlias);
+        }
+    
         private AdminRight needRight(NamedEntry entry) throws ServiceException {
             if (entry instanceof CalendarResource) {
                 return Admin.R_listCalendarResource;
