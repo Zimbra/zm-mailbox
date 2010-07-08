@@ -70,6 +70,7 @@
     <a n="zimbraChildAccount"/>
     <a n="zimbraChildVisibleAccount"/>
     <a n="zimbraContactAutoCompleteEmailFields"/>
+    <a n="zimbraContactEmailFields"/>
     <a n="zimbraContactRankingTableSize"/>
     <a n="zimbraDataSourceCaldavPollingInterval"/>
     <a n="zimbraDataSourceCalendarPollingInterval"/>
@@ -153,12 +154,14 @@
     <a n="zimbraPrefAdvancedClientEnforceMinDisplay"/>
     <a n="zimbraPrefAppleIcalDelegationEnabled"/>
     <a n="zimbraPrefAutoAddAddressEnabled"/>
+    <a n="zimbraPrefAutoCompleteQuickCompletionOnComma"/>
     <a n="zimbraPrefAutoSaveDraftInterval"/>
     <a n="zimbraPrefBccAddress"/>
     <a n="zimbraPrefCalendarAllowCancelEmailToSelf"/>
     <a n="zimbraPrefCalendarAllowForwardedInvite"/>
     <a n="zimbraPrefCalendarAllowPublishMethodInvite"/>
     <a n="zimbraPrefCalendarAlwaysShowMiniCal"/>
+    <a n="zimbraPrefCalendarApptAllowAtendeeEdit"/>
     <a n="zimbraPrefCalendarApptReminderWarningTime"/>
     <a n="zimbraPrefCalendarApptVisibility"/>
     <a n="zimbraPrefCalendarAutoAddInvites"/>
@@ -185,11 +188,13 @@
     <a n="zimbraPrefClientType"/>
     <a n="zimbraPrefComposeFormat"/>
     <a n="zimbraPrefComposeInNewWindow"/>
+    <a n="zimbraPrefContactsDisableAutocompleteOnContactGroupMembers"/>
     <a n="zimbraPrefContactsInitialView"/>
     <a n="zimbraPrefContactsPerPage"/>
     <a n="zimbraPrefConvReadingPaneLocation"/>
     <a n="zimbraPrefConversationOrder"/>
     <a n="zimbraPrefDedupeMessagesSentToSelf"/>
+    <a n="zimbraPrefDefaultPrintFontSize"/>
     <a n="zimbraPrefDefaultSignatureId"/>
     <a n="zimbraPrefDeleteInviteOnReply"/>
     <a n="zimbraPrefDisabledZimlets"/>
@@ -233,6 +238,7 @@
     <a n="zimbraPrefInboxUnreadLifetime"/>
     <a n="zimbraPrefIncludeSpamInSearch"/>
     <a n="zimbraPrefIncludeTrashInSearch"/>
+    <a n="zimbraPrefItemsPerVirtualPage"/>
     <a n="zimbraPrefJunkLifetime"/>
     <a n="zimbraPrefLabel"/>
     <a n="zimbraPrefListViewColumns"/>
@@ -376,6 +382,7 @@
     <a n="zimbraExternalPop3Port"/>
     <a n="zimbraExternalPop3SSLHostname"/>
     <a n="zimbraExternalPop3SSLPort"/>
+    <a n="zimbraGalAlwaysIncludeLocalCalendarResources"/>
     <a n="zimbraHelpAdminURL"/>
     <a n="zimbraHelpAdvancedURL"/>
     <a n="zimbraHelpDelegatedURL"/>
@@ -532,6 +539,9 @@
     <r n="domainAdminCalendarResourceRights"/>
     <r n="domainAdminDistributionListRights"/>
     <r n="domainAdminDomainRights"/>
+    
+    <!-- not generated, put here manually -->
+    <r n="listAlias"/>
   </rights>
 </right>
       

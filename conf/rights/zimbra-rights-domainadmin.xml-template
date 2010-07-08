@@ -180,6 +180,9 @@ ${DOMAIN_ATTRS}
     <r n="domainAdminCalendarResourceRights"/>
     <r n="domainAdminDistributionListRights"/>
     <r n="domainAdminDomainRights"/>
+    
+    <!-- not generated, put here manually -->
+    <r n="listAlias"/>
   </rights>
 </right>
       

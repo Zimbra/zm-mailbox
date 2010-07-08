@@ -782,6 +782,7 @@
     <r n="domainAdminConsoleResourceRights"/>
     <r n="domainAdminConsoleSavedSearchRights"/>
     <!-- needed to check for create*Rights on the domain -->
+    <r n="listAlias"/>
     <r n="listDomain"/>
     <!-- <r n="domainAdminDomainRights"/> -->
   </rights>

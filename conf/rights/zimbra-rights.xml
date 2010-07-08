@@ -463,6 +463,10 @@
   <desc>delete alias in this domain</desc>
 </right>
 
+<right name="listAlias" type="preset" targetType="domain">
+  <desc>list alias in this domain</desc>
+</right>
+
 <right name="accessGAL" type="preset" targetType="domain">
   <desc>access GAL by doing AutoCompleteGal/SearchGal/SyncGal requests</desc>
 </right>

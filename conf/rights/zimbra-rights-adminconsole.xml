@@ -2422,6 +2422,7 @@
     <r n="adminConsoleDomainThemesTabRights"/>
     <r n="adminConsoleDomainLimitsTabRights"/>
     <r n="adminConsoleDomainACLTabRights"/>
+    <r n="listAlias"/>
     <r n="listDomain"/>
     <r n="deleteDomain"/>
     <r n="createSubDomain"/>
