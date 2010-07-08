@@ -80,7 +80,7 @@ public class MimeCompoundHeader {
                     } else if (c == ';') {
                         rfc2231.saveParameter(mParams);
                         rfc2231.setState(RFC2231State.PARAM);
-                    } else if (c > 0x20 && c < 0xFF && !TSPECIALS[c]) {
+                    } else if (c > 0x20 && c < 0x7F && !TSPECIALS[c]) {
                         rfc2231.addKeyChar(c);
                     }
                     break;
