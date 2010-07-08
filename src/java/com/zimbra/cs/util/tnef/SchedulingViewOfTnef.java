@@ -378,14 +378,18 @@ public class SchedulingViewOfTnef extends Message {
      * @return value of PidNameKeywords property or null if absent
      * @throws IOException
      */
-    public String[] getCategories() throws IOException {
+    public List <String> getCategories() throws IOException {
         //TODO: Implement this
         MAPIPropName PidNameKeywords = this.PS_PUBLIC_STRINGS_PropName("Keywords");
-        RawInputStream ris = getRawInputStreamValue(PidNameKeywords, 0);
-        if (ris != null) {
-            sLog.debug("getCategories Not yet implemented");
+        MAPIValue[] values = getValues(PidNameKeywords, 0);
+        if (values == null) {
+            return null;
         }
-        return null;
+        ArrayList <String> categories = new ArrayList <String> ();
+        for (MAPIValue val:values) {
+            categories.add(val.toString());
+        }
+        return categories;
     }
 
     /**

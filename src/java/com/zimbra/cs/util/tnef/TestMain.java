@@ -35,6 +35,7 @@ import javax.mail.util.SharedFileInputStream;
 
 import net.fortuna.ical4j.data.ContentHandler;
 import net.fortuna.ical4j.data.ParserException;
+import net.fortuna.ical4j.model.Property;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -46,6 +47,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.cs.util.tnef.TNEFtoIcalendarServiceException;
 import com.zimbra.cs.util.tnef.TNEFtoIcalendarServiceException.UnsupportedTnefCalendaringMsgException;
 import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
+import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
@@ -399,7 +401,13 @@ public class TestMain {
         public void propertyValue(String value) throws ParserException {
             printDebug("<value>%s</value>", value);
 
-            mCurProperty.setValue(value);
+            String propName = mCurProperty.getName();
+            if ((propName.equalsIgnoreCase(Property.CATEGORIES)) ||
+                (propName.equalsIgnoreCase(Property.RESOURCES))) {
+                mCurProperty.setValueList(ZCalendar.parseCommaSepText(value));
+            } else {
+                mCurProperty.setValue(value);
+            }
         }
 
         public void endProperty(String name) {

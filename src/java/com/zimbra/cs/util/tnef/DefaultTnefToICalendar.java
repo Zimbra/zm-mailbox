@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.EnumSet;
+import java.util.List;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -28,6 +29,7 @@ import javax.mail.internet.MimeMessage;
 
 import net.fortuna.ical4j.data.ContentHandler;
 import net.fortuna.ical4j.data.ParserException;
+import net.fortuna.ical4j.model.CategoryList;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
@@ -59,6 +61,7 @@ import net.fortuna.ical4j.model.parameter.SentBy;
 import net.fortuna.ical4j.model.property.Action;
 import net.fortuna.ical4j.model.property.Attendee;
 import net.fortuna.ical4j.model.property.CalScale;
+import net.fortuna.ical4j.model.property.Categories;
 import net.fortuna.ical4j.model.property.DtStamp;
 import net.fortuna.ical4j.model.property.Organizer;
 import net.fortuna.ical4j.model.property.Trigger;
@@ -128,7 +131,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             DateTime recurrenceIdDateTime = schedView.getRecurrenceIdTime();
             DateTime attendeeCriticalChange = schedView.getAttendeeCriticalChange();
             DateTime ownerCriticalChange = schedView.getOwnerCriticalChange();
-            String[] categories = schedView.getCategories();
+            List <String> categories = schedView.getCategories();
             method = null;
             PartStat partstat = null;
             String descriptionText = null;
@@ -306,6 +309,16 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             addAttendees(icalOutput, mimeMsg, partstat, replyWanted);
             // TODO RESOURCES from PidLidNonSendableBcc with ';' replaced
             // with ','.  These are resources without a mail address
+            if (categories != null) {
+                CategoryList cl = new CategoryList();
+                for (String category:categories) {
+                    cl.add(category);
+                }
+                if (cl.size() > 0) {
+                    Categories myCategories = new Categories(cl);
+                    IcalUtil.addProperty(icalOutput, myCategories);
+                }
+            }
             IcalUtil.addProperty(icalOutput,
                     "X-MICROSOFT-CDO-ALLDAYEVENT",
                     isAllDayEvent ? "TRUE" : "FALSE");
