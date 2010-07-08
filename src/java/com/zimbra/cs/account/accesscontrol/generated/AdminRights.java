@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 gsolovyev 20100617-1603 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100707-0107 */
 
 
     public static AdminRight R_accessGAL;
@@ -114,6 +114,7 @@ public class AdminRights {
     public static AdminRight R_adminConsoleServerStatisticRights;
     public static AdminRight R_adminConsoleServerStatusRights;
     public static AdminRight R_adminConsoleServerVolumesTabRights;
+    public static AdminRight R_adminConsoleSoftwareUpdatesRights;
     public static AdminRight R_adminConsoleZimletACLTabRights;
     public static AdminRight R_adminConsoleZimletRights;
     public static AdminRight R_adminLoginAs;
@@ -222,6 +223,7 @@ public class AdminRights {
     public static AdminRight R_installCertificate;
     public static AdminRight R_installZCSLicense;
     public static AdminRight R_listAccount;
+    public static AdminRight R_listAlias;
     public static AdminRight R_listCalendarResource;
     public static AdminRight R_listCos;
     public static AdminRight R_listDistributionList;
@@ -325,6 +327,7 @@ public class AdminRights {
     public static AdminRight R_setAdminConsoleServerPOPTab;
     public static AdminRight R_setAdminConsoleServerServicesTab;
     public static AdminRight R_setAdminConsoleServerVolumesTab;
+    public static AdminRight R_setAdminConsoleSoftwareUpdatesConfigAttrs;
     public static AdminRight R_setAdminConsoleZimletACLTab;
     public static AdminRight R_setAdminSavedSearch;
     public static AdminRight R_setCalendarResourcePassword;
@@ -406,6 +409,8 @@ public class AdminRights {
     public static AdminRight R_viewAdminConsoleServerServicesTab;
     public static AdminRight R_viewAdminConsoleServerStatus;
     public static AdminRight R_viewAdminConsoleServerVolumesTab;
+    public static AdminRight R_viewAdminConsoleSoftwareUpdatesConfigAttrs;
+    public static AdminRight R_viewAdminConsoleSoftwareUpdatesServerAttrs;
     public static AdminRight R_viewAdminConsoleZimletACLTab;
     public static AdminRight R_viewAdminSavedSearch;
     public static AdminRight R_viewDistributionListAdminUI;
@@ -509,6 +514,7 @@ public class AdminRights {
         R_adminConsoleServerStatisticRights    = rm.getAdminRight(Right.RT_adminConsoleServerStatisticRights);
         R_adminConsoleServerStatusRights       = rm.getAdminRight(Right.RT_adminConsoleServerStatusRights);
         R_adminConsoleServerVolumesTabRights   = rm.getAdminRight(Right.RT_adminConsoleServerVolumesTabRights);
+        R_adminConsoleSoftwareUpdatesRights    = rm.getAdminRight(Right.RT_adminConsoleSoftwareUpdatesRights);
         R_adminConsoleZimletACLTabRights       = rm.getAdminRight(Right.RT_adminConsoleZimletACLTabRights);
         R_adminConsoleZimletRights             = rm.getAdminRight(Right.RT_adminConsoleZimletRights);
         R_adminLoginAs                         = rm.getAdminRight(Right.RT_adminLoginAs);
@@ -617,6 +623,7 @@ public class AdminRights {
         R_installCertificate                   = rm.getAdminRight(Right.RT_installCertificate);
         R_installZCSLicense                    = rm.getAdminRight(Right.RT_installZCSLicense);
         R_listAccount                          = rm.getAdminRight(Right.RT_listAccount);
+        R_listAlias                            = rm.getAdminRight(Right.RT_listAlias);
         R_listCalendarResource                 = rm.getAdminRight(Right.RT_listCalendarResource);
         R_listCos                              = rm.getAdminRight(Right.RT_listCos);
         R_listDistributionList                 = rm.getAdminRight(Right.RT_listDistributionList);
@@ -720,6 +727,7 @@ public class AdminRights {
         R_setAdminConsoleServerPOPTab          = rm.getAdminRight(Right.RT_setAdminConsoleServerPOPTab);
         R_setAdminConsoleServerServicesTab     = rm.getAdminRight(Right.RT_setAdminConsoleServerServicesTab);
         R_setAdminConsoleServerVolumesTab      = rm.getAdminRight(Right.RT_setAdminConsoleServerVolumesTab);
+        R_setAdminConsoleSoftwareUpdatesConfigAttrs = rm.getAdminRight(Right.RT_setAdminConsoleSoftwareUpdatesConfigAttrs);
         R_setAdminConsoleZimletACLTab          = rm.getAdminRight(Right.RT_setAdminConsoleZimletACLTab);
         R_setAdminSavedSearch                  = rm.getAdminRight(Right.RT_setAdminSavedSearch);
         R_setCalendarResourcePassword          = rm.getAdminRight(Right.RT_setCalendarResourcePassword);
@@ -801,6 +809,8 @@ public class AdminRights {
         R_viewAdminConsoleServerServicesTab    = rm.getAdminRight(Right.RT_viewAdminConsoleServerServicesTab);
         R_viewAdminConsoleServerStatus         = rm.getAdminRight(Right.RT_viewAdminConsoleServerStatus);
         R_viewAdminConsoleServerVolumesTab     = rm.getAdminRight(Right.RT_viewAdminConsoleServerVolumesTab);
+        R_viewAdminConsoleSoftwareUpdatesConfigAttrs = rm.getAdminRight(Right.RT_viewAdminConsoleSoftwareUpdatesConfigAttrs);
+        R_viewAdminConsoleSoftwareUpdatesServerAttrs = rm.getAdminRight(Right.RT_viewAdminConsoleSoftwareUpdatesServerAttrs);
         R_viewAdminConsoleZimletACLTab         = rm.getAdminRight(Right.RT_viewAdminConsoleZimletACLTab);
         R_viewAdminSavedSearch                 = rm.getAdminRight(Right.RT_viewAdminSavedSearch);
         R_viewDistributionListAdminUI          = rm.getAdminRight(Right.RT_viewDistributionListAdminUI);

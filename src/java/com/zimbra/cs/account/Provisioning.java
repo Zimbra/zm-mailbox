@@ -351,13 +351,22 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     /**
-     * @return the domain this account, or null if an admin account. 
+     * @return the domain of this account, or null if an admin account. 
      * @throws ServiceException
      */    
     public Domain getDomain(Account acct) throws ServiceException {
         String dname = acct.getDomainName();
         boolean checkNegativeCache = (acct instanceof GuestAccount);
         return dname == null ? null : getDomain(DomainBy.name, dname, checkNegativeCache);
+    }
+    
+    /**
+     * @return the domain of this alias
+     * @throws ServiceException
+     */    
+    public Domain getDomain(Alias alias) throws ServiceException {
+        String dname = alias.getDomainName();
+        return dname == null ? null : getDomain(DomainBy.name, dname, false);
     }
    
 

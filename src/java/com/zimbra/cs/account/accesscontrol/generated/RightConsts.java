@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 gsolovyev 20100617-1603 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100707-0107 */
 
 
     /*
@@ -468,6 +468,12 @@ public class RightConsts {
      * Admin Console rights for Server ACL Tab
      */
     public static final String RT_adminConsoleServerVolumesTabRights = "adminConsoleServerVolumesTabRights";
+
+    /**
+     * Rights for configuring SSL certificate on a server through Admin
+     * Console
+     */
+    public static final String RT_adminConsoleSoftwareUpdatesRights = "adminConsoleSoftwareUpdatesRights";
 
     /**
      * Admin Console rights for Zimlet ACL Tab
@@ -1020,6 +1026,11 @@ public class RightConsts {
     public static final String RT_listAccount = "listAccount";
 
     /**
+     * list alias in this domain
+     */
+    public static final String RT_listAlias = "listAlias";
+
+    /**
      * see calendar resource in
      * GetAllCalendarResources/SearchDirectoryResponse
      */
@@ -1536,6 +1547,11 @@ public class RightConsts {
     public static final String RT_setAdminConsoleServerVolumesTab = "setAdminConsoleServerVolumesTab";
 
     /**
+     * Admin Console view attr rights for accounts contact tab
+     */
+    public static final String RT_setAdminConsoleSoftwareUpdatesConfigAttrs = "setAdminConsoleSoftwareUpdatesConfigAttrs";
+
+    /**
      * Admin Console set attr rights for Zimlet ACL Tab
      */
     public static final String RT_setAdminConsoleZimletACLTab = "setAdminConsoleZimletACLTab";
@@ -1954,6 +1970,16 @@ public class RightConsts {
      * Admin Console view attr rights for Server ACL Tab
      */
     public static final String RT_viewAdminConsoleServerVolumesTab = "viewAdminConsoleServerVolumesTab";
+
+    /**
+     * Admin Console view attr rights for accounts contact tab
+     */
+    public static final String RT_viewAdminConsoleSoftwareUpdatesConfigAttrs = "viewAdminConsoleSoftwareUpdatesConfigAttrs";
+
+    /**
+     * Admin Console view attr rights for accounts contact tab
+     */
+    public static final String RT_viewAdminConsoleSoftwareUpdatesServerAttrs = "viewAdminConsoleSoftwareUpdatesServerAttrs";
 
     /**
      * Admin Console view attr rights for Zimlet ACL Tab
