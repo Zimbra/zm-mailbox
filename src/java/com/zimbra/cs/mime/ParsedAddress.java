@@ -36,7 +36,7 @@ public class ParsedAddress implements Comparable<ParsedAddress> {
     private static String  FIRST_NAME = "(" + INITIAL + "{2,}|" + INITIAL + "?[^,\\s]+)";
     private static String  MIDDLE_NAME = "[^,(;{\\[]*";
     private static String  LAST_NAME = "(\\S+)";
-    private static Pattern NAME_SPACE_PATTERN = Pattern.compile(HONORIFIC + "(.*)\\s+" + LAST_NAME);
+    private static Pattern NAME_SPACE_PATTERN = Pattern.compile(HONORIFIC + FIRST_NAME + "\\s+(.*)");
     private static Pattern COMMA_NAME_PATTERN = Pattern.compile(LAST_NAME + ",\\s*(" + HONORIFIC + FIRST_NAME + MIDDLE_NAME + ")(.*)");
 
 	public String emailPart;
