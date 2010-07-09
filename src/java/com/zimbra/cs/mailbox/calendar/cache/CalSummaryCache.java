@@ -187,7 +187,7 @@ public class CalSummaryCache {
                     InstanceData instData;
                     if (!inst.isException()) {
                         String ridZ = inst.getRecurIdZ();
-                        Long tzOffset = instStartLong != null ? Util.getTZOffsetForInvite(inv, instStart) : null;
+                        Long tzOffset = instStartLong != null ? new Long(inst.getTzOffset()) : null;
                         instData = new InstanceData(
                                 ridZ, instStartLong, durationLong, alarmAt, tzOffset,
                                 effectivePartStat, fba, inv.getPercentComplete(),

@@ -333,4 +333,8 @@ public final class ParsedDuration
     public int getSecs() {
         return mSecs * (mNegative ? -1 : 1);
     }
+
+    public boolean isMultipleOfDays() {
+        return mHours == 0 && mMins == 0 && mSecs == 0 && (mDays != 0 || mWeeks != 0);
+    }
 }
