@@ -34,6 +34,7 @@ public class TcpImapServer extends TcpServer implements ImapServer, RealtimeStat
         return new TcpImapHandler(this);
     }
 
+    @Override
     public ImapConfig getConfig() {
         return (ImapConfig) super.getConfig();
     }

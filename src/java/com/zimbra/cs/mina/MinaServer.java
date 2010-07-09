@@ -312,10 +312,8 @@ public abstract class MinaServer implements Server {
             getLog().warn("Unable to register MinaStats mbean", e);
         }
     }
-    /**
-     * Returns the logger for server log messages.
-     *
-     * @return the Zimbra Log for this server
-     */
-    public abstract Log getLog();
+
+    public Log getLog() {
+        return getConfig().getLog();
+    }
 }

@@ -15,10 +15,7 @@
 
 package com.zimbra.cs.lmtpserver;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaServer;
 import com.zimbra.cs.mina.MinaCodecFactory;
@@ -26,14 +23,9 @@ import com.zimbra.cs.mina.MinaSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 
-import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 
 public class MinaLmtpServer extends MinaServer implements LmtpServer {
-    public static boolean isEnabled() {
-        return Boolean.getBoolean("ZimbraNioLmtpEnabled") || LC.nio_lmtp_enabled.booleanValue();
-    }
-
     public MinaLmtpServer(LmtpConfig config, ExecutorService pool) throws ServiceException {
         super(config, pool);
         registerMinaStatsMBean("MinaLmtpServer");
@@ -54,9 +46,6 @@ public class MinaLmtpServer extends MinaServer implements LmtpServer {
     }
 
     @Override
-    public Log getLog() { return ZimbraLog.lmtp; }
-
-
     public LmtpConfig getConfig() {
         return (LmtpConfig) super.getConfig();
     }

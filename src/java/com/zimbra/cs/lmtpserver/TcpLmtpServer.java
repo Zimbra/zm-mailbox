@@ -23,10 +23,12 @@ public class TcpLmtpServer extends TcpServer implements LmtpServer {
         super("LmtpServer", config);
     }
 
+    @Override
     protected ProtocolHandler newProtocolHandler() {
         return new TcpLmtpHandler(this);
     }
 
+    @Override
     public LmtpConfig getConfig() {
         return (LmtpConfig) super.getConfig();
     }

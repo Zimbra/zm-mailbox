@@ -16,8 +16,6 @@
 package com.zimbra.cs.pop3;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaServer;
 import com.zimbra.cs.mina.MinaCodecFactory;
@@ -25,7 +23,6 @@ import com.zimbra.cs.mina.MinaSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 
-import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 
 public class MinaPop3Server extends MinaServer implements Pop3Server {
@@ -49,10 +46,8 @@ public class MinaPop3Server extends MinaServer implements Pop3Server {
         };
     }
 
+    @Override
     public Pop3Config getConfig() {
         return (Pop3Config) super.getConfig();
     }
-    
-    @Override
-    public Log getLog() { return ZimbraLog.pop; }
 }
