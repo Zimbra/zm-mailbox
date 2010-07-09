@@ -6956,7 +6956,6 @@ public class Mailbox {
         if (!mCurrentChange.endChange())
             return;
 
-        Connection conn = mCurrentChange.conn;
         ServiceException exception = null;
 
         // update mailbox size and folder unread/message counts
@@ -6968,6 +6967,8 @@ public class Mailbox {
                 success = false;
             }
         }
+
+        Connection conn = mCurrentChange.conn;
 
         // Failure case is very simple.  Just rollback the database and cache
         // and return.  We haven't logged anything to the redo log for this
