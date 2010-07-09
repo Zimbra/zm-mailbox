@@ -15,7 +15,6 @@
 
 package com.zimbra.cs.pop3;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
@@ -23,30 +22,26 @@ import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaServer;
 import com.zimbra.cs.mina.MinaCodecFactory;
 import com.zimbra.cs.mina.MinaSession;
-import com.zimbra.cs.server.ServerConfig;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 
-public class MinaPop3Server extends MinaServer {
-    public static boolean isEnabled() {
-        return Boolean.getBoolean("ZimbraNioPop3Enabled") || LC.nio_pop3_enabled.booleanValue();
-    }
-
-    MinaPop3Server(ServerConfig config, ExecutorService pool)
-        throws IOException, ServiceException {
+public class MinaPop3Server extends MinaServer implements Pop3Server {
+    public MinaPop3Server(Pop3Config config, ExecutorService pool) throws ServiceException {
         super(config, pool);
         registerMinaStatsMBean(
             config.isSslEnabled() ? "MinaPop3SSLServer" : "MinaPop3Server");
     }
 
-    @Override public MinaHandler createHandler(MinaSession session) {
+    @Override
+    public MinaHandler createHandler(MinaSession session) {
         return new MinaPop3Handler(this, session);
     }
 
-    @Override protected ProtocolCodecFactory getProtocolCodecFactory() {
+    @Override
+    protected ProtocolCodecFactory getProtocolCodecFactory() {
         return new MinaCodecFactory() {
             public ProtocolDecoder getDecoder() {
                 return new MinaPop3Decoder(getStats());
@@ -54,5 +49,10 @@ public class MinaPop3Server extends MinaServer {
         };
     }
 
-    @Override public Log getLog() { return ZimbraLog.pop; }
+    public Pop3Config getConfig() {
+        return (Pop3Config) super.getConfig();
+    }
+    
+    @Override
+    public Log getLog() { return ZimbraLog.pop; }
 }

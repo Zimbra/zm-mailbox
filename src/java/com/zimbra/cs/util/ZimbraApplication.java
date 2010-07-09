@@ -59,6 +59,10 @@ public class ZimbraApplication {
         return true;
     }
 
+    public boolean supports(Class cls) {
+        return supports(cls.getName());
+    }
+
     public void startup() {}
 
     public void initialize(boolean forMailboxd) {}

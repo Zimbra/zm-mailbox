@@ -169,11 +169,9 @@ public abstract class MinaServer implements Server {
      * 
      * @param config the ServerConfig for the server
      * @param pool the optional handler thread pool to use for this server
-     * @throws IOException if an I/O error occurred while creating the server
      * @throws ServiceException if a ServiceException occured
      */
-    protected MinaServer(ServerConfig config, ExecutorService pool)
-            throws IOException, ServiceException {
+    protected MinaServer(ServerConfig config, ExecutorService pool) throws ServiceException {
         mServerConfig = config;
         mHandlerThreadPool = pool;
         mChannel = config.getServerSocketChannel();
@@ -208,7 +206,7 @@ public abstract class MinaServer implements Server {
      * 
      * @throws IOException if an I/O error occured while starting the server
      */
-    public void start() throws IOException {
+    public void start() throws ServiceException {
         ServerConfig sc = getConfig();
         DefaultIoFilterChainBuilder fc = mAcceptorConfig.getFilterChain();
         if (sc.isSslEnabled()) {
@@ -218,7 +216,11 @@ public abstract class MinaServer implements Server {
         fc.addLast("executer", new ExecutorFilter(mHandlerThreadPool));
         fc.addLast("logger", new MinaLoggingFilter(this, false));
         IoHandler handler = new MinaIoHandler(this);
-        mSocketAcceptor.register(mChannel, handler, mAcceptorConfig);
+        try {
+            mSocketAcceptor.register(mChannel, handler, mAcceptorConfig);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to register socket acceptor", e);
+        }
         getLog().info("Starting listener on %s%s",
                       mChannel.socket().getLocalSocketAddress(),
                       sc.isSslEnabled() ? " (SSL)" : "");
@@ -230,7 +232,7 @@ public abstract class MinaServer implements Server {
      *
      * @param graceSecs number of seconds to wait before forced shutdown
      */
-    public void shutdown(int graceSecs) {
+    public void stop(int graceSecs) {
         getLog().info("Initiating shutdown");
         // Would prefer to unbind first then cleanly close active connections,
         // but mina unbind seems to automatically close the active sessions
@@ -258,8 +260,8 @@ public abstract class MinaServer implements Server {
         mHandlerThreadPool.shutdownNow();
     }
 
-    public void shutdown() {
-        shutdown(getConfig().getShutdownGraceSeconds());
+    public void stop() {
+        stop(getConfig().getShutdownGraceSeconds());
     }
 
     private void closeSessions(long timeout) {

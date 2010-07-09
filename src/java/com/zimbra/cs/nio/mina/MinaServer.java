@@ -83,7 +83,7 @@ public abstract class MinaServer extends NioServer {
      * Starts the server. Binds the server port and starts the connection
      * handler. Optionally adds an SSLFilter if ssl is enabled.
      */
-    public void start() throws IOException {
+    public void start() throws ServiceException {
         ServerConfig sc = getConfig();
         DefaultIoFilterChainBuilder fc = acceptorConfig.getFilterChain();
         if (sc.isSslEnabled()) {
@@ -93,7 +93,11 @@ public abstract class MinaServer extends NioServer {
         fc.addLast("executer", new ExecutorFilter(getHandlerPool()));
         fc.addLast("logger", new MinaLoggingFilter(this, false));
         IoHandler handler = new MinaIoHandler(this);
-        acceptor.register(channel, handler, acceptorConfig);
+        try {
+            acceptor.register(channel, handler, acceptorConfig);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Unable to register socket acceptor", e);
+        }
         getLog().info("Starting listener on %s%s",
                       channel.socket().getLocalSocketAddress(),
                       sc.isSslEnabled() ? " (SSL)" : "");

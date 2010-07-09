@@ -82,14 +82,8 @@ public abstract class Pop3Handler extends ProtocolHandler {
     private int mExpire;
 
     Pop3Handler(Pop3Server server) {
-        super(server);
-        mConfig = (Pop3Config) server.getConfig();
-        mStartedTLS = mConfig.isSslEnabled();
-    }
-
-    Pop3Handler(MinaPop3Server server) {
-        super(null);
-        mConfig = (Pop3Config) server.getConfig();
+        super(server instanceof TcpPop3Server ? (TcpPop3Server) server : null);
+        mConfig = server.getConfig();
         mStartedTLS = mConfig.isSslEnabled();
     }
 

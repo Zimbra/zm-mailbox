@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.nio;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
 
@@ -49,8 +50,8 @@ public abstract class NioServer implements Server {
 
     public abstract NioStatsMBean getStats();
 
-    public void shutdown() {
-        shutdown(getConfig().getShutdownGraceSeconds());
+    public void stop() throws ServiceException {
+        stop(getConfig().getShutdownGraceSeconds());
     }
     
     protected void registerStatsMBean(String type) {

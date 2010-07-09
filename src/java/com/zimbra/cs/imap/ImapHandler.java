@@ -90,7 +90,7 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
-abstract class ImapHandler extends ProtocolHandler {
+public abstract class ImapHandler extends ProtocolHandler {
     enum State { NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT }
 
     enum ImapExtension { CONDSTORE, QRESYNC }
@@ -122,15 +122,9 @@ abstract class ImapHandler extends ProtocolHandler {
     protected boolean         mGoodbyeSent;
     private   Set<ImapExtension> mActiveExtensions;
 
-    ImapHandler(MinaImapServer server) {
-        super(null);
-        mConfig = (ImapConfig) server.getConfig();
-        mStartedTLS = mConfig.isSslEnabled();
-    }
-
     ImapHandler(ImapServer server) {
-        super(server);
-        mConfig = (ImapConfig) server.getConfig();
+        super(server instanceof TcpImapServer ? (TcpImapServer) server : null);
+        mConfig = server.getConfig();
         mStartedTLS = mConfig.isSslEnabled();
     }
 

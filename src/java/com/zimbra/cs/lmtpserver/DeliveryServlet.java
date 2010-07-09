@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.server.ServerManager;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.stats.ZimbraPerf;
 
@@ -73,10 +74,11 @@ public class DeliveryServlet extends ZimbraServlet {
         }
         envelope.setSender(sender);
 
-        LmtpServer lmtpServer = LmtpServer.getInstance();
+        LmtpServer lmtpServer = ServerManager.getInstance().getLmtpServer();
         if (lmtpServer == null) {
             return numDelivered;
         }
+        LmtpBackend lmtpBackend = lmtpServer.getConfig().getLmtpBackend();
 
         List<String> toList = new LinkedList<String>();
         while (toList.size() < MAX_RECIPIENTS) {
@@ -87,9 +89,9 @@ public class DeliveryServlet extends ZimbraServlet {
             toList.add(to);
         }
 
-        String[] tos = toList.toArray(new String[0]);
+        String[] tos = toList.toArray(new String[toList.size()]);
         
-        resp.addHeader(RESPONSE_PROCESSED, new Integer(tos.length).toString());
+        resp.addHeader(RESPONSE_PROCESSED, Integer.toString(tos.length));
         if (contentLength > -1) {
             ZimbraPerf.COUNTER_LMTP_RCVD_MSGS.increment();
             ZimbraPerf.COUNTER_LMTP_RCVD_BYTES.increment(contentLength);
@@ -107,7 +109,7 @@ public class DeliveryServlet extends ZimbraServlet {
             }
             responseIndex.put(recipient, i);
 
-            LmtpReply lmtpReply = lmtpServer.getLmtpConfig().getLmtpBackend().getAddressStatus(recipient);
+            LmtpReply lmtpReply = lmtpBackend.getAddressStatus(recipient);
             if (!lmtpReply.success()) {
         	status[i] = lmtpReply.toString();
         	continue;
@@ -128,7 +130,7 @@ public class DeliveryServlet extends ZimbraServlet {
         }
 
         if (!envelope.getRecipients().isEmpty()) {
-            lmtpServer.getLmtpConfig().getLmtpBackend().deliver(envelope, req.getInputStream(), 0);
+            lmtpBackend.deliver(envelope, req.getInputStream(), 0);
         }
         
         for (LmtpAddress recipient : envelope.getRecipients()) {
@@ -152,9 +154,12 @@ public class DeliveryServlet extends ZimbraServlet {
         return numDelivered;
     }
     
-    /** Adds an item to a folder specified in the URI.  The item content is
-     *  provided in the POST request's body. */
-    @Override public void doPost(HttpServletRequest req, HttpServletResponse resp)
+    /**
+     * Adds an item to a folder specified in the URI.  The item content is
+     * provided in the POST request's body.
+     */
+    @Override
+    public void doPost(HttpServletRequest req, HttpServletResponse resp)
     throws ServletException, IOException {
         ZimbraLog.clearContext();
         addRemoteIpToLoggingContext(req);
@@ -163,7 +168,7 @@ public class DeliveryServlet extends ZimbraServlet {
             numDelivered = deliver(req, resp);
         } finally {
             ZimbraLog.clearContext();
-            resp.addHeader(RESPONSE_DELIVERED, new Integer(numDelivered).toString());
+            resp.addHeader(RESPONSE_DELIVERED, Integer.toString(numDelivered));
         }
     }
     

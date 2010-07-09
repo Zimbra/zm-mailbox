@@ -43,14 +43,9 @@ public abstract class LmtpHandler extends ProtocolHandler {
     protected LmtpEnvelope mEnvelope;
     private String mCurrentCommandLine;
 
-    LmtpHandler(MinaLmtpServer server) {
-	super(null);
-	mConfig = (LmtpConfig) server.getConfig();
-    }
-
     LmtpHandler(LmtpServer server) {
-	super(server);
-	mConfig = (LmtpConfig) server.getConfig();
+	super(server instanceof TcpLmtpServer ? (TcpLmtpServer) server : null);
+	mConfig = server.getConfig();
     }
 
     protected boolean setupConnection(InetAddress remoteAddr) {

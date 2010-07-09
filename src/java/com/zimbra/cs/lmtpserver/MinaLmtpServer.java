@@ -29,13 +29,12 @@ import org.apache.mina.filter.codec.ProtocolDecoder;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 
-public class MinaLmtpServer extends MinaServer {
+public class MinaLmtpServer extends MinaServer implements LmtpServer {
     public static boolean isEnabled() {
         return Boolean.getBoolean("ZimbraNioLmtpEnabled") || LC.nio_lmtp_enabled.booleanValue();
     }
 
-    public MinaLmtpServer(LmtpConfig config, ExecutorService pool)
-            throws IOException, ServiceException {
+    public MinaLmtpServer(LmtpConfig config, ExecutorService pool) throws ServiceException {
         super(config, pool);
         registerMinaStatsMBean("MinaLmtpServer");
     }
@@ -56,4 +55,9 @@ public class MinaLmtpServer extends MinaServer {
 
     @Override
     public Log getLog() { return ZimbraLog.lmtp; }
+
+
+    public LmtpConfig getConfig() {
+        return (LmtpConfig) super.getConfig();
+    }
 }

@@ -15,7 +15,6 @@
 
 package com.zimbra.cs.lmtpserver;
 
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.tcpserver.TcpServerInputStream;
 

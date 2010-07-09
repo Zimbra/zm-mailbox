@@ -38,7 +38,8 @@ class TcpImapHandler extends ImapHandler {
         super(server);
     }
                                                       
-    @Override protected boolean setupConnection(Socket connection) throws IOException {
+    @Override
+    protected boolean setupConnection(Socket connection) throws IOException {
         connection.setSoTimeout(mConfig.getMaxIdleSeconds() * 1000);        
         mRemoteAddress = connection.getInetAddress().getHostAddress();
         INFO("connected");

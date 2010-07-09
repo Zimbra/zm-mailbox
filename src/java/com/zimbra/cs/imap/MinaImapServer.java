@@ -12,10 +12,8 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
 package com.zimbra.cs.imap;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
@@ -29,20 +27,11 @@ import org.apache.mina.filter.codec.ProtocolDecoder;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 
-/**
- * MINA-based IMAP server implementation.
- */
-public class MinaImapServer extends MinaServer {
-    public static boolean isEnabled() {
-        return Boolean.getBoolean("ZimbraNioImapEnabled") || LC.nio_imap_enabled.booleanValue();
-    }
-
-    MinaImapServer(ImapConfig config, ExecutorService pool)
-            throws IOException, ServiceException {
+public class MinaImapServer extends MinaServer implements ImapServer {
+    public MinaImapServer(ImapConfig config, ExecutorService pool) throws ServiceException {
         super(config, pool);
         registerMinaStatsMBean(
             config.isSslEnabled() ? "MinaImapSSLServer" : "MinaImapServer");
-
     }
 
     @Override
@@ -59,6 +48,10 @@ public class MinaImapServer extends MinaServer {
         };
     }
 
+    public ImapConfig getConfig() {
+        return (ImapConfig) super.getConfig();
+    }
+    
     @Override
     public Log getLog() { return ZimbraLog.imap; }
 }

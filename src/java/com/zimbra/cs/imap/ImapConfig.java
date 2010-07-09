@@ -95,6 +95,16 @@ public class ImapConfig extends ServerConfig {
        return getIntAttr(A_zimbraImapShutdownGraceSeconds, super.getShutdownGraceSeconds());
     }
 
+    @Override
+    public int getNioMinThreads() {
+        return LC.nio_imap_min_threads.intValue();
+    }
+
+    @Override
+    public int getNioThreadKeepAliveTime() {
+        return LC.nio_imap_thread_keep_alive_time.intValue();
+    }
+
     public int getAuthenticatedMaxIdleSeconds() {
         return ImapSession.IMAP_IDLE_TIMEOUT_SEC;
     }

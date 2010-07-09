@@ -967,7 +967,7 @@ public class IndexEditor {
             try {
                 sTcpServer.removeActiveHandler(sIndexEditorProtocolHandler);
             } finally {
-                sTcpServer.shutdown(0);
+                sTcpServer.stop(0);
                 sTcpServer = null;
             }
         }

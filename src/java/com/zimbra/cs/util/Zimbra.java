@@ -36,16 +36,14 @@ import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.im.IMRouter;
 import com.zimbra.cs.im.ZimbraIM;
-import com.zimbra.cs.imap.ImapServer;
 import com.zimbra.cs.index.MailboxIndex;
-import com.zimbra.cs.lmtpserver.LmtpServer;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.PurgeThread;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.memcached.MemcachedConnector;
-import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.server.ServerManager;
 import com.zimbra.cs.servlet.FirstServlet;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.WaitSetMgr;
@@ -231,16 +229,7 @@ public class Zimbra {
                     ZimbraIM.startup();
                 }
 
-                if (app.supports(LmtpServer.class.getName()))
-                    LmtpServer.startupLmtpServer();
-                if (app.supports(Pop3Server.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraPop3ServerEnabled, false))
-                    Pop3Server.startupPop3Server();
-                if (app.supports(Pop3Server.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraPop3SSLServerEnabled, false))
-                    Pop3Server.startupPop3SSLServer();
-                if (app.supports(ImapServer.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraImapServerEnabled, false))
-                    ImapServer.startupImapServer();
-                if (app.supports(ImapServer.class.getName()) && server.getBooleanAttr(Provisioning.A_zimbraImapSSLServerEnabled, false))
-                    ImapServer.startupImapSSLServer();
+                ServerManager.getInstance().startServers();
             }
 
             if (app.supports(WaitSetMgr.class.getName()))
@@ -295,16 +284,8 @@ public class Zimbra {
         RedoLogProvider redoLog = RedoLogProvider.getInstance();
         if (sIsMailboxd) {
             if (!redoLog.isSlave()) {
-            	if (app.supports(LmtpServer.class.getName()))
-            		LmtpServer.shutdownLmtpServer();
-
-            	if (app.supports(Pop3Server.class.getName()))
-            		Pop3Server.shutdownPop3Servers();
-
-            	if (app.supports(ImapServer.class.getName()))
-            		ImapServer.shutdownImapServers();
+                ServerManager.getInstance().stopServers();
             }
-
             if (app.supports(ZimbraIM.class.getName()))
             	ZimbraIM.shutdown();
 
