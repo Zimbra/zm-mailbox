@@ -907,7 +907,7 @@
     <target name="reset-open-ldap" description="Resets OpenLDAP" if="is-unix">
         <antcall target="stop-ldap"/>
         <exec failonerror="true" executable="../ZimbraServer/src/perl/install-openldap">
-            <arg line="main"/>
+            <arg line="GNR"/>
         </exec>
     </target>
 
