@@ -157,19 +157,16 @@ public class ProxyServlet extends ZimbraServlet {
         doProxy(req, resp);
     }
 
+    protected boolean isAdminRequest(HttpServletRequest req) {
+        return req.getServerPort() == LC.zimbra_admin_service_port.intValue();
+    }
+    
     private static final String DEFAULT_CTYPE = "text/xml";
 
     private void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ZimbraLog.clearContext();
-        AuthToken authToken = null;
-        boolean isAdmin = false;
-        if(req.getServerPort() ==  LC.zimbra_admin_service_port.intValue()) {
-        	authToken = getAdminAuthTokenFromCookie(req, resp);
-        	isAdmin = true;
-        } else {
-        	authToken = getAuthTokenFromCookie(req, resp);
-        }
-        
+        boolean isAdmin = isAdminRequest(req);
+        AuthToken authToken = isAdmin ? getAdminAuthTokenFromCookie(req, resp) : getAuthTokenFromCookie(req, resp);      
         if (authToken == null)
             return;
 
