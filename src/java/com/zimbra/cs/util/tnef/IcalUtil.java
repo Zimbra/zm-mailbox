@@ -102,6 +102,42 @@ public class IcalUtil {
         return dateOnlyFormat.format(actualTime);
     }
 
+    /**
+     * Use when a UTC equivalent of a DateTime is required with the trailing Z indicating
+     * that it is UTC
+     * @param localTimeSince1601
+     * @param tzDef
+     * @return
+     */
+    public static String icalUtcTime(long localTimeSince1601, TimeZoneDefinition tzDef) {
+        DateTime localTime = IcalUtil.localMinsSince1601toDate(
+                                localTimeSince1601, tzDef);
+        SimpleDateFormat utcTimeFmt = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
+        java.util.TimeZone utcTZ = TimeZone.getTimeZone(TimeZones.UTC_ID);
+        utcTimeFmt.setTimeZone(utcTZ);
+        return utcTimeFmt.format(localTime);
+    }
+
+    /**
+     * Intended for diagnostic purposes.
+     * @param localTimeSince1601 is the number of minutes since the start of 1601 in <code>tzDef</code>
+     * @param tzDef
+     * @return
+     */
+    public static String friendlyLocalTime(long localTimeSince1601, TimeZoneDefinition tzDef) {
+        DateTime localTime = IcalUtil.localMinsSince1601toDate(
+                                localTimeSince1601, tzDef);
+        SimpleDateFormat localTimeFmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+        java.util.TimeZone tz;
+        if (tzDef == null) {
+            tz = TimeZone.getTimeZone(TimeZones.UTC_ID);
+        } else {
+            tz = tzDef.getTimeZone();
+        }
+        localTimeFmt.setTimeZone(tz);
+        return localTimeFmt.format(localTime);
+    }
+
     public static void addPropertyFromUtcTimeAndZone(
             ContentHandler icalOutput, String propName,
             DateTime utcTime, TimeZoneDefinition tzd,
@@ -138,51 +174,34 @@ public class IcalUtil {
 
     /**
      *
-     * @param minsSince1601 is minutes since start of 1601 (used in MAPI FILETIME)
-     * @param tzd
+     * @param minsSince1601 is minutes since start of 1601 in local time (used in MAPI FILETIME)
+     * @param tzd - local timezone applicable to <code>minseSince1601</code>
      * @return
      */
     public static DateTime localMinsSince1601toDate(long minsSince1601, TimeZoneDefinition tzd) {
-                long millisecs = minsSince1601 * 60L * 1000L; // to milliseconds
-                // subtract milliseconds between 1/1/1601 and 1/1/1970 (including 89 leap year days)
-                millisecs = millisecs - 1000L*60L*60L*24L*(365L*369L+89L);
-                // time is in localtime.  We need UTC
-                GregorianCalendar utcCalendar =
-                    new GregorianCalendar(java.util.TimeZone.getTimeZone(TimeZones.UTC_ID));
-                utcCalendar.setTimeInMillis(millisecs);
-                if ( (tzd == null) || tzd.getTimeZone().getID().equals(TimeZones.UTC_ID) ) {
-                    return new DateTime(utcCalendar.getTime());
-                }
-                // At this point, the fields in utcCalendar represent the localtime
-                // values of YEAR/MONTH/DAY/HOUR etc - so, create a new object in the correct
-                // local timezone and copy the fields across.
-                GregorianCalendar localCalendar = new GregorianCalendar(tzd.getTimeZone());
-                localCalendar.set(utcCalendar.get(Calendar.YEAR),
-                        utcCalendar.get(Calendar.MONTH),
-                        utcCalendar.get(Calendar.DAY_OF_MONTH),
-                        utcCalendar.get(Calendar.HOUR_OF_DAY),
-                        utcCalendar.get(Calendar.MINUTE),
-                        utcCalendar.get(Calendar.SECOND));
-                return new DateTime(localCalendar.getTime());
+        long millisecs = minsSince1601 * 60L * 1000L; // to milliseconds
+        // subtract milliseconds between 1/1/1601 and 1/1/1970 (including 89 leap year days)
+        millisecs = millisecs - 1000L*60L*60L*24L*(365L*369L+89L);
+        // time is in localtime.  We need UTC
+        GregorianCalendar utcCalendar =
+            new GregorianCalendar(java.util.TimeZone.getTimeZone(TimeZones.UTC_ID));
+        utcCalendar.setTimeInMillis(millisecs);
+        if ( (tzd == null) || tzd.getTimeZone().getID().equals(TimeZones.UTC_ID) ) {
+            return new DateTime(utcCalendar.getTime());
+        }
+        // At this point, the fields in utcCalendar represent the localtime
+        // values of YEAR/MONTH/DAY/HOUR etc - so, create a new object in the correct
+        // local timezone and copy the fields across.
+        GregorianCalendar localCalendar = new GregorianCalendar(tzd.getTimeZone());
+        localCalendar.set(utcCalendar.get(Calendar.YEAR),
+                utcCalendar.get(Calendar.MONTH),
+                utcCalendar.get(Calendar.DAY_OF_MONTH),
+                utcCalendar.get(Calendar.HOUR_OF_DAY),
+                utcCalendar.get(Calendar.MINUTE),
+                utcCalendar.get(Calendar.SECOND));
+        DateTime localTime = new DateTime(localCalendar.getTime());
+        return localTime;
     }
-
-    /**
-    *
-    * @param minsSince1601 is minutes since start of 1601 (used in MAPI FILETIME)
-    * @param tz
-    * @return
-    */
-   public static DateTime localMinsSince1601toUtcDate(long minsSince1601, TimeZoneDefinition tzd) {
-               DateTime localDate = IcalUtil.localMinsSince1601toDate(minsSince1601, tzd);
-               if ( (tzd == null) || tzd.getTimeZone().getID().equals(TimeZones.UTC_ID) ) {
-                   return localDate;
-               }
-               GregorianCalendar utcCalendar =
-                   new GregorianCalendar(java.util.TimeZone.getTimeZone(TimeZones.UTC_ID));
-
-               utcCalendar.setTimeInMillis(localDate.getTime());
-               return new DateTime(utcCalendar.getTime());
-   }
 
     /**
      * Missing method from RawInputStream

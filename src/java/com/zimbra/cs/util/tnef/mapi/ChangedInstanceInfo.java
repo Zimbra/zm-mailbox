@@ -16,12 +16,10 @@ public class ChangedInstanceInfo {
     static Log sLog = ZimbraLog.tnef;
 
     private int exceptionNum;
+    private TimeZoneDefinition tz;
     private long startMinsSince1601;
     private long endMinsSince1601;
     private long origStartMinsSince1601;
-    private DateTime startDate;
-    private DateTime endDate;
-    private DateTime originalStartDate;
     private String subject;
     private long apptColor;
     private long subType;
@@ -37,9 +35,9 @@ public class ChangedInstanceInfo {
     private byte[] chgHLReserved;
     private long rsrvBlockEE1Size;
     private byte[] rsrvBlockEE1;
-    private DateTime eeStartDate;
-    private DateTime eeEndDate;
-    private DateTime eeOriginalStartDate;
+    private long eeStartMinsSince1601;
+    private long eeEndMinsSince1601;
+    private long eeOrigStartMinsSince1601;
     private int unicodeSubjectLen;
     private String unicodeSubject;
     private int unicodeLocationLen;
@@ -47,14 +45,12 @@ public class ChangedInstanceInfo {
     private long rsrvBlockEE2Size;
     private byte[] rsrvBlockEE2;
 
-    public  ChangedInstanceInfo(int num) {
+    public  ChangedInstanceInfo(int num, TimeZoneDefinition tzDef) {
         this.exceptionNum = num;
+        this.tz = tzDef;
         startMinsSince1601 = 0;
         endMinsSince1601 = 0;
         origStartMinsSince1601 = 0;
-        startDate = null;
-        endDate = null;
-        originalStartDate = null;
         subject = null;
         apptColor =0;
         subType = 0;
@@ -70,9 +66,9 @@ public class ChangedInstanceInfo {
         chgHLReserved = null;
         rsrvBlockEE1Size = 0;
         rsrvBlockEE1 = null;
-        eeStartDate = null;
-        eeEndDate = null;
-        eeOriginalStartDate = null;
+        eeStartMinsSince1601 = -1;
+        eeEndMinsSince1601 = -1;
+        eeOrigStartMinsSince1601 = -1;
         unicodeSubjectLen = 0;
         unicodeSubject = null;
         unicodeLocationLen = 0;
@@ -81,15 +77,10 @@ public class ChangedInstanceInfo {
         rsrvBlockEE2 = null;
     }
  
-    public void readExceptionInfo(RawInputStream ris,
-            TimeZoneDefinition tz) throws IOException {
+    public void readExceptionInfo(RawInputStream ris) throws IOException {
         startMinsSince1601 = ris.readU32();
-        startDate = IcalUtil.localMinsSince1601toDate(startMinsSince1601, tz);
         endMinsSince1601 = ris.readU32();
-        endDate = IcalUtil.localMinsSince1601toDate(endMinsSince1601, tz);
         origStartMinsSince1601 = ris.readU32();
-        originalStartDate = IcalUtil.localMinsSince1601toDate(
-                                origStartMinsSince1601, tz);
         int overrides = ris.readU16();
         for (ExceptionInfoOverrideFlag flag : ExceptionInfoOverrideFlag.values()) {
             if ( (overrides & flag.mapiPropValue()) == flag.mapiPropValue()) {
@@ -102,7 +93,7 @@ public class ChangedInstanceInfo {
             if (subjectLenPlus1 != subjectLen + 1) {
                 throw new IOException("Corruption near subject specification");
             }
-            // TODO: This probably won't work for non-ISO-8859-1
+            // TODO: This might not work for non-ISO-8859-1
             subject = ris.readString(subjectLen);
         }
         if (overrideFlags.contains(ExceptionInfoOverrideFlag.ARO_MEETINGTYPE)) {
@@ -120,7 +111,7 @@ public class ChangedInstanceInfo {
             if (locLenPlus1 != locLen + 1) {
                 throw new IOException("Corruption near location specification");
             }
-            // TODO: This probably won't work for non-ISO-8859-1
+            // TODO: This might not work for non-ISO-8859-1
             location = ris.readString(locLen);
         }
         if (overrideFlags.contains(ExceptionInfoOverrideFlag.ARO_BUSYSTATUS)) {
@@ -138,7 +129,7 @@ public class ChangedInstanceInfo {
     }
 
     public void readExtendedException(RawInputStream ris,
-            TimeZoneDefinition tz, boolean hasChangeHighlight) throws IOException {
+            boolean hasChangeHighlight) throws IOException {
         if (hasChangeHighlight) {
             changeHighlightSize = ris.readU32();
             changeHighlightValue = ris.readU32();
@@ -148,13 +139,9 @@ public class ChangedInstanceInfo {
         rsrvBlockEE1 = ris.readBytes((int)rsrvBlockEE1Size);
         if (overrideFlags.contains(ExceptionInfoOverrideFlag.ARO_SUBJECT) ||
             overrideFlags.contains(ExceptionInfoOverrideFlag.ARO_LOCATION) ) {
-            long startMidnightMinsSince1601 = ris.readU32();
-            eeStartDate = IcalUtil.localMinsSince1601toDate(startMidnightMinsSince1601, tz);
-            long endMidnightMinsSince1601 = ris.readU32();
-            eeEndDate = IcalUtil.localMinsSince1601toDate(endMidnightMinsSince1601, tz);
-            long origStartMidnightMinsSince1601 = ris.readU32();
-            eeOriginalStartDate = IcalUtil.localMinsSince1601toDate(
-                                    origStartMidnightMinsSince1601, tz);
+            eeStartMinsSince1601 = ris.readU32();
+            eeEndMinsSince1601 = ris.readU32();
+            eeOrigStartMinsSince1601 = ris.readU32();
             if (overrideFlags.contains(ExceptionInfoOverrideFlag.ARO_SUBJECT)) {
                 unicodeSubjectLen = ris.readU16();
                 unicodeSubject = ris.readStringUnicode(unicodeSubjectLen * 2);
@@ -171,18 +158,12 @@ public class ChangedInstanceInfo {
     public String toString() {
         StringBuffer buf = new StringBuffer("    ChangedInstance:")
                 .append(exceptionNum).append("\n");
-        if (startDate != null) {
-            buf.append("        StartDate:").append(startDate).append(" (");
-            buf.append(startMinsSince1601).append(")\n");
-        }
-        if (endDate != null) {
-            buf.append("        EndDate:").append(endDate).append(" (");
-            buf.append(endMinsSince1601).append(")\n");
-        }
-        if (originalStartDate != null) {
-            buf.append("        OriginalStartDate:").append(originalStartDate).append(" (");
-            buf.append(origStartMinsSince1601).append(")\n");
-        }
+        this.infoOnLocalTimeSince1601Val(buf,
+                "        StartDate:", startMinsSince1601);
+        this.infoOnLocalTimeSince1601Val(buf,
+                "        EndDate:", endMinsSince1601);
+        this.infoOnLocalTimeSince1601Val(buf,
+                "        OriginalStartDate:", origStartMinsSince1601);
         buf.append("        OverrideFlags:").append(overrideFlags).append("\n");
 
         if (overrideFlags.contains(ExceptionInfoOverrideFlag.ARO_SUBJECT)) {
@@ -224,15 +205,12 @@ public class ChangedInstanceInfo {
         buf.append("        rsrvBlockEE1:")
             .append(TNEFUtils.toHexString((byte[])rsrvBlockEE1, (int)rsrvBlockEE1Size))
             .append("\n");
-        if (eeStartDate != null) {
-            buf.append("        ExtendedStartDate:").append(eeStartDate).append("\n");
-        }
-        if (eeEndDate != null) {
-            buf.append("        ExtendedEndDate:").append(eeEndDate).append("\n");
-        }
-        if (eeOriginalStartDate != null) {
-            buf.append("        ExtendedOriginalStartDate:").append(eeOriginalStartDate).append("\n");
-        }
+        this.infoOnLocalTimeSince1601Val(buf,
+                "        ExtendedStartDate:", eeStartMinsSince1601);
+        this.infoOnLocalTimeSince1601Val(buf,
+                "        ExtendedEndDate:", eeEndMinsSince1601);
+        this.infoOnLocalTimeSince1601Val(buf,
+                "        ExtendedOriginalStartDate:", eeOrigStartMinsSince1601);
         if (overrideFlags.contains(ExceptionInfoOverrideFlag.ARO_SUBJECT)) {
             buf.append("        UnicodeSubject:").append(unicodeSubject).append("\n");
         }
@@ -346,21 +324,21 @@ public class ChangedInstanceInfo {
      * @return the startDate
      */
     public DateTime getStartDate() {
-        return startDate;
+        return IcalUtil.localMinsSince1601toDate(startMinsSince1601, tz);
     }
 
     /**
      * @return the endDate
      */
     public DateTime getEndDate() {
-        return endDate;
+        return IcalUtil.localMinsSince1601toDate(endMinsSince1601, tz);
     }
 
     /**
      * @return the originalStartDate
      */
     public DateTime getOriginalStartDate() {
-        return originalStartDate;
+        return IcalUtil.localMinsSince1601toDate(origStartMinsSince1601, tz);
     }
 
     /**
@@ -369,4 +347,21 @@ public class ChangedInstanceInfo {
     public long getOrigStartMinsSince1601() {
         return origStartMinsSince1601;
     }
+
+    private StringBuffer infoOnLocalTimeSince1601Val(StringBuffer buf, String desc,
+            long localTimeSince1601) {
+        if (localTimeSince1601 == -1) {
+            return buf;
+        }
+        buf.append(desc);
+        buf.append(IcalUtil.friendlyLocalTime(localTimeSince1601, tz));
+        buf.append(" (").append(IcalUtil.icalUtcTime(localTimeSince1601, tz));
+        buf.append(") [");
+        buf.append(localTimeSince1601);
+        buf.append(" (0x");
+        buf.append(Long.toHexString(localTimeSince1601));
+        buf.append(")]\n");
+        return buf;
+    }
+    
 }

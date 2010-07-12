@@ -238,8 +238,8 @@ public class RecurrenceDefinition {
     
             changedInstances = new ArrayList <ChangedInstanceInfo>();
             for (int cnt = 1; cnt <= modifiedInstanceCount; cnt++) {
-                ChangedInstanceInfo cInst = new ChangedInstanceInfo(cnt);
-                cInst.readExceptionInfo(ris, tzDef);
+                ChangedInstanceInfo cInst = new ChangedInstanceInfo(cnt, tzDef);
+                cInst.readExceptionInfo(ris);
                 unprocessedByteCount = ris.available();
                 changedInstances.add(cInst);
             }
@@ -255,7 +255,7 @@ public class RecurrenceDefinition {
             }
             boolean hasChangeHL = (writerVersion2 >= 0x00003009L);
             for (ChangedInstanceInfo cInst : changedInstances) {
-                cInst.readExtendedException(ris, tzDef, hasChangeHL);
+                cInst.readExtendedException(ris, hasChangeHL);
             }
             unprocessedByteCount = ris.available();
             if (unprocessedByteCount > 0) {
@@ -318,14 +318,6 @@ public class RecurrenceDefinition {
 
     public DateTime getStartDate() {
         return IcalUtil.localMinsSince1601toDate(startMinsSince1601, tzDef);
-    }
-
-    public DateTime getEndDate() {
-        if (endMinsSince1601 == 0x5AE980DF) {
-            // Means Infinite
-            return null;
-        }
-        return IcalUtil.localMinsSince1601toDate(endMinsSince1601, tzDef);
     }
 
     public EnumSet <DayOfWeek> getDayOfWeekMask() {
@@ -559,16 +551,25 @@ public class RecurrenceDefinition {
                 //    time or a date with local time and time zone reference, then the
                 //    UNTIL rule part MUST be specified as a date with UTC time.
                 long minsSince1601 = this.endMinsSince1601 + this.startTimeOffset;
-                DateTime untilDateTime = null;
+                DateTime untilDateTime = IcalUtil.localMinsSince1601toDate(minsSince1601, tzDef);
                 recurrenceRule.append(";UNTIL=");
-                if (isFloating) {
-                    // use localtime.  TODO: If all day, do we need to remove hrs/mins etc?
-                    untilDateTime = IcalUtil.localMinsSince1601toDate(minsSince1601, tzDef);
-                } else {
-                    untilDateTime = IcalUtil.localMinsSince1601toUtcDate(minsSince1601, tzDef);
+                java.util.TimeZone untilTZ = null;
+                if (this.tzDef != null) {
+                    untilTZ = this.tzDef.getTimeZone();
                 }
-                recurrenceRule.append(IcalUtil.iCalDateTimeValue(
-                        untilDateTime, this.tzDef.getTimeZone(), isAllDay));
+                if (isFloating) {
+                    // Use localtime.
+                    recurrenceRule.append(IcalUtil.iCalDateTimeValue(
+                            untilDateTime, untilTZ, isAllDay));
+                } else {
+                    if (isAllDay) {
+                        recurrenceRule.append(IcalUtil.iCalDateTimeValue(
+                                untilDateTime, untilTZ, isAllDay));
+                    } else {
+                        // MUST be UTC time
+                        recurrenceRule.append(IcalUtil.icalUtcTime(minsSince1601, tzDef));
+                    }
+                }
             }
             if (hasBYDAY) {
                 WeekDayList weekDayList = new WeekDayList();
@@ -754,48 +755,28 @@ public class RecurrenceDefinition {
                 .append(deletedInstanceCount).append("\n");
         for (long since1601 : delMidnightMinsSince1601) {
             long timeSince1601 = since1601 + startTimeOffset;
-            DateTime currDate = IcalUtil.localMinsSince1601toDate(
-                                    timeSince1601, tzDef);
-            buf.append("        DeletedInstance=").append(since1601);
-            buf.append(" (+startOffset-->").append(timeSince1601).append("-->");
-            buf.append(currDate).append(")");
+            String suffix = new String("");
             if (changedInstances != null) {
                 for (ChangedInstanceInfo cInst : changedInstances) {
                     if (cInst.getOrigStartMinsSince1601() == timeSince1601) {
-                        buf.append(" [changed]");
+                        suffix = new String(" [changed]");
                         break;
                     }
                 }
             }
-            buf.append("\n");
+            infoOnLocalTimeSince1601ValWithOffset(buf,
+                "        DeletedInstance=", since1601, startTimeOffset, suffix);
         }
         buf.append("    ModifedInstanceCount=")
                 .append(modifiedInstanceCount).append("\n");
         for (long since1601 : modMidnightMinsSince1601) {
-            long timeSince1601 = since1601 + startTimeOffset;
-            DateTime currDate = IcalUtil.localMinsSince1601toDate(
-                                    timeSince1601, tzDef);
-            buf.append("        ModifiedInstance=").append(since1601);
-            buf.append(" (+startOffset-->").append(timeSince1601).append("-->");
-            buf.append(currDate).append(")\n");
+            infoOnLocalTimeSince1601ValWithOffset(buf,
+                "        ModifiedInstance=", since1601, startTimeOffset, "");
         }
-        DateTime sDate = getStartDate();
-        buf.append("    StartDate=");
-        if (sDate != null) {
-            buf.append(sDate);
-        } else {
-            buf.append("<null>");
-        }
-        buf.append("[").append(startMinsSince1601).append("]\n");
-
-        DateTime eDate = getEndDate();
-        buf.append("    EndDate(Start of last instance)=");
-        if (eDate != null) {
-            buf.append(eDate);
-        } else {
-            buf.append("<null>");
-        }
-        buf.append("[").append(endMinsSince1601).append("]\n");
+        infoOnLocalTimeSince1601Val(buf,
+                "    StartDate=", startMinsSince1601);
+        infoOnLocalTimeSince1601Val(buf,
+                "    Last Instance's start=", endMinsSince1601);
         buf.append("    ReaderVersion2=0x")
                 .append(Long.toHexString(readerVersion2)).append("\n");
         buf.append("    WriterVersion2=0x")
@@ -828,4 +809,34 @@ public class RecurrenceDefinition {
         }
         return buf.toString();
     }
+    
+    private StringBuffer infoOnLocalTimeSince1601Val(StringBuffer buf, String desc,
+            long localTimeSince1601) {
+        buf.append(desc);
+        buf.append(IcalUtil.friendlyLocalTime(localTimeSince1601, tzDef));
+        buf.append(" (").append(IcalUtil.icalUtcTime(localTimeSince1601, tzDef));
+        buf.append(") [");
+        buf.append(localTimeSince1601);
+        buf.append(" (0x");
+        buf.append(Long.toHexString(localTimeSince1601));
+        buf.append(")]\n");
+        return buf;
+    }
+    
+    private StringBuffer infoOnLocalTimeSince1601ValWithOffset(StringBuffer buf, String desc,
+            long localTimeSince1601, long startOffset, String suffix) {
+        long since1601 = localTimeSince1601 + startOffset;
+        buf.append(desc);
+        buf.append(IcalUtil.friendlyLocalTime(since1601, tzDef));
+        buf.append(" (").append(IcalUtil.icalUtcTime(since1601, tzDef));
+        buf.append(") [");
+        buf.append(localTimeSince1601);
+        buf.append(" + ");
+        buf.append(startOffset);
+        buf.append("]");
+        buf.append(suffix);
+        buf.append("\n");
+        return buf;
+    }
+
 }
