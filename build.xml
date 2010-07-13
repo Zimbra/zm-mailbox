@@ -404,7 +404,6 @@
                     package com.zimbra.cs.util;
                 	
                     class BuildInfoGenerated {
-                        public static final String PLATFORM = "${zimbra.buildinfo.platform}";
                         public static final String MAJORVERSION = "${zimbra.buildinfo.majorversion}";
                         public static final String MINORVERSION = "${zimbra.buildinfo.minorversion}";
                         public static final String MICROVERSION = "${zimbra.buildinfo.microversion}";
