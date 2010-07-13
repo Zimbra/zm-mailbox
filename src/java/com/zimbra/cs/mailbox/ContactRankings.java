@@ -16,6 +16,7 @@ package com.zimbra.cs.mailbox;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -38,11 +39,11 @@ public class ContactRankings {
 	private int mTableSize;
 	private String mAccountId;
 	private TreeMap<String,ContactEntry> mEntryMap;
-	private TreeSet<ContactEntry> mEntrySet;
+	private HashMap<String,ContactEntry> mEntries;
 	public ContactRankings(String accountId) throws ServiceException {
 		mAccountId = accountId;
 		mEntryMap = new TreeMap<String,ContactEntry>();
-		mEntrySet = new TreeSet<ContactEntry>();
+		mEntries = new HashMap<String,ContactEntry>();
 		mTableSize = Provisioning.getInstance().get(Provisioning.AccountBy.id, mAccountId).getIntAttr(Provisioning.A_zimbraContactRankingTableSize, 40);
 		if (!LC.contact_ranking_enabled.booleanValue())
 			return;
@@ -53,7 +54,7 @@ public class ContactRankings {
             return;
         ContactRankings rankings = new ContactRankings(accountId);
         rankings.mEntryMap.clear();
-        rankings.mEntrySet.clear();
+        rankings.mEntries.clear();
         rankings.writeToDatabase();
     }
     public static void remove(String accountId, String email) throws ServiceException {
@@ -81,7 +82,7 @@ public class ContactRankings {
 	public synchronized void increment(String email, String displayName) {
 		long now = System.currentTimeMillis();
 		email = email.toLowerCase();
-		ContactEntry entry = mEntryMap.get(email);
+		ContactEntry entry = mEntries.get(email.toLowerCase());
 		if (entry == null) {
 			entry = new ContactEntry();
 			entry.mEmail = email;
@@ -90,15 +91,16 @@ public class ContactRankings {
 			entry.mFolderId = ContactAutoComplete.FOLDER_ID_UNKNOWN;
 			entry.mLastAccessed = now;
 			
-			if (mEntrySet.size() >= mTableSize) {
-				ContactEntry lastEntry = mEntrySet.last();
+			if (mEntries.size() >= mTableSize) {
+				ContactEntry lastEntry = getSortedSet().last();
 				if (lastEntry.mRanking < 1)
 					remove(lastEntry);
 			}
-			if (mEntrySet.size() < mTableSize) {
+			
+			if (mEntries.size() < mTableSize) {
 				add(entry);
 			} else {
-				for (ContactEntry e : mEntrySet) {
+				for (ContactEntry e : mEntries.values()) {
 					int weeksOld = (int) ((now - e.mLastAccessed) / Constants.MILLIS_PER_WEEK) + 1;
 					e.mRanking -= weeksOld;
 					if (e.mRanking < 0)
@@ -109,6 +111,8 @@ public class ContactRankings {
 			entry.mRanking++;
 			if (entry.mRanking <= 0)
 				entry.mRanking = 1;
+			if (displayName != null && displayName.length() > 0)
+			    entry.setName(displayName);
 			entry.mLastAccessed = now;
 		}
 	}
@@ -129,6 +133,9 @@ public class ContactRankings {
                 break;
         }
         return entries;
+    }
+    private synchronized TreeSet<ContactEntry> getSortedSet() {
+        return new TreeSet<ContactEntry>(mEntries.values());
     }
     private synchronized void readFromDatabase() throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
@@ -158,7 +165,7 @@ public class ContactRankings {
 	private synchronized void writeToDatabase() throws ServiceException {
 		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
 		Metadata config = new Metadata();
-		for (ContactEntry entry : mEntrySet) {
+		for (ContactEntry entry : getSortedSet()) {
 			Metadata m = new Metadata();
 			m.put(KEY_RANKING, entry.mRanking);
 			if (entry.mDisplayName != null)
@@ -173,18 +180,18 @@ public class ContactRankings {
 		mEntryMap.put(entry.mEmail, entry);
 		if (entry.mDisplayName.length() > 0)
 	        mEntryMap.put(entry.mDisplayName, entry);
-		mEntrySet.add(entry);
+		mEntries.put(entry.mEmail.toLowerCase(), entry);
 	}
 	private synchronized void remove(ContactEntry entry) {
 		mEntryMap.remove(entry.mEmail);
         mEntryMap.remove(entry.mDisplayName);
-		mEntrySet.remove(entry);
+		mEntries.remove(entry.mEmail.toLowerCase());
 	}
 	private void dump(String action) {
 		if (ZimbraLog.gal.isDebugEnabled()) {
 			StringBuilder buf = new StringBuilder(action);
 			buf.append("\n");
-			for (ContactEntry entry : mEntrySet) {
+			for (ContactEntry entry : getSortedSet()) {
 				entry.toString(buf);
 				buf.append("\n");
 			}
