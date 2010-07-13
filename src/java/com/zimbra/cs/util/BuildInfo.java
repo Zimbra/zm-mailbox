@@ -114,6 +114,8 @@ public class BuildInfo {
             } finally {
                 ByteUtil.closeReader(reader);
             }
+        } else {
+            System.err.format("Unable to determine platform because %s does not exist.\n", platformFile);
         }
         return platform;
     }
