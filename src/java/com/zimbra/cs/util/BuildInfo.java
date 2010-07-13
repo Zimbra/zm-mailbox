@@ -15,11 +15,17 @@
 
 package com.zimbra.cs.util;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.db.Versions;
 
@@ -47,7 +53,7 @@ public class BuildInfo {
         String majorversion = "unknown";
         String minorversion = "unknown";
         String microversion = "unknown";
-        String platform = "unknown";
+        String platform = getPlatform();
         String buildnum = "buildnum";
         try {
             Class clz = Class.forName("com.zimbra.cs.util.BuildInfoGenerated");
@@ -59,12 +65,13 @@ public class BuildInfo {
             majorversion = (String) clz.getField("MAJORVERSION").get(null);
             minorversion = (String) clz.getField("MINORVERSION").get(null);
             microversion = (String) clz.getField("MICROVERSION").get(null);
-            platform = (String) clz.getField("PLATFORM").get(null);
             buildnum = (String) clz.getField("BUILDNUM").get(null);
         } catch (Exception e) {
             System.err.println("Exception occurred during introspecting; version information incomplete");
             e.printStackTrace();
         }
+        
+        
         VERSION = version;
         TYPE = type;
         RELEASE = release;
@@ -81,6 +88,34 @@ public class BuildInfo {
         } else {
         	FULL_VERSION = VERSION + " " + RELEASE + " " + DATE;
         }
+    }
+    
+    /**
+     * Returns the first line in {@code /opt/zimbra/.platform}, or {@code unknown}
+     * if the platform cannot be determined.
+     */
+    private static String getPlatform() {
+        String platform = "unknown";
+        File platformFile = new File(LC.zimbra_home.value(), ".platform");
+        if (platformFile.exists()) {
+            BufferedReader reader = null;
+            try {
+                reader = new BufferedReader(new FileReader(platformFile));
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                    if (line.length() > 0) {
+                        platform = line;
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                System.err.println("Unable to determine platform.");
+                e.printStackTrace(System.err);
+            } finally {
+                ByteUtil.closeReader(reader);
+            }
+        }
+        return platform;
     }
     
     public static class Version {
