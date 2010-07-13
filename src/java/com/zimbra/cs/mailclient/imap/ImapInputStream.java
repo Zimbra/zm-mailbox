@@ -291,8 +291,8 @@ public final class ImapInputStream extends MailInputStream {
     
     public String readText(String delims) throws IOException {
         sbuf.setLength(0);
-        char c;
-        while (delims.indexOf(c = peekChar()) < 0) {
+        char c = 0;
+        while (!isEOF() && delims.indexOf(c = peekChar()) < 0) {
             if (!Chars.isTextChar(c)) {
                 throw new ParseException(
                     "Unexpected character '" + Ascii.pp((byte) c) +
