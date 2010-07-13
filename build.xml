@@ -632,6 +632,7 @@
     </target>
 
     <target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert" description="Copies build/dist to /opt/zimbra">
+        <echo file="${zimbra.home.dir}/.platform">development</echo>
         <copy todir="${zimbra.home.dir}">
             <fileset dir="${dist.dir}"/>
         </copy>
