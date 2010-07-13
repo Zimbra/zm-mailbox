@@ -32,7 +32,6 @@ import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.CategoryList;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.DateTime;
-import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.ParameterList;
 import net.fortuna.ical4j.model.Property;
@@ -246,6 +245,16 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             IcalUtil.addProperty(icalOutput, Property.CREATED, icalCreateDate, false);
             IcalUtil.addProperty(icalOutput, Property.LAST_MODIFIED, icalLastModDate, false);
             IcalUtil.addProperty(icalOutput, Property.SEQUENCE, sequenceNum, false);
+            if (summary == null) {
+                // TNEF_to_iCalendar.pdf Spec requires SUMMARY for certain method types
+                if (method.equals(Method.REPLY)) {
+                    summary = new String("Response");
+                } else if (method.equals(Method.CANCEL)) {
+                    summary = new String("Canceled");
+                } else if (method.equals(Method.COUNTER)) {
+                    summary = new String("Counter Proposal");
+                }
+            }
             IcalUtil.addProperty(icalOutput, Property.SUMMARY, summary, false);
             IcalUtil.addProperty(icalOutput, Property.LOCATION, location, false);
             IcalUtil.addProperty(icalOutput, Property.DESCRIPTION, descriptionText, false);
@@ -273,19 +282,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.RECURRENCE_ID,
                     recurrenceIdDateTime, startTimeTZinfo, isAllDayEvent);
 
-            if (recurDef != null) {
-                Property recurrenceProp =
-                        recurDef.icalRecurrenceProperty(isAllDayEvent, false);
-                IcalUtil.addProperty(icalOutput, recurrenceProp);
-                for (DateTime exDate : recurDef.getExdates()) {
-                    IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.EXDATE,
-                            exDate, startTimeTZinfo, isAllDayEvent);
-                }
-                for (DateTime rDate : recurDef.getRdates()) {
-                    IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.RDATE,
-                            rDate, startTimeTZinfo, isAllDayEvent);
-                }
-            }
+            addRecurrenceRelatedProps(icalOutput, recurDef, startTimeTZinfo, isAllDayEvent);
 
             if (importance != null) {
                 if (importance == 2) {
@@ -299,13 +296,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             }
 
             IcalUtil.addProperty(icalOutput, icalClass);
-
-            if ( (busyStatus != null) && (busyStatus.equals(BusyStatus.FREE)) ) {
-                IcalUtil.addProperty(icalOutput, Transp.TRANSPARENT);
-            } else {
-                IcalUtil.addProperty(icalOutput, Transp.OPAQUE);
-            }
-
+            addTranspProperty(icalOutput, busyStatus);
             addAttendees(icalOutput, mimeMsg, partstat, replyWanted);
             // TODO RESOURCES from PidLidNonSendableBcc with ';' replaced
             // with ','.  These are resources without a mail address
@@ -378,6 +369,31 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
         return conversionSuccessful;
     }
 
+    private void addRecurrenceRelatedProps(ContentHandler icalOutput,
+            RecurrenceDefinition recurDef, TimeZoneDefinition tzDef, boolean isAllDayEvent)
+                throws ServiceException, ParserException, URISyntaxException, IOException, ParseException {
+        if  (   method.equals(Method.REPLY) ||
+                method.equals(Method.CANCEL) ||
+                method.equals(Method.COUNTER) ) {
+            // TNEF_to_iCalendar.pdf Spec = exclude RRULE and EXDATE for CANCEL/REPLY/COUNTER
+            // By inference, as we only support EXDATE/RDATE pairs, don't want RDATE either
+            return;
+        }
+        if (recurDef != null) {
+            Property recurrenceProp =
+                    recurDef.icalRecurrenceProperty(isAllDayEvent, false);
+            IcalUtil.addProperty(icalOutput, recurrenceProp);
+            for (DateTime exDate : recurDef.getExdates()) {
+                IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.EXDATE,
+                        exDate, tzDef, isAllDayEvent);
+            }
+            for (DateTime rDate : recurDef.getRdates()) {
+                IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.RDATE,
+                        rDate, tzDef, isAllDayEvent);
+            }
+        }
+    }
+
     /**
      * 
      * @param icalOutput
@@ -431,13 +447,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                         cInst.getOriginalStartDate(), tzDef, seriesIsAllDay);
                 IcalUtil.addProperty(icalOutput, dtstamp);
                 BusyStatus exceptBusyStatus = cInst.getBusyStatus();
-                if (exceptBusyStatus != null) {
-                    if (exceptBusyStatus.equals(BusyStatus.FREE)) {
-                        IcalUtil.addProperty(icalOutput, Transp.TRANSPARENT);
-                    } else {
-                        IcalUtil.addProperty(icalOutput, Transp.OPAQUE);
-                    }
-                }
+                addTranspProperty(icalOutput, exceptBusyStatus);
                 IcalUtil.addProperty(icalOutput, Property.SEQUENCE, sequenceNum, false);
                 if (method.equals(Method.REQUEST)) {
                     IcalUtil.addProperty(icalOutput,
@@ -701,6 +711,21 @@ private void addAttendee(ContentHandler icalOutput, InternetAddress ia,
         Trigger trigger = new Trigger(trigParams, trigStr);
         IcalUtil.addProperty(icalOutput, trigger);
         icalOutput.endComponent(Component.VALARM);
+    }
+
+    private void addTranspProperty(ContentHandler icalOutput, BusyStatus busyStatus)
+                    throws ParserException, URISyntaxException, IOException, ParseException {
+        if  (   method.equals(Method.REPLY) ||
+                method.equals(Method.CANCEL) ||
+                method.equals(Method.COUNTER) ) {
+            // TNEF_to_iCalendar.pdf Spec = exclude TRANSP for CANCEL/REPLY/COUNTER
+            return;
+        }
+        if ( (busyStatus != null) && (busyStatus.equals(BusyStatus.FREE)) ) {
+            IcalUtil.addProperty(icalOutput, Transp.TRANSPARENT);
+        } else {
+            IcalUtil.addProperty(icalOutput, Transp.OPAQUE);
+        }
     }
 
     /**

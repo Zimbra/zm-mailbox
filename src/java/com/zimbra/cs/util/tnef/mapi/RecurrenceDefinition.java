@@ -437,7 +437,10 @@ public class RecurrenceDefinition {
         // up from components, for instance, there currently isn't a way
         // to set any BYDAY= value other than in the constructor from a String
         StringBuffer recurrenceRule = new StringBuffer("FREQ=");
-        String weekStartDay = null;
+        // According to RFC, only absolutely NEED WKST of have a
+        // weekly recurrence with interval greater than 1 OR using
+        // BYWEEKNO - however, does no harm to always include it.
+        String weekStartDay = firstDayOfWeek.toString();
         boolean hasBYDAY = false;
         boolean isYearly = false;
         int interval = 1;
@@ -450,9 +453,6 @@ public class RecurrenceDefinition {
                 recurrenceRule.append(Recur.WEEKLY);
                 interval = new Long(period).intValue();
                 hasBYDAY = true;
-                if (interval > 1) {
-                    weekStartDay = firstDayOfWeek.toString();
-                }
                 break;
             case MONTH:
                 interval = new Long(period).intValue();
