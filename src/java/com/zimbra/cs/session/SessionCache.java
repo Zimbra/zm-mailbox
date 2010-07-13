@@ -291,7 +291,7 @@ public final class SessionCache {
                             ZimbraLog.session.debug("Removing cached session: " + s);
                         assert(!Thread.holdsLock(sessionMap));
                         // IMPORTANT: Clean up sessions *after* releasing lock on Session Map
-                        // If Session.doCleanup() is called with sLRUMap locked, it can lead
+                        // If Session.doCleanup() is called with sMap locked, it can lead
                         // to deadlock. (bug 7866)
                         s.doCleanup();
                     }

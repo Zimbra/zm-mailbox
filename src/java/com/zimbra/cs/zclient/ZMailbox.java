@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.common.net.SocketFactories;
-import org.apache.commons.collections.map.LRUMap;
+import com.zimbra.common.util.MapUtil;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
@@ -293,8 +293,8 @@ public class ZMailbox implements ToZJSONObject {
     private ZSearchPagerCache mSearchPagerCache;
     private ZSearchPagerCache mSearchConvPagerCache;
     private ZApptSummaryCache mApptSummaryCache;
-    private LRUMap mMessageCache;
-    private LRUMap mContactCache;
+    private Map mMessageCache;
+    private Map mContactCache;
     private ZFilterRules mRules;
     private ZAuthResult mAuthResult;
     private String mClientIp;
@@ -347,8 +347,8 @@ public class ZMailbox implements ToZJSONObject {
         mHandlers.add(mSearchPagerCache);
         mSearchConvPagerCache = new ZSearchPagerCache(MAX_NUM_CACHED_SEARCH_CONV_PAGERS, false);
         mHandlers.add(mSearchConvPagerCache);
-        mMessageCache = new LRUMap(MAX_NUM_CACHED_MESSAGES);
-        mContactCache = new LRUMap(MAX_NUM_CACHED_CONTACTS);
+        mMessageCache = MapUtil.newLruMap(MAX_NUM_CACHED_MESSAGES);
+        mContactCache = MapUtil.newLruMap(MAX_NUM_CACHED_CONTACTS);
         mApptSummaryCache = new ZApptSummaryCache();
         mHandlers.add(mApptSummaryCache);
         if (options.getEventHandler() != null)

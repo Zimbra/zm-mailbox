@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.commons.collections.map.LRUMap;
+import com.zimbra.common.util.MapUtil;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
@@ -61,7 +61,7 @@ import com.zimbra.cs.util.Zimbra;
 public class ZimbraLmtpBackend implements LmtpBackend {
 
     private static List<LmtpCallback> sCallbacks = new CopyOnWriteArrayList<LmtpCallback>(); 
-    private static LRUMap sReceivedMessageIDs = null;
+    private static Map sReceivedMessageIDs = null;
 
     private LmtpConfig mConfig;
 
@@ -86,7 +86,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         try {
             int cacheSize = Provisioning.getInstance().getConfig().getIntAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize, 0);
             if (cacheSize > 0)
-                sReceivedMessageIDs = new LRUMap(cacheSize);
+                sReceivedMessageIDs = MapUtil.newLruMap(cacheSize);
         } catch (ServiceException e) {
             ZimbraLog.lmtp.error("could not read zimbraMessageIdDedupeCacheSize; no deduping will be performed", e);
         }

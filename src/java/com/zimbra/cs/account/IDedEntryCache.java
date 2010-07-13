@@ -15,8 +15,9 @@
 package com.zimbra.cs.account;
 
 import java.util.List;
+import java.util.Map;
 
-import org.apache.commons.collections.map.LRUMap;
+import com.zimbra.common.util.MapUtil;
 
 /**
  * 
@@ -25,7 +26,7 @@ import org.apache.commons.collections.map.LRUMap;
  */
 public class IDedEntryCache<E extends NamedEntry> {
     
-    private LRUMap mIdCache;
+    private Map mIdCache;
     
     private long mRefreshTTL;
 
@@ -47,7 +48,7 @@ public class IDedEntryCache<E extends NamedEntry> {
      * @param refreshTTL
      */
     public IDedEntryCache(int maxItems, long refreshTTL) {
-        mIdCache = new LRUMap(maxItems);
+        mIdCache = MapUtil.newLruMap(maxItems);
         mRefreshTTL = refreshTTL;
     }
 
@@ -81,7 +82,7 @@ public class IDedEntryCache<E extends NamedEntry> {
     }
 
     @SuppressWarnings("unchecked")
-    private E get(String key, LRUMap cache) {
+    private E get(String key, Map cache) {
         CacheEntry<E> ce = (CacheEntry<E>) cache.get(key);
         if (ce != null) {
             if (mRefreshTTL != 0 && ce.isStale()) {

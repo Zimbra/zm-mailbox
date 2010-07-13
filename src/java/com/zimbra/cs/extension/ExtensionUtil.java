@@ -16,22 +16,22 @@ package com.zimbra.cs.extension;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
-
-import org.apache.commons.collections.map.ListOrderedMap;
+import java.util.Map;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.redolog.op.RedoableOp;
 
 public class ExtensionUtil {
 
-    private static List<ZimbraExtensionClassLoader> sClassLoaders = new ArrayList();
+    private static List<ZimbraExtensionClassLoader> sClassLoaders = new ArrayList<ZimbraExtensionClassLoader>();
 
     public static URL[] dirListToURLs(File dir) {
         File[] files = dir.listFiles();
@@ -41,7 +41,8 @@ public class ExtensionUtil {
         List<URL> urls = new ArrayList<URL>(files.length);
         for (int i = 0; i < files.length; i++) {
             try {
-                URL url = files[i].toURL();
+                URI uri = files[i].toURI();
+                URL url = uri.toURL();
                 urls.add(url);
                 if (ZimbraLog.extensions.isDebugEnabled()) {
                     ZimbraLog.extensions.debug("adding url: " + url);
@@ -95,17 +96,17 @@ public class ExtensionUtil {
         }
     }
 
-    private static ListOrderedMap sInitializedExtensions = new ListOrderedMap();
+    private static Map<String, ZimbraExtension> sInitializedExtensions = new LinkedHashMap<String, ZimbraExtension>();
 
+    @SuppressWarnings("unchecked")
     public static synchronized void initAll() {
         ZimbraLog.extensions.info("Initializing extensions");
         for (ZimbraExtensionClassLoader zcl : sClassLoaders) {
-            List classes = zcl.getExtensionClassNames();
             for (String name : zcl.getExtensionClassNames()) {
-                Class clz;
+                Class<ZimbraExtension> clz;
                 try {
-                    clz = zcl.loadClass(name);
-                    ZimbraExtension ext = (ZimbraExtension)clz.newInstance();
+                    clz = (Class<ZimbraExtension>) zcl.loadClass(name);
+                    ZimbraExtension ext = clz.newInstance();
                     try {
                         ext.init();
                         RedoableOp.registerClassLoader(ext.getClass().getClassLoader());
@@ -143,12 +144,12 @@ public class ExtensionUtil {
 
     public static synchronized void destroyAll() {
         ZimbraLog.extensions.info("Destroying extensions");
-        List extNames = sInitializedExtensions.asList();
-        for (ListIterator iter = extNames.listIterator(extNames.size());
+        List<String> extNames = new ArrayList<String>(sInitializedExtensions.keySet());
+        for (ListIterator<String> iter = extNames.listIterator(extNames.size());
         iter.hasPrevious();)
         {
-            String extName = (String) iter.previous();
-            ZimbraExtension ext = (ZimbraExtension) getExtension(extName);
+            String extName = iter.previous();
+            ZimbraExtension ext = getExtension(extName);
             try {
                 RedoableOp.deregisterClassLoader(ext.getClass().getClassLoader());
                 ext.destroy();
@@ -160,10 +161,10 @@ public class ExtensionUtil {
         sInitializedExtensions.clear();
     }
 
-    public static synchronized Class loadClass(String extensionName, String className) throws ClassNotFoundException {
+    public static synchronized Class<?> loadClass(String extensionName, String className) throws ClassNotFoundException {
         if (extensionName == null)
             return Class.forName(className);
-        ZimbraExtension ext = (ZimbraExtension) sInitializedExtensions.get(extensionName);
+        ZimbraExtension ext = sInitializedExtensions.get(extensionName);
         if (ext == null)
             throw new ClassNotFoundException("extension " + extensionName + " not found");
         ClassLoader loader = ext.getClass().getClassLoader();

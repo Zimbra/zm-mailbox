@@ -33,7 +33,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.service.ZimbraAuthProvider;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.collections.map.LRUMap;
+import com.zimbra.common.util.MapUtil;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
@@ -64,7 +64,7 @@ public class ZimbraAuthToken extends AuthToken {
     private static final String C_DIGEST = "digest";
     private static final String C_VALIDITY_VALUE  = "vv";
 
-    private static LRUMap mCache = new LRUMap(LC.zimbra_authtoken_cache_size.intValue());
+    private static Map mCache = MapUtil.newLruMap(LC.zimbra_authtoken_cache_size.intValue());
     
     private static Log mLog = LogFactory.getLog(AuthToken.class); 
     

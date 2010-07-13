@@ -19,15 +19,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.commons.collections.bidimap.DualHashBidiMap;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.AttributeManager;
-import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 
@@ -135,7 +136,7 @@ public class CheckPortConflict extends AttributeCallback {
     }
     
     private void checkConfig(Config config, Map<String, Object> configAttrsToModify) throws ServiceException {
-        DualHashBidiMap newDefaults = new DualHashBidiMap();
+        BiMap<String, String> newDefaults = HashBiMap.create();
             
         /*
          * First, make sure there is no conflict in the Config entry, even
@@ -175,14 +176,14 @@ public class CheckPortConflict extends AttributeCallback {
         }
     }
     
-    private void checkServerWithNewDefaults(Server server, DualHashBidiMap newDefaults, Map<String, Object> configAttrsToModify) throws ServiceException {
+    private void checkServerWithNewDefaults(Server server, BiMap<String, String> newDefaults, Map<String, Object> configAttrsToModify) throws ServiceException {
         Map<String, String> ports = new HashMap<String, String>();
         
         for (String attrName : sPortAttrs) {
             String newValue = null;
             String curValue = server.getAttr(attrName, false); // value on the server entry
             if (curValue == null)
-                newValue = (String)newDefaults.getKey(attrName);  // will inherit from new default
+                newValue = newDefaults.inverse().get(attrName);  // will inherit from new default
             else
                 newValue = curValue;
             
@@ -197,7 +198,7 @@ public class CheckPortConflict extends AttributeCallback {
         }
     }
         
-    private boolean conflict(Map ports, String port) {
+    private boolean conflict(Map<String, String> ports, String port) {
         
         if (StringUtil.isNullOrEmpty(port))
             return false;

@@ -15,31 +15,33 @@
 
 package com.zimbra.cs.zclient;
 
+import java.util.Iterator;
+import java.util.Map;
+
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.MapUtil;
 import com.zimbra.cs.zclient.event.ZCreateEvent;
+import com.zimbra.cs.zclient.event.ZCreateItemEvent;
+import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
 import com.zimbra.cs.zclient.event.ZDeleteEvent;
 import com.zimbra.cs.zclient.event.ZEventHandler;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyItemEvent;
 import com.zimbra.cs.zclient.event.ZModifyItemFolderEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
-import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
-import com.zimbra.cs.zclient.event.ZCreateItemEvent;
-import org.apache.commons.collections.MapIterator;
-import org.apache.commons.collections.map.LRUMap;
 
 class ZSearchPagerCache extends ZEventHandler {
 
-    LRUMap mSearchPagerCache;
+    Map<ZSearchParams, ZSearchPager> mSearchPagerCache;
     private boolean mClearOnModifyItemFolder;
 
     ZSearchPagerCache(int maxItems, boolean clearOnModifyItemFolder) {
-        mSearchPagerCache = new LRUMap(maxItems);
+        mSearchPagerCache = MapUtil.newLruMap(maxItems);
         mClearOnModifyItemFolder = clearOnModifyItemFolder;
     }
     
     public synchronized ZSearchPagerResult search(ZMailbox mailbox, ZSearchParams params, int page, boolean useCache, boolean useCursor) throws ServiceException {
-        ZSearchPager pager = (ZSearchPager) mSearchPagerCache.get(params);
+        ZSearchPager pager = mSearchPagerCache.get(params);
         if (pager != null && (!useCache || pager.isDirty())) {
             mSearchPagerCache.remove(params);
             pager = null;
@@ -59,10 +61,9 @@ class ZSearchPagerCache extends ZEventHandler {
         if (type == null) {
             mSearchPagerCache.clear();
         } else {
-            MapIterator mi = mSearchPagerCache.mapIterator();
+            Iterator<Map.Entry<ZSearchParams, ZSearchPager>> mi = mSearchPagerCache.entrySet().iterator();
             while(mi.hasNext()) {
-                mi.next();
-                ZSearchParams params = (ZSearchParams) mi.getKey();
+                ZSearchParams params = mi.next().getKey();
                 if (params.getTypes() != null && params.getTypes().contains(type))
                     mi.remove();
             }

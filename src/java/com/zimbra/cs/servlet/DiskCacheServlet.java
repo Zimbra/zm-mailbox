@@ -37,10 +37,9 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.collections.LRUMap;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.LruMap;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.service.admin.FlushCache;
 
@@ -164,7 +163,7 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
 
     // factory
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "serial" })
     protected void createCache() {
         cacheSize = LC.zimbra_disk_cache_servlet_size.intValue();
         String value = getServletConfig().getInitParameter(P_CACHE_SIZE);
@@ -176,10 +175,8 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
                 // ignore -- just use default
             }
         }
-        cache = new LRUMap(cacheSize) {
-            protected void processRemovedLRU(Object key, Object val) {
-                String cacheId = (String)key;
-                File file = (File)val;
+        cache = new LruMap<String, File>(cacheSize) {
+            protected void willRemove(String cacheId, File file) {
                 processRemovedFile(cacheId, file);
             }
         };

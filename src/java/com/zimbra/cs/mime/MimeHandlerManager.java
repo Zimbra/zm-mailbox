@@ -111,6 +111,7 @@ public class MimeHandlerManager {
      * an exact match is not found, returns the default handler.  
      * @throws MimeHandlerException if the handler could not be loaded
      */
+    @SuppressWarnings("unchecked")
     private static synchronized HandlerInfo loadHandler(String mimeType, String extension)
     throws MimeHandlerException {
         sLog.debug("Loading MIME handler for type %s, extension '%s'", mimeType, extension);
@@ -159,7 +160,7 @@ public class MimeHandlerManager {
             if (className.indexOf('.') == -1) {
                 className = "com.zimbra.cs.mime.handler." + className;
             }
-            handlerInfo.mClass = ExtensionUtil.loadClass(mt.getExtension(), className);
+            handlerInfo.mClass = (Class<MimeHandler>) ExtensionUtil.loadClass(mt.getExtension(), className);
             handlerInfo.mMimeType = mt;
             handlerInfo.mRealMimeType = mimeType;
             return handlerInfo;

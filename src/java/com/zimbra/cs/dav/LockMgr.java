@@ -14,11 +14,12 @@
  */
 package com.zimbra.cs.dav;
 
-import org.apache.commons.collections.map.LRUMap;
+import com.zimbra.common.util.MapUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -48,11 +49,11 @@ public class LockMgr {
 	private HashMap<String,List<String>> mLockedResources;
 	
 	// map of token to lock
-	private LRUMap mLocks;
+	private Map mLocks;
 	
 	private LockMgr() {
 		mLockedResources = new HashMap<String,List<String>>();
-		mLocks = new LRUMap(100);
+		mLocks = MapUtil.newLruMap(100);
 	}
 	
 	public enum LockType {

@@ -45,7 +45,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.cs.upgrade.MailboxUpgrade;
-import org.apache.commons.collections.map.LRUMap;
+import com.zimbra.common.util.MapUtil;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
@@ -395,8 +395,8 @@ public class Mailbox {
     private Map<Integer, Folder> mFolderCache;
     private Map<Object, Tag>     mTagCache;
     private SoftReference<Map<Integer, MailItem>> mItemCache = new SoftReference<Map<Integer, MailItem>>(null);
-    private LRUMap       mConvHashes     = new LRUMap(MAX_MSGID_CACHE);
-    private LRUMap       mSentMessageIDs = new LRUMap(MAX_MSGID_CACHE);
+    private Map       mConvHashes     = MapUtil.newLruMap(MAX_MSGID_CACHE);
+    private Map       mSentMessageIDs = MapUtil.newLruMap(MAX_MSGID_CACHE);
 
     private MailboxLock    mMaintenance = null;
     private IMPersona      mPersona = null;

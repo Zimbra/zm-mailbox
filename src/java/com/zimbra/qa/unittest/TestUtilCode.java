@@ -27,25 +27,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Set;
 
 import junit.framework.TestCase;
 
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.ListUtil;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.SystemUtil;
-import com.zimbra.common.util.TimeoutMap;
-import com.zimbra.common.util.ValueCounter;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.FileSegmentDataSource;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LruMap;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.TimeoutMap;
@@ -450,6 +442,44 @@ public class TestUtilCode extends TestCase
         assertEquals("234", new String(ByteUtil.getContent(ds.getInputStream(), 5)));
         
         file.delete();
+    }
+    
+    @SuppressWarnings("serial")
+    private class LruTest<K, V>
+    extends LruMap<K, V> {
+
+        K lastRemovedKey;
+        V lastRemovedValue;
+
+        LruTest(int maxSize) {
+            super(maxSize);
+        }
+        
+        K getLastRemovedKey() { return lastRemovedKey; }
+        V getLastRemovedValue() { return lastRemovedValue; }
+        
+        @Override
+        protected void willRemove(K key, V value) {
+            lastRemovedKey = key;
+            lastRemovedValue = value;
+        }
+        
+    }
+    public void testLruMap()
+    throws Exception {
+        LruTest<Integer, String> map = new LruTest<Integer, String>(3);
+        map.put(1, "one");
+        map.put(2, "two");
+        map.put(3, "three");
+        map.put(4, "four");
+        assertEquals(1, (int) map.getLastRemovedKey());
+        assertEquals("one", map.getLastRemovedValue());
+        assertFalse(map.containsKey(1));
+        
+        map.get(2);
+        map.put(5, "five");
+        assertEquals(3, (int) map.getLastRemovedKey());
+        assertEquals("three", map.getLastRemovedValue());
     }
     
     public void tearDown()

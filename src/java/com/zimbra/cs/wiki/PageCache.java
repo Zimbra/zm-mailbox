@@ -14,7 +14,9 @@
  */
 package com.zimbra.cs.wiki;
 
-import org.apache.commons.collections.map.LRUMap;
+import java.util.Map;
+
+import com.zimbra.common.util.MapUtil;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -42,7 +44,7 @@ import com.zimbra.common.util.Pair;
 public class PageCache {
 	private static final int DEFAULT_CACHE_SIZE = 10240;
 	private static final int TTL = 10 * 60 * 1000;  // 10 min
-	private LRUMap mCache;
+	private Map mCache;
 	private static final String SEP = ":";
 	
 	public PageCache() {
@@ -54,10 +56,10 @@ public class PageCache {
 		} catch (ServiceException se) {
 			cacheSize = DEFAULT_CACHE_SIZE;
 		}
-		mCache = new LRUMap(cacheSize);
+		mCache = MapUtil.newLruMap(cacheSize);
 	}
 	public PageCache(int cacheSize) {
-		mCache = new LRUMap(cacheSize);
+		mCache = MapUtil.newLruMap(cacheSize);
 	}
 	
 	public synchronized void addPage(String key, String page) {

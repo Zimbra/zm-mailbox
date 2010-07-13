@@ -21,7 +21,9 @@
  */
 package com.zimbra.cs.account;
 
-import org.apache.commons.collections.map.LRUMap;
+import java.util.Map;
+
+import com.zimbra.common.util.MapUtil;
 
 import com.zimbra.common.stats.Counter;
 import com.zimbra.cs.account.Provisioning.DomainBy;
@@ -31,10 +33,10 @@ import com.zimbra.cs.account.Provisioning.DomainBy;
  **/
 public class DomainCache {
     
-    private LRUMap mNameCache;
-    private LRUMap mIdCache;
-    private LRUMap mVirtualHostnameCache;
-    private LRUMap mKrb5RealmCache;
+    private Map mNameCache;
+    private Map mIdCache;
+    private Map mVirtualHostnameCache;
+    private Map mKrb5RealmCache;
     
     private long mRefreshTTL;
     private Counter mHitRate = new Counter();
@@ -74,10 +76,10 @@ public class DomainCache {
     
 
     class NegativeCache {
-        private LRUMap mNegativeNameCache;
-        private LRUMap mNegativeIdCache;
-        private LRUMap mNegativeVirtualHostnameCache;
-        private LRUMap mNegativeKrb5RealmCache;
+        private Map mNegativeNameCache;
+        private Map mNegativeIdCache;
+        private Map mNegativeVirtualHostnameCache;
+        private Map mNegativeKrb5RealmCache;
 
         private long mNERefreshTTL;
         
@@ -88,10 +90,10 @@ public class DomainCache {
         private boolean mEnabled = true;
         
         private NegativeCache(int maxItems, long refreshTTL) {
-            mNegativeNameCache = new LRUMap(maxItems);
-            mNegativeIdCache = new LRUMap(maxItems);
-            mNegativeVirtualHostnameCache = new LRUMap(maxItems);  
-            mNegativeKrb5RealmCache = new LRUMap(maxItems);   
+            mNegativeNameCache = MapUtil.newLruMap(maxItems);
+            mNegativeIdCache = MapUtil.newLruMap(maxItems);
+            mNegativeVirtualHostnameCache = MapUtil.newLruMap(maxItems);  
+            mNegativeKrb5RealmCache = MapUtil.newLruMap(maxItems);   
             mNERefreshTTL = refreshTTL;
         }
         
@@ -179,10 +181,10 @@ public class DomainCache {
  * @param refreshTTL
  */
     public DomainCache(int maxItems, long refreshTTL, int maxItemsNegative, long refreshTTLNegative) {
-        mNameCache = new LRUMap(maxItems);
-        mIdCache = new LRUMap(maxItems);
-        mVirtualHostnameCache = new LRUMap(maxItems);  
-        mKrb5RealmCache = new LRUMap(maxItems);   
+        mNameCache = MapUtil.newLruMap(maxItems);
+        mIdCache = MapUtil.newLruMap(maxItems);
+        mVirtualHostnameCache = MapUtil.newLruMap(maxItems);  
+        mKrb5RealmCache = MapUtil.newLruMap(maxItems);   
         mRefreshTTL = refreshTTL;
         
         mNegativeCache = new NegativeCache(maxItemsNegative, refreshTTLNegative);
@@ -233,7 +235,7 @@ public class DomainCache {
         }
     }
 
-    private Domain get(String key, LRUMap cache) {
+    private Domain get(String key, Map cache) {
         CacheEntry ce = (CacheEntry) cache.get(key);
         if (ce != null) {
             if (mRefreshTTL != 0 && ce.isStale()) {

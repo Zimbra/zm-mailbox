@@ -16,8 +16,9 @@ package com.zimbra.cs.wiki;
 
 import java.io.IOException;
 import java.util.Locale;
+import java.util.Map;
 
-import org.apache.commons.collections.map.LRUMap;
+import com.zimbra.common.util.MapUtil;
 import org.apache.commons.httpclient.Header;
 
 import com.zimbra.cs.account.Account;
@@ -147,7 +148,7 @@ public abstract class WikiPage {
 		return create((Document)item);
 	}
 
-	private static LRUMap sPageCache = new LRUMap(1024);
+	private static Map sPageCache = MapUtil.newLruMap(1024);
 	private static long TTL = 10 * 60 * 1000;  // 10 mins
 	
 	private static WikiPage getCachedTemplate(Domain domain, String template) {

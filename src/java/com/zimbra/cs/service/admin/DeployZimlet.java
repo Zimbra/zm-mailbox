@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.collections.map.LRUMap;
+import com.zimbra.common.util.MapUtil;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -45,7 +45,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 	public static final String sSUCCEEDED = "succeeded";
 	public static final String sFAILED = "failed";
 	
-	private LRUMap mProgressMap;
+	private Map mProgressMap;
 
 	private static class Progress implements DeployListener {
 		private Map<String,String> mStatus;
@@ -109,7 +109,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 	
 	public DeployZimlet() {
 		// keep past 20 zimlet deployment progresses
-		mProgressMap = new LRUMap(20);
+		mProgressMap = MapUtil.newLruMap(20);
 	}
 	
 	private void deploy(ZimbraSoapContext lc, String aid, ZAuthToken auth, boolean flushCache, boolean synchronous) throws ServiceException {

@@ -22,7 +22,7 @@ import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.collections.map.LRUMap;
+import com.zimbra.common.util.MapUtil;
 
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -311,7 +311,7 @@ public class UrlNamespace {
 		return DavServlet.getServiceUrl(server, domain, path);
     }
     
-	private static LRUMap sRenamedResourceMap = new LRUMap(100);
+	private static Map sRenamedResourceMap = MapUtil.newLruMap(100);
 	
 	public static void addToRenamedResource(String user, String path, DavResource rsc) {
 		synchronized (sRenamedResourceMap) {

@@ -27,12 +27,12 @@ import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.collections.Factory;
-import org.apache.commons.collections.map.LazyMap;
 import org.apache.commons.httpclient.HttpVersion;
 import org.apache.commons.httpclient.ProtocolException;
 import org.apache.log4j.PropertyConfigurator;
 
+import com.google.common.base.Function;
+import com.google.common.collect.MapMaker;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -70,8 +70,9 @@ public class SoapServlet extends ZimbraServlet {
     public static final String IS_RESUMED_REQUEST = "zimbra.resumedRequest";
 
     // Used by sExtraServices
-    private static Factory sListFactory = new Factory() {
-        public Object create() {
+    private static class ArrayListFactory
+    implements Function<String, List<DocumentService>> {
+        public List<DocumentService> apply(String from) {
             return new ArrayList<DocumentService>();
         }
     };
@@ -79,7 +80,8 @@ public class SoapServlet extends ZimbraServlet {
     /**
      * Keeps track of extra services added by extensions.
      */
-    private static Map<String, List<DocumentService>> sExtraServices = LazyMap.decorate(new HashMap(), sListFactory);
+    private static Map<String, List<DocumentService>> sExtraServices =
+        new MapMaker().makeComputingMap(new ArrayListFactory());
     
     private static Log sLog = LogFactory.getLog(SoapServlet.class);
     private SoapEngine mEngine;

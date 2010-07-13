@@ -14,16 +14,17 @@
  */
 package com.zimbra.cs.account;
 
-import org.apache.commons.collections.bidimap.DualHashBidiMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import com.zimbra.common.service.ServiceException;
+
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 
 public class Signature extends AccountProperty implements Comparable {
 
-    private static final DualHashBidiMap sAttrTypeMap = new DualHashBidiMap();
+    private static final BiMap<String, String> sAttrTypeMap = HashBiMap.create();
 
     static {
         sAttrTypeMap.put(Provisioning.A_zimbraPrefMailSignature, "text/plain");
@@ -72,11 +73,11 @@ public class Signature extends AccountProperty implements Comparable {
     }
     
     public static String mimeTypeToAttrName(String mimeType) {
-        return (String)sAttrTypeMap.getKey(mimeType);
+        return sAttrTypeMap.inverse().get(mimeType);
     }
     
     public static String attrNameToMimeType(String attrName) {
-        return (String)sAttrTypeMap.get(attrName);
+        return sAttrTypeMap.inverse().get(attrName);
     }
 
 }
