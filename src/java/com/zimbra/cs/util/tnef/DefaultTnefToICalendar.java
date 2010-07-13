@@ -63,6 +63,7 @@ import net.fortuna.ical4j.model.property.CalScale;
 import net.fortuna.ical4j.model.property.Categories;
 import net.fortuna.ical4j.model.property.DtStamp;
 import net.fortuna.ical4j.model.property.Organizer;
+import net.fortuna.ical4j.model.property.Status;
 import net.fortuna.ical4j.model.property.Trigger;
 import net.fortuna.ical4j.model.property.XProperty;
 
@@ -296,6 +297,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             }
 
             IcalUtil.addProperty(icalOutput, icalClass);
+            addStatusProperty(icalOutput, busyStatus);
             addTranspProperty(icalOutput, busyStatus);
             addAttendees(icalOutput, mimeMsg, partstat, replyWanted);
             // TODO RESOURCES from PidLidNonSendableBcc with ';' replaced
@@ -447,6 +449,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                         cInst.getOriginalStartDate(), tzDef, seriesIsAllDay);
                 IcalUtil.addProperty(icalOutput, dtstamp);
                 BusyStatus exceptBusyStatus = cInst.getBusyStatus();
+                addStatusProperty(icalOutput, exceptBusyStatus);
                 addTranspProperty(icalOutput, exceptBusyStatus);
                 IcalUtil.addProperty(icalOutput, Property.SEQUENCE, sequenceNum, false);
                 if (method.equals(Method.REQUEST)) {
@@ -725,6 +728,30 @@ private void addAttendee(ContentHandler icalOutput, InternetAddress ia,
             IcalUtil.addProperty(icalOutput, Transp.TRANSPARENT);
         } else {
             IcalUtil.addProperty(icalOutput, Transp.OPAQUE);
+        }
+    }
+
+    private void addStatusProperty(ContentHandler icalOutput, BusyStatus busyStatus)
+                    throws ParserException, URISyntaxException, IOException, ParseException {
+        Status icalStatus = null;
+        if (method.equals(Method.REQUEST)) {
+            if (busyStatus == null) {
+                return;
+            }
+            if (busyStatus.equals(BusyStatus.BUSY)) {
+                icalStatus = Status.VEVENT_CONFIRMED;
+            }else if (busyStatus.equals(BusyStatus.TENTATIVE)) {
+                icalStatus = Status.VEVENT_TENTATIVE;
+            }
+        }
+        else if (method.equals(Method.CANCEL)) {
+            // TODO: Test un-inviting attendees - should NOT be added then according to RFC
+            if ( (busyStatus == null) || (busyStatus.equals(BusyStatus.FREE)) ) {
+                icalStatus = Status.VEVENT_CANCELLED;
+            }
+        }
+        if (icalStatus != null) {
+            IcalUtil.addProperty(icalOutput, icalStatus);
         }
     }
 
