@@ -25,13 +25,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
-import org.apache.commons.collections.map.LRUMap;
+import com.zimbra.common.util.MapUtil;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 import java.util.regex.Pattern;
 
@@ -50,7 +51,7 @@ public class GZIPFilter implements Filter {
      */
     private String[] mCompressableMimeTypes;
     private List<Pattern> mNoCompressionUserAgents;
-    private LRUMap mUAMap;
+    private Map mUAMap;
 
     public void init(FilterConfig filterConfig) {
         mNoCompressionUserAgents = new ArrayList<Pattern>();
@@ -69,7 +70,7 @@ public class GZIPFilter implements Filter {
         String cacheSizeStr = filterConfig.getInitParameter(P_USER_AGENT_CACHE_SIZE);
         if (cacheSizeStr != null)
         	cacheSize = Integer.parseInt(cacheSizeStr);
-        mUAMap = new LRUMap(cacheSize);
+        mUAMap = MapUtil.newLruMap(cacheSize);
     }
 
     public void destroy() { }
