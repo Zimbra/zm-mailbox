@@ -151,6 +151,14 @@ public abstract class Right extends RightConsts {
         return targetType.isInheritedBy(mTargetType);
     }
     
+    /**
+     * returns if the subDomain modifier can be specified for the right
+     * @return
+     */
+    boolean allowSubDomainModifier() {
+        return executableOnTargetType(TargetType.domain);
+    }
+    
     /*
      * overriden only in InlineAttrRight
      */

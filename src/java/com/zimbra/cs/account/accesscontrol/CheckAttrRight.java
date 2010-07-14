@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.account.accesscontrol;
 
 import java.util.HashMap;
@@ -15,7 +29,6 @@ import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 
 public class CheckAttrRight extends CheckRight {
@@ -62,8 +75,6 @@ public class CheckAttrRight extends CheckRight {
     private AllowedAttrs computeAccessibleAttrs() throws ServiceException {
         if (mGrantee == null)
             return AllowedAttrs.DENY_ALL_ATTRS();
-        
-        Provisioning prov = Provisioning.getInstance();
                 
         Map<String, Integer> allowSome = new HashMap<String, Integer>();
         Map<String, Integer> denySome = new HashMap<String, Integer>();
@@ -92,12 +103,12 @@ public class CheckAttrRight extends CheckRight {
         // if the target is a domain-ed entry, get the domain of the target.
         // It is need for checking the cross domain right.
         //
-        Domain targetDomain = TargetType.getTargetDomain(prov, mTarget);
+        Domain targetDomain = TargetType.getTargetDomain(mProv, mTarget);
         
         if (!car.isAll()) {
             // check grants granted on entries from which the target entry can inherit
-            boolean expandTargetGroups = RightChecker.allowGroupTarget(mRightNeeded);
-            TargetIterator iter = TargetIterator.getTargetIeterator(prov, mTarget, expandTargetGroups);
+            boolean expandTargetGroups = CheckRight.allowGroupTarget(mRightNeeded);
+            TargetIterator iter = TargetIterator.getTargetIeterator(mProv, mTarget, expandTargetGroups);
             Entry grantedOn;
             
             GroupACLs groupACLs = null;
@@ -114,8 +125,9 @@ public class CheckAttrRight extends CheckRight {
                     // skip cross domain rights if we are checking rights for a group, because
                     // members in the group can be in different domains, no point checking it.
                     if (mGrantee.isAccount())
-                        skipPositiveGrants = !CrossDomain.crossDomainOK(prov, mGrantee.getAccount(), mGrantee.getDomain(), 
-                            targetDomain, (DistributionList)grantedOn);
+                        skipPositiveGrants = !CrossDomain.crossDomainOK(mProv, 
+                                mGrantee.getAccount(), mGrantee.getDomain(), 
+                                targetDomain, (DistributionList)grantedOn);
                     
                     // don't check yet, collect all acls on all target groups
                     if (groupACLs == null)
@@ -341,7 +353,7 @@ public class CheckAttrRight extends CheckRight {
          * the wrong target.  e.g. put a setAttrs server right on a cos entry.  
          * This should not happen if the grant is done via RightCommand.grantRight.
          */
-         if (!RightChecker.rightApplicableOnTargetType(mTargetType, attrRightGranted, mCanDelegateNeeded))
+         if (!CheckRight.rightApplicableOnTargetType(mTargetType, attrRightGranted, mCanDelegateNeeded))
          // if (!attrRightGranted.executableOnTargetType(targetType))
             return null;
          

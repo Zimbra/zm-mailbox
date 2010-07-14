@@ -265,6 +265,10 @@ public class ZimbraACE {
         return mRightModifier == RightModifier.RM_CAN_DELEGATE;
     }
     
+    public boolean subDomain() {
+        return mRightModifier == RightModifier.RM_SUBDOMAIN;
+    }
+    
     public boolean canExecuteOnly() {
         return !canDelegate() && !deny();
     }

@@ -71,4 +71,5 @@ public class PresetRight extends AdminRight {
         else
             throw ServiceException.FAILURE("internal error", null);
     }
+
 }

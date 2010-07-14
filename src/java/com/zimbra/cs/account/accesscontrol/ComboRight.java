@@ -90,6 +90,17 @@ public class ComboRight extends AdminRight {
         }
         return true;
     }
+        
+    @Override
+    boolean allowSubDomainModifier() {
+        // true if *any* of the rights in the combo right are 
+        // executable on targetType domain
+        for (Right r : getAllRights()) {
+            if (r.executableOnTargetType(TargetType.domain))
+                return true;
+        }
+        return false;
+    }
     
     @Override
     protected Set<TargetType> getGrantableTargetTypes() {

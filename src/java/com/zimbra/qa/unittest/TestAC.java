@@ -1,19 +1,12 @@
 package com.zimbra.qa.unittest;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import junit.framework.TestCase;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AttributeClass;
-import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
@@ -23,26 +16,19 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.accesscontrol.GranteeFlag;
+import com.zimbra.cs.account.accesscontrol.CheckRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.RightChecker;
 import com.zimbra.cs.account.accesscontrol.RightManager;
-import com.zimbra.cs.account.accesscontrol.RightCommand.ACE;
 import com.zimbra.cs.account.accesscontrol.RightCommand.Grants;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
-import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.mailbox.ACL;
 
 public class TestAC extends TestProv {
     
@@ -143,7 +129,7 @@ public class TestAC extends TestProv {
     }
     
     private boolean isRightGrantableOnTargetType(Right right, TargetType targetType) throws Exception {
-        if (targetType == TargetType.dl && !RightChecker.allowGroupTarget(right))
+        if (targetType == TargetType.dl && !CheckRight.allowGroupTarget(right))
             return false;
         
         if (right.isUserRight()) {
@@ -415,7 +401,7 @@ public class TestAC extends TestProv {
                 }
                 
             } else if (grantedOnTargetType == TargetType.dl) {
-                if (RightChecker.allowGroupTarget(right)) {
+                if (CheckRight.allowGroupTarget(right)) {
                     goodTarget = createUserAccount("target-acct", domain);
                     mProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)goodTarget).getName()});
                 } else {
@@ -444,7 +430,7 @@ public class TestAC extends TestProv {
                 badTarget = createCalendarResource("bad-target-cr", domain);
                 
             } else if (grantedOnTargetType == TargetType.dl) {
-                if (RightChecker.allowGroupTarget(right)) {
+                if (CheckRight.allowGroupTarget(right)) {
                     goodTarget = createCalendarResource("target-cr", domain);
                     mProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)goodTarget).getName()});
                 } else {
