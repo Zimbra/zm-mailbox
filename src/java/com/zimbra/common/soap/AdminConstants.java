@@ -697,6 +697,7 @@ public class AdminConstants {
     public static final String A_ALLOW       = "allow";
     public static final String A_CAN_DELEGATE= "canDelegate";
     public static final String A_DENY        = "deny";
+    public static final String A_SUB_DOMAIN  = "subDomain";
     public static final String A_EXPAND_ALL_ATTRS = "expandAllAttrs";
     public static final String A_INHERITED   = "inherited";
     public static final String A_RIGHT       = "right";
