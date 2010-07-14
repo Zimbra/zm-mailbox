@@ -34,7 +34,7 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
  */
 
 public class CrossDomain {
-    private static final Log sLog = LogFactory.getLog(RightChecker.class);
+    private static final Log sLog = LogFactory.getLog(CrossDomain.class);
     
     static boolean crossDomainOK(Provisioning prov, Account grantee, Domain granteeDomain, 
             Domain targetDomain, DistributionList grantedOn) throws ServiceException {

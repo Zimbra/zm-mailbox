@@ -79,7 +79,7 @@ public abstract class RightBearer {
             } else
                 throw ServiceException.INVALID_REQUEST("invalid grantee type", null);
             
-            if (!RightChecker.isValidGranteeForAdminRights(mGranteeType, grantee))
+            if (!RightBearer.isValidGranteeForAdminRights(mGranteeType, grantee))
                 throw ServiceException.INVALID_REQUEST("invalid grantee", null);
 
             if (mGranteeDomain == null)
@@ -116,4 +116,23 @@ public abstract class RightBearer {
         }
     }
 
+    /**
+     * returns true if grantee is an admin account or admin group
+     * 
+     * Note: 
+     *     - system admins cannot receive grants - they don't need any
+     *     
+     * @param gt
+     * @param grantee
+     * @return
+     */
+    static boolean isValidGranteeForAdminRights(GranteeType gt, NamedEntry grantee) {
+        if (gt == GranteeType.GT_USER) {
+            return (!grantee.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) &&
+                    grantee.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false));
+        } else if (gt == GranteeType.GT_GROUP) {
+            return grantee.getBooleanAttr(Provisioning.A_zimbraIsAdminGroup, false);
+        } else
+            return false;
+    }
 }

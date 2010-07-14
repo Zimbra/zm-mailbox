@@ -28,7 +28,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccessManager;
@@ -41,10 +40,8 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
-import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
-import com.zimbra.cs.account.accesscontrol.SearchGrants.SearchGrantsResults;
 
 public class RightCommand {
     
@@ -100,6 +97,7 @@ public class RightCommand {
                 String right = eRight.getText();
                 boolean deny = eRight.getAttributeBool(AdminConstants.A_DENY, false);
                 boolean canDelegate = eRight.getAttributeBool(AdminConstants.A_CAN_DELEGATE, false);
+                boolean subDomain = eRight.getAttributeBool(AdminConstants.A_SUB_DOMAIN, false);
                 
                 RightModifier rightModifier = null;
                 
@@ -110,6 +108,8 @@ public class RightCommand {
                     rightModifier = RightModifier.RM_DENY;
                 else if (canDelegate)
                     rightModifier = RightModifier.RM_CAN_DELEGATE;
+                else if (subDomain)
+                    rightModifier = RightModifier.RM_SUBDOMAIN;
                 
                 ACE ace = new ACE(targetType, targetId, targetName,
                         granteeType, granteeId, granteeName, 
@@ -148,7 +148,8 @@ public class RightCommand {
                 RightModifier rightModifier = ace.rightModifier();
                 boolean deny = (rightModifier == RightModifier.RM_DENY);
                 boolean canDelegate = (rightModifier == RightModifier.RM_CAN_DELEGATE);
-                
+                boolean subDomain = (rightModifier == RightModifier.RM_SUBDOMAIN);
+                    
                 /*
                  * new format:
                  * 
@@ -171,6 +172,7 @@ public class RightCommand {
                 Element eRight = eGrant.addElement(AdminConstants.E_RIGHT);
                 eRight.addAttribute(AdminConstants.A_DENY, deny);
                 eRight.addAttribute(AdminConstants.A_CAN_DELEGATE, canDelegate);
+                eRight.addAttribute(AdminConstants.A_SUB_DOMAIN, subDomain);
                 eRight.setText(ace.right());
             }
         }
@@ -910,7 +912,7 @@ public class RightCommand {
         RightBearer rightBearer = RightBearer.newRightBearer(granteeEntry);
         
         AllEffectiveRights aer = new AllEffectiveRights(gt.getCode(), granteeEntry.getId(), granteeEntry.getName());
-        RightChecker.getAllEffectiveRights(rightBearer, expandSetAttrs, expandGetAttrs, aer);
+        CollectAllEffectiveRights.getAllEffectiveRights(rightBearer, expandSetAttrs, expandGetAttrs, aer);
         return aer;
     }
     
@@ -934,7 +936,7 @@ public class RightCommand {
         EffectiveRights er = new EffectiveRights(targetType, TargetType.getId(targetEntry), targetEntry.getLabel(), 
                 granteeAcct.getId(), granteeAcct.getName());
         
-        RightChecker.getEffectiveRights(rightBearer, targetEntry, expandSetAttrs, expandGetAttrs, er);
+        CollectEffectiveRights.getEffectiveRights(rightBearer, targetEntry, expandSetAttrs, expandGetAttrs, er);
         return er;
     }
     
@@ -959,7 +961,7 @@ public class RightCommand {
         EffectiveRights er = new EffectiveRights(targetType, TargetType.getId(targetEntry), targetEntry.getLabel(), 
                 granteeAcct.getId(), granteeAcct.getName());
         
-        RightChecker.getEffectiveRights(rightBearer, targetEntry, true, true, er);
+        CollectEffectiveRights.getEffectiveRights(rightBearer, targetEntry, true, true, er);
         return er;
     }
     
@@ -1053,7 +1055,7 @@ public class RightCommand {
             if (!revoking) {
                 boolean isCDARight = CrossDomain.validateCrossDomainAdminGrant(right, granteeType);
                 if (!isCDARight &&
-                    !RightChecker.isValidGranteeForAdminRights(granteeType, granteeEntry))
+                    !RightBearer.isValidGranteeForAdminRights(granteeType, granteeEntry))
                     throw ServiceException.INVALID_REQUEST("grantee for admin right or for user right " + 
                             "with the can delegate modifier must be a delegated admin account or admin group, " +
                             "it cannot be a global admin account or a regular user account.", null);
@@ -1078,8 +1080,22 @@ public class RightCommand {
                     "It can only be granted on target types: " + right.reportGrantableTargetTypes(), null);
         
         // then the ugly special group target checking
-        if (targetType == TargetType.dl && !RightChecker.allowGroupTarget(right))
+        if (targetType == TargetType.dl && !CheckRight.allowGroupTarget(right))
             throw ServiceException.INVALID_REQUEST("group target is not supported for right: " + right.getName(), null);
+        
+        /*
+         * check if the right modifier is applicable on the target and right
+         */
+        if (RightModifier.RM_SUBDOMAIN == rightModifier) {
+            // can only be granted on domain targets
+            if (targetType != TargetType.domain)
+                throw ServiceException.INVALID_REQUEST("right modifier " + RightModifier.RM_SUBDOMAIN.getModifier() +
+                        " can only be granted on domain targets", null);
+            
+            if (!right.allowSubDomainModifier())
+                throw ServiceException.INVALID_REQUEST("right modifier " + RightModifier.RM_SUBDOMAIN.getModifier() +
+                        " is not allowed for the right: " + right.getName(), null);
+        }
         
         /*
          * check if the authed account can grant this right on this target
@@ -1105,7 +1121,7 @@ public class RightCommand {
             if (!canGrant)
                 throw ServiceException.PERM_DENIED("insuffcient right to " + (revoking?"revoke":"grant"));
                 
-            RightChecker.checkPartiallyDenied(authedAcct, targetType, targetEntry, right);
+            ParticallyDenied.checkPartiallyDenied(authedAcct, targetType, targetEntry, right);
         }
         
         if (secret != null && !granteeType.allowSecret())
@@ -1213,7 +1229,7 @@ public class RightCommand {
     }
     
     /**
-     * revoke all grants granted to the secified grantee, invoked from 
+     * revoke all grants granted to the specified grantee, invoked from 
      * LdapProvisioning.deleteAccount.
      * 
      * note: no verification (things done in verifyGrant) is done in this method

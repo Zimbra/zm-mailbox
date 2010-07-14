@@ -32,7 +32,7 @@ public class ZimbraACL {
     // all aces
     private List<ZimbraACE> mAces = new ArrayList<ZimbraACE>();
     
-    // positive grants, but not delegable
+    // positive grants, but not delegable, *not* including subdomain grants
     private Set<ZimbraACE> mAllowedNotDelegable = new HashSet<ZimbraACE>();
     
     // positive grants, and delegable
@@ -40,6 +40,9 @@ public class ZimbraACL {
     
     // negative grants
     private Set<ZimbraACE> mDenied = new HashSet<ZimbraACE>();
+    
+    // subdomain grants
+    private Set<ZimbraACE> mSubDomain = new HashSet<ZimbraACE>();
 
     // for the containsRight call, can probably remove now
     private Set<Right> mContainsRight = new HashSet<Right>();
@@ -105,7 +108,7 @@ public class ZimbraACL {
      * 
      * Negative grants must be put in the front.
      * Order of 2 and 3 does not matter.  Putting 
-     * delegables in front of non-delegables is a 
+     * delegable in front of non-delegables is a 
      * little more efficient when we are checking 
      * for delegable grants, because non-delegable 
      * grants will be ignored if encountered.
@@ -114,11 +117,16 @@ public class ZimbraACL {
      */
     private void addACE(ZimbraACE aceToGrant) {
         if (aceToGrant.deny()) {
-            mAces.add(0, aceToGrant);  // add in the front
+            mAces.add(0, aceToGrant);  // add to the front
             mDenied.add(aceToGrant);
         } else if (!aceToGrant.canDelegate()) {
-            mAces.add(aceToGrant);     // add in the rear
-            mAllowedNotDelegable.add(aceToGrant);
+            mAces.add(aceToGrant);     // add to the rear
+            
+            if (aceToGrant.subDomain())
+                mSubDomain.add(aceToGrant);
+            else
+                mAllowedNotDelegable.add(aceToGrant);
+            
         } else {
             mAces.add(mDenied.size(), aceToGrant);  // add in the middle, between denied and non-delegable
             mAllowedDelegable.add(aceToGrant);
@@ -132,6 +140,8 @@ public class ZimbraACL {
             mDenied.remove(aceToRevoke);
         else if (aceToRevoke.canDelegate())
             mAllowedDelegable.remove(aceToRevoke);
+        else if (aceToRevoke.subDomain())
+            mSubDomain.remove(aceToRevoke);
         else
             mAllowedNotDelegable.remove(aceToRevoke);
         mContainsRight.remove(aceToRevoke.getRight());
@@ -248,7 +258,9 @@ public class ZimbraACL {
         return mDenied;
     }
     
-    
+    Set<ZimbraACE> getSubDomainACEs() {
+        return mSubDomain;
+    }    
     
     /**
      * Get ACEs with specified rights

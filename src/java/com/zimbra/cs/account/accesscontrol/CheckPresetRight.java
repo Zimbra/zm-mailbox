@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.account.accesscontrol;
 
 import java.util.List;
@@ -105,7 +119,7 @@ public class CheckPresetRight extends CheckRight {
         
         if (adminRight) {
             // if the grantee is no longer legitimate, e.g. not an admin any more, ignore all his grants
-            if (!RightChecker.isValidGranteeForAdminRights(GranteeType.GT_USER, mGranteeAcct))
+            if (!RightBearer.isValidGranteeForAdminRights(GranteeType.GT_USER, mGranteeAcct))
                 return null;
             
             granteeDomain = mProv.getDomain(mGranteeAcct);
@@ -128,7 +142,7 @@ public class CheckPresetRight extends CheckRight {
         // the actual target separately
         List<ZimbraACE> acl = ACLUtil.getAllACEs(mTarget);
         if (acl != null) {
-            result = checkTargetPresetRight(acl);
+            result = checkTarget(acl, false);
             if (result != null) 
                 return result;
         }
@@ -140,7 +154,7 @@ public class CheckPresetRight extends CheckRight {
         Domain targetDomain = TargetType.getTargetDomain(mProv, mTarget);
         
         // group target is only supported for admin rights
-        boolean expandTargetGroups = RightChecker.allowGroupTarget(mRightNeeded);
+        boolean expandTargetGroups = CheckRight.allowGroupTarget(mRightNeeded);
         
         // check grants granted on entries from which the target entry can inherit from
         TargetIterator iter = TargetIterator.getTargetIeterator(mProv, mTarget, expandTargetGroups);
@@ -172,7 +186,7 @@ public class CheckPresetRight extends CheckRight {
                 if (groupACLs != null) {
                     List<ZimbraACE> aclsOnGroupTargets = groupACLs.getAllACLs();
                     if (aclsOnGroupTargets != null)
-                        result = checkTargetPresetRight(aclsOnGroupTargets);
+                        result = checkTarget(aclsOnGroupTargets, false);
                     if (result != null) 
                         return result;
                     
@@ -183,7 +197,9 @@ public class CheckPresetRight extends CheckRight {
                 // didn't encounter any group grantedOn, or none of them matches, just check this grantedOn entry
                 if (acl == null)
                     continue;
-                result = checkTargetPresetRight(acl);
+                
+                boolean subDomain = (mTargetType == TargetType.domain && (grantedOn instanceof Domain));
+                result = checkTarget(acl, subDomain);
                 if (result != null) 
                     return result;
             }
@@ -195,7 +211,7 @@ public class CheckPresetRight extends CheckRight {
             return null;
     }
     
-    private Boolean checkTargetPresetRight(List<ZimbraACE> acl) throws ServiceException {
+    private Boolean checkTarget(List<ZimbraACE> acl, boolean subDomain) throws ServiceException {
         Boolean result = null;
         
         // if the right is user right, checking for individual match will
@@ -204,29 +220,29 @@ public class CheckPresetRight extends CheckRight {
         short adminFlag = (mRightNeeded.isUserRight()? 0 : GranteeFlag.F_ADMIN);
         
         // as an individual: user, guest, key
-        result = checkPresetRight(acl, (short)(GranteeFlag.F_INDIVIDUAL | adminFlag));
+        result = checkPresetRight(acl, (short)(GranteeFlag.F_INDIVIDUAL | adminFlag), subDomain);
         if (result != null) 
             return result;
         
         // as a group member
-        result = checkGroupPresetRight(acl, (short)(GranteeFlag.F_GROUP));
+        result = checkGroupPresetRight(acl, (short)(GranteeFlag.F_GROUP), subDomain);
         if (result != null) 
             return result;
        
         // if right is an user right, check domain, authed users and public grantees
         if (mRightNeeded.isUserRight()) {
             // as an zimbra user in the same domain
-            result = checkPresetRight(acl, (short)(GranteeFlag.F_DOMAIN));
+            result = checkPresetRight(acl, (short)(GranteeFlag.F_DOMAIN), subDomain);
             if (result != null) 
                 return result;
             
             // all authed zimbra user
-            result = checkPresetRight(acl, (short)(GranteeFlag.F_AUTHUSER));
+            result = checkPresetRight(acl, (short)(GranteeFlag.F_AUTHUSER), subDomain);
             if (result != null) 
                 return result;
             
             // public
-            result = checkPresetRight(acl, (short)(GranteeFlag.F_PUBLIC));
+            result = checkPresetRight(acl, (short)(GranteeFlag.F_PUBLIC), subDomain);
             if (result != null) 
                 return result;
         }
@@ -239,6 +255,7 @@ public class CheckPresetRight extends CheckRight {
      * checks 
      *     - if the grant matches required granteeFlags
      *     - if the granted right is applicable to the entry on which it is granted
+     *     - if the grant is for sub domains, if subDomain is true(if the grant is not a negative grant) 
      *     - if the granted right matches the requested right
      *     
      *     Note: if canDelegateNeeded is true but the granted right is not delegable,
@@ -248,17 +265,24 @@ public class CheckPresetRight extends CheckRight {
      *           That is, a more relevant executable only grant will *not* take away
      *           the grantable property of a less relevant grantable grant.
      *                 
+     * subDomain: whether we want the grant to be for sub domains only
      */
-    private boolean matchesPresetRight(ZimbraACE ace, short granteeFlags) throws ServiceException {
+    private boolean matchesPresetRight(ZimbraACE ace, short granteeFlags, boolean subDomain) throws ServiceException {
         GranteeType granteeType = ace.getGranteeType();
         if (!granteeType.hasFlags(granteeFlags))
             return false;
             
-        if (!RightChecker.rightApplicableOnTargetType(mTargetType, mRightNeeded, mCanDelegateNeeded))
+        if (!CheckRight.rightApplicableOnTargetType(mTargetType, mRightNeeded, mCanDelegateNeeded))
             return false;
         
         if (mCanDelegateNeeded && ace.canExecuteOnly())
             return false;
+        
+        // negative grants are always effective on sub domains
+        if (!ace.deny()) {
+            if (subDomain != ace.subDomain())
+                return false;
+        }
             
         Right rightGranted = ace.getRight();
         if ((rightGranted.isPresetRight() && rightGranted == mRightNeeded) ||
@@ -296,10 +320,10 @@ public class CheckPresetRight extends CheckRight {
      * @return
      * @throws ServiceException
      */
-    private Boolean checkPresetRight(List<ZimbraACE> acl, short granteeFlags) throws ServiceException {
+    private Boolean checkPresetRight(List<ZimbraACE> acl, short granteeFlags, boolean subDomain) throws ServiceException {
         Boolean result = null;
         for (ZimbraACE ace : acl) {
-            if (!matchesPresetRight(ace, granteeFlags))
+            if (!matchesPresetRight(ace, granteeFlags, subDomain))
                 continue;
             
             // if we get here, the right matched, mark it in seenRight.  
@@ -325,11 +349,11 @@ public class CheckPresetRight extends CheckRight {
      *     zimbraIsAdminGroup=TRUE.  The the group's zimbraIsAdminGroup is set to false after 
      *     if grant is made, the grant is still there on the target entry, but becomes useless.
      */
-    private Boolean checkGroupPresetRight(List<ZimbraACE> acl, short granteeFlags) throws ServiceException {
+    private Boolean checkGroupPresetRight(List<ZimbraACE> acl, short granteeFlags, boolean subDomain) throws ServiceException {
         Boolean result = null;
         
         for (ZimbraACE ace : acl) {
-            if (!matchesPresetRight(ace, granteeFlags))
+            if (!matchesPresetRight(ace, granteeFlags, subDomain))
                 continue;
             
             // if we get here, the right matched, mark it in seenRight.  

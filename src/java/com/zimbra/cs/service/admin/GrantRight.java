@@ -76,15 +76,18 @@ public class GrantRight extends RightDocumentHandler {
     static RightModifier getRightModifier(Element eRight) throws ServiceException {
         boolean deny = eRight.getAttributeBool(AdminConstants.A_DENY, false);
         boolean canDelegate = eRight.getAttributeBool(AdminConstants.A_CAN_DELEGATE, false);
+        boolean subDomain = eRight.getAttributeBool(AdminConstants.A_SUB_DOMAIN, false);
         
-        if (deny && canDelegate)
-            throw ServiceException.INVALID_REQUEST("cannot have both deny and canDelegate right modifiers", null);
+        if ((deny && canDelegate) || (canDelegate && subDomain) || (subDomain && deny))
+            throw ServiceException.INVALID_REQUEST("can only have one modifier", null);
         
         RightModifier rightModifier = null;
         if (deny)
             rightModifier = RightModifier.RM_DENY;
         else if (canDelegate)
             rightModifier = RightModifier.RM_CAN_DELEGATE;
+        else if (subDomain)
+            rightModifier = RightModifier.RM_SUBDOMAIN;
         
         return rightModifier;
     }

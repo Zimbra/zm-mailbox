@@ -47,6 +47,10 @@ public class UserRight extends Right {
             return super.executableOnTargetType(targetType);    
     }
     
+    @Override
+    boolean allowSubDomainModifier() {
+        return false;
+    }
     
     /*
     String dump(StringBuilder sb) {
@@ -61,4 +65,5 @@ public class UserRight extends Right {
         // no need to check is other is a combo right, because
         // combo right can only contain admin rights.
     }
+
 }

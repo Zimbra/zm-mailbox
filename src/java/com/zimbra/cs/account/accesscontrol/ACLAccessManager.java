@@ -494,7 +494,7 @@ public class ACLAccessManager extends AccessManager {
                                    Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
         
         TargetType targetType = TargetType.getTargetType(target);
-        if (!RightChecker.rightApplicableOnTargetType(targetType, rightNeeded, canDelegateNeeded))
+        if (!CheckRight.rightApplicableOnTargetType(targetType, rightNeeded, canDelegateNeeded))
             return false;
         
         boolean allowed = false;
