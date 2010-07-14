@@ -24,7 +24,6 @@ import java.util.regex.Pattern;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.db.Versions;
@@ -36,12 +35,12 @@ public class BuildInfo {
     public static final String RELEASE;
     public static final String DATE;
     public static final String HOST;
-	public static final String PLATFORM;
-	public static final String MAJORVERSION;
-	public static final String MINORVERSION;
-	public static final String MICROVERSION;    
-	public static final String BUILDNUM;
-	
+    public static final String PLATFORM;
+    public static final String MAJORVERSION;
+    public static final String MINORVERSION;
+    public static final String MICROVERSION;    
+    public static final String BUILDNUM;
+
     public static final String FULL_VERSION;
 
     static {
@@ -56,7 +55,7 @@ public class BuildInfo {
         String platform = getPlatform();
         String buildnum = "buildnum";
         try {
-            Class clz = Class.forName("com.zimbra.cs.util.BuildInfoGenerated");
+            Class<?> clz = Class.forName("com.zimbra.cs.util.BuildInfoGenerated");
             version = (String) clz.getField("VERSION").get(null);
             type = (String) clz.getField("TYPE").get(null);
             release = (String) clz.getField("RELEASE").get(null);
@@ -68,7 +67,7 @@ public class BuildInfo {
             buildnum = (String) clz.getField("BUILDNUM").get(null);
         } catch (Exception e) {
             System.err.println("Exception occurred during introspecting; version information incomplete");
-            e.printStackTrace();
+            e.printStackTrace(System.err);
         }
         
         
@@ -142,7 +141,6 @@ public class BuildInfo {
         private int mMajor;
         private int mMinor;
         private int mPatch;
-        private int mBuildNum;
         private Release mRel;
         private int mRelNum;
         private String mVersion;
@@ -174,7 +172,6 @@ public class BuildInfo {
             
             if (underscoreAt != -1) {
                 ver = version.substring(0, underscoreAt);
-                String rel = version.substring(underscoreAt+1,lastUnderscoreAt);
                 Matcher matcher = mPattern.matcher(version);
                 if (matcher.find()) {
                     mRel = Release.fromString(matcher.group(1));
@@ -182,11 +179,6 @@ public class BuildInfo {
                     if (!StringUtil.isNullOrEmpty(relNum))
                         mRelNum = Integer.parseInt(relNum);
                 }
-                
-                if (lastUnderscoreAt != (version.length()-1)) {
-                	mBuildNum = Integer.parseInt(version.substring(lastUnderscoreAt+1));
-                }            
-                
             }
             
             String[] parts = ver.split("\\.");
@@ -247,7 +239,7 @@ public class BuildInfo {
          * @param version
          * @return a negative integer, zero, or a positive integer as this object is older than, equal to, or newer than the specified version.
          */
-        public int compare(Version version) throws ServiceException  {
+        public int compare(Version version) {
             if (mFuture) {
                 if (version.mFuture)
                     return 0;
