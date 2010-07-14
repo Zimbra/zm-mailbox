@@ -580,9 +580,6 @@ public class LC {
     
     public static final KnownKey zimbra_slow_logging_enabled;
     public static final KnownKey zimbra_slow_logging_threshold;
-    
-    public static final KnownKey smtp_to_lmtp_enabled;
-    public static final KnownKey smtp_to_lmtp_port;
 
     public static final KnownKey socks_enabled = new KnownKey(
         "socks_enabled", "false", "enable optional support for SOCKS client");
@@ -791,7 +788,7 @@ public class LC {
         zimbra_http_originating_ip_header = new KnownKey("zimbra_http_originating_ip_header", "X-Forwarded-For");
 
         zimbra_session_limit_imap = new KnownKey("zimbra_session_limit_imap");
-        zimbra_session_limit_imap.setDefault("15");
+        zimbra_session_limit_imap.setDefault("5");
 
         zimbra_session_timeout_soap = new KnownKey("zimbra_session_timeout_soap");
         zimbra_session_timeout_soap.setDefault("600");
@@ -1620,9 +1617,6 @@ public class LC {
                 "Number of seconds to cache successful hostname-to-IP address lookup from the name service. ");
 
         text_attachments_base64 = new KnownKey("text_attachments_base64", "true");
-        
-        smtp_to_lmtp_enabled = new KnownKey("smtp_to_lmtp_enabled", "false");
-        smtp_to_lmtp_port = new KnownKey("smtp_to_lmtp_port", "7024");
         
 		// NOTE: When adding a new KnownKey, you do not need to call
 		//       setDoc. The documentation string will come from the
