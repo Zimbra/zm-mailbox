@@ -119,6 +119,12 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             Integer ownerApptId = schedView.getOwnerAppointmentId();
             BusyStatus busyStatus = schedView.getBusyStatus();
             BusyStatus intendedBusyStatus = schedView.getIntendedBusyStatus();
+            // For some ICAL properties like TRANSP and STATUS, intendedBusyStatus
+            // seems closer to what is intended than straight busyStatus
+            BusyStatus bestBusyStatus = intendedBusyStatus;
+            if (bestBusyStatus == null) {
+                bestBusyStatus = busyStatus;
+            }
             TimeZoneDefinition startTimeTZinfo = schedView.getStartDateTimezoneInfo();
             TimeZoneDefinition endTimeTZinfo = schedView.getEndDateTimezoneInfo();
             TimeZoneDefinition recurrenceTZinfo = schedView.getRecurrenceTimezoneInfo();
@@ -297,8 +303,8 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             }
 
             IcalUtil.addProperty(icalOutput, icalClass);
-            addStatusProperty(icalOutput, busyStatus);
-            addTranspProperty(icalOutput, busyStatus);
+            addStatusProperty(icalOutput, bestBusyStatus);
+            addTranspProperty(icalOutput, bestBusyStatus);
             addAttendees(icalOutput, mimeMsg, partstat, replyWanted);
             // TODO RESOURCES from PidLidNonSendableBcc with ';' replaced
             // with ','.  These are resources without a mail address
@@ -738,10 +744,13 @@ private void addAttendee(ContentHandler icalOutput, InternetAddress ia,
             if (busyStatus == null) {
                 return;
             }
-            if (busyStatus.equals(BusyStatus.BUSY)) {
-                icalStatus = Status.VEVENT_CONFIRMED;
-            }else if (busyStatus.equals(BusyStatus.TENTATIVE)) {
+            // BusyStatus is not really an exact analogue for STATUS
+            // Assuming TENTATIVE means plans may change and BUSY/FREE/OUT-OF-OFFICE
+            // means plans are set in stone.
+            if (busyStatus.equals(BusyStatus.TENTATIVE)) {
                 icalStatus = Status.VEVENT_TENTATIVE;
+            } else {
+                icalStatus = Status.VEVENT_CONFIRMED;
             }
         }
         else if (method.equals(Method.CANCEL)) {
