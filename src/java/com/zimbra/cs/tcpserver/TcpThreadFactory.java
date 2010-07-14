@@ -15,7 +15,7 @@
 
 package com.zimbra.cs.tcpserver;
 
-import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadFactory;
 
 public class TcpThreadFactory implements ThreadFactory {
 	private int mCount;

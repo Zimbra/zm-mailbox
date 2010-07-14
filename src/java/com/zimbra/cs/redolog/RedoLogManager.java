@@ -28,13 +28,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
-
-import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
-import EDU.oswego.cs.dl.util.concurrent.Sync;
 
 import com.zimbra.cs.db.Db;
 import com.zimbra.cs.index.MailboxIndex;
@@ -93,7 +93,7 @@ public class RedoLogManager {
 	// simultaneously under normal circumstances, while locking them out
 	// when checkpoint or rollover is in progress.  Thus, "loggers" are
 	// "readers", and threads that do checkpoint/rollover are "writers".
-	private ReentrantWriterPreferenceReadWriteLock mRWLock;
+	private ReentrantReadWriteLock mRWLock;
 
 	// Insertion-order-preserved map of active transactions.  Each thread
 	// reading from or writing to this map must first acquire a read or
@@ -127,7 +127,7 @@ public class RedoLogManager {
         mLogFile = redolog;
     	mArchiveDir = archdir;
 
-        mRWLock = new ReentrantWriterPreferenceReadWriteLock();
+        mRWLock = new ReentrantReadWriteLock();
         mActiveOps = new LinkedHashMap<TransactionId, RedoableOp>(100);
         mTxnIdGenerator = new TxnIdGenerator();
         long minAge = RedoConfig.redoLogRolloverMinFileAge() * 60 * 1000;     // milliseconds
@@ -432,8 +432,8 @@ public class RedoLogManager {
 			// Do the logging while holding a read lock on the RW lock.
 			// This prevents checkpoint or rollover from starting when
 			// there are any threads in the act of logging.
-			Sync readLock = mRWLock.readLock();
-			readLock.acquire();
+			ReadLock readLock = mRWLock.readLock();
+			readLock.lockInterruptibly();
 			try {
 				// Update active ops map.
 				synchronized (mActiveOps) {
@@ -497,7 +497,7 @@ public class RedoLogManager {
 				if (ZimbraLog.redolog.isDebugEnabled())
 					ZimbraLog.redolog.debug(op.toString());
 			} finally {
-				readLock.release();
+				readLock.unlock();
 			}
 		} catch (InterruptedException e) {
 		    synchronized (mShuttingDownGuard) {
@@ -584,9 +584,9 @@ public class RedoLogManager {
         File rolledOverFile = null;
         // Grab a write lock on mRWLock.  No thread will be
         // able to log a new item until rollover is done.
-		Sync writeLock = mRWLock.writeLock();
+		WriteLock writeLock = mRWLock.writeLock();
 		try {
-			writeLock.acquire();
+			writeLock.lockInterruptibly();
 		} catch (InterruptedException e) {
 		    synchronized (mShuttingDownGuard) {
                 if (!mShuttingDown)
@@ -619,7 +619,7 @@ public class RedoLogManager {
 			ZimbraLog.redolog.error("IOException during redo log rollover");
 			signalFatalError(e);
         } finally {
-			writeLock.release();
+			writeLock.unlock();
 		}
 
         /* TODO: Finish implementing Rollover as a replicated op.
@@ -675,19 +675,10 @@ public class RedoLogManager {
 	 * @return the Sync object to be used later to release the lock
 	 * @throws InterruptedException
 	 */
-	protected Sync acquireExclusiveLock() throws InterruptedException {
-		Sync writeLock = mRWLock.writeLock();
-		writeLock.acquire();
+	protected WriteLock acquireExclusiveLock() throws InterruptedException {
+		WriteLock writeLock = mRWLock.writeLock();
+		writeLock.lockInterruptibly();
 		return writeLock;
-	}
-
-	/**
-	 * Releases the exclusive lock on the log manager.
-	 * See acquireExclusiveLock() method.
-	 * @param exclusiveLock
-	 */
-	protected void releaseExclusiveLock(Sync exclusiveLock) {
-		exclusiveLock.release();
 	}
 
 	protected void signalFatalError(Throwable e) {
@@ -722,9 +713,9 @@ public class RedoLogManager {
         Set<Long> mailboxes = new HashSet<Long>();
 
         // Grab a read lock to prevent rollover.
-        Sync readLock = mRWLock.readLock();
+        ReadLock readLock = mRWLock.readLock();
         try {
-            readLock.acquire();
+            readLock.lockInterruptibly();
         } catch (InterruptedException e) {
             synchronized (mShuttingDownGuard) {
                 if (!mShuttingDown)
@@ -775,7 +766,7 @@ public class RedoLogManager {
                 }
             } finally {
                 // We can let rollover happen now.
-                readLock.release();
+                readLock.unlock();
             }
 
             // Scan redologs to get list with IDs of mailboxes that have

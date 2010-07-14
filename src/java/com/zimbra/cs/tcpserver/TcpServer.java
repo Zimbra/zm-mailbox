@@ -20,6 +20,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -28,12 +32,9 @@ import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.Zimbra;
 
-import EDU.oswego.cs.dl.util.concurrent.BoundedLinkedQueue;
-import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
-
 public abstract class TcpServer implements Runnable, Server {
     private final Log mLog;
-    private final PooledExecutor mPooledExecutor;
+    private final ThreadPoolExecutor mPooledExecutor;
     private final String mName;
     private final ServerSocket mServerSocket;
     private final List<ProtocolHandler> mActiveHandlers;
@@ -60,10 +61,8 @@ public abstract class TcpServer implements Runnable, Server {
             numThreads = 10;
         }
 
-        mPooledExecutor = new PooledExecutor(new BoundedLinkedQueue(), numThreads);
-        mPooledExecutor.setMinimumPoolSize(numThreads);
-        mPooledExecutor.setThreadFactory(new TcpThreadFactory(mName, false, threadPriority));
-        mPooledExecutor.waitWhenBlocked();
+        mPooledExecutor = new ThreadPoolExecutor(numThreads, numThreads, 0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<Runnable>(), new TcpThreadFactory(mName, false, threadPriority));
 
         // TODO a linked list is probably the wrong datastructure here
         // TODO write tests with multiple concurrent client
@@ -142,7 +141,7 @@ public abstract class TcpServer implements Runnable, Server {
             mLog.warn(mName + " error closing server socket", ioe);
         }
 
-        mPooledExecutor.shutdownAfterProcessingCurrentlyQueuedTasks();
+        mPooledExecutor.shutdown();
 
         shutdownActiveHandlers(true);
 
@@ -154,7 +153,7 @@ public abstract class TcpServer implements Runnable, Server {
 
         mLog.info(mName + " waiting " + forceShutdownAfterSeconds + " seconds for thread pool shutdown");
         try {
-            mPooledExecutor.awaitTerminationAfterShutdown(forceShutdownAfterSeconds * 1000);
+            mPooledExecutor.awaitTermination(forceShutdownAfterSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException ie) {
             mLog.warn(mName + " interrupted while waiting for graceful shutdown", ie);
         }
@@ -180,8 +179,8 @@ public abstract class TcpServer implements Runnable, Server {
                 handler.setConnection(connection);
                 try {
                     mPooledExecutor.execute(handler);
-                } catch (InterruptedException ie) {
-                    mLog.warn("handler thread pool execution request interrupted", ie);
+                } catch (RejectedExecutionException e) {
+                    mLog.warn("handler thread pool execution request rejected", e);
                 }
             }
         } catch (IOException ioe) {
