@@ -280,10 +280,10 @@ public class ZAuthToken {
     
     private Map<String, String> toZimbraCookieMap(boolean isAdmin) {
         Map<String, String> cookieMap = null;
-        if (mValue != null) {
+        if (mValue != null || mProxyAuthToken != null) {
             String cookieName = zimbraCookieName(isAdmin);
             cookieMap = new HashMap<String, String>();
-            cookieMap.put(cookieName, mValue);
+            cookieMap.put(cookieName, mProxyAuthToken !=null ? mProxyAuthToken : mValue);
         }
         return cookieMap;  
     }
