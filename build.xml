@@ -870,7 +870,7 @@
               file="${config.dir}/jetty-6.1/log4j.properties${production.suffix}" overwrite="true"/>
         <copy todir="${dist.dir}/jetty/common/lib" overwrite="true">
             <fileset dir="${common.jars.dir}"
-                     includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-cli*.jar,commons-codec*.jar,commons-dbcp*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor*jar,dom4j*.jar,ganymed-ssh2*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,guava*.jar"/>
+                     includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-cli*.jar,commons-codec*.jar,commons-dbcp*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,yuicompressor*jar,dom4j*.jar,ganymed-ssh2*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,guava*.jar"/>
         </copy>
         <copy todir="${dist.dir}/jetty/common/endorsed" overwrite="true">
             <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
