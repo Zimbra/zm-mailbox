@@ -68,20 +68,86 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.SoapProtocol;
 
 /**
- * Represents a search query.  Flow is simple:
- *
- *    -- Constructor()
- *       1) Parse the query string, turn it into a list of BaseQuery's.  This is
- *          done by the JavaCC-generated QueryParser in the index.queryparser package
- *       2) Push "not's" down to the leaves, so that we never have to invert
- *           result sets.  See the internal ParseTree class
- *       3) Generate a QueryOperation (which is usually a tree of QueryOperation objects)
- *           from the ParseTree, then optimize them QueryOperations in preparation to run
- *           the query.
- *
- *    -- execute() -- Begin the search, get the ZimbraQueryResults iterator
- *
- *  long-standing TODO is to move BaseQuery classes and ParseTree classes out of this class
+ * Represents a search query.
+ * <p>
+ * Flow is simple:
+ * <ul>
+ *  <li>Constructor() -
+ *   1) Parse the query string, turn it into a list of BaseQuery's. This is done
+ *      by the JavaCC-generated QueryParser in the index.queryparser package.
+ *   2) Push "not's" down to the leaves, so that we never have to invert result
+ *      sets. See the internal ParseTree class.
+ *   3) Generate a QueryOperation (which is usually a tree of QueryOperation
+ *      objects) from the ParseTree, then optimize them QueryOperations in
+ *      preparation to run the query.
+ *  <li>execute() - Begin the search, get the ZimbraQueryResults iterator.
+ * <p>
+ * long-standing TODO is to move BaseQuery classes and ParseTree classes out of
+ * this class.
+ * <p>
+ * The absolute-date (e.g. mm/dd/yyyy) pattern is locale sensitive. This
+ * implementation delegates it to JDK's {@link DateFormat} class whose behavior
+ * is as follows:
+ * <table>
+ *  <tr><td>ar</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>be</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>bg</td><td>yyyy-mm-dd</td></tr>
+ *  <tr><td>ca</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>cs</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>da</td><td>dd-mm-yyyy</td></tr>
+ *  <tr><td>de</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>el</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>en</td><td>mm/dd/yyyy (default)</td></tr>
+ *  <tr><td>en_AU</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>en_CA</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>en_GB</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>en_IE</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>en_IN</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>en_NZ</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>en_ZA</td><td>yyyy/mm/dd</td></tr>
+ *  <tr><td>es</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>es_DO</td><td>mm/dd/yyyy</td></tr>
+ *  <tr><td>es_HN</td><td>mm-dd-yyyy</td></tr>
+ *  <tr><td>es_PR</td><td>mm-dd-yyyy</td></tr>
+ *  <tr><td>es_SV</td><td>mm-dd-yyyy</td></tr>
+ *  <tr><td>et</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>fi</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>fr</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>fr_CA</td><td>yyyy-mm-dd</td></tr>
+ *  <tr><td>fr_CH</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>hr</td><td>yyyy.MM.dd</td></tr>
+ *  <tr><td>hr_HR</td><td>dd.MM.yyyy.</td></tr>
+ *  <tr><td>hu</td><td>yyyy.MM.dd.</td></tr>
+ *  <tr><td>is</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>it</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>it_CH</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>iw</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>ja</td><td>yyyy/mm/dd</td></tr>
+ *  <tr><td>ko</td><td>yyyy. mm. dd</td></tr>
+ *  <tr><td>lt</td><td>yyyy.mm.dd</td></tr>
+ *  <tr><td>lv</td><td>yyyy.dd.mm</td></tr>
+ *  <tr><td>mk</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>nl</td><td>dd-mm-yyyy</td></tr>
+ *  <tr><td>nl_BE</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>no</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>pl</td><td>yyyy-mm-dd</td></tr>
+ *  <tr><td>pl_PL</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>pt</td><td>dd-mm-yyyy</td></tr>
+ *  <tr><td>pt_BR</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>ro</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>ru</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>sk</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>sl</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>sq</td><td>yyyy-mm-dd</td></tr>
+ *  <tr><td>sv</td><td>yyyy-mm-dd</td></tr>
+ *  <tr><td>th</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>tr</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>uk</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>vi</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>zh</td><td>yyyy-mm-dd</td></tr>
+ *  <tr><td>zh_TW</td><td>yyyy/mm/dd</td></tr>
+ * </table>
+ * In case of format error, it falls back to <tt>mm/dd/yyyy</tt>.
  */
 public final class ZimbraQuery {
     /**
@@ -327,15 +393,14 @@ public final class ZimbraQuery {
             return pe;
          }
 
-        protected static final String NUMERICDATE_PATTERN = "^([0-9]+)$";
-        protected static final Pattern sNumericDatePattern = Pattern.compile(NUMERICDATE_PATTERN);
-
-        protected static final String RELDATE_PATTERN = "([+-])([0-9]+)([mhdwy][a-z]*)?";
-        protected static final Pattern sRelDatePattern = Pattern.compile(RELDATE_PATTERN);
+        protected static final Pattern NUMERICDATE_PATTERN =
+            Pattern.compile("^([0-9]+)$");
+        protected static final Pattern RELDATE_PATTERN =
+            Pattern.compile("([+-])([0-9]+)([mhdwy][a-z]*)?");
 
         public void parseDate(int modifier, String s, Token tok,
                 TimeZone tz, Locale locale) throws ParseException {
-            // DATE: absolute-date = mm/dd/yyyy | yyyy/dd/mm  OR
+            // DATE: absolute-date = mm/dd/yyyy (locale sensitive) OR
             //       relative-date = [+/-]nnnn{minute,hour,day,week,month,year}
             // * need to figure out how to represent "this week", "last week",
             // "this month", etc.
@@ -403,7 +468,9 @@ public final class ZimbraQuery {
             }
 
             if (s.length() <= 0) {
-                throw parseException("Invalid string in date query: \""+s+"\"", "INVALID_DATE", tok);
+                throw parseException(
+                        "Invalid string in date query: \"" + s + "\"",
+                        "INVALID_DATE", tok);
             }
 
 
@@ -442,31 +509,28 @@ public final class ZimbraQuery {
             // or an absolute date.
             //
             {
-                Matcher m;
+
                 String mod = null;
-                m = sNumericDatePattern.matcher(s);
-                if (m.lookingAt()) {
+                Matcher matcher = NUMERICDATE_PATTERN.matcher(s);
+                if (matcher.lookingAt()) {
                     long dateLong = Long.parseLong(s);
                     mDate = new Date(dateLong);
                     mEndDate = new Date(dateLong + 1000);
                     // +1000 since SQL time is sec, java in msec
                 } else {
-                    m = sRelDatePattern.matcher(s);
-                    if (m.lookingAt()) {
-                        //
+                    matcher = RELDATE_PATTERN.matcher(s);
+                    if (matcher.lookingAt()) {
                         // RELATIVE DATE!
-                        //
                         String reltime;
                         String what;
 
-                        mod = s.substring(m.start(1), m.end(1));
-                        reltime = s.substring(m.start(2), m.end(2));
+                        mod = s.substring(matcher.start(1), matcher.end(1));
+                        reltime = s.substring(matcher.start(2), matcher.end(2));
 
-
-                        if (m.start(3) == -1) {
+                        if (matcher.start(3) == -1) {
                             // no period specified -- use the defualt for the current operator
                         } else {
-                            what = s.substring(m.start(3), m.end(3));
+                            what = s.substring(matcher.start(3), matcher.end(3));
 
                             switch (what.charAt(0)) {
                                 case 'm':
@@ -490,8 +554,6 @@ public final class ZimbraQuery {
                             }
                         } // (else m.start(3) == -1
 
-
-                        // System.out.println("RELDATE: MOD=\""+mod+"\" AMT=\""+reltime+"\" TYPE="+type);
 
                         GregorianCalendar cal = new GregorianCalendar();
                         if (tz != null) {
@@ -539,10 +601,8 @@ public final class ZimbraQuery {
                         cal.add(field,1);
                         mEndDate = cal.getTime();
                     } else {
-                        //
                         // ABSOLUTE dates:
-                        //       use Locale information to parse date correctly
-                        //
+                        // use Locale information to parse date correctly
 
                         char first = s.charAt(0);
                         if (first == '-' || first == '+') {
@@ -563,9 +623,16 @@ public final class ZimbraQuery {
 
                         try {
                             mDate = df.parse(s);
-                        } catch (java.text.ParseException ex) {
-                            throw parseException(ex.getLocalizedMessage(),
-                                    "INVALID_DATE", tok);
+                        } catch (java.text.ParseException e) {
+                            // fall back to mm/dd/yyyy
+                            df = DateFormat.getDateInstance(DateFormat.SHORT);
+                            try {
+                                mDate = df.parse(s);
+                            } catch (java.text.ParseException again) {
+                                throw parseException(
+                                        again.getLocalizedMessage(),
+                                        "INVALID_DATE", tok);
+                            }
                         }
 
                         Calendar cal = Calendar.getInstance();

@@ -15,11 +15,16 @@
 
 package com.zimbra.qa.unittest;
 
+import java.util.Locale;
+import java.util.TimeZone;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.ZimbraQuery;
+import com.zimbra.cs.index.queryparser.Token;
+import com.zimbra.cs.index.queryparser.ZimbraQueryParser;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -36,6 +41,45 @@ public class TestZimbraQuery {
                 0, 0, "");
         Assert.assertEquals(ZimbraQuery.TextQuery.class, query.getClass());
         Assert.assertEquals("Q(UNKNOWN:(0),)", query.toString());
+    }
+
+    @Test
+    public void parseDate() throws Exception {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        ZimbraQuery.DateQuery query = new ZimbraQuery.DateQuery(
+                ZimbraAnalyzer.getDefaultAnalyzer(), ZimbraQueryParser.DATE);
+        TimeZone tz = TimeZone.getTimeZone("UTC");
+        Token token = Token.newToken(0);
+        String expected = "Q(DATE,DATE,Sat Jan 23 00:00:00 UTC 2010)";
+
+        query.parseDate(0, "1/23/2010", token, tz, Locale.ENGLISH);
+        Assert.assertEquals(expected, query.toString());
+
+        query.parseDate(0, "23/1/2010", token, tz, Locale.FRENCH);
+        Assert.assertEquals(expected, query.toString());
+
+        query.parseDate(0, "23.1.2010", token, tz, Locale.GERMAN);
+        Assert.assertEquals(expected, query.toString());
+
+        query.parseDate(0, "23/1/2010", token, tz, Locale.ITALIAN);
+        Assert.assertEquals(expected, query.toString());
+
+        query.parseDate(0, "2010/1/23", token, tz, Locale.JAPANESE);
+        Assert.assertEquals(expected, query.toString());
+
+        query.parseDate(0, "2010. 1. 23", token, tz, Locale.KOREAN);
+        Assert.assertEquals(expected, query.toString());
+    }
+
+    @Test
+    public void parseDateFallback() throws Exception {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+        ZimbraQuery.DateQuery query = new ZimbraQuery.DateQuery(
+                ZimbraAnalyzer.getDefaultAnalyzer(), ZimbraQueryParser.DATE);
+        query.parseDate(0, "1/23/2010", Token.newToken(0),
+                TimeZone.getTimeZone("UTC"), Locale.GERMAN);
+        Assert.assertEquals("Q(DATE,DATE,Sat Jan 23 00:00:00 UTC 2010)",
+                query.toString());
     }
 
     private static class TestMailbox extends Mailbox {

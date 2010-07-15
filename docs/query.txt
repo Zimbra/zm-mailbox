@@ -1,12 +1,12 @@
-Tim's short-short summary of the query grammar as of now (updated) 
+Tim's short-short summary of the query grammar as of now (updated)
 --------------------------------------------------------
    content:{TEXT}
    to:{TEXT|EMAIL_ADDR|DOMAIN}
-   from:[>,<,>=,<=]{TEXT} OR {EMAIL_ADDR} OR {DOMAIN} 
+   from:[>,<,>=,<=]{TEXT} OR {EMAIL_ADDR} OR {DOMAIN}
    cc:{TEXT|EMAIL|DOMAIN}
    tofrom,tocc,fromcc,tofromcc -> equivalent to combinations like (to:X or from:X), etc
    envto:{TEXT|EMAIL_ADDR|DOMAIN} // x-envelope-to mime header
-   envfrom:{TEXT|EMAIL|DOMAIN}    // x-envelope-from mime-header 
+   envfrom:{TEXT|EMAIL|DOMAIN}    // x-envelope-from mime-header
    subject:[>,<,>=,<=]{TEXT}
    in:{FOLDER_LABEL}   // search in a specific folder
    under:{FOLDER_LABEL} // in specified folder AND ALL SUBFOLERS
@@ -23,10 +23,10 @@ Tim's short-short summary of the query grammar as of now (updated)
        "tome"|"fromme"|"ccme"|"tofromme"|"fromccme"|"tofromccme"  // to, from cc me, including my aliases
        "local" - matches all folders in the local mailbox (that the user has READ access to)
        "remote" - matches all remotely mounted folders (that the user has READ access to)
-       } 
+       }
    date:[>,<,>=,<={DATE}
-   appt-start:[>,<,>=,<={DATE} 
-   appt-end:[>,<,>=,<={DATE} 
+   appt-start:[>,<,>=,<={DATE}
+   appt-end:[>,<,>=,<={DATE}
    after:{DATE}
    before:{DATE}
    size:{SIZE}
@@ -52,9 +52,9 @@ Tim's short-short summary of the query grammar as of now (updated)
 
    // Structured-Data search operator (see below):
    field[FIELDNAME]:{TEXT} or #FIELDNAME:{TEXT}
-   
+
    sort:(score|dateasc|datedesc|subjasc|subjdesc|nameasc|namedesc)
-      -- overrides the sort field specified in the <SearchRequest> 
+      -- overrides the sort field specified in the <SearchRequest>
 
 * : not currently supported
 
@@ -65,7 +65,7 @@ DOMAIN: such as *.com
 FOLDER_LABEL: mail|trash|spam|anywhere
 TAG: tag_name
 OBJECT_TYPE: "phone" "url" "credit-card" etc...types of parsed objects
-DATE:  absolute-date = mm/dd/yyyy | yyyy/dd/mm  OR
+DATE:  absolute-date = mm/dd/yyyy (locale sensitive) OR
        relative-date = [+/-]nnnn{minute,hour,day,week,month,year}
        (need to figure out how to represent "this week", "last
        week", "this month", etc)
@@ -75,7 +75,7 @@ NUM: ([<>])?n+
 
 
 ----------------------------------------
- 
+
 Test Cases
 ----------
 
@@ -98,7 +98,7 @@ content-related
 
   content:  # this should be the default field
 
-    
+
 header-related
 
   from:
@@ -106,22 +106,22 @@ header-related
   cc:{name|domain}
   subject:
 
-  
+
 saved-search-related:     (UNIMPLEMENTED)
 
   my:{name-of-saved-search}
-  
+
   i.e., could have a saved search of "domain:example.zimbra.com"
   called "zimbra" and say:
-  
+
   my:zimbra
-  
+
 object-related fields:
 
   has:attachment              constrains search to messages with attachments
-  has:{phone|url|ssn|po...}           messages with "objects" 
+  has:{phone|url|ssn|po...}           messages with "objects"
 
-    
+
 mime-related
 
   filename:{file-name}        constrains search to messages with attachments of given name
@@ -133,12 +133,12 @@ mime-related
   # aliases are "user-friendly" mime types
   mime-type-alias = "word" | "excel" | "pdf", "image", "audio", etc...
 
-  EXAMPLES:  
+  EXAMPLES:
          type:word "hello"             searches within only words docs for "hello"
          attachment:word "hello"       searches within messages that have word docs for "hello"
          attachment:image/*            matches all messages that have image attachments
 
-         
+
 flags
 
   is:anywhere --> in any folder (overrides spam-trash setting for that query part)
@@ -151,27 +151,90 @@ flags
   is:sent
   is:received
   is:invite
-  is:solo --> true if the item has no conversation 
+  is:solo --> true if the item has no conversation
 
   The flag name can also be used in a search:
     tag:\{FlagName} where {FlagName} is one of the following values:
       Attached, Answered, Copied, Deleted, Draft, Flagged, Forwarded, Notified, Subscribed, Unread
-  
+
 date-related fields
 
   after:{date}
   before:{date}
   date = {absolute-date} | {relative-date}
 
-  absolute-date = mm/dd/yyyy | yyyy/dd/mm
-  
-  relative-date = [+/-]nnnn{minute,hour,day,week,month,year} 
+  absolute-date = mm/dd/yyyy (locale sensitive)
+
+  relative-date = [+/-]nnnn{minute,hour,day,week,month,year}
+
+  NOTE: absolute-date is locale sensitive. Our implementation delegates it to
+        JDK's DateFormat class whose behavior is as follows:
+
+    * ar - dd/mm/yyyy
+    * be - dd.mm.yyyy
+    * bg - yyyy-mm-dd
+    * ca - dd/mm/yyyy
+    * cs - dd.mm.yyyy
+    * da - dd-mm-yyyy
+    * de - dd.mm.yyyy
+    * el - dd/mm/yyyy
+    * en - mm/dd/yyyy (default)
+    * en_AU - dd/mm/yyyy
+    * en_CA - dd/mm/yyyy
+    * en_GB - dd/mm/yyyy
+    * en_IE - dd/mm/yyyy
+    * en_IN - dd/mm/yyyy
+    * en_NZ - dd/mm/yyyy
+    * en_ZA - yyyy/mm/dd
+    * es - dd/mm/yyyy
+    * es_DO - mm/dd/yyyy
+    * es_HN - mm-dd-yyyy
+    * es_PR - mm-dd-yyyy
+    * es_SV - mm-dd-yyyy
+    * et - dd.mm.yyyy
+    * fi - dd.mm.yyyy
+    * fr - dd/mm/yyyy
+    * fr_CA - yyyy-mm-dd
+    * fr_CH - dd.mm.yyyy
+    * hr - yyyy.MM.dd
+    * hr_HR - dd.MM.yyyy.
+    * hu - yyyy.MM.dd.
+    * is - dd.mm.yyyy
+    * it - dd/mm/yyyy
+    * it_CH - dd.mm.yyyy
+    * iw - dd/mm/yyyy
+    * ja - yyyy/mm/dd
+    * ko - yyyy. mm. dd
+    * lt - yyyy.mm.dd
+    * lv - yyyy.dd.mm
+    * mk - dd.mm.yyyy
+    * nl - dd-mm-yyyy
+    * nl_BE - dd/mm/yyyy
+    * no - dd.mm.yyyy
+    * pl - yyyy-mm-dd
+    * pl_PL - dd.mm.yyyy
+    * pt - dd-mm-yyyy
+    * pt_BR - dd/mm/yyyy
+    * ro - dd.mm.yyyy
+    * ru - dd.mm.yyyy
+    * sk - dd.mm.yyyy
+    * sl - dd.mm.yyyy
+    * sq - yyyy-mm-dd
+    * sv - yyyy-mm-dd
+    * th - dd/mm/yyyy
+    * tr - dd.mm.yyyy
+    * uk - dd.mm.yyyy
+    * vi - dd/mm/yyyy
+    * zh - yyyy-mm-dd
+    * zh_TW - yyyy/mm/dd
+
+        In case of format error, it falls back to mm/dd/yyyy.
 
   NOTE: need to figure out how to represent "this week", "last week", "this month", etc. probably
         some special casing of relative dates and use with after/before. i.e., maybe "after:-2d AND before:0d" means
         yesterday? i.e., for relative day/week/month/year, you zero out month/week/day/hour/minute?
 
-  last 4 hours:   after:-4hour 
+  last 4 hours:   after:-4hour
   today:          after:0day
   yesterday:      (after:-2day AND before:0day)
   this week:      after:0week
@@ -191,35 +254,35 @@ appointment search operators
      the *earliest possible* time (start of the first instance in the
      recurrence) and *latest possible* time, or sometime in 2099 if
      the recurrence has no end.
-     
-  
+
+
 
 size-releted fields
 
   larger:{size}
   smaller:{size}
   size:{size}
-  
+
   size is [<>]nnnn{b,kb,mb,gb}    # default is kb?
 
-  
+
 tag-related fields
 
    tag:{user-defined-tag}
 
-      
+
 domain-related fields
 
   domain:{domain-list}
   EXAMPLES: domain:stanford.edu OR: domain:*.org
 
-    
+
 db-related fields
 
   message:{db-message-id}        # constrain searches to a particular message
 
-  
-conversation-related-fields:  
+
+conversation-related-fields:
   conv:{db-conv-id}      # constrain searches to a paritcular conversation
 *  conv-min-count:{num}   # constrain searches to conversations of a particular length
 *  conv-max-count:{num}   # constrain searches to conversations of a particular length
@@ -233,22 +296,22 @@ metadata-related fields
   keywords:
   company:
   metadata:
-  
+
   The metadata fields refer to the metadata of a non-textual attachment.
-  The fields author, title, keywords, company refer to the metadata fields 
+  The fields author, title, keywords, company refer to the metadata fields
   of the same name in the document.
   The field metadata aggregates all the metadata fields including the above four.
   E.g.,
-	author:acme     finds all attachments whose author is acme
-	metadata:acme   finds all attachments where acme appears in any metadata
-	                fields, including author.
+  author:acme     finds all attachments whose author is acme
+  metadata:acme   finds all attachments where acme appears in any metadata
+                  fields, including author.
 
 misc fields
 
 *  minm:nnnn                     # constrain to conversations with at least nnnn messages
 *  maxm:nnnn                     # constrain to conversations with at most nnnn messages
 
-  
+
 other-mime-specific fields
 
   how do we want to handle doc properties from word, pdf, mp3, etc?
@@ -260,17 +323,17 @@ other-mime-specific fields
          author:ross
 
 *   maybe {mime-type-alias}.field? i.e.:
-  
+
           audio.genre:rock OR audio.artist:rush   (or mp3.*?)
           word.title:hello
-          
+
    where the mime-type-alias can be left off if field is non-ambigious?
-   
+
    do we want to try and promote certain fields that we can share between mulitple types? (title, author, keywords)
 
 
 
-   
+
 Structured-Data Searching
 --------------------------------
 Search/Indexing now has the ability to analyze and store data in
@@ -279,16 +342,16 @@ structured way by the query language.
 
 For example, Contact name-value pairs are indexed this way.
 
-Structured data is stored in the "l.field" lucene field, and it should be added to the index document in a format like this: 
+Structured data is stored in the "l.field" lucene field, and it should be added to the index document in a format like this:
       "fieldOne:value1 value2 value3 value4\nFieldTwo:value2 value3 value4"
-      
+
 The search language has been extended to allow field searches to be expressed like this:
      #FieldName:value
-     
+
 For example, to find a contact with the last name "Davis" you would use a search query like:
      #lastname:davis
 OR
      FIELD[lastname]:davis
-     
-     
+
+
 
