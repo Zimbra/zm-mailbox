@@ -165,9 +165,11 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 } else if (msgClass.startsWith("IPM.Microsoft Schedule.MtgRespP")) {
                     method = Method.REPLY;
                     partstat = PartStat.ACCEPTED;
+                    replyWanted = false;
                 } else if (msgClass.startsWith("IPM.Microsoft Schedule.MtgRespN")) {
                     method = Method.REPLY;
                     partstat = PartStat.DECLINED;
+                    replyWanted = false;
                 } else if (msgClass.startsWith("IPM.Microsoft Schedule.MtgRespA")) {
                     if ((isCounterProposal != null) && isCounterProposal) {
                         method = Method.COUNTER;
@@ -175,8 +177,10 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                         method = Method.REPLY;
                     }
                     partstat = PartStat.TENTATIVE;
+                    replyWanted = false;
                 } else if (msgClass.startsWith("IPM.Microsoft Schedule.MtgCncl")) {
                     method = Method.CANCEL;
+                    replyWanted = false;
                 }
             }
 
@@ -252,7 +256,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             IcalUtil.addProperty(icalOutput, Property.CREATED, icalCreateDate, false);
             IcalUtil.addProperty(icalOutput, Property.LAST_MODIFIED, icalLastModDate, false);
             IcalUtil.addProperty(icalOutput, Property.SEQUENCE, sequenceNum, false);
-            if (summary == null) {
+            if ( (summary == null) || (summary.length() == 0) ) {
                 // TNEF_to_iCalendar.pdf Spec requires SUMMARY for certain method types
                 if (method.equals(Method.REPLY)) {
                     summary = new String("Response");
@@ -286,10 +290,15 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             // TODO: RECURRENCE-ID only makes sense in relation to a recurrence. It isn't
             // just the original start date. Make sure we only output one if this is
             // related to a recurring series.
-            IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.RECURRENCE_ID,
-                    recurrenceIdDateTime, startTimeTZinfo, isAllDayEvent);
+            if (recurrenceIdDateTime != null) {
+                IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.RECURRENCE_ID,
+                        recurrenceIdDateTime, startTimeTZinfo, isAllDayEvent);
+            } else {
+                // Outlook messages related to a specific instance still include info on
+                // the full recurrence but we don't want to include that.
+                addRecurrenceRelatedProps(icalOutput, recurDef, startTimeTZinfo, isAllDayEvent);
+            }
 
-            addRecurrenceRelatedProps(icalOutput, recurDef, startTimeTZinfo, isAllDayEvent);
 
             if (importance != null) {
                 if (importance == 2) {
@@ -345,8 +354,12 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 addAlarmComponent(icalOutput, schedView.getReminderDelta());
             }
             icalOutput.endComponent(Component.VEVENT);
-            addExceptions(icalOutput, recurDef, recurrenceTZinfo,
-                sequenceNum, ownerApptId, summary, location, isAllDayEvent);
+            if (recurrenceIdDateTime == null) {
+                // If this message primarily relates to a specific instance,
+                // exception information is superfluous
+                addExceptions(icalOutput, recurDef, recurrenceTZinfo,
+                    sequenceNum, ownerApptId, summary, location, isAllDayEvent);
+            }
 
             icalOutput.endCalendar();
             conversionSuccessful = true;
