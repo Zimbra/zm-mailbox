@@ -50,6 +50,10 @@ public abstract class LmtpHandler extends ProtocolHandler {
 
     protected boolean setupConnection(InetAddress remoteAddr) {
 	mRemoteAddress = remoteAddr.getHostAddress();
+	if (StringUtil.isNullOrEmpty(mRemoteAddress)) {
+	    // Logging for bug 47643.
+	    ZimbraLog.lmtp.info("Unable to determine client IP address.");
+	}
 	mRemoteHostname = remoteAddr.getHostName();
 	if (mRemoteHostname == null || mRemoteHostname.length() == 0) {
 	    mRemoteHostname = mRemoteAddress;
