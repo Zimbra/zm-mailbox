@@ -1,0 +1,10 @@
+This file is intended to describe the REST API used by ZCS admin console
+
+1) /service/afd - com.zimbra.cs.service.AdminFileDownload
+   Usage: Download some files in admin console, such as search result, bulk provision result, etc.
+
+   https://bugzilla.zimbra.com/show_bug.cgi?id=44907#c9
+
+2) /adminres - com.zimbra.webClient.servlet.AdminServlet
+   Usage: Get the CSR file from the server.    
+  
