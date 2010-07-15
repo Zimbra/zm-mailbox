@@ -95,7 +95,7 @@ public class CheckAttrRight extends CheckRight {
         // check the target entry itself
         List<ZimbraACE> acl = ACLUtil.getAllACEs(mTarget);
         if (acl != null) {
-            car = checkTargetAttrsRight(acl, relativity, allowSome, denySome);
+            car = checkTarget(acl, relativity, false, allowSome, denySome);
             relativity += granteeRanksPerTarget;
         }
         
@@ -141,7 +141,7 @@ public class CheckAttrRight extends CheckRight {
                     if (groupACLs != null) {
                         List<ZimbraACE> aclsOnGroupTargets = groupACLs.getAllACLs();
                         if (aclsOnGroupTargets != null) {
-                            car = checkTargetAttrsRight(aclsOnGroupTargets, relativity, allowSome, denySome);
+                            car = checkTarget(aclsOnGroupTargets, relativity, false, allowSome, denySome);
                             relativity += granteeRanksPerTarget;
                             if (car.isAll()) 
                                 break;
@@ -154,7 +154,9 @@ public class CheckAttrRight extends CheckRight {
                     
                     if (acl == null)
                         continue;
-                    car = checkTargetAttrsRight(acl, relativity, allowSome, denySome);
+                    
+                    boolean subDomain = (mTargetType == TargetType.domain && (grantedOn instanceof Domain));
+                    car = checkTarget(acl, relativity, subDomain, allowSome, denySome);
                     relativity += granteeRanksPerTarget;
                 }
             }
@@ -204,21 +206,21 @@ public class CheckAttrRight extends CheckRight {
 
     }
     
-    private CollectAttrsResult checkTargetAttrsRight(
-            List<ZimbraACE> acl, Integer relativity,
+    private CollectAttrsResult checkTarget(
+            List<ZimbraACE> acl, Integer relativity, boolean subDomain,
             Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
         
         CollectAttrsResult result = null;
         
         // as an individual: user
         short granteeFlags = (short)(GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_ADMIN);
-        result = expandACLToAttrs(acl, granteeFlags, relativity, allowSome, denySome);
+        result = expandACLToAttrs(acl, granteeFlags, relativity, subDomain, allowSome, denySome);
         if (result.isAll()) 
             return result;
         
         // as a group member, bump up the relativity
         granteeFlags = (short)(GranteeFlag.F_GROUP);
-        result = expandACLToAttrs(acl, granteeFlags, relativity+1, allowSome, denySome);
+        result = expandACLToAttrs(acl, granteeFlags, relativity+1, subDomain, allowSome, denySome);
 
         return result;
     }
@@ -263,7 +265,7 @@ public class CheckAttrRight extends CheckRight {
      * @throws ServiceException
      */
     private CollectAttrsResult expandACLToAttrs(
-            List<ZimbraACE> acl, short granteeFlags, Integer relativity,
+            List<ZimbraACE> acl, short granteeFlags, Integer relativity, boolean subDomain,
             Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
                                                 
         CollectAttrsResult result = null;
@@ -292,6 +294,12 @@ public class CheckAttrRight extends CheckRight {
             if (mCanDelegateNeeded && ace.canExecuteOnly())
                 continue; // just ignore the grant
 
+            
+            // negative grants are always effective on sub domains
+            if (!ace.deny()) {
+                if (subDomain != ace.subDomain())
+                    continue;
+            }
             
             if (rightGranted.isAttrRight()) {
                 AttrRight attrRight = (AttrRight)rightGranted;

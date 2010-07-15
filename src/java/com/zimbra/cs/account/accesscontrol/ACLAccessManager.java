@@ -362,7 +362,8 @@ public class ACLAccessManager extends AccessManager {
         Entry target = PseudoTarget.createPseudoTarget(Provisioning.getInstance(),
                                                        targetType, 
                                                        domainBy, domainStr, false,
-                                                       cosBy, cosStr);
+                                                       cosBy, cosStr,
+                                                       entryName);
         return canSetAttrs(grantee, target, attrs, asAdmin);
     }
     

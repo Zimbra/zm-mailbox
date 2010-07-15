@@ -28,8 +28,17 @@ public enum RightModifier {
     //   - for domain rights only
     //   - can only be granted on domain targets
     //   - affect sub domains only, *not* the domain on which the right is granted
-    //   - does not work with the +/- modifier.  i.e., grants made with the * modifier 
-    //     cannot be delegated and cannot be negated with a - modifier.
+    //   - does not work with the + modifier.  i.e., grants made with the * modifier 
+    //     cannot be delegated
+    //   - can be negated, just like how negation works for grants made without any 
+    //     modifier or the delegable modifier
+    //
+    //   When ALC on an entry is examined, we either look at the:
+    //   1) denied + delegable + grants without a modifier
+    //      for the "regular" inheritance path
+    //   or
+    //   2) denied + subDomain
+    //      for the sub domain inheritance path, bug 46602
     RM_SUBDOMAIN('*', AdminConstants.A_SUB_DOMAIN); 
     
     // urg, our soap intereface is already published with with the deny attribute, 

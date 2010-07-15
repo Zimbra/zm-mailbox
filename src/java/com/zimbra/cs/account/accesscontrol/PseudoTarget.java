@@ -175,6 +175,28 @@ public class PseudoTarget {
     }
     
     /**
+     * creagte a pseudo domain with the real name.
+     * 
+     * This is only used for computing settable attrs when creating a domain.
+     * We need to be able to traverse the domain hierarchy for grants with the subDomain modifier. 
+     * 
+     * @param prov
+     * @param domainName
+     * @return
+     * @throws ServiceException
+     */
+    public static Domain createPseudoDomain(Provisioning prov, String domainName) throws ServiceException {
+        return (Domain)createPseudoTarget(prov, TargetType.domain, null, null, false, null, null, domainName);
+    }
+    
+    public static Entry createPseudoTarget(Provisioning prov,
+            TargetType targetType, 
+            DomainBy domainBy, String domainStr, boolean createPseudoDomain,
+            CosBy cosBy, String cosStr) throws ServiceException {
+        return createPseudoTarget(prov, targetType, domainBy, domainStr, createPseudoDomain, cosBy, cosStr, null);
+    }
+    
+    /**
      * construct a pseudo target
      * 
      * if targetType is a domain-ed type: account. cr, dl:
@@ -194,13 +216,19 @@ public class PseudoTarget {
      * @param createPseudoDomain
      * @param cosBy
      * @param cosStr
+     * @param domainName only looked at when targetType is domain, ignored otherwise.
+     *                   if not null, the pseudo domain will be created with the provided domainName, 
+     *                   not a pseudo name.
+     *                   This is only used/needed for computing settable attrs when creating a domain.
+     *                   We need to be able to traverse the domain hierarchy for grants with the subDomain modifier. 
      * @return
      * @throws ServiceException
      */
     public static Entry createPseudoTarget(Provisioning prov,
             TargetType targetType, 
             DomainBy domainBy, String domainStr, boolean createPseudoDomain,
-            CosBy cosBy, String cosStr) throws ServiceException {
+            CosBy cosBy, String cosStr,
+            String domainName) throws ServiceException {
         
         Entry targetEntry = null;
         Config config = prov.getConfig();
@@ -266,7 +294,8 @@ public class PseudoTarget {
             dl.turnToAclGroup();
             break;
         case domain:
-            targetEntry = new PseudoDomain("pseudo.pseudo", zimbraId, attrMap, config.getDomainDefaults(), prov);
+            String name = domainName == null ? "pseudo.pseudo" : domainName;
+            targetEntry = new PseudoDomain(name, zimbraId, attrMap, config.getDomainDefaults(), prov);
             break;
         case server:  
             targetEntry = new PseudoServer("pseudo.pseudo", zimbraId, attrMap, config.getServerDefaults(), prov);

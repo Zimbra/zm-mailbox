@@ -949,7 +949,15 @@ public class RightCommand {
         verifyAccessManager();
         
         TargetType tt = TargetType.fromCode(targetType);
-        Entry targetEntry = PseudoTarget.createPseudoTarget(prov, tt, domainBy, domainStr, false, cosBy, cosStr);
+        
+        String domainName = null;
+        if (tt == TargetType.domain) {
+            if (domainBy != DomainBy.name)
+                throw ServiceException.INVALID_REQUEST("must be by name for domain target", null);
+            
+            domainName = domainStr;
+        }
+        Entry targetEntry = PseudoTarget.createPseudoTarget(prov, tt, domainBy, domainStr, false, cosBy, cosStr, domainName);
        
         // grantee
         GranteeType gt = GranteeType.GT_USER;

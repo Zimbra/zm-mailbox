@@ -8,7 +8,7 @@ Grant a right on a target to an individual or group grantee.
 <GrantRightRequest>
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
   <grantee type={grantee-type} by="{grantee-by}" [secret="{secret}"]>{grantee-name-or-id}</grantee>
-  <right [deny="${deny}"] [canDelegate="${canDelegate}"]>{right}</right>
+  <right [deny="${deny}"] [canDelegate="${canDelegate}"] [subDomain="${subDomain}"]>{right}</right>
 </GrantRightRequest>    
 
 {target-type} = account | calresource | dl | domain | cos | server | xmppcomponent | zimlet | config | global 
@@ -30,6 +30,8 @@ Grant a right on a target to an individual or group grantee.
 {deny} = 1 | 0(default)
 
 {canDelegate}  = 1 | 0(default)
+
+{subDomain} = 1 | 0(default)
 
 {right} = {right-name} | {inline-right}
 
@@ -54,7 +56,7 @@ an individual or group grantee.
 <RevokeRightRequest>
   <target type={target-type} by="{target-by}">{target-name-or-id}</target>
   <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
-  <right [deny="${deny}"] [canDelegate="${canDelegate}"]>{right-name}</right>
+  <right [deny="${deny}"] [canDelegate="${canDelegate}"] [subDomain="${subDomain}"]>{right-name}</right>
 </RevokeRightRequest>    
 
 <RevokeRightResponse/>
@@ -161,7 +163,7 @@ all = whether to include grants granted to groups the specified grantee belongs 
   <grant>
     <target type={target-type} by="{target-by}">{target-name-or-id}</target>
     <grantee type={grantee-type} by="{grantee-by}">{grantee-name-or-id}</grantee>
-    <right [deny="${deny}"] [canDelegate="${canDelegate}"]>{right}</right>
+    <right [deny="${deny}"] [canDelegate="${canDelegate}"] [subDomain="${subDomain}"]>{right}</right>
   </grant>+
 </GetGrantsResponse>  
 
@@ -288,11 +290,15 @@ The result can help the admin console decide on what tabs/attributes to display 
     [<cos by="{cos-by}">...</cos>]
 </GetCreateObjectAttrsRequest>    
 
-<domain> : required if {target-type} is "account"
-           ignored otherwise
+<domain> : required if {target-type} is account/calresource/dl/domain, ignored otherwise
+           - if {target-type} is account/calresource/dl: this is the domain in whcih the object will be in.
+             the domain can be speciffied by id or by name
+           - if {target-type} is domain, it is the domain name to be created.
+             e.g. to create a subdomain named foo.bar.test.com, should pass in <domain by="name">foo.bar.test.com</domain>.
+
           
-<cos>    : optional if {target-type} is "account", if missing, default cos of the domain will be used
-           ignored otherwise
+<cos>    : optional if {target-type} is account/calresource, ignored otherwise
+           if missing, default cos of the domain will be used
           
 e.g. 1  creating an account:
 

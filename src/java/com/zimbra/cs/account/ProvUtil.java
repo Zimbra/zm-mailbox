@@ -4037,6 +4037,11 @@ public class ProvUtil implements HttpDebugListener {
             grantee = args[4];
         }
         
+        System.out.println("Domain:  " + domain);
+        System.out.println("Cos:     " + cos);
+        System.out.println("Grantee: " + grantee);
+        System.out.println();
+        
         RightCommand.EffectiveRights effRights = mProv.getCreateObjectAttrs(targetType,
                                                                             domainBy, domain,
                                                                             cosBy, cos,
