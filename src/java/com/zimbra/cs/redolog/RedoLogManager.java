@@ -681,6 +681,15 @@ public class RedoLogManager {
 		return writeLock;
 	}
 
+    /**
+     * Releases the exclusive lock on the log manager.
+     * See acquireExclusiveLock() method.
+     * @param exclusiveLock
+     */
+    protected void releaseExclusiveLock(WriteLock exclusiveLock) {
+        exclusiveLock.unlock();
+    }
+
 	protected void signalFatalError(Throwable e) {
         // Die before any further damage is done.
         Zimbra.halt("Aborting process", e);
