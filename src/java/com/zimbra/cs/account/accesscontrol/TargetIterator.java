@@ -14,8 +14,11 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
-import com.zimbra.common.service.ServiceException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
@@ -270,12 +273,51 @@ public abstract class TargetIterator{
     }
     
     public static class DomainTargetIterator extends TargetIterator {
+        private int mCurSuperDomain;
+        private List<Domain> mSuperDomains;
         
-        DomainTargetIterator(Provisioning prov, Entry target) {
+        DomainTargetIterator(Provisioning prov, Entry target) throws ServiceException {
             super(prov, TargetType.account, target);
+            
+            mCurSuperDomain = 0;
+            mSuperDomains = new ArrayList<Domain>();
+            
+            Domain domain = (Domain)target;
+            String domainName = domain.getName();
+            
+            int nextDot = 0;
+            while ((nextDot = domainName.indexOf('.')) != -1) { // if nextDot is -l we've reached the top
+                domainName = domainName.substring(nextDot+1);
+                Domain parentDomain = mProv.getDomain(Provisioning.DomainBy.name, domainName, true); // check negative cache
+                if (parentDomain != null)
+                    mSuperDomains.add(parentDomain);
+            }
+        }
+        
+        @Override
+        Entry next() throws ServiceException {
+            if (mNoMore)
+                return null;
+            
+            Entry grantedOn = null;
+            
+            if (!mCheckedSelf) {
+                mCheckedSelf = true;
+                grantedOn = mTarget;
+            } else {
+                if (mCurSuperDomain < mSuperDomains.size()) {
+                    grantedOn = mSuperDomains.get(mCurSuperDomain);
+                    mCurSuperDomain++;
+                } else {
+                    mNoMore = true;
+                    grantedOn = mProv.getGlobalGrant();
+                }
+            }
+            
+            return grantedOn;
         }
     }
-    
+
     public static class ServerTargetIterator extends TargetIterator {
         
         ServerTargetIterator(Provisioning prov, Entry target) {
@@ -317,6 +359,41 @@ public abstract class TargetIterator{
             }
                     
             return grantedOn;
+        }
+    }
+    
+    public static void main(String[] args) throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        
+        // sub1.sub2.sub3.sub4.sub5.top
+        
+        Domain sub1 = prov.createDomain("sub1.sub2.sub3.sub4.sub5.top", new HashMap<String, Object>());
+        Domain sub3 = prov.createDomain("sub3.sub4.sub5.top", new HashMap<String, Object>());
+        Domain sub5 = prov.createDomain("sub5.top", new HashMap<String, Object>());
+        
+        TargetIterator targetIter;
+        Entry grantedOn;
+        
+        System.out.println("Testing " + sub1.getName());
+        targetIter = getTargetIeterator(prov, sub1, false);
+        while ((grantedOn = targetIter.next()) != null) {
+            System.out.println(grantedOn.getLabel());
+        }
+        
+        System.out.println();
+        
+        System.out.println("Testing " + sub3.getName());
+        targetIter = getTargetIeterator(prov, sub3, false);
+        while ((grantedOn = targetIter.next()) != null) {
+            System.out.println(grantedOn.getLabel());
+        }
+        
+        System.out.println();
+        
+        System.out.println("Testing " + sub5.getName());
+        targetIter = getTargetIeterator(prov, sub5, false);
+        while ((grantedOn = targetIter.next()) != null) {
+            System.out.println(grantedOn.getLabel());
         }
     }
 }

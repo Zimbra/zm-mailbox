@@ -177,7 +177,7 @@ public class CollectEffectiveRights {
         // check the target entry itself
         List<ZimbraACE> acl = ACLUtil.getAllACEs(mTarget);
         if (acl != null) {
-            collectAdminPresetRightOnTarget(acl, targetType, granteeIds, relativity, allowed, denied);
+            collectAdminPresetRightOnTarget(acl, targetType, granteeIds, relativity, false, allowed, denied);
             relativity += 2;
         }
         
@@ -221,7 +221,7 @@ public class CollectEffectiveRights {
                 if (groupACLs != null) {
                     List<ZimbraACE> aclsOnGroupTargets = groupACLs.getAllACLs();
                     if (aclsOnGroupTargets != null) {
-                        collectAdminPresetRightOnTarget(aclsOnGroupTargets, targetType, granteeIds, relativity, allowed, denied);
+                        collectAdminPresetRightOnTarget(aclsOnGroupTargets, targetType, granteeIds, relativity, false, allowed, denied);
                         relativity += 2;
                     }
                         
@@ -231,7 +231,9 @@ public class CollectEffectiveRights {
                     
                 if (acl == null)
                     continue;
-                collectAdminPresetRightOnTarget(acl, targetType, granteeIds, relativity, allowed, denied);
+                
+                boolean subDomain = (mTargetType == TargetType.domain && (grantedOn instanceof Domain));
+                collectAdminPresetRightOnTarget(acl, targetType, granteeIds, relativity, subDomain, allowed, denied);
                 relativity += 2;
             }
         }
@@ -260,19 +262,19 @@ public class CollectEffectiveRights {
     }
 
     private void collectAdminPresetRightOnTarget(List<ZimbraACE> acl, TargetType targeType,
-            Set<String> granteeIds, Integer relativity,
+            Set<String> granteeIds, Integer relativity, boolean subDomain,
             Map<Right, Integer> allowed, Map<Right, Integer> denied) throws ServiceException {
         // as an individual: user
         short granteeFlags = (short)(GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_ADMIN);
-        collectAdminPresetRights(acl, targeType, granteeIds, granteeFlags, relativity, allowed,  denied);
+        collectAdminPresetRights(acl, targeType, granteeIds, granteeFlags, relativity, subDomain, allowed,  denied);
         
         // as a group member, bump up the relativity
         granteeFlags = (short)(GranteeFlag.F_GROUP | GranteeFlag.F_ADMIN);
-        collectAdminPresetRights(acl, targeType, granteeIds, granteeFlags, relativity, allowed,  denied);
+        collectAdminPresetRights(acl, targeType, granteeIds, granteeFlags, relativity, subDomain, allowed,  denied);
     }
     
     private void collectAdminPresetRights(List<ZimbraACE> acl, TargetType targetType,
-            Set<String> granteeIds, short granteeFlags, Integer relativity,
+            Set<String> granteeIds, short granteeFlags, Integer relativity, boolean subDomain,
             Map<Right, Integer> allowed, Map<Right, Integer> denied) throws ServiceException {
         
         for (ZimbraACE ace : acl) {
@@ -282,6 +284,11 @@ public class CollectEffectiveRights {
                 
             if (!granteeIds.contains(ace.getGrantee()))
                 continue;
+            
+            if (!ace.deny()) {
+                if (subDomain != ace.subDomain())
+                    continue;
+            }
             
             Right right = ace.getRight();
             
