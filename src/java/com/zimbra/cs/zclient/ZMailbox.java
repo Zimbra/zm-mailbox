@@ -3997,63 +3997,55 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     /**
-     * Given a list of folderIds, this function checks whether a mountpoint exists by firing a
-     * BatchRequest of GET_FOLDER_REQUEST per remote folder id. The response consists of a
-     * GET_FOLDER_RESPONSE element for valid folders amd a fault for invalid folders.
-     * @param folderIds
-     * @return a list of local folderids and existing mountpoint ids
-     * @throws ServiceException on error, ignores NO_SUCH_ACCOUNT and NO_SUCH_FOLDER exceptions
+     * Validates the given set of folder ids.  If a folder id corresponds to a mountpoint
+     * that is not accessible, that id is omitted from the returned list.
      */
-    public synchronized String getValFolderIds(String folderIds) throws ServiceException {
+    public synchronized String getValidFolderIds(String ids) throws ServiceException {
+        if (StringUtil.isNullOrEmpty(ids)) {
+            return "";
+        }
+        
         // 1. Separate Local FolderIds and Remote FolderIds
         // sbResult is a list of valid folderIds
         // sbRemote is a list of mountpoints
-        StringBuilder sbResult = new StringBuilder();
-        StringBuilder sbRemote = new StringBuilder();
-        String folders[] = folderIds.split(",");
+        Set<String> mountpointIds = new HashSet<String>();
+        Set<String> validIds = new HashSet<String>();
 
-        for (int i = 0; i < folders.length; i++) {
-            ZFolder f = getFolderById(folders[i]);
+        for (String id : ids.split(",")) {
+            ZFolder f = getFolderById(id);
             if(f instanceof ZMountpoint) {
-                sbRemote.append(folders[i]);
-                sbRemote.append(',');
+                mountpointIds.add(id);
             }
             else {
-                //append the local folderids to the result
-                sbResult.append(folders[i]);
-                sbResult.append(',');
+                validIds.add(id);
             }
         }
+        
         //2. Send a batch request GetFolderRequest with sbRemote as input
-        String rmFolder[] = sbRemote.toString().split(",");
         try {
             Element batch = newRequestElement(ZimbraNamespace.E_BATCH_REQUEST);
             //Element resp;
-            for (int i = 0; i < rmFolder.length; i++) {
+            for (String id : mountpointIds) {
                 Element folderrequest = batch.addElement(MailConstants.GET_FOLDER_REQUEST);
                 Element e = folderrequest.addElement(MailConstants.E_FOLDER);
-                e.addAttribute(MailConstants.A_FOLDER, rmFolder[i]);
+                e.addAttribute(MailConstants.A_FOLDER, id);
             }
 
             Element resp = mTransport.invoke(batch);
             //3. Parse the response and add valid folderIds to sbResult.
-            List<Element> list = resp.listElements();
-            Iterator<Element> iter = list.iterator();
-            while(iter.hasNext()) {
-                Element e = iter.next();
+            for (Element e : resp.listElements()) {
                 if (e.getName().equals(MailConstants.GET_FOLDER_RESPONSE.getName())) {
-                    Element link = e.getElement(MailConstants.E_MOUNT);
-                    String fId = link.getAttribute(MailConstants.A_ID);
-                    sbResult.append(fId);
-                    sbResult.append(',');
+                    String id = e.getElement(MailConstants.E_MOUNT).getAttribute(MailConstants.A_ID);
+                    validIds.add(id);
                 }
             }
 
-            return sbResult.toString();
+            return StringUtil.join(",", validIds);
         } catch (IOException e) {
             throw ZClientException.IO_ERROR("invoke "+e.getMessage(), e);
         }
     }
+    
     /**
      * @param query optional seach query to limit appts returend
      * @param startMsec starting time of range, in msecs
