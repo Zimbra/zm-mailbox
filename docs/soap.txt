@@ -1642,11 +1642,19 @@ if nest="1" on the request, response looks like this:
       <folder .../>
     </folder>
     <folder .../>
+    [<link .../>]
+    [<search .../>]
   </folder>
 </GetFolderResponse>
 
 GetFolderResponse always has exactly 1 folder element within it.  Without a base
 folder ID that folder element will represent the virtual root folder.
+
+Mountpoints are handled in one of two ways, depending on the type of the <folder>
+in the request.  When <folder> is a mountpoint, the mountpoint is
+validated and all of its subfolders are returned.  When <folder> is not specified
+or it is a regular folder, any subfolders that are mountpoints are not validated,
+and subfolders of the mountpoint are not returned.
 
 ----------
 
