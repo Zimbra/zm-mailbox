@@ -440,7 +440,26 @@ public final class SearchParams implements Cloneable {
         params.setOffset(parseOffset(request));
         
         Element cursor = request.getOptionalElement(MailConstants.E_CURSOR);
+        if (cursor != null) {
+        	parseCursor(cursor, zsc.getRequestedAccountId(), params);
+        }
         
+        return params;
+    }
+    
+    /**
+     * Parse cursor element and set cursor info in SearchParams object  
+     * 
+     * @param cursor
+     *            cursor element taken from a <SearchRequest>
+     * @param acctId
+     *            requested account id
+     * @param params 
+     *            SearchParams object to set cursor info to 
+     * @return
+     * @throws ServiceException
+     */
+    public static void parseCursor(Element cursor, String  acctId, SearchParams params) throws ServiceException {
         boolean useCursorToNarrowDbQuery = true;
         
         // in some cases we cannot use cursors, even if they are requested.
@@ -477,62 +496,57 @@ public final class SearchParams implements Cloneable {
             }
         }
         
-        if (cursor != null) {
-            String cursorStr = cursor.getAttribute(MailConstants.A_ID);
-            ItemId prevMailItemId = null;
-            if (cursorStr != null)
-                prevMailItemId = new ItemId(cursorStr, zsc);
-            
-            int prevOffset = 0;
-            String sortVal = cursor.getAttribute(MailConstants.A_SORTVAL);
-            
-            String endSortVal = cursor.getAttribute(MailConstants.A_ENDSORTVAL, null);
-            params.setCursor(prevMailItemId, sortVal, prevOffset, endSortVal);
-            
-            String addedPart = null;
+        String cursorStr = cursor.getAttribute(MailConstants.A_ID);
+        ItemId prevMailItemId = null;
+        if (cursorStr != null)
+            prevMailItemId = new ItemId(cursorStr, acctId);
+        
+        int prevOffset = 0;
+        String sortVal = cursor.getAttribute(MailConstants.A_SORTVAL);
+        
+        String endSortVal = cursor.getAttribute(MailConstants.A_ENDSORTVAL, null);
+        params.setCursor(prevMailItemId, sortVal, prevOffset, endSortVal);
+        
+        String addedPart = null;
 
-            if (useCursorToNarrowDbQuery) {
-                switch (params.getSortBy().getType()) {
-                    case NONE:
-                        throw new IllegalArgumentException("Invalid request: cannot use cursor with SortBy=NONE");
-                    case DATE_ASCENDING:
-                        addedPart = "date:"+quote(">=", sortVal)+(endSortVal!=null ? " date:"+quote("<", endSortVal) : "");
-                        break;
-                    case DATE_DESCENDING:
-                        addedPart = "date:"+quote("<=",sortVal)+(endSortVal!=null ? " date:"+quote(">", endSortVal) : "");
-                        break;
-                    case SUBJ_ASCENDING:
-                        addedPart = "subject:"+quote(">=", sortVal)+(endSortVal!=null ? " subject:"+quote("<", endSortVal) : "");
-                        break;
-                    case SUBJ_DESCENDING:
-                        addedPart = "subject:"+quote("<=", sortVal)+(endSortVal!=null ? " subject:"+quote(">", endSortVal) : "");
-                        break;
-                    case SIZE_ASCENDING:
-                        // hackaround because "size:>=" doesn't parse but "size:>" does
-                        sortVal = "" + (Long.parseLong(sortVal) - 1);
-                        addedPart = "size:"+quote(">", sortVal)+(endSortVal!=null ? " size:"+quote("<", endSortVal) : "");
-                        break;
-                    case SIZE_DESCENDING:
-                        // hackaround because "size:<=" doesn't parse but "size:<" does
-                        sortVal = "" + (Long.parseLong(sortVal) + 1);
-                        addedPart = "size:"+quote("<", sortVal)+(endSortVal!=null ? " size:"+quote(">", endSortVal) : "");
-                        break;
-                    case NAME_ASCENDING:
-                        addedPart = "from:"+quote(">=", sortVal)+(endSortVal!=null ? " from:"+quote("<", endSortVal) : "");
-                        break;
-                    case NAME_DESCENDING:
-                        addedPart = "from:"+quote("<=", sortVal)+(endSortVal!=null ? " from:"+quote(">", endSortVal) : "");
-                        break;
-                }
+        if (useCursorToNarrowDbQuery) {
+            switch (params.getSortBy().getType()) {
+                case NONE:
+                    throw new IllegalArgumentException("Invalid request: cannot use cursor with SortBy=NONE");
+                case DATE_ASCENDING:
+                    addedPart = "date:"+quote(">=", sortVal)+(endSortVal!=null ? " date:"+quote("<", endSortVal) : "");
+                    break;
+                case DATE_DESCENDING:
+                    addedPart = "date:"+quote("<=",sortVal)+(endSortVal!=null ? " date:"+quote(">", endSortVal) : "");
+                    break;
+                case SUBJ_ASCENDING:
+                    addedPart = "subject:"+quote(">=", sortVal)+(endSortVal!=null ? " subject:"+quote("<", endSortVal) : "");
+                    break;
+                case SUBJ_DESCENDING:
+                    addedPart = "subject:"+quote("<=", sortVal)+(endSortVal!=null ? " subject:"+quote(">", endSortVal) : "");
+                    break;
+                case SIZE_ASCENDING:
+                    // hackaround because "size:>=" doesn't parse but "size:>" does
+                    sortVal = "" + (Long.parseLong(sortVal) - 1);
+                    addedPart = "size:"+quote(">", sortVal)+(endSortVal!=null ? " size:"+quote("<", endSortVal) : "");
+                    break;
+                case SIZE_DESCENDING:
+                    // hackaround because "size:<=" doesn't parse but "size:<" does
+                    sortVal = "" + (Long.parseLong(sortVal) + 1);
+                    addedPart = "size:"+quote("<", sortVal)+(endSortVal!=null ? " size:"+quote(">", endSortVal) : "");
+                    break;
+                case NAME_ASCENDING:
+                    addedPart = "from:"+quote(">=", sortVal)+(endSortVal!=null ? " from:"+quote("<", endSortVal) : "");
+                    break;
+                case NAME_DESCENDING:
+                    addedPart = "from:"+quote("<=", sortVal)+(endSortVal!=null ? " from:"+quote(">", endSortVal) : "");
+                    break;
             }
-            
-            if (addedPart != null)
-                params.setQueryStr("(" + params.getQueryStr() + ")" + addedPart);
         }
         
-        return params;
+        if (addedPart != null)
+            params.setQueryStr("(" + params.getQueryStr() + ")" + addedPart);
     }
-    
     
     private static java.util.TimeZone parseTimeZonePart(Element tzElt) throws ServiceException {
         String id = tzElt.getAttribute(MailConstants.A_ID);
