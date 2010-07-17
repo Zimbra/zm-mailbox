@@ -408,7 +408,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         
         String parts[] = emailAddress.split("@");
         if (parts.length == 2) {
-            Domain domain = get(DomainBy.name, parts[1]);
+            Domain domain = getDomain(DomainBy.name, parts[1], true);
             if (domain != null) {
                 String domainType = domain.getAttr(A_zimbraDomainType);
                 if (DOMAIN_TYPE_ALIAS.equals(domainType)) {
@@ -2011,4 +2011,5 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public Map<String, String> getNamesForIds(Set<String> ids, EntryType type) throws ServiceException {
         return new HashMap<String, String>();  // return empty map
     }
+
 }
