@@ -87,17 +87,16 @@ public class Appointment extends CalendarItem {
      * @throws ServiceException
      */
     public String getEffectiveFreeBusyActual(Invite inv, Instance inst) throws ServiceException {
-        Account acct = getMailbox().getAccount();
-        ZAttendee at = getReplyList().getEffectiveAttendee(acct, inv, inst);
-        if (at == null || inv.isOrganizer()) {
-            return inv.getFreeBusyActual();
+        if (!inv.isOrganizer()) {
+            ZAttendee at = getReplyList().getEffectiveAttendee(getMailbox().getAccount(), inv, inst);
+            if (at != null) {
+                if (at.hasPartStat())
+                    return inv.partStatToFreeBusyActual(at.getPartStat());
+                else
+                    return inv.getFreeBusyActual();
+            }
         }
-
-        if (at.hasPartStat()) {
-            return inv.partStatToFreeBusyActual(at.getPartStat());
-        } else {
-            return inv.getFreeBusyActual();
-        }
+        return inv.getFreeBusyActual();
     }
 
     public static class Conflict {
