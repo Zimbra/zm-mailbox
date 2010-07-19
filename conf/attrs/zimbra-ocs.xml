@@ -241,11 +241,11 @@
   </comment>
 </objectclass>
 
-<objectclass id="27" name="zimbraGroupMail" type="AUXILIARY">
+<objectclass id="27" name="zimbraGroup" type="AUXILIARY">
   <sup>top</sup>
-  <desc>AUX oc to hold mail attributes for dynamic groups</desc>
+  <desc>AUX oc to hold attributes for dynamic groups</desc>
   <comment>
-    AUX oc to hold mail attributes for dynamic groups
+    AUX oc to hold attributes for dynamic groups
   </comment>
 </objectclass>
 

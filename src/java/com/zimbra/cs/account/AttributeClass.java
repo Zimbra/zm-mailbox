@@ -48,7 +48,7 @@ public enum AttributeClass {
     signature("zimbraSignature",                true),
     xmppComponent("zimbraXMPPComponent",        true),
     aclTarget("zimbraAclTarget",                true),
-    groupMail("zimbraGroupMail",                false);
+    group("zimbraGroup",                        false);
     
     private static class TM {
         static Map<String, AttributeClass> sOCMap = new HashMap<String, AttributeClass>();
