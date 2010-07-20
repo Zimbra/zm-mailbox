@@ -250,7 +250,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
         @Override
         public boolean incrementToken() throws IOException {
             while (mValues.isEmpty() ||
-                    mFieldName == null || mFieldName.isEmpty()) {
+                    mFieldName == null || mFieldName.length() == 0) {
                 if (!bufferNextLine()) {
                     if (mValues.isEmpty()) {
                         return false;
