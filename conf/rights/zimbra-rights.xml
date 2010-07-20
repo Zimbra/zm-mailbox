@@ -463,10 +463,6 @@
   <desc>delete alias in this domain</desc>
 </right>
 
-<right name="listAlias" type="preset" targetType="domain">
-  <desc>list alias in this domain</desc>
-</right>
-
 <right name="accessGAL" type="preset" targetType="domain">
   <desc>access GAL by doing AutoCompleteGal/SearchGal/SyncGal requests</desc>
 </right>
@@ -779,8 +775,5 @@
 </right>     
 <right name="getAllFreeBusyProviders" type="preset" targetType="global">
 	<desc>Retrieve a list of Free/Busy providers via GetAllFreeBusyProvidersRequest SOAP request</desc>
-</right>
-<right name="checkSoftwareUpdates" type="preset" targetType="global">
-	<desc>check for Zimbra software updates</desc>
 </right>
 </rights>

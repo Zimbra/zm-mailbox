@@ -729,7 +729,6 @@
     <r n="domainAdminConsoleAccountsForwardingTabRights"/>
     <r n="listAccount"/>
     <r n="viewAccountAdminUI"/>
-    <r n="get.account.zimbraIsSystemResource"/>
   </rights>
 </right>
 
@@ -782,7 +781,6 @@
     <r n="domainAdminConsoleResourceRights"/>
     <r n="domainAdminConsoleSavedSearchRights"/>
     <!-- needed to check for create*Rights on the domain -->
-    <r n="listAlias"/>
     <r n="listDomain"/>
     <!-- <r n="domainAdminDomainRights"/> -->
   </rights>
