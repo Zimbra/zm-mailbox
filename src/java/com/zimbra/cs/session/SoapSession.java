@@ -210,7 +210,7 @@ public class SoapSession extends Session {
                                 forceConversationModification((Message) item, pms, filtered, MODIFIED_CONVERSATION_FLAGS);
                         }
                     } else if (chg.what instanceof Mailbox) {
-                        if (mMailbox.hasFullAccess(new OperationContext(getAuthenticatedAccountId()))) {
+                        if (((Mailbox) chg.what).hasFullAccess(new OperationContext(getAuthenticatedAccountId()))) {
                             filtered.recordModified((Mailbox) chg.what, chg.why);
                         }
                     }
