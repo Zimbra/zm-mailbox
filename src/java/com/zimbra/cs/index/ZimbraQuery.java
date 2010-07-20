@@ -2438,7 +2438,6 @@ public final class ZimbraQuery {
     private static final class CountTextOperations implements QueryOperation.RecurseCallback {
         int num = 0;
 
-        @Override
         public void recurseCallback(QueryOperation op) {
             if (op instanceof TextQueryOperation) {
                 num++;
@@ -2448,7 +2447,6 @@ public final class ZimbraQuery {
     private static final class CountCombiningOperations implements QueryOperation.RecurseCallback {
         int num = 0;
 
-        @Override
         public void recurseCallback(QueryOperation op) {
             if (op instanceof CombiningQueryOperation) {
                 if (((CombiningQueryOperation)op).getNumSubOps() > 1) {
@@ -3054,7 +3052,6 @@ public final class ZimbraQuery {
      */
     private static final class excludePrivateCalendarItems implements QueryOperation.RecurseCallback {
 
-        @Override
         public void recurseCallback(QueryOperation op) {
             if (op instanceof TextQueryOperation) {
                 ((TextQueryOperation)op).addAndedClause(new TermQuery(new Term(

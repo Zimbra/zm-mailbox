@@ -912,7 +912,6 @@ public abstract class CalendarItem extends MailItem {
             mFromRdate = fromRdate;
         }
 
-        @Override
         public int compareTo(Instance other) {
             long toRet = mCalItemId - other.mCalItemId;
             if (toRet == 0) {
@@ -1013,7 +1012,6 @@ public abstract class CalendarItem extends MailItem {
 
         public static class StartTimeComparator implements Comparator<Instance> {
 
-            @Override
             public int compare(Instance a, Instance b) {
                 long as = a.getStart();
                 long bs = b.getStart();
@@ -2061,13 +2059,11 @@ public abstract class CalendarItem extends MailItem {
             mPm = pm;
         }
 
-        @Override
         public String getName() {
             // TODO should we just return null?
             return mPm != null ? mPm.getMessageID() : null;
         }
 
-        @Override
         public String getContentType() {
             return "message/rfc822";
         }
@@ -2079,7 +2075,6 @@ public abstract class CalendarItem extends MailItem {
          * the constructor.
          * @throws IOException
          */
-        @Override
         public InputStream getInputStream() throws IOException {
             InputStream is = null;
             if (mPm != null)
@@ -2089,7 +2084,6 @@ public abstract class CalendarItem extends MailItem {
             return is;
         }
 
-        @Override
         public OutputStream getOutputStream() {
             throw new UnsupportedOperationException();
         }

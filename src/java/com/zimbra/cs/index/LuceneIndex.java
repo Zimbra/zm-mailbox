@@ -143,17 +143,14 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
         return (t < c) ? t : c;
     }
 
-    @Override
     public long getBytesWritten() {
         return mIdxDirectory.getBytesWritten();
     }
 
-    @Override
     public long getBytesRead() {
         return mIdxDirectory.getBytesRead();
     }
 
-    @Override
     public String generateIndexId(int itemId) {
         return Integer.toString(itemId);
     }
@@ -208,7 +205,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
         }
     }
 
-    @Override
     public void addDocument(IndexDocument[] docs, MailItem item, int itemId,
             String indexId, int modContent, long receivedDate, long size,
             String sortSubject, String sortSender, boolean deleteFirst)
@@ -295,7 +291,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
         }
     }
 
-    @Override
     public List<String> deleteDocuments(List<String> itemIds) throws IOException {
         synchronized(getLock()) {
             beginWriting();
@@ -330,7 +325,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
         }
     }
 
-    @Override
     public void deleteIndex() throws IOException {
         synchronized (getLock()) {
             flush();
@@ -416,7 +410,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
      * @return TRUE if all tokens were expanded
      *  or FALSE if no more tokens could be expanded
      */
-    @Override
     public boolean expandWildcardToken(Collection<String> toRet, String field,
             String token, int maxToReturn) throws ServiceException {
         // all lucene text should be in lowercase...
@@ -466,7 +459,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
     /**
      * Force all outstanding index writes to go through. Do not return until complete
      */
-    @Override
     public void flush() {
         synchronized (getLock()) {
             sIndexWritersCache.flush(this);
@@ -479,7 +471,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
      * @param collection - Strings which correspond to all of the domain terms stored in a given field.
      * @throws IOException
      */
-    @Override
     public void getDomainsForField(String fieldName, String regex,
             Collection<BrowseTerm> collection) throws IOException {
         if (regex == null) {
@@ -493,7 +484,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
      * @param collection - Strings which correspond to all of the attachment types in the index
      * @throws IOException
      */
-    @Override
     public void getAttachments(String regex, Collection<BrowseTerm> collection)
         throws IOException {
 
@@ -504,7 +494,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
                 new TermEnumCallback(collection));
     }
 
-    @Override
     public void getObjects(String regex, Collection<BrowseTerm> collection)
         throws IOException {
 
@@ -523,7 +512,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
      *
      * @throws IOException
      */
-    @Override
     public RefCountedIndexSearcher getCountedIndexSearcher() throws IOException {
         synchronized(getLock()) {
             RefCountedIndexSearcher searcher = null;
@@ -547,7 +535,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
         return mMbidx.getLock();
     }
 
-    @Override
     public Sort getSort(SortBy searchOrder) {
         if (searchOrder == null || searchOrder == SortBy.NONE) {
             return null;
@@ -638,7 +625,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
         }
     }
 
-    @Override
     public List<SpellSuggestQueryInfo.Suggestion> suggestSpelling(String field,
             String token) throws ServiceException {
         LinkedList<SpellSuggestQueryInfo.Suggestion> toRet = null;
@@ -881,13 +867,11 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
         }
     }
 
-    @Override
     public void beginWriteOperation() throws IOException {
         assert(Thread.holdsLock(getLock()));
         beginWriting();
     }
 
-    @Override
     public void endWriteOperation() throws IOException {
         assert(Thread.holdsLock(getLock()));
         doneWriting();
@@ -1049,7 +1033,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
             mCollection = collection;
         }
 
-        @Override
         public void onTerm(Term term, int docFreq) {
             String text = term.text();
             if (text.length() > 1 && text.charAt(0) == '@') {
@@ -1064,7 +1047,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
             mCollection = collection;
         }
 
-        @Override
         public void onTerm(Term term, int docFreq) {
             String text = term.text();
             if (text.length() > 1) {
@@ -1078,7 +1060,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
         abstract void onTerm(Term term, int docFreq);
     }
 
-    @Override
     public void onReaderClose(RefCountedIndexReader ref) {
         synchronized(mOpenReaders) {
             mOpenReaders.remove(ref);
@@ -1087,7 +1068,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
 
     private List<RefCountedIndexReader> mOpenReaders = new ArrayList<RefCountedIndexReader>();
 
-    @Override
     public IndexReader reopenReader(IndexReader reader) throws IOException {
         return reader.reopen();
     }

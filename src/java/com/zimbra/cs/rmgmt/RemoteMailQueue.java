@@ -106,7 +106,6 @@ public class RemoteMailQueue {
             mId = mVisitorIdCounter.incrementAndGet();
         }
 
-        @Override
         public void handle(int lineNo, Map<String, String> map) throws IOException {
             if (map == null) {
                 return;
@@ -179,7 +178,6 @@ public class RemoteMailQueue {
 
     private class QueueHandler implements RemoteBackgroundHandler {
 
-        @Override
         public void read(InputStream stdout, InputStream stderr) {
             try {
                 mScanStartTime = System.currentTimeMillis();
@@ -207,7 +205,6 @@ public class RemoteMailQueue {
             }
         }
 
-        @Override
         public void error(Throwable t) {
             ZimbraLog.rmgmt.error("error when scanning mail queue " + mQueueName + " on host " + mServerName, t);
         }
@@ -370,7 +367,6 @@ public class RemoteMailQueue {
             return mCount;
         }
 
-        @Override
         public int compareTo(SummaryItem other) {
             return other.mCount - mCount;
         }
