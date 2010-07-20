@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
@@ -180,12 +181,20 @@ public class TestMain {
         File icalFile = null;
         File tnefFile = null;
         File recurInfoFile = null;
+        String outDirName = null;
+        int firstTestFileArgIndex = 0;
         // Thread.sleep(30000);
         for (int i = 0; i < args.length; ++i) {
             String arg = args[i];
             if (arg != null) {
                 if (arg.equalsIgnoreCase("-v")) {
                     verbose = true;
+                } else if (arg.equalsIgnoreCase("-D")) {
+                    if (i >= args.length - 2)
+                        usage();
+                    outDirName = args[i+1];
+                    firstTestFileArgIndex = i + 2;;
+                    break;
                 } else if (arg.equalsIgnoreCase("-i")) {
                     if (i >= args.length - 1)
                         usage();
@@ -215,83 +224,39 @@ public class TestMain {
                 }
             }
         }
+
+        if (inputWasIcs) {
+            SharedFileInputStream sfisMime = null;
+            ByteArrayOutputStream baos = new ByteArrayOutputStream(10240);
+            ByteUtil.copy(sfisMime, false, baos, true);
+            writeIcalendarData(mimeFile, baos, icalFile);
+            validateIcalendarData(mimeFile, baos);
+            return;
+        }
+
+        if (outDirName != null) {
+            File outDir = new File(outDirName);
+            if (!outDir.exists()) {
+                sLog.error("Output directory %s does not exist.", outDirName);
+                return;
+            }
+
+            for (int i = firstTestFileArgIndex ; i < args.length; ++i) {
+                mimeFile = new File(args[i]);
+                String prefix = mimeFile.getName().replace(".eml", "");
+                icalFile = new File(outDir, prefix + ".ics");
+                tnefFile = new File(outDir, prefix + ".tnef");
+                recurInfoFile = new File(outDir, prefix + ".recurState");
+                processMimeFile(mimeFile, icalFile, tnefFile, recurInfoFile, verbose);
+            }
+            return;
+        }
+
+        // Thread.sleep(30000);
         if (mimeFile == null)
             usage();
-        if (!mimeFile.exists()) {
-            System.err.println("Can't find MIME file " + mimeFile.getAbsolutePath());
-            System.exit(1);
-        }
 
-        // Prepare the input and output.
-        SharedFileInputStream sfisMime = null;
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(10240);
-        Writer baosOut = null;
-        boolean doneConversion = false;
-        try {
-            sfisMime = new SharedFileInputStream(mimeFile);
-            baosOut = new OutputStreamWriter(baos, UTF8);
-    
-            // Do the conversion.
-            if (!inputWasIcs) {
-                MimeMessage mm = new MimeMessage(JMSession.getSession(), sfisMime);
-                TnefToICalendar converter = getConverter();
-                doneConversion = doConversion(mm, baosOut, converter, tnefFile, verbose);
-                if (recurInfoFile != null) {
-                    if (converter instanceof DefaultTnefToICalendar) {
-                        DefaultTnefToICalendar tnef2ical = (DefaultTnefToICalendar) converter;
-                        RecurrenceDefinition recurDef = tnef2ical.getRecurDef();
-                        if (recurDef != null) {
-                            FileWriter rsFileWriter = null;
-                            try {
-                                rsFileWriter = new FileWriter(recurInfoFile);
-                                rsFileWriter.write(recurDef.toString());
-                            } finally {
-                                try {
-                                    if (rsFileWriter != null) {
-                                        rsFileWriter.close();
-                                    }
-                                } catch (IOException e) {sLog.error("Problem writing to recurInfo file", e);}
-                            }
-                        }
-                    }
-                }
-            } else {
-                // Input was an ics file.  Pass it through, so we can test the parse/verify step.
-                ByteUtil.copy(sfisMime, false, baos, true);
-                doneConversion = true;
-            }
-        } catch (UnsupportedTnefCalendaringMsgException ex) {
-            sLog.warn("Unable to map this message to ICALENDAR", ex);
-        } catch (TNEFtoIcalendarServiceException ex) {
-            sLog.warn("Problem encountered mapping this message to ICALENDAR", ex);
-        } finally {
-            try {
-                if (sfisMime != null)
-                    sfisMime.close();
-            } catch (IOException e) {sLog.error("Problem closing mime stream", e);}
-        }
-        if (!doneConversion) {
-            System.exit(1);
-        }
-
-        // Write the iCalendar data.
-        String ical = baos.toString(UTF8);
-        Writer wout = null;
-        try {
-            if (icalFile != null)
-                wout = new FileWriter(icalFile);
-            else
-                wout = new OutputStreamWriter(System.out, UTF8);
-            wout.write(ical);
-            wout.flush();
-        } finally {
-            if (wout != null && icalFile != null)
-                wout.close();
-        }
-
-        // Parse the iCalendar object and verify.
-        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-        ZCalendarBuilder.buildMulti(bais, UTF8);
+        processMimeFile(mimeFile, icalFile, tnefFile, recurInfoFile, verbose);
 //        List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(bais, UTF8);
 //        Account dummyAcct = new Account();
 //        List<Invite> invites = Invite.createFromCalendar(dummyAcct, null, icals, false);
@@ -307,6 +272,142 @@ public class TestMain {
 //        }
 //        if (!allGood)
 //            System.exit(1);
+    }
+
+    /**
+     * @param mimeFile Name of original test file - used for diagnostic reporting
+     * @param icalFile the file to write the ICALENDAR data to.
+     * @param tnefFile the file to write TNEF data to.
+     * @param recurInfoFile the file to write recurrence diagnostics data to.
+     * @return true if successfully written data.
+     */
+    private static boolean processMimeFile(File mimeFile,
+            File icalFile, File tnefFile, File recurInfoFile, boolean verbose) {
+        if (!mimeFile.exists()) {
+            sLog.warn("Can't find MIME file %s", mimeFile.getPath());
+            return false;
+        }
+
+        // Prepare the input and output.
+        SharedFileInputStream sfisMime = null;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(10240);
+        Writer baosOut = null;
+        boolean doneConversion = false;
+        try {
+            sfisMime = new SharedFileInputStream(mimeFile);
+            baosOut = new OutputStreamWriter(baos, UTF8);
+    
+            // Do the conversion.
+            MimeMessage mm = new MimeMessage(JMSession.getSession(), sfisMime);
+            TnefToICalendar converter = getConverter();
+            doneConversion = doConversion(mm, baosOut, converter, tnefFile, verbose);
+            if (recurInfoFile != null) {
+                if (converter instanceof DefaultTnefToICalendar) {
+                    DefaultTnefToICalendar tnef2ical = (DefaultTnefToICalendar) converter;
+                    RecurrenceDefinition recurDef = tnef2ical.getRecurDef();
+                    if (recurDef != null) {
+                        FileWriter rsFileWriter = null;
+                        try {
+                            rsFileWriter = new FileWriter(recurInfoFile);
+                            rsFileWriter.write(recurDef.toString());
+                        } finally {
+                            try {
+                                if (rsFileWriter != null) {
+                                    rsFileWriter.close();
+                                }
+                            } catch (IOException e) {
+                                sLog.error("Problem writing to recurInfo file %s", recurInfoFile, e);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (UnsupportedTnefCalendaringMsgException ex) {
+            sLog.warn("Unable to map %s to ICALENDAR", mimeFile.getPath(), ex);
+            return false;
+        } catch (TNEFtoIcalendarServiceException ex) {
+            sLog.warn("Problem encountered mapping %s to ICALENDAR", mimeFile.getPath(), ex);
+            return false;
+        } catch (MessagingException ex) {
+            sLog.warn("Problem encountered mapping %s to ICALENDAR", mimeFile.getPath(), ex);
+            return false;
+        } catch (ServiceException ex) {
+            sLog.warn("Problem encountered mapping %s to ICALENDAR", mimeFile.getPath(), ex);
+            return false;
+        } catch (IOException ex) {
+            sLog.warn("IO Problem encountered mapping %s to ICALENDAR", mimeFile.getPath(), ex);
+            return false;
+        } finally {
+            try {
+                if (sfisMime != null)
+                    sfisMime.close();
+            } catch (IOException e) {sLog.error("Problem closing mime stream", e);}
+        }
+        if (!doneConversion) {
+            return false;
+        }
+
+        if (!writeIcalendarData(mimeFile, baos, icalFile)) {
+            return false;
+        }
+
+        if (!validateIcalendarData(mimeFile, baos)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @param mimeFile Name of original test file - used for diagnostic reporting
+     * @param icalBaos contains the ICALENDAR data
+     * @param icalFile the file to write the ICALENDAR data to.
+     * @return true if successfully written data.
+     */
+    private static boolean writeIcalendarData(File mimeFile, ByteArrayOutputStream icalBaos,
+            File icalFile) {
+        String ical = null;
+        Writer wout = null;
+        try {
+            ical = icalBaos.toString(UTF8);
+            if (icalFile != null)
+                wout = new FileWriter(icalFile);
+            else
+                wout = new OutputStreamWriter(System.out, UTF8);
+            wout.write(ical);
+            wout.flush();
+        } catch (UnsupportedEncodingException e) {
+            sLog.warn("Problem Writing ICALENDAR for %s", mimeFile.getPath(), e);
+            return false;
+        } catch (IOException e) {
+            sLog.warn("Problem Writing ICALENDAR for %s", mimeFile.getPath(), e);
+            return false;
+        } finally {
+            if (wout != null && icalFile != null)
+                try {
+                    wout.close();
+                } catch (IOException e) {
+                    sLog.warn("Problem closing Writer for ICALENDAR for %s", mimeFile.getPath(), e);
+                    return false;
+                }
+        }
+        return true;
+    }
+
+    /**
+     * @param mimeFile Name of original test file - used for diagnostic reporting
+     * @param icalBaos contains the ICALENDAR data
+     * @return true if successfully written data.
+     */
+    private static boolean validateIcalendarData(File mimeFile, ByteArrayOutputStream icalBaos) {
+        // Parse the iCalendar object and verify.
+        ByteArrayInputStream bais = new ByteArrayInputStream(icalBaos.toByteArray());
+        try {
+            ZCalendarBuilder.buildMulti(bais, UTF8);
+        } catch (ServiceException e) {
+            sLog.warn("Problem validating ICALENDAR for %s", mimeFile.getPath(), e);
+            return false;
+        }
+        return true;
     }
 
     private static class TestContentHandler implements ContentHandler {
