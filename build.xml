@@ -86,7 +86,6 @@
     <property name="deploy.port" value="7070"/>
     <property name="ldap.host" value="127.0.0.1"/>
     <property name="ldap.port" value="389"/>
-	<property name="ldap.service.windows" value="CDSSilverSlapd" />
     
     <condition property="remote.deploy.host" value="${env.ZIMBRA_REMOTE_DEPLOY_HOST}">
         <isset property="env.ZIMBRA_REMOTE_DEPLOY_HOST"/>
@@ -396,34 +395,28 @@
     </target>
 
     <target name="generate-buildinfo" depends="set-buildinfo-vars">
-        <if>
-            <not><available file="${build.dir}/buildinfo/com/zimbra/cs/util/BuildInfoGenerated.java"/></not>
-            <then>
-                <mkdir dir="${build.dir}/buildinfo/com/zimbra/cs/util"/>
-                <echo file="${build.dir}/buildinfo/com/zimbra/cs/util/BuildInfoGenerated.java">
-                    package com.zimbra.cs.util;
-                	
-                    class BuildInfoGenerated {
-                        public static final String MAJORVERSION = "${zimbra.buildinfo.majorversion}";
-                        public static final String MINORVERSION = "${zimbra.buildinfo.minorversion}";
-                        public static final String MICROVERSION = "${zimbra.buildinfo.microversion}";
-                        public static final String RELCLASS = "${zimbra.buildinfo.relclass}";
-                        public static final String RELNUM = "${zimbra.buildinfo.relnum}";
-                        public static final String BUILDNUM = "${zimbra.buildinfo.buildnum}";
-                        public static final String VERSION = "${zimbra.buildinfo.version}";
-	                    public static final String TYPE = "${zimbra.buildinfo.type}";
-	                    public static final String RELEASE = "${zimbra.buildinfo.release}";
-	                    public static final String DATE = "${DSTAMP}-${TSTAMP}";
-	                    public static final String HOST = "${zimbra.buildinfo.host}";
-                    }
-                </echo>
-        	</then>
-        </if>
-    	
+        <mkdir dir="${build.dir}/buildinfo"/>
+        <echo file="${build.dir}/buildinfo/BuildInfoGenerated.java">
+            package com.zimbra.cs.util;
+            class BuildInfoGenerated {
+            	public static final String PLATFORM = "${zimbra.buildinfo.platform}";
+            	public static final String MAJORVERSION = "${zimbra.buildinfo.majorversion}";
+            	public static final String MINORVERSION = "${zimbra.buildinfo.minorversion}";
+            	public static final String MICROVERSION = "${zimbra.buildinfo.microversion}";
+            	public static final String RELCLASS = "${zimbra.buildinfo.relclass}";
+            	public static final String RELNUM = "${zimbra.buildinfo.relnum}";
+            	public static final String BUILDNUM = "${zimbra.buildinfo.buildnum}";
+	            public static final String VERSION = "${zimbra.buildinfo.version}";
+	            public static final String TYPE = "${zimbra.buildinfo.type}";
+	            public static final String RELEASE = "${zimbra.buildinfo.release}";
+	            public static final String DATE = "${DSTAMP}-${TSTAMP}";
+	            public static final String HOST = "${zimbra.buildinfo.host}";
+            }
+        </echo>
         <javac destdir="${build.classes.dir}" debug="true" target="${javac.target}" srcdir="${build.dir}/buildinfo">
         </javac>
     </target>
-	
+
     <target name="setup-ldap-config">
         <!-- copy attrs source files to build dir -->
         <delete dir="${build.dir}/attrs-src"/>
@@ -573,17 +566,7 @@
 
     <target name="jar" depends="compile">
         <echo>Hostname: ${zimbra.server.hostname}</echo>
-        <jar destfile="${jarfile}" basedir="${build.classes.dir}">
-            <manifest>
-                <attribute name="Main-Class" value="com.zimbra.cs.util.BuildInfo" />
-            	<attribute name="Implementation-Vendor" value="VMware, Inc."/>
-            	<attribute name="Implementation-Title" value="Zimbra Server"/>
-            	<attribute name="Implementation-Version" value="${zimbra.buildinfo.version} ${zimbra.buildinfo.release} ${DSTAMP}-${TSTAMP} ${zimbra.buildinfo.type}"/>
-            	<attribute name="Specification-Vendor" value="VMware, Inc."/>
-            	<attribute name="Specification-Title" value="Zimbra Collaboration Suite"/>
-            	<attribute name="Specification-version" value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}"/>
-            </manifest>
-        </jar>
+        <jar destfile="${jarfile}" basedir="${build.classes.dir}"/>
         <antcall target="generate-ldap-config"/>
     </target>
 
@@ -598,9 +581,10 @@
     	<delete dir="${zimbra.home.dir}/lib/jars" failonerror="false"/>
     	<delete dir="${zimbra.home.dir}/zimlets-deployed" failonerror="false"/>
     	<delete dir="${zimbra.home.dir}/zimlets-properties" failonerror="false"/>
-        <delete failonerror="false">
-    	    <fileset dir="${jetty.home.dir}/common/lib" includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mysql-connector-java*.jar,mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor*.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,jython*.jar"/>
-    	</delete>
+	<delete failonerror="false">
+	    <fileset dir="${jetty.home.dir}/common/lib"
+		includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mysql-connector-java*.jar,mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor*.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,jython*.jar"/>
+	</delete>
     </target>
 
     <!-- jetty loads jetty-util*.jar, log4j*.jar and slf4j*.jar -->
@@ -640,7 +624,6 @@
     </target>
 
     <target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert">
-        <echo file="${zimbra.home.dir}/.platform">development</echo>
         <copy todir="${zimbra.home.dir}">
             <fileset dir="${dist.dir}"/>
         </copy>
@@ -907,7 +890,7 @@
     <target name="reset-open-ldap" description="Resets OpenLDAP" if="is-unix">
         <antcall target="stop-ldap"/>
         <exec failonerror="true" executable="../ZimbraServer/src/perl/install-openldap">
-            <arg line="GNR"/>
+            <arg line="main"/>
         </exec>
     </target>
 
@@ -1100,9 +1083,8 @@
         </delete>
 
         <delete dir="${zimbra.home.dir}/zmstat"/>
-        <delete dir="${zimbra.home.dir}/imap"/>
-        <delete dir="${zimbra.store.dir}"/>
-        <delete dir="${zimbra.index.dir}"/>
+        <delete dir="${zimbra.home.dir}/store"/>
+        <delete dir="${zimbra.home.dir}/index"/>
         <delete dir="${zimbra.home.dir}/redolog"/>
         <delete dir="${zimbra.home.dir}/backup"/>
         <delete dir="${zimbra.home.dir}/lib/ext"/>
@@ -1126,9 +1108,8 @@
     	<mkdir dir="${zimbra.home.dir}/openldap/var/run"/>
         <mkdir dir="${zimbra.home.dir}/log"/>
         <mkdir dir="${zimbra.home.dir}/zmstat"/>
-        <mkdir dir="${zimbra.home.dir}/imap"/>
-        <mkdir dir="${zimbra.store.dir}"/>
-        <mkdir dir="${zimbra.index.dir}"/>
+        <mkdir dir="${zimbra.home.dir}/store"/>
+        <mkdir dir="${zimbra.home.dir}/index"/>
         <mkdir dir="${zimbra.home.dir}/redolog"/>
         <mkdir dir="${zimbra.home.dir}/redolog/archive"/>
         <mkdir dir="${zimbra.home.dir}/backup"/>
@@ -1585,7 +1566,7 @@
     <target name="stop-ldap-windows" if="is-windows">
         <exec executable="net">
             <arg value="stop"/>
-            <arg value="${ldap.service.windows}"/>
+            <arg value="CDSSilverSlapd"/>
         </exec>
     </target>
 
@@ -1608,7 +1589,7 @@
     <target name="start-ldap-windows" if="is-windows">
         <exec executable="net">
             <arg value="start"/>
-            <arg value="${ldap.service.windows}"/>
+            <arg value="CDSSilverSlapd"/>
         </exec>
     </target>
 
@@ -1936,7 +1917,6 @@
 	    	               com.zimbra.cs.service.hsm 
 	    	               com.zimbra.xmbxsearch
 	    	               com.zimbra.cert
-	    	               com.zimbra.cs.service.versioncheck
 	    	               com.zimbra.license.service"/>
 	        <param name="output" value="docs/rights-ext.txt"/>
 	    </antcall>
