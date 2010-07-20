@@ -38,11 +38,11 @@ public class ContactRankings {
 	
 	private int mTableSize;
 	private String mAccountId;
-	private TreeMap<String,ContactEntry> mEntryMap;
+	private TreeMap<String,TreeSet<ContactEntry>> mEntryMap;
 	private HashMap<String,ContactEntry> mEntries;
 	public ContactRankings(String accountId) throws ServiceException {
 		mAccountId = accountId;
-		mEntryMap = new TreeMap<String,ContactEntry>();
+		mEntryMap = new TreeMap<String,TreeSet<ContactEntry>>();
 		mEntries = new HashMap<String,ContactEntry>();
 		mTableSize = Provisioning.getInstance().get(Provisioning.AccountBy.id, mAccountId).getIntAttr(Provisioning.A_zimbraContactRankingTableSize, 40);
 		if (!LC.contact_ranking_enabled.booleanValue())
@@ -61,7 +61,7 @@ public class ContactRankings {
         if (!LC.contact_ranking_enabled.booleanValue())
             return;
         ContactRankings rankings = new ContactRankings(accountId);
-        ContactEntry entry = rankings.mEntryMap.get(email);
+        ContactEntry entry = rankings.mEntries.get(email.toLowerCase());
         if (entry != null)
             rankings.remove(entry);
         rankings.writeToDatabase();
@@ -117,7 +117,7 @@ public class ContactRankings {
 		}
 	}
 	public int query(String email) {
-	    ContactEntry entry = mEntryMap.get(email.toLowerCase());
+	    ContactEntry entry = mEntries.get(email.toLowerCase());
 	    if (entry != null)
 	        return entry.mRanking;
 	    return 0;
@@ -128,7 +128,7 @@ public class ContactRankings {
         for (String k : mEntryMap.tailMap(str).keySet()) {
             if (k.length() >= len &&
                     k.substring(0, len).equalsIgnoreCase(str)) {
-                entries.add(mEntryMap.get(k));
+                entries.addAll(mEntryMap.get(k));
             } else
                 break;
         }
@@ -176,17 +176,30 @@ public class ContactRankings {
 		mbox.setConfig(null, CONFIG_KEY_CONTACT_RANKINGS, config);
 		dump("writing");
 	}
-	private synchronized void add(ContactEntry entry) {
-		mEntryMap.put(entry.mEmail, entry);
-		if (entry.mDisplayName.length() > 0)
-	        mEntryMap.put(entry.mDisplayName, entry);
-		mEntries.put(entry.mEmail.toLowerCase(), entry);
+	private synchronized TreeSet<ContactEntry> get(String str) {
+        TreeSet<ContactEntry> val = mEntryMap.get(str.toLowerCase());
+	    if (val == null) {
+	        val = new TreeSet<ContactEntry>();
+	        mEntryMap.put(str.toLowerCase(), val);
+	    }
+	    return val;
 	}
-	private synchronized void remove(ContactEntry entry) {
-		mEntryMap.remove(entry.mEmail);
-        mEntryMap.remove(entry.mDisplayName);
-		mEntries.remove(entry.mEmail.toLowerCase());
-	}
+    private synchronized void add(ContactEntry entry) {
+        get(entry.mEmail).add(entry);
+        if (entry.mDisplayName.length() > 0)
+            get(entry.mDisplayName).add(entry);
+        if (entry.mLastName.length() > 0)
+            get(entry.mLastName).add(entry);
+        mEntries.put(entry.mEmail.toLowerCase(), entry);
+    }
+    private synchronized void remove(ContactEntry entry) {
+        get(entry.mEmail).remove(entry);
+        if (entry.mDisplayName.length() > 0)
+            get(entry.mDisplayName).remove(entry);
+        if (entry.mLastName.length() > 0)
+            get(entry.mLastName).remove(entry);
+        mEntries.remove(entry.mEmail.toLowerCase());
+    }
 	private void dump(String action) {
 		if (ZimbraLog.gal.isDebugEnabled()) {
 			StringBuilder buf = new StringBuilder(action);

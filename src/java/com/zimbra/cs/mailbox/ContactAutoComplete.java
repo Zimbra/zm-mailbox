@@ -46,6 +46,7 @@ import com.zimbra.cs.service.util.ItemId;
 
 public class ContactAutoComplete {
 	public static class AutoCompleteResult {
+        public ContactRankings rankings;
 		public Collection<ContactEntry> entries;
 		public boolean canBeCached;
 		public int limit;
@@ -56,21 +57,27 @@ public class ContactAutoComplete {
 			limit = l;
 		}
 		public void addEntry(ContactEntry entry) {
+            if (emails.contains(entry.mEmail.toLowerCase()))
+                return;
 			if (entries.size() >= limit) {
 			    canBeCached = false;
                 return;
 			}
-			if (entries.contains(entry))
-			    return;
+			int ranking = rankings.query(entry.mEmail);
+			// if the match comes from gal or folder search
+			// check the ranking table for matching email
+			// address
+			if (ranking > 0 && entry.mRanking == 0) {
+			    entry.mRanking = ranking;
+			    entry.mFolderId = ContactAutoComplete.FOLDER_ID_UNKNOWN;
+			}
 			String email;
 			if (entry.isDlist())
 				email = entry.mDisplayName;
 			else
-				email = entry.mEmail.toLowerCase();
-			if (!emails.contains(email)) {
-				entries.add(entry);
-				emails.add(email);
-			}
+				email = entry.mEmail;
+            entries.add(entry);
+            emails.add(email.toLowerCase());
 		}
 		public void appendEntries(AutoCompleteResult result) {
 		    for (ContactEntry entry : result.entries)
@@ -126,7 +133,7 @@ public class ContactAutoComplete {
         }
         // ascending order
         public int compareTo(ContactEntry that) {
-            int nameCompare = this.getEmail().compareToIgnoreCase(that.getEmail());
+            int nameCompare = this.mEmail.compareToIgnoreCase(that.mEmail);
             if (nameCompare == 0)
                 return 0;
             // check the ranking
@@ -217,7 +224,7 @@ public class ContactAutoComplete {
 		ZimbraLog.gal.debug("querying "+str);
 		long t0 = System.currentTimeMillis();
 		AutoCompleteResult result = new AutoCompleteResult(limit);
-		ContactRankings rankings = new ContactRankings(mAccountId);
+		result.rankings = new ContactRankings(mAccountId);
 		if (limit <= 0)
 			return result;
 		
@@ -225,7 +232,7 @@ public class ContactAutoComplete {
 			return result;
 		
 		// query ranking table
-		for (ContactEntry entry : rankings.search(str))
+		for (ContactEntry entry : result.rankings.search(str))
 		    result.addEntry(entry);
         long t1 = System.currentTimeMillis();
 		
