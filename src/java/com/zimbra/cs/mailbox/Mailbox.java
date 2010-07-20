@@ -7174,7 +7174,7 @@ public class Mailbox {
             change.mDirty = new PendingModifications();
         }
 
-        Session source = mCurrentChange.octxt == null ? null : mCurrentChange.octxt.getSession();
+        Session source = change.octxt == null ? null : change.octxt.getSession();
 
         try {
             // the mailbox data has changed, so commit the changes
