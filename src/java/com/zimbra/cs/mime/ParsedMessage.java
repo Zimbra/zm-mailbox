@@ -2,20 +2,17 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on 2004. 6. 30.
- */
 package com.zimbra.cs.mime;
 
 import java.io.ByteArrayOutputStream;
@@ -85,6 +82,8 @@ import com.zimbra.cs.util.JMSession;
  * registered instances of {@link MimeVisitor}.  Conversion modifies the in-
  * memory message without affecting the raw version.  Mutation modifies the
  * raw version and affects results returned by the <tt>getRawXXX</tt> methods.
+ *
+ * @since 2004. 6. 30.
  * @author jhahm
  */
 public class ParsedMessage {
@@ -126,7 +125,7 @@ public class ParsedMessage {
     private boolean mWasMutated;
     private Integer mRawSize;
     private InputStream mSharedStream;
-    
+
     public static final long DATE_HEADER = -2;
     public static final long DATE_UNKNOWN = -1;
 
@@ -149,7 +148,7 @@ public class ParsedMessage {
     throws ServiceException {
         initialize(rawData, receivedDate, indexAttachments, null);
     }
-    
+
     /**
      * Creates a <tt>ParsedMessage</tt> from a file already stored on disk.
      * @param file the file on disk.
@@ -161,9 +160,9 @@ public class ParsedMessage {
 
     public ParsedMessage(Blob blob, Long receivedDate, boolean indexAttachments)
         throws ServiceException, IOException {
-        initialize(blob.getFile(), receivedDate, indexAttachments, (int) blob.getRawSize(), blob.getDigest());    
+        initialize(blob.getFile(), receivedDate, indexAttachments, (int) blob.getRawSize(), blob.getDigest());
     }
-    
+
     public ParsedMessage(ParsedMessageOptions opt)
     throws ServiceException {
         if (opt.getAttachmentIndexing() == null) {
@@ -183,7 +182,7 @@ public class ParsedMessage {
             throw ServiceException.FAILURE("ParsedMessageOptions do not specify message content", null);
         }
     }
-    
+
     private void initialize(MimeMessage msg, Long receivedDate, boolean indexAttachments, Integer rawSize, String rawDigest)
     throws ServiceException {
         mMimeMessage = msg;
@@ -192,7 +191,7 @@ public class ParsedMessage {
         mRawDigest = rawDigest;
         initialize(receivedDate, indexAttachments);
     }
-    
+
     private void initialize(byte[] rawData, Long receivedDate, boolean indexAttachments, String rawDigest)
     throws ServiceException {
         if (rawData == null || rawData.length == 0) {
@@ -203,7 +202,7 @@ public class ParsedMessage {
         mRawDigest = rawDigest;
         initialize(receivedDate, indexAttachments);
     }
-    
+
     private void initialize(File file, Long receivedDate, boolean indexAttachments, Integer rawSize, String rawDigest)
     throws IOException, ServiceException {
         if (file == null) {
@@ -222,7 +221,7 @@ public class ParsedMessage {
         mRawDigest = rawDigest;
         initialize(receivedDate, indexAttachments);
     }
-    
+
     private void initialize(Long receivedDate, boolean indexAttachments)
         throws ServiceException {
         try {
@@ -233,7 +232,7 @@ public class ParsedMessage {
             throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
         }
     }
-    
+
     /**
      * Runs MIME mutators and converters, initializes {@link #mMimeMessage}, {@link #mExpandedMessage},
      * {@link #mFileInputStream} and {@link #mReceivedDate} based on message content.
@@ -241,7 +240,7 @@ public class ParsedMessage {
     private void init(Long receivedDate, boolean indexAttachments)
     throws MessagingException, IOException {
         mIndexAttachments = indexAttachments;
-        
+
         if (mMimeMessage == null) {
             if (mSharedStream == null) {
                 throw new IOException("Content stream has not been initialized.");
@@ -258,7 +257,7 @@ public class ParsedMessage {
 
             mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), mSharedStream);
         }
-        
+
         // Run mutators.
         try {
             runMimeMutators();
@@ -276,11 +275,11 @@ public class ParsedMessage {
             mMimeMessage.writeTo(buffer);
             byte[] content = buffer.toByteArray();
             ByteUtil.closeStream(mSharedStream);
-            mSharedStream = new SharedByteArrayInputStream(content); 
+            mSharedStream = new SharedByteArrayInputStream(content);
             mMimeMessage = mExpandedMessage = null;
             mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), mSharedStream);
         }
-        
+
         ExpandMimeMessage expand = new ExpandMimeMessage(mMimeMessage);
         try {
             expand.expand();
@@ -293,15 +292,15 @@ public class ParsedMessage {
 
         // must set received-date before Lucene document is initialized
         if (receivedDate == null) {
-            receivedDate = getZimbraDateHeader(mMimeMessage); 
+            receivedDate = getZimbraDateHeader(mMimeMessage);
         }
         setReceivedDate(receivedDate);
     }
-    
+
     public boolean wasMutated() {
         return mWasMutated;
     }
-    
+
     /**
      * Allows the caller to set the digest of the raw message.  This avoids
      * rereading the file in the case where the caller has already read it
@@ -315,7 +314,7 @@ public class ParsedMessage {
      * Allows the caller to set the size of the raw message.  This avoids
      * rereading the possibly compressed file in the case where the caller has
      * already determined it
-     * 
+     *
      */
     public void setRawSize(Integer size) {
         mRawSize = size;
@@ -324,9 +323,9 @@ public class ParsedMessage {
     /** Applies all registered on-the-fly MIME converters to a copy of the
      *  encapsulated message (leaving the original message intact), then
      *  generates the list of message parts.
-     *  
+     *
      * @return the ParsedMessage itself
-     * @throws ServiceException 
+     * @throws ServiceException
      * @see #runMimeConverters() */
     private ParsedMessage parse() {
         if (mParsed)
@@ -347,10 +346,10 @@ public class ParsedMessage {
     /** Applies all registered MIME mutators to the encapsulated message.
      *  The message is not forked, so both {@link #mMimeMessage} and
      *  {@link #mExpandedMessage} are affected by the changes.
-     *  
+     *
      * @return <tt>true</tt> if a mutator altered the content or
      *   <tt>false</tt> if the encapsulated message is unchanged
-     *         
+     *
      * @see MimeVisitor#registerMutator */
     private void runMimeMutators() throws MessagingException {
         mWasMutated = false;
@@ -366,11 +365,11 @@ public class ParsedMessage {
             }
         }
     }
-    
+
     /**
      * Analyze and extract text from all the "body" (non-attachment) parts of the message.
      * This step is required to properly generate the message fragment.
-     * 
+     *
      * @throws ServiceException
      */
     private void analyzeBodyParts() throws ServiceException {
@@ -381,7 +380,7 @@ public class ParsedMessage {
             return;
 
         parse();
-        
+
         try {
             Set<MPartInfo> mpiBodies = Mime.getBody(mMessageParts, false);
 
@@ -406,10 +405,10 @@ public class ParsedMessage {
             sLog.warn("exception while analyzing message; message will be partially indexed", e);
         }
     }
-    
+
     /**
-     * Analyze and extract text from all attachments parts of the message 
-     *   
+     * Analyze and extract text from all attachments parts of the message
+     *
      * @throws ServiceException
      */
     private void analyzeNonBodyParts() throws ServiceException {
@@ -418,9 +417,9 @@ public class ParsedMessage {
         mAnalyzedNonBodyParts = true;
         if (DebugConfig.disableMessageAnalysis)
             return;
-        
+
         analyzeBodyParts();
-        
+
         try {
             Set<MPartInfo> mpiBodies = Mime.getBody(mMessageParts, false);
 
@@ -436,13 +435,13 @@ public class ParsedMessage {
                     }
                 }
             }
-            
+
             // requires FULL content (all parts)
             mZDocuments.add(setLuceneHeadersFromContainer(getMainBodyLuceneDocument(fullContent)));
 
             // we're done with the body content (saved from analyzeBodyParts()) now
             mBodyContent = "";
-            
+
             if (mNumParseErrors > 0 && sLog.isWarnEnabled()) {
                 String msgid = getMessageID();
                 String sbj = getSubject();
@@ -455,25 +454,25 @@ public class ParsedMessage {
             sLog.warn("exception while analyzing message; message will be partially indexed", e);
         }
     }
-    
+
     /**
-     * Extract all indexable text from this message.  This API should *only* be called if you are 
+     * Extract all indexable text from this message.  This API should *only* be called if you are
      * sure you're going to add the message to the index.  The only callsites of this API should be
      * Mailbox and test utilities.  Don't call it unless you absolutely are sure you need to do so.
-     * 
+     *
      * @throws ServiceException
      */
     public void analyzeFully() throws ServiceException {
         analyzeNonBodyParts();
     }
-    
+
     /**
-     * Returns the <tt>MimeMessage</tt>.  Affected by both conversion and mutation.  
+     * Returns the <tt>MimeMessage</tt>.  Affected by both conversion and mutation.
      */
     public MimeMessage getMimeMessage() {
         return mExpandedMessage;
     }
-    
+
     /**
      * Returns the original <tt>MimeMessage</tt>.  Affected by mutation but not
      * conversion.
@@ -512,7 +511,7 @@ public class ParsedMessage {
         }
         return mRawDigest;
     }
-    
+
     private void initializeDigestAndSize() throws IOException, ServiceException {
         if (mRawDigest != null && mRawSize != null) {
             return;
@@ -542,11 +541,11 @@ public class ParsedMessage {
             ByteUtil.closeStream(in);
         }
     }
-    
+
     /**
      * Returns a stream to the raw MIME message.  Affected by mutation but
      * not conversion.<p>
-     * 
+     *
      * <b>Important</b>: when the content comes from a <tt>MimeMessage</tt>,
      * JavaMail requires us to start a {@link MimeMessageOutputThread} to
      * serve up the content.  As a result, all calls to this method must
@@ -562,7 +561,7 @@ public class ParsedMessage {
             return Mime.getInputStream(mMimeMessage);
         }
     }
-    
+
     public boolean isAttachmentIndexingEnabled() {
         return mIndexAttachments;
     }
@@ -576,7 +575,7 @@ public class ParsedMessage {
         parse();
         return mHasAttachments;
     }
-    
+
     /**
      * Returns the <tt>BlobInputStream</tt> if this message is being streamed
      * from a file, otherwise returns <tt>null</tt>.
@@ -586,7 +585,7 @@ public class ParsedMessage {
             return (BlobInputStream) mSharedStream;
         return null;
     }
-    
+
     public boolean isStreamedFromDisk() {
         return getBlobInputStream() != null;
     }
@@ -799,11 +798,11 @@ public class ParsedMessage {
         else if (date != DATE_UNKNOWN)
             mReceivedDate = (Math.max(0, date) / 1000) * 1000;
     }
-    
+
     public long getReceivedDate() {
         if (mReceivedDate == -1)
             mReceivedDate = System.currentTimeMillis();
-        assert(mReceivedDate >= 0);  
+        assert(mReceivedDate >= 0);
         return mReceivedDate;
     }
 
@@ -851,7 +850,7 @@ public class ParsedMessage {
                 analyzeFully();
             }
         } catch (ServiceException e) {
-            // the calendar info should still be parsed 
+            // the calendar info should still be parsed
             sLog.warn("Message analysis failed when getting calendar info");
         }
         return mCalendarPartInfo;
@@ -864,22 +863,29 @@ public class ParsedMessage {
      */
     public boolean hasTemporaryAnalysisFailure() throws ServiceException {
         analyzeFully();
-        return this.mTemporaryAnalysisFailure; 
+        return this.mTemporaryAnalysisFailure;
     }
-    
+
     private IndexDocument getMainBodyLuceneDocument(StringBuilder fullContent)
-    throws MessagingException, ServiceException {
+        throws MessagingException, ServiceException {
+
         Document document = new Document();
         IndexDocument zd = new IndexDocument(document);
-        
-        document.add(new Field(LuceneFields.L_MIMETYPE, "message/rfc822", Field.Store.YES, Field.Index.TOKENIZED));
-        document.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP, Field.Store.YES, Field.Index.UN_TOKENIZED));
 
-        String toValue = setHeaderAsLuceneField(document, "to", LuceneFields.L_H_TO, Field.Store.NO, Field.Index.TOKENIZED);
-        String ccValue = setHeaderAsLuceneField(document, "cc", LuceneFields.L_H_CC, Field.Store.NO, Field.Index.TOKENIZED);
+        document.add(new Field(LuceneFields.L_MIMETYPE, "message/rfc822",
+                Field.Store.YES, Field.Index.ANALYZED));
+        document.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP,
+                Field.Store.YES, Field.Index.NOT_ANALYZED));
 
-        setHeaderAsLuceneField(document, "x-envelope-from", LuceneFields.L_H_X_ENV_FROM, Field.Store.NO, Field.Index.TOKENIZED);
-        setHeaderAsLuceneField(document, "x-envelope-to", LuceneFields.L_H_X_ENV_TO, Field.Store.NO, Field.Index.TOKENIZED);
+        String toValue = setHeaderAsLuceneField(document, "to", LuceneFields.L_H_TO,
+                Field.Store.NO, Field.Index.ANALYZED);
+        String ccValue = setHeaderAsLuceneField(document, "cc", LuceneFields.L_H_CC,
+                Field.Store.NO, Field.Index.ANALYZED);
+
+        setHeaderAsLuceneField(document, "x-envelope-from", LuceneFields.L_H_X_ENV_FROM,
+                Field.Store.NO, Field.Index.ANALYZED);
+        setHeaderAsLuceneField(document, "x-envelope-to", LuceneFields.L_H_X_ENV_TO,
+                Field.Store.NO, Field.Index.ANALYZED);
 
         String msgId = Mime.getHeader(getMimeMessage(), "message-id");
         if (msgId == null) {
@@ -893,17 +899,16 @@ public class ParsedMessage {
                 msgId = msgId.substring(0, msgId.length()-1);
 
             if (msgId.length() > 0)
-                document.add(new Field(LuceneFields.L_H_MESSAGE_ID, msgId, Field.Store.NO, Field.Index.UN_TOKENIZED));
+                document.add(new Field(LuceneFields.L_H_MESSAGE_ID, msgId,
+                        Field.Store.NO, Field.Index.NOT_ANALYZED));
         }
-        
+
         {
             // iterate all the message headers, add them to the structured-field data in the index
             StringBuilder fieldText = new StringBuilder();
-//            Enumeration<String> en = (Enumeration<String>)(getMimeMessage().getAllHeaderLines());
-            @SuppressWarnings("unchecked")
-            Enumeration<Header> en = getMimeMessage().getAllHeaders();
+            Enumeration<?> en = getMimeMessage().getAllHeaders();
             while (en.hasMoreElements()) {
-                Header h = en.nextElement();
+                Header h = (Header) en.nextElement();
                 String key = h.getName().trim();
                 String value = h.getValue();
                 if (value != null) {
@@ -929,8 +934,9 @@ public class ParsedMessage {
             if (fieldText.length() > 0) {
                 /* add key:value pairs to the structured FIELD lucene field */
 //                ZimbraLog.index.info("FIELD text is:\n"+fieldText.toString());
-                document.add(new Field(LuceneFields.L_FIELD, fieldText.toString(), Field.Store.NO, Field.Index.TOKENIZED));
-            }                
+                document.add(new Field(LuceneFields.L_FIELD, fieldText.toString(),
+                        Field.Store.NO, Field.Index.ANALYZED));
+            }
         }
 
         String from = getSender();
@@ -941,10 +947,12 @@ public class ParsedMessage {
         else if (sortFrom.length() > DbMailItem.MAX_SENDER_LENGTH)
             sortFrom = sortFrom.substring(0, DbMailItem.MAX_SENDER_LENGTH);
 
-        document.add(new Field(LuceneFields.L_H_FROM, from, Field.Store.NO, Field.Index.TOKENIZED));
-        document.add(new Field(LuceneFields.L_H_SUBJECT, subject, Field.Store.NO, Field.Index.TOKENIZED));
+        document.add(new Field(LuceneFields.L_H_FROM, from,
+                Field.Store.NO, Field.Index.ANALYZED));
+        document.add(new Field(LuceneFields.L_H_SUBJECT, subject,
+                Field.Store.NO, Field.Index.ANALYZED));
 
-        
+
         // add subject and from to main content for better searching
         StringBuilder contentPrepend = new StringBuilder(subject);
 
@@ -952,7 +960,7 @@ public class ParsedMessage {
         appendToContent(contentPrepend, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, from));
         appendToContent(contentPrepend, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, toValue));
         appendToContent(contentPrepend, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_CC, ccValue));
-        
+
         // bug 33461: add filenames to our CONTENT field
         for (String fn : mFilenames) {
             appendToContent(contentPrepend, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_FILENAME, fn));
@@ -961,7 +969,8 @@ public class ParsedMessage {
 
         String text = contentPrepend.toString()+" "+fullContent.toString();
 
-        document.add(new Field(LuceneFields.L_CONTENT, text, Field.Store.NO, Field.Index.TOKENIZED));
+        document.add(new Field(LuceneFields.L_CONTENT, text,
+                Field.Store.NO, Field.Index.ANALYZED));
 
         try {
             MimeHandler.getObjects(text, document);
@@ -982,7 +991,8 @@ public class ParsedMessage {
             attachments = LuceneFields.L_ATTACHMENT_NONE;
         else
             attachments = attachments + "," + LuceneFields.L_ATTACHMENT_ANY;
-        document.add(new Field(LuceneFields.L_ATTACHMENTS, attachments, Field.Store.NO, Field.Index.TOKENIZED));
+        document.add(new Field(LuceneFields.L_ATTACHMENTS, attachments,
+                Field.Store.NO, Field.Index.ANALYZED));
 
         return zd;
     }
@@ -1000,20 +1010,22 @@ public class ParsedMessage {
         d.add(new Field(fieldName, value, stored, indexed));
         return value;
     }
-    
+
     /**
      * For every attachment, many of the lucene indexed fields from the top level
      * message are also indexed as part of the attachment: this is done so that the
      * attachment will show up if you do things like "type:pdf and from:foo"
-     * 
+     *
      * "this" --> top level doc
-     * @param d subdocument of top level 
+     * @param d subdocument of top level
      */
     private IndexDocument setLuceneHeadersFromContainer(IndexDocument zd) throws MessagingException {
         org.apache.lucene.document.Document d = (org.apache.lucene.document.Document)(zd.getWrappedDocument());
-        
-        setHeaderAsLuceneField(d, "to", LuceneFields.L_H_TO, Field.Store.NO, Field.Index.TOKENIZED);
-        setHeaderAsLuceneField(d, "cc", LuceneFields.L_H_CC, Field.Store.NO, Field.Index.TOKENIZED);
+
+        setHeaderAsLuceneField(d, "to", LuceneFields.L_H_TO,
+                Field.Store.NO, Field.Index.ANALYZED);
+        setHeaderAsLuceneField(d, "cc", LuceneFields.L_H_CC,
+                Field.Store.NO, Field.Index.ANALYZED);
 
         String subject = getNormalizedSubject();
         String sortFrom = getParsedSender().getSortString();
@@ -1022,11 +1034,13 @@ public class ParsedMessage {
         String from = getSender();
 
         if (from != null)
-            d.add(new Field(LuceneFields.L_H_FROM, from, Field.Store.NO, Field.Index.TOKENIZED));
-        
-        if (subject != null) 
-            d.add(new Field(LuceneFields.L_H_SUBJECT, subject, Field.Store.NO, Field.Index.TOKENIZED));
-        
+            d.add(new Field(LuceneFields.L_H_FROM, from,
+                    Field.Store.NO, Field.Index.ANALYZED));
+
+        if (subject != null)
+            d.add(new Field(LuceneFields.L_H_SUBJECT, subject,
+                    Field.Store.NO, Field.Index.ANALYZED));
+
         return zd;
     }
 
@@ -1084,12 +1098,12 @@ public class ParsedMessage {
             // ignore multipart "container" parts
             if (ctype.startsWith(MimeConstants.CT_MULTIPART_PREFIX))
                 return toRet;
-            
+
             MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, mpi.getFilename());
             assert(handler != null);
-            
+
             Mime.repairTransferEncoding(mpi.getMimePart());
-            
+
             if (handler.isIndexingEnabled()) {
                 handler.init(mpi.getMimePart().getDataHandler().getDataSource());
                 handler.setPartName(mpi.getPartName());
@@ -1103,18 +1117,18 @@ public class ParsedMessage {
                         setCalendarPartInfo(mpi, cal);
                 }
 
-                // In some cases we want to add ALL TEXT from EVERY PART to the toplevel 
+                // In some cases we want to add ALL TEXT from EVERY PART to the toplevel
                 // body content. This is necessary for queries with multiple words -- where
                 // one word is in the body and one is in a sub-attachment.
                 //
                 // We don't always want to do this, for example if attachment indexing is disabled
                 // and this is an attachment handler, we don't want to add this text to the toplevel
-                // document.  
+                // document.
                 //
                 // We index this content in the toplevel if it is:
                 //     - the 'main body' and a local mime handler
                 //     - the 'main body' and IndexAttachments was set in the constructor
-                //     - IndexAttachments was set and !disableIndexingAttachmentsTogether 
+                //     - IndexAttachments was set and !disableIndexingAttachmentsTogether
                 if ((isMainBody && (!handler.runsExternally() || mIndexAttachments)) ||
                             (mIndexAttachments && !DebugConfig.disableIndexingAttachmentsTogether)) {
                     toRet = handler.getContent();
@@ -1126,16 +1140,16 @@ public class ParsedMessage {
                     // client what parts match if a search matched a particular
                     // part.
                     IndexDocument zd = new IndexDocument(handler.getDocument());
-                    
+
                     String fn = handler.getFilename();
                     if (fn != null && fn.length() > 0) {
                         mFilenames.add(fn);
                     }
-                    
+
                     if (zd!= null) {
-                        org.apache.lucene.document.Document doc = (org.apache.lucene.document.Document)(zd.getWrappedDocument()); 
+                        org.apache.lucene.document.Document doc = (org.apache.lucene.document.Document)(zd.getWrappedDocument());
                         int partSize = mpi.getMimePart().getSize();
-                        doc.add(new Field(LuceneFields.L_SIZE, Integer.toString(partSize), Field.Store.YES, Field.Index.NO));
+                        doc.add(new Field(LuceneFields.L_SORT_SIZE, Integer.toString(partSize), Field.Store.YES, Field.Index.NO));
                         mZDocuments.add(setLuceneHeadersFromContainer(zd));
                     }
                 }

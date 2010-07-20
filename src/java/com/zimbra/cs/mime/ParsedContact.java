@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -57,13 +57,13 @@ import com.zimbra.cs.util.JMSession;
 public class ParsedContact {
     private Map<String, String> mFields;
     private List<Attachment> mAttachments;
-    
+
     // Used when parsing existing blobs.
     private InputStream mSharedStream;
-    
+
     // Used when assembling a contact from attachments.
     private MimeMessage mMimeMessage;
-    
+
     private String mDigest;
     private long mSize;
 
@@ -86,7 +86,7 @@ public class ParsedContact {
         }
         init(fields, in);
     }
-    
+
     /**
      * @param fields maps field names to either a <tt>String</tt> or <tt>String[]</tt> value.
      */
@@ -94,7 +94,7 @@ public class ParsedContact {
     throws ServiceException {
         init(fields, in);
     }
-    
+
     /**
      * @param fields maps field names to either a <tt>String</tt> or <tt>String[]</tt> value.
      */
@@ -121,9 +121,9 @@ public class ParsedContact {
     }
 
     /**
-     * 
+     *
      * @param con
-     * @param getAllFields 
+     * @param getAllFields
      *          if true, all fields are passed to the ParsedContact
      *          if false, only non-hidden fields are passed to the ParsedContact
      * @throws ServiceException
@@ -165,7 +165,7 @@ public class ParsedContact {
             } else if (value instanceof String) {
                 strValue = StringUtil.stripControlCharacters((String)value);
             }
-            
+
             if (key != null && !key.trim().equals("") && strValue != null && !strValue.equals(""))
                 strMap.put(key, strValue);
         }
@@ -199,7 +199,7 @@ public class ParsedContact {
             }
         }
     }
-    
+
     private void initializeSizeAndDigest()
     throws IOException {
         CalculatorStream calc = new CalculatorStream(getContentStream());
@@ -215,22 +215,22 @@ public class ParsedContact {
         for (Attachment attach : attachments) {
             ContentDisposition cdisp = new ContentDisposition(Part.ATTACHMENT);
             cdisp.setParameter("filename", attach.getFilename()).setParameter("field", attach.getName());
-            
+
             MimeBodyPart bp = new MimeBodyPart();
             bp.addHeader("Content-Disposition", cdisp.toString());
             bp.addHeader("Content-Type", attach.getContentType());
             bp.addHeader("Content-Transfer-Encoding", MimeConstants.ET_8BIT);
             bp.setDataHandler(attach.getDataHandler());
             multi.addBodyPart(bp);
-            
+
             attach.setPartName(Integer.toString(part++));
         }
         mm.setContent(multi);
         mm.saveChanges();
-        
+
         return mm;
     }
-    
+
     private static List<Attachment> parseBlob(InputStream in) throws ServiceException, MessagingException, IOException {
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), in);
         MimeMultipart multi = null;
@@ -244,7 +244,7 @@ public class ParsedContact {
         for (int i = 1; i <= multi.getCount(); i++) {
             MimeBodyPart bp = (MimeBodyPart) multi.getBodyPart(i - 1);
             ContentDisposition cdisp = new ContentDisposition(bp.getHeader("Content-Disposition", null));
-            
+
             Attachment attachment = new Attachment(bp.getDataHandler(), cdisp.getParameter("field"));
             attachment.setPartName(Integer.toString(i));
             attachments.add(attachment);
@@ -282,7 +282,7 @@ public class ParsedContact {
 
     /**
      * Returns the stream to this contact's blob, or <tt>null</tt> if
-     * it has no attachments. 
+     * it has no attachments.
      */
     public InputStream getContentStream()
     throws IOException {
@@ -294,7 +294,7 @@ public class ParsedContact {
         }
         return null;
     }
-    
+
     public long getSize() {
         return mSize;
     }
@@ -344,11 +344,11 @@ public class ParsedContact {
         if (mAttachments != null) {
             try {
                 mMimeMessage = generateMimeMessage(mAttachments);
-                
+
                 // Original stream is now stale.
                 ByteUtil.closeStream(mSharedStream);
                 mSharedStream = null;
-                
+
                 initializeSizeAndDigest();
             } catch (MessagingException me) {
                 throw MailServiceException.MESSAGE_PARSE_ERROR(me);
@@ -391,9 +391,9 @@ public class ParsedContact {
         }
         return this;
     }
-    
+
     boolean mHasTemporaryAnalysisFailure = false;
-    public boolean hasTemporaryAnalysisFailure() { return mHasTemporaryAnalysisFailure; } 
+    public boolean hasTemporaryAnalysisFailure() { return mHasTemporaryAnalysisFailure; }
 
     private void analyzeContact(Account acct, boolean indexAttachments) throws ServiceException {
         if (mZDocuments != null)
@@ -427,16 +427,16 @@ public class ParsedContact {
         }
 
         mZDocuments.add(new IndexDocument(getPrimaryDocument(acct, attachContent.toString())));
-        
+
         // dumpLuceneDocuments();
     }
-    
+
     public List<IndexDocument> getLuceneDocuments(Mailbox mbox) throws ServiceException {
         analyze(mbox);
         // dumpLuceneDocuments();
         return mZDocuments;
     }
-    
+
     private void analyzeAttachment(Attachment attach, StringBuilder contentText, boolean indexAttachments)
     throws MimeHandlerException, ObjectHandlerException, ServiceException {
         String ctype = attach.getContentType();
@@ -466,7 +466,9 @@ public class ParsedContact {
                 // part.
                 org.apache.lucene.document.Document doc = handler.getDocument();
                 if (doc != null) {
-                    doc.add(new Field(LuceneFields.L_SIZE, Integer.toString(attach.getSize()), Field.Store.YES, Field.Index.NO));
+                    doc.add(new Field(LuceneFields.L_SORT_SIZE,
+                            Integer.toString(attach.getSize()),
+                            Field.Store.YES, Field.Index.NO));
                     mZDocuments.add(new IndexDocument(doc));
                 }
             }
@@ -479,28 +481,28 @@ public class ParsedContact {
             sb.append(s).append(' ');
         }
     }
-    
+
     private org.apache.lucene.document.Document getPrimaryDocument(Account acct, String contentStrIn) throws ServiceException {
         org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
-        
+
         StringBuilder fieldText = new StringBuilder();
         StringBuilder contentText = new StringBuilder();
-        
+
         String emailFields[] = Contact.getEmailFields(acct);
-        
+
         Map<String, String> m = getFields();
         for (Map.Entry<String, String> entry : m.entrySet()) {
             if (!Contact.isEmailField(emailFields, entry.getKey())) { // skip email addrs, they're added to CONTENT below
-                if (!ContactConstants.A_fileAs.equalsIgnoreCase(entry.getKey())) 
+                if (!ContactConstants.A_fileAs.equalsIgnoreCase(entry.getKey()))
                     contentText.append(entry.getValue()).append(' ');
             }
 
             String fieldTextToAdd = entry.getKey() + ":" + entry.getValue() + "\n";
             fieldText.append(fieldTextToAdd);
         }
-        
+
         // fetch all the 'email' addresses for this contact into a single concatenated string
-        String emailStr; 
+        String emailStr;
         {
             StringBuilder emailSb  = new StringBuilder();
             for (String email : Contact.getEmailAddresses(emailFields, getFields())) {
@@ -509,43 +511,49 @@ public class ParsedContact {
             emailStr = emailSb.toString();
         }
         String emailStrTokens = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr);
-        
+
         StringBuilder searchText = new StringBuilder(emailStrTokens).append(' ');
         appendContactField(searchText, this, ContactConstants.A_company);
         appendContactField(searchText, this, ContactConstants.A_firstName);
         appendContactField(searchText, this, ContactConstants.A_lastName);
         appendContactField(searchText, this, ContactConstants.A_nickname);
         appendContactField(searchText, this, ContactConstants.A_fullName);
-        
-        // rebuild contentText here with the emailStr FIRST, then the other text.  
+
+        // rebuild contentText here with the emailStr FIRST, then the other text.
         // The email addresses should be first so that they have a higher search score than the other
         // text
         contentText = new StringBuilder(emailStrTokens).append(' ').append(contentText).append(' ').append(contentStrIn);
-        
+
         /* put the email addresses in the "To" field so they can be more easily searched */
-        doc.add(new Field(LuceneFields.L_H_TO, emailStr,  Field.Store.NO, Field.Index.TOKENIZED));
+        doc.add(new Field(LuceneFields.L_H_TO, emailStr,
+                Field.Store.NO, Field.Index.ANALYZED));
 
         /* put the name in the "From" field since the MailItem table uses 'Sender'*/
-        doc.add(new Field(LuceneFields.L_H_FROM, Contact.getFileAsString(mFields),  Field.Store.NO, Field.Index.TOKENIZED));
+        doc.add(new Field(LuceneFields.L_H_FROM, Contact.getFileAsString(mFields),
+                Field.Store.NO, Field.Index.ANALYZED));
         /* bug 11831 - put contact searchable data in its own field so wildcard search works better  */
-        doc.add(new Field(LuceneFields.L_CONTACT_DATA, searchText.toString(), Field.Store.NO, Field.Index.TOKENIZED));
-        doc.add(new Field(LuceneFields.L_CONTENT, contentText.toString(), Field.Store.NO, Field.Index.TOKENIZED));
-        doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT, Field.Store.YES, Field.Index.UN_TOKENIZED));
+        doc.add(new Field(LuceneFields.L_CONTACT_DATA, searchText.toString(),
+                Field.Store.NO, Field.Index.ANALYZED));
+        doc.add(new Field(LuceneFields.L_CONTENT, contentText.toString(),
+                Field.Store.NO, Field.Index.ANALYZED));
+        doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT,
+                Field.Store.YES, Field.Index.NOT_ANALYZED));
 
         /* add key:value pairs to the structured FIELD lucene field */
-        doc.add(new Field(LuceneFields.L_FIELD, fieldText.toString(), Field.Store.NO, Field.Index.TOKENIZED));
-        
+        doc.add(new Field(LuceneFields.L_FIELD, fieldText.toString(),
+                Field.Store.NO, Field.Index.ANALYZED));
+
         return doc;
     }
-    
+
     private void dumpLuceneDocuments() {
-        
+
         StringBuilder sb = new StringBuilder();
-        
+
         for (IndexDocument id : mZDocuments) {
             id.dump(sb);
         }
-        
+
         ZimbraLog.index_add.debug("Contact lucene doc: \n" + sb.toString());
     }
 }

@@ -38,6 +38,7 @@ import com.zimbra.common.util.Pair;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.PhraseQuery;
@@ -309,6 +310,7 @@ public final class ZimbraQuery {
             return "";
         }
 
+        @Override
         protected QueryOperation getQueryOperation(boolean truth) {
             assert(false);
             return null;
@@ -348,6 +350,7 @@ public final class ZimbraQuery {
             }
         }
 
+        @Override
         protected QueryOperation getQueryOperation(boolean truth) {
             DBQueryOperation op = DBQueryOperation.Create();
             op.addConvId(mMailbox, mConvId, calcTruth(truth));
@@ -370,6 +373,7 @@ public final class ZimbraQuery {
             super(0, qType);
         }
 
+        @Override
         protected QueryOperation getQueryOperation(boolean truth) {
             DBQueryOperation op = DBQueryOperation.Create();
 
@@ -770,6 +774,7 @@ public final class ZimbraQuery {
             mMailbox = mbox;
         }
 
+        @Override
         protected QueryOperation getQueryOperation(boolean truth) {
             TextQueryOperation op = mMailbox.getMailboxIndex().createTextQueryOperation();
             Query q = new TermQuery(new Term(QueryTypeString(getQueryType()), mTarget));
@@ -964,6 +969,7 @@ public final class ZimbraQuery {
             mIncludeSubfolders = includeSubfolders;
         }
 
+        @Override
         protected QueryOperation getQueryOperation(boolean truth) {
             if (mSpecialTarget != null) {
                 if (mSpecialTarget == IN_NO_FOLDER) {
@@ -1119,6 +1125,7 @@ public final class ZimbraQuery {
             mValue = value;
         }
 
+        @Override
         protected QueryOperation getQueryOperation(boolean truth) {
             TextQueryOperation op = mMailbox.getMailboxIndex().createTextQueryOperation();
 
@@ -1269,6 +1276,7 @@ public final class ZimbraQuery {
             }
         }
 
+        @Override
         protected QueryOperation getQueryOperation(boolean truth) {
             DBQueryOperation op = DBQueryOperation.Create();
 
@@ -1336,6 +1344,7 @@ public final class ZimbraQuery {
             mValue = Integer.parseInt(changeId);
         }
 
+        @Override
         protected QueryOperation getQueryOperation(boolean truth) {
             DBQueryOperation op = DBQueryOperation.Create();
             truth = calcTruth(truth);
@@ -1392,6 +1401,7 @@ public final class ZimbraQuery {
             return mSubClauses;
         }
 
+        @Override
         protected QueryOperation getQueryOperation(boolean truth) {
             assert(false);
             return null;
@@ -1549,6 +1559,7 @@ public final class ZimbraQuery {
             mTruth = truth;
         }
 
+        @Override
         protected QueryOperation getQueryOperation(boolean truth) {
             DBQueryOperation dbOp = DBQueryOperation.Create();
 
@@ -1604,6 +1615,7 @@ public final class ZimbraQuery {
             mMailbox = mbox;
         }
 
+        @Override
         protected QueryOperation getQueryOperation(boolean truth) {
             DBQueryOperation dbOp = DBQueryOperation.Create();
 
@@ -1727,19 +1739,14 @@ public final class ZimbraQuery {
                     source = analyzer.tokenStream(QueryTypeString(qType),
                             new StringReader(text));
                 }
-                org.apache.lucene.analysis.Token t;
 
-                while(true) {
-                    try {
-                        t = source.next();
-                    } catch (IOException e) {
-                        t = null;
-                    }
-                    if (t == null)
-                        break;
-                    mTokens.add(t.termText());
-                }
                 try {
+                    TermAttribute termAttr = source.addAttribute(
+                            TermAttribute.class);
+                    while (source.incrementToken()) {
+                        mTokens.add(termAttr.term());
+                    }
+                    source.end();
                     source.close();
                 } catch (IOException ignore) {
                 }
@@ -1754,7 +1761,7 @@ public final class ZimbraQuery {
             // for bug:17232 -- if the search string is ".", don't auto-wildcard it, because . is
             // supposed to match everything by default.
             if (qType == ZimbraQueryParser.CONTACT && mTokens.size() <= 1 && text.length() > 0
-                        && text.charAt(text.length()-1)!='*' && !text.equals(".")) {
+                        && text.charAt(text.length() - 1) != '*' && !text.equals(".")) {
                 text = text + '*';
             }
 
@@ -1824,6 +1831,7 @@ public final class ZimbraQuery {
             // }
         }
 
+        @Override
         protected QueryOperation getQueryOperation(boolean truth) {
             if (mTokens.size() <= 0 && mOredTokens.size() <= 0) {
                 // if we have no tokens, that is usually because the analyzer removed them
@@ -2211,11 +2219,17 @@ public final class ZimbraQuery {
                 mKind = kind;
             }
 
-            public void setTruth(boolean truth) { mTruthFlag = truth; };
+            @Override
+            public void setTruth(boolean truth) {
+                mTruthFlag = truth;
+            };
+
+            @Override
             public void invertTruth() {
                 mTruthFlag = !mTruthFlag;
             }
 
+            @Override
             public void pushNotsDown() {
                 if (!mTruthFlag) { // ONLY push down if this is a "not"
                     mTruthFlag = !mTruthFlag;
@@ -2235,6 +2249,7 @@ public final class ZimbraQuery {
                 }
             }
 
+            @Override
             public Node simplify() {
                 boolean simplifyAgain;
                 do {
@@ -2299,6 +2314,7 @@ public final class ZimbraQuery {
                 return toRet.toString();
             }
 
+            @Override
             public QueryOperation getQueryOperation() {
                 assert(mTruthFlag == true); // we should have pushed the NOT's down the tree already
                 if (mKind == STATE_AND) {
@@ -2345,12 +2361,16 @@ public final class ZimbraQuery {
                 mTruthFlag = thing.mTruth;
             }
 
+            @Override
             public void invertTruth() {
                 mTruthFlag = !mTruthFlag;
             }
+
+            @Override
             public void pushNotsDown() {
             }
 
+            @Override
             public Node simplify() {
                 return this;
             }
@@ -2363,6 +2383,7 @@ public final class ZimbraQuery {
                 return toRet.toString();
             }
 
+            @Override
             public QueryOperation getQueryOperation() {
                 return mThing.getQueryOperation(mTruthFlag);
             }
@@ -2416,6 +2437,8 @@ public final class ZimbraQuery {
 
     private static final class CountTextOperations implements QueryOperation.RecurseCallback {
         int num = 0;
+
+        @Override
         public void recurseCallback(QueryOperation op) {
             if (op instanceof TextQueryOperation) {
                 num++;
@@ -2424,6 +2447,8 @@ public final class ZimbraQuery {
     }
     private static final class CountCombiningOperations implements QueryOperation.RecurseCallback {
         int num = 0;
+
+        @Override
         public void recurseCallback(QueryOperation op) {
             if (op instanceof CombiningQueryOperation) {
                 if (((CombiningQueryOperation)op).getNumSubOps() > 1) {
@@ -3028,9 +3053,12 @@ public final class ZimbraQuery {
      *             text data from searches in private appointments
      */
     private static final class excludePrivateCalendarItems implements QueryOperation.RecurseCallback {
+
+        @Override
         public void recurseCallback(QueryOperation op) {
             if (op instanceof TextQueryOperation) {
-                ((TextQueryOperation)op).addAndedClause(new TermQuery(new Term(LuceneFields.L_FIELD, CalendarItem.INDEX_FIELD_ITEM_CLASS_PRIVATE)), false);
+                ((TextQueryOperation)op).addAndedClause(new TermQuery(new Term(
+                        LuceneFields.L_FIELD, CalendarItem.INDEX_FIELD_ITEM_CLASS_PRIVATE)), false);
             }
         }
     }

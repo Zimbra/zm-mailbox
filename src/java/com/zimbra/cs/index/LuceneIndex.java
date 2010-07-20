@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,7 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.apache.lucene.document.DateField;
+import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
@@ -37,8 +37,8 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.FuzzyTermEnum;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.SingleInstanceLockFactory;
+import org.apache.lucene.util.Version;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -51,19 +51,51 @@ import com.zimbra.cs.service.util.SyncToken;
 
 
 /**
- * An updated Lucene provider that uses the IndexWritersCache to manage the index LRU.  This class 
- * is currently activated via a LC key but will eventually become the default
+ * A custom Lucene provider that uses the IndexWritersCache to manage the index
+ * LRU.
  */
-public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILuceneIndex, ITextIndex{
+public class LuceneIndex extends IndexWritersCache.IndexWriter
+    implements ILuceneIndex, ITextIndex {
 
-    static {
-        System.setProperty("org.apache.lucene.FSDirectory.class", "com.zimbra.cs.index.Z23FSDirectory");
-    }
-    
+    //TODO: Change to 3.0 after writing extensive unit test
+    //public static final Version VERSION = Version.LUCENE_30;
+    public static final Version VERSION = Version.LUCENE_24;
+
+    private static IndexReadersCache sIndexReadersCache;
+    private static IIndexWritersCache sIndexWritersCache;
+
+    /**
+     * If documents are being constantly added to an index, then it will stay at
+     * the front of the LRU cache and will never flush itself to disk: this
+     * setting specifies the maximum number of writes we will allow to the index
+     * before we force a flush. Higher values will improve batch-add
+     * performance, at the cost of longer-lived transactions in the redolog.
+     */
+    private static int sMaxUncommittedOps;
+
+    /**
+     * This static array saves us from the time required to create a new array
+     * everytime editDistance is called.
+     */
+    private int e[][] = new int[1][1];
+    private Z23FSDirectory mIdxDirectory = null;
+
+    private IndexWriter mIndexWriter;
+
+    private volatile long mLastWriteTime = 0;
+
+    private Sort mLatestSort = null;
+    private SortBy mLatestSortBy = null;
+    private MailboxIndex mMbidx;
+    private int mNumUncommittedItems = 0;
+    private SyncToken mHighestUncomittedModContent = new SyncToken(0);
+    private int beginWritingNestLevel = 0;
+
+
     static void flushAllWriters() {
         if (DebugConfig.disableIndexing)
             return;
-        
+
         sIndexWritersCache.flushAllWriters();
     }
 
@@ -84,134 +116,148 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
             ZimbraLog.index.info("Indexing is disabled by the localconfig 'debug_disable_indexing' flag");
             return;
         }
-        
+
         if (sIndexWritersCache != null) {
             // in case startup is somehow called twice
             sIndexWritersCache.shutdown();
         }
-        
+
         sMaxUncommittedOps = LC.zimbra_index_max_uncommitted_operations.intValue();
-        sIndexReadersCache = new IndexReadersCache(LC.zimbra_index_reader_lru_size.intValue(), 
-            LC.zimbra_index_reader_idle_flush_time.longValue() * 1000, 
+        sIndexReadersCache = new IndexReadersCache(LC.zimbra_index_reader_lru_size.intValue(),
+            LC.zimbra_index_reader_idle_flush_time.longValue() * 1000,
             LC.zimbra_index_reader_idle_sweep_frequency.longValue() * 1000);
         sIndexReadersCache.start();
-        
-        if (LC.get("zimbra_index_use_dummy_writer_cache").length() != 0)
+
+        if (LC.get("zimbra_index_use_dummy_writer_cache").length() != 0) {
             sIndexWritersCache = new DummyIndexWritersCache();
-        else
+        } else {
             sIndexWritersCache = new IndexWritersCache();
+        }
     }
 
     /**
-    Finds and returns the smallest of three integers 
+     * Finds and returns the smallest of three integers.
      */
     private static final int min(int a, int b, int c) {
         int t = (a < b) ? a : b;
         return (t < c) ? t : c;
     }
-    
+
+    @Override
     public long getBytesWritten() {
         return mIdxDirectory.getBytesWritten();
     }
+
+    @Override
     public long getBytesRead() {
         return mIdxDirectory.getBytesRead();
-    }        
-    
+    }
+
+    @Override
     public String generateIndexId(int itemId) {
         return Integer.toString(itemId);
     }
-    
+
     LuceneIndex(MailboxIndex mbidx, String idxParentDir, long mailboxId) throws ServiceException {
         mMbidx = mbidx;
         mIndexWriter = null;
-        
+
         // this must be different from the idxParentDir (see the IMPORTANT comment below)
         String idxPath = idxParentDir + File.separatorChar + '0';
 
         {
             File parentDirFile = new File(idxParentDir);
 
-            // IMPORTANT!  Don't make the actual index directory (mIdxDirectory) yet!  
+            // IMPORTANT!  Don't make the actual index directory (mIdxDirectory) yet!
             //
-            // The runtime open-index code checks the existance of the actual index directory:  
-            // if it does exist but we cannot open the index, we do *NOT* create it under the 
-            // assumption that the index was somehow corrupted and shouldn't be messed-with....on the 
-            // other hand if the index dir does NOT exist, then we assume it has never existed (or 
+            // The runtime open-index code checks the existance of the actual index directory:
+            // if it does exist but we cannot open the index, we do *NOT* create it under the
+            // assumption that the index was somehow corrupted and shouldn't be messed-with....on the
+            // other hand if the index dir does NOT exist, then we assume it has never existed (or
             // was deleted intentionally) and therefore we should just create an index.
-            if (!parentDirFile.exists())
+            if (!parentDirFile.exists()) {
                 parentDirFile.mkdirs();
+            }
 
             if (!parentDirFile.canRead()) {
-                throw ServiceException.FAILURE("Cannot READ index directory (mailbox="+mailboxId+ " idxPath="+idxPath+")", null);
+                throw ServiceException.FAILURE("Cannot READ index directory (mailbox=" + mailboxId + " idxPath=" + idxPath + ")", null);
             }
             if (!parentDirFile.canWrite()) {
-                throw ServiceException.FAILURE("Cannot WRITE index directory (mailbox="+mailboxId+ " idxPath="+idxPath+")", null);
+                throw ServiceException.FAILURE("Cannot WRITE index directory (mailbox=" + mailboxId + " idxPath=" + idxPath + ")", null);
             }
 
             // the Lucene code does not atomically swap the "segments" and "segments.new"
             // files...so it is possible that a previous run of the server crashed exactly in such
-            // a way that we have a "segments.new" file but not a "segments" file.  We we will check here 
+            // a way that we have a "segments.new" file but not a "segments" file.  We we will check here
             // for the special situation that we have a segments.new
             // file but not a segments file...
             File segments = new File(idxPath, "segments");
             if (!segments.exists()) {
                 File segments_new = new File(idxPath, "segments.new");
-                if (segments_new.exists()) 
+                if (segments_new.exists()) {
                     segments_new.renameTo(segments);
+                }
             }
-            
+
             try {
-                // must call getDirectory then setLockFactory via 2 calls -- there's the possibility
-                // that the directory we're returned is actually a cached FSDirectory (e.g. if the index
-                // was deleted and re-created) in which case we should be using the existing LockFactory
-                // and not creating a new one
-                mIdxDirectory = (Z23FSDirectory)FSDirectory.getDirectory(idxPath);
-                if (mIdxDirectory.getLockFactory() == null || !(mIdxDirectory.getLockFactory() instanceof SingleInstanceLockFactory))
-                    mIdxDirectory.setLockFactory(new SingleInstanceLockFactory());
+                mIdxDirectory = new Z23FSDirectory(new File(idxPath),
+                        new SingleInstanceLockFactory());
             } catch (IOException e) {
-                throw ServiceException.FAILURE("Cannot create FSDirectory at path: "+idxPath, e);
+                throw ServiceException.FAILURE("Cannot create FSDirectory at path: " + idxPath, e);
             }
         }
     }
 
-    public void addDocument(IndexDocument[] docs, MailItem item, int itemId, String indexId, int modContent, long receivedDate, 
-        long size, String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
-        if (docs.length == 0)
+    @Override
+    public void addDocument(IndexDocument[] docs, MailItem item, int itemId,
+            String indexId, int modContent, long receivedDate, long size,
+            String sortSubject, String sortSender, boolean deleteFirst)
+        throws IOException {
+
+        if (docs.length == 0) {
             return;
-    
-        synchronized(getLock()) {        
-            
+        }
+
+        synchronized(getLock()) {
+
             beginWriting();
             try {
                 assert(mIndexWriter != null);
 
                 for (IndexDocument zdoc : docs) {
-                    org.apache.lucene.document.Document doc = (org.apache.lucene.document.Document)(zdoc.getWrappedDocument());
+                    Document doc = (Document) zdoc.getWrappedDocument();
                     // doc can be shared by multiple threads if multiple mailboxes
                     // are referenced in a single email
                     synchronized (doc) {
                         doc.removeFields(LuceneFields.L_SORT_SUBJECT);
                         doc.removeFields(LuceneFields.L_SORT_NAME);
-                        //                                                                   store, index, tokenize
-                        doc.add(new Field(LuceneFields.L_SORT_SUBJECT, sortSubject, Field.Store.NO, Field.Index.UN_TOKENIZED));
-                        doc.add(new Field(LuceneFields.L_SORT_NAME,    sortSender, Field.Store.NO, Field.Index.UN_TOKENIZED));
-                        
+
+                        doc.add(new Field(LuceneFields.L_SORT_SUBJECT, sortSubject,
+                                Field.Store.NO, Field.Index.NOT_ANALYZED));
+                        doc.add(new Field(LuceneFields.L_SORT_NAME, sortSender,
+                                Field.Store.NO, Field.Index.NOT_ANALYZED));
+
                         doc.removeFields(LuceneFields.L_MAILBOX_BLOB_ID);
-                        doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, indexId, Field.Store.YES, Field.Index.UN_TOKENIZED));
-                        
-                        // If this doc is shared by mult threads, then the date might just be wrong,
+                        doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, indexId,
+                                Field.Store.YES, Field.Index.NOT_ANALYZED));
+
+                        // If this doc is shared by multi threads, then the date might just be wrong,
                         // so remove and re-add the date here to make sure the right one gets written!
                         doc.removeFields(LuceneFields.L_SORT_DATE);
-                        String dateString = DateField.timeToString(receivedDate);
-                        doc.add(new Field(LuceneFields.L_SORT_DATE, dateString, Field.Store.YES, Field.Index.UN_TOKENIZED));
+                        String dateString = DateTools.timeToString(receivedDate,
+                                DateTools.Resolution.MILLISECOND);
+                        doc.add(new Field(LuceneFields.L_SORT_DATE, dateString,
+                                Field.Store.YES, Field.Index.NOT_ANALYZED));
 
                         doc.removeFields(LuceneFields.L_SORT_SIZE);
-                        doc.add(new Field(LuceneFields.L_SORT_SIZE, Long.toString(size), Field.Store.YES, Field.Index.NO));
+                        doc.add(new Field(LuceneFields.L_SORT_SIZE, Long.toString(size),
+                                Field.Store.YES, Field.Index.NO));
 
                         if (null == doc.get(LuceneFields.L_ALL)) {
-                            doc.add(new Field(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE, Field.Store.NO, Field.Index.NO_NORMS, Field.TermVector.NO));
+                            doc.add(new Field(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE,
+                                    Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
                         }
-                        
+
                         if (deleteFirst) {
                             String itemIdStr = indexId;
                             Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, itemIdStr);
@@ -219,26 +265,28 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
                         } else {
                             mIndexWriter.addDocument(doc);
                         }
-                        
+
                     } // synchronized(doc)
                 } // foreach Document
 
                 if (modContent > 0) {
-                    SyncToken token = new SyncToken(modContent, itemId); 
+                    SyncToken token = new SyncToken(modContent, itemId);
                     mNumUncommittedItems++;
                     assert(token.after(mHighestUncomittedModContent));
                     if (token.after(mHighestUncomittedModContent)) {
                         mHighestUncomittedModContent = token;
                     } else {
-                        ZimbraLog.index_add.info("Index items not submitted in order: curHighest="+
-                                             mHighestUncomittedModContent+" new highest="+modContent+"" +
-                                             "indexId="+indexId);
+                        ZimbraLog.index_add.info("Index items not submitted in order: curHighest=" +
+                                             mHighestUncomittedModContent + " new highest=" + modContent + " " +
+                                             "indexId=" + indexId);
                     }
                 }
-                
-                // tim: this might seem bad, since an index in steady-state-of-writes will never get flushed, 
-                // however we also track the number of uncomitted-operations on the index, and will force a 
-                // flush if the index has had a lot written to it without a flush.
+
+                // TODO: tim: this might seem bad, since an index in
+                // steady-state-of-writes will never get flushed, however we
+                // also track the number of uncomitted-operations on the index,
+                // and will force a flush if the index has had a lot written to
+                // it without a flush.
                 updateLastWriteTime();
             } finally {
                 doneWriting();
@@ -246,7 +294,8 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
 
         }
     }
-    
+
+    @Override
     public List<String> deleteDocuments(List<String> itemIds) throws IOException {
         synchronized(getLock()) {
             beginWriting();
@@ -258,16 +307,18 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
                         mIndexWriter.deleteDocuments(toDelete);
                         // NOTE!  The numDeleted may be < you expect here, the document may
                         // already be deleted and just not be optimized out yet -- some lucene
-                        // APIs (e.g. docFreq) will still return the old count until the indexes 
+                        // APIs (e.g. docFreq) will still return the old count until the indexes
                         // are optimized...
                         if (ZimbraLog.index_add.isDebugEnabled()) {
-                            ZimbraLog.index_add.debug("Deleted index documents for itemId "+itemIdStr);
+                            ZimbraLog.index_add.debug("Deleted index documents for itemId " + itemIdStr);
                         }
                     } catch (IOException ioe) {
-                        ZimbraLog.index_add.debug("deleteDocuments exception on index "+i+" out of "+itemIds.size()+" (id="+itemIds.get(i)+")");
+                        ZimbraLog.index_add.debug("deleteDocuments exception on index " + i +
+                                " out of "+itemIds.size() + " (id=" + itemIds.get(i) + ")");
                         List<String> toRet = new ArrayList<String>(i);
-                        for (int j = 0; j < i; j++)
+                        for (int j = 0; j < i; j++) {
                             toRet.add(itemIds.get(j));
+                        }
                         return toRet;
                     }
                     i++;
@@ -279,30 +330,34 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
         }
     }
 
-    public void deleteIndex() throws IOException
-    {
-        synchronized(getLock()) {        
-            IndexWriter writer = null;
+    @Override
+    public void deleteIndex() throws IOException {
+        synchronized (getLock()) {
             flush();
-            if (ZimbraLog.index_add.isDebugEnabled())
+            if (ZimbraLog.index_add.isDebugEnabled()) {
                 ZimbraLog.index_add.debug("****Deleting index " + mIdxDirectory.toString());
-            
-            String[] files = mIdxDirectory.list();
-            // list method may return null (for FSDirectory if the underlying directory doesn't exist in the filesystem or there are permissions problems). 
+            }
+
+            String[] files = mIdxDirectory.listAll();
+            // list method may return null (for FSDirectory if the underlying
+            // directory doesn't exist in the filesystem or there are
+            // permissions problems).
             if (files == null) {
-                if (ZimbraLog.index_add.isDebugEnabled())
-                    ZimbraLog.index_add.debug("****Deleting index unable to list directory " + mIdxDirectory.toString());
+                if (ZimbraLog.index_add.isDebugEnabled()) {
+                    ZimbraLog.index_add.debug("****Deleting index unable to list directory " +
+                            mIdxDirectory.toString());
+                }
                 return;
             }
-                
+
             for (String file : files) {
                 mIdxDirectory.deleteFile(file);
             }
         }
     }
 
-    private void enumerateTermsForField(String regex, Term firstTerm, TermEnumInterface callback) throws IOException
-    {
+    private void enumerateTermsForField(String regex, Term firstTerm,
+            TermEnumInterface callback) throws IOException {
         synchronized(getLock()) {
             RefCountedIndexSearcher searcher = this.getCountedIndexSearcher();
             try {
@@ -310,12 +365,12 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
 
                 TermEnum terms = iReader.terms(firstTerm);
                 boolean hasDeletions = iReader.hasDeletions();
-                
+
                 // HACK!
                 boolean stripAtBeforeRegex = false;
-                if (callback instanceof DomainEnumCallback) 
+                if (callback instanceof DomainEnumCallback)
                     stripAtBeforeRegex = true;
-                
+
                 Pattern p = null;
                 if (regex != null && regex.length() > 0) {
                     p = Pattern.compile(regex);
@@ -332,14 +387,16 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
                         if (p != null) {
                             String compareTo = cur.text();
                             if (stripAtBeforeRegex)
-                                if (compareTo.length() > 1 && compareTo.charAt(0)=='@')
+                                if (compareTo.length() > 1 && compareTo.charAt(0) == '@') {
                                     compareTo = compareTo.substring(1);
-                            if (!(p.matcher(compareTo).matches()))
+                                }
+                            if (!p.matcher(compareTo).matches()) {
                                 skipIt = true;
+                            }
                         }
-                        
+
                         if (!skipIt) {
-                            // NOTE: the term could exist in docs, but they might all be deleted. Unfortunately this means  
+                            // NOTE: the term could exist in docs, but they might all be deleted. Unfortunately this means
                             // that we need to actually walk the TermDocs enumeration for this document to see if it is
                             // non-empty
                             if ((!hasDeletions) || (iReader.termDocs(cur).next())) {
@@ -352,14 +409,16 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
                 searcher.release();
             }
         }
-        
+
     }
 
     /**
-     * @return TRUE if all tokens were expanded or FALSE if no more tokens could be expanded
+     * @return TRUE if all tokens were expanded
+     *  or FALSE if no more tokens could be expanded
      */
-    public boolean expandWildcardToken(Collection<String> toRet, String field, String token, int maxToReturn) throws ServiceException 
-    {
+    @Override
+    public boolean expandWildcardToken(Collection<String> toRet, String field,
+            String token, int maxToReturn) throws ServiceException {
         // all lucene text should be in lowercase...
         token = token.toLowerCase();
 
@@ -382,14 +441,15 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
                         String curText = cur.text();
 
                         if (curText.startsWith(token)) {
-                            if (toRet.size() >= maxToReturn) 
+                            if (toRet.size() >= maxToReturn) {
                                 return false;
-
+                            }
                             // we don't care about deletions, they will be filtered later
                             toRet.add(cur.text());
                         } else {
-                            if (curText.compareTo(token) > 0)
+                            if (curText.compareTo(token) > 0) {
                                 break;
+                            }
                         }
                     }
                 } while (terms.next());
@@ -402,12 +462,13 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
             throw ServiceException.FAILURE("Caught IOException opening index", e);
         }
     }
-    
+
     /**
-     * Force all outstanding index writes to go through. Do not return until complete 
+     * Force all outstanding index writes to go through. Do not return until complete
      */
+    @Override
     public void flush() {
-        synchronized(getLock()) {
+        synchronized (getLock()) {
             sIndexWritersCache.flush(this);
             sIndexReadersCache.removeIndexReader(this);
         }
@@ -418,42 +479,53 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
      * @param collection - Strings which correspond to all of the domain terms stored in a given field.
      * @throws IOException
      */
-    public void getDomainsForField(String fieldName, String regex, Collection<BrowseTerm> collection) throws IOException
-    {
-        if (regex == null)
+    @Override
+    public void getDomainsForField(String fieldName, String regex,
+            Collection<BrowseTerm> collection) throws IOException {
+        if (regex == null) {
             regex = "";
-        enumerateTermsForField(regex, new Term(fieldName,""),new DomainEnumCallback(collection));
+        }
+        enumerateTermsForField(regex, new Term(fieldName,""),
+                new DomainEnumCallback(collection));
     }
-    
+
     /**
      * @param collection - Strings which correspond to all of the attachment types in the index
      * @throws IOException
      */
-    public void getAttachments(String regex, Collection<BrowseTerm> collection) throws IOException
-    {
-        if (regex == null)
+    @Override
+    public void getAttachments(String regex, Collection<BrowseTerm> collection)
+        throws IOException {
+
+        if (regex == null) {
             regex = "";
-        enumerateTermsForField(regex, new Term(LuceneFields.L_ATTACHMENTS, ""), new TermEnumCallback(collection));
+        }
+        enumerateTermsForField(regex, new Term(LuceneFields.L_ATTACHMENTS, ""),
+                new TermEnumCallback(collection));
     }
 
-    public void getObjects(String regex, Collection<BrowseTerm> collection) throws IOException
-    {
-        if (regex == null)
+    @Override
+    public void getObjects(String regex, Collection<BrowseTerm> collection)
+        throws IOException {
+
+        if (regex == null) {
             regex = "";
-        enumerateTermsForField(regex, new Term(LuceneFields.L_OBJECTS, ""), new TermEnumCallback(collection));
+        }
+        enumerateTermsForField(regex, new Term(LuceneFields.L_OBJECTS, ""),
+                new TermEnumCallback(collection));
     }
 
-  
+
     /**
-     * @return A refcounted RefCountedIndexSearcher for this index.  Caller is responsible for 
+     * @return A refcounted RefCountedIndexSearcher for this index.  Caller is responsible for
      *            calling RefCountedIndexReader.release() on the index before allowing it to go
      *            out of scope (otherwise a RuntimeException will occur)
-     * 
+     *
      * @throws IOException
      */
-    public RefCountedIndexSearcher getCountedIndexSearcher() throws IOException
-    {
-        synchronized(getLock()) {        
+    @Override
+    public RefCountedIndexSearcher getCountedIndexSearcher() throws IOException {
+        synchronized(getLock()) {
             RefCountedIndexSearcher searcher = null;
             RefCountedIndexReader cReader = getCountedIndexReader();
             searcher = new RefCountedIndexSearcher(cReader);
@@ -461,27 +533,38 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
         }
     }
 
-    public String toString() { return "LuceneIndex at "+mIdxDirectory.toString(); }
+    @Override
+    public String toString() {
+        return "LuceneIndex at " + mIdxDirectory.toString();
+    }
 
-    long getLastWriteTime() { return mLastWriteTime; }
+    @Override
+    long getLastWriteTime() {
+        return mLastWriteTime;
+    }
 
-    private final Object getLock() { return mMbidx.getLock(); }
+    private final Object getLock() {
+        return mMbidx.getLock();
+    }
 
+    @Override
     public Sort getSort(SortBy searchOrder) {
-        if (searchOrder == null || searchOrder == SortBy.NONE)
+        if (searchOrder == null || searchOrder == SortBy.NONE) {
             return null;
-        
+        }
+
         synchronized(getLock()) {
             if ((mLatestSortBy == null) ||
-                            ((searchOrder.getCriterion() != mLatestSortBy.getCriterion()) ||
-                                            (searchOrder.getDirection() != mLatestSortBy.getDirection()))) {
+                    ((searchOrder.getCriterion() != mLatestSortBy.getCriterion()) ||
+                            (searchOrder.getDirection() != mLatestSortBy.getDirection()))) {
                 String field;
                 int type;
                 boolean reverse = false;;
-                
-                if (searchOrder.getDirection() == SortDirection.DESCENDING)
+
+                if (searchOrder.getDirection() == SortDirection.DESCENDING) {
                     reverse = true;
-                
+                }
+
                 switch (searchOrder.getCriterion()) {
                     case NAME:
                     case NAME_NATURAL_ORDER:
@@ -505,10 +588,10 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
                         reverse = true;;
                         break;
                 }
-                
+
                 mLatestSort = new Sort(new SortField(field, type, reverse));
                 mLatestSortBy = searchOrder;
-//                
+//
 //                switch (searchOrder) {
 //                    case NONE:
 //                        return null;
@@ -554,17 +637,19 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
             return mLatestSort;
         }
     }
-    
-    public List<SpellSuggestQueryInfo.Suggestion> suggestSpelling(String field, String token) throws ServiceException {
+
+    @Override
+    public List<SpellSuggestQueryInfo.Suggestion> suggestSpelling(String field,
+            String token) throws ServiceException {
         LinkedList<SpellSuggestQueryInfo.Suggestion> toRet = null;
 
         token = token.toLowerCase();
-        
+
         try {
             RefCountedIndexSearcher searcher = this.getCountedIndexSearcher();
             try {
                 IndexReader iReader = searcher.getReader();
-                
+
                 Term term = new Term(field, token);
                 int freq = iReader.docFreq(term);
                 int numDocs = iReader.numDocs();
@@ -583,7 +668,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
                             if (cur != null) {
                                 String curText = cur.text();
                                 int curDiff = editDistance(curText, token, curText.length(), token.length());
-                                
+
                                 SpellSuggestQueryInfo.Suggestion sug = new SpellSuggestQueryInfo.Suggestion();
                                 sug.mStr = curText;
                                 sug.mEditDist = curDiff;
@@ -607,7 +692,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
     @Override
     protected void finalize() throws Throwable {
         try {
-            if (mIdxDirectory != null) 
+            if (mIdxDirectory != null)
                 mIdxDirectory.close();
             mIdxDirectory = null;
         } finally {
@@ -616,64 +701,76 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
     }
 
     /**
-    Levenshtein distance also known as edit distance is a measure of similiarity
-    between two strings where the distance is measured as the number of character 
-    deletions, insertions or substitutions required to transform one string to 
-    the other string. 
-    <p>This method takes in four parameters; two strings and their respective 
-    lengths to compute the Levenshtein distance between the two strings.
-    The result is returned as an integer.
-     */ 
+     * Levenshtein distance also known as edit distance is a measure of
+     * similiarity between two strings where the distance is measured as the
+     * number of character deletions, insertions or substitutions required to
+     * transform one string to the other string.
+     * <p>
+     * This method takes in four parameters; two strings and their respective
+     * lengths to compute the Levenshtein distance between the two strings.
+     * The result is returned as an integer.
+     */
     private final int editDistance(String s, String t, int n, int m) {
         if (e.length <= n || e[0].length <= m) {
-            e = new int[Math.max(e.length, n+1)][Math.max(e[0].length, m+1)];
+            e = new int[Math.max(e.length, n + 1)][Math.max(e[0].length, m + 1)];
         }
         int d[][] = e; // matrix
         int i; // iterates through s
         int j; // iterates through t
         char s_i; // ith character of s
 
-        if (n == 0) return m;
-        if (m == 0) return n;
+        if (n == 0) {
+            return m;
+        }
+        if (m == 0) {
+            return n;
+        }
 
         // init matrix d
-        for (i = 0; i <= n; i++) d[i][0] = i;
-        for (j = 0; j <= m; j++) d[0][j] = j;
+        for (i = 0; i <= n; i++) {
+            d[i][0] = i;
+        }
+        for (j = 0; j <= m; j++) {
+            d[0][j] = j;
+        }
 
         // start computing edit distance
         for (i = 1; i <= n; i++) {
             s_i = s.charAt(i - 1);
             for (j = 1; j <= m; j++) {
-                if (s_i != t.charAt(j-1))
-                    d[i][j] = min(d[i-1][j], d[i][j-1], d[i-1][j-1])+1;
-                else d[i][j] = min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]);
+                if (s_i != t.charAt(j - 1)) {
+                    d[i][j] = min(d[i - 1][j], d[i][j - 1], d[i - 1][j - 1]) + 1;
+                } else {
+                    d[i][j] = min(d[i - 1][j]+1, d[i][j - 1] + 1, d[i - 1][j - 1]);
+                }
             }
         }
 
         // we got the result!
         return d[n][m];
     }
-    
-    private static final int MAX_TERMS_PER_QUERY = LC.zimbra_index_lucene_max_terms_per_query.intValue();
-    
+
+    private static final int MAX_TERMS_PER_QUERY =
+        LC.zimbra_index_lucene_max_terms_per_query.intValue();
+
     /**
-     * @return A refcounted IndexReader for this index.  Caller is responsible for 
+     * @return A refcounted IndexReader for this index.  Caller is responsible for
      *            calling IndexReader.release() on the index before allowing it to go
      *            out of scope (otherwise a RuntimeException will occur)
-     * 
+     *
      * @throws IOException
      */
-    private RefCountedIndexReader getCountedIndexReader() throws IOException
-    {
+    private RefCountedIndexReader getCountedIndexReader() throws IOException {
         BooleanQuery.setMaxClauseCount(MAX_TERMS_PER_QUERY);
 
         synchronized(getLock()) {
-        	sIndexWritersCache.flush(this); // flush writer if writing
-        	
+            sIndexWritersCache.flush(this); // flush writer if writing
+
             RefCountedIndexReader toRet = sIndexReadersCache.getIndexReader(this);
-            if (toRet != null)
+            if (toRet != null) {
                 return toRet;
-            
+            }
+
             IndexReader reader = null;
             try {
                 reader = IndexReader.open(mIdxDirectory);
@@ -699,21 +796,21 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
                     throw e;
                 }
             }
-            
+
             synchronized(mOpenReaders) {
                 toRet = new RefCountedIndexReader(this, reader); // refcount starts at 1
                 mOpenReaders.add(toRet);
             }
-                
+
             sIndexReadersCache.putIndexReader(this, toRet); // addrefs if put in cache
-            return toRet; 
+            return toRet;
         }
     }
-    
+
     /**
-     * Check to see if it is OK for us to create an index in the specified 
+     * Check to see if it is OK for us to create an index in the specified
      * directory.
-     * 
+     *
      * @param indexDir
      * @return TRUE if the index directory is empty or doesn't exist,
      *         FALSE if the index directory exists and has files in it or if we cannot list files in the directory
@@ -725,19 +822,19 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
             indexDir.mkdirs();
             return true;
         }
-        
+
         // Empty directory is okay, but a directory with any files
         // implies index corruption.
-        
+
         File[] files = indexDir.listFiles();
-        
+
         // if files is null here, we are likely running into file permission issue
         // log a WARN and return false
         if (files == null) {
             ZimbraLog.index.warn("Could not list files in directory " + indexDir.getAbsolutePath());
             return false;
         }
-        
+
         int numFiles = 0;
         for (int i = 0; i < files.length; i++) {
             File f = files[i];
@@ -748,27 +845,28 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
         }
         return (numFiles <= 0);
     }
-    
+
     private void doneWriting() throws IOException {
         assert(Thread.holdsLock(getLock()));
-        assert(beginWritingNestLevel>0);
-                
+        assert(beginWritingNestLevel > 0);
+
+
         /*
          * assertion is by default off in production
-         * 
-         * If beginWritingNestLevel is 0 before the decrement, the corresponding 
-         * beginWriting probably got an IOException so beginWritingNestLevel didn't 
-         * get incremented.  
-         * 
-         * If assertion is off, we really don't want to proceed here, otherwise the 
-         * beginWritingNestLevel will become negative, which is a situation that 
-         * cannot be recovered until a server restart. 
+         *
+         * If beginWritingNestLevel is 0 before the decrement, the corresponding
+         * beginWriting probably got an IOException so beginWritingNestLevel didn't
+         * get incremented.
+         *
+         * If assertion is off, we really don't want to proceed here, otherwise the
+         * beginWritingNestLevel will become negative, which is a situation that
+         * cannot be recovered until a server restart.
          */
         if (beginWritingNestLevel == 0) {
             ZimbraLog.index.warn("beginWritingNestLevel is 0 in LuceneIndex.doneWriting, flushing skipped.");
             return;
         }
-            
+
         beginWritingNestLevel--;
         if (beginWritingNestLevel == 0) {
             if (mNumUncommittedItems > sMaxUncommittedOps) {
@@ -783,129 +881,137 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
         }
     }
 
+    @Override
     public void beginWriteOperation() throws IOException {
         assert(Thread.holdsLock(getLock()));
         beginWriting();
     }
-    
+
+    @Override
     public void endWriteOperation() throws IOException {
         assert(Thread.holdsLock(getLock()));
         doneWriting();
     }
-    
-    private int beginWritingNestLevel = 0;
 
-    private void beginWriting() throws IOException
-    {
+    private void beginWriting() throws IOException {
         assert(Thread.holdsLock(getLock()));
 
         if (beginWritingNestLevel == 0) {
             // uncache the IndexReader if it is cached
             sIndexReadersCache.removeIndexReader(this);
-            
             sIndexWritersCache.beginWriting(this);
         }
         beginWritingNestLevel++;
     }
-    
+
+    @Override
     void doWriterOpen() throws IOException {
-        if (mIndexWriter != null)
+        if (mIndexWriter != null) {
             return; // already open!
-        
+        }
+
         assert(Thread.holdsLock(getLock()));
 
         boolean useBatchIndexing;
         try {
             useBatchIndexing = mMbidx.useBatchedIndexing();
         } catch (ServiceException e) {
-            throw new IOException("Caught IOException checking BatchedIndexing flag "+e);
+            throw new IOException("Caught IOException checking BatchedIndexing flag " + e);
         }
-        
+
         final LuceneConfigSettings.Config config;
         if (useBatchIndexing) {
             config = LuceneConfigSettings.batched;
         } else {
             config = LuceneConfigSettings.nonBatched;
         }
-        
-        try {
-//          ZimbraLog.index.debug("MI"+this.toString()+" Opening IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-            mIndexWriter = new IndexWriter(mIdxDirectory, config.autocommit, mMbidx.getAnalyzer(), false, null);
-            if (ZimbraLog.index_lucene.isDebugEnabled())
-                mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
-//          ZimbraLog.index.debug("MI"+this.toString()+" Opened IndexWriter(1) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
 
-        } catch (IOException e1) {
-            // 
+        try {
+            // TODO: In 3.0, IndexWriter will no longer accept autoCommit=true.
+            // Call commit() yourself when needed.
+            mIndexWriter = new IndexWriter(mIdxDirectory, mMbidx.getAnalyzer(),
+                    false, IndexWriter.MaxFieldLength.LIMITED);
+            if (ZimbraLog.index_lucene.isDebugEnabled()) {
+                mIndexWriter.setInfoStream(new PrintStream(
+                        new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
+            }
+        } catch (IOException e) {
+            //
             // the index (the segments* file in particular) probably didn't exist when new IndexWriter
             // was called in the try block, we would get a FileNotFoundException for that case.
             // If the directory is empty, this is the very first index write for this this mailbox
             // (or the index might be deleted), the FileNotFoundException is benign.
             //
-            // If the directory is empty, try again with the create flag set to true. 
-            // 
+            // If the directory is empty, try again with the create flag set to true.
+            //
             // If e1 is other IOException, our second try will likely throw another IOException.
             // If the directory is not empty, we throw an IOException and set e1 as the cause.
             // For both case, the IOException will be logged at outer code.
             //
             // Log it as at DEBUG level instead of ERROR here.
             //
-            ZimbraLog.index_add.debug("Caught exception trying to open index: "+e1, e1);
+            ZimbraLog.index_add.debug("Caught exception trying to open index: " + e, e);
             File indexDir  = mIdxDirectory.getFile();
             if (indexDirIsEmpty(indexDir)) {
-               
-                
-//              ZimbraLog.index.debug("MI"+this.toString()+" Opening IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                mIndexWriter = new IndexWriter(mIdxDirectory, config.autocommit, mMbidx.getAnalyzer(), true, null);
-                if (ZimbraLog.index_lucene.isDebugEnabled())
-                    mIndexWriter.setInfoStream(new PrintStream(new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
-                
-//              ZimbraLog.index.debug("MI"+this.toString()+" Opened IndexWriter(2) "+ writer+" for "+this+" dir="+mIdxDirectory.toString());
-                if (mIndexWriter == null) 
-                    throw new IOException("Failed to open IndexWriter in directory "+indexDir.getAbsolutePath());
+                mIndexWriter = new IndexWriter(mIdxDirectory, mMbidx.getAnalyzer(),
+                        true, IndexWriter.MaxFieldLength.LIMITED);
+                if (ZimbraLog.index_lucene.isDebugEnabled()) {
+                    mIndexWriter.setInfoStream(new PrintStream(
+                            new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
+                }
+                if (mIndexWriter == null) {
+                    throw new IOException("Failed to open IndexWriter in directory " +
+                            indexDir.getAbsolutePath());
+                }
             } else {
                 mIndexWriter = null;
-                IOException ioe = new IOException("Could not create index " + mIdxDirectory.toString() + " (directory already exists)");
-                ioe.initCause(e1);
+                IOException ioe = new IOException("Could not create index " +
+                        mIdxDirectory.toString() + " (directory already exists)");
+                ioe.initCause(e);
                 throw ioe;
             }
         }
 
-        if (config.useSerialMergeScheduler)
+        if (config.useSerialMergeScheduler) {
             mIndexWriter.setMergeScheduler(new SerialMergeScheduler());
-        
+        }
+
         mIndexWriter.setMaxBufferedDocs(config.maxBufferedDocs);
-        mIndexWriter.setRAMBufferSizeMB(((double)config.ramBufferSizeKB)/1024.0);
+        mIndexWriter.setRAMBufferSizeMB(((double) config.ramBufferSizeKB) / 1024.0);
         mIndexWriter.setMergeFactor(config.mergeFactor);
-        
+
         if (config.useDocScheduler) {
-            LogDocMergePolicy policy = new LogDocMergePolicy();
+            LogDocMergePolicy policy = new LogDocMergePolicy(mIndexWriter);
             mIndexWriter.setMergePolicy(policy);
             policy.setUseCompoundDocStore(config.useCompoundFile);
             policy.setUseCompoundFile(config.useCompoundFile);
             policy.setMergeFactor(config.mergeFactor);
-            policy.setMinMergeDocs((int)config.minMerge);
-            if (config.maxMerge != Integer.MAX_VALUE) 
-                policy.setMaxMergeDocs((int)config.maxMerge);
+            policy.setMinMergeDocs((int) config.minMerge);
+            if (config.maxMerge != Integer.MAX_VALUE) {
+                policy.setMaxMergeDocs((int) config.maxMerge);
+            }
         } else {
-            LogByteSizeMergePolicy policy = new LogByteSizeMergePolicy();
+            LogByteSizeMergePolicy policy = new LogByteSizeMergePolicy(mIndexWriter);
             mIndexWriter.setMergePolicy(policy);
             policy.setUseCompoundDocStore(config.useCompoundFile);
             policy.setUseCompoundFile(config.useCompoundFile);
             policy.setMergeFactor(config.mergeFactor);
-            policy.setMinMergeMB(((double)config.minMerge)/1024.0);
-            if (config.maxMerge != Integer.MAX_VALUE)
-                policy.setMaxMergeMB(((double)config.maxMerge)/1024.0);
+            policy.setMinMergeMB(((double) config.minMerge) / 1024.0);
+            if (config.maxMerge != Integer.MAX_VALUE) {
+                policy.setMaxMergeMB(((double) config.maxMerge) / 1024.0);
+            }
         }
     }
-    
+
+    @Override
     void doWriterClose() {
         if (mIndexWriter == null) {
             return;
         }
 
-        if (ZimbraLog.index_add.isDebugEnabled())
+        if (ZimbraLog.index_add.isDebugEnabled()) {
             ZimbraLog.index_add.debug("Closing IndexWriter " + mIndexWriter + " for " + this);
+        }
 
         IndexWriter writer = mIndexWriter;
         mIndexWriter = null;
@@ -917,7 +1023,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
             success = true;
         } catch (IOException e) {
             ZimbraLog.index_add.error("Caught Exception " + e + " in LuceneIndex.closeIndexWriter", e);
-            // fall through to finally here with success=false 
+            // fall through to finally here with success=false
         } finally {
             if (mNumUncommittedItems > 0) {
                 assert(mHighestUncomittedModContent.getChangeId() > 0);
@@ -928,85 +1034,66 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter implements ILucen
         }
     }
 
-    private void updateLastWriteTime() { mLastWriteTime = System.currentTimeMillis(); }
+    private void updateLastWriteTime() {
+        mLastWriteTime = System.currentTimeMillis();
+    }
 
-    private static IndexReadersCache sIndexReadersCache;
-    private static IIndexWritersCache sIndexWritersCache;
-    
-    /**
-     * If documents are being constantly added to an index, then it will stay at the front of the LRU cache
-     * and will never flush itself to disk: this setting specifies the maximum number of writes we will allow
-     * to the index before we force a flush.  Higher values will improve batch-add performance, at the cost
-     * of longer-lived transactions in the redolog.
-     */
-    private static int sMaxUncommittedOps;
-    
-    /**
-     * This static array saves us from the time required to create a new array
-     * everytime editDistance is called.
-     */
-    private int e[][] = new int[1][1];
-    private Z23FSDirectory mIdxDirectory = null;
-    
-    private IndexWriter mIndexWriter;
-    
-    private volatile long mLastWriteTime = 0;
-    
-    private Sort mLatestSort = null;
-    private SortBy mLatestSortBy = null;
-    private MailboxIndex mMbidx;
-    private int mNumUncommittedItems = 0;
-    private SyncToken mHighestUncomittedModContent = new SyncToken(0);
-    
-    
     static abstract class DocEnumInterface {
-        void maxDocNo(int num) {};
+        void maxDocNo(int num) {
+        };
         abstract boolean onDocument(Document doc, boolean isDeleted);
     }
+
     static class DomainEnumCallback implements TermEnumInterface {
         DomainEnumCallback(Collection<BrowseTerm> collection) {
             mCollection = collection;
         }
 
+        @Override
         public void onTerm(Term term, int docFreq) {
             String text = term.text();
             if (text.length() > 1 && text.charAt(0) == '@') {
                 mCollection.add(new BrowseTerm(text.substring(1), docFreq));
-            }           
+            }
         }
         private Collection<BrowseTerm> mCollection;
     }
+
     static class TermEnumCallback implements TermEnumInterface {
         TermEnumCallback(Collection<BrowseTerm> collection) {
             mCollection = collection;
         }
 
+        @Override
         public void onTerm(Term term, int docFreq) {
             String text = term.text();
             if (text.length() > 1) {
                 mCollection.add(new BrowseTerm(text, docFreq));
-            }           
+            }
         }
         private Collection<BrowseTerm> mCollection;
     }
+
     interface TermEnumInterface {
-        abstract void onTerm(Term term, int docFreq); 
+        abstract void onTerm(Term term, int docFreq);
     }
-    
+
+    @Override
     public void onReaderClose(RefCountedIndexReader ref) {
         synchronized(mOpenReaders) {
             mOpenReaders.remove(ref);
         }
     }
-    
+
     private List<RefCountedIndexReader> mOpenReaders = new ArrayList<RefCountedIndexReader>();
-    
+
+    @Override
     public IndexReader reopenReader(IndexReader reader) throws IOException {
         return reader.reopen();
     }
-    
+
     long getMailboxId() {
         return mMbidx.getMailboxId();
     }
-    
+
 }
