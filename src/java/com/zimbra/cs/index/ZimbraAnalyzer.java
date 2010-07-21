@@ -48,17 +48,23 @@ import com.zimbra.common.service.ServiceException;
  * @author ysasaki
  */
 public class ZimbraAnalyzer extends StandardAnalyzer {
+    private static final ZimbraAnalyzer sInstance = new ZimbraAnalyzer();
+
+    private static final HashMap<String, Analyzer> sAnalyzerMap =
+        new HashMap<String, Analyzer>();
 
     protected ZimbraAnalyzer() {
         super(LuceneIndex.VERSION);
     }
 
     /***
-     * Returns the Analyzer to be used
+     * Extension analyzers.
+     * <p>
+     * Extension analyzers must call {@link #registerAnalyzer(String, Analyzer)}
+     * on startup.
      *
      * @param name
-     * @return
-     * @throws ServiceException
+     * @return analyzer
      */
     public static Analyzer getAnalyzer(String name) {
         Analyzer toRet = sAnalyzerMap.get(name);
@@ -68,24 +74,15 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
         return toRet;
     }
 
-    //
-    // We maintain a single global instance for our default analyzer,
-    // since it is completely thread safe
-    private static final ZimbraAnalyzer sInstance = new ZimbraAnalyzer();
-
+    /**
+     * We maintain a single global instance for our default analyzer, since it
+     * is completely thread safe.
+     *
+     * @return singleton
+     */
     public static Analyzer getDefaultAnalyzer() {
         return sInstance;
     }
-
-    ///////////////////////
-    //
-    // Extension Analyzer Map
-    //
-    // Extension analyzers must call registerAnalyzer() on startup.
-    //
-    private static HashMap<String, Analyzer> sAnalyzerMap =
-        new HashMap<String, Analyzer>();
-
 
     /**
      * A custom Lucene Analyzer is registered with this API, usually by a Zimbra
@@ -115,7 +112,6 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
 
         sAnalyzerMap.put(name, analyzer);
     }
-
 
     /**
      * Remove a previously-registered custom Analyzer from the system.
@@ -156,7 +152,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
      * "Tokenizer" which returns the entire input as a single token. Used for
      * KEYWORD fields.
      */
-    protected static class DontTokenizer extends CharTokenizer {
+    static class DontTokenizer extends CharTokenizer {
 
         DontTokenizer(Reader input) {
             super(input);
@@ -226,11 +222,8 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
      * <p>
      * "fieldname=Val1 val2 val3\nfieldname2=val2_1 val2_2 val2_3\n" becomes
      * "fieldname:Val1 fieldname:val2 fieldname:val3\nfieldname2:val2_1 fieldname2:val2_2 fieldname2:val2_3"
-     *
-     * TODO: This class was reimplemented accommodating to the new TokenStream
-     * API. Need to write unit tests.
      */
-    protected static class FieldTokenStream extends Tokenizer {
+    static class FieldTokenStream extends Tokenizer {
         protected static final char FIELD_SEPARATOR = ':';
         protected static final char EOL = '\n';
 
@@ -239,7 +232,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
         private List<Token> mValues = new ArrayList<Token>();
         private TermAttribute termAttr = addAttribute(TermAttribute.class);
 
-        public FieldTokenStream(Reader reader) {
+        FieldTokenStream(Reader reader) {
             super(reader);
         }
 
@@ -426,11 +419,8 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
 
     /**
      * numbers separated by ' ' or '\t'
-     *
-     * TODO: This class was reimplemented accommodating to the new TokenStream
-     * API. Need to write unit tests.
      */
-    protected static class NumberTokenStream extends Tokenizer {
+    static class NumberTokenStream extends Tokenizer {
         protected Reader mReader;
         protected int mEndPos = 0;
         private TermAttribute termAttr = addAttribute(TermAttribute.class);
@@ -484,11 +474,8 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
     /**
      * NumberTokenStream converted into ascii-sortable (base-36 ascii encoded)
      * numbers.
-     *
-     * TODO: This class was reimplemented accommodating to the new TokenStream
-     * API. Need to write unit tests.
      */
-    public static class SizeTokenFilter extends TokenFilter {
+    static class SizeTokenFilter extends TokenFilter {
         private TermAttribute termAttr = addAttribute(TermAttribute.class);
 
         SizeTokenFilter(TokenStream in) {
@@ -553,7 +540,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
      * and "text" and "plain", "foo@bar.com" as "foo@bar.com" and "foo" and
      * "@bar.com"
      */
-    public static abstract class MultiTokenFilter extends TokenFilter {
+    static abstract class MultiTokenFilter extends TokenFilter {
         // returns the next split point
         protected abstract int getNextSplit(String s);
 
@@ -668,9 +655,6 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
     }
 
     /***
-     *
-     * @author tim
-     *
      * Email address tokenizer.  For example:
      *   "Tim Brennan" <tim@bar.foo.com>
      * Is tokenized as:
@@ -680,8 +664,10 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
      *    tim@foo.com
      *    @foo.com
      *    foo  -- for bug 30638
+     *
+     * @author tim
      */
-    public static class AddressTokenFilter extends MultiTokenFilter {
+    static class AddressTokenFilter extends MultiTokenFilter {
 
         /*
          * bug 44191
@@ -744,14 +730,16 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
         // false: pre-change-119098
         boolean mWantMainDomain;
 
-        public AddressTokenFilter(TokenFilter in, boolean wantMainDomain) {
+        Queue<Token> mSplitStrings;
+
+        AddressTokenFilter(TokenFilter in, boolean wantMainDomain) {
             super(in);
             mIncludeSeparatorChar = true;
             mMaxSplits = 4;
             mWantMainDomain = wantMainDomain;
         }
 
-        public AddressTokenFilter(TokenStream in, boolean wantMainDomain) {
+        AddressTokenFilter(TokenStream in, boolean wantMainDomain) {
             super(in);
             mIncludeSeparatorChar = true;
             mMaxSplits = 4;
@@ -762,8 +750,6 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
         protected int getNextSplit(String s) {
             return s.indexOf("@");
         }
-
-        Queue<Token> mSplitStrings = null;
 
         /**
          * On first call, we have one toplevel 'token' from our parent filter
@@ -855,9 +841,9 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
         }
     }
 
-    public static class FilenameTokenizer extends CharTokenizer {
+    static class FilenameTokenizer extends CharTokenizer {
 
-        public FilenameTokenizer(Reader reader) {
+        FilenameTokenizer(Reader reader) {
             super(reader);
         }
 
@@ -885,9 +871,9 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
     /**
      * Tokenizer for email addresses. Skips & Splits at \r\n<>\",\'
      */
-    public static class AddrCharTokenizer extends CharTokenizer {
+    static class AddrCharTokenizer extends CharTokenizer {
 
-        public AddrCharTokenizer(Reader reader) {
+        AddrCharTokenizer(Reader reader) {
             super(reader);
         }
 
@@ -917,17 +903,17 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
         }
     }
 
-    private static class ContactDataFilter extends TokenFilter {
+    /**
+     * Swallow '.'. Include '.' in a token only when it is not the only char
+     * in the token.
+     */
+    static class ContactDataFilter extends TokenFilter {
         private TermAttribute termAttr = addAttribute(TermAttribute.class);
 
-        public ContactDataFilter(AddrCharTokenizer input) {
+        ContactDataFilter(AddrCharTokenizer input) {
             super(input);
         }
 
-        /**
-         * Swallow '.'. Include '.' in a token only when it is not the only char
-         * in the token.
-         */
         @Override
         public boolean incrementToken() throws IOException {
             while (input.incrementToken()) {
@@ -937,16 +923,14 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
             }
             return false;
         }
-
     }
 
     /**
+     * image/jpeg --> "image/jpeg" and "image"
      *
      * @author tim
-     *
-     * image/jpeg --> "image/jpeg" and "image"
      */
-    public static class MimeTypeTokenFilter extends MultiTokenFilter {
+    static class MimeTypeTokenFilter extends MultiTokenFilter {
 
         MimeTypeTokenFilter(TokenFilter in) {
             super(in);
@@ -969,164 +953,4 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
         }
     }
 
-    public static class TestTokenStream extends TokenStream {
-        private int curPos = 0;
-        private String[] mStringList;
-        private TermAttribute termAttr = addAttribute(TermAttribute.class);
-        private OffsetAttribute offsetAttr = addAttribute(OffsetAttribute.class);
-
-        TestTokenStream(String[] stringlist) {
-            mStringList = stringlist;
-        }
-
-        @Override
-        public boolean incrementToken() throws IOException {
-            curPos++;
-            if (curPos > mStringList.length) {
-                return false;
-            }
-            termAttr.setTermBuffer(mStringList[curPos - 1]);
-            offsetAttr.setOffset(0, mStringList[curPos].length());
-            return true;
-        }
-
-    }
-
-    private static void testTokenizer(TokenStream tokenStream, String input,
-            String[] expected) throws IOException {
-        System.out.println("Tokenizer: " + tokenStream.getClass().getName());
-        System.out.println("Input string: " + input);
-
-        TermAttribute termAttr = tokenStream.addAttribute(TermAttribute.class);
-
-        int i = 0;
-        boolean ok = true;
-
-        tokenStream.reset();
-        while (tokenStream.incrementToken()) {
-            System.out.println("    " + termAttr.term());
-
-            if (expected != null) {
-                if (i < expected.length) {
-                    if (!expected[i].equals(termAttr.term())) {
-                        ok = false;
-                    }
-                } else {
-                    ok = false;
-                }
-                i++;
-            }
-
-        }
-        tokenStream.end();
-        tokenStream.close();
-
-        System.out.println("OK=" + ok);
-        System.out.println();
-    }
-
-    private static void testTokenizers(String input, String[] expected) throws Exception {
-        System.out.println("\n====================");
-        testTokenizer(new AddrCharTokenizer(new StringReader(input)), input, expected);
-        testTokenizer(new ContactDataFilter(new AddrCharTokenizer(new StringReader(input))), input, expected);
-    }
-
-    private static void testTokenizers() throws Exception {
-        testTokenizers("all-snv", new String[]{"all-snv"});
-        testTokenizers(".", new String[]{"."});
-        testTokenizers(".. .", new String[]{"..", "."});
-        testTokenizers(".abc", new String[]{".abc"});
-        testTokenizers("a", new String[]{"a"});
-        testTokenizers("test.com", new String[]{"test.com"});
-        testTokenizers("user1@zim", new String[]{"user1@zim"});
-        testTokenizers("user1@zimbra.com", new String[]{"user1@zimbra.com"});
-    }
-
-    //TODO: Convert this to JUnit
-    public static void main(String[] args) throws Exception {
-
-        ZimbraAnalyzer analyzer = new ZimbraAnalyzer();
-        String str = "DONOTREPLY@zimbra.com tim@foo.com \"Tester Address\" <test.address@mail.nnnn.com>, image/jpeg, text/plain, text/foo/bar, tim (tim@foo.com),bugzilla-daemon@eric.example.zimbra.com, zug zug [zug@gug.com], Foo.gub, \"My Mom\" <mmm@nnnn.com>,asd foo bar aaa/bbb ccc/ddd/eee fff@ggg.com hhh@iiii";
-        {
-            System.out.print("AddressTokenFilter:\n-------------------------");
-            StringReader reader = new StringReader(str);
-
-            TokenStream filter1 = analyzer.tokenStream(LuceneFields.L_H_FROM, reader);
-            TermAttribute termAttr = filter1.addAttribute(TermAttribute.class);
-            while (filter1.incrementToken()) {
-                System.out.println("    " + termAttr.toString());
-            }
-        }
-
-        {
-            String src = "\"Tim Brown\" <first@domain.com>";
-            String concat = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, src);
-
-            System.out.println("SRC="+src+" OUT=\""+concat+"\"");
-        }
-
-        {
-            String src = "dharma@fdharma.com";
-            String concat = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_FROM, src);
-
-            System.out.println("SRC="+src+" OUT=\""+concat+"\"");
-        }
-
-
-        {
-            System.out.print("\nATTACHMENTS: MimeTypeTokenFilter:\n-------------------------");
-            StringReader reader = new StringReader(str);
-            TokenStream filter1 = analyzer.tokenStream(LuceneFields.L_ATTACHMENTS, reader);
-
-            TermAttribute termAttr = filter1.addAttribute(TermAttribute.class);
-            while (filter1.incrementToken()) {
-                System.out.println("    " + termAttr.term());
-            }
-        }
-        {
-            System.out.print("\nTYPE: MimeTypeTokenFilter:\n-------------------------");
-            StringReader reader = new StringReader(str);
-            TokenStream filter1 = analyzer.tokenStream(LuceneFields.L_MIMETYPE, reader);
-
-            TermAttribute termAttr = filter1.addAttribute(TermAttribute.class);
-            while (filter1.incrementToken()) {
-                System.out.println("    " + termAttr.term());
-            }
-        }
-        {
-            str = "123 26 1000000 100000000 1,000,000,000 1,000,000,000,000,000";
-            System.out.println("\nMimeTypeTokenFilter:\n-------------------------");
-            StringReader reader = new StringReader(str);
-            TokenStream filter1 = analyzer.tokenStream(LuceneFields.L_SORT_SIZE, reader);
-
-            TermAttribute termAttr = filter1.addAttribute(TermAttribute.class);
-            while (filter1.incrementToken()) {
-                System.out.println("    " + termAttr.term());
-            }
-        }
-        {
-            str = "test1:val1 val2 val3    val4-test\t  val5" +
-                    "\r\n#test2:2val1 2val2:_123 2val3\ntest3:zzz\n#calendarItemClass:public";
-            System.out.println("\nFieldTokenStream:\n-------------------------");
-            StringReader reader = new StringReader(str);
-            TokenStream filter1 = analyzer.tokenStream(LuceneFields.L_FIELD, reader);
-
-            TermAttribute termAttr = filter1.addAttribute(TermAttribute.class);
-            while (filter1.incrementToken()) {
-                System.out.println("    " + termAttr.term());
-            }
-        }
-        {
-            String src = "This is my-filename.test.pdf";
-            String concat = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_FILENAME, src);
-
-            System.out.println("SRC="+src+" OUT=\""+concat+"\"");
-        }
-
-        {
-            testTokenizers();
-        }
-
-    }
 }
-
