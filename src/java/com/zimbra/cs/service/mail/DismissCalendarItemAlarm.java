@@ -28,6 +28,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.DocumentHandler;
@@ -81,23 +82,31 @@ public class DismissCalendarItemAlarm extends DocumentHandler {
                         throw AccountServiceException.NO_SUCH_ACCOUNT(ciAcctId);
                 }
                 int calItemId = iid.getId();
-                ciMbox.dismissCalendarItemAlarm(octxt, calItemId, dismissedAt);
-
-                CalendarItem calItem = ciMbox.getCalendarItemById(octxt, calItemId);
-                Element calItemRespElem;
-                if (calItem instanceof Appointment)
-                    calItemRespElem = response.addElement(MailConstants.E_APPOINTMENT);
-                else
-                    calItemRespElem = response.addElement(MailConstants.E_TASK);
                 ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), acctId, false);
-                calItemRespElem.addAttribute(MailConstants.A_CAL_ID, iid.toString(ifmt));
-
-                boolean hidePrivate = !calItem.allowPrivateAccess(authAcct, zsc.isUsingAdminPrivileges());
-                boolean showAll = !hidePrivate || calItem.isPublic();
-                if (showAll) {
-                    AlarmData alarmData = calItem.getAlarmData();
-                    if (alarmData != null)
-                        ToXML.encodeAlarmData(calItemRespElem, calItem, alarmData);
+                try {
+                    ciMbox.dismissCalendarItemAlarm(octxt, calItemId, dismissedAt);
+    
+                    CalendarItem calItem = ciMbox.getCalendarItemById(octxt, calItemId);
+                    Element calItemRespElem;
+                    if (calItem instanceof Appointment)
+                        calItemRespElem = response.addElement(MailConstants.E_APPOINTMENT);
+                    else
+                        calItemRespElem = response.addElement(MailConstants.E_TASK);
+                    calItemRespElem.addAttribute(MailConstants.A_CAL_ID, iid.toString(ifmt));
+    
+                    boolean hidePrivate = !calItem.allowPrivateAccess(authAcct, zsc.isUsingAdminPrivileges());
+                    boolean showAll = !hidePrivate || calItem.isPublic();
+                    if (showAll) {
+                        AlarmData alarmData = calItem.getAlarmData();
+                        if (alarmData != null)
+                            ToXML.encodeAlarmData(calItemRespElem, calItem, alarmData);
+                    }
+                } catch (NoSuchItemException nsie) {
+                    //item must not exist in db anymore.
+                    //this can happen if an alarm is dismissed while a big sync is happening which deletes the item (e.g. bug 48560)
+                    //since item is not in db, it has effectively been dismissed; return ok and no further alarms
+                    Element calItemRespElem = response.addElement(calItemElement); 
+                    calItemRespElem.addAttribute(MailConstants.A_CAL_ID, iid.toString(ifmt));
                 }
             }
         }
