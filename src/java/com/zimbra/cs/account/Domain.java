@@ -47,7 +47,8 @@ public class Domain extends ZAttrDomain {
             mUnicodeName = name;
         else
             mUnicodeName = IDNUtil.toUnicodeDomainName(name);
-        resetData();
+        if (attrs != null)
+            resetData();
     }
 
     public void modify(Map<String, Object> attrs) throws ServiceException {
