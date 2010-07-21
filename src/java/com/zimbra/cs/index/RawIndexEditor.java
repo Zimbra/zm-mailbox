@@ -30,7 +30,7 @@ public class RawIndexEditor {
     private FSDirectory mIdxDirectory = null;
 
     RawIndexEditor(String idxPath) throws IOException {
-        mIdxDirectory = new Z23FSDirectory(new File(idxPath));
+        mIdxDirectory = new ZimbraFSDirectory(new File(idxPath));
         if (mIdxDirectory.getLockFactory() == null ||
                 !(mIdxDirectory.getLockFactory() instanceof SingleInstanceLockFactory)) {
             mIdxDirectory.setLockFactory(new SingleInstanceLockFactory());

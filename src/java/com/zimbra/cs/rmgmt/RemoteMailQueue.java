@@ -46,7 +46,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.index.LuceneIndex;
-import com.zimbra.cs.index.Z23FSDirectory;
+import com.zimbra.cs.index.ZimbraFSDirectory;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.admin.GetMailQueue;
 import com.zimbra.common.service.ServiceException;
@@ -231,7 +231,7 @@ public class RemoteMailQueue {
             if (ZimbraLog.rmgmt.isDebugEnabled()) {
                 ZimbraLog.rmgmt.debug("clearing index (" + mIndexPath + ") for " + this);
             }
-            writer = new IndexWriter(new Z23FSDirectory(mIndexPath),
+            writer = new IndexWriter(new ZimbraFSDirectory(mIndexPath),
                     new StandardAnalyzer(LuceneIndex.VERSION), true,
                     IndexWriter.MaxFieldLength.LIMITED);
             mNumMessages.set(0);
@@ -328,7 +328,7 @@ public class RemoteMailQueue {
         if (ZimbraLog.rmgmt.isDebugEnabled()) {
             ZimbraLog.rmgmt.debug("opening indexwriter " + this);
         }
-        mIndexWriter = new IndexWriter(new Z23FSDirectory(mIndexPath),
+        mIndexWriter = new IndexWriter(new ZimbraFSDirectory(mIndexPath),
                 new StandardAnalyzer(LuceneIndex.VERSION), true,
                 IndexWriter.MaxFieldLength.LIMITED);
     }
@@ -345,7 +345,7 @@ public class RemoteMailQueue {
             ZimbraLog.rmgmt.debug("reopening indexwriter " + this);
         }
         mIndexWriter.close();
-        mIndexWriter = new IndexWriter(new Z23FSDirectory(mIndexPath),
+        mIndexWriter = new IndexWriter(new ZimbraFSDirectory(mIndexPath),
                 new StandardAnalyzer(LuceneIndex.VERSION), false,
                 IndexWriter.MaxFieldLength.LIMITED);
     }
@@ -518,7 +518,7 @@ public class RemoteMailQueue {
             if (!mIndexPath.exists()) {
                 return result;
             }
-            indexReader = IndexReader.open(new Z23FSDirectory(mIndexPath));
+            indexReader = IndexReader.open(new ZimbraFSDirectory(mIndexPath));
             summarize(result, indexReader);
             if (query == null) {
                 list0(result, indexReader, offset, limit);
@@ -555,7 +555,7 @@ public class RemoteMailQueue {
                 clearIndex();
                 all = true;
             } else {
-                indexReader = IndexReader.open(new Z23FSDirectory(mIndexPath));
+                indexReader = IndexReader.open(new ZimbraFSDirectory(mIndexPath));
             }
 
             int done = 0;

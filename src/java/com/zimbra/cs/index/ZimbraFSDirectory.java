@@ -26,16 +26,16 @@ import org.apache.lucene.store.SimpleFSDirectory;
 
 import com.zimbra.cs.stats.ZimbraPerf;
 
-public class Z23FSDirectory extends SimpleFSDirectory {
+public class ZimbraFSDirectory extends SimpleFSDirectory {
 
     private AtomicLong mBytesWritten = new AtomicLong();
     private AtomicLong mBytesRead = new AtomicLong();
 
-    public Z23FSDirectory(File path) throws IOException {
+    public ZimbraFSDirectory(File path) throws IOException {
         super(path);
     }
 
-    public Z23FSDirectory(File path, LockFactory lockFactory)
+    public ZimbraFSDirectory(File path, LockFactory lockFactory)
         throws IOException {
 
         super(path, lockFactory);

@@ -95,7 +95,7 @@ public class LuceneViewer {
         mConsole = console;
 
         mIndexReader = IndexReader.open(
-                new Z23FSDirectory(new File(mIndexDir)));
+                new ZimbraFSDirectory(new File(mIndexDir)));
         mWriter = new FileWriter(mOutputFile);
 
         if (hasFilters()) {
@@ -560,7 +560,7 @@ public class LuceneViewer {
 
         Directory dir = null;
         try {
-            dir = new Z23FSDirectory(new File(indexDir));
+            dir = new ZimbraFSDirectory(new File(indexDir));
         } catch (Throwable t) {
             console.info("ERROR: could not open directory \"" +
                     indexDir + "\"; exiting");

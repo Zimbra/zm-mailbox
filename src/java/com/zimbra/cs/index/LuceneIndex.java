@@ -78,7 +78,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
      * everytime editDistance is called.
      */
     private int e[][] = new int[1][1];
-    private Z23FSDirectory mIdxDirectory = null;
+    private ZimbraFSDirectory mIdxDirectory = null;
 
     private IndexWriter mIndexWriter;
 
@@ -197,7 +197,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
             }
 
             try {
-                mIdxDirectory = new Z23FSDirectory(new File(idxPath),
+                mIdxDirectory = new ZimbraFSDirectory(new File(idxPath),
                         new SingleInstanceLockFactory());
             } catch (IOException e) {
                 throw ServiceException.FAILURE("Cannot create FSDirectory at path: " + idxPath, e);

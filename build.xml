@@ -54,6 +54,7 @@
 
     <property name="build.dir" location="build"/>
     <property name="build.classes.dir" location="${build.dir}/classes"/>
+    <property name="build.test.dir" location="${build.dir}/test"/>
     <property name="build.zmprov" location="${build.dir}/data/zmprov.txt"/>
     <property name="dist.dir" location="build/dist"/>
     <property name="dist.db.dir" location="build/dist/db"/>
@@ -77,6 +78,7 @@
     <property name="tools.lib.dir" location="tools/lib"/>
     <property name="src.dir" location="src"/>
     <property name="src.java.dir" location="${src.dir}/java"/>
+    <property name="src.test.dir" location="${src.dir}/java-test"/>
     <property name="config.dir" location="conf"/>
 	<property name="war.web.xml" location="${config.dir}/web.xml${production.suffix}"/>
     <property name="jetty.xml.file" location='${config.dir}/jetty-6.1/jetty.xml' />
@@ -1984,5 +1986,31 @@
             <arg line="${args}"/>
         </java>
 	</target>
+
+
+    <target name="compile-test" depends="compile">
+        <javac srcdir="${src.test.dir}" destdir="${build.classes.dir}" 
+          debug="true" classpathref="class.path" target="${javac.target}"/>
+    </target>
+
+    <target name="test" depends="compile-test" description="Run unit tests">
+        <delete dir="${build.test.dir}" quiet="true"/>
+        <mkdir dir="${build.test.dir}/output"/>
+        <mkdir dir="${build.test.dir}/report"/>
+        <junit printsummary="on" haltonfailure="on" tempdir="${build.test.dir}">
+            <classpath refid="class.path"/>
+            <formatter type="xml"/>
+            <batchtest todir="${build.test.dir}/output">
+                <fileset dir="${src.test.dir}">
+                    <include name="**/*Test.java"/>
+                </fileset>
+            </batchtest>
+        </junit>
+        <junitreport todir="${build.test.dir}/report">
+            <fileset dir="${build.test.dir}/output"/>
+            <report todir="${build.test.dir}/report"/>
+        </junitreport>
+    </target>
 	
 </project>
+

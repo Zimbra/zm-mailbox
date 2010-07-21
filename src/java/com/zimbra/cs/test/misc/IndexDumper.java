@@ -22,7 +22,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermEnum;
 
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.Z23FSDirectory;
+import com.zimbra.cs.index.ZimbraFSDirectory;
 
 
 /**
@@ -33,7 +33,7 @@ public class IndexDumper {
 
     public static void main(String[] args) throws IOException {
         IndexReader reader = IndexReader.open(
-                new Z23FSDirectory(new File("/tmp/zimbra/index")));
+                new ZimbraFSDirectory(new File("/tmp/zimbra/index")));
         TermEnum terms = reader.terms();
         while (terms.next()) {
             if (terms.term().field().equals(LuceneFields.L_MAILBOX_BLOB_ID)) {
