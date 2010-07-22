@@ -1112,7 +1112,8 @@ OR
 // any time!
 //
 <GetAppointmentRequest
-    id="appointment_id"
+    id="appointment_id"      // either id or uid should be specified, but not both
+    uid="iCalendar UID"
     [sync="1"]
     [includeContent="0|1"]   // if 1, MIME parts for body content are returned; default 0
 />
