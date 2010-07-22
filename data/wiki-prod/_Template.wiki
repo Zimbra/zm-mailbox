@@ -1,5 +1,0 @@
-<H1><nolink><wiklet class="NAME"/></nolink></H1>
-
-<div>
-  <wiklet class="CONTENT"/>
-</div>
