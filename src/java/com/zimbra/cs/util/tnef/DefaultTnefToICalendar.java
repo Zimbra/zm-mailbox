@@ -609,18 +609,20 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                     attendee.getParameters().add(cn);
                 }
                 attendee.getParameters().add(CuType.INDIVIDUAL);
-                PartStat orgPartstat = PartStat.ACCEPTED;
-                if (ccRecips != null) {
-                    for (Address a : ccRecips) {
-                        InternetAddress ia = (InternetAddress) a;
-                        if ( organizerEmail.equals(ia) ) {
-                            orgPartstat = PartStat.TENTATIVE;
-                            break;
+                attendee.getParameters().add(Role.REQ_PARTICIPANT);
+                if (!method.equals(Method.CANCEL)) {
+                    PartStat orgPartstat = PartStat.ACCEPTED;
+                    if (ccRecips != null) {
+                        for (Address a : ccRecips) {
+                            InternetAddress ia = (InternetAddress) a;
+                            if ( organizerEmail.equals(ia) ) {
+                                orgPartstat = PartStat.TENTATIVE;
+                                break;
+                            }
                         }
                     }
+                    attendee.getParameters().add(orgPartstat);
                 }
-                attendee.getParameters().add(Role.REQ_PARTICIPANT);
-                attendee.getParameters().add(orgPartstat);
                 // Was including SENT-BY but probably not appropriate
                 // for a request
                 IcalUtil.addProperty(icalOutput, attendee);
