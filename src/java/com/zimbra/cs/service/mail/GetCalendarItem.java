@@ -24,6 +24,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
@@ -51,8 +52,17 @@ public class GetCalendarItem extends CalendarRequest {
 
         boolean sync = request.getAttributeBool(MailConstants.A_SYNC, false);
         boolean includeContent = request.getAttributeBool(MailConstants.A_CAL_INCLUDE_CONTENT, false);
-        ItemId iid = new ItemId(request.getAttribute("id"), zsc);
-        sLog.info("<GetCalendarItem id=" + iid.getId() + "> " + zsc);
+        ItemId iid = null;
+        String uid = request.getAttribute(MailConstants.A_UID, null);
+        String id = request.getAttribute(MailConstants.A_ID, null);
+        if (uid != null) {
+            if (id != null)
+                throw ServiceException.INVALID_REQUEST("either id or uid should be specified, but not both", null);
+            sLog.info("<GetCalendarItem uid=" + uid + "> " + zsc);
+        } else {
+            iid = new ItemId(id, zsc);
+            sLog.info("<GetCalendarItem id=" + iid.getId() + "> " + zsc);
+        }
 
         // want to return modified date only on sync-related requests
         int fields = ToXML.NOTIFY_FIELDS;
@@ -61,9 +71,17 @@ public class GetCalendarItem extends CalendarRequest {
 
         Element response = getResponseElement(zsc);
         synchronized(mbox) {
-            CalendarItem appointment = mbox.getCalendarItemById(octxt, iid.getId());
-            ToXML.encodeCalendarItemSummary(response, ifmt, octxt, appointment,
-                                            fields, true, includeContent);
+            CalendarItem calItem;
+            if (uid != null) {
+                calItem = mbox.getCalendarItemByUid(octxt, uid);
+                if (calItem == null)
+                    throw MailServiceException.NO_SUCH_CALITEM(uid);
+            } else {
+                calItem = mbox.getCalendarItemById(octxt, iid.getId());
+                if (calItem == null)
+                    throw MailServiceException.NO_SUCH_CALITEM(iid.getId());
+            }
+            ToXML.encodeCalendarItemSummary(response, ifmt, octxt, calItem, fields, true, includeContent);
         }
 
         return response;
