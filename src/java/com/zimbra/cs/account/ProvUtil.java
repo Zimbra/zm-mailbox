@@ -2250,7 +2250,7 @@ public class ProvUtil implements HttpDebugListener {
         System.out.println();
     }
     
-    private void dumpXMPPComponent(XMPPComponent comp, Set<String> attrNames) {
+    private void dumpXMPPComponent(XMPPComponent comp, Set<String> attrNames) throws ServiceException {
         System.out.println("# name "+comp.getName());
         Map<String, Object> attrs = comp.getAttrs();
         dumpAttrs(attrs, attrNames);
@@ -2299,23 +2299,57 @@ public class ProvUtil implements HttpDebugListener {
         System.out.println();
     }
 
-    private void dumpAttrs(Map<String, Object> attrsIn, Set<String> specificAttrs) {
+    private void dumpAttrs(Map<String, Object> attrsIn, Set<String> specificAttrs) throws ServiceException {
         TreeMap<String, Object> attrs = new TreeMap<String, Object>(attrsIn);
-
+        
+        Map<String, Set<String>> specificAttrValues = null;
+        
+        if (specificAttrs != null) {
+            specificAttrValues = new HashMap<String, Set<String>>();
+            for (String specificAttr : specificAttrs) {
+                int colonAt = specificAttr.indexOf("=");
+                String attrName = null;
+                String attrValue = null;
+                if (colonAt == -1) {
+                    attrName = specificAttr;
+                } else {
+                    attrName = specificAttr.substring(0, colonAt);
+                    attrValue = specificAttr.substring(colonAt+1);
+                    if (attrValue.length() < 1)
+                        throw ServiceException.INVALID_REQUEST("missing value for " + specificAttr, null);
+                }
+                
+                Set<String> values = specificAttrValues.get(attrName);
+                if (values == null) // haven't seen the attr yet
+                    values = new HashSet<String>();
+                
+                if (attrValue != null)
+                    values.add(attrValue);
+                
+                specificAttrValues.put(attrName, values);
+            }
+        }
+        
         for (Map.Entry<String, Object> entry : attrs.entrySet()) {
             String name = entry.getKey();
-            if (specificAttrs == null || specificAttrs.contains(name.toLowerCase())) {
+            
+            Set<String> specificValues = null;
+            if (specificAttrValues != null)
+                specificValues = specificAttrValues.get(name.toLowerCase());
+            
+            if (specificAttrValues == null || specificAttrValues.keySet().contains(name.toLowerCase())) {
+                
                 Object value = entry.getValue();
                 if (value instanceof String[]) {
                     String sv[] = (String[]) value;
                     for (String aSv : sv) {
                         // don't print permission denied attr
-                        if (aSv.length() > 0)
+                        if (aSv.length() > 0 && (specificValues == null || specificValues.isEmpty() || specificValues.contains(aSv)))
                             printOutput(name + ": " + aSv);
                     }
                 } else if (value instanceof String) {
                     // don't print permission denied attr
-                    if (((String)value).length() > 0)
+                    if (((String)value).length() > 0 && (specificValues == null || specificValues.isEmpty() || specificValues.contains(value)))
                         printOutput(name+": "+value);
                 }
             }
