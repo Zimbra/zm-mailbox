@@ -904,10 +904,14 @@
     </target>
 
     <target name="reset-open-ldap" description="Resets OpenLDAP" if="is-unix">
-        <antcall target="stop-ldap"/>
-        <exec failonerror="true" executable="../ZimbraServer/src/perl/install-openldap">
-            <arg line="main"/>
-        </exec>
+        <if><available file="../ZimbraServer/src/perl/install-openldap"/> <!-- Not available for community build. -->
+            <then>
+		        <antcall target="stop-ldap"/>
+		        <exec failonerror="true" executable="../ZimbraServer/src/perl/install-openldap">
+		            <arg line="main"/>
+		        </exec>
+            </then>
+        </if>
     </target>
 
     <target name="reset-all" depends="reset-jetty,reset-open-ldap,reset-the-world" description="Reset the world plus jetty and OpenLDAP">
@@ -972,20 +976,29 @@
              </condition>
         </fail>
 
+		<if><available file="data/TestMailRaw"/> <!-- Not available for community builds -->
+		    <then>
+		        <echo>LmtpInject messages for ${account-to-inject.email}</echo>
+		        <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path"
+		              failonerror="true">
+		            <arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r ${account-to-inject.email} -s ho@example.zimbra.com -d"/>
+		            <arg path="data/TestMailRaw"/>
+		        </java>
+	        </then>
+        </if>
+        
+		<if><available file="data/TestMailSpam"/>  <!-- Not available for community builds -->
+		    <then>
+		        <echo>LmtpInject spam for ${account-to-inject.email}</echo>
+		        <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path"
+		              failonerror="true">
+		            <arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r ${account-to-inject.email} -s ho@example.zimbra.com -d"/>
+		            <arg path="data/TestMailSpam"/>
+		            <arg line="--noValidation"/>
+		        </java>
+        	</then>
+	    </if>
 
-        <echo>LmtpInject messages for ${account-to-inject.email}</echo>
-        <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path"
-              failonerror="true">
-            <arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r ${account-to-inject.email} -s ho@example.zimbra.com -d"/>
-            <arg path="data/TestMailRaw"/>
-        </java>
-        <echo>LmtpInject spam for ${account-to-inject.email}</echo>
-        <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject" fork="true" classpathref="class.path"
-              failonerror="true">
-            <arg line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r ${account-to-inject.email} -s ho@example.zimbra.com -d"/>
-            <arg path="data/TestMailSpam"/>
-            <arg line="--noValidation"/>
-        </java>
         <if>
             <not><isset property="email-only"/></not>
             <then>
@@ -993,10 +1006,14 @@
                 <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
                     <arg line="impn ${account-to-inject.email} data/wiki/user1 /"/>
                 </java>
-                <echo>Importing files into Briefcase for ${account-to-inject.email}</echo>
-                <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
-                    <arg line="impn ${account-to-inject.email} data/briefcase/user1 Briefcase"/>
-                </java>
+                <if><available file="data/briefcase"/> <!-- Not available for community builds -->
+                    <then>
+		                <echo>Importing files into Briefcase for ${account-to-inject.email}</echo>
+		                <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
+		                    <arg line="impn ${account-to-inject.email} data/briefcase/user1 Briefcase"/>
+		                </java>
+                    </then>
+                </if>
             </then>
         </if>
     </target>

@@ -3,100 +3,100 @@
 
 <H3>Design protypes and specs</H3>
 	<li>Wiki -- VERY early prototype screens
-[[mailto:owen@zimbra.com][Owen Williams]]
+[[mailto:oscar@zimbra.com][Oscar Wilson]]
 		 <ul>
-				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/Wiki/][UI Mockups]] 
+				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/Wiki/][UI Mockups]] 
 				</li>  
 		 </ul>
 	</li>
 
 
 	<li>Resources -- adding resources and locations to contacts
-[[mailto:owen@zimbra.com][Owen Williams]]
+[[mailto:oscar@zimbra.com][Oscar Wilson]]
 		 <ul>
-				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/Resources/Resources_UI_Design_v3.pdf][UI Spec (pdf)]] 
+				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/Resources/Resources_UI_Design_v3.pdf][UI Spec (pdf)]] 
 				</li>  
 		 </ul>
 	</li>
 
 	<li>Splash Screen -- changes to current splash screen and about screen
-[[mailto:owen@zimbra.com][Owen Williams]]
+[[mailto:oscar@zimbra.com][Oscar Wilson]]
 		 <ul>
-				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/SplashScreen/index.html][UI Spec]] 
+				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/SplashScreen/index.html][UI Spec]] 
 				</li>  
 		 </ul>
 	</li>
 
 	<li>New layout and CLV -- prototype of new layout possibilities and what Conversation List View might look like
-[[mailto:owen@zimbra.com][Owen Williams]]
+[[mailto:oscar@zimbra.com][Oscar Wilson]]
 		 <ul>
-				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/NewLayout/new_layout_3.png][Visual prototype]] 
+				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/NewLayout/new_layout_3.png][Visual prototype]] 
 				</li>  
-<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/NewLayout/new_layout_3_convsel.png][Visual prototype w/ conversation selected]] 
+<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/NewLayout/new_layout_3_convsel.png][Visual prototype w/ conversation selected]] 
 				</li>
 		 </ul>
 	</li>
 
 	<li>Filter/Quick Filter -- changes to current filter UI and QuickFilter
-[[mailto:owen@zimbra.com][Owen Williams]]
+[[mailto:oscar@zimbra.com][Oscar Wilson]]
 		 <ul>
-				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/FilterRules/index.html][UI Spec]] 
+				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/FilterRules/index.html][UI Spec]] 
 				</li>  
 		 </ul>
 	</li>
 
 	<li>Admin UI tweaks -- small tweaks to the Admin interface in general 
-[[mailto:owen@zimbra.com][Owen Williams]]
+[[mailto:oscar@zimbra.com][Oscar Wilson]]
 		 <ul>
-				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/AdminUITweaks/index.html][UI Spec]] 
+				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/AdminUITweaks/index.html][UI Spec]] 
 				</li>  
 		 </ul>
 	</li>
 
-	<li>Calendar alarm: UI spec for alarms in calendar -- [[mailto:owen@zimbra.com][Owen Williams]]
+	<li>Calendar alarm: UI spec for alarms in calendar -- [[mailto:oscar@zimbra.com][Oscar Wilson]]
 		 <ul>
-				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/CalendarAlarm/index.html][UI Spec]] 
+				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/CalendarAlarm/index.html][UI Spec]] 
 				</li>  
 		 </ul>
 	</li>
 
-	<li>Calendar workflow: new UI interaction pattern and screens for calendar -- [[mailto:owen@zimbra.com][Owen Williams]]
+	<li>Calendar workflow: new UI interaction pattern and screens for calendar -- [[mailto:oscar@zimbra.com][Oscar Wilson]]
 		 <ul>
-				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/CalendarWorkflow/index.html][UI Spec]] 
+				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/CalendarWorkflow/index.html][UI Spec]] 
 				</li>  
 		 </ul>
 	</li>
 
-	<li>Show Distribution List: view distribution list memebers in the Mail UI -- [[mailto:owen@zimbra.com][Owen Williams]]
+	<li>Show Distribution List: view distribution list memebers in the Mail UI -- [[mailto:oscar@zimbra.com][Oscar Wilson]]
 		 <ul>
-				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/ViewDistList/index.html][UI Spec]] 
+				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/ViewDistList/index.html][UI Spec]] 
 				</li>  
 		 </ul>
 	</li>
 
-	<li>Save Search: modifications to the search toolbar -- [[mailto:owen@zimbra.com][Owen Williams]]
+	<li>Save Search: modifications to the search toolbar -- [[mailto:oscar@zimbra.com][Oscar Wilson]]
 		 <ul>
-				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/SaveSearch/index.html][UI Spec]] 
+				<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/SaveSearch/index.html][UI Spec]] 
 				</li>  
 		 </ul>
 	</li>
 
-	<li>Calendar Sharing UI Spec: -- [[mailto:owen@zimbra.com][Owen Williams]]
+	<li>Calendar Sharing UI Spec: -- [[mailto:oscar@zimbra.com][Oscar Wilson]]
 	<ul>
-		<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/CalendarSharing/index.html][Full version]]	
-		<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/CalendarSharing/index.html?summary=true][Executive summary]]
-		<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/CalendarSharing/CalendarSharing.zip][Downloadable]]
+		<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/CalendarSharing/index.html][Full version]]	
+		<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/CalendarSharing/index.html?summary=true][Executive summary]]
+		<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/CalendarSharing/CalendarSharing.zip][Downloadable]]
 	</ul>
 
-	<li>Calendar Compose: "new appointment" taking over the window -- [[mailto:owen@zimbra.com][Owen Williams]]
+	<li>Calendar Compose: "new appointment" taking over the window -- [[mailto:oscar@zimbra.com][Oscar Wilson]]
 	<ul>
-		<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/CalendarCompose/calendar_compose.png][Visual prototype]]	
+		<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/CalendarCompose/calendar_compose.png][Visual prototype]]	
 	</ul>
 
-	<li>Search Pods: integrating the query language with the app -- [[mailto:owen@zimbra.com][Owen Williams]]
+	<li>Search Pods: integrating the query language with the app -- [[mailto:oscar@zimbra.com][Oscar Wilson]]
 	<ul>
-		<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/SearchPods/index.html][What is this?]]	
-		<li style='list-style:circle'>[[http://kenny.zimbra.com/public/owen/proto/SearchPods/searchpods_movie.mov][Prototype movie]]	
+		<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/SearchPods/index.html][What is this?]]	
+		<li style='list-style:circle'>[[http://kenny.zimbra.com/public/oscar/proto/SearchPods/searchpods_movie.mov][Prototype movie]]	
 	</ul>
 </ul>
 
@@ -104,7 +104,7 @@
 <H3>Protypes wish list</H3>
 
 Below is a running list of top innovations we should be considering for our next release. 
-We want to focus on a list of items that require mock up work so that we can schedule time with Owen to work on the requirements.  Chris will use this list to discussion our priorities in the Product Team Meetings.
+We want to focus on a list of items that require mock up work so that we can schedule time with Oscar to work on the requirements.  Chris will use this list to discussion our priorities in the Product Team Meetings.
 
 <ol>
 <li> QuickFilter
