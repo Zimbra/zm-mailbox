@@ -242,10 +242,11 @@ public class DbSearch {
         if (sort.getCriterion() == SortCriterion.NONE)
             return "";
 
+        String direction = sort.getDirection() == SortDirection.DESCENDING ? " DESC" : "";
         StringBuilder statement = new StringBuilder(" ORDER BY ");
-        statement.append(sortField(sort, useAlias, true));
-        if (sort.getDirection() == SortDirection.DESCENDING)
-            statement.append(" DESC");
+        statement.append(sortField(sort, useAlias, true)).append(direction);
+        // when two items match in their sort field, let's use item ID as the tie breaker
+        statement.append(", mi.id").append(direction);
         return statement.toString();
     }
 

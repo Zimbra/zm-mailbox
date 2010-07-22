@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mime.ParsedAddress;
@@ -25,13 +26,12 @@ import com.zimbra.cs.mime.ParsedAddress;
 public class SenderList {
     public static class RefreshException extends Exception {
         private static final long serialVersionUID = 7137768259442997280L;
-        public RefreshException(String message) { super(message); }
+        public RefreshException(String message)  { super(message); }
     }
 
-    private static final int MAX_PARTICIPANT_COUNT = 5;
+    private static final int MAX_PARTICIPANT_COUNT = 8;
 
-    private ParsedAddress mFirst;
-    private List<ParsedAddress> mParticipants;  // ordered latest to earliest, doesn't include mFirst
+    private List<ParsedAddress> mParticipants;  // ordered latest to earliest
     private boolean mIsElided;
     private long mLastDate;
     private int mSize;
@@ -41,37 +41,31 @@ public class SenderList {
     public SenderList(Message msg) {
         String sender = msg.getSender();
         if (sender != null && !sender.trim().equals("")) {
-            mFirst = new ParsedAddress(sender).parse();
+            mParticipants = new ArrayList<ParsedAddress>(MAX_PARTICIPANT_COUNT);
+            mParticipants.add(new ParsedAddress(sender).parse());
             mLastDate = msg.getDate();
         }
         mSize = 1;
     }
 
-    public SenderList(List<Message> msgs) {
-        this(msgs == null ? null : msgs.toArray(new Message[msgs.size()]));
+    public SenderList(Message[] msgs) {
+        this(msgs == null ? null : Arrays.asList(msgs));
     }
 
-    public SenderList(Message[] msgs) {
-        if (msgs == null || msgs.length == 0)
+    public SenderList(List<Message> msgs) {
+        if (msgs == null || msgs.isEmpty())
             return;
-        Arrays.sort(msgs, new MailItem.SortDateAscending());
 
-        mLastDate = msgs[msgs.length - 1].getDate();
-        mSize = msgs.length;
+        Collections.sort(msgs, new MailItem.SortDateAscending());
+        mLastDate = msgs.get(msgs.size() - 1).getDate();
+        mSize = msgs.size();
 
-        int first = 0;
-        do {
-            String sender = msgs[first].getSender();
-            if (sender != null && !sender.trim().equals(""))
-                mFirst = new ParsedAddress(sender).parse();
-        } while (mFirst == null && ++first < mSize);
-
-        for (int i = msgs.length - 1; i >= first && !mIsElided; i--) {
-            String sender = msgs[i].getSender();
+        for (ListIterator<Message> lit = msgs.listIterator(mSize); lit.hasPrevious() && !mIsElided; ) {
+            String sender = lit.previous().getSender();
             if (sender == null || sender.trim().equals(""))
                 continue;
             ParsedAddress pa = new ParsedAddress(sender).parse();
-            if (pa.equals(mFirst) || (mParticipants != null && mParticipants.contains(pa)))
+            if (mParticipants != null && mParticipants.contains(pa))
                 continue;
             else if (mParticipants == null)
                 (mParticipants = new ArrayList<ParsedAddress>(MAX_PARTICIPANT_COUNT)).add(pa);
@@ -98,11 +92,7 @@ public class SenderList {
         mSize++;
 
         ParsedAddress pa = new ParsedAddress(sender).parse();
-        if (mFirst == null) {
-            mFirst = pa;
-        } else if (pa.equals(mFirst)) {
-            return this;
-        } else if (mParticipants == null) {
+        if (mParticipants == null) {
             (mParticipants = new ArrayList<ParsedAddress>(MAX_PARTICIPANT_COUNT)).add(pa);
         } else {
             mParticipants.remove(pa);
@@ -117,9 +107,8 @@ public class SenderList {
     }
 
 
-    public int size()                       { return mSize; }
-    public boolean isElided()               { return mIsElided; }
-    public ParsedAddress getFirstAddress()  { return mFirst; }
+    public int size()          { return mSize; }
+    public boolean isElided()  { return mIsElided; }
     public List<ParsedAddress> getLastAddresses() {
         if (mParticipants == null || mParticipants.isEmpty())
             return Collections.emptyList();
@@ -142,15 +131,17 @@ public class SenderList {
         return pa;
     }
 
-    public static SenderList parse(String encoded) throws ServiceException {
+    public static SenderList parse(String encoded) throws ServiceException, RefreshException {
         return parse(new Metadata(encoded));
     }
 
-    public static SenderList parse(Metadata meta) throws ServiceException {
+    public static SenderList parse(Metadata meta) throws ServiceException, RefreshException {
+        if (meta.getMap(Metadata.FN_FIRST, true) != null)
+            return parseDeprecated(meta);
+
         SenderList sl = new SenderList();
         sl.mSize = (int) meta.getLong(Metadata.FN_NODES);
         sl.mLastDate = meta.getLong(Metadata.FN_LAST_DATE, 0);
-        sl.mFirst = importAddress(meta.getMap(Metadata.FN_FIRST, true));
         sl.mIsElided = meta.getBool(Metadata.FN_ELIDED);
         MetadataList entries = meta.getList(Metadata.FN_ENTRIES, true);
         if (entries != null && !entries.isEmpty()) {
@@ -158,6 +149,28 @@ public class SenderList {
             for (int i = 0; i < entries.size(); i++)
                 sl.mParticipants.add(importAddress(entries.getMap(i)));
         }
+        return sl;
+    }
+
+    private static SenderList parseDeprecated(Metadata meta) throws ServiceException, RefreshException {
+        // if the old serialization included no elision and the number of serialized addresses
+        //   matched the total number of messages, we can still deserialize accurately
+        //   (alternatively, only 1 address means we can still deserialize)
+        int size = (int) meta.getLong(Metadata.FN_NODES);
+        MetadataList entries = meta.getList(Metadata.FN_ENTRIES, true);
+        if (entries != null && entries.size() != size - 1)
+            throw new RefreshException("switching from old SenderList to new SenderList requires refresh");
+
+        SenderList sl = new SenderList();
+        sl.mSize = size;
+        sl.mLastDate = meta.getLong(Metadata.FN_LAST_DATE, 0);
+        sl.mIsElided = false;
+        sl.mParticipants = new ArrayList<ParsedAddress>(entries == null ? 1 : size);
+        if (entries != null && !entries.isEmpty()) {
+            for (int i = 0; i < entries.size(); i++)
+                sl.mParticipants.add(importAddress(entries.getMap(i)));
+        }
+        sl.mParticipants.add(importAddress(meta.getMap(Metadata.FN_FIRST)));
         return sl;
     }
 
@@ -171,12 +184,10 @@ public class SenderList {
         return meta;
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         Metadata meta = new Metadata();
         meta.put(Metadata.FN_NODES, mSize);
         meta.put(Metadata.FN_LAST_DATE, mLastDate);
-        meta.put(Metadata.FN_FIRST, exportAddress(mFirst));
         meta.put(Metadata.FN_ELIDED, mIsElided);
         if (mParticipants != null && !mParticipants.isEmpty()) {
             MetadataList entries = new MetadataList();

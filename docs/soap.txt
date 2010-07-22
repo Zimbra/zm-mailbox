@@ -1142,7 +1142,7 @@ Conversations:
   {all-msgs}  = total number of messages in conversation
   
   <e ...>*     = zero or more participants in the converstations;
-                 if elided="1", some participants are missing between the first and second returned <e> elements
+                 if elided="1", some participants are missing before the first returned <e> element
   <m>...</m>+  = one or more messages in the conversation. When doing search, the <m> elements returned
                  will only have the "id" attribute, and only messages that matched the search will be included.
                  

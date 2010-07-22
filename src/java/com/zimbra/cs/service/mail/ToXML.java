@@ -705,8 +705,6 @@ public class ToXML {
                 return c;
             }
 
-            if (sl.getFirstAddress() != null)
-                encodeEmail(c, sl.getFirstAddress(), EmailType.FROM);
             if (sl.isElided())
                 c.addAttribute(MailConstants.A_ELIDED, true);
             for (ParsedAddress pa : sl.getLastAddresses())
