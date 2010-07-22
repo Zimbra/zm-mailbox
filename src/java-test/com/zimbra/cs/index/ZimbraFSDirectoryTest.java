@@ -22,7 +22,7 @@ import java.io.IOException;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.IndexOutput;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.cs.stats.ZimbraPerf;
@@ -33,10 +33,10 @@ import com.zimbra.cs.stats.ZimbraPerf;
  * @author ysasaki
  */
 public class ZimbraFSDirectoryTest {
-    private File tmpDir;
+    private static File tmpDir;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeClass
+    public static void init() throws Exception {
         tmpDir = new File("build/test/" +
                 ZimbraFSDirectoryTest.class.getSimpleName());
         if (!tmpDir.isDirectory()) {

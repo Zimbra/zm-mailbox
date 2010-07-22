@@ -18,10 +18,8 @@ package com.zimbra.cs.index;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -184,13 +182,9 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
             boolean indexing) {
         if (fieldName.equals(LuceneFields.L_H_MESSAGE_ID)) {
             return new DontTokenizer(reader);
-        }
-
-        if (fieldName.equals(LuceneFields.L_FIELD)) {
+        } else if (fieldName.equals(LuceneFields.L_FIELD)) {
             return new FieldTokenStream(reader);
-        }
-
-        if (fieldName.equals(LuceneFields.L_ATTACHMENTS) ||
+        } else if (fieldName.equals(LuceneFields.L_ATTACHMENTS) ||
                 fieldName.equals(LuceneFields.L_MIMETYPE)) {
             return new MimeTypeTokenFilter(CommaSeparatedTokenStream(reader));
         } else if (fieldName.equals(LuceneFields.L_SORT_SIZE)) {
@@ -220,41 +214,89 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
     /**
      * Special Analyzer for structured-data field (see LuceneFields.L_FIELD )
      * <p>
-     * "fieldname=Val1 val2 val3\nfieldname2=val2_1 val2_2 val2_3\n" becomes
-     * "fieldname:Val1 fieldname:val2 fieldname:val3\nfieldname2:val2_1 fieldname2:val2_2 fieldname2:val2_3"
+     * {@code fieldname:Val1 val2 val3\n
+     * fieldname2:val2_1 val2_2 val2_3\n} becomes
+     * {@code fieldname:Val1 fieldname:val2 fieldname:val3\n
+     * fieldname2:val2_1 fieldname2:val2_2 fieldname2:val2_3}.
      */
     static class FieldTokenStream extends Tokenizer {
         protected static final char FIELD_SEPARATOR = ':';
         protected static final char EOL = '\n';
 
-        private int mOffset = 0;
-        private String mFieldName = null;
-        private List<Token> mValues = new ArrayList<Token>();
+        private int offset = 0;
+        private String field;
         private TermAttribute termAttr = addAttribute(TermAttribute.class);
+        private OffsetAttribute offsetAttr = addAttribute(OffsetAttribute.class);
 
         FieldTokenStream(Reader reader) {
             super(reader);
         }
 
-        protected String stripFieldName(String fieldName) {
-            return fieldName;
-        }
-
         @Override
         public boolean incrementToken() throws IOException {
-            while (mValues.isEmpty() ||
-                    mFieldName == null || mFieldName.length() == 0) {
-                if (!bufferNextLine()) {
-                    if (mValues.isEmpty()) {
-                        return false;
+            while (true) {
+                if (field == null) {
+                    StringBuilder buff = new StringBuilder();
+                    while (field == null) {
+                        int c = input.read();
+                        if (c < 0) { // EOF
+                            return false;
+                        }
+                        offset++;
+                        switch (c) {
+                            case FIELD_SEPARATOR:
+                                if (buff.length() > 0) {
+                                    field = stripFieldName(buff.toString());
+                                }
+                                break;
+                            case EOL: // Reached EOL without any words
+                                field = null;
+                                break; // back to top
+                            default:
+                                addCharToFieldName(buff, (char) c);
+                                break;
+                        }
+                    }
+                }
+
+                StringBuilder word = new StringBuilder();
+                int start = offset;
+
+                while (true) {
+                    int c = input.read();
+                    offset++;
+
+                    if (c < 0) { // EOF
+                        if (word.length() > 0) {
+                            setAttrs(word.toString(), start, offset);
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+
+                    char ch = (char) c;
+
+                    // treat '-' as whitespace UNLESS it is at the beginning of a word
+                    if (isWhitespace(ch) || (ch == '-' && word.length() > 0)) {
+                        if (word.length() > 0) {
+                            setAttrs(word.toString(), start, offset);
+                            return true;
+                        }
+                    } else if (ch == EOL) {
+                        if (word.length() > 0) {
+                            setAttrs(word.toString(), start, offset);
+                            field = null;
+                            return true;
+                        } else { // Reached EOL without any words
+                            field = null;
+                            break; // back to top
+                        }
                     } else {
-                        break;
+                        addCharToValue(word, ch);
                     }
                 }
             }
-            Token token = mValues.remove(0);
-            termAttr.setTermBuffer(token.term());
-            return true;
         }
 
         protected boolean isWhitespace(char ch) {
@@ -274,19 +316,24 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
                 case ')':
                 case '*': // wildcard conflict w/ query language
                     return true;
+                default:
+                    return false;
             }
-            return false;
+        }
+
+        protected String stripFieldName(String fieldName) {
+            return fieldName;
         }
 
         /**
          * Strip out punctuation
          *
-         * @param val
-         * @param ch
+         * @param buff string buffer to append the character to
+         * @param ch character to append
          */
-        protected void addCharToValue(StringBuilder val, char ch) {
+        protected void addCharToValue(StringBuilder buff, char ch) {
             if (!Character.isISOControl(ch)) {
-                val.append(Character.toLowerCase(ch));
+                buff.append(Character.toLowerCase(ch));
             }
         }
 
@@ -295,126 +342,21 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
          * to stop collisions with the query grammar, and stop control chars,
          * etc.
          *
-         * @param val
-         * @param ch
+         * @param buff string buffer to append the character to
+         * @param ch character to append
          */
-        protected void addCharToFieldName(StringBuilder val, char ch) {
-            if (ch == ':') {
-                return;
-            }
-            if (!Character.isISOControl(ch)) {
-                val.append(Character.toLowerCase(ch));
+        protected void addCharToFieldName(StringBuilder buff, char ch) {
+            if (ch != ':' && !Character.isISOControl(ch)) {
+                buff.append(Character.toLowerCase(ch));
             }
         }
 
-        /**
-         * TODO: Try to reuse token instances accommodating to the new
-         * TokenStream API.
-         *
-         * @param curWord word to be added
-         * @param wordStart offset into the string (for term position)
-         * @param wordEnd offset into the string (for term position)
-         */
-        protected void addToken(String curWord, int wordStart, int wordEnd) {
-            if (mFieldName.length() > 0) {
-                if (curWord.length() > 0) {
-                    String token = mFieldName + ":" + curWord;
-                    mValues.add(new Token(token, wordStart, wordEnd));
-                }
-            }
+        protected void setAttrs(String word, int start, int end) {
+            assert(field != null && field.length() > 0 &&
+                    word != null && word.length() > 0);
+            termAttr.setTermBuffer(field + ":" + word);
+            offsetAttr.setOffset(start, end);
         }
-
-        /**
-         * 1) fieldName=null
-         * 2) get next char
-         * 3) if find '='
-         *    - save fieldName
-         *    - goto 6
-         * 3.5) if find EOL
-         *    - no values, goto END
-         * 4) buffer char in fieldName
-         * 5) goto 2
-         * 6) curWord = null
-         * 7) get next char
-         * 8) if find whitespace then
-         *    - save fieldName:curWord pair if not empty
-         *    - curWord = null
-         *    - goto 7
-         * 9) if find EOL then
-         *    - save fieldName:curWord pair if not empty
-         *    - goto END
-         * 10) save char in curWord
-         * 11) goto 7
-         *
-         * @return FALSE at EOF for input
-         */
-        protected boolean bufferNextLine() {
-            int c = 0;
-
-            mFieldName = null;
-            mValues.clear();
-
-            try {
-                // step 1 - 5
-                StringBuilder fieldName = new StringBuilder();
-                while (mFieldName == null && (c = input.read()) >= 0) {
-                    mOffset++;
-                    char ch = (char)c;
-                    if (ch == FIELD_SEPARATOR) {
-                        mFieldName = stripFieldName(fieldName.toString());
-                    } else if (ch == '\n') {
-                        return true;
-                    }
-                    addCharToFieldName(fieldName, ch);
-                }
-
-                if (c < 0) {
-                    return false; // EOL
-                }
-
-                assert (mFieldName != null);
-
-                StringBuilder curWord = new StringBuilder();
-                int wordStart = mOffset;
-
-                // step 7 - 11
-                while (true) {
-                    c = input.read();
-                    mOffset++;
-
-                    // at EOF?  Finish current word if one exists...
-                    if (c < 0) {
-                        if (curWord.length() > 0) {
-                            addToken(curWord.toString(), wordStart, mOffset);
-                        }
-                        return false;
-                    }
-
-                    char ch = (char) c;
-
-                    // HACKHACKHACK -- treat '-' as whitespace UNLESS it is at the beginning of a word!
-                    if (isWhitespace(ch) || (curWord.length() > 0 && ch == '-')) {
-                        if (curWord.length() > 0) {
-                            addToken(curWord.toString(), wordStart, mOffset);
-                            curWord = new StringBuilder();
-                        }
-                    } else if (ch == EOL) {
-                        if (curWord.length() > 0) {
-                            addToken(curWord.toString(), wordStart, mOffset);
-                        }
-                        return true;
-                    } else {
-                        addCharToValue(curWord, ch);
-                    }
-                }
-                // notreached
-            } catch (IOException e) {
-                mFieldName = null;
-                mValues.clear();
-                return false;
-            }
-        }
-
     }
 
     /**
@@ -541,15 +483,14 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
      * "@bar.com"
      */
     static abstract class MultiTokenFilter extends TokenFilter {
-        // returns the next split point
-        protected abstract int getNextSplit(String s);
 
         protected int mMaxSplits = 1;
         protected boolean mIncludeSeparatorChar = false;
         protected boolean mNoLastToken = false;
-        Token mCurToken = null;
+        protected Token mCurToken = new Token();
         protected int mNextSplitPos;
         protected int mNumSplits;
+
         private TermAttribute termAttr = addAttribute(TermAttribute.class);
         private OffsetAttribute offsetAttr = addAttribute(OffsetAttribute.class);
         private TypeAttribute typeAttr = addAttribute(TypeAttribute.class);
@@ -563,6 +504,14 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
         }
 
         /**
+         * Returns the next split point.
+         *
+         * @param s string
+         * @return next split offset
+         */
+        protected abstract int getNextSplit(String s);
+
+        /**
          * At this point, a token has been extracted from input, and the full
          * token has been returned to the stream. Now we want to return all the
          * "split" forms of the token.
@@ -571,14 +520,14 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
          * the value of getNextSplit(full_token_text)..., then this API is
          * called repeatedly until mCurToken is cleared.
          */
-        public Token nextSplit() {
+        public void nextSplit() {
             if (mNextSplitPos > 0 && mNumSplits < mMaxSplits) {
                 // split another piece, save our state, and return...
                 mNumSplits++;
-                String termText = mCurToken.term();
-                String stringToRet = termText.substring(0, mNextSplitPos);
 
-                Token tokenToReturn = new Token(stringToRet,
+                String term = mCurToken.term();
+
+                setAttrs(term.substring(0, mNextSplitPos),
                         mCurToken.startOffset(),
                         mCurToken.startOffset() + mNextSplitPos,
                         mCurToken.type());
@@ -586,35 +535,33 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
                 if (!mIncludeSeparatorChar) {
                     mNextSplitPos++;
                 }
-                String secondPart = termText.substring(mNextSplitPos);
+                String secondPart = term.substring(mNextSplitPos);
                 if (mNumSplits < mMaxSplits) {
                     mNextSplitPos = getNextSplit(secondPart);
                 }
 
                 if (mNoLastToken == true) {
-                    mCurToken = null;
+                    mCurToken.clear();
                 } else {
-                    mCurToken = new Token(secondPart,
+                    mCurToken.reinit(secondPart,
                             mCurToken.startOffset() + mNextSplitPos,
                             mCurToken.endOffset(), mCurToken.type());
                 }
-
-                return tokenToReturn;
+                return;
             }
 
             // if we get here, then we've either split as many times as we're
             // allowed, OR we've run out of places to split..
-
             // no more splitting, just return what's left...
-            Token toRet = mCurToken;
-            mCurToken = null;
-            return toRet;
+            setAttrs(mCurToken.term(), mCurToken.startOffset(),
+                    mCurToken.endOffset(), mCurToken.type());
+            mCurToken.clear();
         }
 
         @Override
         public boolean incrementToken() throws IOException {
             while (true) {
-                if (mCurToken == null) {
+                if (mCurToken.termLength() == 0) {
                     // Get a new token, and insert the full token (unsplit) into
                     // the index.
                     if (!input.incrementToken()) {
@@ -623,11 +570,11 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
 
                     // Does it have any sub-parts that need to be added separately?
                     // If so, then save them as internal state: we'll add them in a bit.
-                    String termText = termAttr.term();
-                    if (termText.length() <= 1) { // ignore short term text
+                    String term = termAttr.term();
+                    if (term.length() <= 1) { // ignore short term text
                         continue;
                     }
-                    mNextSplitPos = getNextSplit(termText);
+                    mNextSplitPos = getNextSplit(term);
                     if (mNextSplitPos <= 0) {
                         // no sub-tokens
                         return true;
@@ -636,20 +583,23 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
                     // Now, Insert the full string as a token...we might continue down below
                     // (other parts) if there is more to add...
                     mNumSplits = 0;
-                    mCurToken = new Token(termText, offsetAttr.startOffset(),
+                    mCurToken.reinit(term, offsetAttr.startOffset(),
                             offsetAttr.endOffset(), typeAttr.type());
 
                     return true;
                 } else {
                     // once we get here, we know that the full text has been inserted
                     // once as a single token, now we need to insert all the split tokens
-                    Token token = nextSplit();
-                    termAttr.setTermBuffer(token.term());
-                    offsetAttr.setOffset(token.startOffset(), token.endOffset());
-                    typeAttr.setType(token.type());
+                    nextSplit();
                     return true;
                 }
             }
+        }
+
+        protected void setAttrs(String term, int start, int end, String type) {
+            termAttr.setTermBuffer(term);
+            offsetAttr.setOffset(start, end);
+            typeAttr.setType(type);
         }
 
     }
@@ -730,7 +680,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
         // false: pre-change-119098
         boolean mWantMainDomain;
 
-        Queue<Token> mSplitStrings;
+        Queue<Token> mSplitStrings = new LinkedList<Token>();
 
         AddressTokenFilter(TokenFilter in, boolean wantMainDomain) {
             super(in);
@@ -752,22 +702,19 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
         }
 
         /**
-         * On first call, we have one toplevel 'token' from our parent filter
-         * The only interesting case is when there's an @ sign such as:
-         *        foo@a.b.c.d
-         *
+         * On first call, we have one toplevel 'token' from our parent filter.
+         * The only interesting case is when there's an '@' sign such as:
+         * {@code foo@a.b.c.d}.
          */
         @Override
-        public Token nextSplit() {
-            if (mSplitStrings == null) {
-                mSplitStrings = new LinkedList<Token>();
-
-                String termText = mCurToken.term();
+        public void nextSplit() {
+            if (mSplitStrings.isEmpty()) {
+                String term = mCurToken.term();
                 // split on the "@"
-                String lhs = termText.substring(0, mNextSplitPos);
+                String lhs = term.substring(0, mNextSplitPos);
 
                 // yes, we want to include the @!
-                String rhs = termText.substring(mNextSplitPos);
+                String rhs = term.substring(mNextSplitPos);
 
                 if (mWantMainDomain) {
                     // now, split the left part on the "."
@@ -830,14 +777,13 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
 
             // split another piece, save our state, and return...
             mNumSplits++;
-            Token toRet = mSplitStrings.remove();
+            Token result = mSplitStrings.remove();
+            setAttrs(result.term(), result.startOffset(), result.endOffset(),
+                    result.type());
 
             if (mSplitStrings.isEmpty()) {
-                mSplitStrings = null;
-                mCurToken = null;
+                mCurToken.clear();
             }
-
-            return toRet;
         }
     }
 

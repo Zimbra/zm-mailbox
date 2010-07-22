@@ -2,20 +2,17 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on Jul 20, 2004
- */
 package com.zimbra.cs.index;
 
 import java.io.BufferedOutputStream;
@@ -30,14 +27,14 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
+import java.util.List;
 
 import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.WriterAppender;
-import org.apache.lucene.document.DateField;
+import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
@@ -57,12 +54,15 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.*;
 
+/**
+ * @since Jul 20, 2004
+ */
 public class IndexEditor {
 
     static final int SEARCH_RETURN_CONVERSATIONS = 1;
     static final int SEARCH_RETURN_MESSAGES = 2;
     static final int SEARCH_RETURN_DOCUMENTS = 3;
-    
+
     private static SortBy sortOrder = SortBy.DATE_DESCENDING;
     private BufferedReader inputReader = null;
     private PrintStream outputStream = null;
@@ -116,21 +116,20 @@ public class IndexEditor {
     public void checkIndex(long mailboxId, boolean repair) {
     }
 
-    public interface QueryRunner
-    {
-        public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy) throws IOException, ParseException, MailServiceException, ServiceException;
+    public interface QueryRunner {
+        ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy)
+            throws IOException, ParseException, MailServiceException, ServiceException;
     }
 
-    public class SingleQueryRunner implements QueryRunner
-    {
+    public class SingleQueryRunner implements QueryRunner {
         long mMailboxId;
 
         SingleQueryRunner(long mailboxId) throws ServiceException {
             mMailboxId = mailboxId;
         }
 
-        public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy) throws IOException, MailServiceException, ParseException, ServiceException
-        {
+        public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy)
+            throws IOException, MailServiceException, ParseException, ServiceException {
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
             SearchParams params = new SearchParams();
             params.setQueryStr(qstr);
@@ -145,9 +144,8 @@ public class IndexEditor {
         }
     }
 
-    public class MultiQueryRunner implements QueryRunner
-    {
-        long mMailboxId[];
+    public class MultiQueryRunner implements QueryRunner {
+        long[] mMailboxId;
 
         MultiQueryRunner(long[] mailboxId) throws ServiceException {
             mMailboxId = new long[mailboxId.length];
@@ -156,7 +154,7 @@ public class IndexEditor {
             }
         }
 
-        MultiQueryRunner(ArrayList /* Long */ mailboxId) throws ServiceException {
+        MultiQueryRunner(List<Long> mailboxId) throws ServiceException {
             mMailboxId = new long[mailboxId.size()];
             for (int i = 0; i < mailboxId.size(); i++) {
                 mMailboxId[i] = ((Long) mailboxId.get(i)).longValue();
@@ -164,8 +162,9 @@ public class IndexEditor {
         }
 
 
-        public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy) throws IOException, MailServiceException, ParseException, ServiceException
-        {
+        public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy)
+            throws IOException, MailServiceException, ParseException, ServiceException {
+
             ZimbraQueryResults[] res = new ZimbraQueryResults[mMailboxId.length];
             for (int i = 0; i < mMailboxId.length; i++) {
                 Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId[i]);
@@ -185,10 +184,10 @@ public class IndexEditor {
     }
 
 
-    public void doQuery(QueryRunner runner, boolean dump, int groupBy) throws MailServiceException, IOException, ParseException, ServiceException
-    {
-        //        try {
-        while(true) {
+    public void doQuery(QueryRunner runner, boolean dump, int groupBy)
+        throws MailServiceException, IOException, ParseException, ServiceException {
+
+        while (true) {
             outputStream.print("Query> ");
             String qstr = inputReader.readLine();
             if (qstr.equals("")) {
@@ -196,14 +195,6 @@ public class IndexEditor {
             }
             outputStream.println("\n\nTest 1: "+qstr);
             long startTime = System.currentTimeMillis();
-
-            //ZimbraQuery zq = new ZimbraQuery(qstr, Mailbox.getMailboxById(mailboxId));
-            //        		Hits hits = searcher.search(zq);
-
-//          int groupBy = MailboxIndex.SEARCH_RETURN_MESSAGES;
-//          if (conv) {
-//          groupBy = MailboxIndex.SEARCH_RETURN_CONVERSATIONS;
-//          }
 
             byte[] types = new byte[1];
             switch(groupBy) {
@@ -221,23 +212,7 @@ public class IndexEditor {
             try {
 
                 long endTime = System.currentTimeMillis();
-
-                // compute numMessages the slow way, so we get a true count...for testing only!
-                int numMessages = 0;
-                if (false){
-                    res.resetIterator();
-                    ZimbraHit hit = res.getNext();
-                    while (hit != null) {
-                        numMessages++;
-                        hit=res.getNext();
-                    }
-                }
-
                 int HITS_PER_PAGE = 20;
-//              if (conv) {
-//              HITS_PER_PAGE = 20;
-//              }
-
                 int totalShown = 0;
 
                 res.resetIterator();
@@ -268,10 +243,7 @@ public class IndexEditor {
         if (groupBy == SEARCH_RETURN_CONVERSATIONS) {
             ConversationHit ch = (ConversationHit) hit;
             outputStream.println(ch.toString() + " \"  (" + ch.getNumMessageHits() + ")");
-            Collection mhs = ch.getMessageHits();
-            for (Iterator iter = mhs.iterator(); iter.hasNext(); )
-            {
-                MessageHit mh = (MessageHit)iter.next();
+            for (MessageHit mh : ch.getMessageHits()) {
                 outputStream.println("\t" + mh.toString());
             }
         } else {
@@ -287,89 +259,7 @@ public class IndexEditor {
         }
     }
 
-
-//  public static void newQuery(long mailboxId) throws IOException, ParseException
-//  {
-//  ZimbraSearcher searcher = Indexer.GetInstance().getSearcher(mailboxId);
-//  try {
-//  while(true) {
-//  outputStream.print("Query> ");
-//  String qstr = in.readLine();
-//  if (qstr.equals("")) {
-//  return;
-//  }
-//  outputStream.println("\n\nTest 1: "+qstr);
-//  ZimbraQuery zq = new ZimbraQuery(qstr);
-//  SimpleQueryResults hits = searcher.search(zq,1,101);
-//  try {
-
-//  if (hits==null) {
-//  continue;
-//  }
-//  outputStream.println(hits.numHits() + " total matching documents\n");
-
-//  final int HITS_PER_PAGE = 10;
-//  for (int start = 0; start < hits.numHits(); start += HITS_PER_PAGE) {
-//  int end = Math.min(hits.numHits(), start + HITS_PER_PAGE);
-//  for (int i = start; i < end; i++) {
-//  //        				Document doc = hits.doc(i);
-//  //        				String path = doc.get(LuceneFields.L_MAILBOX_BLOB_ID) + " ";
-//  //        				String dateStr = doc.get(LuceneFields.L_DATE);
-//  //        				if (dateStr != null) { 
-//  //        					path += DateField.stringToDate(dateStr)+" ";
-//  //        				}
-//  //        				String sizeStr = doc.get(LuceneFields.L_SIZE);
-//  //        				if (sizeStr != null) {
-//  //        					path+=sizeStr+" ";
-//  //        				}
-//  //        				path += doc.get(LuceneFields.L_H_SUBJECT);
-//  //        				int hitNum = i + 1;
-//  //        				if (path != null) {
-//  //        					outputStream.println(hitNum + ". " + path);
-//  //        				} else {
-//  //        					outputStream.println(hitNum + ". " + "No path for this document");
-//  //        				}
-//  }
-
-//  if (hits.numHits() > end) {
-//  outputStream.print("more (y/n) ? ");
-//  String line = in.readLine();
-//  if (line.length() == 0 || line.charAt(0) == 'n')
-//  break;
-//  }
-//  }
-//  } finally {
-//  searcher.doneWithSearchResults(hits);
-//  }
-//  }
-//  } catch(Exception e) {
-//  e.printStackTrace();
-//  } finally {
-//  searcher.close();
-//  }
-//  }
-
-
-    public void dumpFields(long mailboxId) throws IOException, ServiceException
-    {
-////      MailboxIndex searcher = Indexer.GetInstance().getMailboxIndex(mailboxId);
-//        MailboxIndex searcher = MailboxManager.getInstance().getMailboxById(mailboxId).getMailboxIndex();
-//
-//        if (searcher != null) {
-//    //      try {
-//            outputStream.println("\nFields\n------");
-//            Collection c = searcher.getFieldNames();
-//            Iterator iterator = c.iterator();
-//            while (iterator.hasNext()) {
-//                String str = iterator.next().toString();
-//                if (str.length() > 0 && !str.equals("")) {
-//                    outputStream.println(str);
-//                }
-//            }
-//    //      } finally {
-//    //      searcher.close();
-//    //      }
-//        }
+    public void dumpFields(long mailboxId) throws IOException, ServiceException {
     }
 
     public boolean confirm(String confirmString) {
@@ -405,8 +295,7 @@ public class IndexEditor {
         return toRet.toString();
     }
 
-    public void dumpDocument(Document d, boolean isDeleted)
-    {
+    public void dumpDocument(Document d, boolean isDeleted) {
         if (isDeleted) {
             outputStream.print("DELETED ");
         }
@@ -428,8 +317,12 @@ public class IndexEditor {
         if (dateStr == null) {
             dateStr = "";
         } else {
-            Date dt = DateField.stringToDate(dateStr);
-            dateStr = dt.toString()+" ("+dt.getTime()+")";
+            try {
+                Date dt = DateTools.stringToDate(dateStr);
+                dateStr = dt.toString() +" (" + dt.getTime() + ")";
+            } catch (java.text.ParseException e) {
+                assert false;
+            }
         }
         String sizeStr = d.get(LuceneFields.L_SORT_SIZE);
         if (sizeStr == null) {
@@ -440,7 +333,8 @@ public class IndexEditor {
             part = "NO_PART";
         }
 
-        outputStream.println(Format(blobId,10) + Format(dateStr,45) + Format(part,10) + Format(sizeStr,10) + "\"" + subj + "\"");
+        outputStream.println(Format(blobId, 10) + Format(dateStr, 45) +
+                Format(part, 10) + Format(sizeStr, 10) + "\"" + subj + "\"");
 
         Field content = d.getField(LuceneFields.L_CONTENT);
         if (content != null) {
@@ -448,310 +342,24 @@ public class IndexEditor {
         }
     }
 
-//    private class DocCallback extends MailboxIndex.DocEnumInterface
-//    {
-//        public void maxDocNo(int num)
-//        {
-//            outputStream.println("There are "+num+" documents in this index.");
-//            outputStream.println("MB-BLOB-ID    DATE                                PART      SIZE  SUBJECT");
-//            outputStream.println("----------------------------------------------------------------------------------------------------------------");
-//        }
-//
-//        public boolean onDocument(Document d, boolean isDeleted) {
-//            if (isDeleted) {
-//                outputStream.print("DELETED ");
-//            }
-//            String subj, blobId;
-//            Field f;
-//            f = d.getField(LuceneFields.L_H_SUBJECT);
-//            if (f!=null) {
-//                subj = f.stringValue();
-//            } else {
-//                subj = "MISSING_SUBJECT";
-//            }
-//            f = d.getField(LuceneFields.L_MAILBOX_BLOB_ID);
-//            if (f!=null) {
-//                blobId = f.stringValue();
-//            } else {
-//                blobId = "MISSING";
-//            }
-//            String part = d.get(LuceneFields.L_PARTNAME);
-//            if (part == null) {
-//                part = "NULL_PART";
-//            }
-//
-//            String dateStr = d.get(LuceneFields.L_SORT_DATE);
-//            if (dateStr == null) {
-//                dateStr = "";
-//            } else {
-//                dateStr = DateField.stringToDate(dateStr).toString();
-//            }
-//            String sizeStr = d.get(LuceneFields.L_SIZE);
-//            if (sizeStr == null) {
-//                sizeStr = "";
-//            }
-//
-//            outputStream.println(Format(blobId,10) + Format(dateStr,30) + Format(part,10) + Format(sizeStr,10) + "\"" + subj + "\"");
-//
-//            return true;
-//        }
-//
-//    }
-
-    public void dumpAll(long mailboxId) throws IOException, ServiceException
-    {
-////      MailboxIndex searcher = Indexer.GetInstance().getMailboxIndex(mailboxId);
-//        MailboxIndex searcher = MailboxManager.getInstance().getMailboxById(mailboxId).getMailboxIndex();
-//        if (searcher != null) {
-//    //      try {
-//    //      int maxDoc = reader.maxDoc();
-//    //      outputStream.println("There are "+maxDoc+" documents in this index.");
-//            searcher.enumerateDocuments(new DocCallback());
-//    //      } finally {
-//    //      searcher.close();
-//    //      }
-//        }
+    public void dumpAll(long mailboxId) throws IOException, ServiceException {
     }
 
-    public void dumpDocumentByMailItemId(long mailboxId, int mailItemId) throws ServiceException, IOException
-    {
-//        Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(mailItemId));
-//        MailboxIndex idx = MailboxManager.getInstance().getMailboxById(mailboxId).getMailboxIndex();
-//        RefCountedIndexSearcher searcher = null;
-//
-//        if (idx != null) {
-//            try {
-//                // Digression here -- find ALL documents for this blob, make sure
-//                // that they all have the same sort field value
-//                TermQuery q = new TermQuery(term);
-//                searcher = idx.getCountedIndexSearcher();
-//                Hits luceneHits = searcher.getSearcher().search(q);
-//    
-//                for (int i = 0; i < luceneHits.length(); i++) {
-//                    Document curDoc = luceneHits.doc(i);
-//                    dumpDocument(curDoc, false);
-//                }
-//            } finally {
-//                if (searcher != null) {
-//                    searcher.release();
-//                }
-//            }
-//        }
+    public void dumpDocumentByMailItemId(long mailboxId, int mailItemId) throws ServiceException, IOException {
     }
 
-    private static int NumDigits(String s)
-    {
-        int ret = 0;
-        char[] array = s.toCharArray();
-        for (int i = 0; i < array.length; i++) {
-            if (Character.isDigit(array[i])) {
-                ret++;
-            }
-        }
-        return ret;
+    public void dumpTerms(long mailboxId) throws IOException, ServiceException {
     }
 
-
-    public void dumpTerms(long mailboxId) throws IOException, ServiceException
-    {
-//        outputStream.print("Field Name> ");
-//        String field = inputReader.readLine();
-//        if (field.equals("")) {
-//            return;
-//        }
-//
-//        outputStream.print("Min Frequency> ");
-//        String min = inputReader.readLine();
-//        outputStream.print("Max Frequency> ");
-//        String max = inputReader.readLine();
-//        int minNum=0,maxNum=100;
-//        boolean constrain = false;
-//        if (!min.equals("")) {
-//            minNum = Integer.parseInt(min);
-//            constrain = true;
-//        }
-//        if (!max.equals("")) {
-//            constrain = true;
-//            maxNum = Integer.parseInt(max);
-//        }
-//        if (constrain) {
-//            outputStream.println("Showing all terms with frequencies between "+minNum+" and "+maxNum);
-//        }
-//
-////      MailboxIndex searcher = Indexer.GetInstance().getMailboxIndex(mailboxId);
-////      MailboxIndex searcher = Mailbox.getMailboxById(mailboxId).getMailboxIndex();
-//
-//
-//        MailboxIndex.AdminInterface admin = null;
-//
-//        try {
-////          Collection c = new ArrayList();
-//            Collection c = new TreeSet(new MailboxIndex.AdminInterface.TermInfo.FreqComparator());
-//
-//            Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
-//            MailboxIndex mi = mbox.getMailboxIndex();
-//            admin = mi != null ? mi.getAdminInterface() : null;
-//            if (admin != null)
-//                admin.enumerateTerms(c, field);
-//
-//            int numDocs = admin.numDocs();
-//
-//            double minFlt = minNum / 10000.0;
-//            double maxFlt = maxNum / 10000.0;
-//            outputStream.println("minFlt = "+minFlt+" max="+maxFlt);
-//
-//            double scaledMin = minFlt * numDocs;
-//            double scaledMax = maxFlt * numDocs;
-//            outputStream.println("Showing all terms with frequencies between "+scaledMin+" and "+scaledMax);
-//
-////          IndexReader reader = admin.getIndexReader();
-//
-//            Iterator iterator = c.iterator();
-//            int tot = 0;
-//            int totalTerms = 0;
-//            ArrayList ats = new ArrayList();
-//            while (iterator.hasNext()) {
-//                MailboxIndex.AdminInterface.TermInfo info =
-//                    (MailboxIndex.AdminInterface.TermInfo)iterator.next();
-//                String termText = info.mTerm.text();
-//
-//                if (termText.indexOf('@') > -1) {
-//                    ats.add(termText);
-//                }
-//
-//                if (NumDigits(termText) <= 2) {
-//                    if (termText.length() > 2 && !termText.equals("")) {
-//
-//                        totalTerms++;
-//
-//                        //				if ((info.mFreq >= scaledMin) && (info.mFreq<=scaledMax)) {
-//                        if (info.mFreq >= minNum) {
-//                            if (tot < maxNum && admin != null) {
-//                                tot++;
-////                              TermEnum e = reader.terms(new Term(LuceneFields.L_CONTENT, termText));
-////                              int occurences = e.docFreq() - info.mFreq;
-//                                int occurences = admin.countTermOccurences(LuceneFields.L_CONTENT, termText);
-//
-////                              int low0 = 0; // 5
-////                              int high0 = 99999; // 40
-////                              int low = 0; // 5
-////                              int high = 99999; // 75
-//
-////                              if (info.mFreq > low0 && info.mFreq < high0 && occurences > low && occurences < high) {
-//                                outputStream.println("" + info.mFreq + ": " + termText+" ("+occurences+")");
-////                              }
-//
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//
-////          outputStream.println("Ats list:");
-////          for (int i = 0; i <ats.size(); i++) {
-////          outputStream.println(ats.get(i).toString());
-////          }
-//            outputStream.println("Displayed "+tot+" out of "+totalTerms+" terms in the index");
-//        } catch (Exception e) {
-//            outputStream.println("Caught "+ExceptionToString.ToString(e));
-//        } finally {
-//            if (admin!=null) {
-//                admin.close();
-//            }
-//        }
+    public void getTerms(long mailboxId, String field, int minNum, int maxNum,
+            Collection<?> ret) throws IOException, ServiceException {
     }
 
-    public void getTerms(long mailboxId, String field, int minNum, int maxNum, Collection ret) throws IOException, ServiceException
-    {
-////      MailboxIndex searcher = Indexer.GetInstance().getMailboxIndex(mailboxId);
-////      MailboxIndex searcher = Mailbox.getMailboxById(mailboxId).getMailboxIndex();
-//
-//
-//        MailboxIndex.AdminInterface admin = null;
-//
-//        try {
-////          Collection c = new ArrayList();
-//            Collection c = new TreeSet(new MailboxIndex.AdminInterface.TermInfo.FreqComparator());
-//
-//            Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
-//            MailboxIndex mi = mbox.getMailboxIndex();
-//            admin = mi != null ? mi.getAdminInterface() : null;
-//            if (admin != null)
-//                admin.enumerateTerms(c, field);
-//
-////          int numDocs = admin.numDocs();
-//
-////          double minFlt = minNum / 100000.0;
-////          double maxFlt = maxNum / 100000.0;
-////          outputStream.println("minFlt = "+minFlt+" max="+maxFlt);
-//
-////          double scaledMin = minFlt * numDocs;
-////          double scaledMax = maxFlt * numDocs;
-////          outputStream.println("Showing all terms with frequencies between "+scaledMin+" and "+scaledMax);
-//
-//            int tot = 0;
-//
-//            Iterator iterator = c.iterator();
-//            while (iterator.hasNext()) {
-//                MailboxIndex.AdminInterface.TermInfo info =
-//                    (MailboxIndex.AdminInterface.TermInfo)iterator.next();
-//
-//                if (tot > maxNum) {
-//                    return;
-//                }
-//
-////              if ((info.mFreq >= scaledMin) && (info.mFreq<=scaledMax)) {
-//                if (info.mFreq >= minNum) {
-//                    String termText = info.mTerm.text();
-//                    if (NumDigits(termText) <= 1) {
-//                        if (termText.length() > 3 && !termText.equals("")) {
-//                            outputStream.println("" + info.mFreq + ": " + termText);
-//                            ret.add(termText);
-//                            tot++;
-//                        }
-//                    }
-//                }
-//            }
-//        } catch (Exception e) {
-//            outputStream.println("Caught "+ExceptionToString.ToString(e));
-//        } finally {
-//            if (admin!=null) {
-//                admin.close();
-//            }
-//        }
-    }
-
-//    public int CountNear(MailboxIndex.AdminInterface admin, Term[] terms, int slop, boolean inOrder) throws IOException
-//    {
-//        SpanQuery q[] = new SpanQuery[terms.length];
-//        for (int i = 0; i < terms.length; i++) {
-//            q[i] = new SpanTermQuery(terms[i]);
-//        }
-//        SpanQuery near = new SpanNearQuery(q, slop, inOrder);
-////      Spans results = near.getSpans(reader);
-//        Spans results = admin.getSpans(near);
-//
-//        int ret = 0;
-////      do {
-//        while(results.next()) {
-////          int docNo = results.doc();
-////          outputStream.print("SPAN(doc="+docNo+","+results.start()+","+results.end()+"):\n\t");
-////          if (docNo >= 0) {
-////          Document doc = reader.document(docNo);
-////          DumpDocument(doc, false);
-////          }
-////          outputStream.println("");
-//            ret++;
-//        }// while(results.next());
-//
-//        return ret;
-//    }
-
-    public static class TwoTerms implements Comparable {
+    public static class TwoTerms implements Comparable<TwoTerms> {
         /* (non-Javadoc)
          * @see java.lang.Comparable#compareTo(java.lang.Object)
          */
-        public int compareTo(Object o) {
+        public int compareTo(TwoTerms o) {
             TwoTerms other = (TwoTerms)o;
             if (other.mCount == mCount) {
                 if (other.s1.equals(s1)) {
@@ -764,173 +372,10 @@ public class IndexEditor {
         public int mCount;
         public String s1;
         public String s2;
-
-
-
     }
 
-    public void spanTest(long mailboxId) throws IOException, ServiceException
-    {
-//        outputStream.println("SpanTest!\n");
-//        outputStream.print("Field1 Name> ");
-//        String field = inputReader.readLine();
-//        if (field.equals("")) {
-//            return;
-//        }
-//
-//        outputStream.print("Min Frequency> ");
-//        String min = inputReader.readLine();
-//        outputStream.print("Max Frequency> ");
-//        String max = inputReader.readLine();
-//        int minNum=0,maxNum=100;
-//        boolean constrain = false;
-//        if (!min.equals("")) {
-//            minNum = Integer.parseInt(min);
-//            constrain = true;
-//        }
-//        if (!max.equals("")) {
-//            constrain = true;
-//            maxNum = Integer.parseInt(max);
-//        }
-//
-//        int slopNum = 10;
-//
-//        outputStream.print("Slop> ");
-//        String sSlop = inputReader.readLine();
-//        if (!sSlop.equals("")) {
-//            constrain = true;
-//            slopNum = Integer.parseInt(sSlop);
-//        }
-//
-//        ArrayList c = new ArrayList();
-//        getTerms(mailboxId, field, minNum, maxNum, c);
-//
-//
-//        if (constrain) {
-//            outputStream.println("Terms with pctages between "+minNum+" and "+maxNum+" with slop "+slopNum);
-//        }
-//
-//
-//
-//
-//
-//        /*		outputStream.print("Text1> ");
-//		String text1 = in.readLine();
-//		if (text1.equals("")) {
-//			return;
-//		}
-//
-//		outputStream.print("Field2 Name> ");
-//		String field2 = in.readLine();
-//		if (field2.equals("")) {
-//			return;
-//		}
-//		outputStream.print("Text> ");
-//		String text = in.readLine();
-//		if (field.equals("")) {
-//			return;
-//		}*/
-//
-//        outputStream.println("-------------------------------");
-//
-//        MailboxIndex.AdminInterface admin = null;
-//        try {
-//            Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
-//            MailboxIndex mi = mbox.getMailboxIndex();
-//            admin = mi != null ? mi.getAdminInterface() : null;
-////          IndexReader reader = admin.getIndexReader();
-//            int printNum = 1; //c.size() / 10;
-//            if (printNum < 1) {
-//                printNum = 1;
-//            }
-//
-//            Collection matches = new TreeSet();
-//
-//            if (admin != null) {
-//                for (int i = 0; i < (c.size()-1); i++) {
-//                    if (i % printNum == 0) {
-//                        outputStream.println("Iter "+i+" out of "+c.size());
-//                    }
-//                    String s1 = (String)c.get(i);
-//                    if (s1.length()>2) {
-//                        for (int j = 0; j < c.size(); j++){
-//                            String s2 = (String)c.get(j);
-//                            //					String s1 = "my";
-//                            //					String s2 = "birthday";
-//                            if (s2.length() > 2) {
-//    
-//                                Term t1 = new Term(field, s1);
-//                                Term t2 = new Term(field, s2);
-//                                int near = CountNear(admin, new Term[] {t1, t2}, slopNum, true);
-//                                TwoTerms tt = new TwoTerms();
-//                                tt.mCount = near;
-//                                tt.s1 = s1;
-//                                tt.s2 = s2;
-//                                matches.add(tt);
-//    //                          if (tt.mCount > 10) {
-//    //                          outputStream.println(""+tt.mCount+" - "+tt.s1+","+tt.s2);
-//    //                          }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//
-//            Iterator i = matches.iterator();
-//            while (i.hasNext()) {
-//                TwoTerms t = (TwoTerms)i.next();
-//                if (t.mCount > 0) {
-//                    outputStream.println(""+t.mCount+": "+t.s1+","+t.s2);
-//                }
-//            }
-//
-////          SpanQuery q1 = new SpanTermQuery(new Term(field, text));
-////          SpanQuery first = new SpanFirstQuery(q1, 100);
-////          Spans results = first.getSpans(reader);
-//
-////          do {
-////          int docNo = results.doc();
-////          outputStream.print("SPAN(doc="+docNo+","+results.start()+","+results.end()+"):\n\t");
-////          if (docNo >= 0) {
-////          Document doc = reader.document(docNo);
-////          DumpDocument(doc, false);
-////          }
-////          outputStream.println("");
-////          } while(results.next());
-//
-//
-//        } catch (Exception e) {
-//            outputStream.println("Caught "+ExceptionToString.ToString(e));
-//        } finally {
-//            if (admin!=null) {
-//                admin.close();
-//            }
-//        }
+    public void spanTest(long mailboxId) throws IOException, ServiceException {
     }
-
-
-//  private static class MemoryThread extends Thread
-//  {
-//  public boolean mRun = true;
-//  public void run() {
-////while(mRun) {
-////long totalMem = Runtime.getRuntime().totalMemory();
-////long freeMem = Runtime.getRuntime().freeMemory();
-////long maxMem = Runtime.getRuntime().maxMemory();
-////totalMem = totalMem / (1024);
-////freeMem = freeMem / (1024);
-////maxMem = maxMem / (1024);
-////long myGuess = totalMem - freeMem;
-////outputStream.println("MT1> GuessUsed: " + myGuess + "K  (System says: total "+ totalMem + "K and claims to have " + freeMem + "K free out of " + maxMem + "K)");
-////try {
-////Thread.sleep(1000);
-////} catch (InterruptedException e) {};
-////}
-//  }
-//  public void stopMemThread() {
-//  mRun = false;
-//  }
-//  }
 
     static IndexEditorTcpServer sTcpServer = null;
     static IndexEditorProtocolhandler sIndexEditorProtocolHandler;
@@ -938,8 +383,7 @@ public class IndexEditor {
     static IndexEditorTcpThread tcpServerThread;
     static Thread sThread;
 
-    public static void StartTcpEditor() throws ServiceException
-    {
+    public static void StartTcpEditor() throws ServiceException {
         ServerSocket serverSocket = NetUtil.getTcpServerSocket(null, sPortNo);
         sTcpServer = new IndexEditorTcpServer("IndexEditorTcpServer", 3, Thread.NORM_PRIORITY, serverSocket);
         sIndexEditorProtocolHandler = new IndexEditorProtocolhandler(sTcpServer);
@@ -950,8 +394,7 @@ public class IndexEditor {
 
     public static void EndTcpEditor() {
 
-        for (Iterator iter = inputs.iterator(); iter.hasNext();) {
-            Object cur = iter.next();
+        for (Object cur : inputs) {
             try {
                 if (cur instanceof InputStream) {
                     ((InputStream)cur).close();
@@ -973,7 +416,7 @@ public class IndexEditor {
         }
     }
 
-    public static ArrayList inputs = new ArrayList();
+    public static List<Object> inputs = new ArrayList<Object>();
 
     private static class IndexEditorTcpThread implements Runnable {
         public void run() {
@@ -983,13 +426,18 @@ public class IndexEditor {
 
     private static class IndexEditorTcpServer extends TcpServer {
 
-        IndexEditorTcpServer(String name, int numThreads, int threadPriority, ServerSocket serverSocket) {
+        IndexEditorTcpServer(String name, int numThreads, int threadPriority,
+                ServerSocket serverSocket) {
             super(name, numThreads, threadPriority, serverSocket);
         }
+
+        @Override
         protected ProtocolHandler newProtocolHandler() {
             return new IndexEditorProtocolhandler(this);
         }
-        public int getConfigMaxIdleMilliSeconds(){
+
+        @Override
+        public int getConfigMaxIdleMilliSeconds() {
             return 0;
         }
 
@@ -1010,14 +458,12 @@ public class IndexEditor {
             super(server);
         }
 
-
-
         /**
          * Performs any necessary setup steps upon connection from client.
          * @throws IOException
          */
-        protected boolean setupConnection(Socket connection) throws IOException
-        {
+        @Override
+        protected boolean setupConnection(Socket connection) throws IOException {
 //          mRemoteAddress = connection.getInetAddress().getHostAddress();
 
             mInputStream = new TcpServerInputStream(connection.getInputStream());
@@ -1033,11 +479,13 @@ public class IndexEditor {
          * @return true if authenticated, false if not authenticated
          * @throws IOException
          */
+        @Override
         protected boolean authenticate() throws IOException {
             return true;
         }
 
         private WriterAppender mAppender;
+
         public boolean enableLogging() {
             if (mAppender == null) {
                 Layout layout = new PatternLayout(logLayoutPattern );
@@ -1050,6 +498,7 @@ public class IndexEditor {
                 return false;
             }
         }
+
         public boolean disableLogging() {
             if (mAppender != null) {
                 Logger root = Logger.getRootLogger();
@@ -1066,8 +515,8 @@ public class IndexEditor {
          *         received and server disconnected the connection
          * @throws Exception
          */
-        protected boolean processCommand() throws Exception
-        {
+        @Override
+        protected boolean processCommand() throws Exception {
             mAppender = null;
             try {
                 mEditor = new IndexEditor(this);
@@ -1082,6 +531,7 @@ public class IndexEditor {
          * Closes any input/output streams with the client.  May get called
          * multiple times.
          */
+        @Override
         protected void dropConnection() {
             if (mInputStream != null) {
                 try {
@@ -1106,6 +556,7 @@ public class IndexEditor {
          * protocol-specific message to client notifying it that the
          * connection is being dropped due to idle timeout.
          */
+        @Override
         protected void notifyIdleConnection() {
         }
 
@@ -1129,21 +580,6 @@ public class IndexEditor {
 
         String mailboxIdStr = null;
         long mailboxId = 0;
-//      try {
-//      outputStream.print("Enter Mbox ID> ");
-
-//      mailboxIdStr = inputReader.readLine();
-//      } catch(Exception e) {
-//      outputStream.print("Caught exception: "+e.toString());
-//      e.printStackTrace();
-//      }
-//      if (mailboxIdStr == null || mailboxIdStr.equals("")) {
-//      mailboxIdStr = "1";
-//      mailboxId = 1;
-//      } else {
-//      mailboxId = Integer.parseInt(mailboxIdStr);
-//      }
-
         boolean quit = false;
 
         while(!quit) {

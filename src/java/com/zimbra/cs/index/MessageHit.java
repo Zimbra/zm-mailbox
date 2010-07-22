@@ -2,26 +2,26 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
 /*
- * Created on Oct 15, 2004
  */
 package com.zimbra.cs.index;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.lucene.document.DateField;
+import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 
 import com.zimbra.common.service.ServiceException;
@@ -36,15 +36,13 @@ import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
-
-
 /**
- * @author tim
- * 
  * Efficient Read-access to a Message returned from a query. APIs mirror the
- * APIs on com.zimbra.cs.mailbox.Message, but are read-only. The real
- * archive.mailbox.Message can be retrieved, but this should only be done if
- * write-access is necessary.
+ * APIs on {@link Message}, but are read-only. The real archive.mailbox.Message
+ * can be retrieved, but this should only be done if write-access is necessary.
+ *
+ * @since Oct 15, 2004
+ * @author tim
  */
 public class MessageHit extends ZimbraHit {
 
@@ -57,7 +55,9 @@ public class MessageHit extends ZimbraHit {
     private int mMessageId = 0;
     private ConversationHit mConversationHit = null;
 
-    protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId, Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
+    protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx,
+            int mailItemId, Document d, float score,
+            MailItem.UnderlyingData underlyingData) throws ServiceException {
         super(results, mbx, score);
         mDoc = d;
         assert (d != null);
@@ -70,7 +70,10 @@ public class MessageHit extends ZimbraHit {
         }
     }
 
-    protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
+    protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx,
+            int mailItemId, float score, MailItem.UnderlyingData underlyingData)
+        throws ServiceException {
+
         super(results, mbx, score);
         mMessageId = mailItemId;
         assert (mailItemId != 0);
@@ -80,11 +83,12 @@ public class MessageHit extends ZimbraHit {
             }
         }
     }
-    
+
     int getFolderId() throws ServiceException {
         return getMessage().getFolderId();
     }
-    
+
+    @Override
     public int getConversationId() throws ServiceException {
         if (mConversationId == 0) {
             mConversationId = getMessage().getConversationId();
@@ -92,13 +96,17 @@ public class MessageHit extends ZimbraHit {
         return mConversationId;
     }
 
+    @Override
     public long getDate() throws ServiceException {
         if (mCachedDate == -1) {
             if (mMessage == null && mDoc != null) {
                 String dateStr = mDoc.get(LuceneFields.L_SORT_DATE);
                 if (dateStr != null) {
-                    mCachedDate = DateField.stringToTime(dateStr);
-                    return mCachedDate;
+                    try {
+                        return mCachedDate = DateTools.stringToTime(dateStr);
+                    } catch (ParseException e) {
+                        return 0;
+                    }
                 }
             }
             mCachedDate = getMessage().getDate();
@@ -109,7 +117,7 @@ public class MessageHit extends ZimbraHit {
     public void addPart(MessagePartHit part) {
         if (mMatchedParts == null)
             mMatchedParts = new ArrayList<MessagePartHit>();
-        
+
         if (!mMatchedParts.contains(part)) {
             mMatchedParts.add(part);
         }
@@ -119,42 +127,50 @@ public class MessageHit extends ZimbraHit {
         return mMatchedParts;
     }
 
+    @Override
     public int getItemId() {
-    	return mMessageId;
+        return mMessageId;
     }
-    
+
     public byte getItemType() {
         return MailItem.TYPE_MESSAGE;
     }
-    
 
+    @Override
     public String toString() {
         int convId = 0;
         boolean convIdUnknown = false;
         try {
             // don't load the message from the DB just to get the convid!
-            if (mConversationId == 0 && mMessage == null)
+            if (mConversationId == 0 && mMessage == null) {
                 convIdUnknown = true;
-            else
+            } else {
                 convId = getConversationId();
+            }
         } catch (ServiceException e) {
             e.printStackTrace();
         }
         long size = 0;
         try {
-            if (mCachedSize == -1 && mMessage == null)
+            if (mCachedSize == -1 && mMessage == null) {
                 size = -1;
-            else
+            } else {
                 size = getSize();
+            }
         } catch (ServiceException e) {
             e.printStackTrace();
         }
-        if (mMessage == null)
+        if (mMessage == null) {
             return "MS: " + this.getItemId();
-        else
-            return "MS: " + super.toString() + " C" + (convIdUnknown ? "?" : convId) + " M" + Integer.toString(getItemId()) + " S="+size;
+        } else {
+            return "MS: " + super.toString() +
+                " C" + (convIdUnknown ? "?" : convId) +
+                " M" + Integer.toString(getItemId()) +
+                " S="+size;
+        }
     }
 
+    @Override
     public long getSize() throws ServiceException {
         if (mCachedSize == -1) {
             if (mMessage == null && mDoc != null) {
@@ -172,25 +188,32 @@ public class MessageHit extends ZimbraHit {
     public boolean isTagged(Tag tag) throws ServiceException {
         return getMessage().isTagged(tag);
     }
-    
+
+    @Override
     void setItem(MailItem item) {
         mMessage = (Message) item;
     }
-    
+
+    @Override
     boolean itemIsLoaded() {
         return mMessage != null;
     }
-    
-    public MailItem getMailItem() throws ServiceException { return  getMessage(); }
-    
+
+    @Override
+    public MailItem getMailItem() throws ServiceException {
+        return getMessage();
+    }
+
     public Message getMessage() throws ServiceException {
         if (mMessage == null) {
-            Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailbox().getId());
+            Mailbox mbox = MailboxManager.getInstance().getMailboxById(
+                    getMailbox().getId());
             int messageId = getItemId();
             try {
                 mMessage = mbox.getMessageById(null, messageId);
             } catch (ServiceException e) {
-                mLog.error("Error getting message id="+messageId+" from mailbox "+mbox.getId(),e);
+                mLog.error("Error getting message id=" + messageId +
+                        " from mailbox " + mbox.getId(), e);
                 e.printStackTrace();
                 throw e;
             }
@@ -198,13 +221,15 @@ public class MessageHit extends ZimbraHit {
         return mMessage;
     }
 
+    @Override
     public String getSubject() throws ServiceException {
         if (mCachedSubj == null) {
             mCachedSubj = getMessage().getSortSubject();
         }
         return mCachedSubj;
     }
-    
+
+    @Override
     public String getName() throws ServiceException {
         if (mCachedName == null) {
             mCachedName = getSender();
@@ -216,7 +241,11 @@ public class MessageHit extends ZimbraHit {
         if (mMessage == null && mDoc != null) {
             String dateStr = mDoc.get(LuceneFields.L_SORT_DATE);
             if (dateStr != null) {
-                return DateField.stringToTime(dateStr);
+                try {
+                    return DateTools.stringToTime(dateStr);
+                } catch (ParseException e) {
+                    return 0;
+                }
             } else {
                 return 0;
             }
