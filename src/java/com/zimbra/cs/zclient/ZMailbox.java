@@ -906,6 +906,8 @@ public class ZMailbox implements ToZJSONObject {
     public ZGetInfoResult getAccountInfo(boolean refresh) throws ServiceException {
         if (mGetInfoResult == null || refresh) {
             Element req = newRequestElement(AccountConstants.GET_INFO_REQUEST);
+            // get everything but zimlets
+            req.addAttribute(AccountConstants.A_SECTIONS, "MBOX, PREFS, ATTRS, PROPS, IDENTS, SIGS, DSRCS, CHILDREN");
             mGetInfoResult = new ZGetInfoResult(invoke(req));
         }
         return mGetInfoResult;
