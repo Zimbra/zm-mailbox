@@ -57,8 +57,11 @@ import com.zimbra.cs.service.util.SyncToken;
 public class LuceneIndex extends IndexWritersCache.IndexWriter
     implements ILuceneIndex, ITextIndex {
 
-    //TODO: Change to 3.0 after writing extensive unit test
-    //public static final Version VERSION = Version.LUCENE_30;
+    /**
+     * We don't want to enable StopFilter preserving position increments,
+     * which is enabled on or after 2.9, because we want phrases to match across
+     * removed stop words.
+     */
     public static final Version VERSION = Version.LUCENE_24;
 
     private static IndexReadersCache sIndexReadersCache;
@@ -911,8 +914,8 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
         }
 
         try {
-            // TODO: In 3.0, IndexWriter will no longer accept autoCommit=true.
-            // Call commit() yourself when needed.
+            // From 3.0, IndexWriter will no longer support autoCommit=true.
+            // We need to call commit() when needed.
             mIndexWriter = new IndexWriter(mIdxDirectory, mMbidx.getAnalyzer(),
                     false, IndexWriter.MaxFieldLength.LIMITED);
             if (ZimbraLog.index_lucene.isDebugEnabled()) {

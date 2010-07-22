@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.junit.Test;
 import org.testng.Assert;
@@ -207,6 +208,25 @@ public class ZimbraAnalyzerTest {
         Assert.assertEquals(toTokens(stream), new String[] {
             "this", "is", "my-filename", "test", "pdf"
         });
+    }
+
+    /**
+     * We intentionally disable the positionIncrement because we want phrases to
+     * match across removed stop words.
+     *
+     * @see PositionIncrementAttribute
+     */
+    @Test
+    public void positionIncrement() throws Exception {
+        TokenStream stream = ZimbraAnalyzer.getDefaultAnalyzer().tokenStream(
+                LuceneFields.L_H_SUBJECT, new StringReader("It's a test."));
+        PositionIncrementAttribute posIncrAtt = stream.addAttribute(
+                PositionIncrementAttribute.class);
+        while (stream.incrementToken()) {
+            Assert.assertEquals(posIncrAtt.getPositionIncrement(), 1);
+        }
+        stream.end();
+        stream.close();
     }
 
     private String[] toTokens(TokenStream stream) throws IOException {
