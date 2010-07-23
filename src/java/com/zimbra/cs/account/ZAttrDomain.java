@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100701-1303 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100722-1121 */
 
     /**
      * RFC2256: descriptive information
@@ -1698,6 +1698,78 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetAvailableSkin(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAvailableSkin, "");
+        return attrs;
+    }
+
+    /**
+     * Realm for the basic auth challenge (WWW-Authenticate) header
+     *
+     * @return zimbraBasicAuthRealm, or "Zimbra" if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1098)
+    public String getBasicAuthRealm() {
+        return getAttr(Provisioning.A_zimbraBasicAuthRealm, "Zimbra");
+    }
+
+    /**
+     * Realm for the basic auth challenge (WWW-Authenticate) header
+     *
+     * @param zimbraBasicAuthRealm new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1098)
+    public void setBasicAuthRealm(String zimbraBasicAuthRealm) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBasicAuthRealm, zimbraBasicAuthRealm);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Realm for the basic auth challenge (WWW-Authenticate) header
+     *
+     * @param zimbraBasicAuthRealm new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1098)
+    public Map<String,Object> setBasicAuthRealm(String zimbraBasicAuthRealm, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBasicAuthRealm, zimbraBasicAuthRealm);
+        return attrs;
+    }
+
+    /**
+     * Realm for the basic auth challenge (WWW-Authenticate) header
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1098)
+    public void unsetBasicAuthRealm() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBasicAuthRealm, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Realm for the basic auth challenge (WWW-Authenticate) header
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1098)
+    public Map<String,Object> unsetBasicAuthRealm(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBasicAuthRealm, "");
         return attrs;
     }
 

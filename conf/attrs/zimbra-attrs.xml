@@ -4933,4 +4933,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Maximum number of messages to delete during a single transaction when emptying a folder.  If the limit is exceeded, the folder is emptied in multiple transactions.  Each transaction deletes this number of messages.</desc>
 </attr>
 
+<attr id="1098" name="zimbraBasicAuthRealm"  type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.0">
+  <globalConfigValue>Zimbra</globalConfigValue>
+  <desc>Realm for the basic auth challenge (WWW-Authenticate) header</desc>
+</attr>
+
 </attrs>

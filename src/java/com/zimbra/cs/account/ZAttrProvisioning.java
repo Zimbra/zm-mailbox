@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100701-1303 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100722-1121 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1604,6 +1604,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=458)
     public static final String A_zimbraBackupTarget = "zimbraBackupTarget";
+
+    /**
+     * Realm for the basic auth challenge (WWW-Authenticate) header
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1098)
+    public static final String A_zimbraBasicAuthRealm = "zimbraBasicAuthRealm";
 
     /**
      * Batch size to use when indexing data

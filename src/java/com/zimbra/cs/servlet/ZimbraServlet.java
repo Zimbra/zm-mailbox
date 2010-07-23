@@ -81,7 +81,34 @@ public class ZimbraServlet extends HttpServlet {
     private static final String PARAM_ALLOWED_PORTS  = "allowed.ports";
 
     protected static final String WWW_AUTHENTICATE_HEADER = "WWW-Authenticate";
-    protected String getRealmHeader()  { return "BASIC realm=\"Zimbra\""; }
+    
+    protected String getRealmHeader(String realm)  { 
+        if (realm == null)
+            realm = "Zimbra";
+        return "BASIC realm=\"" + realm + "\""; 
+    }
+    
+    protected String getRealmHeader(HttpServletRequest req, Domain domain)  { 
+        String realm = null;
+        
+        if (domain == null) {
+            // get domain by virtual host
+            String host = HttpUtil.getVirtualHost(req);
+            if (host != null) {
+                // to defend against DOS attack, use the negative domain cache
+                try {
+                    domain = Provisioning.getInstance().getDomain(DomainBy.virtualHostname, host.toLowerCase(), true);
+                } catch (ServiceException e) {
+                    mLog.warn("caught exception while getting domain by virtual host: " + host, e);
+                }
+            }
+        }
+        
+        if (domain != null)
+            realm = domain.getBasicAuthRealm();
+
+        return getRealmHeader(realm);
+    }
     
     protected static final String ZIMBRA_FAULT_CODE_HEADER    = "X-Zimbra-Fault-Code";
     protected static final String ZIMBRA_FAULT_MESSAGE_HEADER = "X-Zimbra-Fault-Message";
@@ -381,7 +408,7 @@ public class ZimbraServlet extends HttpServlet {
         // TODO: more liberal parsing of Authorization value...
         if (auth == null || !auth.startsWith("Basic ")) {
             if (sendChallenge) {
-                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());            
+                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));            
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "must authenticate");
             }
             return null;
@@ -413,7 +440,7 @@ public class ZimbraServlet extends HttpServlet {
         Account acct = prov.get(AccountBy.name, user);
         if (acct == null) {
             if (sendChallenge) {
-                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
+                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
             }
             return new GuestAccount(user, pass);
@@ -426,7 +453,7 @@ public class ZimbraServlet extends HttpServlet {
             prov.authAccount(acct, pass, AuthContext.Protocol.http_basic, authCtxt);
         } catch (ServiceException se) {
             if (sendChallenge) {
-                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
+                resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, prov.getDomain(acct)));
                 resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "invalid username/password");
             }
             return null;

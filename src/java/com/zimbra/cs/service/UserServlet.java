@@ -387,7 +387,7 @@ public class UserServlet extends ZimbraServlet {
         if (ctxt == null) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN, message);
         } else if (!ctxt.cookieAuthHappened && ctxt.basicAuthAllowed() && !ctxt.basicAuthHappened) {
-            resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader());
+            resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, message);
         } else {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN, message);
@@ -1221,10 +1221,6 @@ public class UserServlet extends ZimbraServlet {
             sb.append("foramt(" + format + ")\n");
             return sb.toString();
         }
-    }
-
-    @Override protected String getRealmHeader() {
-        return "BASIC realm=\"Zimbra\"";
     }
 
     private String defaultFormat(Context context) {
