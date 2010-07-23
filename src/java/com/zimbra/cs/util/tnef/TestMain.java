@@ -45,6 +45,7 @@ import com.zimbra.cs.util.tnef.DefaultTnefToICalendar;
 import com.zimbra.cs.util.tnef.PlainTextFinder;
 import com.zimbra.cs.util.tnef.TnefToICalendar;
 import com.zimbra.common.util.Log;
+import com.zimbra.common.util.Log.Level;
 import com.zimbra.cs.util.tnef.TNEFtoIcalendarServiceException;
 import com.zimbra.cs.util.tnef.TNEFtoIcalendarServiceException.UnsupportedTnefCalendaringMsgException;
 import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
@@ -189,7 +190,9 @@ public class TestMain {
             if (arg != null) {
                 if (arg.equalsIgnoreCase("-v")) {
                     verbose = true;
-                } else if (arg.equalsIgnoreCase("-D")) {
+                } else if (arg.equalsIgnoreCase("-debug")) {
+                    sLog.setLevel(Level.debug);
+                } else if (arg.equalsIgnoreCase("-d")) {
                     if (i >= args.length - 2)
                         usage();
                     outDirName = args[i+1];
@@ -287,6 +290,7 @@ public class TestMain {
             sLog.warn("Can't find MIME file %s", mimeFile.getPath());
             return false;
         }
+        sLog.debug("Processing MIME file %s", mimeFile.getPath());
 
         // Prepare the input and output.
         SharedFileInputStream sfisMime = null;

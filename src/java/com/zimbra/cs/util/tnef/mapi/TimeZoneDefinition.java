@@ -18,6 +18,7 @@ package com.zimbra.cs.util.tnef.mapi;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.tnef.IcalUtil;
+import com.zimbra.cs.util.tnef.MSGUID;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -38,6 +39,7 @@ import net.fortuna.ical4j.model.property.TzId;
 import net.fortuna.ical4j.model.property.TzOffsetFrom;
 import net.fortuna.ical4j.model.property.TzOffsetTo;
 import net.fortuna.ical4j.util.TimeZones;
+import net.freeutils.tnef.MAPIPropName;
 import net.freeutils.tnef.RawInputStream;
 
 /**
@@ -85,14 +87,36 @@ public class TimeZoneDefinition {
     private TZRule effectiveRule;
     private TimeZone theZone;
 
+    // PidLidAppointmentTimeZoneDefinitionStartDisplay - Specifies
+    // time zone information applicable to PidLidAppointmentStartWhole.
+    public static MAPIPropName PidLidAppointmentTimeZoneDefinitionStartDisplay =
+            new MAPIPropName(MSGUID.PSETID_Appointment.getJtnefGuid(), 0x825E);
+    // PidLidAppointmentTimeZoneDefinitionEndDisplay - Specifies
+    // time zone information applicable to PidLidAppointmentEndWhole.
+    public static MAPIPropName PidLidAppointmentTimeZoneDefinitionEndDisplay =
+            new MAPIPropName(MSGUID.PSETID_Appointment.getJtnefGuid(), 0x825F);
+    // PidLidAppointmentTimeZoneDefinitionRecur - Specifies time zone information
+    // that describes how to convert the meeting date and time on a recurring
+    // series to and from UTC.
+    // MS-OXOCAL says "If this property is set, but it has data that is
+    // inconsistent with the data that is represented by PidLidTimeZoneStruct,
+    // then the client uses PidLidTimeZoneStruct instead of this property."
+    public static MAPIPropName PidLidAppointmentTimeZoneDefinitionRecur =
+            new MAPIPropName(MSGUID.PSETID_Appointment.getJtnefGuid(), 0x8260);
+
     /**
      * Initialise TimeZoneDefinition object from one of the MAPI TimeZoneDefinition
      * properties (as opposed to the simpler TimeZoneStruct property)
      * 
+     * @param mpn is one of the known ones associated with TimeZoneDefinition - see above
      * @param ris
      * @throws IOException
      */
-    public TimeZoneDefinition(RawInputStream ris) throws IOException {
+    public TimeZoneDefinition(MAPIPropName mpn, RawInputStream ris)
+                            throws IOException {
+        if ( (mpn == null) || (ris == null) ) {
+            throw new IOException("Problem getting timezone information");
+        }
         theZone = null;
         int MajorVersion = ris.readU8();
         int MinorVersion = ris.readU8();
@@ -105,6 +129,13 @@ public class TimeZoneDefinition {
             StringBuffer debugInfo = new StringBuffer();
             debugInfo.append("TimeZoneName=");
             debugInfo.append(getTimezoneName());
+            if (mpn.equals(TimeZoneDefinition.PidLidAppointmentTimeZoneDefinitionStartDisplay)) {
+                debugInfo.append("(PidLidAppointmentTimeZoneDefinitionStartDisplay)");
+            } else if (mpn.equals(TimeZoneDefinition.PidLidAppointmentTimeZoneDefinitionEndDisplay)) {
+                debugInfo.append("(PidLidAppointmentTimeZoneDefinitionEndDisplay)");
+            } else if (mpn.equals(TimeZoneDefinition.PidLidAppointmentTimeZoneDefinitionRecur)) {
+                debugInfo.append("(PidLidAppointmentTimeZoneDefinitionRecur)");
+            }
             debugInfo.append(":\n");
             if (MajorVersion != 0x2) {
                 debugInfo.append("    Unexpected MajorVersion=");
@@ -156,6 +187,13 @@ public class TimeZoneDefinition {
     public TimeZoneDefinition(RawInputStream ris, String tzName) throws IOException {
         theZone = null;
         setTimezoneName(tzName);
+        if (sLog.isDebugEnabled()) {
+            StringBuffer debugInfo = new StringBuffer();
+            debugInfo.append("TimeZoneName=");
+            debugInfo.append(getTimezoneName());
+            debugInfo.append(" (from PidLidDescription):\n");
+            sLog.debug(debugInfo);
+        }
         TZRule currRule = new TZRule();
         currRule.setBias(IcalUtil.readI32(ris));
         currRule.setStandardBias(IcalUtil.readI32(ris));

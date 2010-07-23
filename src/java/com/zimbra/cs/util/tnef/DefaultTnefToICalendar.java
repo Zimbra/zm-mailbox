@@ -125,6 +125,9 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             if (bestBusyStatus == null) {
                 bestBusyStatus = busyStatus;
             }
+            // An algorithm is used to choose the values for these
+            // TimeZoneDefinitions  - they don't necessarily map to single
+            // MAPI properties
             TimeZoneDefinition startTimeTZinfo = schedView.getStartDateTimezoneInfo();
             TimeZoneDefinition endTimeTZinfo = schedView.getEndDateTimezoneInfo();
             TimeZoneDefinition recurrenceTZinfo = schedView.getRecurrenceTimezoneInfo();

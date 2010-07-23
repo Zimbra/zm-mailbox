@@ -30,7 +30,6 @@ import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.property.Clazz;
 import net.freeutils.tnef.Attachment;
 import net.freeutils.tnef.Attr;
-import net.freeutils.tnef.GUID;
 import net.freeutils.tnef.MAPIProp;
 import net.freeutils.tnef.MAPIPropName;
 import net.freeutils.tnef.MAPIProps;
@@ -38,7 +37,6 @@ import net.freeutils.tnef.MAPIValue;
 import net.freeutils.tnef.Message;
 import net.freeutils.tnef.RawInputStream;
 import net.freeutils.tnef.TNEFInputStream;
-import net.freeutils.tnef.TNEFUtils;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
@@ -58,7 +56,6 @@ public class SchedulingViewOfTnef extends Message {
 
     static Log sLog = ZimbraLog.tnef;
 
-    private int xmlIndentLevel;
     private String messageClass;
     private GlobalObjectId globalObjectId;
     private GlobalObjectId cleanGlobalObjectId;
@@ -896,6 +893,18 @@ public class SchedulingViewOfTnef extends Message {
 
     /**
      * Initialise timezone related fields.
+     * Replies from Outlook 2007 related to a recurrence or an instance
+     * of a recurrence had :
+     *     PidLidTimeZoneDescription,PidLidTimeZoneStruct,
+     *     PidLidAppointmentTimeZoneDefinitionStartDisplay and
+     *     PidLidAppointmentTimeZoneDefinitionEndDisplay present but NOT
+     *     PidLidAppointmentTimeZoneDefinitionRecur
+     * further, the StartDisplay/EndDisplay properties were appropriate to the
+     * Outlook client replying and were NOT related to the originally sent ICAL.
+     *
+     * The Outlook originated TimeZone names associated with
+     * StartDisplay/EndDisplay/Recur props seem "nicer" than the names
+     * used in PidLidTimeZoneDescription - so, tend to prefer those.
      *
      * @throws IOException
      */
@@ -903,58 +912,55 @@ public class SchedulingViewOfTnef extends Message {
         if (tzinfoInitialized) {
             return;
         }
-        RawInputStream tzRis;
-            
-        // PidLidAppointmentTimeZoneDefinitionStartDisplay - Specifies
-        // time zone information applicable to PidLidAppointmentStartWhole.
-        MAPIPropName PidLidAppointmentTimeZoneDefinitionStartDisplay =
-                this.PSETID_AppointmentPropName(0x825E);
+
         try {
-            tzRis = getRawInputStreamValue(PidLidAppointmentTimeZoneDefinitionStartDisplay, 0);
+            RawInputStream tzRis;
+            MAPIPropName mpn;
+            mpn = TimeZoneDefinition.PidLidAppointmentTimeZoneDefinitionStartDisplay;
+            tzRis = getRawInputStreamValue(mpn, 0);
             if (tzRis != null) {
-                startTimeTZinfo = new TimeZoneDefinition(tzRis);
+                startTimeTZinfo = new TimeZoneDefinition(mpn, tzRis);
             }
-
-            // PidLidAppointmentTimeZoneDefinitionEndDisplay - Specifies
-            // time zone information applicable to PidLidAppointmentEndWhole.
-            MAPIPropName PidLidAppointmentTimeZoneDefinitionEndDisplay =
-                    this.PSETID_AppointmentPropName(0x825F);
-            tzRis = getRawInputStreamValue(PidLidAppointmentTimeZoneDefinitionEndDisplay, 0);
+            mpn = TimeZoneDefinition.PidLidAppointmentTimeZoneDefinitionEndDisplay;
+            tzRis = getRawInputStreamValue(mpn, 0);
             if (tzRis != null) {
-                endTimeTZinfo = new TimeZoneDefinition(tzRis);
+                endTimeTZinfo = new TimeZoneDefinition(mpn, tzRis);
             }
-
-            // PidLidAppointmentTimeZoneDefinitionRecur - Specifies time zone information
-            // that describes how to convert the meeting date and time on a recurring
-            // series to and from UTC.
-            // MS-OXOCAL says "If this property is set, but it has data that is
-            // inconsistent with the data that is represented by PidLidTimeZoneStruct,
-            // then the client uses PidLidTimeZoneStruct instead of this property."
-            MAPIPropName PidLidAppointmentTimeZoneDefinitionRecur =
-                    this.PSETID_AppointmentPropName(0x8260);
-            tzRis = getRawInputStreamValue(PidLidAppointmentTimeZoneDefinitionRecur, 0);
+            mpn = TimeZoneDefinition.PidLidAppointmentTimeZoneDefinitionRecur;
+            tzRis = getRawInputStreamValue(mpn, 0);
             if (tzRis != null) {
-                recurrenceTZinfo = new TimeZoneDefinition(tzRis);
+                recurrenceTZinfo = new TimeZoneDefinition(mpn, tzRis);
             }
             String tzDesc = this.getTimeZoneDescription();
             if (null != tzDesc) {
-                TimeZoneDefinition tzStructInfo =
-                        this.getTimeZoneStructInfo(tzDesc);
-                if (null != tzStructInfo) {
-                    // if the rules differ, tzStructInfo should win
-                    if (recurrenceTZinfo != null) {
-                        TZRule tzsRule = tzStructInfo.getEffectiveRule();
-                        if (tzsRule != null) {
-                            if (!tzsRule.equivalentRule(
-                                    recurrenceTZinfo.getEffectiveRule())) {
-                                sLog.debug(
-    "PidLidAppointmentTimeZoneDefinitionRecur effective rule differs from PidLidTimeZoneStruct rule - ignored");
-                                recurrenceTZinfo = tzStructInfo;
-                            }
+                TimeZoneDefinition tzStructInfo = this.getTimeZoneStructInfo(tzDesc);
+                if (tzStructInfo != null) {
+                    // We know we have a recurrence related TZ definition.  Make
+                    // sure we have the most appropriate/nice definition for that.
+                    TZRule tzsRule = tzStructInfo.getEffectiveRule();
+                    if (recurrenceTZinfo == null) {
+                        if  (   (startTimeTZinfo != null) &&
+                                (tzsRule.equivalentRule(
+                                        startTimeTZinfo.getEffectiveRule())) ) {
+                            recurrenceTZinfo = startTimeTZinfo;
+                            sLog.debug("Using %s for TZ info",
+                                    "PidLidAppointmentTimeZoneDefinitionStart");
+                        } else if  (   (endTimeTZinfo != null) &&
+                                (tzsRule.equivalentRule(
+                                        endTimeTZinfo.getEffectiveRule())) ) {
+                            recurrenceTZinfo = endTimeTZinfo;
+                            sLog.debug("Using %s for TZ info",
+                                    "PidLidAppointmentTimeZoneDefinitionEnd");
+                        } else {
+                            recurrenceTZinfo = tzStructInfo;
+                            sLog.debug("Using %s for TZ info",
+                                    "PidLidTimeZoneStruct");
                         }
-                    }
-                    if (startTimeTZinfo == null) {
-                        startTimeTZinfo = tzStructInfo;
+                    } else if (!tzsRule.equivalentRule(
+                                    recurrenceTZinfo.getEffectiveRule())) {
+                        recurrenceTZinfo = tzStructInfo;
+                        sLog.debug("Using %s for TZ info",
+                                "PidLidAppointmentTimeZoneDefinitionRecur");
                     }
                 }
             }
@@ -962,13 +968,31 @@ public class SchedulingViewOfTnef extends Message {
             sLog.debug("Problem encountered initialising timezone information", e);
         }
 
-        if (recurrenceTZinfo == null) {
-            recurrenceTZinfo = startTimeTZinfo;
+        if (recurrenceTZinfo != null) {
+            // For recurrences, we want just one TZ for consistency
+            if (endTimeTZinfo == null) {
+                endTimeTZinfo = recurrenceTZinfo;
+            } else if (recurrenceTZinfo.getEffectiveRule().equivalentRule(
+                            endTimeTZinfo.getEffectiveRule())) {
+                endTimeTZinfo = recurrenceTZinfo;
+            } else if (startTimeTZinfo != null) {
+                // Sometimes, the start and end timezones are different
+                // for cancel/request, even when related to an exception.
+                if (startTimeTZinfo.getEffectiveRule().equivalentRule(
+                            endTimeTZinfo.getEffectiveRule())) {
+                    endTimeTZinfo = recurrenceTZinfo;
+                }
+            }
+            startTimeTZinfo = recurrenceTZinfo;
         }
         if (endTimeTZinfo == null) {
             endTimeTZinfo = startTimeTZinfo;
+        } else if (startTimeTZinfo == null) {
+            startTimeTZinfo = endTimeTZinfo ;
+        } else if (startTimeTZinfo.getEffectiveRule().equivalentRule(
+                            endTimeTZinfo.getEffectiveRule())) {
+            endTimeTZinfo = startTimeTZinfo;
         }
-        tzinfoInitialized = true;
     }
 
     /**
@@ -982,9 +1006,17 @@ public class SchedulingViewOfTnef extends Message {
         MAPIPropName PidLidTimeZoneStruct = this.PSETID_AppointmentPropName(0x8233);
         RawInputStream tzRis = getRawInputStreamValue(PidLidTimeZoneStruct, 0);
         if (tzRis == null) {
+            if (sLog.isDebugEnabled()) {
+                sLog.debug("No PidLidTimeZoneStruct property found");
+            }
             return null;
         }
         TimeZoneDefinition tzDef = new TimeZoneDefinition(tzRis, tzName);
+        if (tzDef == null) {
+            if (sLog.isDebugEnabled()) {
+                sLog.debug("Failed to load TimeZoneDefinition from PidLidTimeZoneStruct and " + tzName);
+            }
+        }
         return tzDef;
     }
 
