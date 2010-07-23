@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100722-1121 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100722-1915 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -13981,6 +13981,83 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetMailAlias(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAlias, "");
+        return attrs;
+    }
+
+    /**
+     * If TRUE, a mailbox that exceeds its quota is still allowed to receive
+     * mail, but is not allowed to send.
+     *
+     * @return zimbraMailAllowReceiveButNotSendWhenOverQuota, or false if unset
+     *
+     * @since ZCS 7.0
+     */
+    @ZAttr(id=1099)
+    public boolean isMailAllowReceiveButNotSendWhenOverQuota() {
+        return getBooleanAttr(Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota, false);
+    }
+
+    /**
+     * If TRUE, a mailbox that exceeds its quota is still allowed to receive
+     * mail, but is not allowed to send.
+     *
+     * @param zimbraMailAllowReceiveButNotSendWhenOverQuota new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0
+     */
+    @ZAttr(id=1099)
+    public void setMailAllowReceiveButNotSendWhenOverQuota(boolean zimbraMailAllowReceiveButNotSendWhenOverQuota) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota, zimbraMailAllowReceiveButNotSendWhenOverQuota ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If TRUE, a mailbox that exceeds its quota is still allowed to receive
+     * mail, but is not allowed to send.
+     *
+     * @param zimbraMailAllowReceiveButNotSendWhenOverQuota new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0
+     */
+    @ZAttr(id=1099)
+    public Map<String,Object> setMailAllowReceiveButNotSendWhenOverQuota(boolean zimbraMailAllowReceiveButNotSendWhenOverQuota, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota, zimbraMailAllowReceiveButNotSendWhenOverQuota ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * If TRUE, a mailbox that exceeds its quota is still allowed to receive
+     * mail, but is not allowed to send.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0
+     */
+    @ZAttr(id=1099)
+    public void unsetMailAllowReceiveButNotSendWhenOverQuota() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If TRUE, a mailbox that exceeds its quota is still allowed to receive
+     * mail, but is not allowed to send.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0
+     */
+    @ZAttr(id=1099)
+    public Map<String,Object> unsetMailAllowReceiveButNotSendWhenOverQuota(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota, "");
         return attrs;
     }
 

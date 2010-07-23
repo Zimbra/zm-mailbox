@@ -4938,4 +4938,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Realm for the basic auth challenge (WWW-Authenticate) header</desc>
 </attr>
 
+<attr id="1099" name="zimbraMailAllowReceiveButNotSendWhenOverQuota" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="7.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>If TRUE, a mailbox that exceeds its quota is still allowed to receive mail, but is not allowed to send.</desc>
+</attr>
+
 </attrs>

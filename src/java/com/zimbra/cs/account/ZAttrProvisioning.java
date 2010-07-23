@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100722-1121 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100722-1915 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3964,6 +3964,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=20)
     public static final String A_zimbraMailAlias = "zimbraMailAlias";
+
+    /**
+     * If TRUE, a mailbox that exceeds its quota is still allowed to receive
+     * mail, but is not allowed to send.
+     *
+     * @since ZCS 7.0
+     */
+    @ZAttr(id=1099)
+    public static final String A_zimbraMailAllowReceiveButNotSendWhenOverQuota = "zimbraMailAllowReceiveButNotSendWhenOverQuota";
 
     /**
      * Maximum number of entries for per user black list. This restricts the
