@@ -65,8 +65,8 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemData;
 
 public abstract class ArchiveFormatter extends Formatter {
-    private Pattern ILLEGAL_FILE_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|]");
-    private Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[\\:\\*\\?\\\"\\<\\>\\|]");
+    private Pattern ILLEGAL_FILE_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|\\\0]");
+    private Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[\\:\\*\\?\\\"\\<\\>\\|\\\0]");
     private static String UTF8 = "UTF-8";
     private static enum Resolve { Modify, Replace, Reset, Skip }
 
