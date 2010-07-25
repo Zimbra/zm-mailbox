@@ -104,8 +104,13 @@ public class InternetAddress {
                 if (!escaped && c == '\\') {
                     escaped = true;
                 } else if (quoted && !escaped && c == '"') {
-                    if (angle)  address = builder.appendTo(address);
-                    else        base = builder.appendTo(base);
+                    // make sure to check we didn't have encoded-words inside the quoted string
+                    if (angle)
+                        address = builder.appendTo(address);
+                    else if (builder.indexOf((byte) '=') != -1)
+                        base = (base == null ? "" : base) +  MimeHeader.decode(builder.toByteArray(), mCharset);
+                    else
+                        base = builder.appendTo(base);
                     quoted = false;  builder.reset();
                 } else {
                     // continuation of a quoted string; note that quoted strings aren't recognized in comments
@@ -210,9 +215,10 @@ public class InternetAddress {
         }
 
         if (!builder.isEmpty()) {
-            if (clevel > 0)  comment = builder.appendTo(comment);
-            else if (angle)  address = builder.appendTo(address);
-            else             base = builder.appendTo(base);
+            if (clevel > 0)   comment = builder.appendTo(comment);
+            else if (angle)   address = builder.appendTo(address);
+            else if (quoted)  base = (base == null ? "" : base) +  MimeHeader.decode(builder.toByteArray(), mCharset);
+            else              base = builder.appendTo(base);
         }
 
         if (!angle && wsp && base != null && base.length() > 0)

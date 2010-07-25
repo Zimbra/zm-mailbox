@@ -104,8 +104,17 @@ public class HeaderUtils {
         ByteBuilder(String charset)            { this();  mCharset = charset; }
         ByteBuilder(int size, String charset)  { this(size);  mCharset = charset; }
 
-        ByteBuilder pop()      { if (count > 0) count--;  return this; }
-        boolean isEmpty()      { return count == 0; }
+        ByteBuilder pop()       { if (count > 0) count--;  return this; }
+        boolean isEmpty()       { return count == 0; }
+        byte byteAt(int index)  { return buf[index]; }
+
+        int indexOf(byte b) {
+            for (int i = 0; i < count; i++) {
+                if (buf[i] == b)
+                    return i;
+            }
+            return -1;
+        }
 
         String appendTo(String prefix) {
             return prefix == null ? toString() : prefix + this;
