@@ -190,6 +190,10 @@ public class LdapDIT {
             Zimbra.halt("Unable to initialize LDAP DIT");
     }
     
+    public static boolean isZimbraDefault(LdapDIT dit) {
+        return dit.getClass() == LdapDIT.class;
+    }
+    
     /*
      * Zimbra root
      */

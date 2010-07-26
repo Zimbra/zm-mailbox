@@ -16,11 +16,15 @@ package com.zimbra.cs.account.accesscontrol;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.SetUtil;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -386,12 +390,60 @@ public enum TargetType {
             return null;
     }
     
+    static String getSearchBase(Provisioning prov, TargetType tt) throws ServiceException {
+        LdapDIT dit = ((LdapProvisioning)prov).getDIT();
+        
+        String base;
+        
+        switch (tt) {
+        case account:
+        case calresource:
+        case dl:
+            base = dit.mailBranchBaseDN();
+            break;
+        case domain:
+            base = dit.domainBaseDN();
+            break;
+        case cos:
+            base = dit.cosBaseDN();
+            break;    
+        case server:
+            base = dit.serverBaseDN();
+            break;
+        case xmppcomponent:
+            base = dit.xmppcomponentBaseDN();
+            break;    
+        case zimlet:
+            base = dit.zimletBaseDN();
+            break;
+        case config:
+            base = dit.configDN();
+            break;
+        case global: 
+            // is really an internal error, globalgrant should never appear in the 
+            // targetTypes if we get here, because it is not a sub-target of any 
+            // other target types.  
+            base = dit.globalGrantDN();
+            break;
+        default:
+            throw ServiceException.FAILURE("internal error", null);
+        }
+        
+        return base;
+    }
+    
+
+    static class SearchBaseAndOC {
+        String mBase;
+        List<String> mOCs;
+    }
+    
     /*
      * This method is called for searching for negative grants granted on a  
      * "sub-target" of a target on which we are granting a right.  If the 
      * granting account has any negative grants for a right that is a 
      * "sub-right" of the right he is trying to grant to someone else,
-     * and ths negative grant is on a "sub-target" of the target he is 
+     * and this negative grant is on a "sub-target" of the target he is 
      * trying to grant on, then sorry, it is not allowed.  Because otherwise
      * the person receiving the grant can end up getting "more" rights 
      * than the granting person.
@@ -408,154 +460,113 @@ public enum TargetType {
      * 
      * SO, for the search base:
      *   - for domain-ed targets, dls must be under the domain, but accounts 
-     *     in dls can be in any domain, so the search base is ''.
+     *     in dls can be in any domain, so the search base is the mail branch base.
      *   - for non domain-ed targets, the search base is the base DN for the type
      *   
      *   we go through all wanted target types, find the least common base  
      */ 
-    static Pair<String, Set<String>> getSearchBaseAndOCs(Provisioning prov, 
+    static Map<String, Set<String>> getSearchBasesAndOCs(Provisioning prov, 
             Set<TargetType> targetTypes) throws ServiceException {
         
         // sanity check, is really an internal error if targetTypes is empty
         if (targetTypes.isEmpty())
             return null;
         
+        Map<String, Set<String>> tempResult = new HashMap<String, Set<String>>();
+         
+                
+        for (TargetType tt : targetTypes) {
+            String base = getSearchBase(prov, tt);
+            
+            String oc = tt.getAttributeClass().getOCName();
+            Set<String> ocs = tempResult.get(base);
+            if (ocs == null)
+                ocs = new HashSet<String>();
+            ocs.add(oc);
+            tempResult.put(base, ocs);
+        }
+        
+        // optimize
         LdapDIT dit = ((LdapProvisioning)prov).getDIT();
+        String configBranchBase = dit.configBranchBaseDN();
+        Set<String> mailBranchOCs = new HashSet<String>();
+        Set<String> configBranchOCs = new HashSet<String>();
         
-        String[] curRnds = null;
-        String base = null;
-        Set<String> ocs = new HashSet<String>();
+        String leastCommonBaseInMailBranch = null;
+        String leastCommonBaseInConfigBranch = null;
         
-        for (TargetType tt : targetTypes) {
-            
-            String bs;
-            
-            switch (tt) {
-            case account:
-            case calresource:
-            case dl:
-            case domain:
-                bs = "";
-                break;
-            case cos:
-                bs = dit.cosBaseDN();
-                break;    
-            case server:
-                bs = dit.serverBaseDN();
-                break;
-            case xmppcomponent:
-                bs = dit.xmppcomponentBaseDN();
-                break;    
-            case zimlet:
-                bs = dit.zimletBaseDN();
-                break;
-            case config:
-                bs = dit.configDN();
-                break;
-            case global: 
-                // is really an internal error, globalgrant should never appear in the 
-                // targetTypes if we get here, because it is not a sub-target of any 
-                // other target types.  
-                bs = dit.globalGrantDN();
-                break;
-            default:
-                throw ServiceException.FAILURE("internal error", null);
-            }
-            
-            // if we've reached the '', break
-            if (bs.equals("")) {
-                base = bs;
-            } else {
-                String[] rdns = bs.split(",");
-                if (curRnds == null)
-                    curRnds = rdns;
-                else {
-                    // find the least common base
-                    int shorter = rdns.length < curRnds.length? rdns.length : curRnds.length;
-                    for (int i = 1 ; i <= shorter; i++) {
-                        if (!rdns[rdns.length-i].equals(curRnds[curRnds.length-i])) {
-                            if (i == 1) {
-                                base = "";
-                                break;
-                            } else {
-                                
-                                curRnds = new String[i-1];
-                                for (int j = 0; j < i-1; j++)
-                                    curRnds[curRnds.length-1-j] = rdns[rdns.length-1-j];
-                            }
-                        }
-                    }
-                    
-                }
-            }
-            if (base != null)
-                break;
-        }
-        
-        if (base == null) {
-            boolean first = true;
-            for (int i=0; i<curRnds.length; i++) {
-                if (first) {
-                    base = curRnds[i];
-                    first = false;
-                } else {
-                    base = base + "," + curRnds[i];
-                }
-            }
-        }
-        
-        for (TargetType tt : targetTypes) {
-            ocs.add(tt.getAttributeClass().getOCName());
-        }
-        
-        return new Pair<String, Set<String>>(base, ocs);
-    }
-    
-    private static void doTest(Provisioning prov, Set<TargetType> ttInheritBy) throws ServiceException {
-        Pair<String, Set<String>> baseAndOcs = getSearchBaseAndOCs(prov, ttInheritBy);
-        System.out.println("    base:" + baseAndOcs.getFirst());
-        System.out.print("    OCs: ");
-        for (String oc : baseAndOcs.getSecond())
-            System.out.print(oc + " ");
-        
-        System.out.println("\n");
-    }
-    
-    public static void main(String[] args) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        
-        Set<TargetType> ttInheritBy;
-        
-        for (TargetType tt : TargetType.values()) {
-            System.out.println("Target " + tt.name());  
-            
-            ttInheritBy = new HashSet<TargetType>();
-            ttInheritBy.add(tt);
-            doTest(prov, ttInheritBy);
-            
-            ttInheritBy = tt.subTargetTypes();
-            
-            System.out.print("    sub target types: ");
-            for (TargetType ttib : ttInheritBy)
-                System.out.print(ttib.name() + " ");
-            System.out.println();
-            
-            if (ttInheritBy.isEmpty()) {
-                System.out.println();
-                continue;
-            }
-            
-            doTest(prov, ttInheritBy);
-        }
-        
-        System.out.println("==========");
-        System.out.println("Test");
-        ttInheritBy = new HashSet<TargetType>();
-        ttInheritBy.add(TargetType.cos);
-        ttInheritBy.add(TargetType.server);
-        ttInheritBy.add(TargetType.zimlet);
-        ttInheritBy.add(TargetType.global);
-        doTest(prov, ttInheritBy);
+        for (Map.Entry<String, Set<String>> entry : tempResult.entrySet()) {
+             String base = entry.getKey();
+             Set<String> ocs  = entry.getValue();
+             
+             boolean inConfigBranch = base.endsWith(configBranchBase);
+             if (inConfigBranch) {
+                 configBranchOCs.addAll(ocs);
+                 
+                 if (leastCommonBaseInConfigBranch == null)
+                     leastCommonBaseInConfigBranch = base;
+                 else
+                     leastCommonBaseInConfigBranch = getCommonBase(base, leastCommonBaseInConfigBranch);
 
+             } else {
+                 mailBranchOCs.addAll(ocs);
+                 
+                 if (leastCommonBaseInMailBranch == null)
+                     leastCommonBaseInMailBranch = base;
+                 else
+                     leastCommonBaseInMailBranch = getCommonBase(base, leastCommonBaseInMailBranch);
+             }
+        }
+        
+        Map<String, Set<String>> result = new HashMap<String, Set<String>>();
+        
+        // if zimbra default DIT and both mail branch and config branch are needed, merge the two
+        if (LdapDIT.isZimbraDefault(dit)) {
+            if (leastCommonBaseInMailBranch != null && leastCommonBaseInConfigBranch != null) {
+                // merge the two
+                String commonBase = getCommonBase(leastCommonBaseInMailBranch, leastCommonBaseInConfigBranch);
+                Set<String> allOCs = SetUtil.union(mailBranchOCs, configBranchOCs);
+                result.put(commonBase, allOCs);
+                return result;
+            }
+        } 
+        
+        // bug 48272, do two searches, one based at the mail branch, one based on the config branch.
+        if (leastCommonBaseInMailBranch != null)
+            result.put(leastCommonBaseInMailBranch, mailBranchOCs);
+        if (leastCommonBaseInConfigBranch != null)
+            result.put(leastCommonBaseInConfigBranch, configBranchOCs);
+
+        return result;
     }
+    
+    static String getCommonBase(String dn1, String dn2) {
+        String top = "";
+        
+        if (top.equals(dn1) || top.equals(dn2))
+            return top;
+        
+        String[] rdns1 = dn1.split(",");
+        String[] rdns2 = dn2.split(",");
+        
+        String[] shorter = rdns1.length < rdns2.length? rdns1 : rdns2;
+        
+        int i = 0;
+        while (i < shorter.length) {
+            if (!rdns1[rdns1.length-1-i].equals(rdns2[rdns2.length-1-i]))
+                break;
+            else;
+                i++;
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        for (int j = shorter.length - i; j < shorter.length; j++) {
+            if (j != shorter.length - i)
+                sb.append(",");
+            sb.append(shorter[j]);
+        }
+            
+        return sb.toString();
+    }
+
 }

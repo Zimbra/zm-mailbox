@@ -220,38 +220,40 @@ public class SearchGrants {
     */
     SearchGrantsResults doSearch() throws ServiceException {
        
-       Pair<String, Set<String>> baseAndOcs = TargetType.getSearchBaseAndOCs(mProv, mTargetTypes);
-
-       // base
-       String base = baseAndOcs.getFirst();
-       
-       // query
-       StringBuilder ocQuery = new StringBuilder();
-       ocQuery.append("(|");
-       for (String oc : baseAndOcs.getSecond())
-           ocQuery.append("(" + Provisioning.A_objectClass + "=" + oc + ")");
-       ocQuery.append(")");
-       
-       StringBuilder granteeQuery = new StringBuilder();
-       granteeQuery.append("(|");
-       for (String granteeId : mGranteeIds)
-           granteeQuery.append("(" + Provisioning.A_zimbraACE + "=" + granteeId + "*)");
-       granteeQuery.append(")");
-       
-       String query = "(&" + granteeQuery + ocQuery + ")";
-       
-       String returnAttrs[] = new String[] {Provisioning.A_cn,
-                                            Provisioning.A_zimbraId,
-                                            Provisioning.A_objectClass,
-                                            Provisioning.A_zimbraACE};
-       
+       Map<String, Set<String>> basesAndOcs = TargetType.getSearchBasesAndOCs(mProv, mTargetTypes);
        
        SearchGrantsResults results = new SearchGrantsResults(mProv);
        SearchGrantVisitor visitor = new SearchGrantVisitor(results);
-       LdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
+       
+       for (Map.Entry<String, Set<String>> entry : basesAndOcs.entrySet())
+           search(entry.getKey(), entry.getValue(), visitor);
        
        return results;
-   }
+    }
     
-
+    private void search(String base, Set<String> ocs, SearchGrantVisitor visitor) throws ServiceException {
+        
+        // query
+        StringBuilder ocQuery = new StringBuilder();
+        ocQuery.append("(|");
+        for (String oc : ocs)
+            ocQuery.append("(" + Provisioning.A_objectClass + "=" + oc + ")");
+        ocQuery.append(")");
+        
+        StringBuilder granteeQuery = new StringBuilder();
+        granteeQuery.append("(|");
+        for (String granteeId : mGranteeIds)
+            granteeQuery.append("(" + Provisioning.A_zimbraACE + "=" + granteeId + "*)");
+        granteeQuery.append(")");
+        
+        String query = "(&" + granteeQuery + ocQuery + ")";
+        
+        String returnAttrs[] = new String[] {Provisioning.A_cn,
+                                             Provisioning.A_zimbraId,
+                                             Provisioning.A_objectClass,
+                                             Provisioning.A_zimbraACE};
+        
+        
+        LdapUtil.searchLdapOnMaster(base, query, returnAttrs, visitor);
+    }
 }
