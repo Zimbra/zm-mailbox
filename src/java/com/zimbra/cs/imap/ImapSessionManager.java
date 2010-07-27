@@ -490,7 +490,8 @@ public class ImapSessionManager {
     }
 
     static class DiskSerializer implements FolderSerializer {
-        private static final File sCacheDir = new File(LC.zimbra_home.value() + File.separator + "imap");
+        private static final String CACHE_DATA_SUBDIR = "data" + File.separator + "mailboxd" + File.separator + "imap" + File.separator + "cache";
+        private static final File sCacheDir = new File(LC.zimbra_home.value() + File.separator + CACHE_DATA_SUBDIR);
         private static final String IMAP_CACHEFILE_SUFFIX = ".i4c";
 
         DiskSerializer() {
