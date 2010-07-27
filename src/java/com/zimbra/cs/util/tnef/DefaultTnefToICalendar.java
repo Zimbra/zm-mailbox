@@ -193,6 +193,10 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
 //                throw TNEFtoIcalendarServiceException.NON_CALENDARING_CLASS(msgClass);
             }
 
+            // RTF might be useful as a basis for X-ALT-DESC if we can find a reliable
+            // conversion to HTML
+            // String rtfText = schedView.getRTF();
+
             icalOutput.startCalendar();
             // Results in a 2nd PRODID in iCalendar
             // IcalUtil.addProperty(icalOutput, Property.PRODID,

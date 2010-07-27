@@ -16,6 +16,7 @@
 package com.zimbra.cs.util.tnef;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -30,6 +31,7 @@ import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.property.Clazz;
 import net.freeutils.tnef.Attachment;
 import net.freeutils.tnef.Attr;
+import net.freeutils.tnef.CompressedRTFInputStream;
 import net.freeutils.tnef.MAPIProp;
 import net.freeutils.tnef.MAPIPropName;
 import net.freeutils.tnef.MAPIProps;
@@ -37,6 +39,7 @@ import net.freeutils.tnef.MAPIValue;
 import net.freeutils.tnef.Message;
 import net.freeutils.tnef.RawInputStream;
 import net.freeutils.tnef.TNEFInputStream;
+import net.freeutils.tnef.TNEFUtils;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
@@ -492,7 +495,9 @@ public class SchedulingViewOfTnef extends Message {
         MAPIPropName PidLidExceptionReplaceTime
                 = PSETID_AppointmentPropName(0x8228);
         DateTime recurrenceIdTime = getUtcDateTime(PidLidExceptionReplaceTime, 0);
-        if (recurrenceIdTime == null) {
+        if (recurrenceIdTime != null) {
+            sLog.debug("RECURRENCE-ID taken from PidLidExceptionReplaceTime");
+        } else {
             getGlobalObjectId();
             if (this.globalObjectId == null) {
                 return null;
@@ -514,6 +519,9 @@ public class SchedulingViewOfTnef extends Message {
                 secs = recurTime & 0x0000003f;
                 mins = (recurTime & 0x00000fc0) >>6;
                 hrs = (recurTime & 0xfffff000) >>12;
+                sLog.debug("RECURRENCE-ID taken from GlobalObjectId/PidLidStartRecurrenceTime");
+            } else {
+                sLog.debug("RECURRENCE-ID taken from JUST GlobalObjectId");
             }
             try {
                 String dateString;
@@ -626,6 +634,26 @@ public class SchedulingViewOfTnef extends Message {
         DateTime icalDateTime = new net.fortuna.ical4j.model.DateTime(javaDate);
         icalDateTime.setUtc(true);
         return icalDateTime;
+    }
+
+    /**
+     * Useful for X-ALT-DESC?  Would need to convert to HTML, which, even for wrapped HTML
+     * which isn't necessarily common place, isn't 100% straight forward.
+     * 
+     * @return
+     * @throws IOException
+     */
+    public String getRTF() throws IOException {
+        RawInputStream ris = getRawInputStreamValue(null, MAPIProp.PR_RTF_COMPRESSED);
+        if (ris == null) {
+            sLog.debug("No PR_RTF_COMPRESSED property found");
+            return null;
+        }
+        String rtfTxt = new String(CompressedRTFInputStream.decompressRTF(ris.toByteArray()));
+        if (sLog.isDebugEnabled()) {
+            sLog.debug("RTF from PR_RTF_COMPRESSED\n%s\n", rtfTxt);
+        }
+        return rtfTxt;
     }
 
     public String getStringValue(MAPIPropName name, int id) throws IOException {

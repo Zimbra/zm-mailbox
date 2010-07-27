@@ -163,13 +163,18 @@ public class TestMain {
     private static final String UTF8 = "utf-8";
 
     private static void usage() {
-        System.err.println("Usage: java com.zimbra.cs.util.tnef.TestMain [-v] \n");
+        System.err.println("Usage: java com.zimbra.cs.util.tnef.TestMain [-v] [-debug]");
         System.err.println("            -i <MIME file> [-o <iCalendar file>] [-t <tnef file>] [-r <recurInfo file>]");
+        System.err.println("  or");
+        System.err.println("            -D <Output Directory> <MIME files>...\n");
         System.err.println("-v: verbose output");
+        System.err.println("-debug: Set TNEF specific logging level to DEBUG");
         System.err.println("-i: MIME input file TNEF part");
         System.err.println("-o: iCalendar output file; if unspecified, output goes to stdout");
         System.err.println("-t: TNEF output file; The main TNEF attachment will be written here if present");
         System.err.println("-r: A diagnostic string representing any recurrence property will be written here");
+        System.err.println("-D: Output directory to contain all output files.");
+        System.err.println("    Supplied MIME files are assumed to have suffix \".eml\"");
         System.exit(1);
     }
 
