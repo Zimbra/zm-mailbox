@@ -99,6 +99,10 @@ public class ZimletResources extends DiskCacheServlet {
         String contentType = getContentType(uri);
         String type = contentType.replaceAll("^.*/", "");
         boolean debug = req.getParameter(P_DEBUG) != null;
+        boolean compress =
+            !debug &&
+            LC.zimbra_web_generate_gzip.booleanValue() && uri.endsWith(COMPRESSED_EXT)
+        ;
 
         String cacheId = getCacheId(req, type, zimletNames);
 
@@ -197,8 +201,9 @@ public class ZimletResources extends DiskCacheServlet {
                 if (ZimbraLog.zimlet.isDebugEnabled())
                     ZimbraLog.zimlet.debug("DEBUG: buffer file: " + file);
                 copy(text, file);
-                if (LC.zimbra_web_generate_gzip.booleanValue())
-                    compress(file);
+                if (compress) {
+                    file = compress(file);
+                }
                 putCacheFile(cacheId, file);
             }
         } else {
@@ -206,7 +211,6 @@ public class ZimletResources extends DiskCacheServlet {
         }
 
         // write buffer
-        boolean compress = !debug && uri.endsWith(COMPRESSED_EXT);
         try {
             // We browser sniff so need to make sure any caches do the same.
             resp.addHeader("Vary", "User-Agent");
@@ -229,15 +233,27 @@ public class ZimletResources extends DiskCacheServlet {
                 resp.setDateHeader("Last-Modified", file.lastModified());
             }
             resp.setContentType(contentType);
-            resp.setContentLength(file != null ? (int)file.length() :
-                text.getBytes("UTF-8").length);
+
+            if (compress && file != null) {
+                resp.setHeader("Content-Encoding", "gzip");
+            }
+
+            // NOTE: We can only be certain we know the final size if we are
+            // NOTE: *not* compressing the output OR if we're just writing
+            // NOTE: the contents of the generated file to the stream.
+            if (!compress || file != null) {
+                resp.setContentLength(file != null ? (int)file.length() : text.getBytes("UTF-8").length);
+            }
         } catch (IllegalStateException e) {
             // ignore -- thrown if called from including JSP
             ZimbraLog.zimlet.debug("zimletres: " + cacheId);
             ZimbraLog.zimlet.debug("zimletres: " + e.getMessage());
         }
         if (file != null) {
-            copy(file, resp, compress);
+            // NOTE: If we saved the buffer to a file and compression is
+            // NOTE: enabled then the file has *already* been compressed
+            // NOTE: and the Content-Encoding header has been added.
+            copy(file, resp, false);
         } else {
             copy(text, resp, compress);
         }

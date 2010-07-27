@@ -273,13 +273,15 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
      * Compress a file and store the content in a new file in the same
      * location as the original file, appending ".gz" extension.
      */
-    protected void compress(File src) throws IOException {
+    protected File compress(File src) throws IOException {
         File dest = new File(src.getParentFile(), src.getName()+EXT_COMPRESSED);
         GZIPOutputStream out = new GZIPOutputStream(new FileOutputStream(dest));
         
         copy(src, out);
         out.finish();
         out.close();
+
+        return dest;
     }
 
     /** Copy file to HTTP response. */
