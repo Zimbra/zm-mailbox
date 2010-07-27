@@ -1099,7 +1099,6 @@
         </delete>
 
         <delete dir="${zimbra.home.dir}/zmstat"/>
-        <delete dir="${zimbra.home.dir}/imap"/>
         <delete dir="${zimbra.store.dir}"/>
         <delete dir="${zimbra.index.dir}"/>
         <delete dir="${zimbra.home.dir}/redolog"/>
@@ -1121,11 +1120,11 @@
        	<mkdir dir="${zimbra.home.dir}/data/ldap/hdb/db"/>
        	<mkdir dir="${zimbra.home.dir}/data/ldap/hdb/logs"/>
        	<mkdir dir="${zimbra.home.dir}/data/ldap/config"/>
+        <mkdir dir="${zimbra.home.dir}/data/mailboxd/imap/cache"/>
      	
     	<mkdir dir="${zimbra.home.dir}/openldap/var/run"/>
         <mkdir dir="${zimbra.home.dir}/log"/>
         <mkdir dir="${zimbra.home.dir}/zmstat"/>
-        <mkdir dir="${zimbra.home.dir}/imap"/>
         <mkdir dir="${zimbra.store.dir}"/>
         <mkdir dir="${zimbra.index.dir}"/>
         <mkdir dir="${zimbra.home.dir}/redolog"/>
@@ -1177,11 +1176,11 @@
     </target>
 
     <target name="sqlite-init" if="db-sqlite">
-	<delete dir="${zimbra.sqlite.dir}"/>
-	<mkdir dir="${zimbra.sqlite.dir}"/>
-	<exec executable="sqlite3" dir="${zimbra.sqlite.dir}" failonerror="true" input="${dist.db.dir}/init.sql">
-	    <arg line="zimbra.db"/>
-	</exec>
+        <delete dir="${zimbra.sqlite.dir}"/>
+        <mkdir dir="${zimbra.sqlite.dir}"/>
+        <exec executable="sqlite3" dir="${zimbra.sqlite.dir}" failonerror="true" input="${dist.db.dir}/init.sql">
+            <arg line="zimbra.db"/>
+        </exec>
     </target>
 
     <target name="ldap-setup-preauth">
