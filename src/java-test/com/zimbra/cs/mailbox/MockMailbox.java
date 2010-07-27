@@ -20,12 +20,12 @@ import java.util.Map;
 
 import com.zimbra.cs.account.Account;
 
-class MemoryMailbox extends Mailbox {
+class MockMailbox extends Mailbox {
 
     private Account account;
     private Map<String, Metadata> metadata = new HashMap<String, Metadata>();
 
-    protected MemoryMailbox(Account account) {
+    MockMailbox(Account account) {
         super(new MailboxData());
     }
 

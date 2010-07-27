@@ -30,7 +30,7 @@ public class MockMailboxManager extends MailboxManager {
         throws ServiceException {
 
         Account account = Provisioning.getInstance().getAccount(accountId);
-        return new MemoryMailbox(account);
+        return new MockMailbox(account);
     }
 
 }
