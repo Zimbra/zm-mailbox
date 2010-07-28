@@ -1221,7 +1221,7 @@ public class ZAttrProvisioning {
      * access control mechanism for admin access acl: ACL based access
      * control (a.k.a. delegated admin). global: allows only global admins.
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 6.0.9
      */
     @ZAttr(id=1101)
     public static final String A_zimbraAdminAccessControlMech = "zimbraAdminAccessControlMech";

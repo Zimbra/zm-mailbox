@@ -550,7 +550,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraAdminAccessControlMech, or ZAttrProvisioning.AdminAccessControlMech.acl if unset and/or has invalid value
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 6.0.9
      */
     @ZAttr(id=1101)
     public ZAttrProvisioning.AdminAccessControlMech getAdminAccessControlMech() {
@@ -565,7 +565,7 @@ public class ZAttrConfig extends Entry {
      *
      * @return zimbraAdminAccessControlMech, or "acl" if unset
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 6.0.9
      */
     @ZAttr(id=1101)
     public String getAdminAccessControlMechAsString() {
@@ -581,7 +581,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraAdminAccessControlMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 6.0.9
      */
     @ZAttr(id=1101)
     public void setAdminAccessControlMech(ZAttrProvisioning.AdminAccessControlMech zimbraAdminAccessControlMech) throws com.zimbra.common.service.ServiceException {
@@ -600,7 +600,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 6.0.9
      */
     @ZAttr(id=1101)
     public Map<String,Object> setAdminAccessControlMech(ZAttrProvisioning.AdminAccessControlMech zimbraAdminAccessControlMech, Map<String,Object> attrs) {
@@ -618,7 +618,7 @@ public class ZAttrConfig extends Entry {
      * @param zimbraAdminAccessControlMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 6.0.9
      */
     @ZAttr(id=1101)
     public void setAdminAccessControlMechAsString(String zimbraAdminAccessControlMech) throws com.zimbra.common.service.ServiceException {
@@ -637,7 +637,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 6.0.9
      */
     @ZAttr(id=1101)
     public Map<String,Object> setAdminAccessControlMechAsString(String zimbraAdminAccessControlMech, Map<String,Object> attrs) {
@@ -654,7 +654,7 @@ public class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 6.0.9
      */
     @ZAttr(id=1101)
     public void unsetAdminAccessControlMech() throws com.zimbra.common.service.ServiceException {
@@ -672,7 +672,7 @@ public class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 6.0.9
      */
     @ZAttr(id=1101)
     public Map<String,Object> unsetAdminAccessControlMech(Map<String,Object> attrs) {
