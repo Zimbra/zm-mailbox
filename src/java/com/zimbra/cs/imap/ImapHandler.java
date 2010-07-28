@@ -690,12 +690,6 @@ public abstract class ImapHandler extends ProtocolHandler {
                         req.skipSpace();  Set<String> patterns = Collections.singleton(req.readFolderPattern());
                         checkEOF(tag, req);
                         return doLIST(tag, base, patterns, (byte) 0, RETURN_XLIST, (byte) 0);
-                    } else if (command.equals("XPERSIST")) {
-                        checkEOF(tag, req);
-                        return doXPERSIST(tag);
-                    } else if (command.equals("XRESTORE")) {
-                        checkEOF(tag, req);
-                        return doXRESTORE(tag);
                     }
                     break;
             }
@@ -1582,8 +1576,11 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (selectOptions == 0 && (returnOptions & ~RETURN_XLIST) == 0 && mailboxNames.size() == 1 && mailboxNames.contains("")) {
             // 6.3.8: "An empty ("" string) mailbox name argument is a special request to return
             //         the hierarchy delimiter and the root name of the name given in the reference."
+            String owner = new ImapPath(referenceName, mCredentials, ImapPath.Scope.UNPARSED).getOwner();
+            String root = owner == null ? "\"\"" : ImapPath.asUtf7String(ImapPath.NAMESPACE_PREFIX + owner);
+
             sendNotifications(true, false);
-            sendUntagged(command + " (\\NoSelect) \"/\" \"\"");
+            sendUntagged(command + " (\\NoSelect) \"/\" " + root);
             sendOK(tag, command + " completed");
             return CONTINUE_PROCESSING;
         }
@@ -3741,31 +3738,4 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     abstract void sendLine(String line, boolean flush) throws IOException;
-
-
-    boolean doXPERSIST(String tag) throws IOException {
-        if (!checkState(tag, State.SELECTED))
-            return CONTINUE_PROCESSING;
-
-        try {
-            mSelectedFolder.unload();
-        } catch (ServiceException e) {
-            ZimbraLog.imap.warn("XPERSIST failed", e);
-            sendNO(tag, "XPERSIST failed");
-            return canContinue(e);
-        }
-
-        sendOK(tag, "XPERSIST completed");
-        return CONTINUE_PROCESSING;
-    }
-
-    boolean doXRESTORE(String tag) throws IOException {
-        if (!checkState(tag, State.SELECTED))
-            return CONTINUE_PROCESSING;
-
-        mSelectedFolder.reload();
-
-        sendOK(tag, "XRESTORE completed");
-        return CONTINUE_PROCESSING;
-    }
 }

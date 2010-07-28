@@ -608,7 +608,12 @@ public class ImapPath implements Comparable<ImapPath> {
     /** Formats a folder path as an IMAP-UTF-7 quoted-string.  Applies all
      *  special hack-specific path transforms. */
     String asUtf7String() {
-        ByteBuffer bb = FOLDER_ENCODING_CHARSET.encode(asImapPath());
+        return asUtf7String(asImapPath());
+    }
+
+    /** Formats a folder path as an IMAP-UTF-7 quoted-string. */
+    static String asUtf7String(String imapPath) {
+        ByteBuffer bb = FOLDER_ENCODING_CHARSET.encode(imapPath);
         byte[] content = new byte[bb.limit() + 2];
         content[0] = '"';
         System.arraycopy(bb.array(), 0, content, 1, content.length - 2);
