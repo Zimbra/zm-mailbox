@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,7 +22,6 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 
 import com.zimbra.common.localconfig.LC;
@@ -63,32 +62,38 @@ public class ExtensionUtil {
             // No ext-common libraries are present.
             sExtParentClassLoader = ExtensionUtil.class.getClassLoader();
         } else {
-            sExtParentClassLoader = new URLClassLoader(extCommonURLs, ExtensionUtil.class.getClassLoader());    
+            sExtParentClassLoader = new URLClassLoader(extCommonURLs, ExtensionUtil.class.getClassLoader());
         }
         loadAll();
     }
 
+    static synchronized void addClassLoader(ZimbraExtensionClassLoader zcl) {
+        sClassLoaders.add(zcl);
+    }
+
     private static synchronized void loadAll() {
-        File extDir = new File(LC.zimbra_extensions_directory.value());
-        if (extDir == null) {
-            ZimbraLog.extensions.info(LC.zimbra_extensions_directory.key() + " is null, no extensions loaded");
+        if (LC.zimbra_extensions_directory.value() == null) {
+            ZimbraLog.extensions.info(LC.zimbra_extensions_directory.key() +
+                    " is null, no extensions loaded");
             return;
         }
+        File extDir = new File(LC.zimbra_extensions_directory.value());
         ZimbraLog.extensions.info("Loading extensions from " + extDir.getPath());
 
         File[] extDirs = extDir.listFiles();
         if (extDirs == null) {
             return;
         }
-        for (int i = 0; i < extDirs.length; i++) {
-            if (!extDirs[i].isDirectory()) {
-                ZimbraLog.extensions.warn("ignored non-directory in extensions directory: " + extDirs[i]);
+        for (File dir : extDirs) {
+            if (!dir.isDirectory()) {
+                ZimbraLog.extensions.warn("ignored non-directory in extensions directory: " + dir);
                 continue;
             }
 
-            ZimbraExtensionClassLoader zcl = new ZimbraExtensionClassLoader(dirListToURLs(extDirs[i]), sExtParentClassLoader);
+            ZimbraExtensionClassLoader zcl = new ZimbraExtensionClassLoader(
+                    dirListToURLs(dir), sExtParentClassLoader);
             if (!zcl.hasExtensions()) {
-                ZimbraLog.extensions.warn("no " + ZimbraExtensionClassLoader.ZIMBRA_EXTENSION_CLASS + " found, ignored: " + extDirs[i]);
+                ZimbraLog.extensions.warn("no " + ZimbraExtensionClassLoader.ZIMBRA_EXTENSION_CLASS + " found, ignored: " + dir);
                 continue;
             }
 
@@ -98,23 +103,31 @@ public class ExtensionUtil {
 
     private static Map<String, ZimbraExtension> sInitializedExtensions = new LinkedHashMap<String, ZimbraExtension>();
 
-    @SuppressWarnings("unchecked")
     public static synchronized void initAll() {
         ZimbraLog.extensions.info("Initializing extensions");
         for (ZimbraExtensionClassLoader zcl : sClassLoaders) {
             for (String name : zcl.getExtensionClassNames()) {
-                Class<ZimbraExtension> clz;
                 try {
-                    clz = (Class<ZimbraExtension>) zcl.loadClass(name);
-                    ZimbraExtension ext = clz.newInstance();
+                    Class<?> clazz = zcl.loadClass(name);
+                    ZimbraExtension ext = (ZimbraExtension) clazz.newInstance();
                     try {
                         ext.init();
                         RedoableOp.registerClassLoader(ext.getClass().getClassLoader());
                         String extName = ext.getName();
-                        ZimbraLog.extensions.info("Initialized extension " + extName + ": " + name + "@" + zcl);
+                        ZimbraLog.extensions.info("Initialized extension " +
+                                extName + ": " + name + "@" + zcl);
                         sInitializedExtensions.put(extName, ext);
-                    } catch (Exception e) { 
+                    } catch (ExtensionException e) {
+                        ZimbraLog.extensions.info(
+                                "Disabled '" + ext.getName() + "' " +
+                                e.getMessage());
+                        ext.destroy();
+                        RedoableOp.deregisterClassLoader(
+                                ext.getClass().getClassLoader());
+                    } catch (Exception e) {
                         ZimbraLog.extensions.warn("exception in " + name + ".init()", e);
+                        RedoableOp.deregisterClassLoader(
+                                ext.getClass().getClassLoader());
                     }
                 } catch (InstantiationException e) {
                     ZimbraLog.extensions.warn("exception occurred initializing extension " + name, e);
@@ -127,28 +140,22 @@ public class ExtensionUtil {
             }
         }
     }
-    
-    /**
-     * Called 
-     */
+
     public static synchronized void postInitAll() {
         ZimbraLog.extensions.info("Post-Initializing extensions");
-        
+
         for (Object o : sInitializedExtensions.values()) {
             if (o instanceof ZimbraExtensionPostInit) {
                 ((ZimbraExtensionPostInit)o).postInit();
             }
         }
     }
-    
+
 
     public static synchronized void destroyAll() {
         ZimbraLog.extensions.info("Destroying extensions");
         List<String> extNames = new ArrayList<String>(sInitializedExtensions.keySet());
-        for (ListIterator<String> iter = extNames.listIterator(extNames.size());
-        iter.hasPrevious();)
-        {
-            String extName = iter.previous();
+        for (String extName : extNames) {
             ZimbraExtension ext = getExtension(extName);
             try {
                 RedoableOp.deregisterClassLoader(ext.getClass().getClassLoader());
@@ -162,11 +169,13 @@ public class ExtensionUtil {
     }
 
     public static synchronized Class<?> loadClass(String extensionName, String className) throws ClassNotFoundException {
-        if (extensionName == null)
+        if (extensionName == null) {
             return Class.forName(className);
+        }
         ZimbraExtension ext = sInitializedExtensions.get(extensionName);
-        if (ext == null)
+        if (ext == null) {
             throw new ClassNotFoundException("extension " + extensionName + " not found");
+        }
         ClassLoader loader = ext.getClass().getClassLoader();
         return loader.loadClass(className);
     }

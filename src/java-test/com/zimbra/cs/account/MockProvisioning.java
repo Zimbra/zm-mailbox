@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,9 +25,16 @@ import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
 import com.zimbra.cs.mime.MimeTypeInfo;
 
+/**
+ * Mock implementation of {@link Provisioning} for testing.
+ *
+ * @author ysasaki
+ */
 public class MockProvisioning extends Provisioning {
 
     private Map<String, Account> accounts = new HashMap<String, Account>();
+    private Map<String, List<MimeTypeInfo>> mimeConfig =
+        new HashMap<String, List<MimeTypeInfo>>();
 
     @Override
     public Account createAccount(String email, String password,
@@ -38,6 +46,29 @@ public class MockProvisioning extends Provisioning {
     @Override
     public Account get(AccountBy keyType, String key) {
         return accounts.get(key);
+    }
+
+    @Override
+    public List<MimeTypeInfo> getMimeTypes(String mime) {
+        return mimeConfig.get(mime);
+    }
+
+    @Override
+    public List<MimeTypeInfo> getAllMimeTypes() {
+        List<MimeTypeInfo> result = new ArrayList<MimeTypeInfo>();
+        for (List<MimeTypeInfo> entry : mimeConfig.values()) {
+            result.addAll(entry);
+        }
+        return result;
+    }
+
+    public void addMimeType(String mime, MimeTypeInfo info) {
+        List<MimeTypeInfo> list = mimeConfig.get(mime);
+        if (list == null) {
+            list = new ArrayList<MimeTypeInfo>();
+            mimeConfig.put(mime, list);
+        }
+        list.add(info);
     }
 
     @Override
@@ -91,16 +122,6 @@ public class MockProvisioning extends Provisioning {
 
     @Override
     public GlobalGrant getGlobalGrant() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<MimeTypeInfo> getMimeTypes(String mimeType) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<MimeTypeInfo> getAllMimeTypes() {
         throw new UnsupportedOperationException();
     }
 
