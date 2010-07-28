@@ -94,6 +94,15 @@ public abstract class AuthToken {
     public String getProxyAuthToken() { return null; }
     
     public void resetProxyAuthToken() {}
+    
+    public Account getAccount() throws ServiceException {
+        String acctId = getAccountId();
+        Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.id, acctId);
+        if (acct == null)
+            throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
+        
+        return acct;
+    }
 
     /**
      * Encode original auth info into an outgoing http request.

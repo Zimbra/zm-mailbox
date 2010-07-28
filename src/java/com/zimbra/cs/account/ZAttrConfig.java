@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100722-1915 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100728-1509 */
 
     /**
      * RFC2256: descriptive information
@@ -539,6 +539,145 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetAccountExtraObjectClass(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAccountExtraObjectClass, "");
+        return attrs;
+    }
+
+    /**
+     * access control mechanism for admin access acl: ACL based access
+     * control (a.k.a. delegated admin). global: allows only global admins.
+     *
+     * <p>Valid values: [acl, global]
+     *
+     * @return zimbraAdminAccessControlMech, or ZAttrProvisioning.AdminAccessControlMech.acl if unset and/or has invalid value
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1101)
+    public ZAttrProvisioning.AdminAccessControlMech getAdminAccessControlMech() {
+        try { String v = getAttr(Provisioning.A_zimbraAdminAccessControlMech); return v == null ? ZAttrProvisioning.AdminAccessControlMech.acl : ZAttrProvisioning.AdminAccessControlMech.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.AdminAccessControlMech.acl; }
+    }
+
+    /**
+     * access control mechanism for admin access acl: ACL based access
+     * control (a.k.a. delegated admin). global: allows only global admins.
+     *
+     * <p>Valid values: [acl, global]
+     *
+     * @return zimbraAdminAccessControlMech, or "acl" if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1101)
+    public String getAdminAccessControlMechAsString() {
+        return getAttr(Provisioning.A_zimbraAdminAccessControlMech, "acl");
+    }
+
+    /**
+     * access control mechanism for admin access acl: ACL based access
+     * control (a.k.a. delegated admin). global: allows only global admins.
+     *
+     * <p>Valid values: [acl, global]
+     *
+     * @param zimbraAdminAccessControlMech new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1101)
+    public void setAdminAccessControlMech(ZAttrProvisioning.AdminAccessControlMech zimbraAdminAccessControlMech) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminAccessControlMech, zimbraAdminAccessControlMech.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * access control mechanism for admin access acl: ACL based access
+     * control (a.k.a. delegated admin). global: allows only global admins.
+     *
+     * <p>Valid values: [acl, global]
+     *
+     * @param zimbraAdminAccessControlMech new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1101)
+    public Map<String,Object> setAdminAccessControlMech(ZAttrProvisioning.AdminAccessControlMech zimbraAdminAccessControlMech, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminAccessControlMech, zimbraAdminAccessControlMech.toString());
+        return attrs;
+    }
+
+    /**
+     * access control mechanism for admin access acl: ACL based access
+     * control (a.k.a. delegated admin). global: allows only global admins.
+     *
+     * <p>Valid values: [acl, global]
+     *
+     * @param zimbraAdminAccessControlMech new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1101)
+    public void setAdminAccessControlMechAsString(String zimbraAdminAccessControlMech) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminAccessControlMech, zimbraAdminAccessControlMech);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * access control mechanism for admin access acl: ACL based access
+     * control (a.k.a. delegated admin). global: allows only global admins.
+     *
+     * <p>Valid values: [acl, global]
+     *
+     * @param zimbraAdminAccessControlMech new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1101)
+    public Map<String,Object> setAdminAccessControlMechAsString(String zimbraAdminAccessControlMech, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminAccessControlMech, zimbraAdminAccessControlMech);
+        return attrs;
+    }
+
+    /**
+     * access control mechanism for admin access acl: ACL based access
+     * control (a.k.a. delegated admin). global: allows only global admins.
+     *
+     * <p>Valid values: [acl, global]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1101)
+    public void unsetAdminAccessControlMech() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminAccessControlMech, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * access control mechanism for admin access acl: ACL based access
+     * control (a.k.a. delegated admin). global: allows only global admins.
+     *
+     * <p>Valid values: [acl, global]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1101)
+    public Map<String,Object> unsetAdminAccessControlMech(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminAccessControlMech, "");
         return attrs;
     }
 
@@ -1357,6 +1496,78 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetAllowNonLDHCharsInDomain(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAllowNonLDHCharsInDomain, "");
+        return attrs;
+    }
+
+    /**
+     * When a virus is detected quarantine message to this account
+     *
+     * @return zimbraAmavisQuarantineAccount, or null if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1100)
+    public String getAmavisQuarantineAccount() {
+        return getAttr(Provisioning.A_zimbraAmavisQuarantineAccount, null);
+    }
+
+    /**
+     * When a virus is detected quarantine message to this account
+     *
+     * @param zimbraAmavisQuarantineAccount new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1100)
+    public void setAmavisQuarantineAccount(String zimbraAmavisQuarantineAccount) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisQuarantineAccount, zimbraAmavisQuarantineAccount);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When a virus is detected quarantine message to this account
+     *
+     * @param zimbraAmavisQuarantineAccount new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1100)
+    public Map<String,Object> setAmavisQuarantineAccount(String zimbraAmavisQuarantineAccount, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisQuarantineAccount, zimbraAmavisQuarantineAccount);
+        return attrs;
+    }
+
+    /**
+     * When a virus is detected quarantine message to this account
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1100)
+    public void unsetAmavisQuarantineAccount() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisQuarantineAccount, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When a virus is detected quarantine message to this account
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1100)
+    public Map<String,Object> unsetAmavisQuarantineAccount(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAmavisQuarantineAccount, "");
         return attrs;
     }
 

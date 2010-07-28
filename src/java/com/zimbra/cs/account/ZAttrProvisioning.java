@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100722-1915 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100728-1509 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -68,6 +68,22 @@ public class ZAttrProvisioning {
         public boolean isClosed() { return this == closed;}
         public boolean isLocked() { return this == locked;}
         public boolean isLockout() { return this == lockout;}
+    }
+
+    public static enum AdminAccessControlMech {
+        acl("acl"),
+        global("global");
+        private String mValue;
+        private AdminAccessControlMech(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static AdminAccessControlMech fromString(String s) throws ServiceException {
+            for (AdminAccessControlMech value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isAcl() { return this == acl;}
+        public boolean isGlobal() { return this == global;}
     }
 
     public static enum BackupMode {
@@ -1202,6 +1218,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraACE = "zimbraACE";
 
     /**
+     * access control mechanism for admin access acl: ACL based access
+     * control (a.k.a. delegated admin). global: allows only global admins.
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1101)
+    public static final String A_zimbraAdminAccessControlMech = "zimbraAdminAccessControlMech";
+
+    /**
      * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
      */
     @ZAttr(id=109)
@@ -1328,6 +1353,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1052)
     public static final String A_zimbraAllowNonLDHCharsInDomain = "zimbraAllowNonLDHCharsInDomain";
+
+    /**
+     * When a virus is detected quarantine message to this account
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1100)
+    public static final String A_zimbraAmavisQuarantineAccount = "zimbraAmavisQuarantineAccount";
 
     /**
      * Mailboxes in which the current account in archived. Multi-value attr
@@ -3969,7 +4002,7 @@ public class ZAttrProvisioning {
      * If TRUE, a mailbox that exceeds its quota is still allowed to receive
      * mail, but is not allowed to send.
      *
-     * @since ZCS 7.0
+     * @since ZCS 7.0.0
      */
     @ZAttr(id=1099)
     public static final String A_zimbraMailAllowReceiveButNotSendWhenOverQuota = "zimbraMailAllowReceiveButNotSendWhenOverQuota";

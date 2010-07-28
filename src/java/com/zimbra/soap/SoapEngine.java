@@ -347,7 +347,7 @@ public class SoapEngine {
             if (needsAdminAuth) {
                 AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(at);
                 if (!aac.isSufficientAdminForSoap(context, handler))
-                    return soapFault(soapProto, "cannot dispatch request", ServiceException.PERM_DENIED("need admin token"));
+                    return soapFault(soapProto, "cannot dispatch request", ServiceException.PERM_DENIED("need adequate admin token"));
             }
             
             String acctId = null;

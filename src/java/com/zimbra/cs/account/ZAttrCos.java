@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100722-1915 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100728-1509 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -9621,7 +9621,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @return zimbraMailAllowReceiveButNotSendWhenOverQuota, or false if unset
      *
-     * @since ZCS 7.0
+     * @since ZCS 7.0.0
      */
     @ZAttr(id=1099)
     public boolean isMailAllowReceiveButNotSendWhenOverQuota() {
@@ -9635,7 +9635,7 @@ public class ZAttrCos extends NamedEntry {
      * @param zimbraMailAllowReceiveButNotSendWhenOverQuota new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.0
+     * @since ZCS 7.0.0
      */
     @ZAttr(id=1099)
     public void setMailAllowReceiveButNotSendWhenOverQuota(boolean zimbraMailAllowReceiveButNotSendWhenOverQuota) throws com.zimbra.common.service.ServiceException {
@@ -9652,7 +9652,7 @@ public class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.0
+     * @since ZCS 7.0.0
      */
     @ZAttr(id=1099)
     public Map<String,Object> setMailAllowReceiveButNotSendWhenOverQuota(boolean zimbraMailAllowReceiveButNotSendWhenOverQuota, Map<String,Object> attrs) {
@@ -9667,7 +9667,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.0
+     * @since ZCS 7.0.0
      */
     @ZAttr(id=1099)
     public void unsetMailAllowReceiveButNotSendWhenOverQuota() throws com.zimbra.common.service.ServiceException {
@@ -9683,7 +9683,7 @@ public class ZAttrCos extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.0
+     * @since ZCS 7.0.0
      */
     @ZAttr(id=1099)
     public Map<String,Object> unsetMailAllowReceiveButNotSendWhenOverQuota(Map<String,Object> attrs) {

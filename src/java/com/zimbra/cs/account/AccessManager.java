@@ -21,6 +21,8 @@ import java.util.Set;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -31,17 +33,55 @@ public abstract class AccessManager {
     
     public static AccessManager getInstance() {
         if (sManager == null) {
-            String className = LC.zimbra_class_accessmanager.value();
-            if (className != null && !className.equals("")) {
-                try {
-                	sManager = (AccessManager) Class.forName(className).newInstance();
-                } catch (Exception e) {
-                    ZimbraLog.account.error("could not instantiate AccessManager interface of class '" + className + "'; defaulting to DomainAccessManager", e);
+            
+            // 1. try getting it from global config attr zimbraAdminAccessControlMech.
+            //    zimbraAdminAccessControlMech can only be set to an access manager that is 
+            //    "admin console capable".  That is, it must implement the AdminConsoleCapable
+            //    interface.
+            try {
+                Config config = Provisioning.getInstance().getConfig();
+                String accessManager = config.getAttr(Provisioning.A_zimbraAdminAccessControlMech);
+                if (accessManager != null) {
+                    ZAttrProvisioning.AdminAccessControlMech am = ZAttrProvisioning.AdminAccessControlMech.fromString(accessManager);
+                    if (am == ZAttrProvisioning.AdminAccessControlMech.acl)
+                        sManager = new com.zimbra.cs.account.accesscontrol.ACLAccessManager();
+                    else if (am == ZAttrProvisioning.AdminAccessControlMech.global)
+                        sManager = new com.zimbra.cs.account.accesscontrol.GlobalAccessManager();
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("unable to determine access manager from global config attribute " + 
+                        Provisioning.A_zimbraAdminAccessControlMech + ", fallback to use LC key " +
+                        LC.zimbra_class_accessmanager.key(), e);
+            }
+            
+            //
+            // 2. if not set, fallback to localconfig key zimbra_class_accessmanager.
+            //    zimbra_class_accessmanager can be set to any class that is an
+            //    AccessManager.  No guarantee it will support the admin console.
+            //    Allow this path for backward compatibility.
+            //
+            if (sManager == null) {
+                String className = LC.zimbra_class_accessmanager.value();
+                
+                if (className != null && !className.equals("")) {
+                    try {
+                        sManager = (AccessManager) Class.forName(className).newInstance();
+                    } catch (Exception e) {
+                        ZimbraLog.account.error("could not instantiate AccessManager interface of class '" 
+                                + className + "'; defaulting to DomainAccessManager", e);
+                    }
                 }
             }
+            
+            // 
+            // 3. if still null, default to GlobalAccessManager
+            //
             if (sManager == null)
-            	sManager = new DomainAccessManager();
+            	sManager = new com.zimbra.cs.account.accesscontrol.GlobalAccessManager();
+            
+            ZimbraLog.account.info("Initialized access manager: " + sManager.getClass().getCanonicalName());
         }
+        
         return sManager;
     }
     
