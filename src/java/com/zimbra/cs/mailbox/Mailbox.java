@@ -3771,7 +3771,15 @@ public class Mailbox {
                         // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
                         String method = scid.mInv.getMethod();
                         if ("REQUEST".equals(method) || "PUBLISH".equals(method)) {
-                            calItem = createCalendarItem(folderId, flags, tags, scid.mInv.getUid(), scid.mPm, scid.mInv, null);
+                            try {
+                                calItem = createCalendarItem(folderId, flags, tags, scid.mInv.getUid(), scid.mPm, scid.mInv, null);
+                            } catch (MailServiceException mse) {
+                                if (mse.getCode() == MailServiceException.ALREADY_EXISTS) {
+                                    //bug 49106 - did not find the appointment above in getCalendarItemByUid(), but the mail_item exists
+                                    ZimbraLog.calendar.error("failed to create calendar item; already exists. cause: "+(scidList.isEmpty()?"no items in uuid list.":"uuid not found in appointment: "+scidList.get(0).mInv.getUid()+" or bad mail_item type"));
+                                }
+                                throw mse;
+                            }
                         } else {
                             return null; // for now, just ignore this Invitation
                         }
