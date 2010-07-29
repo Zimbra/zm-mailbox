@@ -98,7 +98,7 @@ public class TaskScheduler<V> {
 
                 if (mCallbacks != null) {
                     for (ScheduledTaskCallback<V2> callback : mCallbacks) {
-                        callback.afterTaskRun(mTask);
+                        callback.afterTaskRun(mTask, mLastResult);
                     }
                 }
             } catch (Throwable t) {

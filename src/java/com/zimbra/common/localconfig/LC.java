@@ -350,6 +350,8 @@ public class LC {
     public static final KnownKey calendar_cache_range_months;
     public static final KnownKey calendar_cache_max_stale_items;
 
+    public static final KnownKey calendar_reminder_email_enabled;
+
     public static final KnownKey text_attachments_base64;
 
     public static final KnownKey nio_imap_enabled =
@@ -1275,6 +1277,9 @@ public class LC {
 
         calendar_cache_max_stale_items = new KnownKey("calendar_cache_max_stale_items");
         calendar_cache_max_stale_items.setDefault("10");
+
+        calendar_reminder_email_enabled = new KnownKey("calendar_reminder_email_enabled");
+        calendar_reminder_email_enabled.setDefault("true");
 
         krb5_keytab = new KnownKey("krb5_keytab");
         krb5_keytab.setDefault("${zimbra_home}" + FS + "conf" + FS + "krb5.keytab");
