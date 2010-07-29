@@ -469,9 +469,9 @@ public class SoapSession extends Session {
 
     private boolean mIsOffline = false;
     
-    public boolean isOfflineSoapSession() { return mIsOffline; }
-    
-    public void setOfflineSoapSession() { mIsOffline = true; }
+    public boolean isOfflineSoapSession()  { return mIsOffline; }
+    public void setOfflineSoapSession()    { mIsOffline = true; }
+
 
     public Session getDelegateSession(String targetAccountId) {
         if (mUnregistered || targetAccountId == null)
@@ -729,11 +729,7 @@ public class SoapSession extends Session {
         }
     }
     
-    /**
-     * On the session's first write op, record the timestamp to the database
-     * 
-     * @param mbox
-     */
+    /** On the session's first write op, record the timestamp to the database. */
     public void updateLastWrite(Mailbox mbox) {
         boolean firstWrite = mLastWrite == -1;
         mLastWrite = System.currentTimeMillis();
@@ -754,11 +750,12 @@ public class SoapSession extends Session {
      *  on the Mailbox.
      *  <p>
      *  *All* changes are currently cached, regardless of the client's state/views.
+     * @param pms       A set of new change notifications from our Mailbox.
      * @param changeId  The sync-token change id of the change.
-     * @param pms       A set of new change notifications from our Mailbox. */
-    @Override public void notifyPendingChanges(PendingModifications pms, int changeIdxxx, Session source) {
+     * @param source    The (optional) Session which initiated these changes. */
+    @Override public void notifyPendingChanges(PendingModifications pms, int changeId, Session source) {
         Mailbox mbox = mMailbox;
-        if (pms == null || !pms.hasNotifications() || mbox == null)
+        if (pms == null || mbox == null || !pms.hasNotifications())
             return;
 
         if (source == this) {
@@ -789,14 +786,32 @@ public class SoapSession extends Session {
         handleNotifications(pms, source == this);
     }
 
+    boolean hasSerializableChanges(PendingModifications pms) {
+        // catch cases where the only notifications are mailbox config changes, which we don't serialize
+        if (pms.created != null && !pms.created.isEmpty())
+            return true;
+        if (pms.deleted != null && !pms.deleted.isEmpty())
+            return true;
+        if (pms.modified != null && !pms.modified.isEmpty()) {
+            for (Change chg : pms.modified.values()) {
+                if (!(chg.what instanceof Mailbox) || chg.why != Change.MODIFIED_CONFIG)
+                    return true;
+            }
+        }
+        return false;
+    }
+
     void handleNotifications(PendingModifications pms, boolean fromThisSession) {
+        if (!hasSerializableChanges(pms))
+            return;
+
         try {
             // update the set of notifications not yet sent to the client
             cacheNotifications(pms, fromThisSession);
             // if we're in a hanging no-op, alert the client that there are changes
-        	notifyPushChannel(pms, true);
+            notifyPushChannel(pms, true);
             // FIXME: this query result cache purge seems a little aggressive
-        	clearCachedQueryResults();
+            clearCachedQueryResults();
         } catch (ServiceException e) {
             ZimbraLog.session.warn("ServiceException in notifyPendingChanges ", e);
         }
