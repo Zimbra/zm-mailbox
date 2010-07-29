@@ -19,8 +19,15 @@ import com.zimbra.cs.account.accesscontrol.Rights.User;
 
 public class GlobalAccessManager extends AccessManager implements AdminConsoleCapable {
 
+    // embed a ACLAccessManager for handling user rights
+    private ACLAccessManager mAclAccessManager;
+    
     public GlobalAccessManager() {
-        // TODO Auto-generated constructor stub
+        try {
+            mAclAccessManager = new ACLAccessManager();
+        } catch (ServiceException e) {
+            ZimbraLog.acl.warn("unable to instaintiate ACLAccessManager, user rights will not be honored", e);
+        }
     }
 
     @Override
@@ -118,7 +125,13 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
     @Override
     public boolean canDo(Account grantee, Entry target, Right rightNeeded,
             boolean asAdmin) {
-        // TODO Auto-generated method stub
+        if (rightNeeded != null && rightNeeded.isUserRight()) {
+            // need a user right, delegate to the ACLAccessmanager
+            if (mAclAccessManager != null)
+                return mAclAccessManager.canDo(grantee, target, rightNeeded, asAdmin);
+            else
+                return false;
+        }
         return AccessControlUtil.isGlobalAdmin(grantee, asAdmin);
     }
 
