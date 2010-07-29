@@ -30,13 +30,16 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.DomainAccessManager;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.accesscontrol.GranteeType;
+
+import com.zimbra.cs.account.accesscontrol.ACLAccessManager;
 import com.zimbra.cs.account.accesscontrol.ACLUtil;
+import com.zimbra.cs.account.accesscontrol.GlobalAccessManager;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
-import com.zimbra.cs.account.accesscontrol.ACLAccessManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
@@ -112,9 +115,11 @@ public class TestACLGrantee extends TestACL {
         verify(target, target, User.R_invite, ALLOW, null);
         
         // admin access using admin privileges
-        if (AccessManager.getInstance() instanceof ACLAccessManager) // *all* decisions are based on ACL, admins don't have special rights 
+        AccessManager am = AccessManager.getInstance();
+        if (am instanceof ACLAccessManager ||  // *all* decisions are based on ACL, non-global admins don't have special rights 
+            am instanceof GlobalAccessManager) 
             verify(admin, target, User.R_invite, AS_ADMIN, DENY, null);
-        else
+        else if (am instanceof DomainAccessManager)
             verify(admin, target, User.R_invite, AS_ADMIN, ALLOW, null);
         
         // admin access NOT using admin privileges
