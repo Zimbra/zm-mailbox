@@ -50,6 +50,7 @@ public class DbPool {
     private static boolean sIsInitialized;
     
     private static boolean isShutdown;
+    private static boolean isUsageWarningEnabled = true;
 
     static ValueCounter<String> sConnectionStackCounter = new ValueCounter<String>();
     
@@ -370,9 +371,12 @@ public class DbPool {
             }
             stackTraceMsg = buf.toString();
         }
-        ZimbraLog.dbconn.warn(
-            "Connection pool is 75%% utilized (%d connections out of a maximum of %d in use).  %s",
-            numActive, maxActive, stackTraceMsg);
+        String logMsg = "Connection pool is 75%% utilized (%d connections out of a maximum of %d in use).  %s";
+        if (isUsageWarningEnabled) {
+            ZimbraLog.dbconn.warn(logMsg, numActive, maxActive, stackTraceMsg);
+        } else {
+            ZimbraLog.dbconn.debug(logMsg, numActive, maxActive, stackTraceMsg);
+        }
     }
 
     /**
@@ -506,5 +510,9 @@ public class DbPool {
     public static synchronized void shutdown() throws Exception {
     	isShutdown = true;
     	close();
+    }
+    
+    public static void disableUsageWarning() {
+        isUsageWarningEnabled = false;
     }
 }
