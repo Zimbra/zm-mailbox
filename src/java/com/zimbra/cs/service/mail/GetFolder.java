@@ -24,6 +24,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.FolderNode;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.OperationContextData;
@@ -31,6 +33,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.Pair;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetFolder extends MailDocumentHandler {
@@ -50,16 +53,31 @@ public class GetFolder extends MailDocumentHandler {
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
-        String parentId = DEFAULT_FOLDER_ID;
+        ItemId iid;
         Element eFolder = request.getOptionalElement(MailConstants.E_FOLDER);
         if (eFolder != null) {
+            iid = new ItemId(eFolder.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID), zsc);
+
             String path = eFolder.getAttribute(MailConstants.A_PATH, null);
-            if (path != null)
-                parentId = mbox.getFolderByPath(octxt, path).getId() + "";
-            else
-                parentId = eFolder.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID);
+            if (path != null) {
+                Pair<Folder, String> resolved = mbox.getFolderByPathLongestMatch(octxt, iid.getId(), path);
+                Folder folder = resolved.getFirst();
+                String overflow = resolved.getSecond();
+
+                if (overflow == null) {
+                    iid = new ItemId(folder);
+                } else if (folder instanceof Mountpoint) {
+                    // path crosses a mountpoint; update request and proxy to target mailbox
+                    ItemId iidTarget = ((Mountpoint) folder).getTarget();
+                    eFolder.addAttribute(MailConstants.A_FOLDER, iidTarget.toString()).addAttribute(MailConstants.A_PATH, overflow);
+                    return proxyRequest(request, context, new ItemId(folder), iidTarget);
+                } else {
+                    throw MailServiceException.NO_SUCH_FOLDER(path);
+                }
+            }
+        } else {
+            iid = new ItemId(DEFAULT_FOLDER_ID, zsc);
         }
-        ItemId iid = new ItemId(parentId, zsc);
 
         boolean visible = request.getAttributeBool(MailConstants.A_VISIBLE, false);
         boolean needGranteeName = request.getAttributeBool(MailConstants.A_NEED_GRANTEE_NAME, true);
@@ -99,8 +117,12 @@ public class GetFolder extends MailDocumentHandler {
 
 
     private void handleMountpoint(Element request, Map<String, Object> context, ItemId iidLocal, Mountpoint mpt, Element eRoot)
-    throws ServiceException, SoapFaultException {
+    throws ServiceException {
+        // gotta nuke the old <folder> element, lest it interfere with our proxying...
         ItemId iidRemote = mpt.getTarget();
+        request.getElement(MailConstants.E_FOLDER).detach();
+        request.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_FOLDER, iidRemote.toString());
+
         Element proxied = proxyRequest(request, context, iidLocal, iidRemote);
         // return the children of the remote folder as children of the mountpoint
         proxied = proxied.getOptionalElement(MailConstants.E_FOLDER);

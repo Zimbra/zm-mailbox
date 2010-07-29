@@ -1623,6 +1623,7 @@ if nest="1" on the request, response looks like this:
 
   - either a {base-folder-id} or a {fully-qualified-path} can optionally be specified;
       if neither is present, the descent of the folder hierarchy begins at the mailbox's root folder (id 1).
+      if both are present, the path is treated as relative to the folder that was specified by id
 
   - if "visible" is 1, we include all visible subfolders of the specified folder
       when you have full rights on the mailbox, this is indistinguishable from the normal <GetFolderResponse>
