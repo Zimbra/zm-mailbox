@@ -19,6 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -236,7 +237,9 @@ public class DbScheduledTask {
     private static String getEncodedMetadata(ScheduledTask task) {
         boolean hasProperties = false;
         Metadata metadata = new Metadata();
-        for (String key : task.getPropertyNames()) {
+        Iterator<String> it = task.getPropertyNames().iterator();
+        while (it.hasNext()) {
+            String key = it.next();
             hasProperties = true;
             metadata.put(key, task.getProperty(key));
         }
