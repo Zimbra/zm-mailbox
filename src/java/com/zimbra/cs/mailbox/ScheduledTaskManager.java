@@ -26,6 +26,7 @@ import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbScheduledTask;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.mailbox.alerts.CalItemReminderTaskCallback;
 
 /**
  * Manages persistent scheduled tasks.  Properties of recurring tasks
@@ -34,7 +35,7 @@ import com.zimbra.cs.db.DbPool.Connection;
  */
 public class ScheduledTaskManager {
 
-    private static TaskScheduler<Void> sScheduler;
+    private static TaskScheduler<ScheduledTaskResult> sScheduler;
     private static Random sRandom = new Random();
     
     public static void startup()
@@ -48,9 +49,9 @@ public class ScheduledTaskManager {
         Provisioning prov = Provisioning.getInstance();
         int numThreads = prov.getLocalServer().getIntAttr(Provisioning.A_zimbraScheduledTaskNumThreads, 20);
         int minThreads = numThreads / 2;
-        sScheduler = new TaskScheduler<Void>(null, minThreads, numThreads);
+        sScheduler = new TaskScheduler<ScheduledTaskResult>(null, minThreads, numThreads);
         sScheduler.addCallback(new TaskCleanup());
-
+        sScheduler.addCallback(new CalItemReminderTaskCallback());
         
         for (ScheduledTask task : DbScheduledTask.getTasks(null, 0)) {
             try {
@@ -170,10 +171,10 @@ public class ScheduledTaskManager {
      * Only deletes single-run tasks, not recurring tasks. 
      */
     private static class TaskCleanup
-    implements ScheduledTaskCallback<Void> {
+    implements ScheduledTaskCallback<ScheduledTaskResult> {
         TaskCleanup()  { }
 
-        public void afterTaskRun(Callable<Void> c) {
+        public void afterTaskRun(Callable<ScheduledTaskResult> c, ScheduledTaskResult mLastResult) {
             Connection conn = null;
             ScheduledTask task = (ScheduledTask) c;
             if (task.isRecurring()) {

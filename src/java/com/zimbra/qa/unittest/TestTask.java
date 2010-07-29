@@ -14,8 +14,6 @@
  */
 package com.zimbra.qa.unittest;
 
-import java.util.concurrent.Callable;
-
 import com.zimbra.cs.mailbox.ScheduledTask;
 
 /**
@@ -25,9 +23,8 @@ import com.zimbra.cs.mailbox.ScheduledTask;
  *
  */
 public class TestTask
-extends ScheduledTask
-implements Callable<Void> {
-    
+extends ScheduledTask {
+
     int mNumCalls = 0;
     
     public TestTask() {

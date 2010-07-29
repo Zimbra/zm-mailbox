@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-public abstract class ScheduledTask
-implements Callable<Void> {
+public abstract class ScheduledTask<V>
+implements Callable<V> {
 
     private long mMailboxId;
     private Map<String, String> mProperties = new HashMap<String, String>();

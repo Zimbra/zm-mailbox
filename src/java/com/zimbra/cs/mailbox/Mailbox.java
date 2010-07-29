@@ -7246,16 +7246,8 @@ public class Mailbox {
             change.reset();
         }
 
-        // if the calendar items has changed in the mailbox,
-        // recalculate the free/busy for the user and propogate to
-        // other system.
-        if (dirty != null && dirty.hasNotifications()) {
-            FreeBusyProvider.mailboxChanged(getAccountId(), dirty.changedTypes);
-            MailboxListener.mailboxChanged(getAccountId(), dirty.changedTypes, change.octxt);
-        }
-
         // committed changes, so notify any listeners
-        if (!mListeners.isEmpty() && dirty != null && dirty.hasNotifications()) {
+        if (dirty != null && dirty.hasNotifications()) {
             for (Session session : mListeners) {
                 try {
                     session.notifyPendingChanges(dirty, mData.lastChangeId, source);
@@ -7263,9 +7255,8 @@ public class Mailbox {
                     ZimbraLog.mailbox.error("ignoring error during notification", e);
                 }
             }
+            MailboxListener.mailboxChanged(getAccountId(), dirty, change.octxt, mData.lastChangeId);
         }
-        if (dirty != null)
-            MemcachedCacheManager.notifyCommittedChanges(dirty, mData.lastChangeId);
     }
 
     private void rollbackCache(MailboxChange change) {

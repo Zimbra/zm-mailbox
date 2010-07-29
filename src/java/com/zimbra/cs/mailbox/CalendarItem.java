@@ -99,7 +99,7 @@ import com.zimbra.common.mime.MimeConstants;
  * every monday with name "Gorilla Discussion" EXCEPT for the 21st, where we
  * talk about lefties instead. CANCELED for the 28th
  */
-public abstract class CalendarItem extends MailItem {
+public abstract class CalendarItem extends MailItem implements ScheduledTaskResult {
 
     // these are special values indexed in the L_FIELD structured index field, they allow us to
     // restrict lucene searches keyed off of public/private settings
