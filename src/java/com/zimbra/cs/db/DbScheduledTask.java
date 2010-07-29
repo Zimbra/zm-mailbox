@@ -19,9 +19,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
@@ -237,9 +237,8 @@ public class DbScheduledTask {
     private static String getEncodedMetadata(ScheduledTask task) {
         boolean hasProperties = false;
         Metadata metadata = new Metadata();
-        Iterator<String> it = task.getPropertyNames().iterator();
-        while (it.hasNext()) {
-            String key = it.next();
+        Set<String> keys = task.getPropertyNames();
+        for (String key : keys) {
             hasProperties = true;
             metadata.put(key, task.getProperty(key));
         }
