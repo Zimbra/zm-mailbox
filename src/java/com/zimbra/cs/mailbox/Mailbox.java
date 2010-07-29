@@ -907,7 +907,7 @@ public class Mailbox {
         mCurrentChange.mDirty.recordModified(this, Change.MODIFIED_SIZE);
         mCurrentChange.size = size;
     }
-
+    
     void checkSizeChange(long newSize) throws ServiceException {
         long quota = getAccount().getLongAttr(Provisioning.A_zimbraMailQuota, 0);
         if (quota != 0 && newSize > quota)
@@ -4517,7 +4517,8 @@ public class Mailbox {
             long tags = Tag.tagsToBitmask(tagStr);
 
             // step 0: preemptively check for quota issues (actual update is done in Message.create)
-            checkSizeChange(getSize() + staged.getStagedSize());
+            if (!getAccount().isMailAllowReceiveButNotSendWhenOverQuota())
+                checkSizeChange(getSize() + staged.getStagedSize());
 
             // step 1: get an ID assigned for the new message
             int messageId = getNextItemId(!isRedo ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());

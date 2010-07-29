@@ -91,6 +91,11 @@ public class SendMsg extends MailDocumentHandler {
     @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
+        Account account = getRequestedAccount(zsc);
+        long quota = account.getMailQuota();
+        if (account.isMailAllowReceiveButNotSendWhenOverQuota() && quota != 0 && mbox.getSize() > quota) {
+            throw MailServiceException.QUOTA_EXCEEDED(quota);
+        }
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 

@@ -25,13 +25,17 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.lmtpserver.LmtpMessageInputStream;
 import com.zimbra.cs.lmtpserver.ZimbraLmtpBackend;
 import com.zimbra.cs.lmtpserver.utils.LmtpClient;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.handler.MessageRFC822Handler;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZFolder;
@@ -55,6 +59,7 @@ extends TestCase {
     private String mOriginalServerDiskThreshold;
     private String mOriginalConfigDiskThreshold;
     private String mOriginalQuota;
+    private String mOriginalAllowReceiveButNotSendWhenOverQuota;
     
     private class LmtpClientThread
     implements Runnable {
@@ -87,6 +92,8 @@ extends TestCase {
         mOriginalConfigDiskThreshold = TestUtil.getConfigAttr(
             Provisioning.A_zimbraMailDiskStreamingThreshold);
         mOriginalQuota = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota);
+        mOriginalAllowReceiveButNotSendWhenOverQuota =
+            TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota);
         cleanUp();
     }
     
@@ -499,6 +506,38 @@ extends TestCase {
         assertFalse(TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, buf.toString()));
     }
     
+    /**
+     * Verifies send/receive behavior for {@code zimbraMailAllowReceiveButNotSendWhenOverQuota}.
+     */
+    public void testAllowReceiveButNotSendWhenOverQuota()
+    throws Exception {
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota, LdapUtil.LDAP_TRUE);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota, "1");
+        String subject = NAME_PREFIX + " testAllowReceiveButNotSendWhenOverQuota";
+        
+        // Verify that receive is allowed.
+        TestUtil.addMessageLmtp(subject, USER_NAME, USER_NAME);
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.getMessage(mbox, "in:inbox subject:\"" + subject + "\"");
+        
+        // Verify that send is disallowed.
+        try {
+            TestUtil.sendMessage(mbox, USER_NAME, subject);
+            fail("Send should have failed");
+        } catch (ServiceException e) {
+            assertEquals(MailServiceException.QUOTA_EXCEEDED, e.getCode());
+        }
+        
+        // Verify that adding a document is disallowed.
+        try {
+            byte[] data = new byte[1024];
+            TestUtil.createDocument(mbox, Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE), NAME_PREFIX + " receivenosend.bin", "application/content-stream", data);
+            fail("Document creation should have failed");
+        } catch (ServiceException e) {
+            assertEquals(MailServiceException.QUOTA_EXCEEDED, e.getCode());
+        }
+    }
+    
     public void tearDown()
     throws Exception {
         setQuotaWarnPercent(mOriginalWarnPercent);
@@ -506,6 +545,8 @@ extends TestCase {
         TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, mOriginalServerDiskThreshold);
         TestUtil.setConfigAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, mOriginalConfigDiskThreshold);
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota, mOriginalQuota);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota,
+            mOriginalAllowReceiveButNotSendWhenOverQuota);
         cleanUp();
     }
     

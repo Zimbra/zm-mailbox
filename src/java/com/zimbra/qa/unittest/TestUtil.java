@@ -86,6 +86,7 @@ import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZDataSource;
 import com.zimbra.cs.zclient.ZDateTime;
+import com.zimbra.cs.zclient.ZDocument;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZFilterRule;
 import com.zimbra.cs.zclient.ZFolder;
@@ -510,6 +511,12 @@ extends Assert {
         
         // Delete appointments
         List<String> ids = search(mbox, subjectSubstring, ZSearchParams.TYPE_APPOINTMENT);
+        if (!ids.isEmpty()) {
+            mbox.deleteItem(StringUtil.join(",", ids), null);
+        }
+        
+        // Delete documents
+        ids = search(mbox, subjectSubstring, ZSearchParams.TYPE_DOCUMENT);
         if (!ids.isEmpty()) {
             mbox.deleteItem(StringUtil.join(",", ids), null);
         }
@@ -1035,5 +1042,12 @@ extends Assert {
             }
         }
         return null;
+    }
+    
+    public static ZDocument createDocument(ZMailbox mbox, String folderId, String name, String contentType, byte[] content)
+    throws ServiceException {
+        String attachId = mbox.uploadAttachment(name, content, contentType, 0);
+        String docId = mbox.createDocument(folderId, name, attachId);
+        return mbox.getDocument(docId);
     }
 }

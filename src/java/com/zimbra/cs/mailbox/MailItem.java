@@ -1428,13 +1428,22 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (isLeafNode()) {
             boolean isDeleted = isTagged(Flag.ID_FLAG_DELETED);
 
-            mMailbox.updateSize(mData.size);
+            mMailbox.updateSize(mData.size, isQuotaCheckRequired());
             folder.updateSize(1, isDeleted ? 1 : 0, mData.size);
             
             // let the folder and tags know if the new item is unread
             folder.updateUnread(mData.unreadCount, isDeleted ? mData.unreadCount : 0);
             updateTagUnread(mData.unreadCount, isDeleted ? mData.unreadCount : 0);
         }
+    }
+    
+    /**
+     * Returns {@code true} if a quota check is required when creating
+     * this item.  See bug 15666.
+     */
+    @SuppressWarnings("unused")
+    protected boolean isQuotaCheckRequired() throws ServiceException {
+        return true;
     }
 
     /** Changes the item's color.  Color is specified in RGB, with
