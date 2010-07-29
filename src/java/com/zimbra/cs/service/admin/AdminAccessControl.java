@@ -40,11 +40,13 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.accesscontrol.ACLAccessManager;
 import com.zimbra.cs.account.accesscontrol.AccessControlUtil;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
+import com.zimbra.cs.account.accesscontrol.GlobalAccessManager;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PseudoTarget;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -250,10 +252,14 @@ public abstract class AdminAccessControl {
     
     private static AdminAccessControl newAdminAccessControl(ZimbraSoapContext zsc, AuthToken authToken, Account authedAcct) {
         AccessManager accessMgr = AccessManager.getInstance();
-        if (isDomainBasedAccessManager(accessMgr))
-            return new DomainAccessControl(accessMgr, zsc, authToken, authedAcct);
-        else
+        
+        if (accessMgr.getClass() == ACLAccessManager.class)
             return new ACLAccessControl(accessMgr, zsc, authToken, authedAcct);
+        else if (accessMgr.getClass() == GlobalAccessManager.class) {
+            return new GlobalAccessControl(accessMgr, zsc, authToken, authedAcct);
+        } else {
+            return new DomainAccessControl(accessMgr, zsc, authToken, authedAcct);
+        }
     }
 
     public boolean isDomainAdminOnly() {
@@ -452,6 +458,146 @@ public abstract class AdminAccessControl {
 
     }
     
+    /**
+     * 
+     * Class GlobalAccessControl
+     *
+     */
+    private static class GlobalAccessControl extends AdminAccessControl {
+        private GlobalAccessControl(AccessManager accessMgr, ZimbraSoapContext zsc, AuthToken authToken, Account authedAcct) {
+            super(accessMgr, zsc, authToken, authedAcct);
+        }
+        
+        @Override
+        public void checkAccountRight(AdminDocumentHandler handler,
+                Account account, Object needed) throws ServiceException {
+            soapOnly();
+            
+            checkDomainStatus(account);
+            
+            Boolean canAccess = handler.canAccessAccountCommon(mZsc, account, false);
+            
+            if (canAccess == null)
+                throwIfNotAllowed();
+            else {
+                boolean hasRight = canAccess.booleanValue();
+                if (!hasRight)
+                    throw ServiceException.PERM_DENIED("only global admin is allowed");
+            }     
+        }
+
+        @Override
+        public void checkCalendarResourceRight(AdminDocumentHandler handler,
+                CalendarResource cr, Object needed) throws ServiceException {
+            checkAccountRight(handler, cr, needed);
+        }
+
+        @Override
+        public void checkCosRight(Cos cos, Object needed) throws ServiceException {
+            throwIfNotAllowed();
+        }
+
+        @Override
+        public void checkDistributionListRight(AdminDocumentHandler handler,
+                DistributionList dl, Object needed) throws ServiceException {
+            soapOnly();
+            checkDomainStatus(dl);
+            throwIfNotAllowed();
+        }
+
+        @Override
+        public void checkDomainRight(AdminDocumentHandler handler,
+                String domainName, Object needed) throws ServiceException {
+            soapOnly();
+            
+            Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, domainName);
+            if (domain == null)
+                throw ServiceException.PERM_DENIED("no such domain: " + domainName);
+            
+            throwIfNotAllowed();
+        }
+
+        @Override
+        public void checkDomainRight(AdminDocumentHandler handler, Domain domain,
+                Object needed) throws ServiceException {
+            soapOnly();
+            throwIfNotAllowed();
+        }
+
+        @Override
+        public void checkDomainRightByEmail(AdminDocumentHandler handler,
+                String email, AdminRight needed) throws ServiceException {
+            soapOnly();
+            
+            String domainName = getDomainFromEmail(email);
+            Domain domain = Provisioning.getInstance().get(Provisioning.DomainBy.name, domainName);
+            if (domain == null)
+                throw AccountServiceException.NO_SUCH_DOMAIN(domainName);
+            
+            checkDomainStatus(domain);
+            throwIfNotAllowed();
+        }
+
+        @Override
+        public void checkModifyAttrs(AttributeClass attrClass,
+                Map<String, Object> attrs) throws ServiceException {
+            throwIfNotAllowed();
+        }
+
+        @Override
+        public void checkRight(Entry target, Object needed) throws ServiceException {
+            throwIfNotAllowed();
+        }
+
+        @Override
+        public void checkSetAttrsOnCreate(TargetType targetType, String entryName,
+                Map<String, Object> attrs) throws ServiceException {
+            throwIfNotAllowed();
+        }
+
+        @Override
+        public AttrRightChecker getAttrRightChecker(Entry target)
+                throws ServiceException {
+            return new AttributeRightChecker(this, target);
+        }
+
+        @Override
+        public boolean hasRightsToList(NamedEntry target, AdminRight listRight,
+                Object getAttrRight) throws ServiceException {
+            return doCheckRight();
+        }
+
+        @Override
+        public boolean hasRightsToListCos(Cos target, AdminRight listRight,
+                Object getAttrRight) throws ServiceException {
+            return doCheckRight();
+        }
+
+        @Override
+        public boolean isSufficientAdminForSoap(Map<String, Object> soapCtxt,
+                DocumentHandler handler) {
+            return mAuthToken.isAdmin();
+        }
+
+        @Override
+        public boolean isSufficientAdminForZimletFilterServlet() {
+            return mAuthToken.isAdmin();
+        }
+        
+        //
+        // private methods
+        //
+        private void throwIfNotAllowed() throws ServiceException {
+            boolean hasRight = doCheckRight();
+            
+            if (!hasRight)
+                throw ServiceException.PERM_DENIED("only global admin is allowed");
+        }
+        
+        private boolean doCheckRight() {
+            return mAccessMgr.canDo(mAuthedAcct, null, null, true);
+        }
+    }
     
     /**
      * 

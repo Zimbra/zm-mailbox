@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -22,7 +24,6 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
@@ -34,10 +35,11 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
+import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 
-public class ACLAccessManager extends AccessManager {
+public class ACLAccessManager extends AccessManager implements AdminConsoleCapable {
 
     public ACLAccessManager() throws ServiceException {
         // initialize RightManager
@@ -205,28 +207,11 @@ public class ACLAccessManager extends AccessManager {
     public boolean canDo(AuthToken grantee, Entry target, Right rightNeeded, 
             boolean asAdmin, ViaGrant via) throws ServiceException {
         try {
-            Account granteeAcct;
-            if (grantee == null) {
-                if (rightNeeded.isUserRight())
-                    granteeAcct = GuestAccount.ANONYMOUS_ACCT;
-                else
-                    return false;
-            } else if (grantee.isZimbraUser())
-                granteeAcct = getAccountFromAuthToken(grantee);
-            else {
-                if (rightNeeded.isUserRight())
-                    granteeAcct = new GuestAccount(grantee);
-                else
-                    return false;
-            }
-            
-            return canDo(granteeAcct, target, rightNeeded, asAdmin, via);
+            Account granteeAcct = AccessControlUtil.authTokenToAccount(grantee, rightNeeded);
+            if (granteeAcct != null)
+                return canDo(granteeAcct, target, rightNeeded, asAdmin, via);
         } catch (ServiceException e) {
-            ZimbraLog.acl.warn("ACL checking failed: " +
-                               "grantee=" + grantee.getAccountId() +
-                               ", target=" + target.getLabel() +
-                               ", right=" + rightNeeded.getName() +
-                               " => denied", e);
+            ZimbraLog.acl.warn("ACL checking failed", e);
         }
         
         return false;
@@ -236,24 +221,11 @@ public class ACLAccessManager extends AccessManager {
     public boolean canDo(String granteeEmail, Entry target, Right rightNeeded, 
             boolean asAdmin, ViaGrant via) throws ServiceException {
         try {
-            Account granteeAcct = null;
-            
-            if (granteeEmail != null)
-                granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.name, granteeEmail);
-            if (granteeAcct == null) {
-                if (rightNeeded.isUserRight())
-                    granteeAcct = GuestAccount.ANONYMOUS_ACCT;
-                else
-                    return false;
-            }
-            
-            return canDo(granteeAcct, target, rightNeeded, asAdmin, via);
+            Account granteeAcct = AccessControlUtil.emailAddrToAccount(granteeEmail, rightNeeded);
+            if (granteeAcct != null)
+                return canDo(granteeAcct, target, rightNeeded, asAdmin, via);
         } catch (ServiceException e) {
-            ZimbraLog.acl.warn("ACL checking failed: " + 
-                               "grantee=" + granteeEmail + 
-                               ", target=" + target.getLabel() + 
-                               ", right=" + rightNeeded.getName() + 
-                               " => denied", e);
+            ZimbraLog.acl.warn("ACL checking failed", e);
         }
         
         return false;
@@ -273,7 +245,7 @@ public class ACLAccessManager extends AccessManager {
     @Override
     public boolean canGetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) 
     throws ServiceException {
-        return canGetAttrs(getAccountFromAuthToken(grantee), target, attrs, asAdmin);
+        return canGetAttrs(grantee.getAccount(), target, attrs, asAdmin);
     }
 
     @Override
@@ -290,7 +262,7 @@ public class ACLAccessManager extends AccessManager {
     
     @Override
     public AttrRightChecker canGetAttrs(AuthToken credentials, Entry target, boolean asAdmin) throws ServiceException {
-        return canGetAttrs(getAccountFromAuthToken(credentials), target, asAdmin);
+        return canGetAttrs(credentials.getAccount(), target, asAdmin);
     }
     
     
@@ -308,7 +280,7 @@ public class ACLAccessManager extends AccessManager {
     
     @Override
     public boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException {
-        return canSetAttrs(getAccountFromAuthToken(grantee), target, attrs, asAdmin);
+        return canSetAttrs(grantee.getAccount(), target, attrs, asAdmin);
     }
     
     @Override
@@ -327,7 +299,7 @@ public class ACLAccessManager extends AccessManager {
     
     @Override
     public boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
-        return canSetAttrs(getAccountFromAuthToken(grantee), target, attrs, asAdmin);
+        return canSetAttrs(grantee.getAccount(), target, attrs, asAdmin);
     }
     
     public boolean canSetAttrsOnCreate(Account grantee, TargetType targetType, String entryName, 
@@ -405,7 +377,7 @@ public class ACLAccessManager extends AccessManager {
     @Override
     public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean canDelegate, 
             Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) throws ServiceException {
-        Account authedAcct = getAccountFromAuthToken(grantee);
+        Account authedAcct = grantee.getAccount();
         return canPerform(authedAcct, target, rightNeeded, canDelegate, 
                           attrs, asAdmin, viaGrant);
     }
@@ -545,30 +517,26 @@ public class ACLAccessManager extends AccessManager {
     // util methods
     // ============
     
-    /*
-     * get the authed account from an auth token
-     */
-    private Account getAccountFromAuthToken(AuthToken authToken) throws ServiceException {
-        String acctId = authToken.getAccountId();
-        Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.id, acctId);
-        if (acct == null)
-            throw AccountServiceException.NO_SUCH_ACCOUNT(acctId);
-        
-        return acct;
+    // ===========================
+    // AdminConsoleCapable methods
+    // ===========================
+    
+    public void getAllEffectiveRights(RightBearer rightBearer, 
+            boolean expandSetAttrs, boolean expandGetAttrs,
+            AllEffectiveRights result) throws ServiceException {
+        CollectAllEffectiveRights.getAllEffectiveRights(rightBearer, expandSetAttrs, expandGetAttrs, result);
     }
-
     
-    // ================
-    // end util methods
-    // ================
+    public void getEffectiveRights(RightBearer rightBearer, Entry target, 
+            boolean expandSetAttrs, boolean expandGetAttrs,
+            RightCommand.EffectiveRights result) throws ServiceException {
+        CollectEffectiveRights.getEffectiveRights(rightBearer, target, expandSetAttrs, expandGetAttrs, result);
+        
+    }
     
-    
-    /**
-     * @param args
-     */
-    public static void main(String[] args) {
-        // TODO Auto-generated method stub
-
+    public Set<TargetType> targetTypesForGrantSearch() {
+        // we want all target types
+        return new HashSet<TargetType>(Arrays.asList(TargetType.values()));
     }
 
 }

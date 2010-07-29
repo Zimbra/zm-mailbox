@@ -15,8 +15,11 @@
 package com.zimbra.cs.account.accesscontrol;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 
 public class AccessControlUtil {
@@ -63,5 +66,42 @@ public class AccessControlUtil {
         
         // hard rules are not applicable
         return null;
+    }
+    
+    static public Account authTokenToAccount(AuthToken authToken, Right rightNeeded) {
+        Account granteeAcct = null;
+        try {
+            
+            if (authToken == null) {
+                if (rightNeeded.isUserRight())
+                    granteeAcct = GuestAccount.ANONYMOUS_ACCT;
+            } else if (authToken.isZimbraUser())
+                granteeAcct = authToken.getAccount();
+            else {
+                if (rightNeeded.isUserRight())
+                    granteeAcct = new GuestAccount(authToken);
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.acl.warn("unable to get account from auth token, id=: " + authToken.getAccountId(), e);
+        }
+        
+        return granteeAcct;
+    }
+    
+    static public Account emailAddrToAccount(String emailAddr, Right rightNeeded) {
+        Account granteeAcct = null;
+        try {
+            if (emailAddr != null)
+                granteeAcct = Provisioning.getInstance().get(Provisioning.AccountBy.name, emailAddr);
+            if (granteeAcct == null) {
+                if (rightNeeded.isUserRight())
+                    granteeAcct = GuestAccount.ANONYMOUS_ACCT;
+            }
+            
+        } catch (ServiceException e) {
+            ZimbraLog.acl.warn("unable to get account from email address: " + emailAddr, e);
+        }
+        
+        return granteeAcct;
     }
 }

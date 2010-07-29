@@ -828,17 +828,27 @@ public class RightCommand {
     }
 
     
-    public static Right getRight(String rightName) throws ServiceException {
-        verifyAccessManager();
-        return RightManager.getInstance().getRight(rightName);
-    }
-    
     private static void verifyAccessManager() throws ServiceException {
         if (!(AccessManager.getInstance() instanceof ACLAccessManager))
             throw ServiceException.FAILURE("method is not supported by the current AccessManager: " + 
                     AccessManager.getInstance().getClass().getCanonicalName() +
-                    ", check localonfig key " + LC.zimbra_class_accessmanager.key() + 
-                    ", this method requires " +  ACLAccessManager.class.getCanonicalName(), null);
+                    ", this method requires access manager " +  ACLAccessManager.class.getCanonicalName(), null);
+    }
+    
+    private static AdminConsoleCapable verifyAdminConsoleCapable() throws ServiceException {
+        AccessManager am = AccessManager.getInstance();
+        
+        if (am instanceof AdminConsoleCapable)
+            return (AdminConsoleCapable)am;
+        else
+            throw ServiceException.FAILURE("method is not supported by the current AccessManager: " + 
+                    AccessManager.getInstance().getClass().getCanonicalName() +
+                    ", this method requires an admin console capable access manager", null);
+    }
+    
+    public static Right getRight(String rightName) throws ServiceException {
+        verifyAccessManager();
+        return RightManager.getInstance().getRight(rightName);
     }
     
     /**
@@ -904,7 +914,7 @@ public class RightCommand {
     public static AllEffectiveRights getAllEffectiveRights(Provisioning prov,
             String granteeType, GranteeBy granteeBy, String grantee, 
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
-        verifyAccessManager();
+        AdminConsoleCapable acc = verifyAdminConsoleCapable();
 
         // grantee
         GranteeType gt = GranteeType.fromCode(granteeType);
@@ -912,7 +922,8 @@ public class RightCommand {
         RightBearer rightBearer = RightBearer.newRightBearer(granteeEntry);
         
         AllEffectiveRights aer = new AllEffectiveRights(gt.getCode(), granteeEntry.getId(), granteeEntry.getName());
-        CollectAllEffectiveRights.getAllEffectiveRights(rightBearer, expandSetAttrs, expandGetAttrs, aer);
+        
+        acc.getAllEffectiveRights(rightBearer, expandSetAttrs, expandGetAttrs, aer);
         return aer;
     }
     
@@ -920,7 +931,7 @@ public class RightCommand {
                                                      String targetType, TargetBy targetBy, String target,
                                                      GranteeBy granteeBy, String grantee,
                                                      boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
-        verifyAccessManager();
+        AdminConsoleCapable acc = verifyAdminConsoleCapable();
         
         // target
         TargetType tt = TargetType.fromCode(targetType);
@@ -936,7 +947,7 @@ public class RightCommand {
         EffectiveRights er = new EffectiveRights(targetType, TargetType.getId(targetEntry), targetEntry.getLabel(), 
                 granteeAcct.getId(), granteeAcct.getName());
         
-        CollectEffectiveRights.getEffectiveRights(rightBearer, targetEntry, expandSetAttrs, expandGetAttrs, er);
+        acc.getEffectiveRights(rightBearer, targetEntry, expandSetAttrs, expandGetAttrs, er);
         return er;
     }
     
@@ -946,7 +957,7 @@ public class RightCommand {
                                                        CosBy cosBy, String cosStr,
                                                        GranteeBy granteeBy, String grantee) throws ServiceException {
         
-        verifyAccessManager();
+        AdminConsoleCapable acc = verifyAdminConsoleCapable();
         
         TargetType tt = TargetType.fromCode(targetType);
         
@@ -969,7 +980,7 @@ public class RightCommand {
         EffectiveRights er = new EffectiveRights(targetType, TargetType.getId(targetEntry), targetEntry.getLabel(), 
                 granteeAcct.getId(), granteeAcct.getName());
         
-        CollectEffectiveRights.getEffectiveRights(rightBearer, targetEntry, true, true, er);
+        acc.getEffectiveRights(rightBearer, targetEntry, true, true, er);
         return er;
     }
     
@@ -1248,15 +1259,13 @@ public class RightCommand {
     public static void revokeAllRights(Provisioning prov,
             GranteeType granteeType, String granteeId) throws ServiceException {
 
-        verifyAccessManager();
+        AdminConsoleCapable acc = verifyAdminConsoleCapable();
         
         //
         // search grants
         //
+        Set<TargetType> targetTypesToSearch = acc.targetTypesForGrantSearch();
         
-        // we want all target types
-        Set<TargetType> targetTypesToSearch = new HashSet<TargetType>(Arrays.asList(TargetType.values()));
-
         // search for grants granted to this grantee
         Set<String> granteeIdsToSearch = new HashSet<String>();
         granteeIdsToSearch.add(granteeId);
