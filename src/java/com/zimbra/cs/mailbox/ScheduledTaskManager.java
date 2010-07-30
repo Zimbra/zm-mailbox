@@ -174,7 +174,7 @@ public class ScheduledTaskManager {
     implements ScheduledTaskCallback<ScheduledTaskResult> {
         TaskCleanup()  { }
 
-        public void afterTaskRun(Callable<ScheduledTaskResult> c, ScheduledTaskResult mLastResult) {
+        public void afterTaskRun(Callable<ScheduledTaskResult> c, ScheduledTaskResult lastResult) {
             Connection conn = null;
             ScheduledTask task = (ScheduledTask) c;
             if (task.isRecurring()) {

@@ -83,7 +83,7 @@ public class CalItemReminderService extends MailboxListener {
      * Cancels any reminder for an existing calendar item.
      *
      * @param calItem
-     * @return true if cancellation was successful
+     * @return true if no error was encountered during cancellation
      */
     static boolean cancelExistingReminder(CalendarItem calItem) {
         return cancelExistingReminder(calItem.getId(), calItem.getMailboxId());
@@ -94,7 +94,7 @@ public class CalItemReminderService extends MailboxListener {
      *
      * @param calItemId
      * @param mailboxId
-     * @return
+     * @return true if no error was encountered during cancellation
      */
     static boolean cancelExistingReminder(int calItemId, long mailboxId) {
         try {
@@ -131,7 +131,7 @@ public class CalItemReminderService extends MailboxListener {
                 // be handled when we handle pending notifications for modified items
                 calItem.getMailbox().dismissCalendarItemAlarm(null, calItem.getId(), System.currentTimeMillis());
             } catch (ServiceException e) {
-                ZimbraLog.scheduler.warn("Error in updating calendar item's next alarm", e);
+                ZimbraLog.scheduler.error("Error in updating calendar item's next alarm", e);
             }
         } else {
             CalendarItem.AlarmData alarmData = calItem.getAlarmData();
@@ -143,10 +143,11 @@ public class CalItemReminderService extends MailboxListener {
             reminderTask.setProperty("calItemId", Integer.toString(calItem.getId()));
             reminderTask.setProperty("invId", Integer.toString(alarmData.getInvId()));
             reminderTask.setProperty("compNum", Integer.toString(alarmData.getCompNum()));
+            reminderTask.setProperty("nextInstStart", Long.toString(alarmData.getNextInstanceStart()));
             try {
                 ScheduledTaskManager.schedule(reminderTask);
             } catch (ServiceException e) {
-                ZimbraLog.scheduler.error("Scheduling reminder task " + reminderTask + " failed", e);
+                ZimbraLog.scheduler.error("Error in scheduling reminder task " + reminderTask, e);
             }
         }
     }

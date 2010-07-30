@@ -64,7 +64,7 @@ public class CalItemReminderTask extends ScheduledTask {
         return calItem;
     }
 
-    public static void sendReminderEmail(CalendarItem calItem, Invite invite) throws MessagingException, ServiceException {
+    private void sendReminderEmail(CalendarItem calItem, Invite invite) throws MessagingException, ServiceException {
         ZimbraLog.scheduler.debug("Creating reminder email for calendar item (id=" + calItem.getId() + ",mailboxId=" + calItem.getMailboxId() + ")");
         Locale locale = calItem.getAccount().getLocale();
 
@@ -94,13 +94,15 @@ public class CalItemReminderTask extends ScheduledTask {
         calItem.getMailbox().getMailSender().sendMimeMessage(null, calItem.getMailbox(), mm);
     }
 
-    private static String getBody(Invite invite, boolean html, Locale locale) {
+    private String getBody(Invite invite, boolean html, Locale locale) throws ServiceException {
+        Date startDate = new Date(new Long(getProperty("nextInstStart")));
+        Date endDate = invite.getEffectiveDuration().addToDate(startDate);
         String newLine = html ? "<br>" : "\n";
         StringBuilder sb = new StringBuilder();
         sb.append(newLine);
-        sb.append(L10nUtil.getMessage(L10nUtil.MsgKey.zsStart, locale)).append(" : ").append(invite.getStartTime().getDate());
+        sb.append(L10nUtil.getMessage(L10nUtil.MsgKey.zsStart, locale)).append(" : ").append(startDate);
         sb.append(newLine).append(newLine);
-        sb.append(L10nUtil.getMessage(L10nUtil.MsgKey.zsEnd, locale)).append(" : ").append(invite.getEndTime().getDate());
+        sb.append(L10nUtil.getMessage(L10nUtil.MsgKey.zsEnd, locale)).append(" : ").append(endDate);
         if (invite.getLocation() != null && invite.getLocation().trim().length() > 0) {
             sb.append(newLine).append(newLine);
             sb.append(L10nUtil.getMessage(L10nUtil.MsgKey.zsLocation, locale)).append(" : ").append(invite.getLocation());
@@ -109,7 +111,8 @@ public class CalItemReminderTask extends ScheduledTask {
         boolean emptyDesc = true;
         try {
             desc = html ? invite.getDescriptionHtml() : invite.getDescription();
-            emptyDesc = html ? invite.getDescription().trim().length() == 0 : desc.trim().length() == 0;
+            if (desc != null)
+                emptyDesc = html ? invite.getDescription().trim().length() == 0 : desc.trim().length() == 0;
         } catch (ServiceException e) {
             ZimbraLog.scheduler.warn("Error in getting invite description", e);
         }
