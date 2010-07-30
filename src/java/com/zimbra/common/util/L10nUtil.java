@@ -81,7 +81,8 @@ public class L10nUtil {
 
         // calendar reminder alerts
         calendarReminderEmailSubject,
-        calendarReminderEmailDescription,
+        calendarReminderEmailBody,
+        calendarReminderEmailBodyHtml,
 
         // caldav messages
         caldavCalendarDescription,
