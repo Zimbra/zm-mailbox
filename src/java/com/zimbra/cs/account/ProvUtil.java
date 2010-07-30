@@ -4158,11 +4158,11 @@ public class ProvUtil implements HttpDebugListener {
         getRightArgs(ra, true, false);
         
         TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
-        GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
+        GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null : guessGranteeBy(ra.mGranteeIdOrName);
     
         mProv.revokeRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, 
-                         ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, 
-                         ra.mRight, ra.mRightModifier);
+                          ra.mGranteeType, granteeBy, ra.mGranteeIdOrName,
+                          ra.mRight, ra.mRightModifier);
     }
     
     private void doGetAuthTokenInfo(String[] args) throws ServiceException {
