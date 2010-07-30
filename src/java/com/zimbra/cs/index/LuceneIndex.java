@@ -51,10 +51,10 @@ import com.zimbra.cs.service.util.SyncToken;
 
 
 /**
- * A custom Lucene provider that uses the IndexWritersCache to manage the index
- * LRU.
+ * A custom Lucene provider that uses the {@link IndexWritersCache} to manage
+ * the index LRU.
  */
-public class LuceneIndex extends IndexWritersCache.IndexWriter
+public class LuceneIndex extends IndexWritersCache.CacheEntry
     implements ILuceneIndex, ITextIndex {
 
     /**
@@ -65,7 +65,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
     public static final Version VERSION = Version.LUCENE_24;
 
     private static IndexReadersCache sIndexReadersCache;
-    private static IIndexWritersCache sIndexWritersCache;
+    private static IndexWritersCache sIndexWritersCache;
 
     /**
      * If documents are being constantly added to an index, then it will stay at
@@ -131,11 +131,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
             LC.zimbra_index_reader_idle_sweep_frequency.longValue() * 1000);
         sIndexReadersCache.start();
 
-        if (LC.get("zimbra_index_use_dummy_writer_cache").length() != 0) {
-            sIndexWritersCache = new DummyIndexWritersCache();
-        } else {
-            sIndexWritersCache = new IndexWritersCache();
-        }
+        sIndexWritersCache = new IndexWritersCache();
     }
 
     /**
@@ -217,9 +213,8 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
             return;
         }
 
-        synchronized(getLock()) {
-
-            beginWriting();
+        synchronized (getLock()) {
+            beginWriteOperation();
             try {
                 assert(mIndexWriter != null);
 
@@ -288,15 +283,15 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
                 // it without a flush.
                 updateLastWriteTime();
             } finally {
-                doneWriting();
+                endWriteOperation();
             }
 
         }
     }
 
     public List<String> deleteDocuments(List<String> itemIds) throws IOException {
-        synchronized(getLock()) {
-            beginWriting();
+        synchronized (getLock()) {
+            beginWriteOperation();
             try {
                 int i = 0;
                 for (String itemIdStr : itemIds) {
@@ -322,7 +317,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
                     i++;
                 }
             } finally {
-                doneWriting();
+                endWriteOperation();
             }
             return itemIds; // success
         }
@@ -752,7 +747,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
     private RefCountedIndexReader getCountedIndexReader() throws IOException {
         BooleanQuery.setMaxClauseCount(MAX_TERMS_PER_QUERY);
 
-        synchronized(getLock()) {
+        synchronized (getLock()) {
             sIndexWritersCache.flush(this); // flush writer if writing
 
             RefCountedIndexReader toRet = sIndexReadersCache.getIndexReader(this);
@@ -769,8 +764,8 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
                 // directory should get initialized as a result.
                 File indexDir = mIdxDirectory.getFile();
                 if (indexDirIsEmpty(indexDir)) {
-                    beginWriting();
-                    doneWriting();
+                    beginWriteOperation();
+                    endWriteOperation();
                     flush();
                     try {
                         reader = IndexReader.open(mIdxDirectory);
@@ -786,7 +781,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
                 }
             }
 
-            synchronized(mOpenReaders) {
+            synchronized (mOpenReaders) {
                 toRet = new RefCountedIndexReader(this, reader); // refcount starts at 1
                 mOpenReaders.add(toRet);
             }
@@ -835,10 +830,19 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
         return (numFiles <= 0);
     }
 
-    private void doneWriting() throws IOException {
+    public void beginWriteOperation() throws IOException {
+        assert(Thread.holdsLock(getLock()));
+        if (beginWritingNestLevel == 0) {
+            // uncache the IndexReader if it is cached
+            sIndexReadersCache.removeIndexReader(this);
+            sIndexWritersCache.beginWriting(this);
+        }
+        beginWritingNestLevel++;
+    }
+
+    public void endWriteOperation() throws IOException {
         assert(Thread.holdsLock(getLock()));
         assert(beginWritingNestLevel > 0);
-
 
         /*
          * assertion is by default off in production
@@ -868,27 +872,6 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
             }
             updateLastWriteTime();
         }
-    }
-
-    public void beginWriteOperation() throws IOException {
-        assert(Thread.holdsLock(getLock()));
-        beginWriting();
-    }
-
-    public void endWriteOperation() throws IOException {
-        assert(Thread.holdsLock(getLock()));
-        doneWriting();
-    }
-
-    private void beginWriting() throws IOException {
-        assert(Thread.holdsLock(getLock()));
-
-        if (beginWritingNestLevel == 0) {
-            // uncache the IndexReader if it is cached
-            sIndexReadersCache.removeIndexReader(this);
-            sIndexWritersCache.beginWriting(this);
-        }
-        beginWritingNestLevel++;
     }
 
     @Override
@@ -1064,7 +1047,7 @@ public class LuceneIndex extends IndexWritersCache.IndexWriter
     }
 
     public void onReaderClose(RefCountedIndexReader ref) {
-        synchronized(mOpenReaders) {
+        synchronized (mOpenReaders) {
             mOpenReaders.remove(ref);
         }
     }
