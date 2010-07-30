@@ -25,6 +25,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -47,8 +48,12 @@ public class RevokeRight extends RightDocumentHandler {
             
         Element eGrantee = request.getElement(AdminConstants.E_GRANTEE);
         String granteeType = eGrantee.getAttribute(AdminConstants.A_TYPE);
-        GranteeBy granteeBy = GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
-        String grantee = eGrantee.getText();
+        GranteeBy granteeBy = null;
+        String grantee = null;
+        if (GranteeType.fromCode(granteeType).needsGranteeIdentity()) {
+            granteeBy = GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
+            grantee   = eGrantee.getText();
+        }
         
         Element eRight = request.getElement(AdminConstants.E_RIGHT);
         String right = eRight.getText();
