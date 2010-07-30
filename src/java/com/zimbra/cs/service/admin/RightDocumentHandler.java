@@ -18,6 +18,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
@@ -48,31 +49,58 @@ public abstract class RightDocumentHandler extends AdminDocumentHandler {
         return GranteeType.lookupGrantee(prov, granteeType, granteeBy, grantee);
     }
     
+    protected void checkCheckRightRight(ZimbraSoapContext zsc, 
+            GranteeType granteeType, GranteeBy granteeBy, String grantee) throws ServiceException {
+        checkCheckRightRight(zsc, granteeType, granteeBy, grantee, false);
+    }
+    
     /**
      * check the checkRight right
      * 
      * check if the authed admin has the checkRight right on the user/group it is
      * checking right for.
-     * 
+     *
      * @param zsc
+     * @param granteeType
      * @param granteeBy
      * @param grantee
+     * @return whether the checkRight right is checked
+     * @throws ServiceException
      */
-    protected void checkCheckRightRight(ZimbraSoapContext zsc, 
-            GranteeType granteeType, GranteeBy granteeBy, String grantee) throws ServiceException {
-        NamedEntry granteeEntry = GranteeType.lookupGrantee(Provisioning.getInstance(), 
-                granteeType, granteeBy, grantee);  
+    protected boolean checkCheckRightRight(ZimbraSoapContext zsc, 
+            GranteeType granteeType, GranteeBy granteeBy, String grantee, 
+            boolean granteeCanBeExternalEmailAddr) throws ServiceException {
         
-        // call checkRight instead of checkAccountRight because there is no 
-        // backward compatibility issue for this SOAP.
-        //
-        // Note: granteeEntry is the target for the R_checkRight{Usr}/{Grp} right here
-        if (granteeType == GranteeType.GT_USER)
-            checkRight(zsc, granteeEntry, Admin.R_checkRightUsr);
-        else if (granteeType == GranteeType.GT_GROUP)
-            checkRight(zsc, granteeEntry, Admin.R_checkRightGrp);
-        else
-            throw ServiceException.PERM_DENIED("invalid grantee type for check right:" + granteeType.getCode());
+        NamedEntry granteeEntry = null;
+        
+        try {
+            granteeEntry = GranteeType.lookupGrantee(Provisioning.getInstance(), 
+                granteeType, granteeBy, grantee);  
+        } catch (ServiceException e) {
+            // grantee to check could be an external email address
+            ZimbraLog.acl.debug("unable to find grantee" , e);
+        }
+        
+        if (granteeEntry != null) {
+            // call checkRight instead of checkAccountRight because there is no 
+            // backward compatibility issue for this SOAP.
+            //
+            // Note: granteeEntry is the target for the R_checkRight{Usr}/{Grp} right here
+            if (granteeType == GranteeType.GT_USER)
+                checkRight(zsc, granteeEntry, Admin.R_checkRightUsr);
+            else if (granteeType == GranteeType.GT_GROUP)
+                checkRight(zsc, granteeEntry, Admin.R_checkRightGrp);
+            else
+                throw ServiceException.PERM_DENIED("invalid grantee type for check right:" + granteeType.getCode());
+            
+            return true;
+        } else {
+            if (granteeCanBeExternalEmailAddr)
+                return false;
+            else
+                throw ServiceException.PERM_DENIED("unable to check checkRight right for " + grantee);
+        }
+        
     }
     
     protected Pair<Boolean, Boolean> parseExpandAttrs(Element request) throws ServiceException {

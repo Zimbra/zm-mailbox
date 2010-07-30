@@ -14,7 +14,7 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
-import com.zimbra.cs.account.Account;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.localconfig.DebugConfig;
@@ -38,21 +38,30 @@ public abstract class CheckRight {
         mCanDelegateNeeded = canDelegateNeeded;
     }
      
-    
+    // bug 46840
     // master control to enable/disable group targets
     // TODO: - check all callsites of Right.grantableOnTargetType and 
     //         RightChecker.rightApplicableOnTargetType
     //         see if they can be optimized
     //
-    public static boolean allowGroupTarget(Right rightNeeded) {
+    public static boolean allowGroupTarget(Right rightNeeded) throws ServiceException {
         // group target is only supported for admin rights
         boolean allowed = !rightNeeded.isUserRight();
         
-        // group targets can be turned off by a localconfig key
-        if (DebugConfig.disableGroupTargetForAdminRight) {
-            allowed = false;
+        if (rightNeeded.isUserRight()) {
+            // for perf reason, for user rights, groups target is supported 
+            // only if target type of the right is not account.
+            // i.e. account right cannot be granted on groups
+            
+            if (rightNeeded.getTargetType() == TargetType.account)
+                allowed = false;
+            else
+                allowed = true;
+            
+        } else {
+            // group targets can be turned off for admin rights by a localconfig key
+            allowed = !DebugConfig.disableGroupTargetForAdminRight;
         }
-        
         return allowed;
     }
 

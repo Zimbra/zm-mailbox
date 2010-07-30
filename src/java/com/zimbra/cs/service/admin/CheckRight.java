@@ -30,6 +30,7 @@ import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -69,9 +70,7 @@ public class CheckRight extends RightDocumentHandler {
             throw ServiceException.INVALID_REQUEST("invalid grantee type " + granteeType, null);
         GranteeBy granteeBy = GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
         String grantee = eGrantee.getText();
-        
-        checkCheckRightRight(zsc, GranteeType.GT_USER, granteeBy, grantee);
-        
+
         Element eRight = request.getElement(AdminConstants.E_RIGHT);
         String right = eRight.getText();
         boolean deny = eRight.getAttributeBool(MailConstants.A_DENY, false);
@@ -79,13 +78,17 @@ public class CheckRight extends RightDocumentHandler {
         Element eAttrs = request.getOptionalElement(AdminConstants.E_ATTRS);
         Map<String, Object> attrs = (eAttrs==null)? null : AdminService.getAttrs(request);
         
-        if (!grantee.equals(zsc.getAuthtokenAccountId()))
-            checkCheckRightRight(zsc, GranteeType.GT_USER, granteeBy, grantee);
+        GuestAccount guest = null;
+        if (!grantee.equals(zsc.getAuthtokenAccountId())) {
+            boolean checked = checkCheckRightRight(zsc, GranteeType.GT_USER, granteeBy, grantee, true);
+            if (!checked)
+                guest = new GuestAccount(grantee, null);
+        }
         
         ViaGrant via = new ViaGrant();
         boolean result = RightCommand.checkRight(Provisioning.getInstance(),
                                                  targetType, targetBy, target,
-                                                 granteeBy, grantee,
+                                                 granteeBy, grantee, guest,
                                                  right, attrs,
                                                  via);
         

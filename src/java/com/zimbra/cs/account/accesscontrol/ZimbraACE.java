@@ -148,10 +148,13 @@ public class ZimbraACE {
         case GT_GUEST:
         case GT_KEY:
             String[] externalParts = grantee.split(S_SECRET_DELIMITER);
-            if (externalParts.length != 2)
+            if (externalParts.length != 1 && externalParts.length != 2)
                 throw ServiceException.PARSE_ERROR("bad ACE(gurst/key grantee must have two sub parts): " + ace, null);
             mGrantee = decodeGrantee(externalParts[0]);
-            mSecret = decodeSecret(externalParts[1]);
+            if (externalParts.length == 2)
+                mSecret = decodeSecret(externalParts[1]);
+            else
+                mSecret = null;
             break;
         default:
             throw ServiceException.PARSE_ERROR("invalid grantee type " + mGranteeType, null);
@@ -220,7 +223,10 @@ public class ZimbraACE {
     
     // no encoding for now
     private String encodeSecret(String secret) {
-        return secret;
+        if (secret == null)
+            return "";
+        else
+            return secret;
     }
     
     // no encoding for now

@@ -52,6 +52,7 @@ import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.GroupedEntry;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
@@ -6097,9 +6098,17 @@ public class LdapProvisioning extends Provisioning {
                               GranteeBy granteeBy, String grantee,
                               String right, Map<String, Object> attrs,
                               AccessManager.ViaGrant via) throws ServiceException {
+        GuestAccount guest = null;
+        
+        try {
+            GranteeType.lookupGrantee(this, GranteeType.GT_USER, granteeBy, grantee);
+        } catch (ServiceException e) {
+            guest = new GuestAccount(grantee, null);
+        }
+            
         return RightCommand.checkRight(this,
                                        targetType, targetBy, target,
-                                       granteeBy, grantee,
+                                       granteeBy, grantee, guest,
                                        right, attrs, via);
     }
 

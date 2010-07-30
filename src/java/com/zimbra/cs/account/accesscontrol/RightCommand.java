@@ -34,6 +34,7 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CosBy;
@@ -881,7 +882,7 @@ public class RightCommand {
     
     public static boolean checkRight(Provisioning prov,
                                      String targetType, TargetBy targetBy, String target,
-                                     GranteeBy granteeBy, String grantee,
+                                     GranteeBy granteeBy, String grantee, GuestAccount guest,
                                      String right, Map<String, Object> attrs,
                                      AccessManager.ViaGrant via) throws ServiceException {
         verifyAccessManager();
@@ -892,7 +893,11 @@ public class RightCommand {
         
         // grantee
         GranteeType gt = GranteeType.GT_USER;  // grantee for check right must be an Account
-        NamedEntry granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);  
+        NamedEntry granteeEntry;
+        if (guest != null)
+            granteeEntry = guest;
+        else
+            granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);  
         
         // right
         Right r = RightManager.getInstance().getRight(right);

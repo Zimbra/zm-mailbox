@@ -281,11 +281,14 @@ public class RightManager {
         String targetTypeStr = eRight.attributeValue(A_TARGET_TYPE, null);
         
         if (userRight) {
+            TargetType targetType;
             if (targetTypeStr != null)
-                throw ServiceException.PARSE_ERROR(A_TARGET_TYPE + " is not allowed for user right", null);
-
+                targetType = TargetType.fromCode(targetTypeStr);
+            else
+                targetType = TargetType.account;  // default target type for user right is account
+            
             right = new UserRight(name);
-            right.setTargetType(TargetType.account);
+            right.setTargetType(targetType);
             
             String fallback = eRight.attributeValue(A_FALLBACK, null);
             if (fallback != null) {
