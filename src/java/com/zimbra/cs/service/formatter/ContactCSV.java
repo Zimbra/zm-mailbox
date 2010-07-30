@@ -41,6 +41,8 @@ import org.dom4j.QName;
 
 public class ContactCSV {
 
+    private static final String FORMAT_ZIMBRA_CSV = "zimbra-csv";
+
     private HashMap<String, Integer> mFieldCols;
     private ArrayList<String> mFields;
 
@@ -224,34 +226,60 @@ public class ContactCSV {
     public static String getTags(Map<String,String> csv) {
     	return csv.remove(TAG);
     }
-    private Map<String, String> toContact(List<String> csv, CsvFormat format) throws ParseException {
+    private Map<String, String> toContact(List<String> csv, CsvFormat[] formats) throws ParseException {
         Map<String, String> contact = new HashMap<String, String>();
-        
-        if (format.allFields()) {
-            for (String field : mFields) {
-                addField(field, csv, field, contact);
+
+        // NOTE: We keep track of the fields we've seen to avoid dupes.
+        Set<String> seenFields = new HashSet<String>();
+        for (CsvFormat format : formats) {
+            if (format.allFields()) {
+                for (String field : mFields) {
+                    String lfield = field.toLowerCase();
+                    if (!seenFields.contains(lfield)) {
+                        seenFields.add(lfield);
+                        addField(field, csv, field, contact);
+                    }
+                }
             }
-        } else if (format.hasNoHeaders()) {
-            int end = csv.size();
-            end = (end > format.columns.size()) ? format.columns.size() : end;
-            for (int i = 0; i < end; i++) {
-                String key = format.columns.get(i).field;
-                String val = csv.get(i);
-                if (key != null && val != null)
-                    contact.put(key, val);
+            else if (format.hasNoHeaders()) {
+                int end = csv.size();
+                end = (end > format.columns.size()) ? format.columns.size() : end;
+                for (int i = 0; i < end; i++) {
+                    String key = format.columns.get(i).field;
+                    String val = csv.get(i);
+                    if (key != null && val != null) {
+                        String lfield = key.toLowerCase();
+                        if (!seenFields.contains(lfield)) {
+                            seenFields.add(lfield);
+                            contact.put(key, val);
+                        }
+                    }
+                }
             }
-        } else {
-            for (CsvColumn col : format.columns) {
-                if (col.multivalue) {
-                    addMultiValueField(col.names, csv, col.field, contact);
-                } else if (col.isName) {
-                    addNameField(col.name, csv, col.field, contact);
-                } else if (col.mapToTag) {
-                	String tag = getField(col.name, csv);
-                	if (tag != null)
-                		contact.put(TAG, tag);
-                } else {
-                    addField(col.name, csv, col.field, contact);
+            else {
+                for (CsvColumn col : format.columns) {
+                    if (col.multivalue) {
+                        addMultiValueField(col.names, csv, col.field, contact);
+                    }
+                    else if (col.isName) {
+                        String lfield = col.name.toLowerCase();
+                        if (!seenFields.contains(lfield)) {
+                            seenFields.add(lfield);
+                            addNameField(col.name, csv, col.field, contact);
+                        }
+                    }
+                    else if (col.mapToTag) {
+                        String tag = getField(col.name, csv);
+                        if (tag != null)
+                            contact.put(TAG, tag);
+                    }
+                    else {
+                        String lfield = col.name.toLowerCase();
+                        if (!seenFields.contains(lfield)) {
+                            seenFields.add(lfield);
+                            addField(col.name, csv, col.field, contact);
+                        }
+                    }
                 }
             }
         }
@@ -271,9 +299,16 @@ public class ContactCSV {
 
             List<Map<String, String>> result = new ArrayList<Map<String, String>>();
             List<String> fields = new ArrayList<String>();
-            
+
+            // NOTE: In case we've guessed wrong, attempting to import Zimbra
+            // NOTE: fields should help prevent data loss.
+            CsvFormat[] formats = format.name.equals(FORMAT_ZIMBRA_CSV)
+                ? new CsvFormat[] { format }
+                : new CsvFormat[] { format, getFormat(FORMAT_ZIMBRA_CSV) }
+            ;
+
             while (parseLine(reader, fields, false)) {
-                Map<String, String> contact = toContact(fields, format);
+                Map<String, String> contact = toContact(fields, formats);
                 if (contact.size() > 0)
                     result.add(contact);
             }
