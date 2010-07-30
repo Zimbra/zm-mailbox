@@ -9,28 +9,30 @@
 -->
 
 <right name="invite" userRight="1" fallback="InviteFallback">
-  <desc>automatically add meeting invites from grantee to the target's calendar</desc>
-  <doc>
-    e.g. (1) When user Y is invited to a meeting, an appt is added to his calendar automatically(tentatively) only if invite is from A, B, C or anyone in group G.
+  <desc>
+    automatically add meeting invites from grantee to the target's calendar.
+    e.g. (1) When user Y is invited to a meeting, an appointment is added to his calendar automatically(tentatively) 
+             only if invite is from A, B, C or anyone in group G.
          (2) Conf room Y can only be booked by users A, B, C and group G.
-  </doc>
+  </desc>
   <default>allow</default>
-</right>
-
-<right name="loginAs" userRight="1">
-  <desc>login as</desc>
-  <doc>login as another user.  Currently this is only honored for imap/pop3 login</doc>
-</right>
-
-<right name="sendAs" userRight="1">
-  <desc>send as</desc>
-  <doc>reply to messages in a shared folder as the owner of the folder</doc>
 </right>
 
 <right name="viewFreeBusy" userRight="1">
   <desc>view free/busy</desc>
-  <doc>e.g. Free/busy for Y can only be seen by users A, B, C and group G.</doc>
   <default>allow</default>
+</right>
+
+<right name="loginAs" userRight="1">
+  <desc>login as another user.  Currently this is only honored for imap/pop3 login</desc>
+</right>
+
+<right name="sendAs" userRight="1">
+  <desc>reply to messages in a shared folder as the owner of the folder</desc>
+</right>
+
+<right name="sendToDistList" userRight="1" targetType="dl">
+  <desc>send mails to distribution list</desc>
 </right>
 
 </rights>
