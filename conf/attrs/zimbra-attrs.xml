@@ -4947,7 +4947,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>When a virus is detected quarantine message to this account</desc>
 </attr>
 
-<attr id="1101" name="zimbraAdminAccessControlMech" type="enum" cardinality="single" value="acl,global" optionalIn="globalConfig" since="6.0.9">
+<attr id="1101" name="zimbraAdminAccessControlMech" type="enum" cardinality="single" value="acl,global" optionalIn="globalConfig" since="6.0.9" requiresRestart="mailbox">
   <globalConfigValue>acl</globalConfigValue>
   <desc>
     access control mechanism for admin access

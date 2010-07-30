@@ -22,8 +22,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.accesscontrol.ACLAccessManager;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.zimlet.ZimletPresence.Presence;
@@ -56,7 +58,11 @@ public class GetAdminExtensionZimlets extends AdminDocumentHandler  {
 			    continue;
 			
 			if (z.isExtension()) {
-				ZimletUtil.listZimlet(response, z, -1, Presence.enabled); // admin zimlets are all enabled
+			    boolean include = true;
+			    if ("com_zimbra_delegatedadmin".equals(z.getName()))
+                    include = (AccessManager.getInstance() instanceof ACLAccessManager);
+			    if (include)
+				    ZimletUtil.listZimlet(response, z, -1, Presence.enabled); // admin zimlets are all enabled
 			}
 		}
     }
