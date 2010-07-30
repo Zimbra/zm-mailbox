@@ -16,7 +16,6 @@
 package com.zimbra.cs.util.tnef;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -39,7 +38,6 @@ import net.freeutils.tnef.MAPIValue;
 import net.freeutils.tnef.Message;
 import net.freeutils.tnef.RawInputStream;
 import net.freeutils.tnef.TNEFInputStream;
-import net.freeutils.tnef.TNEFUtils;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
@@ -622,7 +620,8 @@ public class SchedulingViewOfTnef extends Message {
         if (tzRis == null) {
             return null;
         }
-        RecurrenceDefinition recurDef = new RecurrenceDefinition(tzRis, tzDef);
+        String oemCodePage = super.getOEMCodePage();
+        RecurrenceDefinition recurDef = new RecurrenceDefinition(tzRis, tzDef, oemCodePage);
         return recurDef;
     }
 
@@ -649,7 +648,10 @@ public class SchedulingViewOfTnef extends Message {
             sLog.debug("No PR_RTF_COMPRESSED property found");
             return null;
         }
-        String rtfTxt = new String(CompressedRTFInputStream.decompressRTF(ris.toByteArray()));
+        // TODO:  What impact does the OEMCodePage for the TNEF have on this?
+        String rtfTxt = new String(
+                CompressedRTFInputStream.decompressRTF(
+                        ris.toByteArray()));
         if (sLog.isDebugEnabled()) {
             sLog.debug("RTF from PR_RTF_COMPRESSED\n%s\n", rtfTxt);
         }
@@ -661,7 +663,18 @@ public class SchedulingViewOfTnef extends Message {
         if (mpValue == null) {
             return null;
         }
-        Object obj = mpValue.getValue();
+        Object obj;
+        if (mpValue.getType() == MAPIProp.PT_STRING) {
+            // Assume the value is in the OEM Code Page
+            // The current MAPIValue code does not take account of that.
+            RawInputStream ris = mpValue.getRawData();
+            return IcalUtil.readString(ris, (int)ris.getLength(),
+                        super.getOEMCodePage());
+        } else {
+            // Probably PT_UNICODE_STRING but will accept anything whose value is
+            // a String.
+            obj = mpValue.getValue();
+        }
         if (obj == null) {
             return null;
         }

@@ -100,7 +100,6 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             tnefStream = new TNEFInputStream(tnefInput);
             schedView = new SchedulingViewOfTnef(tnefStream);
 
-            // String oemCodePage = schedView.getOEMCodePage();
             String msgClass = schedView.getMessageClass();
             if (msgClass == null) {
                 sLog.debug("Unable to determine Class of TNEF - cannot generate ICALENDER equivalent");

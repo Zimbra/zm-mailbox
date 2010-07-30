@@ -15,6 +15,7 @@ public class ChangedInstanceInfo {
 
     static Log sLog = ZimbraLog.tnef;
 
+    private String oemCodePage;
     private int exceptionNum;
     private TimeZoneDefinition tz;
     private long startMinsSince1601;
@@ -45,7 +46,8 @@ public class ChangedInstanceInfo {
     private long rsrvBlockEE2Size;
     private byte[] rsrvBlockEE2;
 
-    public  ChangedInstanceInfo(int num, TimeZoneDefinition tzDef) {
+    public  ChangedInstanceInfo(int num, TimeZoneDefinition tzDef, String oemCP) {
+        this.oemCodePage = oemCP;
         this.exceptionNum = num;
         this.tz = tzDef;
         startMinsSince1601 = 0;
@@ -93,8 +95,7 @@ public class ChangedInstanceInfo {
             if (subjectLenPlus1 != subjectLen + 1) {
                 throw new IOException("Corruption near subject specification");
             }
-            // TODO: This might not work for non-ISO-8859-1
-            subject = ris.readString(subjectLen);
+            subject = IcalUtil.readString(ris, subjectLen, oemCodePage);
         }
         if (overrideFlags.contains(ExceptionInfoOverrideFlag.ARO_MEETINGTYPE)) {
             meetingType = ris.readU32();
@@ -111,8 +112,7 @@ public class ChangedInstanceInfo {
             if (locLenPlus1 != locLen + 1) {
                 throw new IOException("Corruption near location specification");
             }
-            // TODO: This might not work for non-ISO-8859-1
-            location = ris.readString(locLen);
+            location = IcalUtil.readString(ris, locLen, oemCodePage);
         }
         if (overrideFlags.contains(ExceptionInfoOverrideFlag.ARO_BUSYSTATUS)) {
             busyStatus = ris.readU32();

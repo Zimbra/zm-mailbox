@@ -14,8 +14,8 @@
  */
 
 package com.zimbra.cs.util.tnef;
-
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -23,6 +23,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.tnef.mapi.TimeZoneDefinition;
 import java.util.Iterator;
 
@@ -36,9 +38,12 @@ import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.parameter.Value;
 import net.fortuna.ical4j.util.TimeZones;
 import net.freeutils.tnef.RawInputStream;
+import net.freeutils.tnef.TNEFUtils;
 
 public class IcalUtil {
 
+    static Log sLog = ZimbraLog.tnef;
+    
     public static void addProperty(ContentHandler icalOutput, Property icalProp)
             throws ParserException, URISyntaxException,IOException, ParseException {
         if (icalProp == null) {
@@ -213,4 +218,28 @@ public class IcalUtil {
         return (ris.readU8() | (ris.readU8() << 8) | (ris.readU8() << 16) | (ris.readU8() << 24)) & 0xFFFFFFFFFFFFFFFFL;
     }
 
+    /**
+     * Missing method from RawInputStream
+     * @param ris
+     * @param len
+     * @param oemCodePage
+     * @return
+     * @throws IOException
+     */
+    public static String readString(RawInputStream ris, int len, String oemCodePage) throws IOException {
+        String myString = null;
+        if (oemCodePage != null) {
+            if (oemCodePage.equals("Cp932")) {
+                oemCodePage = new String("Cp942"); // IBM OS/2 Japanese, superset of Cp932
+            }
+        }
+        byte[] asBytes = ris.readBytes(len);
+        try {
+            myString = TNEFUtils.removeTerminatingNulls(new String(asBytes, oemCodePage));
+        } catch (UnsupportedEncodingException uee) {
+            sLog.debug("Problem with oemCodePage=%s", oemCodePage, uee);
+            myString = TNEFUtils.createString(asBytes, 0, len);
+        }
+        return myString;
+    }
 }

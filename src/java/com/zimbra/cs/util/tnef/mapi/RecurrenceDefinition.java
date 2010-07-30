@@ -102,6 +102,7 @@ public class RecurrenceDefinition {
     }
 
     private TimeZoneDefinition tzDef;
+    private String oemCodePage;
 
     private long readerVersion;
     private long writerVersion;
@@ -158,7 +159,8 @@ public class RecurrenceDefinition {
      * @throws IOException
      */
     public RecurrenceDefinition(RawInputStream ris,
-            TimeZoneDefinition tz) throws IOException {
+            TimeZoneDefinition tz, String oemCP) throws IOException {
+        oemCodePage = oemCP;
         exdateTimes = null;
         rsrvdBlock1Size = -1;
         rsrvdBlock2Size = -1;
@@ -238,7 +240,7 @@ public class RecurrenceDefinition {
     
             changedInstances = new ArrayList <ChangedInstanceInfo>();
             for (int cnt = 1; cnt <= modifiedInstanceCount; cnt++) {
-                ChangedInstanceInfo cInst = new ChangedInstanceInfo(cnt, tzDef);
+                ChangedInstanceInfo cInst = new ChangedInstanceInfo(cnt, tzDef, oemCodePage);
                 cInst.readExceptionInfo(ris);
                 unprocessedByteCount = ris.available();
                 changedInstances.add(cInst);
