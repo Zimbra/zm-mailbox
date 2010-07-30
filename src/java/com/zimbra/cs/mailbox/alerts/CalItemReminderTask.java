@@ -9,6 +9,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTask;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.AccountUtil;
@@ -19,8 +20,10 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * @author vmahajan
@@ -67,6 +70,7 @@ public class CalItemReminderTask extends ScheduledTask {
     private void sendReminderEmail(CalendarItem calItem, Invite invite) throws MessagingException, ServiceException {
         ZimbraLog.scheduler.debug("Creating reminder email for calendar item (id=" + calItem.getId() + ",mailboxId=" + calItem.getMailboxId() + ")");
         Locale locale = calItem.getAccount().getLocale();
+        TimeZone tz = ICalTimeZone.getAccountTimeZone(calItem.getAccount());
 
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
 
@@ -80,11 +84,11 @@ public class CalItemReminderTask extends ScheduledTask {
         mm.setContent(mmp);
 
         MimeBodyPart textPart = new MimeBodyPart();
-        textPart.setText(getBody(invite, false, locale), MimeConstants.P_CHARSET_UTF8);
+        textPart.setText(getBody(invite, false, locale, tz), MimeConstants.P_CHARSET_UTF8);
         mmp.addBodyPart(textPart);
 
         MimeBodyPart htmlPart = new MimeBodyPart();
-        htmlPart.setContent(getBody(invite, true, locale), MimeConstants.CT_TEXT_HTML + "; " + MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8);
+        htmlPart.setContent(getBody(invite, true, locale, tz), MimeConstants.CT_TEXT_HTML + "; " + MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8);
         mmp.addBodyPart(htmlPart);
 
         mm.setSentDate(new Date());
@@ -94,34 +98,24 @@ public class CalItemReminderTask extends ScheduledTask {
         calItem.getMailbox().getMailSender().sendMimeMessage(null, calItem.getMailbox(), mm);
     }
 
-    private String getBody(Invite invite, boolean html, Locale locale) throws ServiceException {
+    private String getBody(Invite invite, boolean html, Locale locale, TimeZone tz) throws ServiceException {
+        DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.LONG, locale);
+        dateFormat.setTimeZone(tz);
         Date startDate = new Date(new Long(getProperty("nextInstStart")));
         Date endDate = invite.getEffectiveDuration().addToDate(startDate);
-        String newLine = html ? "<br>" : "\n";
-        StringBuilder sb = new StringBuilder();
-        sb.append(newLine);
-        sb.append(L10nUtil.getMessage(L10nUtil.MsgKey.zsStart, locale)).append(" : ").append(startDate);
-        sb.append(newLine).append(newLine);
-        sb.append(L10nUtil.getMessage(L10nUtil.MsgKey.zsEnd, locale)).append(" : ").append(endDate);
-        if (invite.getLocation() != null && invite.getLocation().trim().length() > 0) {
-            sb.append(newLine).append(newLine);
-            sb.append(L10nUtil.getMessage(L10nUtil.MsgKey.zsLocation, locale)).append(" : ").append(invite.getLocation());
-        }
-        String desc = null;
-        boolean emptyDesc = true;
-        try {
-            desc = html ? invite.getDescriptionHtml() : invite.getDescription();
-            if (desc != null)
-                emptyDesc = html ? invite.getDescription().trim().length() == 0 : desc.trim().length() == 0;
-        } catch (ServiceException e) {
-            ZimbraLog.scheduler.warn("Error in getting invite description", e);
-        }
-        if (desc != null && !emptyDesc) {
-            sb.append(newLine).append(newLine);
-            sb.append(L10nUtil.getMessage(L10nUtil.MsgKey.calendarReminderEmailDescription, locale)).append(" :");
-            sb.append(newLine);
-            sb.append(desc);
-        }
-        return sb.toString();
+        String location = invite.getLocation();
+        String description = html ? invite.getDescriptionHtml() : invite.getDescription();
+        return html ? L10nUtil.getMessage(L10nUtil.MsgKey.calendarReminderEmailBodyHtml,
+                                          locale,
+                                          dateFormat.format(startDate),
+                                          dateFormat.format(endDate),
+                                          location == null ? "" : location,
+                                          description == null ? "" : description) :
+                      L10nUtil.getMessage(L10nUtil.MsgKey.calendarReminderEmailBody,
+                                          locale,
+                                          dateFormat.format(startDate),
+                                          dateFormat.format(endDate),
+                                          location == null ? "" : location,
+                                          description == null ? "" : description);
     }
 }
