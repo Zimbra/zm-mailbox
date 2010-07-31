@@ -383,6 +383,10 @@
       <mime-type>audio/x-mpegurl</mime-type>
   </mime-mapping>
   <mime-mapping>
+      <extension>manifest</extension>
+      <mime-type>text/cache-manifest</mime-type>
+  </mime-mapping>
+  <mime-mapping>
       <extension>mp1</extension>
       <mime-type>audio/x-mpeg</mime-type>
   </mime-mapping>
