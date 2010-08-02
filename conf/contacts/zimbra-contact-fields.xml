@@ -160,13 +160,13 @@ translate the value of into Zimbra tag.
         <column name="Messenger ID8" field="imAddress9"/>
         <column name="Messenger ID9" field="imAddress10"/>
 	    <!-- TODO: [Q] can we merge these into imAddress#, collapsing empty ones? -->
-        <column name="Skype ID"/>
-        <column name="IRC ID"/>
-        <column name="ICQ ID"/>
-        <column name="Google ID"/>
-        <column name="MSN ID"/>
-        <column name="AIM ID"/>
-        <column name="QQ ID"/>
+        <column name="Skype ID" field="skypeId" /> <!-- custom -->
+        <column name="IRC ID" field="ircId" /> <!-- custom -->
+        <column name="ICQ ID" field="icqId" /> <!-- custom -->
+        <column name="Google ID" field="googleChatId" /> <!-- custom -->
+        <column name="MSN ID" field="msnId" /> <!-- custom -->
+        <column name="AIM ID" field="aimId" /> <!-- custom -->
+        <column name="QQ ID" field="qqId" /> <!-- custom -->
     </format>
 
     <format name="thunderbird-csv" type="csv">
@@ -239,22 +239,22 @@ translate the value of into Zimbra tag.
         <column name="Home Fax" field="homeFax"/>
         <column name="Home Phone" field="homePhone"/>
         <column name="Home Phone 2" field="homePhone2"/>
-        <column name="ISDN"/>
+        <column name="ISDN" field="isdn" /> <!-- custom -->
         <column name="Mobile Phone" field="mobilePhone"/>
         <column name="Other Fax" field="otherFax"/>
         <column name="Other Phone" field="otherPhone"/>
         <column name="Pager" field="pager"/>
         <column name="Primary Phone"/>
-        <column name="Radio Phone"/>
-        <column name="TTY/TDD Phone"/>
-        <column name="Telex"/>
-        <column name="Account"/>
-        <column name="Anniversary"/>
-        <column name="Assistant's Name"/>
-        <column name="Billing Information"/>
+        <column name="Radio Phone" field="radioPhone" /> <!-- custom -->
+        <column name="TTY/TDD Phone" field="ttyTDDPhone"/> <!-- custom -->
+        <column name="Telex" field="telex"/> <!-- custom -->
+        <column name="Account" field="account"/> <!-- custom -->
+        <column name="Anniversary" field="anniversary"/>
+        <column name="Assistant's Name" field="assistantName"/> <!-- custom -->
+        <column name="Billing Information" field="billingInfo"/> <!-- custom -->
         <column name="Birthday" field="birthday"/>
         <column name="Categories"/>
-        <column name="Children"/>
+        <column name="Children" field="children"/> <!-- custom -->
         <column name="Directory Server"/>
         <column name="E-mail Address" field="email"/>
         <column name="E-mail Display Name"/>
@@ -262,26 +262,26 @@ translate the value of into Zimbra tag.
         <column name="E-mail 2 Display Name"/>
         <column name="E-mail 3 Address" field="email3"/>
         <column name="E-mail 3 Display Name"/>
-        <column name="Gender"/>
-        <column name="Government ID Number"/>
-        <column name="Hobby"/>
+        <column name="Gender" field="gender"/> <!-- custom -->
+        <column name="Government ID Number" field="governmentId"/> <!-- custom -->
+        <column name="Hobby" field="hobby"/> <!-- custom -->
         <column name="Initials" field="initials"/>
         <column name="Internet Free Busy"/>
-        <column name="Keywords"/>
-        <column name="Language"/>
-        <column name="Location"/>
-        <column name="Manager's Name"/>
-        <column name="Mileage"/>
+        <column name="Keywords" field="keywords"/> <!-- custom -->
+        <column name="Language" field="language"/> <!-- custom -->
+        <column name="Location" field="location"/> <!-- custom -->
+        <column name="Manager's Name" field="managerName"/> <!-- custom -->
+        <column name="Mileage" field="mileage"/> <!-- custom -->
         <column name="Notes" field="notes"/>
         <column name="Office Location" field="office"/>
-        <column name="Organizational ID Number"/>
-        <column name="PO Box"/>
+        <column name="Organizational ID Number" field="organizationId"/> <!-- custom -->
+        <column name="PO Box" field="poBox"/> <!-- custom -->
         <column name="Priority"/>
         <column name="Private"/>
-        <column name="Profession"/>
-        <column name="Referred By"/>
-        <column name="Sensitivity"/>
-        <column name="Spouse"/>
+        <column name="Profession" field="profession"/> <!-- custom -->
+        <column name="Referred By" field="referredBy"/> <!-- custom -->
+        <column name="Sensitivity" field="sensitivity"/> <!-- custom -->
+        <column name="Spouse" field="spouse" /> <!-- custom -->
         <column name="User 1" field="custom1"/>
         <column name="User 2" field="custom2"/>
         <column name="User 3" field="custom3"/>
@@ -326,23 +326,23 @@ translate the value of into Zimbra tag.
         <column name="Home Fax" field="homeFax"/>
         <column name="Home Phone" field="homePhone"/>
         <column name="Home Phone 2" field="homePhone2"/>
-        <column name="ISDN"/>
+        <column name="ISDN" field="isdn"/> <!-- custom -->
         <column name="Mobile Phone" field="mobilePhone"/>
         <column name="Other Fax" field="otherFax"/>
         <column name="Other Phone" field="otherPhone"/>
         <column name="Pager" field="pager"/>
         <column name="Primary Phone"/>
-        <column name="Radio Phone"/>
-        <column name="TTY/TDD Phone"/>
-        <column name="Telex"/>
-        <column name="Account"/>
-        <column name="Anniversary"/>
-        <column name="Assistant's Name"/>
-        <column name="Billing Information"/>
+        <column name="Radio Phone" field="radioPhone"/> <!-- custom -->
+        <column name="TTY/TDD Phone" field="ttyTDDPhone"/> <!-- custom -->
+        <column name="Telex" field="telex"/> <!-- custom -->
+        <column name="Account" field="account"/> <!-- custom -->
+        <column name="Anniversary" field="anniversary"/>
+        <column name="Assistant's Name" field="assistantName"/> <!-- custom -->
+        <column name="Billing Information" field="billingInfo"/> <!-- custom -->
         <column name="Birthday" field="birthday"/>
         <column name="Business Address PO Box"/>
         <column name="Categories"/>
-        <column name="Children"/>
+        <column name="Children" field="children"/> <!-- custom -->
         <column name="Directory Server"/>
         <column name="E-mail Address" field="email"/>
         <column name="E-mail Type"/>
@@ -353,27 +353,27 @@ translate the value of into Zimbra tag.
         <column name="E-mail 3 Address" field="email3"/>
         <column name="E-mail 3 Type"/>
         <column name="E-mail 3 Display Name"/>
-        <column name="Gender"/>
-        <column name="Government ID Number"/>
-        <column name="Hobby"/>
-        <column name="Home Address PO Box"/>
+        <column name="Gender" field="gender"/> <!-- custom -->
+        <column name="Government ID Number" field="governmentId"/> <!-- custom -->
+        <column name="Hobby" field="hobby"/> <!-- custom -->
+        <column name="Home Address PO Box" field="homePOBox"/> <!-- custom -->
         <column name="Initials" field="initials"/>
         <column name="Internet Free Busy"/>
-        <column name="Keywords"/>
-        <column name="Language"/>
-        <column name="Location"/>
-        <column name="Manager's Name"/>
-        <column name="Mileage"/>
+        <column name="Keywords" field="keywords"/> <!-- custom -->
+        <column name="Language" field="language"/> <!-- custom -->
+        <column name="Location" field="location"/> <!-- custom -->
+        <column name="Manager's Name" field="managerName"/> <!-- custom -->
+        <column name="Mileage" field="mileage"/> <!-- custom -->
         <column name="Notes" field="notes"/>
         <column name="Office Location" field="office"/>
-        <column name="Organizational ID Number"/>
-        <column name="Other Address PO Box"/>
+        <column name="Organizational ID Number" field="organizationId"/> <!-- custom -->
+        <column name="Other Address PO Box" field="otherPOBox"/> <!-- custom -->
         <column name="Priority"/>
         <column name="Private"/>
-        <column name="Profession"/>
-        <column name="Referred By"/>
-        <column name="Sensitivity"/>
-        <column name="Spouse"/>
+        <column name="Profession" field="profession"/> <!-- custom -->
+        <column name="Referred By" field="referredBy"/> <!-- custom -->
+        <column name="Sensitivity" field="sensitivity"/> <!-- custom -->
+        <column name="Spouse" field="spouse"/> <!-- custom -->
         <column name="User 1" field="custom1"/>
         <column name="User 2" field="custom2"/>
         <column name="User 3" field="custom3"/>
@@ -415,22 +415,22 @@ translate the value of into Zimbra tag.
         <column name="HomeFax" field="homeFax"/>
         <column name="HomePhone" field="homePhone"/>
         <column name="HomePhone2" field="homePhone2"/>
-        <column name="ISDN"/>
+        <column name="ISDN" field="isdn"/> <!-- custom -->
         <column name="MobilePhone" field="mobilePhone"/>
         <column name="OtherFax" field="otherFax"/>
         <column name="OtherPhone" field="otherPhone"/>
         <column name="Pager" field="pager"/>
         <column name="PrimaryPhone"/>
-        <column name="RadioPhone"/>
-        <column name="TTYTDDPhone"/>
-        <column name="Telex"/>
-        <column name="Account"/>
-        <column name="Anniversary"/>
-        <column name="AssistantsName"/>
-        <column name="BillingInformation"/>
+        <column name="RadioPhone" field="radioPhone"/> <!-- custom -->
+        <column name="TTYTDDPhone" field="ttyTDDPhone"/> <!-- custom -->
+        <column name="Telex" field="telex"/> <!-- custom -->
+        <column name="Account" field="account"/> <!-- custom -->
+        <column name="Anniversary" field="anniversary"/>
+        <column name="AssistantsName" field="assistantName"/> <!-- custom -->
+        <column name="BillingInformation" field="billingInfo"/> <!-- custom -->
         <column name="Birthday" field="birthday"/>
         <column name="Categories"/>
-        <column name="Children"/>
+        <column name="Children" field="children"/> <!-- custom -->
         <column name="DirectoryServer"/>
         <column name="EmailAddress" field="email"/>
         <column name="EmailDisplayName"/>
@@ -438,26 +438,26 @@ translate the value of into Zimbra tag.
         <column name="Email2DisplayName"/>
         <column name="Email3Address" field="email3"/>
         <column name="Email3DisplayName"/>
-        <column name="Gender"/>
-        <column name="GovernmentIDNumber"/>
-        <column name="Hobby"/>
+        <column name="Gender" field="gender"/> <!-- custom -->
+        <column name="GovernmentIDNumber" field="governmentId"/> <!-- custom -->
+        <column name="Hobby" field="hobby"/> <!-- custom -->
         <column name="Initials" field="initials"/>
         <column name="InternetFreeBusy"/>
-        <column name="Keywords"/>
-        <column name="Language1"/>
-        <column name="Location"/>
-        <column name="ManagersName"/>
-        <column name="Mileage"/>
+        <column name="Keywords" field="keywords"/> <!-- custom -->
+        <column name="Language1" field="language"/> <!-- custom -->
+        <column name="Location" field="location"/> <!-- custom -->
+        <column name="ManagersName" field="managerName"/> <!-- custom -->
+        <column name="Mileage" field="mileage"/> <!-- custom -->
         <column name="Notes" field="notes"/>
         <column name="OfficeLocation" field="office"/>
-        <column name="OrganizationalIDNumber"/>
-        <column name="POBox"/>
-        <column name="Priority"/>
+        <column name="OrganizationalIDNumber" field="organizationId"/> <!-- custom -->
+        <column name="POBox" field="poBox"/> <!-- custom -->
+        <column name="Priority" field="priority"/> <!-- custom -->
         <column name="Private"/>
-        <column name="Profession"/>
-        <column name="ReferredBy"/>
-        <column name="Sensitivity"/>
-        <column name="Spouse"/>
+        <column name="Profession" field="profession"/> <!-- custom -->
+        <column name="ReferredBy" field="referredBy"/> <!-- custom -->
+        <column name="Sensitivity" field="sensitivity"/> <!-- custom -->
+        <column name="Spouse" field="spouse"/> <!-- custom -->
         <column name="User 1" field="custom1"/>
         <column name="User 2" field="custom2"/>
         <column name="User 3" field="custom3"/>
