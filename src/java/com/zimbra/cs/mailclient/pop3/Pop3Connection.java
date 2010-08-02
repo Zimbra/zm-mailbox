@@ -20,6 +20,7 @@ import java.io.OutputStream;
 
 import javax.security.auth.login.LoginException;
 
+import com.zimbra.common.util.ZimbraLog;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
@@ -33,7 +34,7 @@ import com.zimbra.cs.mailclient.util.Ascii;
 public final class Pop3Connection extends MailConnection {
     private Pop3Capabilities capabilities;
     private int messageCount;
-    private int maildropSize;
+    private long maildropSize;
 
     private static final Logger LOGGER = Logger.getLogger(Pop3Connection.class);
     
@@ -141,9 +142,10 @@ public final class Pop3Connection extends MailConnection {
         if (parts.length > 1) {
             try {
                 messageCount = Integer.parseInt(parts[0]);
-                maildropSize = Integer.parseInt(parts[1]);
+                maildropSize = Long.parseLong(parts[1]);
                 return;
             } catch (NumberFormatException e) {
+                ZimbraLog.pop.error("Invalid STAT response: " + res.getMessage(), e);
                 // Fall through...
             }
         }
@@ -159,7 +161,7 @@ public final class Pop3Connection extends MailConnection {
         return messageCount;
     }
 
-    public int getMaildropSize() {
+    public long getMaildropSize() {
         return maildropSize;
     }
     
