@@ -49,7 +49,6 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.util.SyncToken;
 
-
 /**
  * A custom Lucene provider that uses the {@link IndexWritersCache} to manage
  * the index LRU.
@@ -126,9 +125,10 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         }
 
         sMaxUncommittedOps = LC.zimbra_index_max_uncommitted_operations.intValue();
-        sIndexReadersCache = new IndexReadersCache(LC.zimbra_index_reader_lru_size.intValue(),
-            LC.zimbra_index_reader_idle_flush_time.longValue() * 1000,
-            LC.zimbra_index_reader_idle_sweep_frequency.longValue() * 1000);
+        sIndexReadersCache = new IndexReadersCache(
+                LC.zimbra_index_reader_lru_size.intValue(),
+                LC.zimbra_index_reader_idle_flush_time.longValue() * 1000,
+                LC.zimbra_index_reader_idle_sweep_frequency.longValue() * 1000);
         sIndexReadersCache.start();
 
         sIndexWritersCache = new IndexWritersCache();
@@ -351,7 +351,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
     private void enumerateTermsForField(String regex, Term firstTerm,
             TermEnumInterface callback) throws IOException {
         synchronized(getLock()) {
-            RefCountedIndexSearcher searcher = this.getCountedIndexSearcher();
+            IndexSearcherRef searcher = this.getIndexSearcherRef();
             try {
                 IndexReader iReader = searcher.getReader();
 
@@ -398,7 +398,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
                     }
                 } while (terms.next());
             } finally {
-                searcher.release();
+                searcher.dec();
             }
         }
 
@@ -414,7 +414,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         token = token.toLowerCase();
 
         try {
-            RefCountedIndexSearcher searcher = this.getCountedIndexSearcher();
+            IndexSearcherRef searcher = this.getIndexSearcherRef();
             try {
                 Term firstTerm = new Term(field, token);
 
@@ -447,7 +447,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
 
                 return true;
             } finally {
-                searcher.release();
+                searcher.dec();
             }
         } catch (IOException e) {
             throw ServiceException.FAILURE("Caught IOException opening index", e);
@@ -510,12 +510,9 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
      *
      * @throws IOException
      */
-    public RefCountedIndexSearcher getCountedIndexSearcher() throws IOException {
-        synchronized(getLock()) {
-            RefCountedIndexSearcher searcher = null;
-            RefCountedIndexReader cReader = getCountedIndexReader();
-            searcher = new RefCountedIndexSearcher(cReader);
-            return searcher;
+    public IndexSearcherRef getIndexSearcherRef() throws IOException {
+        synchronized (getLock()) {
+            return new IndexSearcherRef(getIndexReaderRef());
         }
     }
 
@@ -630,7 +627,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         token = token.toLowerCase();
 
         try {
-            RefCountedIndexSearcher searcher = this.getCountedIndexSearcher();
+            IndexSearcherRef searcher = this.getIndexSearcherRef();
             try {
                 IndexReader iReader = searcher.getReader();
 
@@ -663,7 +660,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
                     }
                 }
             } finally {
-                searcher.release();
+                searcher.dec();
             }
         } catch (IOException e) {
             throw ServiceException.FAILURE("Caught IOException opening index", e);
@@ -738,19 +735,19 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         LC.zimbra_index_lucene_max_terms_per_query.intValue();
 
     /**
-     * @return A refcounted IndexReader for this index.  Caller is responsible for
-     *            calling IndexReader.release() on the index before allowing it to go
-     *            out of scope (otherwise a RuntimeException will occur)
+     * Caller is responsible for calling {@link IndexReaderRef#dec()} before
+     * allowing it to go out of scope (otherwise a RuntimeException will occur).
      *
+     * @return A {@link IndexReaderRef} for this index.
      * @throws IOException
      */
-    private RefCountedIndexReader getCountedIndexReader() throws IOException {
+    private IndexReaderRef getIndexReaderRef() throws IOException {
         BooleanQuery.setMaxClauseCount(MAX_TERMS_PER_QUERY);
 
         synchronized (getLock()) {
             sIndexWritersCache.flush(this); // flush writer if writing
 
-            RefCountedIndexReader toRet = sIndexReadersCache.getIndexReader(this);
+            IndexReaderRef toRet = sIndexReadersCache.getIndexReader(this);
             if (toRet != null) {
                 return toRet;
             }
@@ -758,7 +755,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
             IndexReader reader = null;
             try {
                 reader = IndexReader.open(mIdxDirectory);
-            } catch(IOException e) {
+            } catch (IOException e) {
                 // Handle the special case of trying to open a not-yet-created
                 // index, by opening for write and immediately closing.  Index
                 // directory should get initialized as a result.
@@ -770,19 +767,21 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
                     try {
                         reader = IndexReader.open(mIdxDirectory);
                     } catch (IOException e1) {
-                        if (reader != null)
+                        if (reader != null) {
                             reader.close();
+                        }
                         throw e1;
                     }
                 } else {
-                    if (reader != null)
+                    if (reader != null) {
                         reader.close();
+                    }
                     throw e;
                 }
             }
 
             synchronized (mOpenReaders) {
-                toRet = new RefCountedIndexReader(this, reader); // refcount starts at 1
+                toRet = new IndexReaderRef(this, reader); // refcount starts at 1
                 mOpenReaders.add(toRet);
             }
 
@@ -1046,13 +1045,13 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         abstract void onTerm(Term term, int docFreq);
     }
 
-    public void onReaderClose(RefCountedIndexReader ref) {
+    public void onReaderClose(IndexReaderRef ref) {
         synchronized (mOpenReaders) {
             mOpenReaders.remove(ref);
         }
     }
 
-    private List<RefCountedIndexReader> mOpenReaders = new ArrayList<RefCountedIndexReader>();
+    private List<IndexReaderRef> mOpenReaders = new ArrayList<IndexReaderRef>();
 
     public IndexReader reopenReader(IndexReader reader) throws IOException {
         return reader.reopen();

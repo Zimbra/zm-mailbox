@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,7 +33,7 @@ public class DebugConfig {
     /** If true, then we do ICalendar Validation every time we generate
      *  ICalendar data. */
     public static boolean validateOutgoingICalendar;
-    
+
     /** If true, turns off conversation feature. */
     public static boolean disableConversation;
 
@@ -50,7 +50,7 @@ public class DebugConfig {
      *  meaningless.  When extraction is disabled,
      *  not even the text of main text body part is extracted and won't be
      *  searchable.  Only the message subject ends up being indexed.
-     * 
+     *
      *  Disabling extraction still performs reading the MIME body part data
      *  from JavaMail API.  It only skips sending the body data to the code
      *  that does type-specific text extraction.  Setting this key to true
@@ -125,7 +125,7 @@ public class DebugConfig {
      *  the effects of corruption are issues) and database-per-user (which
      *  most DBMSes can't deal with). */
     public static final int numMailboxGroups;
-    
+
     /** If true, more than one server may be sharing the same store and
      *  database install.  In that case, the server must perform extra checks
      *  to ensure that mailboxes "homed" on other servers are treated
@@ -133,7 +133,7 @@ public class DebugConfig {
     public static final boolean mockMultiserverInstall;
 
     /** If true, the GAL sync visitor mechanism is disabled.  SyncGal will use
-     *  the traditional way of adding matches to a SearchGalResult, then add 
+     *  the traditional way of adding matches to a SearchGalResult, then add
      *  each match in the SOAP response.  The GAL sync visitor mechanism
      *  reduces chance of OOME when there is a huge result. */
     public static boolean disableGalSyncVisitor;
@@ -147,15 +147,15 @@ public class DebugConfig {
     /** If true, disable the memcached-based folders/tags cache of mailboxes.
      */
     public static boolean disableFoldersTagsCache;
-    
+
     public static boolean enableContactLocalizedSort;
-    
-    public static boolean enableRefCountedIndexReaderStats;
-    
+
+    public static boolean enableIndexReaderRefStats;
+
     public static boolean enableMigrateUserZimletPrefs;
-    
+
     public static boolean disableGroupTargetForAdminRight;
-    
+
     public static boolean disableComputeGroupMembershipOptimization;
 
     public static int imapSerializedSessionNotificationOverloadThreshold;
@@ -216,7 +216,7 @@ public class DebugConfig {
 
         enableContactLocalizedSort = booleanValue("debug_enable_contact_localized_sort", true);
 
-        enableRefCountedIndexReaderStats = booleanValue("debug_enable_ref_counted_index_reader_stats", false);
+        enableIndexReaderRefStats = booleanValue("debug_enable_index_reader_ref_stats", false);
 
         enableMigrateUserZimletPrefs = booleanValue("migrate_user_zimlet_prefs", false);
 
