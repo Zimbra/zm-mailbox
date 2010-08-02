@@ -37,8 +37,8 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 /**
- * Efficient Read-access to a Message returned from a query. APIs mirror the
- * APIs on {@link Message}, but are read-only. The real archive.mailbox.Message
+ * Efficient Read-access to a {@link Message} returned from a query. APIs mirror
+ * the APIs on {@link Message}, but are read-only. The real archive.mailbox.Message
  * can be retrieved, but this should only be done if write-access is necessary.
  *
  * @since Oct 15, 2004
