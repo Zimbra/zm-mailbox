@@ -1825,17 +1825,10 @@ public class ZMailboxUtil implements DebugListener {
         String cmOwner = args[1];
         String cmItem = args[2];
 
-        OwnerBy ownerBy = OwnerBy.BY_ID;
-        Account ownerAcct = mProv.getAccount(cmOwner);
-        if (ownerAcct != null) {
-            if (cmOwner.equals(ownerAcct.getId()))
-                ownerBy = OwnerBy.BY_ID;
-            else
-                ownerBy = OwnerBy.BY_NAME;
-        } else {
-            // account is not found, still let it go to server (default to OwnerBy.BY_ID) and let server return us the error
-        }
-
+        OwnerBy ownerBy = OwnerBy.BY_NAME;
+        if (Provisioning.isUUID(cmOwner))
+            ownerBy = OwnerBy.BY_ID;
+        
         SharedItemBy sharedItemBy = SharedItemBy.BY_PATH;
         String sharedItem = cmItem;
         
