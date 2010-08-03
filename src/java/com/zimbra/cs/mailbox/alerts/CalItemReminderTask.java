@@ -78,7 +78,7 @@ public class CalItemReminderTask extends ScheduledTask {
         mm.setFrom(emailAddress);
         mm.setRecipient(javax.mail.Message.RecipientType.TO, emailAddress);
 
-        mm.setSubject(L10nUtil.getMessage(L10nUtil.MsgKey.calendarReminderEmailSubject, locale) + ": " + calItem.getSubject(), MimeConstants.P_CHARSET_UTF8);
+        mm.setSubject(L10nUtil.getMessage(L10nUtil.MsgKey.calendarReminderEmailSubject, locale, calItem.getSubject()), MimeConstants.P_CHARSET_UTF8);
 
         MimeMultipart mmp = new MimeMultipart("alternative");
         mm.setContent(mmp);
