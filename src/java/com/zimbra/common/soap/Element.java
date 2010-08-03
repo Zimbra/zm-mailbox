@@ -187,6 +187,8 @@ public abstract class Element implements Cloneable {
      *  is <tt>null</tt>, returns <u>all</u> sub-elements.  If no elements
      *  with the given name exist, returns an empty <tt>List</tt> */
     public abstract List<Element> listElements(String name);
+    /** Returns whether the element has any sub-elements. */
+    public abstract boolean hasChildren();
 
     public List<KeyValuePair> listKeyValuePairs()  { return listKeyValuePairs(null, null); }
     public abstract List<KeyValuePair> listKeyValuePairs(String eltname, String attrname);
@@ -688,6 +690,15 @@ public abstract class Element implements Cloneable {
                 }
             }
             return list;
+        }
+
+        @Override public boolean hasChildren() {
+            if (!mAttributes.isEmpty()) {
+                for (Object obj : mAttributes.values())
+                    if (obj instanceof Element)
+                        return true;
+            }
+            return false;
         }
 
         @Override public List<KeyValuePair> listKeyValuePairs(String eltname, String attrname) {
@@ -1195,6 +1206,10 @@ public abstract class Element implements Cloneable {
                         list.add(elt);
             }
             return list;
+        }
+
+        @Override public boolean hasChildren() {
+            return mChildren != null && !mChildren.isEmpty();
         }
 
         @Override public List<KeyValuePair> listKeyValuePairs(String eltname, String attrname) {
