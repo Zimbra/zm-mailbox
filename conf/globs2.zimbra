@@ -1,1 +1,2 @@
 # zimbra override for globs
+60:application/vnd.ms-project:*.mpp
