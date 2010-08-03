@@ -482,10 +482,10 @@ public class SoapEngine {
 	}
 
     private void acknowledgeNotifications(ZimbraSoapContext zsc) {
-        String authAccountId = zsc.getAuthtokenAccountId();
         SessionInfo sinfo = zsc.getSessionInfo();
-        if (sinfo != null && sinfo.sequence > 0) {
-            Session session = SessionCache.lookup(sinfo.sessionId, authAccountId);
+        if (sinfo != null) {
+            Session session = SessionCache.lookup(sinfo.sessionId, zsc.getAuthtokenAccountId());
+            // acknowledge ntfn sets up to sinfo.sequence; unset value means acknowledge all sent ntfns
             if (session instanceof SoapSession)
                 ((SoapSession) session).acknowledgeNotifications(sinfo.sequence);
         }
