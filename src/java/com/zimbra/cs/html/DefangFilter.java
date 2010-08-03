@@ -88,7 +88,7 @@ public class DefangFilter extends DefaultFilter {
     private static final Pattern AV_SCRIPT_TAG = Pattern.compile("</?script/?>", Pattern.CASE_INSENSITIVE);
     
     // regex for URLs href. TODO: beef this up
-	private static final Pattern VALID_URL = Pattern.compile("^(https?://[\\w-].*|mailto:.*|cid:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*|[^:]*)$", Pattern.CASE_INSENSITIVE);
+	private static final Pattern VALID_URL = Pattern.compile("^(https?://[\\w-].*|mailto:.*|cid:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*|[^:]*)", Pattern.CASE_INSENSITIVE);
 
     //
     // Data
@@ -633,7 +633,7 @@ public class DefangFilter extends DefaultFilter {
         result = AV_SCRIPT_TAG.matcher(result).replaceAll("SCRIPT-TAG-BLOCKED");
         // TODO: change to set?
         if (aName.equalsIgnoreCase("href") || aName.equalsIgnoreCase("src") || aName.equalsIgnoreCase("longdesc") || aName.equalsIgnoreCase("usemap")){
-            if (!VALID_URL.matcher(result).matches()) {
+            if (!VALID_URL.matcher(result).find()) {
                 // TODO: just leave blank?
                 result = "about:blank";
             }
