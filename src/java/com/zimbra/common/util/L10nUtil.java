@@ -79,11 +79,6 @@ public class L10nUtil {
 
         calendarUserReplyPermissionDenied,
 
-        // calendar reminder alerts
-        calendarReminderEmailSubject,
-        calendarReminderEmailBody,
-        calendarReminderEmailBodyHtml,
-
         // caldav messages
         caldavCalendarDescription,
 

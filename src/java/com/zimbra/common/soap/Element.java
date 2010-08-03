@@ -286,7 +286,10 @@ public abstract class Element implements Cloneable {
     
     public abstract String prettyPrint();
 
-    /** Serialize this <tt>Element</tt> to an <code>Appendable</code>. */
+    /**
+     * serialize this <tt>Element</tt> to an Appendable
+     * @param out
+     */
     public abstract void toString(Appendable out) throws IOException;
     
     private static final String FORTY_SPACES = "                                        ";
@@ -302,7 +305,6 @@ public abstract class Element implements Cloneable {
         doc.setRootElement(toXML(null));
         return doc.getRootElement();
     }
-
     private org.dom4j.Element toXML(org.dom4j.Element d4parent) {
         org.dom4j.Element d4elt = (d4parent == null ? org.dom4j.DocumentHelper.createElement(getQName()) : d4parent.addElement(getQName()));
         for (Attribute attr : listAttributes())
@@ -313,9 +315,13 @@ public abstract class Element implements Cloneable {
         return d4elt;
     }
 
-    /** Return the attribute value that is at the specified path, or null if
-     *  one could not be found.
-     * @param xpath an array of names to traverse in the element tree */
+    /**
+     * Return the attribute value that is at the specified path, or null if
+     * one could not be found
+     * 
+     * @param xpath an array of names to traverse in the element tree
+     * @return
+     */
     public String getPathAttribute(String[] xpath) {
         int depth = 0;
         Element cur = this;
@@ -324,32 +330,49 @@ public abstract class Element implements Cloneable {
         return (cur == null ? null : cur.getAttribute(xpath[depth], null));
     }
 
-    /** Return the first Element matching the specified path, or null if none was found.
-     * @param xpath an array of names to traverse in the element tree */
+    /**
+     * Return the first Element matching the specified path, or null if none was found
+     * 
+     * @param xpath an array of names to traverse in the element tree
+     * @return
+     */
     public Element getPathElement(String[] xpath) {
         int depth = 0;
         Element cur = this;
         while (depth < xpath.length && cur != null)
             cur = cur.getOptionalElement(xpath[depth++]);
+
         return cur;
     }
 
-    /** Return the list of Elements matching the specified path, or null
-     *  if none were found.
-     * @param xpath an array of names to traverse in the element tree */
+    /**
+     * Return the list of Elements matching the specified path, or null
+     * if none were found.
+     * 
+     * @param xpath an array of names to traverse in the element tree
+     * @return
+     */
     public List<Element> getPathElementList(String[] xpath) {
         int depth = 0;
         Element cur = this;
         while (depth < xpath.length-1 && cur != null)
             cur = cur.getOptionalElement(xpath[depth++]);
+
         if (cur == null)
             return null;
+
         return cur.listElements(xpath[xpath.length-1]);
     }
 
-    /** Set the attribute at the specified path, thowing an exception if the
-     *  parent Element does not exist.
-     * @param xpath an array of names to traverse in the element tree */
+
+    /**
+     * Set the attribute at the specified path, thowing an exception if the
+     * parent Element does not exist.
+     * 
+     * @param xpath an array of names to traverse in the element tree
+     * @param value
+     * @throws ServiceException
+     */
     public void setPathAttribute(String[] xpath, String value) throws ServiceException {
         if (xpath == null || xpath.length == 0)
             return;
@@ -560,7 +583,7 @@ public abstract class Element implements Cloneable {
                 return null;
             String name = elt.getName();
             Object obj = mAttributes.get(name);
-            if (obj instanceof List<?>) {
+            if (obj instanceof List) {
                 throw new ContainerException("already stored non-unique element(s) with name: " + name);
             } else if (obj instanceof String || obj instanceof Number || obj instanceof Boolean) {
                 throw new ContainerException("already stored attribute with name: " + name);
@@ -579,11 +602,10 @@ public abstract class Element implements Cloneable {
         @Override public Element setText(String content) throws ContainerException  { return addAttribute(A_CONTENT, content); }
 
         @Override public Element addAttribute(String key, String value, Disposition disp) throws ContainerException {
-            checkNamingConflict(key);
             if (value == null)
-                mAttributes.remove(key);
-            else
-                mAttributes.put(key, value);
+                return this;
+            checkNamingConflict(key);
+            mAttributes.put(key, value);
             return this;
         }
 
@@ -607,7 +629,7 @@ public abstract class Element implements Cloneable {
 
         private void checkNamingConflict(String key) throws ContainerException {
             Object obj = mAttributes.get(key);
-            if (obj instanceof Element || obj instanceof List<?>)
+            if (obj instanceof Element || obj instanceof List)
                 throw new ContainerException("already stored element with name: " + key);
         }
 
@@ -620,7 +642,7 @@ public abstract class Element implements Cloneable {
             if (existing == null) {
                 attrs.mAttributes.put(key, kvp);
             } else if (existing instanceof KeyValuePair) {
-                List<KeyValuePair> pairs = new ArrayList<KeyValuePair>(3);
+                List<KeyValuePair> pairs = new ArrayList<KeyValuePair>();
                 pairs.add((KeyValuePair) existing);  pairs.add(kvp);
                 attrs.mAttributes.put(key, pairs);
             } else {
@@ -636,7 +658,7 @@ public abstract class Element implements Cloneable {
             Object obj = mAttributes.get(elt.getName());
             if (obj == elt) {
                 mAttributes.remove(elt.getName());
-            } else if (obj instanceof List<?>) {
+            } else if (obj instanceof List) {
                 ((List<?>) obj).remove(elt);
                 if (((List<?>) obj).isEmpty())
                     mAttributes.remove(elt.getName());
@@ -647,7 +669,7 @@ public abstract class Element implements Cloneable {
             Object obj = mAttributes.get(name);
             if (obj instanceof Element)
                 return (Element) obj;
-            else if (obj instanceof List<?>)
+            else if (obj instanceof List)
                 return (Element) ((List<?>) obj).get(0);
             // could return a "pseudo-element" for attribute values...
             return null;
@@ -659,7 +681,7 @@ public abstract class Element implements Cloneable {
             HashSet<Attribute> set = new HashSet<Attribute>();
             for (Map.Entry<String, Object> attr : mAttributes.entrySet()) {
                 Object obj = attr.getValue();
-                if (obj != null && !attr.getKey().equals(A_CONTENT) && !(obj instanceof Element || obj instanceof List<?>))
+                if (obj != null && !attr.getKey().equals(A_CONTENT) && !(obj instanceof Element || obj instanceof List))
                     set.add(new Attribute(attr, this));
             }
             return set;
@@ -708,7 +730,7 @@ public abstract class Element implements Cloneable {
 
             List<KeyValuePair> pairs = new ArrayList<KeyValuePair>();
             for (Map.Entry<String, Object> entry : attrs.mAttributes.entrySet()) {
-                List<?> values = (entry.getValue() instanceof List<?> ? (List<?>) entry.getValue() : Arrays.asList(entry.getValue()));
+                List<?> values = (entry.getValue() instanceof List ? (List<?>) entry.getValue() : Arrays.asList(entry.getValue()));
                 for (Object multi : values) {
                     if (multi instanceof KeyValuePair)
                         pairs.add((KeyValuePair) multi);
@@ -725,7 +747,7 @@ public abstract class Element implements Cloneable {
         @Override public String getAttribute(String key, String defaultValue) {
             Object obj = mAttributes.get(key);
             if (obj != null) {
-                if (obj instanceof List<?>)
+                if (obj instanceof List)
                     obj = ((List<?>) obj).isEmpty() ? null : ((List<?>) obj).get(0);
                 if (obj instanceof Element)
                     obj = ((Element) obj).getRawText();
@@ -759,15 +781,15 @@ public abstract class Element implements Cloneable {
                     clone.addUniqueElement(((Element) value).clone());
                 } else if (value instanceof JSONKeyValuePair) {
                     clone.mAttributes.put(key, ((JSONKeyValuePair) value).clone());
-                } else if (value instanceof List<?>) {
-                    for (Object child : (List<?>) value) {
+                } else if (value instanceof List) {
+                    for (Object child : (List) value) {
                         if (child instanceof Element) {
                             clone.addElement(((Element) child).clone());
                         } else {
                             Object childclone = child instanceof JSONKeyValuePair ? ((JSONKeyValuePair) child).clone() : child;
                             List<Object> children = (List<Object>) clone.mAttributes.get(key);
                             if (children == null) {
-                                (children = new ArrayList<Object>(((List<?>) value).size())).add(childclone);
+                                (children = new ArrayList<Object>(((List) value).size())).add(childclone);
                                 clone.mAttributes.put(key, children);
                             } else {
                                 children.add(childclone);
@@ -807,7 +829,7 @@ public abstract class Element implements Cloneable {
                 return c;
             }
             private String readQuoted(char quote) throws SoapParseException {
-                StringBuilder sb = new StringBuilder();
+                StringBuffer sb = new StringBuffer();
                 for (char c = js.charAt(offset); c != quote; c = js.charAt(++offset)) {
                     if (c == '\n' || c == '\t' || offset >= max - 1)
                         error("unterminated string");
@@ -818,7 +840,7 @@ public abstract class Element implements Cloneable {
                 return sb.toString();
             }
             private String readLiteral() throws SoapParseException {
-                StringBuilder sb = new StringBuilder();
+                StringBuffer sb = new StringBuffer();
                 for (char c = peekChar(); offset < max - 1; c = js.charAt(++offset)) {
                     if (c <= ' ' || ",:]}/\"[{;=#".indexOf(c) >= 0)
                         break;
@@ -961,11 +983,11 @@ public abstract class Element implements Cloneable {
         }
 
         @Override public String toString() {
-            StringBuilder sb = new StringBuilder();  
+            StringBuffer sb = new StringBuffer();  
             try {
                 toString(sb, -1);
             } catch (IOException e) {
-                // should really not happen with the StringBuilder impl of Appendable, just log it
+                // should really not happen with the StringBuffer impl of Appendable, just log it
                 ZimbraLog.soap.error("Caught IOException: ", e);
             }
             return sb.toString();
@@ -976,11 +998,11 @@ public abstract class Element implements Cloneable {
         }
         
         @Override public String prettyPrint() {
-            StringBuilder sb = new StringBuilder();  
+            StringBuffer sb = new StringBuffer();  
             try {
                 toString(sb, 0);  
             } catch (IOException e) {
-                // should really not happen with the StringBuilder impl of Appendable, just log it
+                // should really not happen with the StringBuffer impl of Appendable, just log it
                 ZimbraLog.soap.error("Caught IOException: ", e);
             }
             return sb.toString();
@@ -1003,7 +1025,7 @@ public abstract class Element implements Cloneable {
                     else if (value instanceof JSONKeyValuePair)  sb.append(value.toString());
                     else if (value instanceof JSONElement)       ((JSONElement) value).toString(sb, indent);
                     else if (value instanceof Element)           sb.append('"').append(StringUtil.jsEncode(value)).append('"');
-                    else if (!(value instanceof List<?>))        sb.append(String.valueOf(value));
+                    else if (!(value instanceof List))           sb.append(String.valueOf(value));
                     else {
                         sb.append('[');
                         if ((lsize = ((List<?>) value).size()) > 0)
@@ -1092,7 +1114,7 @@ public abstract class Element implements Cloneable {
                 return elt;
             else if (elt.mParent != null)
                 throw new ContainerException("element already has a parent");
-            else if (mText != null)
+            if (mText != null)
                 throw new ContainerException("cannot add children to element containing text");
 
             if (mChildren == null)
@@ -1103,32 +1125,26 @@ public abstract class Element implements Cloneable {
         }
 
         @Override public Element setText(String content) throws ContainerException {
-            if (content != null && !content.trim().equals("") && mChildren != null)
-                throw new ContainerException("cannot set text on element with children");
+            if (content != null && !content.trim().equals("")) {
+                if (mChildren != null)
+                    throw new ContainerException("cannot set text on element with children");
+            } else {
+                content = null;
+            }
             mText = content;
             return this;
         }
 
         @Override public Element addAttribute(String key, String value, Disposition disp) throws ContainerException {
             validateName(key);
-            // if we're setting an attribute, we need to clear all other things that could be considered the same...
-            if (mAttributes != null) {
-                mAttributes.remove(key);
-            }
-            if (mChildren != null) {
-                for (Element child : listElements(key))
-                    if (child.getRawText() != null)
-                        child.detach();
-            }
-            // a null value leaves it unset; a non-null value places the attribute appropriately
-            if (value != null) {
-                if (disp == Disposition.CONTENT) {
-                    addElement(key).setText(value);
-                } else {
-                    if (mAttributes == null)
-                        mAttributes = new HashMap<String, Object>();
-                    mAttributes.put(key, value);
-                }
+            if (value == null) {
+                return this;
+            } else if (disp == Disposition.CONTENT) {
+                addElement(key).setText(value);
+            } else {
+                if (mAttributes == null)
+                    mAttributes = new HashMap<String, Object>();
+                mAttributes.put(key, value);
             }
             return this;
         }
@@ -1231,16 +1247,18 @@ public abstract class Element implements Cloneable {
         @Override public String getAttribute(String key, String defaultValue) {
             if (key == null)
                 return defaultValue;
-            if (mAttributes != null) {
-                String result;
-                if ((result = (String) mAttributes.get(key)) != null)
+            // also need to check downcased version of attribute names because of safari bug
+            String result;
+            if (mAttributes != null)
+                if ((result = (String) mAttributes.get(key)) != null || (result = (String) mAttributes.get(key.toLowerCase())) != null)
                     return result;
-            }
-            if (mChildren != null) {
-                for (Element elt : mChildren) {
-                    if (elt.getName().equals(key) && elt.getRawText() != null)
-                        return elt.getRawText();
-                }
+            if (mChildren == null)
+                return defaultValue;
+            for (Element elt : mChildren) {
+                if (elt.getName().equalsIgnoreCase(key))
+                    return elt.getText();
+                else if (elt.getName().equals(E_ATTRIBUTE) && elt.getAttribute(A_ATTR_NAME, "").equalsIgnoreCase(key))
+                    return elt.getText();
             }
             return defaultValue;
         }
@@ -1248,7 +1266,7 @@ public abstract class Element implements Cloneable {
         private String xmlEncode(String str, boolean escapeQuotes) {
             if (str == null)
                 return "";
-            StringBuilder sb = null;
+            StringBuffer sb = null;
             String replacement;
             int i, last;
             for (i = 0, last = -1; i < str.length(); i++) {
@@ -1265,7 +1283,7 @@ public abstract class Element implements Cloneable {
                                replacement = "?";       break;
                 }
                 if (sb == null)
-                    sb = new StringBuilder(str.substring(0, i));
+                    sb = new StringBuffer(str.substring(0, i));
                 else
                     sb.append(str.substring(last, i));
                 sb.append(replacement);
@@ -1294,11 +1312,11 @@ public abstract class Element implements Cloneable {
         }
 
         @Override public String toString() {
-            StringBuilder sb = new StringBuilder();  
+            StringBuffer sb = new StringBuffer();  
             try {
                 toString(sb, -1);  
             } catch (IOException e) {
-                // should really not happen with the StringBuilder impl of Appendable, just log it
+                // should really not happen with the StringBuffer impl of Appendable, just log it
                 ZimbraLog.soap.error("Caught IOException: ", e);
             }
             return sb.toString();
@@ -1309,11 +1327,11 @@ public abstract class Element implements Cloneable {
         }
         
         @Override public String prettyPrint() {
-            StringBuilder sb = new StringBuilder();  
+            StringBuffer sb = new StringBuffer();  
             try {
                 toString(sb, 0);  
             } catch (IOException e) {
-                // should really not happen with the StringBuilder impl of Appendable, just log it
+                // should really not happen with the StringBuffer impl of Appendable, just log it
                 ZimbraLog.soap.error("Caught IOException: ", e);
             }
             return sb.toString();
@@ -1340,8 +1358,7 @@ public abstract class Element implements Cloneable {
                 }
             }
             // element content (children/text) and closing
-            String text = "".equals(mText) ? null : mText;
-            if (mChildren != null || text != null) {
+            if (mChildren != null || mText != null) {
                 sb.append('>');
                 if (mChildren != null) {
                     for (Element child : mChildren) {
@@ -1352,7 +1369,7 @@ public abstract class Element implements Cloneable {
                     }
                     indent(sb, indent, true);
                 } else {
-                    sb.append(xmlEncode(text, false));
+                    sb.append(xmlEncode(mText, false));
                 }
                 sb.append("</").append(qn).append('>');
             } else {
@@ -1413,9 +1430,6 @@ public abstract class Element implements Cloneable {
         } catch (SoapParseException spe) {
             System.out.println("caught exception (expected): " + spe.getMessage());
         }
-
-        System.out.println(new XMLElement("test").addAttribute("x", null).addAttribute("x", "", Disposition.CONTENT).addAttribute("x", "bar").addAttribute("x", null));
-        System.out.println(new JSONElement("test").addAttribute("x", null).addAttribute("x", "foo", Disposition.CONTENT).addAttribute("x", "bar").addAttribute("x", null));
     }
 
     private static Element testMessage(Element env, SoapProtocol proto, QName qm) {
