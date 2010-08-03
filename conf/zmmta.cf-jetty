@@ -21,6 +21,7 @@ SECTION amavis
 	VAR zimbraSpamKillPercent
 	VAR zimbraSpamTagPercent
 	VAR zimbraSpamSubjectTag
+	VAR zimbraAmavisQuarantineAccount
   RESTART archiving antispam antivirus mta
 
 SECTION antivirus DEPENDS amavis
