@@ -1248,18 +1248,12 @@ public class SoapSession extends Session {
      *  list of visible messages when serializing delegated conversations.
      *  If it looks like it'd be too expensive to fetch that list, we just
      *  skip the notification. */
-    private static final int DELEGATED_CONVERSATION_SIZE_LIMIT = 30;
+    private static final int DELEGATED_CONVERSATION_SIZE_LIMIT = 50;
 
     private static final String A_ID = "id";
 
-    /**
-     * Write a single instance of the PendingModifications structure into the 
-     * passed-in <ctxt> block 
-     * @param ntfn
-     * @param parent
-     * @param zsc
-     * @param explicitAcct
-     */
+    /** Write a single instance of the PendingModifications structure into the 
+     *  passed-in <ctxt> block. */
     protected void putQueuedNotifications(Mailbox mbox, QueuedNotifications ntfn, Element parent, ZimbraSoapContext zsc) {
         // create the base "notify" block:  <notify seq="6"/>
         Element eNotify = parent.addElement(ZimbraNamespace.E_NOTIFY);
@@ -1273,6 +1267,8 @@ public class SoapSession extends Session {
             ZimbraLog.session.warn("error fetching operation context for: " + zsc.getAuthtokenAccountId(), e);
             return;
         }
+
+        boolean debug = ZimbraLog.session.isDebugEnabled();
 
         PendingModifications pms = ntfn.mMailboxChanges;
         RemoteNotifications rns = ntfn.mRemoteChanges;
@@ -1310,8 +1306,13 @@ public class SoapSession extends Session {
                         return;
                     }
                 }
+                // sanity-check the returned element
+                if (!eCreated.hasChildren() && debug)
+                    ZimbraLog.session.debug("no serialied creates for item set: " + pms.created.keySet());
             }
             if (hasRemoteCreates) {
+                if (debug)
+                    ZimbraLog.session.debug("adding " + rns.created.size() + " proxied creates");
                 for (Element elt : rns.created)
                     eCreated.addElement(elt.detach());
             }
@@ -1326,14 +1327,21 @@ public class SoapSession extends Session {
                     if (chg.why != 0 && chg.what instanceof MailItem) {
                         MailItem item = (MailItem) chg.what;
                         // don't serialize out changes on too-large delegated conversation
-                        if (mbox != item.getMailbox() && item instanceof Conversation && ((Conversation) item).getMessageCount() > DELEGATED_CONVERSATION_SIZE_LIMIT)
+                        if (mbox != item.getMailbox() && item instanceof Conversation && ((Conversation) item).getMessageCount() > DELEGATED_CONVERSATION_SIZE_LIMIT) {
+                            if (debug)
+                                ZimbraLog.session.debug("skipping serialization of too-large remote conversation: " + new ItemId(item));
                             continue;
+                        }
     
                         ItemIdFormatter ifmt = new ItemIdFormatter(mAuthenticatedAccountId, item.getMailbox(), false);
                         try {
                             Element elt = ToXML.encodeItem(eModified, ifmt, octxt, item, chg.why);
-                            if (elt == null)
-                                addDeletedNotification(new ModificationKey(item), deletedIds);
+                            if (elt == null) {
+                                ModificationKey mkey = new ModificationKey(item);
+                                addDeletedNotification(mkey, deletedIds);
+                                if (debug)
+                                    ZimbraLog.session.debug("marking nonserialized item as a delete: " + mkey);
+                            }
                         } catch (ServiceException e) {
                             ZimbraLog.session.warn("error encoding item " + item.getId(), e);
                             return;
@@ -1342,8 +1350,13 @@ public class SoapSession extends Session {
                         ToXML.encodeMailbox(eModified, octxt, (Mailbox) chg.what, chg.why);
                     }
                 }
+                // sanity-check the returned element
+                if (!eModified.hasChildren() && debug)
+                    ZimbraLog.session.debug("no serialied modifies for item set: " + pms.modified.keySet());
             }
             if (hasRemoteModifies) {
+                if (debug)
+                    ZimbraLog.session.debug("adding " + rns.modified.size() + " proxied modifies");
                 for (Element elt : rns.modified)
                     eModified.addElement(elt.detach());
             }
