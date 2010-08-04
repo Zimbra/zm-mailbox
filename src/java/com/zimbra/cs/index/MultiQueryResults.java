@@ -30,10 +30,17 @@ import com.zimbra.common.service.ServiceException;
  * they should be combined somehow
  * <p>
  * The primary use of this class is for cross-mailbox-search, when you need to
- * aggregate search results together from many mailboxes
+ * aggregate search results together from many mailboxes.
+ *
+ * @deprecated Holding many {@link ZimbraQueryResults} objects causes too many
+ * Lucene IndexReader objects opened concurrently, which will likely result in
+ * {@link OutOfMemoryError}. Retrieve necessary information from
+ * {@link ZimbraQueryResults} and call {@link ZimbraQueryResults#doneWithSearchResults()}
+ * before processing another {@link ZimbraQueryResults}.
  *
  * @since Mar 17, 2005
  */
+@Deprecated
 public class MultiQueryResults implements ZimbraQueryResults {
     private SortBy mSortOrder;
     private ZimbraQueryResults[] mResults;
