@@ -47,9 +47,15 @@ public class LC {
         return value;
     }
 
+	// Force reload of the config file
+	//
     public static String[] getAllKeys() {
         return LocalConfig.getInstance().allKeys();
     }
+
+	public static void readConfig() {
+		LocalConfig.readConfig();
+	}
 
     static void init() {
         // This method is there to guarantee static initializer of this
