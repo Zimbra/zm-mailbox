@@ -4,7 +4,7 @@
 	<property name="src.java.dir" location="src/java" />
 	<property name="build.dir" location="build" />
 	<property name="build.classes.dir" location="${build.dir}/classes" />
-        <property name="javac.target" value="1.5"/>
+        <property name="javac.target" value="1.6"/>
 
 	<path id="all.java.path">
 		<pathelement location="${src.java.dir}" />
