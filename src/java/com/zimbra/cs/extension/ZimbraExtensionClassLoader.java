@@ -53,7 +53,8 @@ public class ZimbraExtensionClassLoader extends URLClassLoader {
      * @param parent parent class loader
      */
     ZimbraExtensionClassLoader(URL url, String clazz) {
-        super(new URL[]{url});
+        super(new URL[]{url},
+                ZimbraExtensionClassLoader.class.getClassLoader());
         mExtensionClassNames.add(clazz);
     }
 
