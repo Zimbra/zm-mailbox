@@ -159,6 +159,8 @@ class ImapProxy {
 
             ImapConfig config = conn.getImapConfig();
             final int oldTimeout = config != null ? config.getReadTimeout() : LC.javamail_imap_timeout.intValue();
+            // necessary because of subsequent race condition with req.cleanup()
+            final byte[] payload = req.toByteArray();
 
             mIdleThread = new Thread() {
                 @Override public void run() {
@@ -167,7 +169,7 @@ class ImapProxy {
                         // the standard aggressive read timeout is inappropriate for IDLE
                         conn.setReadTimeout(ImapSession.IMAP_IDLE_TIMEOUT_SEC);
                         // send the IDLE command; this call waits until the subsequent DONE is acknowledged
-                        boolean ok = proxyCommand(req.getTag(), req.toByteArray(), true, true);
+                        boolean ok = proxyCommand(req.getTag(), payload, true, true);
                         // restore the old read timeout
                         conn.setReadTimeout(oldTimeout);
                         // don't set <code>success</code> until we're past things that can throw IOExceptions
