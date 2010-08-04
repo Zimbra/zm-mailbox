@@ -405,39 +405,9 @@ public class UrlNamespace {
         			item = mbox.getCalendarItemByUid(octxt, uid);
         		}
             } else if (path.toLowerCase().endsWith(AddressObject.VCARD_EXTENSION)) {
-                try {
-                    String uid = URLDecoder.decode(path.substring(index + 1, path.length() - AddressObject.VCARD_EXTENSION.length()), "UTF-8");
-                    index = uid.indexOf(':');
-                    if (index > 0) {
-                        item = mbox.getContactById(octxt, Integer.parseInt(uid.substring(index+1)));
-                    } else {
-                        ZimbraQueryResults zqr = null;
-                        StringBuilder query = new StringBuilder();
-                        query.append("#").append(ContactConstants.A_vCardUID).append(":");
-                        query.append(uid);
-                        query.append(" OR ").append("#").append(ContactConstants.A_vCardURL).append(":");
-                        query.append(uid);
-                        ZimbraLog.dav.debug("query %s", query.toString());
-                        try {
-                            zqr = mbox.search(ctxt.getOperationContext(), query.toString(), new byte[] { MailItem.TYPE_CONTACT }, SortBy.NAME_ASCENDING, 10);
-                            if (zqr.hasNext()) {
-                                ZimbraHit hit = zqr.getNext();
-                                if (hit instanceof ContactHit) {
-                                    item = ((ContactHit)hit).getContact();
-                                }
-                            }
-                        } catch (Exception e) {
-                            ZimbraLog.dav.error("can't search for: uid="+uid, e);
-                        } finally {
-                            if (zqr != null)
-                                try {
-                                    zqr.doneWithSearchResults();
-                                } catch (ServiceException e) {}
-                        }
-                    }
-                } catch (UnsupportedEncodingException e) {
-                    ZimbraLog.dav.warn("Can't decode URL %s", path);
-                }
+                rs = AddressObject.getAddressObjectByUID(ctxt, path.substring(index + 1), account);
+                if (rs != null)
+                    return rs;
         	} else if (f.getId() == Mailbox.ID_FOLDER_INBOX || f.getId() == Mailbox.ID_FOLDER_SENT) {
         		ctxt.setPathInfo(path.substring(index+1));
         		// delegated scheduling and notification handling

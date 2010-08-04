@@ -4956,4 +4956,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="1102" name="zimbraPrefContactsExpandAppleContactGroups" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable"  since="7.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>Expand the contact groups in Apple Address Book format to Zimbra format over CardDAV.</desc>
+</attr>
+
 </attrs>

@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100728-1509 */
+    /* build: 6.0.2_BETA1_1111 jylee 20100803-1320 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -16373,6 +16373,83 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefContactsDisableAutocompleteOnContactGroupMembers(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefContactsDisableAutocompleteOnContactGroupMembers, "");
+        return attrs;
+    }
+
+    /**
+     * Expand the contact groups in Apple Address Book format to Zimbra
+     * format over CardDAV.
+     *
+     * @return zimbraPrefContactsExpandAppleContactGroups, or false if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1102)
+    public boolean isPrefContactsExpandAppleContactGroups() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefContactsExpandAppleContactGroups, false);
+    }
+
+    /**
+     * Expand the contact groups in Apple Address Book format to Zimbra
+     * format over CardDAV.
+     *
+     * @param zimbraPrefContactsExpandAppleContactGroups new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1102)
+    public void setPrefContactsExpandAppleContactGroups(boolean zimbraPrefContactsExpandAppleContactGroups) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefContactsExpandAppleContactGroups, zimbraPrefContactsExpandAppleContactGroups ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expand the contact groups in Apple Address Book format to Zimbra
+     * format over CardDAV.
+     *
+     * @param zimbraPrefContactsExpandAppleContactGroups new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1102)
+    public Map<String,Object> setPrefContactsExpandAppleContactGroups(boolean zimbraPrefContactsExpandAppleContactGroups, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefContactsExpandAppleContactGroups, zimbraPrefContactsExpandAppleContactGroups ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Expand the contact groups in Apple Address Book format to Zimbra
+     * format over CardDAV.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1102)
+    public void unsetPrefContactsExpandAppleContactGroups() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefContactsExpandAppleContactGroups, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Expand the contact groups in Apple Address Book format to Zimbra
+     * format over CardDAV.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1102)
+    public Map<String,Object> unsetPrefContactsExpandAppleContactGroups(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefContactsExpandAppleContactGroups, "");
         return attrs;
     }
 

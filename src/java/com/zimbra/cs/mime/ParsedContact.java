@@ -173,8 +173,6 @@ public class ParsedContact {
         if (strMap.isEmpty())
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
 
-        addNicknameAndTypeIfPDL(strMap);
-
         mFields = strMap;
 
         // Initialize attachments.
@@ -252,22 +250,6 @@ public class ParsedContact {
         return attachments;
     }
 
-    /** This is a workaround for bug 11900 that must go away before Frank GA */
-    private static void addNicknameAndTypeIfPDL(Map<String, String> fields) throws ServiceException {
-        if (!fields.containsKey(ContactConstants.A_dlist))
-            return;
-        String fileAs = fields.get(ContactConstants.A_fileAs);
-        if (fileAs == null)
-            throw ServiceException.INVALID_REQUEST("PDL: no " + ContactConstants.A_fileAs + " present", null);
-        String fileAsPrefix = ContactConstants.FA_EXPLICIT + ":";
-        if (!fileAs.startsWith(fileAsPrefix) || fileAs.length() <= fileAsPrefix.length())
-            throw ServiceException.INVALID_REQUEST("PDL: invalid" + ContactConstants.A_fileAs + ": " + fileAs, null);
-        String nickname = fileAs.substring(fileAsPrefix.length());
-        fields.put(ContactConstants.A_nickname, nickname);
-        fields.put(ContactConstants.A_type, ContactConstants.TYPE_GROUP);
-    }
-
-
     public Map<String, String> getFields() {
         return mFields;
     }
@@ -335,8 +317,6 @@ public class ParsedContact {
 
         if (mFields.isEmpty())
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
-
-        addNicknameAndTypeIfPDL(mFields);
 
         mDigest = null;
         mZDocuments = null;

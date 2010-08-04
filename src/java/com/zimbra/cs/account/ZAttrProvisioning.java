@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100728-1509 */
+    /* build: 6.0.2_BETA1_1111 jylee 20100803-1320 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5564,6 +5564,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1090)
     public static final String A_zimbraPrefContactsDisableAutocompleteOnContactGroupMembers = "zimbraPrefContactsDisableAutocompleteOnContactGroupMembers";
+
+    /**
+     * Expand the contact groups in Apple Address Book format to Zimbra
+     * format over CardDAV.
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1102)
+    public static final String A_zimbraPrefContactsExpandAppleContactGroups = "zimbraPrefContactsExpandAppleContactGroups";
 
     /**
      * Deprecated since: 6.0.5. We do not support cards view any more. See

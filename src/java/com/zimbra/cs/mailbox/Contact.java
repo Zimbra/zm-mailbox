@@ -728,20 +728,23 @@ public class Contact extends MailItem {
     }
     
     public Map<String,String> getXProps() {
+        return decodeXProps(mFields.get(ContactConstants.A_vCardXProps));
+    }
+    
+    public static Map<String,String> decodeXProps(String xpropStr) {
         HashMap<String,String> xprops = new HashMap<String,String>();
-        String xpropStr = mFields.get(ContactConstants.A_vCardXProps);
-        if (xpropStr != null) {
-            try {
-                JSONObject xpropObj = new JSONObject(xpropStr);
-                @SuppressWarnings("unchecked")
-                Iterator iter = xpropObj.keys();
-                while (iter.hasNext()) {
-                    String key = (String)iter.next();
-                    xprops.put(key, xpropObj.get(key).toString());
-                }
-            } catch (JSONException e) {
-                ZimbraLog.mailop.debug("can't get xprop %s", xpropStr, e);
+        if (xpropStr == null || xpropStr.length() == 0)
+            return xprops;
+        try {
+            JSONObject xpropObj = new JSONObject(xpropStr);
+            @SuppressWarnings("unchecked")
+            Iterator iter = xpropObj.keys();
+            while (iter.hasNext()) {
+                String key = (String)iter.next();
+                xprops.put(key, xpropObj.get(key).toString());
             }
+        } catch (JSONException e) {
+            ZimbraLog.mailop.debug("can't get xprop %s", xpropStr, e);
         }
         return xprops;
     }

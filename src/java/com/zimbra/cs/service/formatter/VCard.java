@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.net.QuotedPrintableCodec;
+import org.json.JSONException;
 
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Tag;
@@ -180,7 +181,7 @@ public class VCard {
         List<VCard> cards = new ArrayList<VCard>();
 
         Map<String, String> fields = new HashMap<String, String>();
-        Map<String, String> xprops = new HashMap<String, String>();
+        Map<String, Object> xprops = new HashMap<String, Object>();
         List<Attachment> attachments = new ArrayList<Attachment>();
 
         VCardProperty vcprop = new VCardProperty();
@@ -215,14 +216,30 @@ public class VCard {
             if (name.equals("")) {
                 throw ServiceException.PARSE_ERROR("missing property name in line " + line, null);
             } else if (name.startsWith("X-")) {
-                xprops.put(name, vcfDecode(vcprop.getValue()));
+                String decodedValue = vcfDecode(vcprop.getValue());
+                // handle multiple occurrences of xprops with the same key
+                Object val = xprops.get(name);
+                if (val != null) {
+                    if (val instanceof ArrayList) {
+                        @SuppressWarnings("unchecked")
+                        ArrayList<String> valArray = (ArrayList) val;
+                        valArray.add(decodedValue);
+                    } else {
+                        ArrayList<String> valArray = new ArrayList<String>();
+                        valArray.add((String)val);
+                        valArray.add(decodedValue);
+                        xprops.put(name, valArray);
+                    }
+                } else {
+                    xprops.put(name, decodedValue);
+                }
             } else if (!PROPERTY_NAMES.contains(name)) {
                 continue;
             } else if (name.equals("BEGIN")) {
                 if (++depth == 1) {
                     // starting a top-level vCard; reset state
                     fields = new HashMap<String, String>();
-                    xprops = new HashMap<String,String>();
+                    xprops = new HashMap<String,Object>();
                     attachments = new ArrayList<Attachment>();
                     cardstart = linestart;
                     emails = 0;
@@ -231,8 +248,28 @@ public class VCard {
                 continue;
             } else if (name.equals("END")) {
                 if (depth > 0 && depth-- == 1) {
-                    if (!xprops.isEmpty())
-                        fields.put(ContactConstants.A_vCardXProps, Contact.encodeXProps(xprops));
+                    if (!xprops.isEmpty()) {
+                        HashMap<String, String> newMap = new HashMap<String, String>();
+                        // handle multiple occurrences of xprops with the same key
+                        for (String k : xprops.keySet()) {
+                            Object v = xprops.get(k);
+                            String val = null;
+                            if (v instanceof ArrayList) {
+                                @SuppressWarnings("unchecked")
+                                ArrayList<String> valArray = (ArrayList) v;
+                                try {
+                                    val = Contact.encodeMultiValueAttr(valArray.toArray(new String[0]));
+                                } catch (JSONException e) {
+                                }
+                                if (val == null)
+                                    val = v.toString();
+                                newMap.put(k, val);
+                            } else {
+                                newMap.put(k, (String)v);
+                            }
+                        }
+                        fields.put(ContactConstants.A_vCardXProps, Contact.encodeXProps(newMap));
+                    }
                     
                     // finished a vCard; add to list if non-empty
                     if (!fields.isEmpty()) {
@@ -516,8 +553,15 @@ public class VCard {
         // sb.append("MAILER:Zimbra ").append(BuildInfo.VERSION).append("\r\n");
         if (includeXProps) {
             Map<String,String> xprops = con.getXProps();
-            for (String key : xprops.keySet())
-                sb.append(key).append(":").append(xprops.get(key)).append("\r\n");
+            for (String key : xprops.keySet()) {
+                try {
+                    for (String value : Contact.parseMultiValueAttr(xprops.get(key))) {
+                        sb.append(key).append(":").append(value).append("\r\n");
+                    }
+                } catch (JSONException e) {
+                    sb.append(key).append(":").append(xprops.get(key)).append("\r\n");
+                }
+            }
         }
         sb.append("END:VCARD\r\n");
         return new VCard(fn, sb.toString(), fields, attachments, uid);
