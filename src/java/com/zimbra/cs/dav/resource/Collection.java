@@ -108,7 +108,6 @@ public class Collection extends MailItemResource {
 
         // XXX aggregate into single call
         ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_FOLDER, mId));
-        ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_MOUNTPOINT, mId));
         ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_DOCUMENT, mId));
         ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_WIKI, mId));
         ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_CONTACT, mId));
