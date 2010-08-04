@@ -1117,7 +1117,7 @@ public abstract class Element implements Cloneable {
             }
             if (mChildren != null) {
                 for (Element child : listElements(key))
-                    if (child.getRawText() != null)
+                    if (!child.hasChildren())
                         child.detach();
             }
             // a null value leaves it unset; a non-null value places the attribute appropriately
@@ -1238,8 +1238,8 @@ public abstract class Element implements Cloneable {
             }
             if (mChildren != null) {
                 for (Element elt : mChildren) {
-                    if (elt.getName().equals(key) && elt.getRawText() != null)
-                        return elt.getRawText();
+                    if (elt.getName().equals(key))
+                        return elt.getText();
                 }
             }
             return defaultValue;
@@ -1416,6 +1416,12 @@ public abstract class Element implements Cloneable {
 
         System.out.println(new XMLElement("test").addAttribute("x", null).addAttribute("x", "", Disposition.CONTENT).addAttribute("x", "bar").addAttribute("x", null));
         System.out.println(new JSONElement("test").addAttribute("x", null).addAttribute("x", "foo", Disposition.CONTENT).addAttribute("x", "bar").addAttribute("x", null));
+
+        try {
+            System.out.println("foo: |" + Element.parseXML("<test><foo/></test>").getAttribute("foo") + "|");
+        } catch (Exception x) {
+            System.out.println("error parsing XML element: " + x);
+        }
     }
 
     private static Element testMessage(Element env, SoapProtocol proto, QName qm) {
