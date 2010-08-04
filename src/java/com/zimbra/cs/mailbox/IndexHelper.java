@@ -958,39 +958,6 @@ public class IndexHelper {
             }
         }
     }
-    
-    /*
-     * The bug actually has been introduced since 1.4 (GNR-D1), but was 
-     * detected in GNR 6.0.4, and fixed in 6.0.5.  Mailbox version for GNR 6.0.5 is 1.7.
-     * 
-     * This upgrade step is triggered when !MailboxVersion.atLeast(1, 7)
-     * instead of MailboxVersion.atLeast(1, 4), because there could be users 
-     * already upgraded to 1.4 or above, just never found this bug bothering.
-     * 
-     */
-    void upgradeMailboxTo1_7() {
-        // bug 42874: Re-Index all contacts 
-        
-        ZimbraLog.mailbox.info("Upgrading Mailbox " + mMbox.getId() + " contact index to mailbox version 1.7");
-        
-        Set<Byte> types = new HashSet<Byte>();
-        types.add(MailItem.TYPE_CONTACT);
-        if (!types.isEmpty()) {
-            ReIndexTask task = new ReIndexTask(null, types, null, false) {
-                @Override
-                protected void onCompletion() {
-                    ZimbraLog.mailbox.info("Mailbox contact index has been successuflly upgraded to mailbox version 1.7");
-                }
-            };
-            try {
-                startReIndex(task, true);
-            } catch (ServiceException e) {
-                ZimbraLog.mailbox.warn("Failed to reindex contacts on mailbox upgrade initialization." +
-                "  Skipping (you will have to manually reindex contacts for this mailbox)"); 
-            }
-        }
-    }
-    
 
     private static final int NO_CHANGE = -1;
 
