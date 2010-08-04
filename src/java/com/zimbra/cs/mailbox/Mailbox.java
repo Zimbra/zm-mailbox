@@ -466,10 +466,8 @@ public class Mailbox {
             }
 
             // bug 41893: revert folder colors back to mapped value
-            // bug 42874: re-index all contacts
             if (!getVersion().atLeast(1, 7)) {
                 MailboxUpgrade.upgradeTo1_7(this);
-                mIndexHelper.upgradeMailboxTo1_7();
                 updateVersion(new MailboxVersion((short) 1, (short) 7));
             }
 
