@@ -54,7 +54,7 @@ public class LC {
     }
 
 	public static void readConfig() {
-		LocalConfig.readConfig();
+		LocalConfig.readConfig(null);
 	}
 
     static void init() {
