@@ -153,29 +153,33 @@ public class DbDataSource {
     	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
     	ZimbraLog.datasource.debug("Deleting %d mappings for dataSource %s", itemIds.size(), ds.getName());
-
+        List<List<Integer>> splitIds = ListUtil.split(itemIds, Db.getINClauseBatchSize());
         synchronized (getSynchronizer(mbox)) {
             Connection conn = null;
             PreparedStatement stmt = null;
             try {
                 conn = DbPool.getConnection(mbox);
-                StringBuilder sb = new StringBuilder();
-                sb.append("DELETE FROM ");
-                sb.append(getTableName(mbox));
-                sb.append(" WHERE ");
-                sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
-                sb.append(" data_source_id = ? AND ");
-                sb.append(DbUtil.whereIn("item_id", itemIds.size()));
-                stmt = conn.prepareStatement(sb.toString());
-
-                int i = 1;
-                i = DbMailItem.setMailboxId(stmt, mbox, i);
-                stmt.setString(i++, ds.getId());
-                for (int itemId : itemIds)
-                    stmt.setInt(i++, itemId);
-
-                int numRows = stmt.executeUpdate();
-                conn.commit();
+                int numRows = 0;
+                for (List<Integer> curIds : splitIds) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("DELETE FROM ");
+                    sb.append(getTableName(mbox));
+                    sb.append(" WHERE ");
+                    sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
+                    sb.append(" data_source_id = ? AND ");
+                    sb.append(DbUtil.whereIn("item_id", curIds.size()));
+                    stmt = conn.prepareStatement(sb.toString());
+    
+                    int i = 1;
+                    i = DbMailItem.setMailboxId(stmt, mbox, i);
+                    stmt.setString(i++, ds.getId());
+                    for (int itemId : curIds)
+                        stmt.setInt(i++, itemId);
+    
+                    numRows += stmt.executeUpdate();
+                    conn.commit();
+                    stmt.close();
+                }
                 ZimbraLog.datasource.debug("Deleted %d mappings for %s", numRows, ds.getName());
             } catch (SQLException e) {
                 throw ServiceException.FAILURE("Unable to delete mapping for dataSource "+ds.getName(), e);
