@@ -16,157 +16,155 @@
 package com.zimbra.cs.index;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 
 /**
- * A QueryResults set which cross multiple mailboxes.
+ * {@link ZimbraQueryResults} that collects hits from multiple mailboxes.
  * <p>
- * Take a bunch of QueryResults (each sorted with the same sort-order) and
- * iterate them in order....kind of like a MergeSort.
- * <p>
- * TODO - this class duplicates functionality in UnionQueryOperation,
- * they should be combined somehow
+ * Take a bunch of {@link ZimbraQueryResults} (each sorted with the same
+ * sort-order) and iterate them in order....kind of like a MergeSort.
  * <p>
  * The primary use of this class is for cross-mailbox-search, when you need to
  * aggregate search results together from many mailboxes.
  *
- * @deprecated Holding many {@link ZimbraQueryResults} objects causes too many
- * Lucene IndexReader objects opened concurrently, which will likely result in
- * {@link OutOfMemoryError}. Retrieve necessary information from
- * {@link ZimbraQueryResults} and call {@link ZimbraQueryResults#doneWithSearchResults()}
- * before processing another {@link ZimbraQueryResults}.
- *
  * @since Mar 17, 2005
+ * @author anandp
+ * @author tim
+ * @author ysasaki
  */
-@Deprecated
 public class MultiQueryResults implements ZimbraQueryResults {
-    private SortBy mSortOrder;
-    private ZimbraQueryResults[] mResults;
-    private ZimbraHit mCachedNextHit = null;
+    private final int limit;
+    private final SortBy sortOrder;
+    private final Comparator<ZimbraHit> comparator;
+    private List<ZimbraHit> hits = new ArrayList<ZimbraHit>();
+    private int next = 0; // for interation
+    private int estimatedResultSize = 0;
+    private List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
 
-    public MultiQueryResults(ZimbraQueryResults[] results, SortBy sortOrder) {
-        mSortOrder = sortOrder;
-        mResults = new ZimbraQueryResults[results.length];
-        for (int i = 0; i < results.length; i++) {
-            mResults[i] = HitIdGrouper.Create(results[i], sortOrder);
-        }
+    public MultiQueryResults(int limit, SortBy sort) {
+        this.limit = limit;
+        sortOrder = sort;
+        comparator = ZimbraHit.getSortAndIdComparator(sort);
     }
 
+    @Override
     public SortBy getSortBy() {
-        return mSortOrder;
+        return sortOrder;
     }
 
-    public ZimbraHit peekNext() throws ServiceException {
-        bufferNextHit();
-        return mCachedNextHit;
-    }
-
-    private void internalGetNextHit() throws ServiceException {
-        if (mCachedNextHit == null) {
-            if (mSortOrder == SortBy.NONE) {
-                for (ZimbraQueryResults res : mResults) {
-                    mCachedNextHit = res.getNext();
-                    if (mCachedNextHit != null) {
-                        return;
-                    }
-                }
-                // no more results!
-
-            } else {
-                // mergesort: loop through QueryOperations and find the "best" hit
-
-                int currentBestHitOffset = -1;
-                ZimbraHit currentBestHit = null;
-                for (int i = 0; i < mResults.length; i++) {
-                    ZimbraQueryResults op = mResults[i];
-                    if (op.hasNext()) {
-                        if (currentBestHitOffset == -1) {
-                            currentBestHitOffset = i;
-                            currentBestHit = op.peekNext();
-                        } else {
-                            ZimbraHit opNext = op.peekNext();
-                            int result = opNext.compareBySortField(mSortOrder, currentBestHit);
-                            if (result < 0) {
-                                // "before"
-                                currentBestHitOffset = i;
-                                currentBestHit = opNext;
-                            }
-                        }
-                    }
-                }
-                if (currentBestHitOffset > -1) {
-                    mCachedNextHit = mResults[currentBestHitOffset].getNext();
-                    assert(mCachedNextHit == currentBestHit);
-                }
-            }
+    @Override
+    public ZimbraHit peekNext() {
+        try {
+            return hits.get(next);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
         }
     }
 
-    public ZimbraHit skipToHit(int hitNo) throws ServiceException {
-        resetIterator();
-        for (int i = 0; i < hitNo; i++) {
-            if (!hasNext()) {
-                return null;
-            }
-            getNext();
-        }
+    @Override
+    public ZimbraHit skipToHit(int hitNo) {
+        next = hitNo;
         return getNext();
     }
 
-    public boolean hasNext() throws ServiceException {
-        return bufferNextHit();
+    @Override
+    public boolean hasNext() {
+        return next < hits.size();
     }
 
-    public boolean bufferNextHit() throws ServiceException {
-        if (mCachedNextHit == null) {
-            internalGetNextHit();
-        }
-        return (mCachedNextHit != null);
+    @Override
+    public void resetIterator() {
+        next = 0;
     }
 
-    public void resetIterator() throws ServiceException {
-        for (int i = 0; i < mResults.length; i++) {
-            mResults[i].resetIterator();
-        }
-    }
-
-    public ZimbraHit getFirstHit() throws ServiceException {
+    @Override
+    public ZimbraHit getFirstHit() {
         resetIterator();
         return getNext();
     }
 
-    public ZimbraHit getNext() throws ServiceException {
-        bufferNextHit();
-        ZimbraHit toRet = mCachedNextHit;
-        mCachedNextHit = null;
-        return toRet;
-    }
-
-    public void doneWithSearchResults() throws ServiceException {
-        for (int i = 0; i < mResults.length; i++) {
-            mResults[i].doneWithSearchResults();
+    @Override
+    public ZimbraHit getNext() {
+        try {
+            return hits.get(next++);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
         }
     }
 
+    @Override
+    public void doneWithSearchResults() {
+        hits = null;
+        queryInfo = null;
+    }
+
+    @Override
     public List<QueryInfo> getResultInfo() {
-        List<QueryInfo> toRet = new ArrayList<QueryInfo>();
-        for (ZimbraQueryResults results : mResults) {
-            toRet.addAll(results.getResultInfo());
-        }
-        return toRet;
+        return queryInfo;
     }
 
-    public int estimateResultSize() throws ServiceException {
-        long total = 0;
-        for (ZimbraQueryResults results : mResults) {
-            total += results.estimateResultSize();
-        }
-        if (total > Integer.MAX_VALUE) {
-            return Integer.MAX_VALUE;
+    @Override
+    public int estimateResultSize() {
+        return estimatedResultSize;
+    }
+
+    /**
+     * Add the specified {@link ZimbraQueryResults} to this result. The adding
+     * result must be sorted by the same order as this result.
+     * <p>
+     * Holding many {@link ZimbraQueryResults} objects causes too many Lucene
+     * IndexReader objects opened concurrently, which will likely result in
+     * {@link OutOfMemoryError}. The caller is expected to close the {@link ZimbraQueryResults}
+     * with {@link ZimbraQueryResults#doneWithSearchResults()} immediately after
+     * this method, which implies that all {@link ZimbraHit} contained in the
+     * {@link ZimbraQueryResults} must be still accessible even after closing
+     * the {@link ZimbraQueryResults}.
+     *
+     * @param result result to add
+     * @throws ServiceException error
+     */
+    public void add(ZimbraQueryResults result) throws ServiceException {
+        assert(sortOrder == result.getSortBy());
+
+        if (hits.isEmpty()) {
+            for (int i = 0; i < limit && result.hasNext(); i++) {
+                hits.add(result.getNext());
+            }
         } else {
-            return (int) total;
+            ZimbraHit last = hits.get(hits.size() - 1);
+            while (result.hasNext()) {
+                ZimbraHit hit = result.getNext();
+                if (comparator.compare(last, hit) > 0) {
+                    hits.add(hit);
+                } else {
+                    break;
+                }
+            }
+            // if the list grew, sort it, then shrink it down to limit.
+            if (last != hits.get(hits.size() - 1)) {
+                Collections.sort(hits, comparator);
+                while (hits.size() > limit) {
+                    hits.remove(hits.size() - 1);
+                }
+            }
+        }
+
+        queryInfo.addAll(result.getResultInfo());
+        estimatedResultSize += result.estimateResultSize();
+    }
+
+    /**
+     * Shrink the list by removing entries from the head to the offset.
+     *
+     * @param offset entries at and after this offset will survive
+     */
+    public void shrink(int offset) {
+        for (int i = 0; i < offset && !hits.isEmpty(); i++) {
+            hits.remove(0);
         }
     }
 

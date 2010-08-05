@@ -128,6 +128,7 @@ public class IndexEditor {
             mMailboxId = mailboxId;
         }
 
+        @Override
         public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy)
             throws IOException, MailServiceException, ParseException, ServiceException {
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
@@ -161,11 +162,11 @@ public class IndexEditor {
             }
         }
 
-
+        @Override
         public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy)
             throws IOException, MailServiceException, ParseException, ServiceException {
 
-            ZimbraQueryResults[] res = new ZimbraQueryResults[mMailboxId.length];
+            MultiQueryResults all = new MultiQueryResults(100, sortBy);
             for (int i = 0; i < mMailboxId.length; i++) {
                 Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId[i]);
                 SearchParams params = new SearchParams();
@@ -177,9 +178,14 @@ public class IndexEditor {
                 params.setPrefetch(true);
                 params.setMode(SearchResultMode.NORMAL);
                 ZimbraQuery zq = new ZimbraQuery(null, SoapProtocol.Soap12, mbox, params);
-                res[i] = zq.execute(/*null, SoapProtocol.Soap12*/);
+                ZimbraQueryResults result = zq.execute(/*null, SoapProtocol.Soap12*/);
+                try {
+                    all.add(result);
+                } finally {
+                    result.doneWithSearchResults();
+                }
             }
-            return HitIdGrouper.Create(new MultiQueryResults(res, sortBy), sortBy);
+            return HitIdGrouper.Create(all, sortBy);
         }
     }
 
@@ -356,9 +362,7 @@ public class IndexEditor {
     }
 
     public static class TwoTerms implements Comparable<TwoTerms> {
-        /* (non-Javadoc)
-         * @see java.lang.Comparable#compareTo(java.lang.Object)
-         */
+        @Override
         public int compareTo(TwoTerms o) {
             TwoTerms other = (TwoTerms)o;
             if (other.mCount == mCount) {
@@ -419,6 +423,7 @@ public class IndexEditor {
     public static List<Object> inputs = new ArrayList<Object>();
 
     private static class IndexEditorTcpThread implements Runnable {
+        @Override
         public void run() {
             sTcpServer.run();
         }
