@@ -35,6 +35,7 @@ public class MockProvisioning extends Provisioning {
     private Map<String, Account> accounts = new HashMap<String, Account>();
     private Map<String, List<MimeTypeInfo>> mimeConfig =
         new HashMap<String, List<MimeTypeInfo>>();
+    private Config config = new Config(new HashMap<String, Object>(), this);
 
     @Override
     public Account createAccount(String email, String password,
@@ -72,9 +73,14 @@ public class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs,
+    public Config getConfig() {
+        return config;
+    }
+
+    @Override
+    public void modifyAttrs(Entry entry, Map<String, ? extends Object> attrs,
             boolean checkImmutable) {
-        throw new UnsupportedOperationException();
+        entry.setAttrs(new HashMap<String, Object>(attrs));
     }
 
     @Override
@@ -112,11 +118,6 @@ public class MockProvisioning extends Provisioning {
 
     @Override
     public boolean healthCheck() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Config getConfig() {
         throw new UnsupportedOperationException();
     }
 
