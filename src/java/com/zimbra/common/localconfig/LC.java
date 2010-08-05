@@ -53,7 +53,7 @@ public class LC {
         return LocalConfig.getInstance().allKeys();
     }
 
-	public static void readConfig() {
+	public static void readConfig() throws DocumentException, ConfigException {
 		LocalConfig.readConfig(null);
 	}
 
