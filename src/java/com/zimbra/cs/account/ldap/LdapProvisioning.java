@@ -876,7 +876,7 @@ public class LdapProvisioning extends Provisioning {
             } else {
                 // We are creating a "subclass" of account (e.g. calendar resource), get just the
                 // zimbra default object classes for account, then add extra object classes needed
-                // by the subclass.  All object classes need by the subclass (calendar resource)
+                // by the subclass.  All object classes needed by the subclass (calendar resource)
                 // were figured out in the createCalendarResource method: including the zimbra
                 // default (zimbracalendarResource) and any extra ones configured via
                 // globalconfig.zimbraCalendarResourceExtraObjectClass.
@@ -897,6 +897,33 @@ public class LdapProvisioning extends Provisioning {
                 for (int i = 0; i < additionalObjectClasses.length; i++)
                     ocs.add(additionalObjectClasses[i]);
             }
+            
+            /* bug 48226
+             * 
+             * Check if any of the OCs in the backup is a structural OC that subclasses
+             * our default OC: organizationalPerson.  If so, add that OC now while creating
+             * the account, because it cannot be modified later.
+             */
+            if (restoring && origAttrs != null) {
+                Object ocsInBackupObj = origAttrs.get(A_objectClass);
+                String[] ocsInBackup;
+                if (ocsInBackupObj instanceof String) {
+                    ocsInBackup = new String[1];
+                    ocsInBackup[0] = (String)ocsInBackupObj;
+                } else if (ocsInBackupObj instanceof String[]) {
+                    ocsInBackup = (String[])ocsInBackupObj;
+                } else {
+                    throw ServiceException.FAILURE("internal error", null);
+                }
+                
+                Set<String> updatedOCs = new HashSet<String>();
+                
+                String mostSpecificOC = LdapObjectClassHierarchy.getMostSpecificOC(ocsInBackup, LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC);
+                
+                if (!LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC.equalsIgnoreCase(mostSpecificOC))
+                    ocs.add(mostSpecificOC);
+            }
+            
             Attribute oc = LdapUtil.addAttr(attrs, A_objectClass, ocs);
 
 

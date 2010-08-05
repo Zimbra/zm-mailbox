@@ -24,6 +24,8 @@ import com.zimbra.common.service.ServiceException;
 
 public class LdapObjectClass {
     
+    static String ZIMBRA_DEFAULT_PERSON_OC = "organizationalPerson";
+    
     private static void addExtraObjectClasses(Set<String> ocs, LdapProvisioning prov, String extraOCAttr) throws ServiceException {
         String[] extraObjectClasses = prov.getConfig().getMultiAttr(extraOCAttr);
         for (String eoc : extraObjectClasses) {
@@ -41,7 +43,7 @@ public class LdapObjectClass {
     public static Set<String> getAccountObjectClasses(LdapProvisioning prov, boolean zimbraDefaultOnly) throws ServiceException {
         Set<String> ocs = new LinkedHashSet<String>();
         
-        ocs.add("organizationalPerson");
+        ocs.add(ZIMBRA_DEFAULT_PERSON_OC);
         ocs.add(LdapProvisioning.C_zimbraAccount);
         
         if (!zimbraDefaultOnly)
