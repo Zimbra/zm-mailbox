@@ -88,7 +88,10 @@ public class SendDeliveryReport extends MailDocumentHandler {
         MimeMessage mm = msg.getMimeMessage();
         Account owner = msg.getMailbox().getAccount();
 
-        String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
+        String charset = authAccount.getPrefMailDefaultCharset();
+        if (charset == null)
+            charset = MimeConstants.P_CHARSET_UTF8;
+
         try {
             InternetAddress[] recipients = Mime.parseAddressHeader(mm, "Disposition-Notification-To");
             if (recipients == null || recipients.length == 0)
@@ -103,7 +106,7 @@ public class SendDeliveryReport extends MailDocumentHandler {
             report.setHeader("Auto-Submitted", "auto-replied (zimbra; read-receipt)");
             report.setHeader("Precedence", "bulk");
 
-            if (Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraAutoSubmittedNullReturnPath, true))
+            if (Provisioning.getInstance().getConfig().isAutoSubmittedNullReturnPath())
                 report.setEnvelopeFrom("<>");
             else
                 report.setEnvelopeFrom(authAccount.getName());
@@ -146,7 +149,7 @@ public class SendDeliveryReport extends MailDocumentHandler {
         String dateStr = "???";
         Calendar cal = DateUtil.parseRFC2822DateAsCalendar(mm.getHeader("Date", null));
         if (cal != null) {
-            DateFormat format = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, lc);
+            DateFormat format = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, lc);
             format.setTimeZone(TimeZone.getTimeZone("GMT" + DateUtil.getTimezoneString(cal)));
             dateStr = format.format(cal.getTime());
         }
