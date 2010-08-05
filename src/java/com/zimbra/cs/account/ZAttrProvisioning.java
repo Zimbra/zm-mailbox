@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 jylee 20100803-1320 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100804-2314 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5447,10 +5447,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarReminderDuration2 = "zimbraPrefCalendarReminderDuration2";
 
     /**
-     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
-     * used. Orig desc: The email the reminder goes to.
+     * RFC822 email address for receiving reminders for appointments and
+     * tasks
      *
-     * @since ZCS 5.0.0
+     * @since ZCS 7.0.0
      */
     @ZAttr(id=575)
     public static final String A_zimbraPrefCalendarReminderEmail = "zimbraPrefCalendarReminderEmail";
@@ -5473,10 +5473,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarReminderMobile = "zimbraPrefCalendarReminderMobile";
 
     /**
-     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
-     * used. Orig desc: To send email or to not send email is the question.
+     * whether or not email reminders for appointments and tasks are enabled
      *
-     * @since ZCS 5.0.0
+     * @since ZCS 7.0.0
      */
     @ZAttr(id=576)
     public static final String A_zimbraPrefCalendarReminderSendEmail = "zimbraPrefCalendarReminderSendEmail";

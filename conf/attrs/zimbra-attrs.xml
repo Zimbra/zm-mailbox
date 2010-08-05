@@ -2890,15 +2890,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <deprecateDesc>was added for Yahoo calendar, no longer used</deprecateDesc>
 </attr>
 
-<attr id="575" name="zimbraPrefCalendarReminderEmail" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="6.0.0_BETA1">
-  <desc>The email the reminder goes to.</desc>
-  <deprecateDesc>was added for Yahoo calendar, no longer used</deprecateDesc>
+<attr id="575" name="zimbraPrefCalendarReminderEmail" type="email" max="256" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="7.0.0">
+  <desc>RFC822 email address for receiving reminders for appointments and tasks</desc>
 </attr>
 
-<attr id="576" name="zimbraPrefCalendarReminderSendEmail" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="6.0.0_BETA1">
-  <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>To send email or to not send email is the question.</desc>
-  <deprecateDesc>was added for Yahoo calendar, no longer used</deprecateDesc>
+<attr id="576" name="zimbraPrefCalendarReminderSendEmail" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="7.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether or not email reminders for appointments and tasks are enabled</desc>
 </attr>
 
 <attr id="577" name="zimbraPrefCalendarReminderMobile" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="6.0.0_BETA1">
