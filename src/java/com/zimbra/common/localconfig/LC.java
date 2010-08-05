@@ -16,6 +16,7 @@
 package com.zimbra.common.localconfig;
 
 import com.zimbra.common.util.Constants;
+import org.dom4j.DocumentException;
 
 import java.io.File;
 
