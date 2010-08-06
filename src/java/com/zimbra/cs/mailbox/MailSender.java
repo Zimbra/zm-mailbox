@@ -57,7 +57,6 @@ import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
@@ -240,6 +239,69 @@ public class MailSender {
             } catch (NoSuchItemException nsie) { }
         }
         return folderId;
+    }
+    
+    /**
+     * Getter save to sent flag - exposed for OfflineMailSender 
+     */
+    protected Boolean getSaveToSent() {
+        return mSaveToSent;
+    }
+
+    /**
+     * Getter for Collection of contacts to save - exposed for OfflineMailSender 
+     */
+    protected Collection<InternetAddress> getSaveContacts() {
+        return mSaveContacts;
+    }
+
+    /**
+     * Getter for original message Id - exposed for OfflineMailSender 
+     */
+    protected ItemId getOriginalMessageId() {
+        return mOriginalMessageId;
+    }
+
+    /**
+     * Getter for reply type - exposed for OfflineMailSender
+     */
+    protected String getReplyType() {
+        return mReplyType;
+    }
+
+    /**
+     * Getter for identity - exposed for OfflineMailSender 
+     */
+    protected Identity getIdentity() {
+        return mIdentity;
+    }
+
+    /**
+     * Getter for force partial send flag - exposed for OfflineMailSender
+     */
+    protected boolean isForceSendPartial() {
+        return mForceSendPartial;
+    }
+
+    /**
+     * Getter for reply to sender flag - exposed for OfflineMailSender
+     */
+    protected boolean isReplyToSender() {
+        return mReplyToSender;
+    }
+
+    /**
+     * Getter for recipient List - exposed for OfflineMailSender 
+     */
+    protected List<String> getRecipients() {
+        return mRecipients;
+    }
+
+    /**
+     * Getter for Collection of uploads - exposed for OfflineMailSender  
+     */
+    protected Collection<Upload> getUploads() {
+        return mUploads;
     }
 
     public static enum ReplyForwardType {
