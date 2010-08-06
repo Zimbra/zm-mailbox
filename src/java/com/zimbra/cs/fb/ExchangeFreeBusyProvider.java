@@ -525,8 +525,10 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	    		case UNAVAILABLE:
 	    			mList.addInterval(new Interval(start, start + intervalInMillis, IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE));
 	    			break;
+                case NODATA:
+                    mList.addInterval(new Interval(start, start + intervalInMillis, IcalXmlStrMap.FBTYPE_NODATA));
+                    break;
 	    		case FREE:
-	    		case NODATA:
 	    		default:
 	    			break;
 	    		}
