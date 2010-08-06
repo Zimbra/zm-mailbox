@@ -16,6 +16,7 @@
 package com.zimbra.common.localconfig;
 
 import com.zimbra.common.util.Constants;
+import org.dom4j.DocumentException;
 
 import java.io.File;
 
@@ -47,9 +48,15 @@ public class LC {
         return value;
     }
 
+	// Force reload of the config file
+	//
     public static String[] getAllKeys() {
         return LocalConfig.getInstance().allKeys();
     }
+
+	public static void readConfig() throws DocumentException, ConfigException {
+		LocalConfig.readConfig(null);
+	}
 
     static void init() {
         // This method is there to guarantee static initializer of this
