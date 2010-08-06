@@ -10,6 +10,8 @@ Tim's short-short summary of the query grammar as of now (updated)
    subject:[>,<,>=,<=]{TEXT}
    in:{FOLDER_LABEL}   // search in a specific folder
    under:{FOLDER_LABEL} // in specified folder AND ALL SUBFOLERS
+   inid:{FOLDER_ID} // search in a specific folder
+   underid:{FOLDER_ID} // in specified folder AND ALL SUBFOLDERS
    has:{"attachment"|OBJECT_TYPE}
    filename:{FILENAME}
    type:{RAW_MIME_TYPE|FRIENDLY_MIME_TYPE}

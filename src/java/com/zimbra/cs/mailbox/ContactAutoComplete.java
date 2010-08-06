@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
@@ -149,6 +150,7 @@ public class ContactAutoComplete {
         }
 
         // ascending order
+        @Override
         public int compareTo(ContactEntry that) {
             int nameCompare = this.getKey().compareToIgnoreCase(that.getKey());
             if (nameCompare == 0) {
@@ -279,7 +281,7 @@ public class ContactAutoComplete {
         long t2 = System.currentTimeMillis();
 
         if (mIncludeGal && result.entries.size() < limit) {
-            queryGal(str, limit, result);
+            queryGal(str, result);
         }
         long t3 = System.currentTimeMillis();
 
@@ -287,7 +289,7 @@ public class ContactAutoComplete {
         return result;
     }
 
-    private void queryGal(String str, int limit, AutoCompleteResult result) throws ServiceException {
+    private void queryGal(String str, AutoCompleteResult result) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(Provisioning.AccountBy.id, mAccountId);
         ZimbraLog.gal.debug("querying gal");
@@ -323,7 +325,7 @@ public class ContactAutoComplete {
             this.str = str;
         }
 
-        public void handleContactAttrs(Map<String,? extends Object> attrs) throws ServiceException {
+        public void handleContactAttrs(Map<String,? extends Object> attrs) {
             addMatchedContacts(str, attrs, FOLDER_ID_GAL, null, result);
         }
 
@@ -441,34 +443,36 @@ public class ContactAutoComplete {
         }
     }
 
-    private void queryFolders(String str, Collection<Integer> folders, int limit, AutoCompleteResult result) throws ServiceException {
+    private void queryFolders(String str, Collection<Integer> folderIDs, int limit, AutoCompleteResult result) throws ServiceException {
         str = str.toLowerCase();
         ZimbraQueryResults qres = null;
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
             OperationContext octxt = new OperationContext(mbox);
-            HashMap<ItemId,Integer> mountpoints = new HashMap<ItemId,Integer>();
-            if (folders == null) {
-                ArrayList<Integer> allFolders = new ArrayList<Integer>();
-                for (Folder f : mbox.getFolderList(octxt, SortBy.NONE)) {
-                    boolean isMountpoint = false;
-                    if (f.getDefaultView() != MailItem.TYPE_CONTACT) {
+            List<Folder> folders = new ArrayList<Folder>();
+            Map<ItemId, Mountpoint> mountpoints = new HashMap<ItemId, Mountpoint>();
+            if (folderIDs == null) {
+                for (Folder folder : mbox.getFolderList(octxt, SortBy.NONE)) {
+                    if (folder.getDefaultView() != MailItem.TYPE_CONTACT) {
                         continue;
                     }
-                    if (f instanceof Mountpoint) {
-                        mountpoints.put(((Mountpoint) f).getTarget(), f.getId());
-                        isMountpoint = true;
-                    }
-                    if (!isMountpoint || mIncludeSharedFolders) {
-                        allFolders.add(f.getId());
+                    if (folder instanceof Mountpoint) {
+                        Mountpoint mp = (Mountpoint) folder;
+                        mountpoints.put(mp.getTarget(), mp);
+                        if (mIncludeSharedFolders) {
+                            folders.add(folder);
+                        }
+                    } else {
+                        folders.add(folder);
                     }
                 }
-                folders = allFolders;
             } else {
-                for (int fid : folders) {
-                    Folder f = mbox.getFolderById(octxt, fid);
-                    if (f instanceof Mountpoint) {
-                        mountpoints.put(((Mountpoint) f).getTarget(), fid);
+                for (int fid : folderIDs) {
+                    Folder folder = mbox.getFolderById(octxt, fid);
+                    folders.add(folder);
+                    if (folder instanceof Mountpoint) {
+                        Mountpoint mp = (Mountpoint) folder;
+                        mountpoints.put(mp.getTarget(), mp);
                     }
                 }
             }
@@ -479,33 +483,38 @@ public class ContactAutoComplete {
                 ZimbraHit hit = qres.getNext();
                 Map<String,String> fields = null;
                 ItemId id = null;
-                int folderId = 0;
+                int fid = 0;
                 if (hit instanceof ContactHit) {
                     Contact c = ((ContactHit) hit).getContact();
                     ZimbraLog.gal.debug("hit: " + c.getId());
                     fields = c.getFields();
                     id = new ItemId(c);
-                    folderId = c.getFolderId();
+                    fid = c.getFolderId();
                 } else if (hit instanceof ProxiedHit) {
                     fields = new HashMap<String, String>();
-                    Element top = ((ProxiedHit)hit).getElement();
+                    Element top = ((ProxiedHit) hit).getElement();
                     id = new ItemId(top.getAttribute(MailConstants.A_ID), (String) null);
-                    ZimbraLog.gal.debug("hit: "+id);
+                    ZimbraLog.gal.debug("hit: " + id);
                     ItemId fiid = new ItemId(top.getAttribute(MailConstants.A_FOLDER), (String) null);
-                    folderId = mountpoints.get(fiid);
+                    Mountpoint mp = mountpoints.get(fiid);
+                    if (mp != null) {
+                        // if the hit came from a descendant folder of
+                        // the mountpoint, we don't have a peer folder ID.
+                        fid = mp.getId();
+                    }
                     for (Element elt : top.listElements(MailConstants.E_ATTRIBUTE)) {
                         try {
                             String name = elt.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
                             fields.put(name, elt.getText());
                         } catch (ServiceException se) {
-                            ZimbraLog.gal.warn("error handling proxied query result "+hit);
+                            ZimbraLog.gal.warn("error handling proxied query result " + hit);
                         }
                     }
                 } else {
                     continue;
                 }
 
-                addMatchedContacts(str, fields, folderId, id, result);
+                addMatchedContacts(str, fields, fid, id, result);
                 if (!result.canBeCached) {
                     return;
                 }
@@ -521,19 +530,22 @@ public class ContactAutoComplete {
         }
     }
 
-    private String generateQuery(String query, Collection<Integer> folders) {
-        StringBuilder buf = new StringBuilder();
+    private String generateQuery(String query, Collection<Folder> folders) {
+        StringBuilder buf = new StringBuilder("(");
         boolean first = true;
-        buf.append("(");
-        for (int fid : folders) {
+        for (Folder folder : folders) {
+            int fid = folder.getId();
             if (fid < 1) {
                 continue;
             }
-            if (!first) {
+            if (first) {
+                first = false;
+            } else {
                 buf.append(" OR ");
             }
-            first = false;
-            buf.append("inid:").append(fid);
+            // include descendant folders if mountpoint
+            buf.append(folder instanceof Mountpoint ? "underid:" : "inid:");
+            buf.append(fid);
         }
         buf.append(") AND contact:(").append(query).append(")");
         return buf.toString();
