@@ -38,6 +38,7 @@ import net.freeutils.tnef.MAPIValue;
 import net.freeutils.tnef.Message;
 import net.freeutils.tnef.RawInputStream;
 import net.freeutils.tnef.TNEFInputStream;
+import net.freeutils.tnef.TNEFUtils;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
@@ -103,9 +104,37 @@ public class SchedulingViewOfTnef extends Message {
     @Override
     protected void read(TNEFInputStream in) throws IOException {
         Attr attr;
+        Attachment attachmnt = null;
         while ((attr = in.readAttr()) != null) {
             switch (attr.getLevel()) {
                 case Attr.LVL_ATTACHMENT:
+                    switch (attr.getID()) {
+                        case Attr.attAttachRenddata:
+                            if (attachmnt != null) {
+                                super.addAttachment(attachmnt);
+                            }
+                            attachmnt = new Attachment();
+                            attachmnt.addAttribute(attr);
+                            break;
+                        case Attr.attAttachment:
+                            MAPIProps mps = new MAPIProps((RawInputStream)attr.getValue());
+                            attachmnt.setMAPIProps(mps);
+                            break;
+                        case Attr.attAttachData:
+                            RawInputStream ris = (RawInputStream)attr.getValue();
+                            attachmnt.setRawData(ris);
+                            break;
+                        case Attr.attAttachTransportFilename:
+                            RawInputStream data = (RawInputStream)attr.getValue();
+                            String filename = TNEFUtils.removeTerminatingNulls(
+                                    new String(data.toByteArray(), super.getOEMCodePage())
+                                    );
+                            attachmnt.setFilename(filename);
+                            break;
+                        default:
+                            attachmnt.addAttribute(attr);
+                            break;
+                    } // switching on ID for LVL_ATTACHMENT
                     break;
                 case Attr.LVL_MESSAGE:
                     if (isNeededAttribute(attr)) {
@@ -116,6 +145,10 @@ public class SchedulingViewOfTnef extends Message {
                     throw new IOException("Invalid attribute level: " + attr.getLevel());
             } // switch level
         } // while
+
+        if (attachmnt != null) {
+            super.addAttachment(attachmnt);
+        }
     }
 
     /**
@@ -930,6 +963,18 @@ public class SchedulingViewOfTnef extends Message {
             sLog.debug("Problem getting value of MAPI property " + pName + " from TNEF", e);
         }
         return gid;
+    }
+
+    /**
+     * For a Task, PidLidTaskGlobalId contains a unique key.
+     * 
+     * @return 
+     * @throws IOException 
+     */
+    private String getPidLidTaskGlobalId() throws IOException {
+        MAPIPropName pnPidLidTaskGlobalId = new MAPIPropName(MSGUID.PSETID_Common.getJtnefGuid(), (long)0x8519);
+        byte[] theVal = this.getByteArrayValue(pnPidLidTaskGlobalId, 0);
+        return null;
     }
 
     /**
