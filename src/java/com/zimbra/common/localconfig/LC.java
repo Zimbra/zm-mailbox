@@ -399,6 +399,9 @@ public class LC {
     public static final KnownKey zimbra_mtareport_max_hosts;
 
     public static final KnownKey zmmtaconfig_enable_config_restarts;
+    public static final KnownKey zmmtaconfig_interval;
+    public static final KnownKey zmmtaconfig_log_level;
+    public static final KnownKey zmmtaconfig_listen_port;
 
     public static final KnownKey zimbra_mailbox_groups;
 
@@ -1303,8 +1306,17 @@ public class LC {
         zimbra_mtareport_max_hosts = new KnownKey("zimbra_mtareport_max_hosts");
         zimbra_mtareport_max_hosts.setDefault("50");
 
-    zmmtaconfig_enable_config_restarts = new KnownKey("zmmtaconfig_enable_config_restarts");
-    zmmtaconfig_enable_config_restarts.setDefault("TRUE");
+		zmmtaconfig_enable_config_restarts = new KnownKey("zmmtaconfig_enable_config_restarts");
+		zmmtaconfig_enable_config_restarts.setDefault("TRUE");
+
+		zmmtaconfig_interval = new KnownKey("zmmtaconfig_interval");
+		zmmtaconfig_interval.setDefault("60");
+
+		zmmtaconfig_log_level = new KnownKey("zmmtaconfig_log_level");
+		zmmtaconfig_log_level.setDefault("3");
+
+		zmmtaconfig_listen_port = new KnownKey("zmmtaconfig_listen_port");
+		zmmtaconfig_listen_port.setDefault("7171");
 
         zimbra_auth_always_send_refer = new KnownKey("zimbra_auth_always_send_refer");
         zimbra_auth_always_send_refer.setDefault("false");
