@@ -123,7 +123,7 @@ public class TcpImapRequest extends ImapRequest {
         return mParts.get(mIndex).getLiteral();
     }
 
-    protected Literal readLiteral() throws IOException, ImapParseException {
+    @Override protected Literal readLiteral() throws IOException, ImapParseException {
         boolean blocking = true;
         skipChar('{');
         long length = Long.parseLong(readNumber());

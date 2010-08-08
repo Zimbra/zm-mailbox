@@ -29,13 +29,11 @@ public class TcpImapServer extends TcpServer implements ImapServer, RealtimeStat
         ZimbraPerf.addStatsCallback(this);
     }
 
-    @Override
-    protected ProtocolHandler newProtocolHandler() {
+    @Override protected ProtocolHandler newProtocolHandler() {
         return new TcpImapHandler(this);
     }
 
-    @Override
-    public ImapConfig getConfig() {
+    @Override public ImapConfig getConfig() {
         return (ImapConfig) super.getConfig();
     }
 
@@ -43,7 +41,7 @@ public class TcpImapServer extends TcpServer implements ImapServer, RealtimeStat
      * Implementation of <code>RealtimeStatsCallback</code> that returns the number
      * of active handlers for this server.
      */
-    public Map<String, Object> getStatData() {
+    @Override public Map<String, Object> getStatData() {
         Map<String, Object> data = new HashMap<String, Object>();
         String statName = getConfig().isSslEnabled() ?
             ZimbraPerf.RTS_POP_SSL_CONN : ZimbraPerf.RTS_POP_CONN;

@@ -94,7 +94,7 @@ class ImapURL {
                 Account acct = Provisioning.getInstance().get(AccountBy.name, mUsername);
                 if (acct == null)
                     throw new ImapUrlException(tag, url, "unknown user: " + mUsername);
-                mHostname = acct.getAttr(Provisioning.A_zimbraMailHost);
+                mHostname = acct.getMailHost();
             } catch (ServiceException e) {
                 throw new ImapUrlException(tag, url, "could not look up user: " + mUsername);
             }

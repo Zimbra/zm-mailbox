@@ -387,19 +387,19 @@ public class ImapSession extends Session {
             mPagedSessionData = i4folder.getSessionData() == null ? null : new PagedSessionData(i4folder);
         }
 
-        public int getId() {
+        @Override public int getId() {
             return ImapSession.this.getFolderId();
         }
 
-        public int getSize() {
+        @Override public int getSize() {
             return mOriginalSize;
         }
 
-        public boolean isWritable() {
+        @Override public boolean isWritable() {
             return mPagedSessionData == null ? false : mPagedSessionData.mOriginalSessionData.mWritable;
         }
 
-        public synchronized boolean hasExpunges() {
+        @Override public synchronized boolean hasExpunges() {
             // hugely overbroad, but this should never be called in the first place...
             if (mPagedSessionData != null && mPagedSessionData.mOriginalSessionData.mExpungedCount > 0)
                 return true;
@@ -414,7 +414,7 @@ public class ImapSession extends Session {
             return false;
         }
 
-        public boolean hasNotifications() {
+        @Override public boolean hasNotifications() {
             if (mPagedSessionData != null && mPagedSessionData.hasNotifications())
                 return true;
             return mQueuedChanges != null && !mQueuedChanges.isEmpty();
@@ -434,11 +434,11 @@ public class ImapSession extends Session {
             return mCacheKey;
         }
 
-        public void doEncodeState(Element imap) {
+        @Override public void doEncodeState(Element imap) {
             imap.addAttribute("paged", true);
         }
 
-        public void endSelect() {
+        @Override public void endSelect() {
             mPagedSessionData = null;
         }
 
@@ -491,30 +491,30 @@ public class ImapSession extends Session {
             }
         }
 
-        public void handleTagDelete(int changeId, int tagId) {
+        @Override public void handleTagDelete(int changeId, int tagId) {
             queueDelete(changeId, tagId);
         }
-        public void handleTagCreate(int changeId, Tag tag) {
+        @Override public void handleTagCreate(int changeId, Tag tag) {
             queueCreate(changeId, tag);
         }
-        public void handleTagRename(int changeId, Tag tag, Change chg) {
+        @Override public void handleTagRename(int changeId, Tag tag, Change chg) {
             queueModify(changeId, chg);
         }
-        public void handleItemDelete(int changeId, int itemId) {
+        @Override public void handleItemDelete(int changeId, int itemId) {
             queueDelete(changeId, itemId);
         }
-        public void handleItemCreate(int changeId, MailItem item, AddedItems added) {
+        @Override public void handleItemCreate(int changeId, MailItem item, AddedItems added) {
             queueCreate(changeId, item);
         }
-        public void handleFolderRename(int changeId, Folder folder, Change chg) {
+        @Override public void handleFolderRename(int changeId, Folder folder, Change chg) {
             queueModify(changeId, chg);
         }
-        public void handleItemUpdate(int changeId, Change chg, AddedItems added) {
+        @Override public void handleItemUpdate(int changeId, Change chg, AddedItems added) {
             queueModify(changeId, chg);
         }
-        public void handleAddedMessages(int changeId, AddedItems added)  { }
+        @Override public void handleAddedMessages(int changeId, AddedItems added)  { }
 
-        public void finishNotification(int changeId) throws IOException {
+        @Override public void finishNotification(int changeId) throws IOException {
             // idle sessions need to be notified immediately
             ImapHandler handler = getHandler();
             if (handler != null && handler.isIdle())

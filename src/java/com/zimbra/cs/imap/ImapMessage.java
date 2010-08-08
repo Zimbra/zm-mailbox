@@ -142,13 +142,13 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
     }
 
 
-    public int compareTo(ImapMessage i4msg) {
+    @Override public int compareTo(ImapMessage i4msg) {
         if (imapUid == i4msg.imapUid)  return 0;
         return (imapUid < i4msg.imapUid ? -1 : 1);
     }
 
     static class SequenceComparator implements Comparator<ImapMessage> {
-        public int compare(ImapMessage o1, ImapMessage o2) {
+        @Override public int compare(ImapMessage o1, ImapMessage o2) {
             if (o1 == null)       return o2 == null ? 0 : -1;
             else if (o2 == null)  return 1;
             return (o1.sequence < o2.sequence ? -1 : (o1.sequence == o2.sequence ? 0 : 1));

@@ -131,7 +131,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
     }
 
 
-    public void doEncodeState(Element imap) {
+    @Override public void doEncodeState(Element imap) {
         SessionData sdata = mSessionData;
         if (sdata != null) {
             ImapCredentials.EnabledHack[] hacks = sdata.mCredentials.getEnabledHacks();
@@ -154,7 +154,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         return mSessionData;
     }
 
-    public void endSelect() {
+    @Override public void endSelect() {
         mSessionData = null;
     }
 
@@ -171,14 +171,14 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
     }
 
     /** Returns the selected folder's zimbra ID. */
-    public int getId() {
+    @Override public int getId() {
         return mFolderId;
     }
 
     /** Returns the number of messages in the folder.  Messages that have been
      *  received or deleted since the client was last notified are still
      *  included in this count. */
-    public int getSize() {
+    @Override public int getSize() {
         return mSequence == null ? 0 : mSequence.size();
     }
 
@@ -190,12 +190,12 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         return isVirtual()  || sdata == null ? 0 : sdata.mRecentCount;
     }
 
-    public boolean hasExpunges() {
+    @Override public boolean hasExpunges() {
         SessionData sdata = mSessionData;
         return sdata != null && sdata.mExpungedCount > 0;
     }
 
-    public boolean hasNotifications() {
+    @Override public boolean hasNotifications() {
         SessionData sdata = mSessionData;
         return sdata != null && sdata.hasNotifications();
     }
@@ -247,13 +247,13 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
     }
 
     /** Returns whether this folder was opened for write. */
-    public boolean isWritable() {
+    @Override public boolean isWritable() {
         SessionData sdata = mSessionData;
         return sdata == null ? false : sdata.mWritable;
     }
 
 
-    public Iterator<ImapMessage> iterator() {
+    @Override public Iterator<ImapMessage> iterator() {
         return mSequence.iterator();
     }
 
@@ -856,22 +856,22 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
     }
 
 
-    public void handleTagDelete(int changeId, int tagId) {
+    @Override public void handleTagDelete(int changeId, int tagId) {
         mTags.uncache(1L << Tag.getIndex(tagId));
         dirtyTag(tagId, changeId, true);
     }
 
-    public void handleTagCreate(int changeId, Tag tag) {
+    @Override public void handleTagCreate(int changeId, Tag tag) {
         cacheTag(tag);
     }
 
-    public void handleTagRename(int changeId, Tag tag, Change chg) {
+    @Override public void handleTagRename(int changeId, Tag tag, Change chg) {
         mTags.uncache(tag.getBitmask());
         cacheTag(tag);
         dirtyTag(tag.getId(), changeId);
     }
 
-    public void handleItemDelete(int changeId, int itemId) {
+    @Override public void handleItemDelete(int changeId, int itemId) {
         ImapMessage i4msg = getById(itemId);
         if (i4msg != null) {
             markMessageExpunged(i4msg);
@@ -880,7 +880,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         }
     }
 
-    public void handleItemCreate(int changeId, MailItem item, ImapSession.AddedItems added) {
+    @Override public void handleItemCreate(int changeId, MailItem item, ImapSession.AddedItems added) {
         int msgId = item.getId();
         // make sure this message hasn't already been detected in the folder
         if (getById(msgId) != null)
@@ -893,7 +893,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
             ZimbraLog.imap.debug("  ** created (ntfn): " + msgId);
     }
 
-    public void handleFolderRename(int changeId, Folder folder, Change chg) {
+    @Override public void handleFolderRename(int changeId, Folder folder, Change chg) {
         updatePath(folder);
         // FIXME: can we change the folder's UIDVALIDITY?
         //        if not, how do we persist it for the session?
@@ -901,7 +901,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         //                by simply changing the name attribute on the mailbox."
     }
 
-    public void handleItemUpdate(int changeId, Change chg, ImapSession.AddedItems added) {
+    @Override public void handleItemUpdate(int changeId, Change chg, ImapSession.AddedItems added) {
         MailItem item = (MailItem) chg.what;
         boolean inFolder = isVirtual() || (item.getFolderId() == mFolderId);
 
@@ -926,7 +926,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         }
     }
 
-    public void handleAddedMessages(int changeId, ImapSession.AddedItems added) {
+    @Override public void handleAddedMessages(int changeId, ImapSession.AddedItems added) {
         boolean debug = ZimbraLog.imap.isDebugEnabled();
 
         added.sort();
@@ -973,5 +973,5 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         }
     }
 
-    public void finishNotification(int changeId)  { }
+    @Override public void finishNotification(int changeId)  { }
 }

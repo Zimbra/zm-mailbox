@@ -99,7 +99,7 @@ public class MinaImapRequest extends ImapRequest {
         mHandler.sendContinuation("send literal data");
     }
 
-    public Literal readLiteral() throws ImapParseException {
+    @Override public Literal readLiteral() throws ImapParseException {
         skipChar('{');
         if (mIndex + 1 >= mParts.size()) {
             throw new ImapParseException(mTag, "no next literal");
@@ -110,7 +110,7 @@ public class MinaImapRequest extends ImapRequest {
         return part.getLiteral();
     }
 
-    public String toString() {
+    @Override public String toString() {
         StringBuilder sb = new StringBuilder();
         for (Part part : mParts) {
             sb.append(part);

@@ -17,5 +17,5 @@ package com.zimbra.cs.imap;
 import com.zimbra.cs.server.Server;
 
 public interface ImapServer extends Server {
-    public ImapConfig getConfig();
+    @Override public ImapConfig getConfig();
 }

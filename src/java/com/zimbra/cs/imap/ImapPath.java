@@ -169,7 +169,7 @@ public class ImapPath implements Comparable<ImapPath> {
         return asImapPath().equalsIgnoreCase(((ImapPath) obj).asImapPath());
     }
 
-    public int compareTo(ImapPath o) {
+    @Override public int compareTo(ImapPath o) {
         return asImapPath().compareToIgnoreCase(o.asImapPath());
     }
 

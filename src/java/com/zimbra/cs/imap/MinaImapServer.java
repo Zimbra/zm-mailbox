@@ -24,7 +24,6 @@ import com.zimbra.cs.mina.MinaSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 
-import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 
 public class MinaImapServer extends MinaServer implements ImapServer {
@@ -34,24 +33,23 @@ public class MinaImapServer extends MinaServer implements ImapServer {
             config.isSslEnabled() ? "MinaImapSSLServer" : "MinaImapServer");
     }
 
-    @Override
-    public MinaHandler createHandler(MinaSession session) {
+    @Override public MinaHandler createHandler(MinaSession session) {
         return new MinaImapHandler(this, session);
     }
 
-    @Override
-    protected ProtocolCodecFactory getProtocolCodecFactory() {
+    @Override protected ProtocolCodecFactory getProtocolCodecFactory() {
         return new MinaCodecFactory() {
-            public ProtocolDecoder getDecoder() {
+            @Override public ProtocolDecoder getDecoder() {
                 return new MinaImapDecoder(getStats());
             }
         };
     }
 
-    public ImapConfig getConfig() {
+    @Override public ImapConfig getConfig() {
         return (ImapConfig) super.getConfig();
     }
     
-    @Override
-    public Log getLog() { return ZimbraLog.imap; }
+    @Override public Log getLog() {
+        return ZimbraLog.imap;
+    }
 }

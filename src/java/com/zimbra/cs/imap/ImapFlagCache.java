@@ -202,7 +202,7 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag>, java.io.
         mBitmasks.clear();
     }
 
-    public Iterator<ImapFlag> iterator() {
+    @Override public Iterator<ImapFlag> iterator() {
         return mNames.values().iterator();
     }
 

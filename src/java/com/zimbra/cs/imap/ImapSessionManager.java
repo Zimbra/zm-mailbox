@@ -500,7 +500,7 @@ public class ImapSessionManager {
             // iterate over all serialized folders and delete all but the most recent
             File[] allCached = sCacheDir.listFiles();
             Arrays.sort(allCached, new Comparator<File>() {
-                public int compare(File o1, File o2)  { return o1.getName().compareTo(o2.getName()); }
+                @Override public int compare(File o1, File o2)  { return o1.getName().compareTo(o2.getName()); }
             });
             File previous = null;
             String lastOwner = "", lastId = "";
@@ -529,7 +529,7 @@ public class ImapSessionManager {
                 file.renameTo(new File(sCacheDir, filename.substring(0, filename.lastIndexOf("+")) + IMAP_CACHEFILE_SUFFIX));
         }
 
-        public void serialize(String cachekey, ImapFolder i4folder) throws IOException {
+        @Override public void serialize(String cachekey, ImapFolder i4folder) throws IOException {
             File pagefile = new File(sCacheDir, cachekey + IMAP_CACHEFILE_SUFFIX);
             if (pagefile.exists())
                 return;
@@ -550,7 +550,7 @@ public class ImapSessionManager {
             }
         }
 
-        public ImapFolder deserialize(String cachekey) throws IOException {
+        @Override public ImapFolder deserialize(String cachekey) throws IOException {
             File pagefile = new File(sCacheDir, cachekey + IMAP_CACHEFILE_SUFFIX);
             if (!pagefile.exists())
                 throw new FileNotFoundException("unable to deserialize folder state (pagefile not found)");

@@ -36,50 +36,50 @@ class ImapAuthenticatorUser implements AuthenticatorUser {
 
     boolean canContinue()  { return canContinue; }
 
-    public String getProtocol()  { return "imap"; }
+    @Override public String getProtocol()  { return "imap"; }
     
-    public void sendBadRequest(String s) throws IOException {
+    @Override public void sendBadRequest(String s) throws IOException {
         mHandler.sendBAD(mTag, s);
     }
 
-    public void sendFailed() throws IOException {
+    @Override public void sendFailed() throws IOException {
         mHandler.sendNO(mTag, "AUTHENTICATE failed");
     }
 
-    public void sendFailed(String msg) throws IOException {
+    @Override public void sendFailed(String msg) throws IOException {
         mHandler.sendNO(mTag, "AUTHENTICATE failed: " + msg);
     }
 
-    public void sendSuccessful() throws IOException {
+    @Override public void sendSuccessful() throws IOException {
         // 6.2.2: "A server MAY include a CAPABILITY response code in the tagged OK
         //         response of a successful AUTHENTICATE command in order to send
         //         capabilities automatically."
         mHandler.sendOK(mTag, '[' + mHandler.getCapabilityString() + "] AUTHENTICATE completed");
     }
 
-    public void sendContinuation(String s) throws IOException {
+    @Override public void sendContinuation(String s) throws IOException {
         mHandler.sendContinuation(s);
     }
 
-    public boolean authenticate(String authorizationId, String authenticationId, String password, Authenticator auth)
+    @Override public boolean authenticate(String authorizationId, String authenticationId, String password, Authenticator auth)
     throws IOException {
         canContinue = mHandler.authenticate(authorizationId, authenticationId, password, mTag, auth);
         return mHandler.isAuthenticated();
     }
 
-    public Log getLog() {
+    @Override public Log getLog() {
         return ZimbraLog.imap;
     }
 
-    public boolean isSSLEnabled() {
+    @Override public boolean isSSLEnabled() {
         return mHandler.isSSLEnabled();
     }
 
-    public boolean allowCleartextLogin() {
+    @Override public boolean allowCleartextLogin() {
         return mHandler.getConfig().isCleartextLoginEnabled();
     }
 
-    public boolean isGssapiAvailable() {
+    @Override public boolean isGssapiAvailable() {
         return mHandler.getConfig().isSaslGssapiEnabled();
     }
 }

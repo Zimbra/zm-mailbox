@@ -33,7 +33,7 @@ public class MinaImapDecoder extends ProtocolDecoderAdapter {
         this.stats = stats;
     }
 
-    public void decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) {
+    @Override public void decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) {
         java.nio.ByteBuffer bb = in.buf();
         while (bb.hasRemaining()) {
             if (count >= 0) {

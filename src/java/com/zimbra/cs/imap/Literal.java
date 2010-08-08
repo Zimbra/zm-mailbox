@@ -15,7 +15,7 @@
 package com.zimbra.cs.imap;
 
 import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.file.FileBlobStore;
+import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.store.BlobBuilder;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -66,25 +66,25 @@ abstract class Literal {
             buf = ByteBuffer.allocate(size);
         }
 
-        public int size() {
+        @Override public int size() {
             return buf.capacity();
         }
 
-        public int remaining() {
+        @Override public int remaining() {
             return buf.capacity() - buf.position();
         }
         
-        public byte[] getBytes() {
+        @Override public byte[] getBytes() {
             checkComplete();
             return buf.array();
         }
         
-        public InputStream getInputStream() {
+        @Override public InputStream getInputStream() {
             checkComplete();
             return new ByteArrayInputStream(buf.array());
         }
         
-        public int copy(InputStream is) throws IOException {
+        @Override public int copy(InputStream is) throws IOException {
             int count = is.read(buf.array(), buf.position(), remaining());
             if (count > 0) {
                 buf.position(buf.position() + count);
@@ -92,7 +92,7 @@ abstract class Literal {
             return count;
         }
 
-        public int put(byte[] b, int off, int len) {
+        @Override public int put(byte[] b, int off, int len) {
             if (len > remaining()) {
                 len = remaining();
             }
@@ -100,14 +100,14 @@ abstract class Literal {
             return len;
         }
         
-        public Blob getBlob() throws IOException, ServiceException {
-            return FileBlobStore.getInstance().storeIncoming(getInputStream(), size(), null);
+        @Override public Blob getBlob() throws IOException, ServiceException {
+            return StoreManager.getInstance().storeIncoming(getInputStream(), size(), null);
         }
 
-        public void cleanup() {
+        @Override public void cleanup() {
             buf = null;
             if (blob != null) {
-                FileBlobStore.getInstance().quietDelete(blob);
+                StoreManager.getInstance().quietDelete(blob);
                 blob = null;
             }
         }
@@ -118,22 +118,22 @@ abstract class Literal {
 
         BlobLiteral(int size) throws IOException {
             try {
-                builder = FileBlobStore.getInstance().getBlobBuilder();
+                builder = StoreManager.getInstance().getBlobBuilder();
                 builder.setSizeHint(size).init();
             } catch (ServiceException e) {
                 throw error("Unable to initialize BlobBuilder", e);
             }
         }
 
-        public int size() {
+        @Override public int size() {
             return (int) builder.getSizeHint();
         }
 
-        public int remaining() {
+        @Override public int remaining() {
             return size() - (int) builder.getTotalBytes();
         }
         
-        public byte[] getBytes() throws IOException {
+        @Override public byte[] getBytes() throws IOException {
             DataInputStream is = new DataInputStream(getInputStream());
             try {
                 byte[] b = new byte[size()];
@@ -145,11 +145,11 @@ abstract class Literal {
             }
         }
 
-        public InputStream getInputStream() throws IOException {
+        @Override public InputStream getInputStream() throws IOException {
             return getBlob().getInputStream();
         }
 
-        public int put(byte[] b, int off, int len) throws IOException {
+        @Override public int put(byte[] b, int off, int len) throws IOException {
             if (len > remaining()) {
                 len = remaining();
             }
@@ -159,7 +159,7 @@ abstract class Literal {
             return len;
         }
 
-        public int copy(InputStream is) throws IOException {
+        @Override public int copy(InputStream is) throws IOException {
             int count = 0;
             if (remaining() > 0) {
                 byte[] b = new byte[8192];
@@ -174,7 +174,7 @@ abstract class Literal {
             return count;
         }
 
-        public Blob getBlob() throws IOException {
+        @Override public Blob getBlob() throws IOException {
             checkComplete();
             try {
                 return builder.finish();
@@ -183,7 +183,7 @@ abstract class Literal {
             }
         }
 
-        public void cleanup() {
+        @Override public void cleanup() {
             if (builder != null) {
                 builder.dispose();
                 builder = null;
@@ -191,7 +191,7 @@ abstract class Literal {
         }
     }
 
-    private static IOException error(String msg, Throwable cause) {
+    static IOException error(String msg, Throwable cause) {
         IOException e = new IOException(msg);
         e.initCause(cause);
         return e;

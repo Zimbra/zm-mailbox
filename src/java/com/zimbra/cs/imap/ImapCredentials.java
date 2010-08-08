@@ -96,7 +96,7 @@ class ImapCredentials implements java.io.Serializable {
 
     Mailbox getMailbox() throws ServiceException {
         if (!mIsLocal)
-            throw ServiceException.WRONG_HOST(getAccount().getAttr(Provisioning.A_zimbraMailHost), null);
+            throw ServiceException.WRONG_HOST(getAccount().getMailHost(), null);
         return MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
     }
 

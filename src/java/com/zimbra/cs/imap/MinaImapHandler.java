@@ -54,7 +54,7 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         return true;
     }
 
-    public void connectionOpened() throws IOException {
+    @Override public void connectionOpened() throws IOException {
         if (!Config.userServicesEnabled()) {
             ZimbraLog.imap.debug("Dropping connection (user services are disabled)");
             dropConnection();
@@ -71,7 +71,7 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         throw new UnsupportedOperationException();
     }
 
-    public void messageReceived(Object msg) throws IOException {
+    @Override public void messageReceived(Object msg) throws IOException {
         if (mRequest == null)
             mRequest = new MinaImapRequest(this);
         
@@ -132,8 +132,7 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
      * execution since requests are processed in sequence for any given
      * connection.
      */
-    @Override
-    protected void dropConnection(boolean sendBanner) {
+    @Override protected void dropConnection(boolean sendBanner) {
         dropConnection(sendBanner, WRITE_TIMEOUT);
     }
 
@@ -155,11 +154,11 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         mSession.close();
     }
 
-    public void dropConnection(long timeout) {
+    @Override public void dropConnection(long timeout) {
         dropConnection(true, timeout);
     }
     
-    public void connectionClosed() {
+    @Override public void connectionClosed() {
         cleanup();
         mSession.close();
     }
@@ -174,7 +173,7 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         } catch (Exception e) {}
     }
     
-    public void connectionIdle() {
+    @Override public void connectionIdle() {
         notifyIdleConnection();
     }
     
