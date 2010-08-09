@@ -122,7 +122,7 @@ public class TestSendAndReceive extends TestCase {
         List<ZMessage> messages = TestUtil.search(mbox, "subject:\"Test Phone Number Formats\"");
         assertEquals("Unexpected message count", 1, messages.size());
         ZMessage msg = messages.get(0);
-        Calendar cal = Calendar.getInstance();
+        Calendar cal = Calendar.getInstance(mbox.getPrefs().getTimeZone());
         cal.setTimeInMillis(msg.getReceivedDate());
         assertEquals(2005, cal.get(Calendar.YEAR));
         assertEquals(1, cal.get(Calendar.MONTH));

@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.TreeSet;
 
 import javax.mail.MessagingException;
@@ -1002,8 +1001,8 @@ extends Assert {
         comp.setClassProp(ZClass.PUB);
         comp.setTransparency(ZTransparency.O);
 
-        comp.setStart(new ZDateTime(startDate.getTime(), false, TimeZone.getDefault()));
-        comp.setEnd(new ZDateTime(endDate.getTime(), false, TimeZone.getDefault()));
+        comp.setStart(new ZDateTime(startDate.getTime(), false, mailbox.getPrefs().getTimeZone()));
+        comp.setEnd(new ZDateTime(endDate.getTime(), false, mailbox.getPrefs().getTimeZone()));
         comp.setName(subject);
         comp.setOrganizer(new ZOrganizer(mailbox.getName()));
 
