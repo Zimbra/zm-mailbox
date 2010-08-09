@@ -921,14 +921,14 @@ public class ProxyConfGen
         return validConf;
     }
 
-    public static void main (String[] args) throws ServiceException, ProxyConfException
-    {
+	public static int createConf (String[] args) throws ServiceException, ProxyConfException
+	{
         int exitCode = 0;
         CommandLine cl = parseArgs(args);
 
         if (cl == null) {
             exitCode = 1;
-            System.exit(exitCode);
+            return(exitCode);
         }
 
         mProv = Provisioning.getInstance();
@@ -944,7 +944,7 @@ public class ProxyConfGen
         if (cl.hasOption('h')) {
             usage(null);
             exitCode = 0;
-            System.exit(exitCode);
+            return(exitCode);
         }
 
         if (cl.hasOption('n')) {
@@ -990,7 +990,7 @@ public class ProxyConfGen
         if (cl.hasOption('d')) {
             displayVariables();
             exitCode = 0;
-            System.exit(exitCode);
+            return(exitCode);
         }
 
 
@@ -1004,7 +1004,7 @@ public class ProxyConfGen
             } catch (ProxyConfException pe) {
                 mLog.error("Cannot load server object. Make sure the server specified with -s exists");
                 exitCode = 1;
-                System.exit(exitCode);
+                return(exitCode);
             }
         }
 
@@ -1018,14 +1018,14 @@ public class ProxyConfGen
         if (cl.hasOption('D')) {
             displayVariables();
             exitCode = 0;
-            System.exit(exitCode);
+            return(exitCode);
         }
 
         if (!isWorkableConf()) {
             mLog.error("Configuration is not valid because no route lookup handlers exist, or because no HTTP upstream servers were found");
             mLog.error("Please ensure that the output of 'zmprov garpu' and 'zmprov garpb' returns at least one entry");
             exitCode = 1;
-            System.exit(exitCode);
+            return(exitCode);
         }
 
         exitCode = 0;
@@ -1070,7 +1070,12 @@ public class ProxyConfGen
             mLog.error("Error while expanding templates: " + se.getMessage());
             exitCode = 1;
         }
+		return(exitCode);
+	}
 
+    public static void main (String[] args) throws ServiceException, ProxyConfException
+    {
+		int exitCode = createConf(args);
         System.exit(exitCode);
     }
 }
