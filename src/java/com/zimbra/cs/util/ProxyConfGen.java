@@ -148,34 +148,35 @@ class ProxyConfVar
         } else if (mValueType == ProxyConfValueType.BOOLEAN) {
             updateBoolean();
         } else if (mValueType == ProxyConfValueType.ENABLER) {
-            updateEnabler();
+        	updateEnabler();
+        	/* web.http.enabled and web.https.enabled are special ENABLER that need CUSTOM override */
+        	if ("web.http.enabled".equalsIgnoreCase(mKeyword))
+			{
+				/* if mailmode is https (only), then http needs to be disabled */
+				
+				String mailmode = serverSource.getAttr(Provisioning.A_zimbraReverseProxyMailMode,"both");
+				if ("https".equalsIgnoreCase(mailmode)) {
+				     mValue = false;
+				} else {
+				     mValue = true;
+				}
+	         }
+	         else if ("web.https.enabled".equalsIgnoreCase(mKeyword))
+	         {
+	             /* if mailmode is http (only), then https needs to be disabled */
+	
+	             String mailmode = serverSource.getAttr(Provisioning.A_zimbraReverseProxyMailMode,"both");
+	             if ("http".equalsIgnoreCase(mailmode)) {
+	                 mValue = false;
+	             } else {
+	                 mValue = true;
+	             }
+	         }
         } else if (mValueType == ProxyConfValueType.TIME) {
             updateTime();
-        } else if (mValueType == ProxyConfValueType.CUSTOM)
-        {
-            if ("web.http.enabled".equalsIgnoreCase(mKeyword))
-            {
-                /* if mailmode is https (only), then http needs to be disabled */
-
-                String mailmode = serverSource.getAttr(Provisioning.A_zimbraReverseProxyMailMode,"both");
-                if ("https".equalsIgnoreCase(mailmode)) {
-                    mValue = false;
-                } else {
-                    mValue = true;
-                }
-            }
-            else if ("web.https.enabled".equalsIgnoreCase(mKeyword))
-            {
-                /* if mailmode is http (only), then https needs to be disabled */
-
-                String mailmode = serverSource.getAttr(Provisioning.A_zimbraReverseProxyMailMode,"both");
-                if ("http".equalsIgnoreCase(mailmode)) {
-                    mValue = false;
-                } else {
-                    mValue = true;
-                }
-            }
-            else if ("mail.pop3.greeting".equalsIgnoreCase(mKeyword))
+        } else if (mValueType == ProxyConfValueType.CUSTOM) {
+           
+            if ("mail.pop3.greeting".equalsIgnoreCase(mKeyword))
             {
                 if (serverSource.getBooleanAttr("zimbraReverseProxyPop3ExposeVersionOnBanner",false)) {
                     mValue = "+OK " + "Zimbra " + BuildInfo.VERSION + " POP3 ready";
