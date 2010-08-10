@@ -122,7 +122,9 @@ public class SearchConv extends Search {
                         response, ifmt, octxt, conv, CONVERSATION_FIELD_MASK): response;
                 SearchResponse builder = new SearchResponse(zsc, octxt, container, params);
 
-                putHits(octxt, ifmt, builder, msgs, results, params);
+                boolean more = putHits(octxt, ifmt, builder, msgs, results, params);
+                response.addAttribute(MailConstants.A_QUERY_MORE, more);
+
                 // call me AFTER putHits since some of the <info> is generated
                 // by the getting of the hits!
                 builder.add(results.getResultInfo(), results.estimateResultSize());
@@ -201,7 +203,7 @@ public class SearchConv extends Search {
      *  the specified limit
      * @throws ServiceException
      */
-    private void putHits(OperationContext octxt, ItemIdFormatter ifmt,
+    private boolean putHits(OperationContext octxt, ItemIdFormatter ifmt,
             SearchResponse resp, List<Message> msgs, ZimbraQueryResults results,
             SearchParams params) throws ServiceException {
 
@@ -254,7 +256,7 @@ public class SearchConv extends Search {
             }
         }
 
-        resp.addHasMore(offset + iterLen < msgs.size());
+        return offset + iterLen < msgs.size();
     }
 
     private Element addMessageMiss(Message msg, Element response,
