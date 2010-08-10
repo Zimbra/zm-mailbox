@@ -216,11 +216,16 @@ public class ItemAction extends MailDocumentHandler {
         while (hopCount < ZimbraSoapContext.MAX_HOP_COUNT) {
             owner = Provisioning.getInstance().getAccountById(iidFolder.getAccountId());
             if (Provisioning.onLocalServer(owner)) {
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
-                Folder folder = mbox.getFolderById(octxt, iidFolder.getId());
-                if (!(folder instanceof Mountpoint))
+                try {
+                    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(owner);
+                    Folder folder = mbox.getFolderById(octxt, iidFolder.getId());
+                    if (!(folder instanceof Mountpoint))
+                        break;
+                    iidFolder = ((Mountpoint) folder).getTarget();
+                } catch (ServiceException e) {
+                    // could be a PERM_DENIED, could be something else -- this is not the right place to fail, however
                     break;
-                iidFolder = ((Mountpoint) folder).getTarget();
+                }
             } else {
                 if (zat == null) {
                     AuthToken at = zsc.getAuthToken();

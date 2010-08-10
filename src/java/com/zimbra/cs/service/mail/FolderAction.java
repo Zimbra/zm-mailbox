@@ -47,21 +47,17 @@ import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
-/**
- * @author dkarp
- */
 public class FolderAction extends ItemAction {
 
-    protected String[] getProxiedIdPath(Element request) {
+    @Override protected String[] getProxiedIdPath(Element request) {
         String operation = getXPath(request, OPERATION_PATH);
         if (operation != null && FOLDER_OPS.contains(operation.toLowerCase()))
             return TARGET_ITEM_PATH;
         return super.getProxiedIdPath(request);
     }
-    protected boolean checkMountpointProxy(Element request) {
+    @Override protected boolean checkMountpointProxy(Element request) {
         String operation = getXPath(request, OPERATION_PATH);
         // grant/revoke ops get passed through to the referenced resource
         if (OP_GRANT.equalsIgnoreCase(operation) || OP_REVOKE.equalsIgnoreCase(operation) ||
@@ -89,7 +85,7 @@ public class FolderAction extends ItemAction {
         OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_CHECK, OP_UNCHECK, OP_GRANT, OP_REVOKE, OP_REVOKEORPHANGRANTS, OP_UPDATE, OP_SYNCON, OP_SYNCOFF
     }));
 
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
+    @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element action = request.getElement(MailConstants.E_ACTION);
@@ -111,7 +107,7 @@ public class FolderAction extends ItemAction {
         result.addAttribute(MailConstants.A_ID, successes);
         result.addAttribute(MailConstants.A_OPERATION, operation);
         return response;
-	}
+    }
 
     private String handleFolder(Map<String,Object> context, Element request, String operation, Element result)
     throws ServiceException {
@@ -150,7 +146,7 @@ public class FolderAction extends ItemAction {
                 mbox.alterTag(octxt, iid.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, fb);
             }
         } else if (operation.equals(OP_REVOKE)) {
-        	String zid = action.getAttribute(MailConstants.A_ZIMBRA_ID);
+            String zid = action.getAttribute(MailConstants.A_ZIMBRA_ID);
             mbox.revokeAccess(octxt, iid.getId(), zid);
         } else if (operation.equals(OP_GRANT)) {
             Element grant = action.getElement(MailConstants.E_GRANT);
@@ -166,7 +162,7 @@ public class FolderAction extends ItemAction {
             } else if (gtype == ACL.GRANTEE_GUEST) {
                 zid = grant.getAttribute(MailConstants.A_DISPLAY);
                 if (zid == null || zid.indexOf('@') < 0)
-                	throw ServiceException.INVALID_REQUEST("invalid guest id or password", null);
+                    throw ServiceException.INVALID_REQUEST("invalid guest id or password", null);
                 // make sure they didn't accidentally specify "guest" instead of "usr"
                 try {
                     nentry = lookupGranteeByName(zid, ACL.GRANTEE_USER, zsc);
@@ -182,43 +178,36 @@ public class FolderAction extends ItemAction {
             } else if (gtype == ACL.GRANTEE_KEY) {
                 zid = grant.getAttribute(MailConstants.A_DISPLAY);
                 // unlike guest, we do not require the display name to be an email address
-                /*
-                if (zid == null || zid.indexOf('@') < 0)
-                    throw ServiceException.INVALID_REQUEST("invalid guest id or key", null);
-                */    
+//                if (zid == null || zid.indexOf('@') < 0)
+//                    throw ServiceException.INVALID_REQUEST("invalid guest id or key", null);
                 // unlike guest, we do not fixup grantee type for key grantees if they specify an internal user
-                
+
                 // get the optional accesskey
                 secret = grant.getAttribute(MailConstants.A_ACCESSKEY, null);
-                
             } else if (zid != null) {
-            	nentry = lookupGranteeByZimbraId(zid, gtype);
+                nentry = lookupGranteeByZimbraId(zid, gtype);
             } else {
-            	nentry = lookupGranteeByName(grant.getAttribute(MailConstants.A_DISPLAY), gtype, zsc);
-            	zid = nentry.getId();
+                nentry = lookupGranteeByName(grant.getAttribute(MailConstants.A_DISPLAY), gtype, zsc);
+                zid = nentry.getId();
                 // make sure they didn't accidentally specify "usr" instead of "grp"
-            	if (gtype == ACL.GRANTEE_USER && nentry instanceof DistributionList)
-            		gtype = ACL.GRANTEE_GROUP;
+                if (gtype == ACL.GRANTEE_USER && nentry instanceof DistributionList)
+                    gtype = ACL.GRANTEE_GROUP;
             }
-            
+
             ACL.Grant g =  mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, secret);
-            
+
             // kinda hacky -- return the zimbra id and name of the grantee in the response
             result.addAttribute(MailConstants.A_ZIMBRA_ID, zid);
             if (nentry != null)
                 result.addAttribute(MailConstants.A_DISPLAY, nentry.getName());
             else if (gtype == ACL.GRANTEE_GUEST || gtype == ACL.GRANTEE_KEY)
                 result.addAttribute(MailConstants.A_DISPLAY, zid);
-            
             if (gtype == ACL.GRANTEE_KEY)
                 result.addAttribute(MailConstants.A_ACCESSKEY, g.getPassword());
-       
         } else if (operation.equals(OP_REVOKEORPHANGRANTS)) {
             String zid = action.getAttribute(MailConstants.A_ZIMBRA_ID);
             byte gtype = ACL.stringToType(action.getAttribute(MailConstants.A_GRANT_TYPE));
-            
             revokeOrphanGrants(octxt, mbox, iid, zid, gtype);
-            
         } else if (operation.equals(OP_UPDATE)) {
             // duplicating code from ItemAction.java for now...
             String newName = action.getAttribute(MailConstants.A_NAME, null);
@@ -335,15 +324,10 @@ public class FolderAction extends ItemAction {
             return null;
         }
     }
-    
-    
-    private void revokeOrphanGrants(OperationContext octxt, Mailbox mbox, ItemId iid,
-            String granteeId, byte gtype) throws ServiceException {
-        
-        //
+
+    private void revokeOrphanGrants(OperationContext octxt, Mailbox mbox, ItemId iid, String granteeId, byte gtype)
+    throws ServiceException {
         // check if the grantee still exists
-        //
-        
         int flags = 0;
         if (gtype == ACL.GRANTEE_USER)
             flags |= (Provisioning.SA_ACCOUNT_FLAG | Provisioning.SA_CALENDAR_RESOURCE_FLAG) ;
@@ -355,30 +339,29 @@ public class FolderAction extends ItemAction {
             flags |= Provisioning.SA_DOMAIN_FLAG;
         else
             throw ServiceException.INVALID_REQUEST("invalid grantee type for revokeOrphanGrants", null);
-            
+
         String query = "(" + Provisioning.A_zimbraId + "=" + granteeId + ")";    
-        
+
         Provisioning.SearchOptions opts = new SearchOptions();
         opts.setFlags(flags);
         opts.setQuery(query);  
         opts.setOnMaster(true);  // search the grantee on LDAP master
-        
+
         Provisioning prov = Provisioning.getInstance();
         List<NamedEntry> entries = prov.searchDirectory(opts);
 
         if (entries.size() != 0)
             throw ServiceException.INVALID_REQUEST("grantee " + granteeId + " exists", null);
-        
+
         // the grantee indeed does not exist, revoke all grants granted to the grantee
         // in this folder and all subfolders
         FolderNode rootNode = mbox.getFolderTree(octxt, iid, true);
         revokeOrphanGrants(octxt, mbox, rootNode, granteeId, gtype);
     }
-    
-    private void revokeOrphanGrants(OperationContext octxt, Mailbox mbox,
-            FolderNode node, String granteeId, byte gtype) throws ServiceException {
+
+    private void revokeOrphanGrants(OperationContext octxt, Mailbox mbox, FolderNode node, String granteeId, byte gtype)
+    throws ServiceException {
         if (node.mFolder != null) {
-            
             // skip this folder if the authed user does not have admin right
             // we still want to proceed to subfolders because the authed user 
             // may have admin right on subfolders
@@ -389,9 +372,9 @@ public class FolderAction extends ItemAction {
             //
             //        if there are orphan grants on all folder1, folder2, folder3,
             //        we will revoke the orphan grants on folder1 and folder3 only, not folder2.
-            
+
             boolean canAdmin = (mbox.getEffectivePermissions(octxt, node.mFolder.getId(), MailItem.TYPE_FOLDER) & ACL.RIGHT_ADMIN) != 0;
-            
+
             if (canAdmin) {
                 ACL acl = node.mFolder.getACL(); // or getEffectiveACL?
                 if (acl != null) {
@@ -405,7 +388,7 @@ public class FolderAction extends ItemAction {
                 }
             }
         }
-        
+
         for (FolderNode subNode : node.mSubfolders)
             revokeOrphanGrants(octxt, mbox, subNode, granteeId, gtype);
     }

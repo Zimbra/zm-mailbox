@@ -292,10 +292,14 @@ public class ItemActionHelper {
 
         // deal with local mountpoints pointing at local folders here
         if (targeted && mIidFolder.belongsTo(mMailbox) && mIidFolder.getId() > 0 && mIidFolder.getId() != Mailbox.ID_FOLDER_TRASH && mIidFolder.getId() != Mailbox.ID_FOLDER_SPAM) {
-            Folder folder = mMailbox.getFolderById(mOpCtxt, mIidFolder.getId());
-            if (folder instanceof Mountpoint && !((Mountpoint) folder).getOwnerId().equals(mIidFolder.getAccountId())) {
-                mIidFolder = ((Mountpoint) folder).getTarget();
-                mHopCount++;
+            try {
+                Folder folder = mMailbox.getFolderById(mOpCtxt, mIidFolder.getId());
+                if (folder instanceof Mountpoint && !((Mountpoint) folder).getOwnerId().equals(mIidFolder.getAccountId())) {
+                    mIidFolder = ((Mountpoint) folder).getTarget();
+                    mHopCount++;
+                }
+            } catch (ServiceException e) {
+                // could be a PERM_DENIED, could be something else -- this is not the right place to fail, however
             }
         }
 
@@ -622,7 +626,7 @@ public class ItemActionHelper {
             invCopy.setDtStamp(System.currentTimeMillis());
             ZOrganizer org = invCopy.getOrganizer();
             org.setAddress(target.getName());
-            org.setCn(target.getAttr(Provisioning.A_displayName));
+            org.setCn(target.getDisplayName());
             Account authAcct = mOpCtxt != null ? mOpCtxt.getAuthenticatedUser() : target;
             if (authAcct == null || authAcct.equals(target))
                 org.setSentBy(null);
