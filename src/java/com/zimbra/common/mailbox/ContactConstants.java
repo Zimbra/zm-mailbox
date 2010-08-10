@@ -104,9 +104,12 @@ public final class ContactConstants {
     public static final String A_imAddress3 = Attr.imAddress3.name();
 
     /**
-     * Whether to allow displaying remote images in HTML mail.
+     * Whether to auto-load remote images in HTML mail.
+     *
+     * @since Helix
      */
-    public static final String A_allowRemoteContent = Attr.allowRemoteContent.name();
+    public static final String A_autoLoadRemoteImages =
+        Attr.autoLoadRemoteImages.name();
 
     // Comcast specific fields
     public static final String A_homeAddress = Attr.homeAddress.name();
@@ -142,8 +145,8 @@ public final class ContactConstants {
      * "well known attrs". keep in sync with ContactConstants.A_* above.
      */
     public enum Attr {
-        allowRemoteContent,
         assistantPhone,
+        autoLoadRemoteImages,
         birthday,
         callbackPhone,
         carPhone,
