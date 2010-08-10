@@ -2602,7 +2602,11 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         // also delete any conversations whose messages have all been removed
         if (info.cascadeIds != null && !info.cascadeIds.isEmpty()) {
-            DbMailItem.delete(mbox, info.cascadeIds);
+            try {
+                DbMailItem.delete(mbox, info.cascadeIds);
+            } catch (ServiceException se) {
+                MailboxErrorUtil.handleCascadeFailure(mbox, info.cascadeIds, se);
+            }
             mbox.markItemDeleted(MailItem.typeToBitmask(TYPE_CONVERSATION), info.cascadeIds);
             info.itemIds.add(TYPE_CONVERSATION, info.cascadeIds);
         }
