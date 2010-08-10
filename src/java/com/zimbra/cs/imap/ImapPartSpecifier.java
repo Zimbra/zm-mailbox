@@ -51,6 +51,7 @@ class ImapPartSpecifier {
     ImapPartSpecifier(String cmd, String part, String modifier) {
         mCommand = cmd;  mPart = part;  mModifier = modifier;
     }
+
     ImapPartSpecifier(String cmd, String part, String modifier, int start, int count) {
         mCommand = cmd;  mPart = part;  mModifier = modifier;  setPartial(start, count);
     }
@@ -61,11 +62,14 @@ class ImapPartSpecifier {
         }
     }
 
-    boolean isEntireMessage()  { return mPart.equals("") && mModifier.equals(""); }
+    boolean isEntireMessage() {
+        return mPart.equals("") && mModifier.equals("");
+    }
 
     ImapPartSpecifier setHeaders(List<String> headers) {
         mHeaders = headers;  return this;
     }
+
     private String[] getHeaders() {
         if (mHeaders == null || mHeaders.isEmpty())
             return NO_HEADERS;
@@ -87,6 +91,14 @@ class ImapPartSpecifier {
                 response.append('<').append(mOctetStart).append('>');
         }
         return response.toString();
+    }
+
+    String getCommand() {
+        return mCommand;
+    }
+
+    String getSectionPart() {
+        return mPart;
     }
 
     String getSectionSpec() {

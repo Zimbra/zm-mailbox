@@ -349,7 +349,14 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
     /** Returns the ImapMessage with the given 1-based sequence number in the
      *  folder's {@link #mSequence} message list. */
     ImapMessage getBySequence(int seq) {
-        return checkRemoved(seq > 0 && seq <= getSize() ? (ImapMessage) mSequence.get(seq - 1) : null);
+        return getBySequence(seq, false);
+    }
+
+    /** Returns the ImapMessage with the given 1-based sequence number in the
+     *  folder's {@link #mSequence} message list. */
+    ImapMessage getBySequence(int seq, boolean includeExpunged) {
+        ImapMessage i4msg = seq > 0 && seq <= getSize() ? (ImapMessage) mSequence.get(seq - 1) : null;
+        return includeExpunged ? i4msg : checkRemoved(i4msg);
     }
 
     /** Returns the last ImapMessage in the folder's {@link #mSequence}
@@ -665,6 +672,10 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
     }
 
     ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean isSEARCH) throws ImapParseException {
+        return getSubsequence(tag, subseqStr, byUID, isSEARCH, false);
+    }
+
+    ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean isSEARCH, boolean isFETCH) throws ImapParseException {
         ImapMessageSet result = new ImapMessageSet();
         if (subseqStr == null || subseqStr.trim().equals(""))
             return result;
@@ -680,13 +691,13 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
                 throw new ImapParseException(tag, "invalid message sequence number: " + subseqStr);
             } else if (lower == upper) {
                 // single message -- get it and add it (may be null)
-                result.add(byUID ? getByImapId(lower) : getBySequence(lower));
+                result.add(byUID ? getByImapId(lower) : getBySequence(lower, isFETCH));
             } else {
                 // range of messages -- get them and add them (may be null)
                 if (!byUID) {
                     upper = Math.min(getSize(), upper);
                     for (int seq = Math.max(0, lower); seq <= upper; seq++)
-                        result.add(getBySequence(seq));
+                        result.add(getBySequence(seq, isFETCH));
                 } else {
                     ImapMessage i4msg;
                     int start = uidSearch(lower), end = uidSearch(upper);

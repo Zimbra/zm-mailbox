@@ -2909,7 +2909,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         if (result != null)
             sendUntagged(result.toString());
-        sendNotifications(false, false);
+        sendNotifications(byUID, false);
         sendOK(tag, (byUID ? "UID " : "") + command + " completed");
         return CONTINUE_PROCESSING;
     }
@@ -3112,10 +3112,9 @@ public abstract class ImapHandler extends ProtocolHandler {
         ImapMessageSet i4set;
         Mailbox mbox = i4folder.getMailbox();
         synchronized (mbox) {
-            i4set = i4folder.getSubsequence(tag, sequenceSet, byUID);
+            i4set = i4folder.getSubsequence(tag, sequenceSet, byUID, false, true);
+            i4set.remove(null);
         }
-        boolean allPresent = byUID || !i4set.contains(null);
-        i4set.remove(null);
 
         // if VANISHED was requested, we need to return the set of UIDs that *don't* exist in the folder
         if (byUID && (attributes & FETCH_VANISHED) != 0) {
@@ -3127,6 +3126,22 @@ public abstract class ImapHandler extends ProtocolHandler {
                 String vanished = i4folder.invertSubsequence(sequenceSet, true, i4set);
                 if (!vanished.equals(""))
                     sendUntagged("VANISHED (EARLIER) " + vanished);
+            }
+        }
+
+        if (!byUID) {
+            boolean nonePresent = true;
+            for (ImapMessage i4msg : i4set) {
+                if (!i4msg.isExpunged()) {
+                    nonePresent = false;  break;
+                }
+            }
+            if (nonePresent) {
+                // RFC 2180 4.1.3: "If all of the messages in the subsequent FETCH command have been
+                //                  expunged, the server SHOULD return only a tagged NO."
+                if (standalone)
+                    sendNO(tag, "all of the requested messages have been expunged");
+                return CONTINUE_PROCESSING;
             }
         }
 
@@ -3172,12 +3187,17 @@ public abstract class ImapHandler extends ProtocolHandler {
             ByteArrayOutputStream baosDebug = ZimbraLog.imap.isDebugEnabled() ? new ByteArrayOutputStream() : null;
             PrintStream result = new PrintStream(new ByteUtil.TeeOutputStream(os, baosDebug), false, "utf-8");
             try {
+                result.print("* " + i4msg.sequence + " FETCH (");
+
+                if (i4msg.isExpunged()) {
+                    fetchStub(i4msg, i4folder, attributes, parts, fullMessage, result);
+                    continue;
+                }
+
                 boolean markMessage = markRead && (i4msg.flags & Flag.BITMASK_UNREAD) != 0;
                 boolean empty = true;
                 MailItem item = null;
                 MimeMessage mm;
-
-                result.print("* " + i4msg.sequence + " FETCH (");
 
                 if (!fullMessage.isEmpty() || (parts != null && !parts.isEmpty()) || (attributes & ~FETCH_FROM_CACHE) != 0) {
                     item = mbox.getItemById(getContext(), i4msg.msgId, i4msg.getType());
@@ -3226,9 +3246,8 @@ public abstract class ImapHandler extends ProtocolHandler {
                 // 6.4.5: "The \Seen flag is implicitly set; if this causes the flags to
                 //         change, they SHOULD be included as part of the FETCH responses."
                 // FIXME: optimize by doing a single mark-read op on multiple messages
-                if (markMessage) {
+                if (markMessage)
                     mbox.alterTag(getContext(), i4msg.msgId, i4msg.getType(), Flag.ID_FLAG_UNREAD, false, null);
-                }
                 ImapFolder.DirtyMessage unsolicited = i4folder.undirtyMessage(i4msg);
                 if ((attributes & FETCH_FLAGS) != 0 || unsolicited != null) {
                     result.print(empty ? "" : " ");  result.print(i4msg.getFlags(i4folder));  empty = false;
@@ -3263,17 +3282,66 @@ public abstract class ImapHandler extends ProtocolHandler {
         }
 
         if (standalone) {
-            sendNotifications(false, false);
-            if (allPresent) {
-                sendOK(tag, command + " completed");
-            } else {
-                // RFC 2180 4.1.2: "The server MAY allow the EXPUNGE of a multi-accessed mailbox,
-                //                  and on subsequent FETCH commands return FETCH responses only
-                //                  for non-expunged messages and a tagged NO."
-                sendNO(tag, "some of the requested messages no longer exist");
-            }
+            sendNotifications(byUID, false);
+            sendOK(tag, command + " completed");
         }
         return CONTINUE_PROCESSING;
+    }
+
+    private void fetchStub(ImapMessage i4msg, ImapFolder i4folder, int attributes, List<ImapPartSpecifier> parts, List<ImapPartSpecifier> fullMessage, PrintStream result)
+    throws ServiceException {
+        // RFC 2180 4.1.3: "The server MAY allow the EXPUNGE of a multi-accessed mailbox, and
+        //                  on subsequent FETCH commands return the usual FETCH responses for
+        //                  non-expunged messages, "NIL FETCH Responses" for expunged messages,
+        //                  and a tagged OK response."
+
+        boolean empty = true;
+
+        if ((attributes & FETCH_UID) != 0) {
+            result.print((empty ? "" : " ") + "UID " + i4msg.imapUid);  empty = false;
+        }
+        if ((attributes & FETCH_INTERNALDATE) != 0) {
+            result.print((empty ? "" : " ") + "INTERNALDATE \"01-Jan-1970 00:00:00 +0000\"");  empty = false;
+        }
+        if ((attributes & FETCH_RFC822_SIZE) != 0) {
+            result.print((empty ? "" : " ") + "RFC822.SIZE 0");  empty = false;
+        }
+        if ((attributes & FETCH_BINARY_SIZE) != 0) {
+            result.print((empty ? "" : " ") + "BINARY.SIZE[] 0");  empty = false;
+        }
+
+        if (!fullMessage.isEmpty()) {
+            for (ImapPartSpecifier pspec : fullMessage) {
+                result.print((empty ? "" : " ") + pspec + " \"\"");  empty = false;
+            }
+        }
+        if ((attributes & FETCH_BODY) != 0) {
+            result.print((empty ? "" : " ") + "BODY (\"TEXT\" \"PLAIN\" NIL NIL NIL \"7BIT\" 0 0)");  empty = false;
+        }
+        if ((attributes & FETCH_BODYSTRUCTURE) != 0) {
+            result.print((empty ? "" : " ") + "BODYSTRUCTURE (\"TEXT\" \"PLAIN\" NIL NIL NIL \"7BIT\" 0 0)");  empty = false;
+        }
+        if ((attributes & FETCH_ENVELOPE) != 0) {
+            result.print((empty ? "" : " ") + "ENVELOPE (NIL NIL NIL NIL NIL NIL NIL NIL NIL NIL)");  empty = false;
+        }
+        if (parts != null) {
+            for (ImapPartSpecifier pspec : parts) {
+                // pretending that all messages have 1 text part means we should return NIL for other FETCHes
+                String pnum = pspec.getSectionPart();
+                String value = (pnum.equals("") || pnum.equals("1")) ? (pspec.getCommand().equals("BINARY.SIZE") ? "0" : "\"\"") : "NIL";
+                result.print((empty ? "" : " ") + pspec + ' ' + value);  empty = false;
+            }
+        }
+
+        if ((attributes & FETCH_FLAGS) != 0) {
+            result.print((empty ? "" : " ") + "FLAGS ()");  empty = false;
+        }
+        if ((attributes & FETCH_MODSEQ) != 0) {
+            result.print((empty ? "" : " ") + "MODSEQ (" + i4folder.getCurrentMODSEQ() + ')');  empty = false;
+        }
+
+        // don't send back notifications on deleted messages, especially ones that contradict what we just told 'em
+        i4folder.undirtyMessage(i4msg);
     }
 
     private enum StoreAction { REPLACE, ADD, REMOVE }
@@ -3458,7 +3526,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         boolean hadConflicts = modifyConflicts != null && !modifyConflicts.isEmpty();
         String conflicts = hadConflicts ? " [MODIFIED " + ImapFolder.encodeSubsequence(modifyConflicts, byUID) + ']' : "";
 
-        sendNotifications(false, false);
+        sendNotifications(byUID, false);
         // RFC 2180 4.2.1: "If the ".SILENT" suffix is used, and the STORE completed successfully for
         //                  all the non-expunged messages, the server SHOULD return a tagged OK."
         // RFC 2180 4.2.3: "If the ".SILENT" suffix is not used, and a mixture of expunged and non-
