@@ -695,7 +695,7 @@ public abstract class Element implements Cloneable {
         @Override public boolean hasChildren() {
             if (!mAttributes.isEmpty()) {
                 for (Object obj : mAttributes.values())
-                    if (obj instanceof Element)
+                    if (obj instanceof Element || obj instanceof List<?> || obj instanceof KeyValuePair)
                         return true;
             }
             return false;
