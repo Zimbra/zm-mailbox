@@ -118,6 +118,11 @@ public class AdminFileDownload  extends ZimbraServlet {
 //                resp.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
                 resp.setStatus(resp.SC_OK);
                 resp.setContentType("application/x-download");
+		
+		resp.setContentType("text/html;charset=utf-8");   
+		resp.setCharacterEncoding("utf-8");   
+		resp.setHeader("Charset", "utf-8");   
+
                 resp.setHeader("Content-Disposition", "attachment; filename=" + filename );
                 writeSearchResults (resp.getOutputStream(), query, domain, types, authToken);
             } else if (action.equalsIgnoreCase(ACTION_GETBP_FILE) )  {
