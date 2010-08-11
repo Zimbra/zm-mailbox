@@ -76,7 +76,6 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbMailItem.QueryParams;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.fb.FreeBusy;
-import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.im.IMNotification;
@@ -375,8 +374,6 @@ public class Mailbox {
      * 
      * The indexing subsystem should attempt to batch the completion callbacks if possible, to
      * lessen the number of SQL transactions.
-     *  
-     * @param ids
      */
     public void indexingCompleted(int count, SyncToken highestModContent, boolean succeeded) {
         mIndexHelper.indexingCompleted(count, highestModContent, succeeded);
@@ -395,8 +392,8 @@ public class Mailbox {
     private Map<Integer, Folder> mFolderCache;
     private Map<Object, Tag>     mTagCache;
     private SoftReference<Map<Integer, MailItem>> mItemCache = new SoftReference<Map<Integer, MailItem>>(null);
-    private Map       mConvHashes     = MapUtil.newLruMap(MAX_MSGID_CACHE);
-    private Map       mSentMessageIDs = MapUtil.newLruMap(MAX_MSGID_CACHE);
+    private Map <String, Integer> mConvHashes     = MapUtil.newLruMap(MAX_MSGID_CACHE);
+    private Map <String, Integer> mSentMessageIDs = MapUtil.newLruMap(MAX_MSGID_CACHE);
 
     private MailboxLock    mMaintenance = null;
     private IMPersona      mPersona = null;
@@ -907,7 +904,7 @@ public class Mailbox {
     }
     
     void checkSizeChange(long newSize) throws ServiceException {
-        long quota = getAccount().getLongAttr(Provisioning.A_zimbraMailQuota, 0);
+        long quota = getAccount().getMailQuota();
         if (quota != 0 && newSize > quota)
             throw MailServiceException.QUOTA_EXCEEDED(quota);
     }
@@ -993,7 +990,7 @@ public class Mailbox {
 
         if (delta < 0)
             return;
-        int quota = getAccount().getIntAttr(Provisioning.A_zimbraContactMaxNumEntries, 0);
+        int quota = getAccount().getContactMaxNumEntries();
         if (quota != 0 && mCurrentChange.contacts > quota)
             throw MailServiceException.TOO_MANY_CONTACTS(quota);
     }
@@ -1715,9 +1712,8 @@ public class Mailbox {
             DbMailbox.renameMailbox(this, newName);
 
             Account acct = getAccount();
-            boolean imEnabledThisAcct = acct.getBooleanAttr(Provisioning.A_zimbraFeatureIMEnabled, false);
-            boolean xmppEnabled = Provisioning.getInstance().getServer(acct).
-                                     getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false);
+            boolean imEnabledThisAcct = acct.isFeatureIMEnabled();
+            boolean xmppEnabled = Provisioning.getInstance().getServer(acct).isXMPPEnabled();
 
             if (mPersona != null || (xmppEnabled && imEnabledThisAcct)) {
                 getPersona().renamePersona(newName);
@@ -3023,7 +3019,7 @@ public class Mailbox {
     Conversation getConversationByHash(String hash) throws ServiceException {
         Conversation conv = null;
 
-        Integer convId = (Integer) mConvHashes.get(hash);
+        Integer convId = mConvHashes.get(hash);
         if (convId != null)
             conv = getCachedConversation(convId);
         if (conv != null)
@@ -3608,7 +3604,7 @@ public class Mailbox {
             if (max > 0) {
                 if (browseResult.getResult().size() > max) {
                     Comparator<BrowseTerm> reverseComp= new Comparator<BrowseTerm>() {
-                        public int compare(BrowseTerm o1, BrowseTerm o2) {
+                        @Override public int compare(BrowseTerm o1, BrowseTerm o2) {
                             int retVal = o2.freq - o1.freq;
                             if (retVal == 0) {
                                 retVal = o1.term.compareTo(o2.term);
@@ -3681,7 +3677,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("setCalendarItem", octxt, redoRecorder);
-            SetCalendarItem redoPlayer = (octxt == null ? null : (SetCalendarItem) octxt.getPlayer());
+//            SetCalendarItem redoPlayer = (octxt == null ? null : (SetCalendarItem) octxt.getPlayer());
 
             // Make a single list containing default and exceptions.
             int scidLen = (defaultInv != null ? 1 : 0) + (exceptions != null ? exceptions.length : 0);
@@ -4110,28 +4106,22 @@ public class Mailbox {
         }
     }
 
-    private static final String DEDUPE_ALL    = "dedupeAll";
-    private static final String DEDUPE_INBOX  = "moveSentMessageToInbox";
-    private static final String DEDUPE_SECOND = "secondCopyifOnToOrCC";
-
     private boolean dedupe(MimeMessage mm, Integer sentMsgId) throws ServiceException {
         Account acct = getAccount();
-        String pref = acct.getAttr(Provisioning.A_zimbraPrefDedupeMessagesSentToSelf, null);
-        if (pref == null) {                                 // default to no deduping
-            return false;
-        } else if (pref.equalsIgnoreCase(DEDUPE_ALL)) {     // remove all duplicates
-            return true;
-        } else if (pref.equalsIgnoreCase(DEDUPE_SECOND)) {  // receive if we're not a direct recipient (to, cc, bcc)
-            try {
-                return !AccountUtil.isDirectRecipient(acct, mm);
-            } catch (Exception e) {
+        switch (acct.getPrefDedupeMessagesSentToSelf()) {
+            case dedupeAll:
+                return true;
+
+            case secondCopyifOnToOrCC:
+                try {
+                    return !AccountUtil.isDirectRecipient(acct, mm);
+                } catch (Exception e) {
+                    return false;
+                }
+
+            case dedupeNone:
+            default:
                 return false;
-            }
-        } else if (pref.equalsIgnoreCase(DEDUPE_INBOX)) {   // move the existing mail from sent to inbox
-            // XXX: not implemented
-            return false;
-        } else {
-            return false;
         }
     }
 
@@ -4445,7 +4435,7 @@ public class Mailbox {
         boolean isSent = ((flags & Flag.BITMASK_FROM_ME) != 0);
         boolean checkDuplicates = (!isRedo && msgidHeader != null);
         if (checkDuplicates && !isSent && mSentMessageIDs.containsKey(msgidHeader)) {
-            Integer sentMsgID = (Integer) mSentMessageIDs.get(msgidHeader);
+            Integer sentMsgID = mSentMessageIDs.get(msgidHeader);
             // if the deduping rules say to drop this duplicated incoming message, return null now...
             //   ... but only dedupe messages not carrying a calendar part
             CalendarPartInfo cpi = pm.getCalendarPartInfo();
@@ -7100,8 +7090,7 @@ public class Mailbox {
                 else if (octxt != null && octxt.getSession() != null && !octxt.isDelegatedRequest(this))
                     isNewMessage = false;
                 if (isNewMessage) {
-                    String folderList = getAccount().getAttr(
-                        Provisioning.A_zimbraPrefMailFoldersCheckedForNewMsgIndicator);
+                    String folderList = getAccount().getPrefMailFoldersCheckedForNewMsgIndicator();
                     
                     if (folderList != null) {
                         String[] folderIds = folderList.split(",");
@@ -7348,7 +7337,7 @@ public class Mailbox {
     
 
     public boolean attachmentsIndexingEnabled() throws ServiceException {
-        return getAccount().getBooleanAttr(Provisioning.A_zimbraAttachmentsIndexingEnabled, true);
+        return getAccount().isAttachmentsIndexingEnabled();
     }
 
     private void logCacheActivity(Integer key, byte type, MailItem item) {
