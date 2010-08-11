@@ -4419,7 +4419,7 @@ public class Mailbox {
 
         boolean debug = ZimbraLog.mailbox.isDebugEnabled();
 
-        if (conversationId <= HIGHEST_SYSTEM_ID)
+        if (Math.abs(conversationId) <= HIGHEST_SYSTEM_ID)
             conversationId = ID_AUTO_INCREMENT;
 
         boolean needRedo = octxt == null || octxt.needRedo();
@@ -4535,9 +4535,12 @@ public class Mailbox {
                             openConversation(conv, hash);
                         if (debug)  ZimbraLog.mailbox.debug("  fetched explicitly-specified conversation " + conv.getId());
                     } catch (ServiceException e) {
-                        if (e.getCode() != MailServiceException.NO_SUCH_CONV)
+                        if (!(e instanceof NoSuchItemException))
                             throw e;
-                        if (debug)  ZimbraLog.mailbox.debug("  could not find explicitly-specified conversation " + conversationId);
+                        if (!isRedo) {
+                            if (debug)  ZimbraLog.mailbox.debug("  could not find explicitly-specified conversation " + conversationId);
+                            conversationId = ID_AUTO_INCREMENT;
+                        }
                     }
                 } else if (!isRedo && !isSpam && !isDraft && (isReply || (!isSent && !subject.equals("")))) {
                     conv = getConversationByHash(hash);
@@ -4581,7 +4584,7 @@ public class Mailbox {
                     VirtualConversation vconv = null;
                     if (!isRedo) {
                         vconv = (VirtualConversation) conv;
-                        contents = (conv == null ? new Message[] { msg } : new Message[] { vconv.getMessage(), msg });
+                        contents = (vconv == null ? new Message[] { msg } : new Message[] { vconv.getMessage(), msg });
                     } else {
                         // Executing redo.
                         int convFirstMsgId = redoPlayer.getConvFirstMsgId();
