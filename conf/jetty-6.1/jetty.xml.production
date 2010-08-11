@@ -30,7 +30,7 @@
     <!-- =========================================================== -->
 
     <!-- user services connector, no SSL -->
-    <!-- HTTPBEGIN -->
+    <!-- HTTPBEGIN %%comment VAR:zimbraMailMode,-->,http,redirect,mixed,both%%
     <Call name="addConnector">
       <Arg>
         <New id="http" class="org.mortbay.jetty.nio.SelectChannelConnector">
@@ -43,10 +43,10 @@
         </New>
       </Arg>
     </Call>
-    <!-- HTTPEND -->
+    %%comment VAR:zimbraMailMode,<!--,http,redirect,mixed,both%% HTTPEND -->
     
     <!-- user services connector, SSL -->
-    <!-- HTTPSBEGIN
+    <!-- HTTPSBEGIN %%comment VAR:zimbraMailMode,-->,https,redirect,mixed,both%%
     <Call name="addConnector">
       <Arg>
         <New id="ssl" class="org.mortbay.jetty.security.SslSelectChannelConnector">
@@ -66,7 +66,7 @@
         </New>
       </Arg>
     </Call>
-    HTTPSEND -->
+    %%comment VAR:zimbraMailMode,<!--,https,redirect,mixed,both%% HTTPSEND -->
 
     <!-- =============================================================== -->
     <!-- Admin services connector; requires SSL -->
@@ -313,7 +313,7 @@
       </Set>
     </Ref>
 
-    <!-- DEBUGBEGIN
+    <!-- DEBUGBEGIN %%comment VAR:zimbraHttpDebugHandlerEnabled,-->%%
     <Get id="oldhandler" name="handler"/>
     <Set name="handler">
       <New id="DebugHandler" class="org.mortbay.jetty.handler.DebugHandler">
@@ -327,7 +327,7 @@
         </Set>
       </New>
     </Set>
-    DEBUGEND -->
+    %%comment VAR:zimbraHttpDebugHandlerEnabled,<!--%% DEBUGEND -->
 
     <!-- =========================================================== -->
     <!-- extra options                                               -->
@@ -340,17 +340,17 @@
     <!-- start connectors                                            -->
     <!-- =========================================================== -->
     
-    <!-- HTTPBEGIN -->
+    <!-- HTTPBEGIN %%comment VAR:zimbraMailMode,-->,http,redirect,mixed,both%%
     <Ref id="http">
       <Call name="open"/>
     </Ref>
-    <!-- HTTPEND -->
+    %%comment VAR:zimbraMailMode,<!--,http,redirect,mixed,both%% HTTPEND -->
     
-    <!-- HTTPSBEGIN
+    <!-- HTTPSBEGIN %%comment VAR:zimbraMailMode,-->,https,redirect,mixed,both%%
     <Ref id="ssl">
       <Call name="open"/>
     </Ref>
-    HTTPSEND -->
+    %%comment VAR:zimbraMailMode,<!--,https,redirect,mixed,both%% HTTPSEND -->
     
     <Ref id="admin">
       <Call name="open"/>
