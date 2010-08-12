@@ -1820,6 +1820,12 @@ public class Mailbox {
      * 
      * @param octxt    The context (authenticated user, redo player, other
      *                 constraints) under which this operation is executed.
+     *                 Note, if the callstack is currently in a transaction,
+     *                 this octxt will be ignored for right checking purpose; 
+     *                 the OperationContext object associated with the 
+     *                 top-most transaction will be used for right checking 
+     *                 purpose instead.
+     *                 
      * @param itemId   The item whose permissions we need to query.
      * @param type     The item's type, or {@link MailItem#TYPE_UNKNOWN}.
      * @return An OR'ed-together set of rights, e.g. {@link ACL#RIGHT_READ}
@@ -1832,13 +1838,14 @@ public class Mailbox {
      * @see ACL
      * @see MailItem#checkRights(short, Account, boolean) */
     public synchronized short getEffectivePermissions(OperationContext octxt, int itemId, byte type) throws ServiceException {
-        // fetch the item outside the transaction so we get it even if the
-        //   authenticated user doesn't have read permissions on it
-        MailItem item = getItemById(null, itemId, type);
-
         boolean success = false;
         try {
             beginTransaction("getEffectivePermissions", octxt);
+            
+            // fetch the item without perm check so we get it even if the
+            // authenticated user doesn't have read permissions on it
+            MailItem item = getItemById(itemId, type);
+            
             // use ~0 to query *all* rights; may need to change this when we do negative rights
             short rights = item.checkRights((short) ~0, getAuthenticatedAccount(), isUsingAdminPrivileges());
             success = true;
@@ -1861,13 +1868,15 @@ public class Mailbox {
      * @throws ServiceException
      */
     public synchronized short getEffectivePermissions(Account authedAcct, boolean asAdmin, int itemId, byte type) throws ServiceException {
-        // fetch the item outside the transaction so we get it even if the
-        //   authenticated user doesn't have read permissions on it
-        MailItem item = getItemById(null, itemId, type);
 
         boolean success = false;
         try {
             beginTransaction("getEffectivePermissions", new OperationContext(authedAcct, asAdmin));
+            
+            // fetch the item without perm check so we get it even if the
+            // authenticated user doesn't have read permissions on it
+            MailItem item = getItemById(itemId, type);
+            
             // use ~0 to query *all* rights; may need to change this when we do negative rights
             short rights = item.checkRights((short) ~0, authedAcct, asAdmin);
             success = true;
