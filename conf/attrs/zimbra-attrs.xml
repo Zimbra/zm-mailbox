@@ -4959,4 +4959,19 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Expand the contact groups in Apple Address Book format to Zimbra format over CardDAV.</desc>
 </attr>
 
+<attr id="1103" name="zimbraPrefCalendarWorkdays" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="WorkdaysMask" since="7.0.0">
+  <defaultCOSValue>0111110</defaultCOSValue>
+  <desc>seven-digit sequence indicating working (1) or non-working (0) days.  first digit is Sunday, then Monday, and so on</desc>
+</attr>
+
+<attr id="1104" name="zimbraPrefCalendarWorkdayStartTime" type="string" max="4" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="WorkdayStartEndTime" since="7.0.0">
+  <defaultCOSValue>0800</defaultCOSValue>
+  <desc>start time of a working day (HHMM format, from 0000 to 2400)</desc>
+</attr>
+
+<attr id="1105" name="zimbraPrefCalendarWorkdayEndTime" type="string" max="4" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="WorkdayStartEndTime" since="7.0.0">
+  <defaultCOSValue>1700</defaultCOSValue>
+  <desc>end time of a working day (HHMM format, from 0000 to 2400)</desc>
+</attr>
+
 </attrs>
