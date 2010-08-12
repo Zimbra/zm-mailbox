@@ -1847,6 +1847,36 @@ public class Mailbox {
             endTransaction(success);
         }
     }
+    
+    /**
+     * See Mailbox.getEffectivePermissions(OperationContext octxt, int itemId, byte type)
+     * 
+     * This API uses the credentials in authedAcct/asAdmin parameters.
+     * 
+     * @param authedAcct
+     * @param asAdmin
+     * @param itemId
+     * @param type
+     * @return
+     * @throws ServiceException
+     */
+    public synchronized short getEffectivePermissions(Account authedAcct, boolean asAdmin, int itemId, byte type) throws ServiceException {
+        // fetch the item outside the transaction so we get it even if the
+        //   authenticated user doesn't have read permissions on it
+        MailItem item = getItemById(null, itemId, type);
+
+        boolean success = false;
+        try {
+            beginTransaction("getEffectivePermissions", new OperationContext(authedAcct, asAdmin));
+            // use ~0 to query *all* rights; may need to change this when we do negative rights
+            short rights = item.checkRights((short) ~0, authedAcct, asAdmin);
+            success = true;
+            return rights;
+        } finally {
+            endTransaction(success);
+        }
+    }
+    
 
     /** Returns whether this type of {@link MailItem} is definitely preloaded
      *  in one of the <tt>Mailbox</tt>'s caches.
