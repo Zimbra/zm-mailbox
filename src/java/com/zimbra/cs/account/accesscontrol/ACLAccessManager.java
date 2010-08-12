@@ -428,9 +428,9 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
                 result = CheckPresetRight.check(grantee, target, rightNeeded, canDelegateNeeded, via);
             
             if (result != null && result.booleanValue()) 
-                return result.booleanValue();  // // allowed by ACL
+                return result.booleanValue();  // allowed by ACL
             else {
-                // either no matching ACL for the right or is now allowed by ACL
+                // either no matching ACL for the right or is not allowed by ACL
                 
                 if (canDelegateNeeded)
                     return false;
@@ -444,7 +444,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
                 }
                 
                 if (result == null) {
-                    // no matching ACL for the right, and no callback (or no callback result), 
+                    // no matching ACL for the right, and no fallback (or no fallback result), 
                     // see if there is a configured default 
                     Boolean defaultValue = rightNeeded.getDefault();
                     if (defaultValue != null)
