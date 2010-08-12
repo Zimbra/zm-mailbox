@@ -23,9 +23,11 @@ import org.junit.Test;
 
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.ZimbraQuery;
+import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.index.queryparser.Token;
 import com.zimbra.cs.index.queryparser.ZimbraQueryParser;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MockMailboxManager;
 
 /**
  * Unit test for {@link ZimbraQuery}.
@@ -36,8 +38,9 @@ public class ZimbraQueryTest {
 
     @Test
     public void emptySubject() throws Exception {
+        Mailbox mbox = new MockMailboxManager().getMailboxByAccountId("0");
         ZimbraQuery.BaseQuery query = ZimbraQuery.SubjectQuery.create(
-                new TestMailbox(), ZimbraAnalyzer.getDefaultAnalyzer(),
+                mbox, ZimbraAnalyzer.getDefaultAnalyzer(),
                 0, 0, "");
         Assert.assertEquals(ZimbraQuery.TextQuery.class, query.getClass());
         Assert.assertEquals("Q(UNKNOWN:(0),)", query.toString());
@@ -82,12 +85,31 @@ public class ZimbraQueryTest {
                 query.toString());
     }
 
-    private static class TestMailbox extends Mailbox {
+    @Test
+    public void parseSize() throws Exception {
+        ZimbraQuery.SizeQuery query = new ZimbraQuery.SizeQuery(0, 0, "1KB");
+        Assert.assertEquals("Q(UNKNOWN:(0),1024)", query.toString());
 
-        protected TestMailbox() {
-            super(new Mailbox.MailboxData());
+        query = new ZimbraQuery.SizeQuery(0, 0, ">1KB");
+        Assert.assertEquals("Q(BIGGER,1024)", query.toString());
+
+        query = new ZimbraQuery.SizeQuery(0, 0, "<1KB");
+        Assert.assertEquals("Q(SMALLER,1024)", query.toString());
+
+        query = new ZimbraQuery.SizeQuery(0, 0, ">=1KB");
+        Assert.assertEquals("Q(BIGGER,1023)", query.toString());
+
+        query = new ZimbraQuery.SizeQuery(0, 0, "<=1KB");
+        Assert.assertEquals("Q(SMALLER,1025)", query.toString());
+
+        query = new ZimbraQuery.SizeQuery(0, 0, "1 KB");
+        Assert.assertEquals("Q(UNKNOWN:(0),1024)", query.toString());
+
+        try {
+            query = new ZimbraQuery.SizeQuery(0, 0, "x KB");
+            Assert.fail();
+        } catch (ParseException expected) {
         }
-
     }
 
 }

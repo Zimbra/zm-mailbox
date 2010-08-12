@@ -391,7 +391,7 @@ public final class ZimbraQuery {
         }
 
 
-        public static final ParseException parseException(String s, String code, Token t) throws ParseException {
+        public static final ParseException parseException(String s, String code, Token t) {
             ParseException pe = new ParseException(s, code);
             pe.currentToken = t;
             return pe;
@@ -1211,8 +1211,18 @@ public final class ZimbraQuery {
         private String mSizeStr;
         private long mSize;
 
+        /**
+         * @param analyzer not used
+         */
+        @Deprecated
         public SizeQuery(Analyzer analyzer, int modifier, int target,
                 String size) throws ParseException {
+            this(modifier, target, size);
+        }
+
+        public SizeQuery(int modifier, int target, String size)
+            throws ParseException {
+
             super(modifier, target);
 
             boolean hasEQ = false;
@@ -1239,8 +1249,8 @@ public final class ZimbraQuery {
             typeChar = Character.toLowerCase(mSizeStr.charAt(mSizeStr.length() - 1));
             // strip "b" off end (optimize me)
             if (typeChar == 'b') {
-                mSizeStr = mSizeStr.substring(0,mSizeStr.length()-1);
-                typeChar = Character.toLowerCase(mSizeStr.charAt(mSizeStr.length() -1));
+                mSizeStr = mSizeStr.substring(0, mSizeStr.length() - 1);
+                typeChar = Character.toLowerCase(mSizeStr.charAt(mSizeStr.length() - 1));
             }
 
             // size:100b size:1kb size:1mb bigger:10kb smaller:3gb
@@ -1260,7 +1270,12 @@ public final class ZimbraQuery {
                 mSizeStr = mSizeStr.substring(0, mSizeStr.length() - 1);
             }
 
-            mSize = Integer.parseInt(mSizeStr) * multiplier;
+            try {
+                mSize = Integer.parseInt(mSizeStr.trim()) * multiplier;
+            } catch (NumberFormatException e) {
+                throw new ParseException("'" + mSizeStr + "' is NaN",
+                        "PARSER_ERROR");
+            }
 
             if (hasEQ) {
                 if (getQueryType() == ZimbraQueryParser.BIGGER) {
@@ -1319,7 +1334,7 @@ public final class ZimbraQuery {
         private Operator mOp;
 
         public ModseqQuery(Mailbox mbox, Analyzer analyzer, int modifier,
-                int target, String changeId) throws ParseException {
+                int target, String changeId) {
             super(modifier, target);
 
             if (changeId.charAt(0) == '<') {
@@ -1388,6 +1403,7 @@ public final class ZimbraQuery {
 
     public static class SubQuery extends BaseQuery {
         private List<BaseQuery> mSubClauses;
+
         public SubQuery(Analyzer analyzer, int modifier, List<BaseQuery> exp) {
             super(modifier, SUBQUERY_TOKEN );
             mSubClauses = exp;
@@ -1999,8 +2015,8 @@ public final class ZimbraQuery {
             return op;
         }
 
-        public static BaseQuery create(Mailbox mbox, Analyzer analyzer, int modifier, int qType, String str)
-        throws ServiceException {
+        public static BaseQuery create(Mailbox mbox, Analyzer analyzer,
+                int modifier, int qType, String str) {
             if (str.charAt(0) == '<') {
                 boolean eq = false;
                 if (str.charAt(1) == '=') {
@@ -2177,17 +2193,14 @@ public final class ZimbraQuery {
     }
 
     /**
-     *
      * ParseTree's job is to take the LIST of query terms (BaseQuery's) and build them
      * into a Tree structure of Things (return results) and Operators (AND and OR)
      *
      * Once a simple tree is built, then ParseTree "distributes the NOTs" down to the leaf
      * nodes: this is so we never have to do result-set inversions, which are prohibitively
      * expensive for nontrivial cases.
-     *
      */
-    private static class ParseTree
-    {
+    private static class ParseTree {
         private static final int STATE_AND    = 1;
         private static final int STATE_OR     = 2;
 
@@ -2438,6 +2451,7 @@ public final class ZimbraQuery {
     private static final class CountTextOperations implements QueryOperation.RecurseCallback {
         int num = 0;
 
+        @Override
         public void recurseCallback(QueryOperation op) {
             if (op instanceof TextQueryOperation) {
                 num++;
@@ -2447,6 +2461,7 @@ public final class ZimbraQuery {
     private static final class CountCombiningOperations implements QueryOperation.RecurseCallback {
         int num = 0;
 
+        @Override
         public void recurseCallback(QueryOperation op) {
             if (op instanceof CombiningQueryOperation) {
                 if (((CombiningQueryOperation)op).getNumSubOps() > 1) {
@@ -2493,7 +2508,7 @@ public final class ZimbraQuery {
     }
 
 
-    public static boolean unitTests(Mailbox mbox) throws ServiceException {
+    public static boolean unitTests(Mailbox mbox) {
 
         try {
             final long GRAN = 1000L; // time granularity in SQL (1000ms = 1sec)
@@ -2916,18 +2931,16 @@ public final class ZimbraQuery {
 
                 Set<Folder> visibleFolders = mbox.getVisibleFolders(octxt);
 
-                localOps = handleLocalPermissionChecks(localOps, mMbox, octxt,
-                                                       mMbox.getMailboxIndex(), mParams,
-                                                       visibleFolders,
-                                                       allowPrivateAccess);
+                localOps = handleLocalPermissionChecks(localOps, visibleFolders,
+                        allowPrivateAccess);
 
                 if (ZimbraLog.index_search.isDebugEnabled()) {
-                    ZimbraLog.index_search.debug("LOCAL_AFTER_PERM_CHECKS="+localOps.toString());
+                    ZimbraLog.index_search.debug("LOCAL_AFTER_PERM_CHECKS=%s", localOps);
                 }
 
                 if (!hasFolderRightPrivateSet.isEmpty()) {
                     if (ZimbraLog.index_search.isDebugEnabled()) {
-                        ZimbraLog.index_search.debug("CLONED_LOCAL_BEFORE_PERM="+clonedLocal.toString());
+                        ZimbraLog.index_search.debug("CLONED_LOCAL_BEFORE_PERM=%s", clonedLocal);
                     }
 
                     //
@@ -2936,13 +2949,11 @@ public final class ZimbraQuery {
                     // that have RIGHT_PRIVATE (note that we build this list from the visible
                     // folder list, so we are
                     //
-                    clonedLocal = handleLocalPermissionChecks(clonedLocal, mMbox, octxt,
-                                                              mMbox.getMailboxIndex(), mParams,
-                                                              hasFolderRightPrivateSet,
-                                                              true);
+                    clonedLocal = handleLocalPermissionChecks(
+                            clonedLocal, hasFolderRightPrivateSet, true);
 
                     if (ZimbraLog.index_search.isDebugEnabled()) {
-                        ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_PERM="+clonedLocal.toString());
+                        ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_PERM=%s", clonedLocal);
                     }
 
                     // clonedLocal should only have the single INTERSECT in it
@@ -2950,7 +2961,7 @@ public final class ZimbraQuery {
 
                     QueryOperation optimizedClonedLocal = clonedLocal.optimize(mbox);
                     if (ZimbraLog.index_search.isDebugEnabled()) {
-                        ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_OPTIMIZE="+optimizedClonedLocal.toString());
+                        ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_OPTIMIZE=%s", optimizedClonedLocal);
                     }
 
                     UnionQueryOperation withPrivateExcluded = localOps;
@@ -2959,7 +2970,7 @@ public final class ZimbraQuery {
                     localOps.add(optimizedClonedLocal);
 
                     if (ZimbraLog.index_search.isDebugEnabled()) {
-                        ZimbraLog.index_search.debug("LOCAL_WITH_CLONED="+localOps.toString());
+                        ZimbraLog.index_search.debug("LOCAL_WITH_CLONED=%s", localOps);
                     }
 
                     //
@@ -2981,13 +2992,13 @@ public final class ZimbraQuery {
             union.add(localOps);
             union.add(remoteOps);
             if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("BEFORE_FINAL_OPT="+union.toString());
+                ZimbraLog.index_search.debug("BEFORE_FINAL_OPT=%s", union);
             }
             mOp = union.optimize(mbox);
             assert(union.mQueryOperations.size() > 0);
         }
         if (ZimbraLog.index_search.isDebugEnabled()) {
-            ZimbraLog.index_search.debug("END_ZIMBRAQUERY_CONSTRUCTOR="+mOp.toString());
+            ZimbraLog.index_search.debug("END_ZIMBRAQUERY_CONSTRUCTOR=%s", mOp);
         }
     }
 
@@ -3052,6 +3063,7 @@ public final class ZimbraQuery {
      */
     private static final class excludePrivateCalendarItems implements QueryOperation.RecurseCallback {
 
+        @Override
         public void recurseCallback(QueryOperation op) {
             if (op instanceof TextQueryOperation) {
                 ((TextQueryOperation)op).addAndedClause(new TermQuery(new Term(
@@ -3065,14 +3077,9 @@ public final class ZimbraQuery {
      *   - exclude all the not-visible folders from the query
      *   - look at all the text-operations and figure out if private appointments need to be excluded
      */
-    private static UnionQueryOperation handleLocalPermissionChecks(UnionQueryOperation union,
-                                                              Mailbox mbox,
-                                                              OperationContext octxt,
-                                                              MailboxIndex mbidx,
-                                                              SearchParams params,
-                                                              Set<Folder> visibleFolders,
-                                                              boolean allowPrivateAccess)
-    throws ServiceException {
+    private static UnionQueryOperation handleLocalPermissionChecks(
+            UnionQueryOperation union, Set<Folder> visibleFolders,
+            boolean allowPrivateAccess) {
 
         // Since optimize() has already been run, we know that each of our ops
         // only has one target (or none).  Find those operations which have

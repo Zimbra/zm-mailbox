@@ -27,6 +27,7 @@ class MockMailbox extends Mailbox {
 
     MockMailbox(Account account) {
         super(new MailboxData());
+        this.account = account;
     }
 
     @Override
