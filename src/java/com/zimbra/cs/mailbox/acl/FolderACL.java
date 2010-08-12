@@ -259,7 +259,8 @@ public class FolderACL {
         EffectiveACLCache.put(folder.getAccount().getId(), folder.getId(), acl);
         
         // return the effective permission - auth user dependent
-        return ownerMbx.getEffectivePermissions(octxt, folder.getId(), MailItem.TYPE_FOLDER);
+        return ownerMbx.getEffectivePermissions(octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), 
+                folder.getId(), MailItem.TYPE_FOLDER);
     }
     
     private Short getEffectivePermissionsRemote() throws ServiceException {
