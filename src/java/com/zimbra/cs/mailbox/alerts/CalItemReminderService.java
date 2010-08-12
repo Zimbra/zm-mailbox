@@ -2,6 +2,8 @@ package com.zimbra.cs.mailbox.alerts;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
@@ -21,8 +23,20 @@ import java.util.Map;
 public class CalItemReminderService extends MailboxListener {
 
     public void handleMailboxChange(String accountId, PendingModifications mods, OperationContext octxt, int lastChangeId) {
-        if (ZimbraLog.scheduler.isDebugEnabled())
-            ZimbraLog.scheduler.debug(getClass().getName() + ".handleMailboxChange()...");
+        Account account = null;
+        try {
+            account = Provisioning.getInstance().getAccountById(accountId);
+        } catch (ServiceException e) {
+            ZimbraLog.scheduler.error("Error in getting account", e);
+        }
+        if (account == null) {
+            ZimbraLog.scheduler.error("Account not found for id " + accountId);
+            return;
+        }
+        if (!account.getBooleanAttr(Provisioning.A_zimbraPrefCalendarReminderSendEmail, false)) {
+            // calendar reminders not enabled for this account
+            return;
+        }
         if (mods.created != null) {
             for (Map.Entry<PendingModifications.ModificationKey, MailItem> entry : mods.created.entrySet()) {
                 MailItem item = entry.getValue();
