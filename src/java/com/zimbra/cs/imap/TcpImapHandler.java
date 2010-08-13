@@ -175,13 +175,15 @@ class TcpImapHandler extends ImapHandler {
             }
         }.start();
 
+        if (mCredentials != null && !mGoodbyeSent)
+        	ZimbraLog.imap.info("dropping connection for user " + mCredentials.getUsername() + " (server-initiated)");
+
         ZimbraLog.addIpToContext(mRemoteAddress);
         try {
             OutputStream os = mOutputStream;
             if (os != null) {
-                if (sendBanner && !mGoodbyeSent) {
+                if (sendBanner && !mGoodbyeSent)
                     sendBYE();
-                }
                 os.close();
                 mOutputStream = null;
             }

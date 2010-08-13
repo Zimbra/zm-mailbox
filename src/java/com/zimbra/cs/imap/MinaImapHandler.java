@@ -141,16 +141,18 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
             unsetSelectedFolder(false);
         } catch (Exception e) { }
 
+        if (mCredentials != null && !mGoodbyeSent)
+        	ZimbraLog.imap.info("dropping connection for user " + mCredentials.getUsername() + " (server-initiated)");
+
         if (mSession.isClosed())
             return; // No longer connected
         ZimbraLog.imap.debug("dropConnection: sendBanner = %s\n", sendBanner);
         cleanup();
-        if (sendBanner && !mGoodbyeSent) {
+
+        if (sendBanner && !mGoodbyeSent)
             sendBYE();
-        }
-        if (!mSession.drainWriteQueue(timeout)) {
+        if (!mSession.drainWriteQueue(timeout))
             ZimbraLog.imap.warn("Force closing connection with unsent data");
-        }
         mSession.close();
     }
 
