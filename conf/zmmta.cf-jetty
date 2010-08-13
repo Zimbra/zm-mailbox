@@ -89,10 +89,12 @@ SECTION mta DEPENDS amavis
 	POSTCONF alias_maps 						              LOCAL postfix_alias_maps
 	POSTCONF broken_sasl_auth_clients			        LOCAL postfix_broken_sasl_auth_clients
   POSTCONF bounce_queue_lifetime                LOCAL postfix_bounce_queue_lifetime
+  POSTCONF bounce_notice_recipient              LOCAL postfix_bounce_notice_recipient
 	POSTCONF mail_owner                           LOCAL postfix_mail_owner
 	POSTCONF setgid_group                         LOCAL postfix_setgid_group
 	POSTCONF command_directory					          LOCAL postfix_command_directory
 	POSTCONF daemon_directory					            LOCAL postfix_daemon_directory
+  POSTCONF delay_warning_time                   LOCAL postfix_delay_warning_time
 	POSTCONF header_checks						            LOCAL postfix_header_checks
   if VAR zimbraMtaBlockedExtensionWarnRecipient
 	  POSTCONF header_checks
@@ -100,6 +102,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF mailq_path							              LOCAL postfix_mailq_path
 	POSTCONF manpage_directory					          LOCAL postfix_manpage_directory
 	POSTCONF newaliases_path					            LOCAL postfix_newaliases_path
+  POSTCONF notify_classes                       LOCAL postfix_notify_classes
 	POSTCONF policy_time_limit				LOCAL postfix_policy_time_limit
 	POSTCONF queue_directory					            LOCAL postfix_queue_directory
 	POSTCONF smtpd_sasl_authenticated_header			LOCAL postfix_smtpd_sasl_authenticated_header
