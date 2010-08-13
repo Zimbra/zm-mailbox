@@ -242,4 +242,19 @@ public class IcalUtil {
         }
         return myString;
     }
+ 
+    public static String toHexString(byte[] bytes, int offset, int len) {
+        if (bytes == null) {
+            return "";
+        }
+        StringBuffer s = new StringBuffer();
+        for (int i = 0; i < len; i++) {
+            String b = Integer.toHexString(bytes[offset + i] & 0xFF).toUpperCase();
+            if (b.length() == 1) {
+                s.append('0');
+            }
+            s.append(b);
+        }
+        return s.toString();
+    }
 }

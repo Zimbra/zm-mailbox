@@ -229,7 +229,17 @@ public class RecurrenceDefinition {
             
             startMinsSince1601 = ris.readU32();
             endMinsSince1601 = ris.readU32();
-    
+
+            unprocessedByteCount = ris.available();
+            if (unprocessedByteCount == 0L) {
+                // Task recurrence info ends at this point.
+                exceptionCount = 0;
+                startTimeOffset = 0;
+                endTimeOffset = 0;
+                exceptionCount = 0;
+                changedInstances = new ArrayList <ChangedInstanceInfo>();
+                return;
+            }
             readerVersion2 = ris.readU32();
             writerVersion2 = ris.readU32();
             

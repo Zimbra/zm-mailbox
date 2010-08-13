@@ -43,7 +43,9 @@ import net.fortuna.ical4j.model.parameter.Rsvp;
 import net.fortuna.ical4j.model.property.Clazz;
 import net.fortuna.ical4j.model.property.Method;
 import net.fortuna.ical4j.model.property.Transp;
+import net.freeutils.tnef.Attachment;
 import net.freeutils.tnef.MAPIProp;
+import net.freeutils.tnef.MAPIProps;
 import net.freeutils.tnef.TNEFInputStream;
 
 import com.zimbra.common.service.ServiceException;
@@ -53,6 +55,7 @@ import com.zimbra.cs.util.tnef.TNEFtoIcalendarServiceException.UnsupportedTnefCa
 import com.zimbra.cs.util.tnef.mapi.BusyStatus;
 import com.zimbra.cs.util.tnef.mapi.ChangedInstanceInfo;
 import com.zimbra.cs.util.tnef.mapi.ExceptionInfoOverrideFlag;
+import com.zimbra.cs.util.tnef.mapi.MapiPropertyId;
 import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
 import com.zimbra.cs.util.tnef.mapi.TimeZoneDefinition;
 import net.fortuna.ical4j.model.parameter.Cn;
@@ -63,6 +66,7 @@ import net.fortuna.ical4j.model.property.CalScale;
 import net.fortuna.ical4j.model.property.Categories;
 import net.fortuna.ical4j.model.property.DtStamp;
 import net.fortuna.ical4j.model.property.Organizer;
+import net.fortuna.ical4j.model.property.Priority;
 import net.fortuna.ical4j.model.property.Status;
 import net.fortuna.ical4j.model.property.Trigger;
 import net.fortuna.ical4j.model.property.XProperty;
@@ -83,6 +87,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
     private DtStamp dtstamp;
     private String uid;
     private Method method;
+    private ICALENDAR_TYPE icalType;
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.util.tnef.TnefToICalendar#convert(java.io.InputStream, net.fortuna.ical4j.data.ContentHandler)
@@ -95,6 +100,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
         TNEFInputStream tnefStream = null;
         SchedulingViewOfTnef schedView = null;
         Integer sequenceNum = 0;
+        icalType = ICALENDAR_TYPE.VEVENT;
 
         try {
             tnefStream = new TNEFInputStream(tnefInput);
@@ -106,50 +112,11 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 // throw TNEFtoIcalendarServiceException.NON_CALENDARING_CLASS(msgClass);
                 return false;
             }
-            uid = schedView.getIcalUID();
-            sequenceNum = schedView.getSequenceNumber();
-            boolean replyWanted = schedView.getResponseRequested();
-            boolean reminderSet = schedView.getReminderSet();
-            String location = schedView.getLocation();
-            Boolean isAllDayEvent = schedView.isAllDayEvent();
-            Boolean isCounterProposal = schedView.isCounterProposal();
-            Integer importance = schedView.getMapiImportance();
-            Clazz  icalClass = schedView.getIcalClass();
-            Integer ownerApptId = schedView.getOwnerAppointmentId();
-            BusyStatus busyStatus = schedView.getBusyStatus();
-            BusyStatus intendedBusyStatus = schedView.getIntendedBusyStatus();
-            // For some ICAL properties like TRANSP and STATUS, intendedBusyStatus
-            // seems closer to what is intended than straight busyStatus
-            BusyStatus bestBusyStatus = intendedBusyStatus;
-            if (bestBusyStatus == null) {
-                bestBusyStatus = busyStatus;
-            }
-            // An algorithm is used to choose the values for these
-            // TimeZoneDefinitions  - they don't necessarily map to single
-            // MAPI properties
-            TimeZoneDefinition startTimeTZinfo = schedView.getStartDateTimezoneInfo();
-            TimeZoneDefinition endTimeTZinfo = schedView.getEndDateTimezoneInfo();
-            TimeZoneDefinition recurrenceTZinfo = schedView.getRecurrenceTimezoneInfo();
-            recurDef = schedView.getRecurrenceDefinition(recurrenceTZinfo);
-
-            DateTime icalStartDate = schedView.getStartTime();
-            DateTime icalEndDate = schedView.getEndTime();
-            DateTime icalCreateDate = schedView.getUtcDateTime(null, MAPIProp.PR_CREATION_TIME);
-            DateTime icalLastModDate = schedView.getUtcDateTime(null, MAPIProp.PR_LAST_MODIFICATION_TIME);
-            DateTime recurrenceIdDateTime = schedView.getRecurrenceIdTime();
-            DateTime attendeeCriticalChange = schedView.getAttendeeCriticalChange();
-            DateTime ownerCriticalChange = schedView.getOwnerCriticalChange();
-            List <String> categories = schedView.getCategories();
+            icalType = schedView.getIcalType();
             method = null;
             PartStat partstat = null;
-            String descriptionText = null;
-            String summary = null;
-            if (mimeMsg != null) {
-                summary = mimeMsg.getSubject();
-                PlainTextFinder finder = new PlainTextFinder();
-                finder.accept(mimeMsg);
-                descriptionText = finder.getPlainText();
-            }
+            boolean replyWanted = schedView.getResponseRequested();
+            Boolean isCounterProposal = schedView.isCounterProposal();
             if (msgClass != null) {
                 // IPM.Microsoft Schedule.MtgRespP IPM.Schedule.Meeting.Resp.Pos
                 // IPM.Microsoft Schedule.MtgRespN IPM.Schedule.Meeting.Resp.Neg
@@ -183,6 +150,22 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 } else if (msgClass.startsWith("IPM.Microsoft Schedule.MtgCncl")) {
                     method = Method.CANCEL;
                     replyWanted = false;
+                } else if (msgClass.startsWith("IPM.TaskRequest.Accept")) {
+                    method = Method.REPLY;
+                    partstat = PartStat.ACCEPTED;
+                    replyWanted = false;
+                } else if (msgClass.startsWith("IPM.TaskRequest.Decline")) {
+                    method = Method.REPLY;
+                    partstat = PartStat.DECLINED;
+                    replyWanted = false;
+                } else if (msgClass.startsWith("IPM.TaskRequest.Update")) {
+                    method = Method.REPLY; // TODO: Is this necessarily true?
+                    partstat = PartStat.IN_PROCESS; // May be overridden?
+                    replyWanted = false;
+                } else if (msgClass.startsWith("IPM.TaskRequest")) {
+                    method = Method.REQUEST;
+                    partstat = PartStat.NEEDS_ACTION;
+                    replyWanted = true;
                 }
             }
 
@@ -192,6 +175,77 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
 //                throw TNEFtoIcalendarServiceException.NON_CALENDARING_CLASS(msgClass);
             }
 
+            if (icalType == ICALENDAR_TYPE.VTODO) {
+                List <?> attaches = (List <?>) schedView.getAttachments();
+                if (attaches == null) {
+                    sLog.debug("Unable to map class %s to ICALENDER - no attachments", msgClass);
+                    return false;
+                }
+                schedView = null;
+                for (Object obj:attaches) {
+                    if (obj instanceof Attachment) {
+                        Attachment currAttach = (Attachment) obj;
+                        MAPIProps attachMPs = currAttach.getMAPIProps();
+                        if (attachMPs != null) {
+                            MAPIProp attachData = attachMPs.getProp(MAPIProp.PR_ATTACH_DATA_OBJ);
+                            if (attachData != null) {
+                                Object theVal = attachData.getValue();
+                                if ( (theVal != null) && (theVal instanceof TNEFInputStream)) {
+                                    TNEFInputStream tnefSubStream = (TNEFInputStream) theVal;
+                                    schedView = new SchedulingViewOfTnef(tnefSubStream);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (schedView == null) {
+                    sLog.debug("Unable to map class %s to ICALENDER - no properties found for sub-msg", msgClass);
+                }
+            }
+            uid = schedView.getIcalUID();
+            sequenceNum = schedView.getSequenceNumber();
+            boolean reminderSet = schedView.getReminderSet();
+            String location = schedView.getLocation();
+            Boolean isAllDayEvent = schedView.isAllDayEvent();
+            Integer importance = schedView.getMapiImportance();
+            Clazz  icalClass = schedView.getIcalClass();
+            Integer ownerApptId = schedView.getOwnerAppointmentId();
+            BusyStatus busyStatus = schedView.getBusyStatus();
+            BusyStatus intendedBusyStatus = schedView.getIntendedBusyStatus();
+            // For some ICAL properties like TRANSP and STATUS, intendedBusyStatus
+            // seems closer to what is intended than straight busyStatus
+            BusyStatus bestBusyStatus = intendedBusyStatus;
+            if (bestBusyStatus == null) {
+                bestBusyStatus = busyStatus;
+            }
+            // An algorithm is used to choose the values for these
+            // TimeZoneDefinitions  - they don't necessarily map to single
+            // MAPI properties
+            TimeZoneDefinition startTimeTZinfo = schedView.getStartDateTimezoneInfo();
+            TimeZoneDefinition endTimeTZinfo = schedView.getEndDateTimezoneInfo();
+            TimeZoneDefinition recurrenceTZinfo = schedView.getRecurrenceTimezoneInfo();
+            recurDef = schedView.getRecurrenceDefinition(recurrenceTZinfo);
+
+            DateTime icalStartDate = schedView.getStartTime();
+            DateTime icalEndDate = schedView.getEndTime();
+            DateTime icalDueDate = schedView.getDueDate();
+            DateTime icalCreateDate =
+                MapiPropertyId.PidTagCreationTime.getUtcDateTime(schedView);
+            DateTime icalLastModDate =
+                MapiPropertyId.PidTagLastModificationTime.getUtcDateTime(schedView);
+            DateTime recurrenceIdDateTime = schedView.getRecurrenceIdTime();
+            DateTime attendeeCriticalChange = schedView.getAttendeeCriticalChange();
+            DateTime ownerCriticalChange = schedView.getOwnerCriticalChange();
+            List <String> categories = schedView.getCategories();
+            String descriptionText = null;
+            String summary = null;
+            if (mimeMsg != null) {
+                summary = mimeMsg.getSubject();
+                PlainTextFinder finder = new PlainTextFinder();
+                finder.accept(mimeMsg);
+                descriptionText = finder.getPlainText();
+            }
             // RTF might be useful as a basis for X-ALT-DESC if we can find a reliable
             // conversion to HTML
             // String rtfText = schedView.getRTF();
@@ -239,7 +293,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 }
             }
 
-            icalOutput.startComponent(Component.VEVENT);
+            icalOutput.startComponent(icalType.toString());
             //TODO - for text properties, need to handle line endings and strange
             //       characters - also, OemCodePage may need to be taken into account.
             if (uid == null) {
@@ -264,12 +318,22 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             IcalUtil.addProperty(icalOutput, Property.SEQUENCE, sequenceNum, false);
             if ( (summary == null) || (summary.length() == 0) ) {
                 // TNEF_to_iCalendar.pdf Spec requires SUMMARY for certain method types
-                if (method.equals(Method.REPLY)) {
-                    summary = new String("Response");
-                } else if (method.equals(Method.CANCEL)) {
-                    summary = new String("Canceled");
-                } else if (method.equals(Method.COUNTER)) {
-                    summary = new String("Counter Proposal");
+                if (this.icalType == ICALENDAR_TYPE.VTODO) {
+                    if (method.equals(Method.REQUEST)) {
+                        summary = new String("Task Request");
+                    } else if (method.equals(Method.REPLY)) {
+                        summary = new String("Task Response");
+                    } else {
+                        summary = new String("Task");
+                    }
+                } else {
+                    if (method.equals(Method.REPLY)) {
+                        summary = new String("Response");
+                    } else if (method.equals(Method.CANCEL)) {
+                        summary = new String("Canceled");
+                    } else if (method.equals(Method.COUNTER)) {
+                        summary = new String("Counter Proposal");
+                    }
                 }
             }
             IcalUtil.addProperty(icalOutput, Property.SUMMARY, summary, false);
@@ -287,10 +351,17 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                         "X-MS-OLK-ORIGINALEND",
                         icalEndDate, endTimeTZinfo, isAllDayEvent);
             } else {
-                IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTSTART,
-                        icalStartDate, startTimeTZinfo, isAllDayEvent);
-                IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTEND,
-                        icalEndDate, endTimeTZinfo, isAllDayEvent);
+                if (this.icalType == ICALENDAR_TYPE.VTODO) {
+                    IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTSTART,
+                            icalStartDate, startTimeTZinfo, true);
+                    IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DUE,
+                            icalDueDate, startTimeTZinfo, true);
+                } else {
+                    IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTSTART,
+                            icalStartDate, startTimeTZinfo, isAllDayEvent);
+                    IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTEND,
+                            icalEndDate, endTimeTZinfo, isAllDayEvent);
+                }
             }
 
             // TODO: RECURRENCE-ID only makes sense in relation to a recurrence. It isn't
@@ -305,17 +376,19 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 addRecurrenceRelatedProps(icalOutput, recurDef, startTimeTZinfo, isAllDayEvent);
             }
 
-
+            // VTODO REQUEST must have priority according to http://tools.ietf.org/html/rfc5546
+            // No harm in always setting it
+            Priority priority = Priority.MEDIUM;
             if (importance != null) {
                 if (importance == 2) {
-                    importance = new Integer(1);
+                    priority = Priority.HIGH;
                 } else if (importance == 1) {
-                    importance = new Integer(5);
+                    priority = Priority.MEDIUM;
                 } else if (importance == 0) {
-                    importance = new Integer(9);
+                    priority = Priority.LOW;
                 }
-                IcalUtil.addProperty(icalOutput, Property.PRIORITY, importance, false);
             }
+            IcalUtil.addProperty(icalOutput, priority);
 
             IcalUtil.addProperty(icalOutput, icalClass);
             addStatusProperty(icalOutput, bestBusyStatus);
@@ -333,33 +406,35 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                     IcalUtil.addProperty(icalOutput, myCategories);
                 }
             }
-            IcalUtil.addProperty(icalOutput,
-                    "X-MICROSOFT-CDO-ALLDAYEVENT",
-                    isAllDayEvent ? "TRUE" : "FALSE");
-            IcalUtil.addProperty(icalOutput,
-                    "X-MICROSOFT-CDO-BUSYSTATUS", busyStatus, false);
-            if (method.equals(Method.REQUEST)) {
+            if (this.icalType == ICALENDAR_TYPE.VEVENT) {
                 IcalUtil.addProperty(icalOutput,
-                        "X-MICROSOFT-CDO-INTENDEDSTATUS",
-                        intendedBusyStatus, false);
-            }
-            IcalUtil.addProperty(icalOutput, "X-MICROSOFT-CDO-OWNERAPPTID",
-                        ownerApptId, false);
-            IcalUtil.addProperty(icalOutput, "X-MICROSOFT-CDO-REPLYTIME",
-                    schedView.getAppointmentReplyTime(), false);
-            IcalUtil.addProperty(icalOutput,
-                    "X-MICROSOFT-CDO-OWNER-CRITICAL-CHANGE",
-                    ownerCriticalChange, false);
-            Boolean disallowCounter = schedView.isDisallowCounter();
-            if (disallowCounter != null) {
+                        "X-MICROSOFT-CDO-ALLDAYEVENT",
+                        isAllDayEvent ? "TRUE" : "FALSE");
                 IcalUtil.addProperty(icalOutput,
-                        "X-MICROSOFT-CDO-DISALLOW-COUNTER",
-                        disallowCounter ? "TRUE" : "FALSE");
+                        "X-MICROSOFT-CDO-BUSYSTATUS", busyStatus, false);
+                if (method.equals(Method.REQUEST)) {
+                    IcalUtil.addProperty(icalOutput,
+                            "X-MICROSOFT-CDO-INTENDEDSTATUS",
+                            intendedBusyStatus, false);
+                }
+                IcalUtil.addProperty(icalOutput, "X-MICROSOFT-CDO-OWNERAPPTID",
+                            ownerApptId, false);
+                IcalUtil.addProperty(icalOutput, "X-MICROSOFT-CDO-REPLYTIME",
+                        schedView.getAppointmentReplyTime(), false);
+                IcalUtil.addProperty(icalOutput,
+                        "X-MICROSOFT-CDO-OWNER-CRITICAL-CHANGE",
+                        ownerCriticalChange, false);
+                Boolean disallowCounter = schedView.isDisallowCounter();
+                if (disallowCounter != null) {
+                    IcalUtil.addProperty(icalOutput,
+                            "X-MICROSOFT-CDO-DISALLOW-COUNTER",
+                            disallowCounter ? "TRUE" : "FALSE");
+                }
             }
             if (reminderSet) {
                 addAlarmComponent(icalOutput, schedView.getReminderDelta());
             }
-            icalOutput.endComponent(Component.VEVENT);
+            icalOutput.endComponent(icalType.toString());
             if (recurrenceIdDateTime == null) {
                 // If this message primarily relates to a specific instance,
                 // exception information is superfluous
@@ -450,7 +525,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 if ( (overrideFlags == null) || (overrideFlags.isEmpty()) ) {
                     continue;
                 }
-                icalOutput.startComponent(Component.VEVENT);
+                icalOutput.startComponent(icalType.toString());
                 Boolean exceptIsAllDayEvent = cInst.isAllDayEvent();
                 if (exceptIsAllDayEvent == null) {
                     exceptIsAllDayEvent = seriesIsAllDay;
@@ -488,7 +563,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                         "X-MICROSOFT-CDO-ALLDAYEVENT",
                         exceptIsAllDayEvent ? "TRUE" : "FALSE");
                 addAlarmComponent(icalOutput, cInst.getReminderDelta());
-                icalOutput.endComponent(Component.VEVENT);
+                icalOutput.endComponent(icalType.toString());
             }
         }
     }
@@ -609,29 +684,31 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                     organizer.getParameters().add(sentBy);
                 }
                 IcalUtil.addProperty(icalOutput, organizer);
-                // Assumption - ORGANIZER is an attendee and is attending.
-                Attendee attendee = new Attendee("Mailto:" + firstFromEmailAddr);
-                if (cn != null) {
-                    attendee.getParameters().add(cn);
-                }
-                attendee.getParameters().add(CuType.INDIVIDUAL);
-                attendee.getParameters().add(Role.REQ_PARTICIPANT);
-                if (!method.equals(Method.CANCEL)) {
-                    PartStat orgPartstat = PartStat.ACCEPTED;
-                    if (ccRecips != null) {
-                        for (Address a : ccRecips) {
-                            InternetAddress ia = (InternetAddress) a;
-                            if ( organizerEmail.equals(ia) ) {
-                                orgPartstat = PartStat.TENTATIVE;
-                                break;
+                if (icalType == ICALENDAR_TYPE.VEVENT) {
+                    // Assumption - ORGANIZER is an attendee and is attending.
+                    Attendee attendee = new Attendee("Mailto:" + firstFromEmailAddr);
+                    if (cn != null) {
+                        attendee.getParameters().add(cn);
+                    }
+                    attendee.getParameters().add(CuType.INDIVIDUAL);
+                    attendee.getParameters().add(Role.REQ_PARTICIPANT);
+                    if (!method.equals(Method.CANCEL)) {
+                        PartStat orgPartstat = PartStat.ACCEPTED;
+                        if (ccRecips != null) {
+                            for (Address a : ccRecips) {
+                                InternetAddress ia = (InternetAddress) a;
+                                if ( organizerEmail.equals(ia) ) {
+                                    orgPartstat = PartStat.TENTATIVE;
+                                    break;
+                                }
                             }
                         }
+                        attendee.getParameters().add(orgPartstat);
                     }
-                    attendee.getParameters().add(orgPartstat);
+                    // Was including SENT-BY but probably not appropriate
+                    // for a request
+                    IcalUtil.addProperty(icalOutput, attendee);
                 }
-                // Was including SENT-BY but probably not appropriate
-                // for a request
-                IcalUtil.addProperty(icalOutput, attendee);
             }
             if (toRecips != null) {
                 for (Address a : toRecips) {

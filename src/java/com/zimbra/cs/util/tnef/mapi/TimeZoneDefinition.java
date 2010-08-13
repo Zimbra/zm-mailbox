@@ -18,7 +18,6 @@ package com.zimbra.cs.util.tnef.mapi;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.tnef.IcalUtil;
-import com.zimbra.cs.util.tnef.MSGUID;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -39,7 +38,6 @@ import net.fortuna.ical4j.model.property.TzId;
 import net.fortuna.ical4j.model.property.TzOffsetFrom;
 import net.fortuna.ical4j.model.property.TzOffsetTo;
 import net.fortuna.ical4j.util.TimeZones;
-import net.freeutils.tnef.MAPIPropName;
 import net.freeutils.tnef.RawInputStream;
 
 /**
@@ -86,38 +84,23 @@ public class TimeZoneDefinition {
     private String timezoneName; // KeyName
     private TZRule effectiveRule;
     private TimeZone theZone;
-
-    // PidLidAppointmentTimeZoneDefinitionStartDisplay - Specifies
-    // time zone information applicable to PidLidAppointmentStartWhole.
-    public static MAPIPropName PidLidAppointmentTimeZoneDefinitionStartDisplay =
-            new MAPIPropName(MSGUID.PSETID_Appointment.getJtnefGuid(), 0x825E);
-    // PidLidAppointmentTimeZoneDefinitionEndDisplay - Specifies
-    // time zone information applicable to PidLidAppointmentEndWhole.
-    public static MAPIPropName PidLidAppointmentTimeZoneDefinitionEndDisplay =
-            new MAPIPropName(MSGUID.PSETID_Appointment.getJtnefGuid(), 0x825F);
-    // PidLidAppointmentTimeZoneDefinitionRecur - Specifies time zone information
-    // that describes how to convert the meeting date and time on a recurring
-    // series to and from UTC.
-    // MS-OXOCAL says "If this property is set, but it has data that is
-    // inconsistent with the data that is represented by PidLidTimeZoneStruct,
-    // then the client uses PidLidTimeZoneStruct instead of this property."
-    public static MAPIPropName PidLidAppointmentTimeZoneDefinitionRecur =
-            new MAPIPropName(MSGUID.PSETID_Appointment.getJtnefGuid(), 0x8260);
+    private MapiPropertyId mpi;
 
     /**
      * Initialise TimeZoneDefinition object from one of the MAPI TimeZoneDefinition
      * properties (as opposed to the simpler TimeZoneStruct property)
      * 
-     * @param mpn is one of the known ones associated with TimeZoneDefinition - see above
+     * @param mpi is one of the known ones associated with TimeZoneDefinition - see above
      * @param ris
      * @throws IOException
      */
-    public TimeZoneDefinition(MAPIPropName mpn, RawInputStream ris)
+    public TimeZoneDefinition(MapiPropertyId mpi, RawInputStream ris)
                             throws IOException {
-        if ( (mpn == null) || (ris == null) ) {
+        if ( (mpi == null) || (ris == null) ) {
             throw new IOException("Problem getting timezone information");
         }
         theZone = null;
+        this.mpi = mpi;
         int MajorVersion = ris.readU8();
         int MinorVersion = ris.readU8();
         int cbHeader = ris.readU16();
@@ -129,11 +112,11 @@ public class TimeZoneDefinition {
             StringBuffer debugInfo = new StringBuffer();
             debugInfo.append("TimeZoneName=");
             debugInfo.append(getTimezoneName());
-            if (mpn.equals(TimeZoneDefinition.PidLidAppointmentTimeZoneDefinitionStartDisplay)) {
+            if (mpi.equals(MapiPropertyId.PidLidAppointmentTimeZoneDefinitionStartDisplay)) {
                 debugInfo.append("(PidLidAppointmentTimeZoneDefinitionStartDisplay)");
-            } else if (mpn.equals(TimeZoneDefinition.PidLidAppointmentTimeZoneDefinitionEndDisplay)) {
+            } else if (mpi.equals(MapiPropertyId.PidLidAppointmentTimeZoneDefinitionEndDisplay)) {
                 debugInfo.append("(PidLidAppointmentTimeZoneDefinitionEndDisplay)");
-            } else if (mpn.equals(TimeZoneDefinition.PidLidAppointmentTimeZoneDefinitionRecur)) {
+            } else if (mpi.equals(MapiPropertyId.PidLidAppointmentTimeZoneDefinitionRecur)) {
                 debugInfo.append("(PidLidAppointmentTimeZoneDefinitionRecur)");
             }
             debugInfo.append(":\n");
@@ -198,9 +181,9 @@ public class TimeZoneDefinition {
         currRule.setBias(IcalUtil.readI32(ris));
         currRule.setStandardBias(IcalUtil.readI32(ris));
         currRule.setDaylightBias(IcalUtil.readI32(ris));
-        int wStandardYear = ris.readU16();
+        ris.readU16();  // wStandardYear
         currRule.setStandardDate(new SYSTEMTIME(ris));
-        int wDaylightYear = ris.readU16();
+        ris.readU16();  // wDaylightYear
         currRule.setDaylightDate(new SYSTEMTIME(ris));
         setEffectiveRule(currRule);
     }
@@ -277,8 +260,9 @@ public class TimeZoneDefinition {
             vtz.validate(true);
             theZone = new TimeZone(vtz);
         } catch (ValidationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            if (sLog.isDebugEnabled()) {
+                sLog.debug("Problem with property %s - will default to UTC" + this.mpi.toString(), e);
+            }
             theZone = new TimeZone(0, TimeZones.UTC_ID);
         }
         theZone = new TimeZone(vtz);

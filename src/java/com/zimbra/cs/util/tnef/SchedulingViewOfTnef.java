@@ -18,12 +18,14 @@ package com.zimbra.cs.util.tnef;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import com.zimbra.cs.util.tnef.mapi.GlobalObjectId;
+import com.zimbra.cs.util.tnef.mapi.MapiPropertyId;
 import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
 import com.zimbra.cs.util.tnef.mapi.TZRule;
+import com.zimbra.cs.util.tnef.mapi.TaskMode;
+import com.zimbra.cs.util.tnef.mapi.TaskStatus;
 import com.zimbra.cs.util.tnef.mapi.TimeZoneDefinition;
 
 import net.fortuna.ical4j.model.DateTime;
@@ -31,8 +33,6 @@ import net.fortuna.ical4j.model.property.Clazz;
 import net.freeutils.tnef.Attachment;
 import net.freeutils.tnef.Attr;
 import net.freeutils.tnef.CompressedRTFInputStream;
-import net.freeutils.tnef.MAPIProp;
-import net.freeutils.tnef.MAPIPropName;
 import net.freeutils.tnef.MAPIProps;
 import net.freeutils.tnef.MAPIValue;
 import net.freeutils.tnef.Message;
@@ -67,6 +67,9 @@ public class SchedulingViewOfTnef extends Message {
     private TimeZoneDefinition recurrenceTZinfo;
     
     private EnumSet <AppointmentStateFlags> appointmentStateFlagsMask;
+    private TaskMode taskMode;
+    private TaskStatus taskStatus;
+    private ICALENDAR_TYPE icalType;
 
     public SchedulingViewOfTnef() {
         List <Attr> attribs = new ArrayList <Attr>();
@@ -81,6 +84,9 @@ public class SchedulingViewOfTnef extends Message {
         startTimeTZinfo = null;
         endTimeTZinfo = null;
         recurrenceTZinfo = null;
+        taskMode = null;
+        taskStatus = null;
+        icalType = null;
     }
 
     /**
@@ -185,6 +191,11 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public String getIcalUID() throws IOException {
+        String currUid;
+        // For Meeting related objects, the GlobalObjectIds
+        // should contain the information needed to form the UID
+        // regardless of whether the original UID was chosen by
+        // Microsoft products or third party ones.
         getGlobalObjectId();
         if (globalObjectId != null) {
             return globalObjectId.getIcalUid();
@@ -193,8 +204,18 @@ public class SchedulingViewOfTnef extends Message {
         if (cleanGlobalObjectId != null) {
             return cleanGlobalObjectId.getIcalUid();
         }
-
-        return null;
+        // The only known unique handle for an Outlook task
+        // is PidLidTaskGlobalId
+        // which is documented as being a GUID and thus is not able
+        // to wrap third party UIDs.
+        // It is possible that some code paths might lead to the setting
+        // of {00020329-0000-0000-C000-000000000046}/urn:schemas:calendar:uid
+        // so, look for that.
+        currUid = getUrnSchemasCalendarUid();
+        if (currUid != null) {
+            return currUid;
+        }
+        return getUidFromPidLidTaskGlobalId();
     }
 
     /**
@@ -202,13 +223,14 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public Integer getSequenceNumber() throws IOException {
-        // PidLidAppointmentSequence - Specifies the sequence number of a Meeting object.
-        MAPIPropName PidLidAppointmentSequence = PSETID_AppointmentPropName(0x8201);
-        Integer sequenceNum = getIntegerValue(PidLidAppointmentSequence, 0);
-        if (sequenceNum == null) {
-            sequenceNum = new Integer(0);
+        if (this.getIcalType() == ICALENDAR_TYPE.VTODO) {
+            Integer retVal = MapiPropertyId.PidLidTaskVersion.getIntegerValue(this);
+            if (retVal != null) {
+                return retVal;
+            }
         }
-        return sequenceNum;
+        // PidLidAppointmentSequence - Specifies the sequence number of a Meeting object.
+        return MapiPropertyId.PidLidAppointmentSequence.getIntegerValue(this, 0 /* default */);
     }
 
     /**
@@ -216,7 +238,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public Integer getMapiImportance() throws IOException {
-        return getIntegerValue(null, 0x17);
+        return MapiPropertyId.PidTagImportance.getIntegerValue(this);
     }
 
     /**
@@ -225,7 +247,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public Integer getOwnerAppointmentId() throws IOException {
-        return getIntegerValue(null, 0x62);
+        return MapiPropertyId.PidTagOwnerAppointmentId.getIntegerValue(this);
     }
 
     /**
@@ -269,7 +291,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public Integer getMapiSensitivity() throws IOException {
-        return getIntegerValue(null, 0x36);
+        return MapiPropertyId.PidTagSensitivity.getIntegerValue(this);
     }
 
     /**
@@ -284,7 +306,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public BusyStatus getBusyStatus() throws IOException {
-        Integer intVal = getIntegerValue(PSETID_AppointmentPropName(0x8205), 0);
+        Integer intVal = MapiPropertyId.PidLidBusyStatus.getIntegerValue(this);
         if (intVal == null) {
             return null;
         }
@@ -304,7 +326,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public BusyStatus getIntendedBusyStatus() throws IOException {
-        Integer intVal = getIntegerValue(PSETID_AppointmentPropName(0x8224), 0);
+        Integer intVal = MapiPropertyId.PidLidIntendedBusyStatus.getIntegerValue(this);
         if (intVal == null) {
             return null;
         }
@@ -322,7 +344,6 @@ public class SchedulingViewOfTnef extends Message {
      * (asfMeeting, 0x00000001): object is a Meeting object or a meeting related object.
      * (asfReceived, 0x00000002): object was received from someone else.
      * (asfCanceled, 0x00000004): Meeting object that is represented by the object has been cancelled.
-     * TODO: MS-OXCICAL says attendee properties SHOULD NOT be exported if asfMeeting not set.
      * @return Value representing known flags in PidLidAppointmentStateFlags property
      * @throws IOException
      */
@@ -331,7 +352,7 @@ public class SchedulingViewOfTnef extends Message {
             return appointmentStateFlagsMask;
         }
         appointmentStateFlagsMask = EnumSet.noneOf(AppointmentStateFlags.class);
-        Integer apptFlags = getIntegerValue(PSETID_AppointmentPropName(0x8217), 0);
+        Integer apptFlags = MapiPropertyId.PidLidAppointmentStateFlags.getIntegerValue(this);
         if (apptFlags == null) {
             return null;
         }
@@ -352,11 +373,13 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public boolean getResponseRequested() throws IOException {
-        Boolean responseRequested = getBooleanValue(null, MAPIProp.PR_RESPONSE_REQUESTED);
+        Boolean responseRequested =
+            MapiPropertyId.PidTagResponseRequested.getBooleanValue(this);
         if (responseRequested != null) {
             return responseRequested;
         }
-        Boolean replyRequested = getBooleanValue(null, MAPIProp.PR_REPLY_REQUESTED);
+        Boolean replyRequested =
+            MapiPropertyId.PidTagReplyRequested.getBooleanValue(this);
         if (replyRequested != null) {
             return replyRequested;
         }
@@ -369,8 +392,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public Boolean isAllDayEvent() throws IOException {
-        MAPIPropName PidLidAppointmentSubType = PSETID_AppointmentPropName(0x8215);
-        return getBooleanValue(PidLidAppointmentSubType, 0, false);
+        return MapiPropertyId.PidLidAppointmentSubType.getBooleanValue(this, false);
     }
 
     /**
@@ -380,8 +402,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public Boolean isCounterProposal() throws IOException {
-        MAPIPropName PidLidAppointmentCounterProposal = PSETID_AppointmentPropName(0x8257);
-        return getBooleanValue(PidLidAppointmentCounterProposal, 0, false);
+        return MapiPropertyId.PidLidAppointmentCounterProposal.getBooleanValue(this, false);
     }
 
     /**
@@ -391,9 +412,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public Boolean isDisallowCounter() throws IOException {
-        MAPIPropName PidLidAppointmentNotAllowPropose
-                = PSETID_AppointmentPropName(0x825A);
-        return getBooleanValue(PidLidAppointmentNotAllowPropose, 0);
+        return MapiPropertyId.PidLidAppointmentNotAllowPropose.getBooleanValue(this);
     }
 
     /**
@@ -401,8 +420,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public String getLocation() throws IOException {
-        MAPIPropName PidLidLocation = PSETID_AppointmentPropName(0x8208);
-        return getStringValue(PidLidLocation, 0);
+        return MapiPropertyId.PidLidLocation.getStringValue(this);
     }
 
     /**
@@ -410,9 +428,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public List <String> getCategories() throws IOException {
-        //TODO: Implement this
-        MAPIPropName PidNameKeywords = this.PS_PUBLIC_STRINGS_PropName("Keywords");
-        MAPIValue[] values = getValues(PidNameKeywords, 0);
+        MAPIValue[] values = MapiPropertyId.PidNameKeywords.getValues(this);
         if (values == null) {
             return null;
         }
@@ -430,8 +446,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public DateTime getOwnerCriticalChange() throws IOException {
-        MAPIPropName PidLidOwnerCriticalChange = PSETID_MeetingPropName(0x1a);
-        return getUtcDateTime(PidLidOwnerCriticalChange, 0);
+        return MapiPropertyId.PidLidOwnerCriticalChange.getUtcDateTime(this);
     }
 
     /**
@@ -441,9 +456,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public DateTime getAppointmentReplyTime() throws IOException {
-        MAPIPropName PidLidAppointmentReplyTime
-                = PSETID_AppointmentPropName(0x8220);
-        return getUtcDateTime(PidLidAppointmentReplyTime, 0);
+        return MapiPropertyId.PidLidAppointmentReplyTime.getUtcDateTime(this);
     }
 
     /**
@@ -456,9 +469,8 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public Integer getReminderDelta() throws IOException {
-        MAPIPropName PidLidReminderDelta
-                = PSETID_CommonPropName(0x8501);
-        Integer reminderDelta = this.getIntegerValue(PidLidReminderDelta, 0);
+        Integer reminderDelta =
+            MapiPropertyId.PidLidReminderDelta.getIntegerValue(this);
         if ( (reminderDelta != null) && (reminderDelta == 0x5AE980E1) ) {
             reminderDelta= 15;
         }
@@ -473,23 +485,39 @@ public class SchedulingViewOfTnef extends Message {
      */
     public boolean getReminderSet() throws IOException {
         // Specifies the start date and time of the event in UTC
-        MAPIPropName PidLidReminderSet
-                = PSETID_CommonPropName(0x8503);
-        return this.getBooleanValue(PidLidReminderSet, 0, false);
+        return MapiPropertyId.PidLidReminderSet.getBooleanValue(this, false);
     }
 
     /**
-     * PidLidAppointmentStartWhole - Specifies the start date and time for the event.
      * @return the time in UTC that the meeting object was sent or null
      * @throws IOException
      */
     public DateTime getStartTime() throws IOException {
         // Specifies the start date and time of the event in UTC
-        MAPIPropName PidLidAppointmentStartWhole
-                = PSETID_AppointmentPropName(0x820D);
-        DateTime timeVal = getUtcDateTime(PidLidAppointmentStartWhole, 0);
+        DateTime timeVal = null;
+        if (this.getIcalType() == ICALENDAR_TYPE.VTODO) {
+            /* PidLidTaskStartDate Unset or has value 0x5AE980E0 
+             *        --> task does not have a start date
+             */
+            Long taskStartDateNum = 
+                MapiPropertyId.PidLidTaskStartDate.get100nsPeriodsSince1601(this);
+            if (taskStartDateNum == null) {
+                return null;
+            }
+            if (taskStartDateNum == 0x5AE980E0) {
+                sLog.debug("PidLidTaskStartDate as num 0x%s [means NO start date]",
+                        Long.toHexString(taskStartDateNum));
+                return null;
+            }
+            timeVal =
+                MapiPropertyId.PidLidTaskStartDate.getUtcDateTime(this);
+        } else {
+            // PidLidAppointmentStartWhole - UTC start date and time for the event.
+            timeVal =
+                MapiPropertyId.PidLidAppointmentStartWhole.getUtcDateTime(this);
+        }
         if (timeVal == null) {
-            timeVal = getUtcDateTime(null, MAPIProp.PR_START_DATE);
+            timeVal = MapiPropertyId.PidTagStartDate.getUtcDateTime(this);
         }
         return timeVal;
     }
@@ -500,12 +528,25 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public DateTime getEndTime() throws IOException {
-        MAPIPropName PidLidAppointmentEndWhole
-                = PSETID_AppointmentPropName(0x820E);
-        DateTime timeVal = getUtcDateTime(PidLidAppointmentEndWhole, 0);
+        DateTime timeVal =
+            MapiPropertyId.PidLidAppointmentEndWhole.getUtcDateTime(this);
         if (timeVal == null) {
-            timeVal = getUtcDateTime(null, MAPIProp.PR_END_DATE);
+            timeVal = MapiPropertyId.PidTagEndDate.getUtcDateTime(this);
         }
+        return timeVal;
+    }
+
+    /**
+     * @return the time in UTC that the meeting object was sent or null
+     * @throws IOException
+     */
+    public DateTime getDueDate() throws IOException {
+        DateTime timeVal = null;
+        if (this.getIcalType() != ICALENDAR_TYPE.VTODO) {
+            return null;
+        }
+        timeVal =
+            MapiPropertyId.PidLidTaskDueDate.getUtcDateTime(this);
         return timeVal;
     }
 
@@ -521,11 +562,10 @@ public class SchedulingViewOfTnef extends Message {
      */
     public DateTime getRecurrenceIdTime() throws IOException {
         // Note: Was assuming PidLidOldWhenStartWhole was a good candidate
-        //       but that seems to be used for non-recurrence related objects
+        //       but that is used for non-recurrence related objects
         //       to give the previous start time of a single appointment.
-        MAPIPropName PidLidExceptionReplaceTime
-                = PSETID_AppointmentPropName(0x8228);
-        DateTime recurrenceIdTime = getUtcDateTime(PidLidExceptionReplaceTime, 0);
+        DateTime recurrenceIdTime =
+            MapiPropertyId.PidLidExceptionReplaceTime.getUtcDateTime(this);
         if (recurrenceIdTime != null) {
             sLog.debug("RECURRENCE-ID taken from PidLidExceptionReplaceTime");
         } else {
@@ -540,8 +580,8 @@ public class SchedulingViewOfTnef extends Message {
             int origMonth = globalObjectId.getOrigInstanceMonth();
             int origDay = globalObjectId.getOrigInstanceDay();
             // PidLidStartRecurrenceTime identifies start time of the recurrence pattern.
-            MAPIPropName pnPidLidStartRecurrenceTime = PSETID_MeetingPropName(0xe);
-            Integer recurTime = this.getIntegerValue(pnPidLidStartRecurrenceTime, 0);
+            Integer recurTime =
+                MapiPropertyId.PidLidStartRecurrenceTime.getIntegerValue(this);
             int secs = 0;
             int mins = 0;
             int hrs = 0;
@@ -578,9 +618,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public DateTime getProposedStartTime() throws IOException {
-        MAPIPropName PidLidAppointmentProposedStartWhole
-        = PSETID_AppointmentPropName(0x8250);
-        return getUtcDateTime(PidLidAppointmentProposedStartWhole, 0);
+        return MapiPropertyId.PidLidAppointmentProposedStartWhole.getUtcDateTime(this);
     }
 
     /**
@@ -590,9 +628,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public DateTime getProposedEndTime() throws IOException {
-        MAPIPropName PidLidAppointmentProposedEndWhole
-        = PSETID_AppointmentPropName(0x8251);
-        return getUtcDateTime(PidLidAppointmentProposedEndWhole, 0);
+        return MapiPropertyId.PidLidAppointmentProposedEndWhole.getUtcDateTime(this);
     }
 
     /**
@@ -601,8 +637,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public DateTime getAttendeeCriticalChange() throws IOException {
-        MAPIPropName PidLidAttendeeCriticalChange = PSETID_MeetingPropName(0x1);
-        return getUtcDateTime(PidLidAttendeeCriticalChange, 0);
+        return MapiPropertyId.PidLidAttendeeCriticalChange.getUtcDateTime(this);
     }
 
     /**
@@ -640,32 +675,23 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public String getTimeZoneDescription() throws IOException {
-        MAPIPropName PidLidTimeZoneDescription = PSETID_AppointmentPropName(0x8234);
-        return getStringValue(PidLidTimeZoneDescription, 0);
+        return MapiPropertyId.PidLidTimeZoneDescription.getStringValue(this);
     }
 
     public RecurrenceDefinition getRecurrenceDefinition(
             TimeZoneDefinition tzDef) throws IOException {
-        MAPIPropName PidLidAppointmentRecur =
-                this.PSETID_AppointmentPropName(0x8216);
-        RawInputStream tzRis = getRawInputStreamValue(
-                PidLidAppointmentRecur, 0);
+        RawInputStream tzRis;
+        if (this.getIcalType() == ICALENDAR_TYPE.VTODO) {
+            tzRis = MapiPropertyId.PidLidTaskRecurrence.getRawInputStreamValue(this);
+        } else {
+            tzRis = MapiPropertyId.PidLidAppointmentRecur.getRawInputStreamValue(this);
+        }
         if (tzRis == null) {
             return null;
         }
         String oemCodePage = super.getOEMCodePage();
         RecurrenceDefinition recurDef = new RecurrenceDefinition(tzRis, tzDef, oemCodePage);
         return recurDef;
-    }
-
-    public DateTime getUtcDateTime(MAPIPropName name, int id) throws IOException {
-        Date javaDate = getDateValue(name, id);
-        if (javaDate == null) {
-            return null;
-        }
-        DateTime icalDateTime = new net.fortuna.ical4j.model.DateTime(javaDate);
-        icalDateTime.setUtc(true);
-        return icalDateTime;
     }
 
     /**
@@ -676,7 +702,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public String getRTF() throws IOException {
-        RawInputStream ris = getRawInputStreamValue(null, MAPIProp.PR_RTF_COMPRESSED);
+        RawInputStream ris = MapiPropertyId.PidTagRtfCompressed.getRawInputStreamValue(this);
         if (ris == null) {
             sLog.debug("No PR_RTF_COMPRESSED property found");
             return null;
@@ -689,166 +715,6 @@ public class SchedulingViewOfTnef extends Message {
             sLog.debug("RTF from PR_RTF_COMPRESSED\n%s\n", rtfTxt);
         }
         return rtfTxt;
-    }
-
-    public String getStringValue(MAPIPropName name, int id) throws IOException {
-        MAPIValue mpValue = getFirstValue(name, id);
-        if (mpValue == null) {
-            return null;
-        }
-        Object obj;
-        if (mpValue.getType() == MAPIProp.PT_STRING) {
-            // Assume the value is in the OEM Code Page
-            // The current MAPIValue code does not take account of that.
-            RawInputStream ris = mpValue.getRawData();
-            return IcalUtil.readString(ris, (int)ris.getLength(),
-                        super.getOEMCodePage());
-        } else {
-            // Probably PT_UNICODE_STRING but will accept anything whose value is
-            // a String.
-            obj = mpValue.getValue();
-        }
-        if (obj == null) {
-            return null;
-        }
-        if (obj instanceof String) {
-            return (String) obj;
-        }
-        return null;
-    }
-
-    public Boolean getBooleanValue(MAPIPropName name, int id, boolean defaultValue) throws IOException {
-        Boolean truthValue = getBooleanValue(name, id);
-        if (truthValue == null) {
-            truthValue = new Boolean(defaultValue);
-        }
-        return truthValue;
-    }
-
-    public Boolean getBooleanValue(MAPIPropName name, int id) throws IOException {
-        MAPIValue mpValue = getFirstValue(name, id);
-        if (mpValue == null) {
-            return null;
-        }
-        Object obj = mpValue.getValue();
-        if (obj == null) {
-            return null;
-        }
-        if (obj instanceof Boolean) {
-            return (Boolean) obj;
-        }
-        return null;
-    }
-
-    public Integer getIntegerValue(MAPIPropName name, int id) throws IOException {
-        MAPIValue mpValue = getFirstValue(name, id);
-        if (mpValue == null) {
-            return null;
-        }
-        Object obj = mpValue.getValue();
-        if (obj == null) {
-            return null;
-        }
-        if (obj instanceof Integer) {
-            return (Integer) obj;
-        }
-        return null;
-    }
-
-    public Date getDateValue(MAPIPropName name, int id) throws IOException {
-        MAPIValue mpValue = getFirstValue(name, id);
-        if (mpValue == null) {
-            return null;
-        }
-        Object obj = mpValue.getValue();
-        if (obj == null) {
-            return null;
-        }
-        if (obj instanceof Date) {
-            return (Date) obj;
-        }
-        return null;
-    }
-
-    public RawInputStream getRawInputStreamValue(MAPIPropName name, int id) throws IOException {
-        MAPIValue mpValue = getFirstValue(name, id);
-        if (mpValue == null) {
-            return null;
-        }
-        Object obj = mpValue.getValue();
-        if (obj == null) {
-            return null;
-        }
-        if (obj instanceof RawInputStream) {
-            return (RawInputStream) obj;
-        }
-        return null;
-    }
-
-    public byte[] getByteArrayValue(MAPIPropName name, int id) throws IOException {
-        MAPIValue mpValue = getFirstValue(name, id);
-        if (mpValue == null) {
-            return null;
-        }
-        Object obj = mpValue.getValue();
-        if (obj == null) {
-            return null;
-        }
-        if (obj instanceof byte[]) {
-            return (byte[]) obj;
-        }
-        return null;
-    }
-
-    public MAPIValue getFirstValue(MAPIPropName name, int id) throws IOException {
-        MAPIValue[] mpValues = getValues(name, id);
-        if (mpValues == null) {
-            return null;
-        }
-        if (mpValues.length < 1) {
-            return null;
-        }
-        return mpValues[0];
-    }
-
-    public MAPIValue[] getValues(MAPIPropName name, int id) throws IOException {
-        MAPIProp mp;
-        mp = getProp(name, id);
-        if (mp == null) {
-            return null;
-        }
-        return mp.getValues();
-    }
-
-    public MAPIProp getProp(MAPIPropName name, int id) throws IOException {
-        MAPIProp mp;
-        List <?> attribs = (List <?>) super.getAttributes();
-        for (Object thisObj : attribs) {
-            if (! (thisObj instanceof Attr)) {
-                continue;
-            }
-            Attr thisAtt = (Attr) thisObj;
-            Object o = thisAtt.getValue();
-            if (o == null) {
-                continue;
-            }
-            if (thisAtt.getID() != (Attr.attMAPIProps)) {
-                continue;
-            }
-            if (!(o instanceof MAPIProps)) {
-                return null;
-            }
-            MAPIProps thisPropset = (MAPIProps) o;
-            if (name == null) {
-                mp = thisPropset.getProp(id);
-            } else {
-                mp = thisPropset.getProp(name);
-            }
-            if (mp != null) {
-                return mp;
-            }
-        }
-        return null;
     }
 
     /**
@@ -871,51 +737,6 @@ public class SchedulingViewOfTnef extends Message {
         }
         return null;
     }
-
-    /**
-     *
-     * @param LID - Property Long ID
-     * @return MAPIPropName for set PSETID_Appointment with this Property Long ID
-     */
-    public MAPIPropName PSETID_AppointmentPropName(int LID) {
-        return new MAPIPropName(MSGUID.PSETID_Appointment.getJtnefGuid(), LID);
-    }
-
-    /**
-     *
-     * @param LID - Property Long ID
-     * @return MAPIPropName for set PSETID_Meeting with this Property Long ID
-     */
-    public MAPIPropName PSETID_MeetingPropName(int LID) {
-        return new MAPIPropName(MSGUID.PSETID_Meeting.getJtnefGuid(), LID);
-    }
-
-    /**
-     * @param LID - Property Long ID
-     * @return MAPIPropName for set PSETID_Common with this Property Long ID
-     */
-    public MAPIPropName PSETID_CommonPropName(int LID) {
-        return new MAPIPropName(MSGUID.PSETID_Common.getJtnefGuid(), LID);
-    }
-
-    /**
-     *
-     * @param LID - Property Long ID
-     * @return MAPIPropName for set PS_PUBLIC_STRINGS with this Property Long ID
-     */
-    public MAPIPropName PS_PUBLIC_STRINGS_PropName(int LID) {
-        return new MAPIPropName(MSGUID.PS_PUBLIC_STRINGS.getJtnefGuid(), LID);
-    }
-
-    /**
-     *
-     * @param propName - Property Name
-     * @return MAPIPropName for set PS_PUBLIC_STRINGS with this Property Name
-     */
-    public MAPIPropName PS_PUBLIC_STRINGS_PropName(String propName) {
-        return new MAPIPropName(MSGUID.PS_PUBLIC_STRINGS.getJtnefGuid(), propName);
-    }
-
     /**
      * PidLidGlobalObjectId is The unique identifier of the Calendar object.
      * After it is set for a Calendar object, the value of this property MUST NOT change.
@@ -926,8 +747,7 @@ public class SchedulingViewOfTnef extends Message {
         if (globalObjectId != null) {
             return globalObjectId;
         }
-        MAPIPropName pnPidLidGlobalObjectId = new MAPIPropName(MSGUID.PSETID_Meeting.getJtnefGuid(), (long)0x3);
-        globalObjectId = this.getGlobalObjectIdType(pnPidLidGlobalObjectId);
+        globalObjectId = this.getGlobalObjectIdType(MapiPropertyId.PidLidGlobalObjectId);
         return globalObjectId;
     }
 
@@ -946,34 +766,115 @@ public class SchedulingViewOfTnef extends Message {
         if (cleanGlobalObjectId != null) {
             return cleanGlobalObjectId;
         }
-        MAPIPropName pnPidCleanGlobalObjectId = new MAPIPropName(MSGUID.PSETID_Meeting.getJtnefGuid(), (long)0x23);
-        cleanGlobalObjectId = this.getGlobalObjectIdType(pnPidCleanGlobalObjectId);
+        cleanGlobalObjectId = this.getGlobalObjectIdType(
+                MapiPropertyId.PidLidCleanGlobalObjectId);
         return cleanGlobalObjectId;
     }
 
-    private GlobalObjectId getGlobalObjectIdType(MAPIPropName pName) {
+    private GlobalObjectId getGlobalObjectIdType(MapiPropertyId mpi) {
         GlobalObjectId gid = null;
         RawInputStream ris;
         try {
-            ris = getRawInputStreamValue(pName, 0);
+            ris = mpi.getRawInputStreamValue(this);
             if (ris != null) {
                 gid = new GlobalObjectId(ris);
             }
         } catch (IOException e) {
-            sLog.debug("Problem getting value of MAPI property " + pName + " from TNEF", e);
+            sLog.debug("Problem getting value of MAPI property " + mpi.toString() + " from TNEF", e);
         }
         return gid;
     }
 
     /**
+     * @return PidNameCalendarUid value if set.  Normal Outlook MAPI working does not set it.
+     * @throws IOException
+     */
+    private String getUrnSchemasCalendarUid() throws IOException {
+        return MapiPropertyId.PidNameCalendarUid.getStringValue(this);
+    }
+
+    /**
      * For a Task, PidLidTaskGlobalId contains a unique key.
+     * As Outlook 2007 and earlier don't send assigned tasks using ICAL
+     * in the same way as meeting requests can be sent and there doesn't
+     * appear to be a way to save as ICAL, it isn't totally clear what
+     * is the best source of a UID.  This property is a GUID, so does NOT
+     * have the ability to encode third party UIDs in the same way as
+     * GlobalObjectIds do;
      * 
      * @return 
      * @throws IOException 
      */
-    private String getPidLidTaskGlobalId() throws IOException {
-        MAPIPropName pnPidLidTaskGlobalId = new MAPIPropName(MSGUID.PSETID_Common.getJtnefGuid(), (long)0x8519);
-        byte[] theVal = this.getByteArrayValue(pnPidLidTaskGlobalId, 0);
+    private String getUidFromPidLidTaskGlobalId() throws IOException {
+        byte[] theVal = MapiPropertyId.PidLidTaskGlobalId.getByteArrayValue(this);
+        if (theVal == null) {
+            return null;
+        }
+        return IcalUtil.toHexString(theVal, 0, theVal.length);
+    }
+
+    /**
+     * @param icalType the icalType to set
+     */
+    public void setIcalType(ICALENDAR_TYPE icalType) {
+        this.icalType = icalType;
+    }
+
+    /**
+     * @return the icalType
+     * @throws IOException 
+     */
+    public ICALENDAR_TYPE getIcalType() throws IOException {
+        if (icalType == null) {
+            String msgClass = this.getMessageClass();
+            if (msgClass.startsWith("IPM.Task")) {
+                icalType = ICALENDAR_TYPE.VTODO;
+            } else {
+                icalType = ICALENDAR_TYPE.VEVENT;
+            }
+        }
+        return icalType;
+    }
+
+    /**
+     * @return Value of PidLidTaskMode property
+     * @throws IOException
+     */
+    public TaskMode getTaskMode() throws IOException {
+        if (taskMode != null) {
+            return taskMode;
+        }
+        Integer intVal = MapiPropertyId.PidLidTaskMode.getIntegerValue(this);
+        if (intVal == null) {
+            return null;
+        }
+        for (TaskMode curr : TaskMode.values()) {
+            if (curr.mapiPropValue() == intVal) {
+                taskMode = curr;
+                return taskMode;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @return Value of PidLidTaskStatus property
+     * @throws IOException
+     */
+    public TaskStatus getTaskStatus() throws IOException {
+        if (taskStatus != null) {
+            return taskStatus;
+        }
+        Integer intVal = MapiPropertyId.PidLidTaskStatus.getIntegerValue(this);
+        if (intVal == null) {
+            return null;
+        }
+        for (TaskStatus curr : TaskStatus.values()) {
+            if (curr.mapiPropValue() == intVal) {
+                taskStatus = curr;
+                return taskStatus;
+            }
+        }
         return null;
     }
 
@@ -1001,21 +902,21 @@ public class SchedulingViewOfTnef extends Message {
 
         try {
             RawInputStream tzRis;
-            MAPIPropName mpn;
-            mpn = TimeZoneDefinition.PidLidAppointmentTimeZoneDefinitionStartDisplay;
-            tzRis = getRawInputStreamValue(mpn, 0);
+            MapiPropertyId mpi;
+            mpi = MapiPropertyId.PidLidAppointmentTimeZoneDefinitionStartDisplay;
+            tzRis =  mpi.getRawInputStreamValue(this);
             if (tzRis != null) {
-                startTimeTZinfo = new TimeZoneDefinition(mpn, tzRis);
+                startTimeTZinfo = new TimeZoneDefinition(mpi, tzRis);
             }
-            mpn = TimeZoneDefinition.PidLidAppointmentTimeZoneDefinitionEndDisplay;
-            tzRis = getRawInputStreamValue(mpn, 0);
+            mpi = MapiPropertyId.PidLidAppointmentTimeZoneDefinitionEndDisplay;
+            tzRis =  mpi.getRawInputStreamValue(this);
             if (tzRis != null) {
-                endTimeTZinfo = new TimeZoneDefinition(mpn, tzRis);
+                endTimeTZinfo = new TimeZoneDefinition(mpi, tzRis);
             }
-            mpn = TimeZoneDefinition.PidLidAppointmentTimeZoneDefinitionRecur;
-            tzRis = getRawInputStreamValue(mpn, 0);
+            mpi = MapiPropertyId.PidLidAppointmentTimeZoneDefinitionRecur;
+            tzRis =  mpi.getRawInputStreamValue(this);
             if (tzRis != null) {
-                recurrenceTZinfo = new TimeZoneDefinition(mpn, tzRis);
+                recurrenceTZinfo = new TimeZoneDefinition(mpi, tzRis);
             }
             String tzDesc = this.getTimeZoneDescription();
             if (null != tzDesc) {
@@ -1089,12 +990,9 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     private TimeZoneDefinition getTimeZoneStructInfo(String tzName) throws IOException {
-        MAPIPropName PidLidTimeZoneStruct = this.PSETID_AppointmentPropName(0x8233);
-        RawInputStream tzRis = getRawInputStreamValue(PidLidTimeZoneStruct, 0);
+        RawInputStream tzRis =
+            MapiPropertyId.PidLidTimeZoneStruct.getRawInputStreamValue(this);
         if (tzRis == null) {
-            if (sLog.isDebugEnabled()) {
-                sLog.debug("No PidLidTimeZoneStruct property found");
-            }
             return null;
         }
         TimeZoneDefinition tzDef = new TimeZoneDefinition(tzRis, tzName);

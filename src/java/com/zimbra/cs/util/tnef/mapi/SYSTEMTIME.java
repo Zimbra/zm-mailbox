@@ -16,7 +16,6 @@
 package com.zimbra.cs.util.tnef.mapi;
 
 import java.io.IOException;
-import java.text.DateFormatSymbols;
 
 import net.freeutils.tnef.RawInputStream;
 
@@ -134,7 +133,6 @@ public class SYSTEMTIME {
     }
 
     public String toString() {
-        String dayNames[] = new DateFormatSymbols().getWeekdays();
         StringBuffer timeInfo = new StringBuffer();
         if (Year != 0) {
             timeInfo.append("Year=");  // if non-zero, interpret as absolute date that occurs once only.
