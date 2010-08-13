@@ -276,10 +276,12 @@ public class LC {
     public static final KnownKey postfix_alias_maps;
     public static final KnownKey postfix_always_add_missing_headers;
     public static final KnownKey postfix_broken_sasl_auth_clients;
+    public static final KnownKey postfix_bounce_notice_recipient;
     public static final KnownKey postfix_bounce_queue_lifetime;
     public static final KnownKey postfix_command_directory;
     public static final KnownKey postfix_daemon_directory;
     public static final KnownKey postfix_enable_smtpd_policyd;
+    public static final KnownKey postfix_delay_warning_time;
     public static final KnownKey postfix_header_checks;
     public static final KnownKey postfix_in_flow_delay;
     public static final KnownKey postfix_lmtp_connection_cache_destinations;
@@ -290,6 +292,7 @@ public class LC {
     public static final KnownKey postfix_maximal_backoff_time;
     public static final KnownKey postfix_minimal_backoff_time;
     public static final KnownKey postfix_newaliases_path;
+    public static final KnownKey postfix_notify_classes;
     public static final KnownKey postfix_policy_time_limit;
     public static final KnownKey postfix_queue_directory;
     public static final KnownKey postfix_smtpd_sasl_authenticated_header;
@@ -1070,6 +1073,9 @@ public class LC {
         postfix_broken_sasl_auth_clients  = new KnownKey("postfix_broken_sasl_auth_clients");
         postfix_broken_sasl_auth_clients.setDefault("yes");
 
+        postfix_bounce_notice_recipient  = new KnownKey("postfix_bounce_notice_recipient");
+        postfix_bounce_notice_recipient.setDefault("postmaster");
+
         postfix_bounce_queue_lifetime  = new KnownKey("postfix_bounce_queue_lifetime");
         postfix_bounce_queue_lifetime.setDefault("5d");
 
@@ -1082,6 +1088,9 @@ public class LC {
         postfix_enable_smtpd_policyd = new KnownKey("postfix_enable_smtpd_policyd");
         postfix_enable_smtpd_policyd.setDefault("no");
 
+        postfix_delay_warning_time = new KnownKey("postfix_delay_warning_time");
+        postfix_delay_warning_time.setDefault("0h");
+
         postfix_header_checks  = new KnownKey("postfix_header_checks");
         postfix_header_checks.setDefault("pcre:${zimbra_home}" + FS + "conf" + FS + "postfix_header_checks");
 
@@ -1093,6 +1102,9 @@ public class LC {
 
         postfix_newaliases_path  = new KnownKey("postfix_newaliases_path");
         postfix_newaliases_path.setDefault("${zimbra_home}" + FS + "postfix" + FS + "sbin" + FS + "newaliases");
+
+        postfix_notify_classes  = new KnownKey("postfix_notify_classes");
+        postfix_notify_classes.setDefault("resource,software");
 
         postfix_policy_time_limit = new KnownKey("postfix_policy_time_limit");
         postfix_policy_time_limit.setDefault("3600");
