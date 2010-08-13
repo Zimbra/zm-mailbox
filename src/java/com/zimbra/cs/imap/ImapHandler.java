@@ -1062,6 +1062,9 @@ abstract class ImapHandler extends ProtocolHandler {
 
     boolean doLOGOUT(String tag) throws IOException {
         sendBYE();
+        if (mCredentials != null)
+        	ZimbraLog.imap.info("dropping connection for user " + mCredentials.getUsername() + " (LOGOUT)");
+
         sendOK(tag, "LOGOUT completed");
         return STOP_PROCESSING;
     }
