@@ -3699,6 +3699,19 @@ public class Mailbox {
         }
     }
 
+    public static class AddInviteData {
+        public int calItemId;
+        public int invId;
+        public int modSeq;
+        public int rev;
+        public AddInviteData(int calItemId, int invId, int modSeq, int rev) {
+            this.calItemId = calItemId;
+            this.invId = invId;
+            this.modSeq = modSeq;
+            this.rev = rev;
+        }
+    }
+
     /**
      * @param octxt
      * @param exceptions can be NULL
@@ -3990,21 +4003,21 @@ public class Mailbox {
         }
     }
 
-    public int[] addInvite(OperationContext octxt, Invite inv, int folderId)
+    public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId)
     throws ServiceException {
         mIndexHelper.maybeIndexDeferredItems();
         boolean addRevision = true;  // Always rev the calendar item.
         return addInvite(octxt, inv, folderId, null, false, false, addRevision);
     }
 
-    public int[] addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm)
+    public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm)
     throws ServiceException {
         mIndexHelper.maybeIndexDeferredItems();
         boolean addRevision = true;  // Always rev the calendar item.
         return addInvite(octxt, inv, folderId, pm, false, false, addRevision);
     }
 
-    public int[] addInvite(OperationContext octxt, Invite inv, int folderId, boolean preserveExistingAlarms,
+    public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId, boolean preserveExistingAlarms,
                            boolean addRevision)
     throws ServiceException {
         mIndexHelper.maybeIndexDeferredItems();
@@ -4023,11 +4036,10 @@ public class Mailbox {
      * @param addRevision if true and revisioning is enabled and calendar item exists already, add a revision
      *                    with current snapshot of the calendar item
      * 
-     * @return int[2] = { calendar-item-id, invite-mail-item-id }  Note that even though the invite has a mail-item-id,
-     *         that mail-item does not really exist, it can ONLY be referenced through the calendar item "calItemId-invMailItemId"
+     * @return AddInviteData
      * @throws ServiceException
      */
-    public int[] addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm,
+    public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm,
                            boolean preserveExistingAlarms, boolean discardExistingInvites, boolean addRevision)
     throws ServiceException {
         if (pm == null) {
@@ -4094,7 +4106,8 @@ public class Mailbox {
                 
                 success = true;
                 if (processed)
-                    return new int[] { calItem.getId(), inv.getMailItemId() };
+                    return new AddInviteData(calItem.getId(), inv.getMailItemId(),
+                                             calItem.getModifiedSequence(), calItem.getSavedSequence());
                 else
                     return null;
             } finally {
@@ -6174,9 +6187,9 @@ public class Mailbox {
                             }
                         }
                         if (!skip) {
-                            int calIds[] = addInvite(octxtNoConflicts, inv, folderId, true, addRevision);
-                            if (calIds != null && calIds.length > 0)
-                                existingCalItems.remove(calIds[0]);
+                            AddInviteData aid = addInvite(octxtNoConflicts, inv, folderId, true, addRevision);
+                            if (aid != null)
+                                existingCalItems.remove(aid.calItemId);
                         }
                     } catch (ServiceException e) {
                         ZimbraLog.calendar.warn("Skipping bad iCalendar object during import: uid=" + inv.getUid(), e);

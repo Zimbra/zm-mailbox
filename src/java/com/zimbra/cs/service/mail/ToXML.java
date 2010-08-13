@@ -1093,7 +1093,9 @@ public class ToXML {
 
         Element m;
         if (wholeMessage) {
-            m = encodeMessageCommon(parent, ifmt, calItem, NOTIFY_FIELDS, serializeType);
+            // We want to return the MODIFIED_CONFLICT fields to enable conflict detection on modify.
+            int fields = NOTIFY_FIELDS | Change.MODIFIED_CONFLICT;
+            m = encodeMessageCommon(parent, ifmt, calItem, fields, serializeType);
             m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(calItem, invId));
         } else {
             m = parent.addElement(MailConstants.E_MSG);

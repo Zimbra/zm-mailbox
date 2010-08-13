@@ -24,6 +24,7 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Mailbox.AddInviteData;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
@@ -110,10 +111,10 @@ public class ImportAppointments extends MailDocumentHandler  {
                 }
                 // and add the invite to the calendar!
                 try {
-                    int[] invIds = mbox.addInvite(octxt, inv, iidFolder.getId(), false, addRevision);
-                    if (invIds != null && invIds.length >= 2) {
+                    AddInviteData aid = mbox.addInvite(octxt, inv, iidFolder.getId(), false, addRevision);
+                    if (aid != null) {
                         if (ids.length() > 0) ids.append(",");
-                        ids.append(invIds[0]).append("-").append(invIds[1]);
+                        ids.append(aid.calItemId).append("-").append(aid.invId);
                     }
                 } catch (ServiceException e) {
                     ZimbraLog.calendar.warn("Skipping bad iCalendar object during import: uid=" + inv.getUid(), e);

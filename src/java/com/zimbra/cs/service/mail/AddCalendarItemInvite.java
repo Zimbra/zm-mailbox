@@ -27,6 +27,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Mailbox.AddInviteData;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -135,14 +136,14 @@ public class AddCalendarItemInvite extends CalendarRequest {
             }
         }
 
-        int[] ids = mbox.addInvite(octxt, inv, folderId, scid.mPm, false, false, true);
-        if (ids != null && ids.length >= 2) {
-            calItem = mbox.getCalendarItemById(octxt, ids[0]);
+        AddInviteData aid = mbox.addInvite(octxt, inv, folderId, scid.mPm, false, false, true);
+        if (aid != null) {
+            calItem = mbox.getCalendarItemById(octxt, aid.calItemId);
             if (calItem != null) {
-                Invite[] invs = calItem.getInvites(ids[1]);
+                Invite[] invs = calItem.getInvites(aid.invId);
                 if (invs != null && invs.length > 0) {
-                    response.addAttribute(MailConstants.A_CAL_ID, ids[0]);
-                    response.addAttribute(MailConstants.A_CAL_INV_ID, ids[1]);
+                    response.addAttribute(MailConstants.A_CAL_ID, aid.calItemId);
+                    response.addAttribute(MailConstants.A_CAL_INV_ID, aid.invId);
                     response.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, invs[0].getComponentNum());
                 }
             }

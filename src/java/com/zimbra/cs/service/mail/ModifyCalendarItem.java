@@ -105,6 +105,14 @@ public class ModifyCalendarItem extends CalendarRequest {
             if (calItem == null) {
                 throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
             }
+
+            // Conflict detection.  Do it only if requested by client.  (for backward compat)
+            int modSeq = (int) request.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, 0);
+            int revision = (int) request.getAttributeLong(MailConstants.A_REVISION, 0);
+            if (modSeq != 0 && revision != 0 &&
+                (modSeq < calItem.getModifiedSequence() || revision < calItem.getSavedSequence()))
+                throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
+
             Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
             if (inv == null) {
                 throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());

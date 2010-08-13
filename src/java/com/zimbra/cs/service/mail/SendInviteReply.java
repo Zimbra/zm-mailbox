@@ -46,6 +46,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Mailbox.AddInviteData;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
@@ -207,10 +208,10 @@ public class SendInviteReply extends CalendarRequest {
                                 folder = calItem.getFolderId();
                             }
                             ParsedMessage pm = new ParsedMessage(msg.getMimeMessage(false), false);
-                            int[] ids = mbox.addInvite(octxt, inv, folder, pm, false, untrashing, true);
-                            if (ids == null || ids.length == 0)
+                            AddInviteData aid = mbox.addInvite(octxt, inv, folder, pm, false, untrashing, true);
+                            if (aid == null)
                                 throw ServiceException.FAILURE("Could not create/update calendar item", null);
-                            calItemId = ids[0];
+                            calItemId = aid.calItemId;
                             // Refetch updated item.
                             calItem = safeGetCalendarItemById(mbox, octxt, calItemId);
                             if (calItem == null)

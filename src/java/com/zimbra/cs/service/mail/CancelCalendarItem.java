@@ -68,6 +68,16 @@ public class CancelCalendarItem extends CalendarRequest {
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId()); 
             if (calItem == null)
                 throw MailServiceException.NO_SUCH_CALITEM(iid.getId(), " for CancelCalendarItemRequest(" + iid + "," + compNum + ")");
+
+            if (false) {  // We probably don't want to bother with conflict check for a cancel request...
+                // Conflict detection.  Do it only if requested by client.  (for backward compat)
+                int modSeq = (int) request.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, 0);
+                int revision = (int) request.getAttributeLong(MailConstants.A_REVISION, 0);
+                if (modSeq != 0 && revision != 0 &&
+                    (modSeq < calItem.getModifiedSequence() || revision < calItem.getSavedSequence()))
+                    throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
+            }
+
             Invite inv = calItem.getInvite(iid.getSubpartId(), compNum);
             if (inv == null)
                 throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());

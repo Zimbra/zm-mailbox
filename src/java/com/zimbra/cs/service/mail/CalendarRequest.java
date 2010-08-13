@@ -44,6 +44,7 @@ import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Mailbox.AddInviteData;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
@@ -343,7 +344,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             ByteUtil.closeStream(is);
         }
 
-        int[] ids = null;
+        AddInviteData aid = null;
         ItemId msgId = null;
         boolean forceSendPartial = true;  // All calendar-related emails are sent in sendpartial mode.
         try {
@@ -355,7 +356,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 // First, update my own appointment.  It is important that this happens BEFORE the call to sendMimeMessage,
                 // because sendMimMessage will delete uploaded attachments as a side-effect.
                 if (updateOwnAppointment)
-                    ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
+                    aid = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
                 // Next, notify any attendees.
                 if (!csd.mDontNotifyAttendees)
                     msgId = mbox.getMailSender().sendMimeMessage(
@@ -378,7 +379,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                             octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
                             csd.mOrigId, csd.mReplyType, csd.mIdentityId, forceSendPartial, false);
                 if (updateOwnAppointment)
-                    ids = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
+                    aid = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
             }
         } finally {
             // Delete the temp file after we're done sending email.
@@ -386,13 +387,17 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 tempMmFile.delete();
         }
 
-        if (updateOwnAppointment && response != null && ids != null && ids.length >= 2) {
+        if (updateOwnAppointment && response != null && aid != null) {
             ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-            String id = ifmt.formatItemId(ids[0]);
+            String id = ifmt.formatItemId(aid.calItemId);
             response.addAttribute(MailConstants.A_CAL_ID, id);
             if (csd.mInvite.isEvent())
                 response.addAttribute(MailConstants.A_APPT_ID_DEPRECATE_ME, id);  // for backward compat
-            response.addAttribute(MailConstants.A_CAL_INV_ID, ifmt.formatItemId(ids[0], ids[1]));
+            response.addAttribute(MailConstants.A_CAL_INV_ID, ifmt.formatItemId(aid.calItemId, aid.invId));
+            if (Invite.isOrganizerMethod(csd.mInvite.getMethod())) {
+                response.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, aid.modSeq);
+                response.addAttribute(MailConstants.A_REVISION, aid.rev);
+            }
             if (msgId != null)
                 response.addUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, ifmt.formatItemId(msgId));
         }

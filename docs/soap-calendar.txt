@@ -423,7 +423,7 @@ RECURRENCE SPECIFIERS!
  <bymonth>,<byweekno>.... --- TODO 
 ----------------------
 
-<CreateAppointmentResponse calItemId="APPOINTMENT-ID" invId="invite-message-id"/>
+<CreateAppointmentResponse calItemId="APPOINTMENT-ID" invId="invite-message-id" ms="change-sequence" rev="revision"/>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -711,7 +711,9 @@ OR
 // CALENDAR PART for Invite messages
 //
 <GetMsgResponse> // mesage with invite
-  <m id="{message-id}" f="{flags}" t="{tags}" s="{size}" d="{date}" l="{folder}">
+  <m id="{message-id}" f="{flags}" t="{tags}" s="{size}" d="{date}" l="{folder}"
+     rev="{revision-number}" md="{date-metadata-changed}" ms="{change-sequence}"
+  >
      [<e .../>*]  // optional users to send request to
 
      <inv type="appt|task" id="{invId}">
@@ -791,12 +793,17 @@ OR
 //        
 //   -- If any of: START, DURATION, END or RECUR change, then all exceptions are implicitly canceled!
 //
-<ModifyAppointmentRequest id="INVITE_ID_OF_DEFAULT_INVITE" comp="COMPONENT_NUM_DEFAULT_INVITE">
+<ModifyAppointmentRequest id="INVITE_ID_OF_DEFAULT_INVITE" comp="COMPONENT_NUM_DEFAULT_INVITE"
+    ms="change-sequence of fetched version" rev="revision of fetched version"
+>
    rest is SAME as CreateAppointmentRequest
 </ModifyAppointmentRequest>
 
-<ModifyAppointmentResponse calItemId="appointment-id" invId="invite-message-id/>
+<ModifyAppointmentResponse calItemId="appointment-id" invId="invite-message-id" ms="change-sequence" rev="revision"/>
 
+"ms" and "rev" are used for conflict detection.  By setting these, the request indicates
+which version of the appointment it is attempting to modify.  If the appointment was updated on
+the server between the fetch and modify, an INVITE_OUT_OF_DATE exception will be thrown.
 
 
 //////////////////////////////////////////////////////////////////////
@@ -829,7 +836,9 @@ OR
 //  On the other hand, if a user clicks on the 6/15 9am appointment and wants to modify it,
 //  then this is the right API to use.
 //
-<CreateAppointmentExceptionRequest id="ID_DEFAULT_INVITE" comp="COMP_DEFAULT_INVITE">
+<CreateAppointmentExceptionRequest id="ID_DEFAULT_INVITE" comp="COMP_DEFAULT_INVITE"
+    ms="change-sequence of fetched series" rev="revision of fetched series"
+>
 
   Just like CreateAppointmentRequest above:
   <m f="{flags}" l="{folder}">
@@ -844,6 +853,10 @@ OR
 </CreateAppointmentExceptionRequest>
 
 <CreateAppointmentExceptionResponse>...
+
+"ms" and "rev" are used for conflict detection.  The create exception request indicates the baseline
+series version.  If the appointment was modified on the server between the series fetch and exception
+creation, an INVITE_OUT_OF_DATE exception will be thrown.
 
 
 //////////////////////////////////////////////////////////////////////
