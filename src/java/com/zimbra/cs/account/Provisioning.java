@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -48,7 +48,7 @@ import java.util.Set;
  */
 public abstract class Provisioning extends ZAttrProvisioning {
 
-    
+
     public final static String TRUE  = "TRUE";
 
     public final static String FALSE = "FALSE";
@@ -65,56 +65,56 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     /**
      * generate appts that try to follow the standard
-     */    
+     */
     public static final String CAL_MODE_STANDARD = "standard";
-    
+
     /**
      * zimbraAuthMech type of "zimbra" means our own (use userPassword)
      */
     public static final String AM_ZIMBRA = "zimbra";
-    
+
     /**
      * zimbraAuthMech type of "ldap" means use configured LDAP attrs
      * (zimbraAuthLdapURL, zimbraAuthLdapBindDn)
      */
     public static final String AM_LDAP = "ldap";
-    
+
     /**
      * zimbraAuthMech type of "ad" means use configured LDAP attrs
      * (zimbraAuthLdapURL, zimbraAuthLdapBindDn) for use with ActiveDirectory
      */
     public static final String AM_AD = "ad";
-    
+
     /**
      * zimbraAuthMech type of "kerberos5" means use kerberos5 authentication.
      * The principal can be obtained by, either:
      * (1) {email-local-part}@{domain-attr-zimbraAuthKerberos5Realm}
      * or
-     * (2) {principal-name} if account zimbraForeignPrincipal is in the format of 
+     * (2) {principal-name} if account zimbraForeignPrincipal is in the format of
      *     kerberos5:{principal-name}
      */
     public static final String AM_KERBEROS5 = "kerberos5";
-    
+
     /**
      * zimbraAuthMech type of "custom:{handler}" means use registered extension
-     * of ZimbraCustomAuth.authenticate() method 
+     * of ZimbraCustomAuth.authenticate() method
      * see customauth.txt
      */
-    public static final String AM_CUSTOM = "custom:";  
-    
+    public static final String AM_CUSTOM = "custom:";
+
     /**
      * For kerberos5 auth, we allow specifying a principal on a per-account basis.
-     * If zimbraForeignPrincipal is in the format of kerberos5:{principal-name}, we 
+     * If zimbraForeignPrincipal is in the format of kerberos5:{principal-name}, we
      * use the {principal-name} instead of {user-part}@{kerberos5-realm-of-the-domain}
      */
-    public static final String FP_PREFIX_KERBEROS5 = "kerberos5:";  
+    public static final String FP_PREFIX_KERBEROS5 = "kerberos5:";
 
     /**
      * Used to store Active Directory account name for the user for free/busy
      * replication from Zimbra to Exchange.
      */
     public static final String FP_PREFIX_AD = "ad:";
-    
+
     /**
      * the account is active, and allows logins, etc.
      */
@@ -125,12 +125,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * to account data. Maintenance mode is a temporary state.
      */
     public static final String ACCOUNT_STATUS_MAINTENANCE = "maintenance";
-    
+
     /**
      * the account is locked due to administrative reasons and shouldn't allow logins and/or access.
      */
     public static final String ACCOUNT_STATUS_LOCKED = "locked";
-    
+
     /**
      * the account is locked due to too many login failure attempts and shouldn't allow  logins and/or access.
      */
@@ -138,19 +138,19 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     /**
      * the account is marked pending and shouldn't allow logins and/or access.
-     * 
-     * Account behavior is like closed, except that when the status is being set to 
+     *
+     * Account behavior is like closed, except that when the status is being set to
      * pending, account addresses are not removed from distribution lists.
-     * The use case is for hosted.  New account creation based on invites 
+     * The use case is for hosted.  New account creation based on invites
      * that are not completed until user accepts TOS on account creation confirmation page.
      */
     public static final String ACCOUNT_STATUS_PENDING = "pending";
-    
+
     /**
      * the account is marked closed (future garbage collection) and shouldn't allow logins and/or access.
      */
     public static final String ACCOUNT_STATUS_CLOSED = "closed";
-    
+
     /**
      * mail sent to this account's primary email or aliases should be accepted.
      */
@@ -162,7 +162,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * the addresses to appear as "non-existant" to the MTA.
      */
     public static final String MAIL_STATUS_DISABLED = "disabled";
-    
+
     public static final String DOMAIN_STATUS_ACTIVE = "active";
     public static final String DOMAIN_STATUS_MAINTENANCE = "maintenance";
     public static final String DOMAIN_STATUS_LOCKED = "locked";
@@ -176,14 +176,14 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * domain.
      */
     public static final String DOMAIN_TYPE_ALIAS = "alias";
-    
+
     /**
      * A local domain is not an alias domain - ie the whole domain is
      * not a forwarding domain, normal mailbox addresses and
      * individually listed aliases exist.
      */
     public static final String DOMAIN_TYPE_LOCAL = "local";
-    
+
     /**
      * Compose mail in text format
      */
@@ -193,12 +193,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * Compose mail in html format
      */
     public static final String MAIL_FORMAT_HTML = "html";
-    
+
     /**
      * Forward/reply mail in the same format of message we are replying to
      */
     public static final String MAIL_FORWARDREPLY_FORMAT_SAME = "same";
-    
+
     /**
      * Possible values for zimbraMailMode and ZimbraReverseProxyMailMode. "mixed"
      * means web server should authenticate in HTTPS and redirect to HTTP (useful
@@ -212,29 +212,29 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * on both HTTP and HTTPS but redirect traffic on the HTTP port to HTTPS.
      */
     public enum MailMode {
-    	http, https, mixed, both, redirect;
-    	
-    	public static MailMode fromString(String s) throws ServiceException {
-	        try {
-	            return MailMode.valueOf(s);
-	        } catch (IllegalArgumentException e) {
-	            throw ServiceException.INVALID_REQUEST("unknown mail mode: " + s, e);
-	        }
+        http, https, mixed, both, redirect;
+
+        public static MailMode fromString(String s) throws ServiceException {
+            try {
+                return MailMode.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown mail mode: " + s, e);
+            }
         }
     }
-    
+
     /**
      * Possible values for zimbraMailReferMode
      */
     public static final String MAIL_REFER_MODE_ALWAYS = "always";
     public static final String MAIL_REFER_MODE_WRONGHOST = "wronghost";
     public static final String MAIL_REFER_MODE_REVERSE_PROXIED = "reverse-proxied";
-    
+
 
     // attributes
 
     public static final String A_dc = "dc";
-        
+
     /**
      * aliased object name. The dn that an alias points to
      */
@@ -249,7 +249,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final String DEFAULT_IDENTITY_NAME = "DEFAULT";
 
     public static final int MAX_ZIMBRA_ID_LEN = 127;
-    
+
+    private List<ProvisioningValidator> validators = new ArrayList<ProvisioningValidator>();
+
     private static Provisioning sProvisioning;
 
     public synchronized static Provisioning getInstance() {
@@ -278,11 +280,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
             ZimbraLog.account.warn("duplicate call to Provisioning.setInstance()");
         sProvisioning = prov;
     }
-    
+
     public boolean idIsUUID() {
         return true;
     }
-    
+
     /**
      * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
      * keys that are <code>String</code>s, and values that are either
@@ -293,14 +295,14 @@ public abstract class Provisioning extends ZAttrProvisioning {
      *   <li>an <code>Object</code> array or <code>Collection</code>,
      *     in which case a multi-valued attr is updated</li>
      * </ul>
-     * 
+     *
      * Calls {@link #modifyAttrs(Map, boolean)} with <code>checkImmutable=false</code>.
      */
     public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs) throws ServiceException
     {
         modifyAttrs(e, attrs, false);
     }
-    
+
     /**
      * Modifies this entry.  <code>attrs</code> is a <code>Map</code> consisting of
      * keys that are <code>String</code>s, and values that are either
@@ -316,7 +318,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
                                      Map<String, ? extends Object> attrs,
                                      boolean checkImmutable)
     throws ServiceException;
-    
+
     public void modifyAttrs(Entry e,
             Map<String, ? extends Object> attrs,
             boolean checkImmutable,
@@ -333,17 +335,17 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     /**
      * reload/refresh the entry.
-     * 
+     *
      * (LdapProvisioning will reload the entry from the master)
      */
     public abstract void reload(Entry e) throws ServiceException;
-    
+
 
     /**
      * reload/refresh the entry.
-     * 
+     *
      * @param e
-     * @param fromMaster whether to reload the entry from the master 
+     * @param fromMaster whether to reload the entry from the master
      * @throws ServiceException
      */
     public void reload(Entry e, boolean fromMaster) throws ServiceException {
@@ -351,24 +353,24 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     /**
-     * @return the domain of this account, or null if an admin account. 
+     * @return the domain of this account, or null if an admin account.
      * @throws ServiceException
-     */    
+     */
     public Domain getDomain(Account acct) throws ServiceException {
         String dname = acct.getDomainName();
         boolean checkNegativeCache = (acct instanceof GuestAccount);
         return dname == null ? null : getDomain(DomainBy.name, dname, checkNegativeCache);
     }
-    
+
     /**
      * @return the domain of this alias
      * @throws ServiceException
-     */    
+     */
     public Domain getDomain(Alias alias) throws ServiceException {
         String dname = alias.getDomainName();
         return dname == null ? null : getDomain(DomainBy.name, dname, false);
     }
-   
+
 
     /**
      * @return the Server object where this account's mailbox is homed
@@ -377,13 +379,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public Server getServer(Account acct) throws ServiceException {
         String serverId = acct.getAttr(Provisioning.A_zimbraMailHost);
         return (serverId == null ? null : get(ServerBy.name, serverId));
-    } 
-    
-    
-    
+    }
+
+
+
     /**
      * @return the COS object for this account, or null if account has no COS
-     * 
+     *
      * @throws ServiceException
      */
     public Cos getCOS(Account acct) throws ServiceException {
@@ -391,7 +393,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         Cos cos = (Cos) acct.getCachedData(EntryCacheDataKey.ACCOUNT_COS);
         if (cos == null) {
             String id = acct.getCOSId();
-                if (id != null) cos = get(CosBy.id, id); 
+                if (id != null) cos = get(CosBy.id, id);
                 if (cos == null) {
                     Domain domain = getDomain(acct);
                     String domainCosId = domain != null ? domain.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
@@ -402,10 +404,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
         return cos;
     }
-    
+
     public String getEmailAddrByDomainAlias(String emailAddress) throws ServiceException {
         String addr = null;
-        
+
         String parts[] = emailAddress.split("@");
         if (parts.length == 2) {
             Domain domain = getDomain(DomainBy.name, parts[1], true);
@@ -422,17 +424,17 @@ public abstract class Provisioning extends ZAttrProvisioning {
                 }
             }
         }
-        
+
         return addr;
     }
-    
+
     /**
      * @param zimbraId the zimbraId of the dl we are checking for
      * @return true if this account (or one of the dl it belongs to) is a member of the specified dl.
      * @throws ServiceException
      */
     public abstract boolean inDistributionList(Account acct, String zimbraId) throws ServiceException;
-    
+
     /**
      * @param zimbraId the zimbraId of the dl we are checking for
      * @return true if this distribution list (or one of the dl it belongs to) is a member of the specified dl.
@@ -441,32 +443,32 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public boolean inDistributionList(DistributionList list, String zimbraId) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
-    
+
     /**
      * @return set of all the zimbraId's of lists this account belongs to, including any list in other list.
      * @throws ServiceException
      */
-    public abstract Set<String> getDistributionLists(Account acct) throws ServiceException; 
+    public abstract Set<String> getDistributionLists(Account acct) throws ServiceException;
 
     /**
-     *      
+     *
      * @param directOnly return only DLs this account is a direct member of
-     * @param via if non-null and directOnly is false, this map will containing a mapping from a DL name to the DL it was a member of, if 
+     * @param via if non-null and directOnly is false, this map will containing a mapping from a DL name to the DL it was a member of, if
      *            member was indirect.
      * @return all the DLs
      * @throws ServiceException
      */
-    public abstract List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String,String> via) throws ServiceException; 
+    public abstract List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String,String> via) throws ServiceException;
 
     /**
-     *      
+     *
      * @param directOnly return only DLs this DL is a direct member of
-     * @param via if non-null and directOnly is false, this map will containing a mapping from a DL name to the DL it was a member of, if 
+     * @param via if non-null and directOnly is false, this map will containing a mapping from a DL name to the DL it was a member of, if
      *            member was indirect.
      * @return all the DLs
      * @throws ServiceException
      */
-    public abstract List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String,String> via) throws ServiceException; 
+    public abstract List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String,String> via) throws ServiceException;
 
 
     //
@@ -476,58 +478,58 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
-    
+
     /**
-     * represents a super group in which the perspective object(account, cr, dl) is 
+     * represents a super group in which the perspective object(account, cr, dl) is
      * directly or indirectly a member of
      */
     public static class MemberOf {
         private String mId;            // zimbraId of this group
         private boolean mIsAdminGroup; // is this group is an admin group (zimbraIsAdminGroup == TRUE)
-        
+
         public MemberOf(String id, boolean isAdminGroup) {
             mId = id;
             mIsAdminGroup = isAdminGroup;
         }
-        
+
         public String getId() {
             return mId;
         }
-        
+
         public boolean isAdminGroup() {
             return mIsAdminGroup;
         }
     }
-    
+
     public static class AclGroups {
         List<MemberOf> mMemberOf;  // list of MemberOf
         List<String> mGroupIds;    // list of group ids
-        
+
         public AclGroups(List<MemberOf> memberOf, List<String> groupIds) {
             mMemberOf = memberOf;
             mGroupIds = groupIds;
         }
-        
+
         // create an empty AclGroups
         public AclGroups() {
             this(new ArrayList<MemberOf>(), new ArrayList<String>());
         }
-        
+
         public List<MemberOf> memberOf() {
             return mMemberOf;
         }
-        
+
         public List<String> groupIds() {
             return mGroupIds;
         }
     }
-    
+
     /**
-     * 
+     *
      * @param acct
      * @param adminGroupsOnly return admin groups only
      * @return List of all direct and indirect groups this account belongs to.
-     *         The returned List is sorted by "shortest distance" to the account, 
+     *         The returned List is sorted by "shortest distance" to the account,
      *         the sorter the distance is, the earlier it appears in the returned List.
      * @throws ServiceException
      */
@@ -536,55 +538,55 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     /**
-     * 
+     *
      * @param list
      * @param adminGroupsOnly return admin groups only
      * @return List of all the zimbraId's of lists this list belongs to, including any list in other list.
-     *         The returned List is sorted by "shortest distance" to the list, the sorter the distance is, 
+     *         The returned List is sorted by "shortest distance" to the list, the sorter the distance is,
      *         the earlier it appears in the returned List.
      * @throws ServiceException
      */
     public AclGroups getAclGroups(DistributionList list, boolean adminGroupsOnly) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
-    
+
     /**
      * @return the domain of the distribution list
      * @throws ServiceException
-     */    
+     */
     public Domain getDomain(DistributionList dl) throws ServiceException {
         String dname = dl.getDomainName();
         return dname == null ? null : get(DomainBy.name, dname);
     }
-    
+
     public abstract boolean healthCheck() throws ServiceException;
 
     public abstract Config getConfig() throws ServiceException;
-    
+
     public abstract GlobalGrant getGlobalGrant() throws ServiceException;
-    
+
     /**
      * Looks up <tt>MimeTypeInfo</tt> objects by type.
      * @return the MIME types, or an empty <tt>List</tt> if none match
      */
     public abstract List<MimeTypeInfo> getMimeTypes(String mimeType) throws ServiceException;
-    
+
     /**
      * Returns all <tt>MimeTypeInfo</tt> objects.
      * @return the MIME types, or an empty <tt>List</tt> if none exist
      */
     public abstract List<MimeTypeInfo> getAllMimeTypes() throws ServiceException;
-    
+
     public abstract List<Zimlet> getObjectTypes() throws ServiceException;
-    
+
     /**
      * Creates the specified account. The A_uid attribute is automatically
      * created and should not be passed in.
-     * 
-     * If A_zimbraId is passed in the attrs list, createAccount honors it if it is a valid uuid per RFC 4122. 
-     * It is caller's responsibility to ensure the uuid passed in is unique in the namespace.  
+     *
+     * If A_zimbraId is passed in the attrs list, createAccount honors it if it is a valid uuid per RFC 4122.
+     * It is caller's responsibility to ensure the uuid passed in is unique in the namespace.
      * createAccount does not check for uniqueness of the uuid passed in as an argument.
-     *      
+     *
      * For example:
      * <pre>
      * HashMap attrs  = new HashMap();
@@ -592,10 +594,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * attrs.put(Provisioning.A_cn, "Roland Schemers");
      * attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_ENABLED);
      * attrs.put(Provisioning.A_zimbraMailHost, "server1");
-     * attrs.put(Provisioning.A_zimbraMailDeliveryAddress, "roland@tiiq.net");        
+     * attrs.put(Provisioning.A_zimbraMailDeliveryAddress, "roland@tiiq.net");
      * prov.createAccount("roland@tiiq.net", "dsferulz", Provisioning.ACCOUNT_STATUS_ACTIVE, attrs);
      * </pre>
-     * 
+     *
      * @param emailAddress email address (domain must already exist) of account being created.
      * @param password password of account being created, or null. Account's without passwords can't be logged into.
      * @param accountStatus the initial account status
@@ -606,7 +608,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract Account createAccount(String emailAddress, String password, Map<String, Object> attrs) throws ServiceException;
 
     /**
-     * 
+     *
      * @param emailAddress
      * @param password
      * @param attrs attributes to set while creating the account entry
@@ -615,9 +617,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return
      * @throws ServiceException
      */
-    public abstract Account restoreAccount(String emailAddress, String password, 
+    public abstract Account restoreAccount(String emailAddress, String password,
             Map<String, Object> attrs, Map<String, Object> origAttrs) throws ServiceException;
-    
+
     /**
      * deletes the specified account, removing the account and all email aliases.
      * does not remove any mailbox associated with the account.
@@ -635,10 +637,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void renameAccount(String zimbraId, String newName) throws ServiceException;
 
     public static enum AccountBy {
-        
+
         // case must match protocol
         adminName, appAdminName, id, foreignPrincipal, name, krb5Principal;
-        
+
         public static AccountBy fromString(String s) throws ServiceException {
             try {
                 return AccountBy.valueOf(s);
@@ -647,10 +649,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
             }
         }
     }
-    
+
     /**
      * Looks up an account by the specified key.
-     * 
+     *
      * @return the <code>Account</code>, or <code>null</code> if no <code>Account</code>
      * with the given key exists.
      * @throws ServiceException if the key is malformed
@@ -665,10 +667,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     /**
      * Looks up an account by the specified key.
-     * 
-     * For implementations that do not support the loadFromMaster parameter, this method is 
+     *
+     * For implementations that do not support the loadFromMaster parameter, this method is
      * equivalent to get(AccountBy keyType, String key).
-     * 
+     *
      * @param keyType
      * @param key
      * @param loadFromMaster whether the account should be loaded from the master directory if the account is not in cache.
@@ -678,36 +680,36 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public Account get(AccountBy keyType, String key, boolean loadFromMaster) throws ServiceException {
         return get(keyType, key);
     }
-    
+
     /**
      * For Yahoo CalendarProvisioning.
-     * 
+     *
      * The Yahoo paranoids normally want them to do what is called a "credentialed open" when they access UDB.
-     * That means they want the UDB client to pass in the Y&T cookies to UDB, so UDB will also double check 
-     * them. This helps to prevent servers from accidentally responding to a request without properly check 
+     * That means they want the UDB client to pass in the Y&T cookies to UDB, so UDB will also double check
+     * them. This helps to prevent servers from accidentally responding to a request without properly check
      * credentials and/or operating on the wrong account.
      *
-     */ 
+     */
     public Account get(AccountBy keyType, String key, AuthToken authToken) throws ServiceException {
         return get(keyType, key);
     }
-    
+
     public Account get(AccountBy keyType, String key, boolean loadFromMaster, AuthToken authToken) throws ServiceException {
         return get(keyType, key, loadFromMaster);
     }
-    
+
     /**
      * Get account by id first, if not found, get by name.
-     * 
-     * Note, this function might do an extra LDAP search, it should only be called from the edge of 
-     * CLI tools where the call rate is very low.  
-     * 
+     *
+     * Note, this function might do an extra LDAP search, it should only be called from the edge of
+     * CLI tools where the call rate is very low.
+     *
      * @param key account id or name
      * @return
      */
     public Account getAccount(String key) throws ServiceException {
         Account acct = null;
-        
+
         if (Provisioning.isUUID(key))
             acct = get(AccountBy.id, key);
         else {
@@ -716,7 +718,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
             if (acct == null)
                 acct = get(AccountBy.id, key);
         }
-        
+
         return acct;
     }
 
@@ -725,41 +727,41 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * calendar resource accounts are excluded
      */
     public static final int SA_ACCOUNT_FLAG = 0x1;
-    
+
     /** return aliases from searchAccounts */
     public static final int SA_ALIAS_FLAG = 0x2;
-    
+
     /** return distribution lists from searchAccounts */
     public static final int SA_DISTRIBUTION_LIST_FLAG = 0x4;
 
     /** return calendar resource accounts from searchAccounts */
     public static final int SA_CALENDAR_RESOURCE_FLAG = 0x8;
-    
+
     /** return domains from searchAccounts. only valid with Provisioning.searchAccounts. */
     public static final int SA_DOMAIN_FLAG = 0x10;
-    
+
     /** return coses from searchDirectory */
     public static final int SD_COS_FLAG = 0x20;
-    
+
     /** do not fixup objectclass in query for searchObject, should only be used from LdapUpgrade */
     public static final int SO_NO_FIXUP_OBJECTCLASS = 0x40;
-    
+
     /** do not fixup return attrs for searchObject, should only be used from LdapUpgrade */
     public static final int SO_NO_FIXUP_RETURNATTRS = 0x80;
-    
-    /** 
+
+    /**
      *  do not set account defaults in makeAccount
-     *  
+     *
      *  bug 36017, 41533
-     *  
-     *  only used from the admin SearchDirectory and GetQuotaUsage SOAPs, where large number of accounts are 
-     *  returned from Provisioning.searchDirectory.  In the extreme case where the accounts 
-     *  span many different domains, the admin console UI/zmprov would seem to be be unresponsive.  
-     *  
+     *
+     *  only used from the admin SearchDirectory and GetQuotaUsage SOAPs, where large number of accounts are
+     *  returned from Provisioning.searchDirectory.  In the extreme case where the accounts
+     *  span many different domains, the admin console UI/zmprov would seem to be be unresponsive.
+     *
      *  Domain is needed for:
      *    - determine the cos if cos is not set on the account
      *    - account secondary default
-     *  
+     *
      *  Caller is responsible for setting the defaults when it needs them.
      */
     public static final int SO_NO_ACCOUNT_DEFAULTS = 0x100;            // do not set defaults and secondary defaults in makeAccount
@@ -773,7 +775,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public static int searchAccountStringToMask(String types) {
         int flags = 0;
-        
+
         if (types.indexOf("accounts") != -1) flags |= Provisioning.SA_ACCOUNT_FLAG;
         if (types.indexOf("aliases") != -1) flags |= Provisioning.SA_ALIAS_FLAG;
         if (types.indexOf("distributionlists") != -1) flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
@@ -782,17 +784,17 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
         return flags;
     }
-    
+
     public static String searchAccountMaskToString(int mask) {
         StringBuilder sb = new StringBuilder();
         if ( (mask & Provisioning.SA_ACCOUNT_FLAG) != 0) sb.append("accounts");
         if ( (mask & Provisioning.SA_ALIAS_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("aliases"); }
-        if ( (mask & Provisioning.SA_DISTRIBUTION_LIST_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("distributionlists"); }                
+        if ( (mask & Provisioning.SA_DISTRIBUTION_LIST_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("distributionlists"); }
         if ( (mask & Provisioning.SA_CALENDAR_RESOURCE_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("resources"); }
-        if ( (mask & Provisioning.SA_DOMAIN_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("domains"); }        
+        if ( (mask & Provisioning.SA_DOMAIN_FLAG) != 0) { if (sb.length() >0) sb.append(','); sb.append("domains"); }
         return sb.toString();
     }
-        
+
     public static enum GAL_SEARCH_TYPE {
         ALL, USER_ACCOUNT, CALENDAR_RESOURCE
     }
@@ -806,23 +808,23 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return a list of all the accounts that matched.
      * @throws ServiceException
      */
-    public abstract List<NamedEntry> searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;  
+    public abstract List<NamedEntry> searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;
 
     public abstract List<Account> getAllAdminAccounts()  throws ServiceException;
 
     public abstract void setCOS(Account acct, Cos cos) throws ServiceException;
-    
+
     public abstract void modifyAccountStatus(Account acct, String newStatus) throws ServiceException;
 
     public abstract void authAccount(Account acct, String password, AuthContext.Protocol proto) throws ServiceException;
-    
+
     public abstract void authAccount(Account acct, String password, AuthContext.Protocol proto, Map<String, Object> authCtxt) throws ServiceException;
-    
+
     public void accountAuthed(Account acct) throws ServiceException {
         // noop by default
     }
 
-    public void preAuthAccount(Account acct, String accountName, String accountBy, long timestamp, long expires, 
+    public void preAuthAccount(Account acct, String accountName, String accountBy, long timestamp, long expires,
                                         String preAuth,
                                         boolean admin,
                                         Map<String, Object> authCtxt) throws ServiceException
@@ -834,20 +836,20 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public abstract void preAuthAccount(Account acct, String accountName, String accountBy, long timestamp, long expires, String preAuth, Map<String, Object> authCtxt) throws ServiceException;
-    
+
     public abstract void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException;
-    
+
     public abstract void setPassword(Account acct, String newPassword) throws ServiceException;
 
     public abstract void checkPasswordStrength(Account acct, String password) throws ServiceException;
 
     public abstract void addAlias(Account acct, String alias) throws ServiceException;
-    
+
     public abstract void removeAlias(Account acct, String alias) throws ServiceException;
-    
+
     /**
      * search alias target - will always do a search
-     * 
+     *
      * @param alias
      * @param mustFind
      * @return
@@ -856,23 +858,23 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public NamedEntry searchAliasTarget(Alias alias, boolean mustFind) throws ServiceException {
         String targetId = alias.getAttr(Provisioning.A_zimbraAliasTargetId);
         SearchOptions options = new SearchOptions();
-    
+
         int flags = 0;
 
         flags |= Provisioning.SA_ACCOUNT_FLAG;
         flags |= Provisioning.SA_CALENDAR_RESOURCE_FLAG;
         flags |= Provisioning.SA_DISTRIBUTION_LIST_FLAG;
-            
+
         String query = "(" + Provisioning.A_zimbraId + "=" + targetId + ")";
-    
+
         options.setFlags(flags);
         options.setQuery(query);
-    
+
         List<NamedEntry> entries = searchDirectory(options);
-        
+
         if (mustFind && entries.size() == 0)
             throw ServiceException.FAILURE("target " + targetId + " of alias " +  alias.getName() + " not found " + query, null);
-        
+
         if (entries.size() > 1)
             throw AccountServiceException.TOO_MANY_SEARCH_RESULTS("too many results for search " + query, null);
 
@@ -881,10 +883,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
         else
             return entries.get(0);
     }
-    
+
     /**
      * search alias target - implementation can return cached entry
-     * 
+     *
      * @param alias
      * @param mustFind
      * @return
@@ -911,10 +913,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract Domain createDomain(String name, Map<String, Object> attrs) throws ServiceException;
 
     public static enum DomainBy {
-        
+
         // case must match protocol
         id, name, virtualHostname, krb5Realm;
-        
+
         public static DomainBy fromString(String s) throws ServiceException {
             try {
                 return DomainBy.valueOf(s);
@@ -923,16 +925,16 @@ public abstract class Provisioning extends ZAttrProvisioning {
             }
         }
     }
-    
+
     public abstract Domain get(DomainBy keyType, String key) throws ServiceException;
 
     /**
      * @param keyType
      * @param key
-     * @param checkNegativeCache whether to check the negative domain cache 
+     * @param checkNegativeCache whether to check the negative domain cache
      *                           if set to true, and if key is found in the
-     *                           negative cache, then no LDAP search will be 
-     *                           issued 
+     *                           negative cache, then no LDAP search will be
+     *                           issued
      * @return
      * @throws ServiceException
      */
@@ -944,9 +946,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public Domain getDomainById(String id) throws ServiceException { return get(DomainBy.id, id); }
     public Domain getDomainByVirtualHostname(String host) throws ServiceException { return get(DomainBy.virtualHostname, host); }
     public Domain getDomainByKrb5Realm(String realm) throws ServiceException { return get(DomainBy.krb5Realm, realm); }
-    
+
     public abstract List<Domain> getAllDomains()  throws ServiceException;
-    
+
     public void getAllDomains(NamedEntry.Visitor visitor, String[] retAttrs) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
@@ -954,16 +956,16 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void deleteDomain(String zimbraId) throws ServiceException;
 
     public abstract Cos createCos(String name, Map<String, Object> attrs) throws ServiceException;
-    
+
     public abstract Cos copyCos(String srcCosId, String destCosName) throws ServiceException;
 
     public abstract void renameCos(String zimbraId, String newName) throws ServiceException;
-    
+
     public static enum CosBy {
-        
+
         // case must match protocol
         id, name;
-        
+
         public static CosBy fromString(String s) throws ServiceException {
             try {
                 return CosBy.valueOf(s);
@@ -971,9 +973,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }
         }
-    
+
     }
-    
+
     public abstract Cos get(CosBy keyType, String key) throws ServiceException;
 
     public Cos getCosByName(String name) throws ServiceException { return get(CosBy.name, name); }
@@ -1241,7 +1243,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     /**
      * Search for all accunts on the server
-     * 
+     *
      * @param server
      * @param opts  note: query in opts is ignored
      * @param visitor
@@ -1338,11 +1340,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
         public void setConvertIDNToAscii(boolean convertIDNToAscii) {
             mConvertIDNToAscii = convertIDNToAscii;
         }
-        
+
         public boolean getOnMaster() {
             return mOnMaster;
         }
-        
+
         public void setOnMaster(boolean onMaster) {
             mOnMaster = onMaster;
         }
@@ -1442,19 +1444,23 @@ public abstract class Provisioning extends ZAttrProvisioning {
             mVisitor = visitor;
         }
 
+        @Override
         public List<GalContact> getMatches() throws ServiceException {
             throw ServiceException.FAILURE("getMatches not supported for VisitorSearchGalResult", null);
         }
 
+        @Override
         public int getNumMatches() {
             return mNumMatches;
         }
 
+        @Override
         public void addMatch(GalContact gc) throws ServiceException {
             mVisitor.visit(gc);
             mNumMatches++;
         }
 
+        @Override
         public void addMatches(SearchGalResult result) throws ServiceException {
             if (!(result instanceof VisitorSearchGalResult))
                 throw ServiceException.FAILURE("cannot addMatches with non VisitorSearchGalResult", null);
@@ -1594,9 +1600,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public abstract Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
-    
+
     public abstract Identity restoreIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
-    
+
     public abstract void modifyIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;
 
     public abstract void deleteIdentity(Account account, String identityName) throws ServiceException;
@@ -1624,7 +1630,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public abstract Signature createSignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException;
-    
+
     public abstract Signature restoreSignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException;
 
     public abstract void modifySignature(Account account, String signatureId, Map<String, Object> attrs) throws ServiceException;
@@ -1651,7 +1657,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract DataSource createDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs) throws ServiceException;
     public abstract DataSource createDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs, boolean passwdAlreadyEncrypted) throws ServiceException;
-    
+
     public abstract DataSource restoreDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs) throws ServiceException;
 
     public abstract void modifyDataSource(Account account, String dataSourceId, Map<String, Object> attrs) throws ServiceException;
@@ -1673,7 +1679,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
         // case must match protocol
         id, name, serviceHostname;
-        
+
         public static XMPPComponentBy fromString(String s) throws ServiceException {
             try {
                 return XMPPComponentBy.valueOf(s);
@@ -1682,24 +1688,24 @@ public abstract class Provisioning extends ZAttrProvisioning {
             }
         }
     }
-    
+
     // XMPPComponents
     public abstract XMPPComponent createXMPPComponent(String name, Domain domain, Server server, Map<String, Object> attrs) throws ServiceException;
-    
+
     public abstract XMPPComponent get(XMPPComponentBy keyName, String key) throws ServiceException;
-    
+
     public abstract List<XMPPComponent> getAllXMPPComponents() throws ServiceException;
-    
+
     public abstract void deleteXMPPComponent(XMPPComponent comp) throws ServiceException;
-    
+
     //
     // rights
     //
     public static enum TargetBy {
-        
+
         // case must match protocol
         id, name;
-        
+
         public static TargetBy fromString(String s) throws ServiceException {
             try {
                 return TargetBy.valueOf(s);
@@ -1708,12 +1714,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
             }
         }
     }
-    
+
     public static enum GranteeBy {
-        
+
         // case must match protocol
         id, name;
-        
+
         public static GranteeBy fromString(String s) throws ServiceException {
             try {
                 return GranteeBy.valueOf(s);
@@ -1722,51 +1728,51 @@ public abstract class Provisioning extends ZAttrProvisioning {
             }
         }
     }
-    
-    public static class RightsDoc { 
+
+    public static class RightsDoc {
         String mCmd;
         List<String> mRights;
         List<String> mNotes;
-        
+
         public RightsDoc(String cmd) {
             mCmd = cmd;
             mRights = new ArrayList<String>();
             mNotes = new ArrayList<String>();
         }
-        
+
         public void addRight(String right) {
             mRights.add(right);
         }
-        
+
         public void addNote(String note) {
             mNotes.add(note);
         }
-        
+
         public String getCmd() {
             return mCmd;
         }
-        
+
         public List<String> getRights() {
             return mRights;
         }
-        
+
         public List<String> getNotes() {
             return mNotes;
         }
     }
-    
+
     public Map<String, List<RightsDoc>> getRightsDoc(String[] pkgs) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
-    
+
     public Right getRight(String rightName, boolean expandAllAttrs) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
-    
+
     public List<Right> getAllRights(String targetType, boolean expandAllAttrs)  throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
-    
+
     public boolean checkRight(
             String targetType, TargetBy targetBy, String target,
             GranteeBy granteeBy, String grantee,
@@ -1774,7 +1780,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
             AccessManager.ViaGrant via) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
-    
+
     public RightCommand.AllEffectiveRights getAllEffectiveRights(
             String granteeType, GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
@@ -1787,7 +1793,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
-    
+
     public RightCommand.EffectiveRights getCreateObjectAttrs(
             String targetType,
             DomainBy domainBy, String domainStr,
@@ -1795,21 +1801,21 @@ public abstract class Provisioning extends ZAttrProvisioning {
             GranteeBy granteeBy, String grantee) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
-            
+
     public RightCommand.Grants getGrants(
             String targetType, TargetBy targetBy, String target,
             String granteeType, GranteeBy granteeBy, String grantee,
             boolean granteeIncludeGroupsGranteeBelongs) throws ServiceException{
         throw ServiceException.FAILURE("unsupported", null);
     }
-            
+
     public void grantRight(
             String targetType, TargetBy targetBy, String target,
             String granteeType, GranteeBy granteeBy, String grantee, String secret,
             String right, RightModifier rightModifier) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
-    
+
     public void revokeRight(
             String targetType, TargetBy targetBy, String target,
             String granteeType, GranteeBy granteeBy, String grantee,
@@ -1823,7 +1829,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         locale,
         skin,
         license,
-        
+
         // ldap entries
         account,
         group,
@@ -1832,7 +1838,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         domain,
         server,
         zimlet;
-        
+
         public static CacheEntryType fromString(String s) throws ServiceException {
             try {
                 return CacheEntryType.valueOf(s);
@@ -1841,13 +1847,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
             }
         }
     }
-    
+
     public static enum CacheEntryBy {
-        
+
         // case must match protocol
         id, name;
     }
-    
+
     public static class CacheEntry {
         public CacheEntry(CacheEntryBy entryBy, String entryIdentity) {
             mEntryBy = entryBy;
@@ -1856,10 +1862,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
         public CacheEntryBy mEntryBy;
         public String mEntryIdentity;
     }
-    
+
     /**
      * flush cache by entry type and optional specific e
-     * 
+     *
      * @param type
      * @param entries
      * @throws ServiceException
@@ -1868,45 +1874,45 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public static class CountAccountResult {
         public static class CountAccountByCos {
-            
+
             CountAccountByCos(String cosId, String cosName, long count) {
                 mCosId = cosId;
                 mCosName = cosName;
                 mCount = count;
             }
-            
+
             private String mCosId;
             private String mCosName;
             private long mCount;
-            
+
             public String getCosId()   { return mCosId;}
             public String getCosName() { return mCosName; }
             public long getCount()        { return mCount; }
         }
-        
+
         private List<CountAccountByCos> mCountAccountByCos = new ArrayList<CountAccountByCos>();
-        
+
         public void addCountAccountByCosResult(String cosId, String cosName, long count) {
             CountAccountByCos r = new CountAccountByCos(cosId, cosName, count);
             mCountAccountByCos.add(r);
         }
-        
+
         public List<CountAccountByCos> getCountAccountByCos() {
             return mCountAccountByCos;
         }
-        
+
     }
 
     public CountAccountResult countAccount(Domain domain) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
-    
+
     // supported types for countObjects
     // for now just used by the installer
     // add more canned types if needed, we certainly don't want to open up a free form query interface
     public enum CountObjectsType {
         userAccounts;
-        
+
         public static CountObjectsType fromString(String type) throws ServiceException {
             try {
                 return CountObjectsType.valueOf(type);
@@ -1915,7 +1921,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
             }
         }
     }
-    
+
     public long countObjects(CountObjectsType type, Domain domain) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
@@ -1930,7 +1936,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         NameUtil.validEmailAddress(addr);
     }
 
-    
+
     public static boolean isUUID(String value) {
         if (value.length() == 36 &&
             value.charAt(8) == '-' &&
@@ -1940,15 +1946,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
             return true;
         return false;
     }
-    
+
     public String getProxyAuthToken(String acctId) throws ServiceException {
         return null;
     }
-    
+
     public boolean isOfflineProxyServer(Server server) {
-        return false; 
+        return false;
     }
-    
+
     public boolean allowsPingRemote() {
         return true;
     }
@@ -1960,7 +1966,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public void reloadMemcachedClientConfig() throws ServiceException {
         // do nothing by default
     }
-    
+
     ///
     //
     // ShareInfo
@@ -1969,7 +1975,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static enum PublishShareInfoAction {
         add,
         remove;
-        
+
         public static PublishShareInfoAction fromString(String action) throws ServiceException {
             try {
                 return PublishShareInfoAction.valueOf(action);
@@ -1978,21 +1984,21 @@ public abstract class Provisioning extends ZAttrProvisioning {
             }
         }
     }
-    
+
     public static interface PublishedShareInfoVisitor {
         public void visit(ShareInfoData shareInfoData) throws ServiceException;
     }
-    
-    public void publishShareInfo(DistributionList dl, PublishShareInfoAction action, 
+
+    public void publishShareInfo(DistributionList dl, PublishShareInfoAction action,
             Account ownerAcct, String folderIdOrPath) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
-    
-    public void getPublishedShareInfo(DistributionList dl, Account ownerAcct, 
+
+    public void getPublishedShareInfo(DistributionList dl, Account ownerAcct,
             PublishedShareInfoVisitor visitor) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
-    
+
     public void getShareInfo(Account ownerAcct, PublishedShareInfoVisitor visitor) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
@@ -2007,9 +2013,39 @@ public abstract class Provisioning extends ZAttrProvisioning {
         server,
         zimlet;
     }
-    
+
     public Map<String, String> getNamesForIds(Set<String> ids, EntryType type) throws ServiceException {
         return new HashMap<String, String>();  // return empty map
+    }
+
+    public static interface ProvisioningValidator {
+        static final String CREATE_ACCOUNT_SUCCEEDED = "createAccountSucceeded";
+        static final String CREATE_ACCOUNT = "createAccount";
+        static final String CREATE_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE =
+            "createAccountCheckDomainCosAndFeature";
+        static final String MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE =
+            "modifyAccountCheckDomainCosAndFeature";
+
+        void validate(Provisioning prov, String action, Object... args) throws ServiceException;
+        void refresh();
+    }
+
+    public void register(ProvisioningValidator validator) {
+        synchronized (validators) {
+            validators.add(validator);
+        }
+    }
+
+    protected void validate(String action, Object... args) throws ServiceException {
+        for (ProvisioningValidator validator : validators) {
+            validator.validate(this, action, args);
+        }
+    }
+
+    public void refreshValidators() {
+        for (ProvisioningValidator validator : validators) {
+            validator.refresh();
+        }
     }
 
 }

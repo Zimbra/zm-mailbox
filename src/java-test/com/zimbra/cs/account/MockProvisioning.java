@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DataSource.Type;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
@@ -39,9 +40,15 @@ public class MockProvisioning extends Provisioning {
 
     @Override
     public Account createAccount(String email, String password,
-            Map<String, Object> attrs) {
+            Map<String, Object> attrs) throws ServiceException {
+        validate(ProvisioningValidator.CREATE_ACCOUNT, email, null, attrs);
+
         Account account = new Account(email, email, attrs, null, this);
-        return accounts.put(email, account);
+        try {
+            return accounts.put(email, account);
+        } finally {
+            validate(ProvisioningValidator.CREATE_ACCOUNT_SUCCEEDED, email, account);
+        }
     }
 
     @Override
