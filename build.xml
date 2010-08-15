@@ -1,52 +1,81 @@
 <project name="ZimbraCommon" default="jar">
-	
-	<!-- Properties -->
 
-	<property name="javac.target" value="1.6"/>
-	
-	<property name="jar.file" value="zimbracommon.jar" />
-	<property name="src.java.dir" location="src/java" />
-	<property name="build.dir" location="build" />
-	<property name="build.classes.dir" location="${build.dir}/classes" />
-	<property name="zimbra.home.dir" location="/opt/zimbra" />
+  <!-- Properties -->
 
-	<condition property="is-windows">
-		<os family="windows" />
-	</condition>
-	<condition property="is-unix">
-		<not>
-			<os family="windows" />
-		</not>
-	</condition>
+  <property name="javac.target" value="1.6"/>
+  <property name="jar.file" value="zimbracommon.jar" />
+  <property name="src.java.dir" location="src/java" />
+  <property name="build.dir" location="build" />
+  <property name="build.classes.dir" location="${build.dir}/classes" />
+  <property name="test.dir" location="${build.dir}/test"/>
+  <property name="test.src.dir" location="src/java-test"/>
+  <property name="test.classes.dir" location="${build.dir}/test-classes"/>
+  <property name="zimbra.home.dir" location="/opt/zimbra" />
 
-	<path id="all.java.path">
-		<pathelement location="${src.java.dir}" />
-	</path>
+  <condition property="is-windows">
+    <os family="windows" />
+  </condition>
+  <condition property="is-unix">
+    <not>
+      <os family="windows" />
+    </not>
+  </condition>
 
-	<path id="class.path">
-		<pathelement location="${build.classes.dir}" />
-		<fileset dir="jars">
-			<include name="**/*.jar" />
-		</fileset>
-	</path>
+  <path id="all.java.path">
+    <pathelement location="${src.java.dir}" />
+  </path>
 
-	<!-- Targets -->
-	<target name="build-init">
-		<mkdir dir="${build.classes.dir}" />
-	</target>
+  <path id="class.path">
+    <pathelement location="${build.classes.dir}" />
+    <fileset dir="jars">
+      <include name="**/*.jar" />
+    </fileset>
+  </path>
 
-	<target name="compile" depends="build-init" description="Compiles the source code">
-		<javac destdir="${build.classes.dir}" debug="true" classpathref="class.path" target="${javac.target}">
-			<src refid="all.java.path" />
-		</javac>
-	</target>
+  <!-- Targets -->
+  <target name="build-init">
+    <mkdir dir="${build.classes.dir}" />
+  </target>
 
-	<target name="jar" depends="compile" description="Creates the jar file">
-		<jar destfile="${build.dir}/${jar.file}" basedir="${build.classes.dir}" />
-	</target>
+  <target name="compile" depends="build-init" description="Compiles the source code">
+    <javac destdir="${build.classes.dir}" debug="true" classpathref="class.path" target="${javac.target}">
+      <src refid="all.java.path" />
+    </javac>
+  </target>
 
-	<target name="clean" description="Removes build files and undeploys extension">
-		<delete dir="${build.dir}" />
-	</target>
-	
+  <target name="jar" depends="compile" description="Creates the jar file">
+    <jar destfile="${build.dir}/${jar.file}" basedir="${build.classes.dir}" />
+  </target>
+
+  <target name="clean" description="Removes build files and undeploys extension">
+    <delete dir="${build.dir}" />
+  </target>
+
+  <target name="test-compile" depends="compile">
+      <mkdir dir="${test.classes.dir}"/>
+      <javac srcdir="${test.src.dir}" destdir="${test.classes.dir}"
+        debug="true" classpathref="class.path" target="${javac.target}"/>
+  </target>
+
+  <target name="test" depends="test-compile" description="Run unit tests">
+      <delete dir="${test.dir}" quiet="true"/>
+      <mkdir dir="${test.dir}/output"/>
+      <mkdir dir="${test.dir}/report"/>
+      <junit printsummary="on" haltonfailure="on" tempdir="${test.dir}">
+          <classpath refid="class.path"/>
+          <classpath path="${test.classes.dir}"/>
+          <formatter type="xml"/>
+          <batchtest todir="${test.dir}/output">
+              <fileset dir="${test.src.dir}">
+                  <include name="**/*Test.java"/>
+              </fileset>
+          </batchtest>
+      </junit>
+      <junitreport todir="${test.dir}/report">
+          <fileset dir="${test.dir}/output"/>
+          <report todir="${test.dir}/report"/>
+      </junitreport>
+      <echo>Test Report: ${test.dir}/report/index.html</echo>
+  </target>
+
 </project>
