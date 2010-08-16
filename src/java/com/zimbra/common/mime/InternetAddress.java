@@ -142,7 +142,6 @@ public class InternetAddress {
                     clevel += c == '(' ? 1 : -1;
                 }
                 escaped = !escaped && c == '\\';
-                empty = false;
             } else if (c == '"') {
                 quoted = true;
                 empty = false;
@@ -150,7 +149,7 @@ public class InternetAddress {
                 // this concludes the address portion of our program
                 if (!empty) {
                     iaddrs.add(new InternetAddress(content,
-                            astart, pos - astart, null));
+                            astart, pos - astart - 1, null));
                 }
                 group = c == ';';
                 empty = true;
