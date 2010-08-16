@@ -215,20 +215,31 @@ public abstract class Session {
     
     private List<RecentOperation> mRecentOperations = new LinkedList<RecentOperation>();
     
-    synchronized public void logOperation(Operation op) {
-        long now = System.currentTimeMillis();
-        long cutoff = now - OPERATION_HISTORY_TIME;
-
-        if (mRecentOperations.size() >= OPERATION_HISTORY_LENGTH) 
-            mRecentOperations.remove(0);
-
-        while (!mRecentOperations.isEmpty() && mRecentOperations.get(0).mTimestamp < cutoff)
-            mRecentOperations.remove(0);
-
-        mRecentOperations.add(new RecentOperation(now, op.getClass()));
+    public void logOperation(Operation op) {
+        synchronized (mRecentOperations) {
+            long now = System.currentTimeMillis();
+            long cutoff = now - OPERATION_HISTORY_TIME;
+    
+            if (mRecentOperations.size() >= OPERATION_HISTORY_LENGTH) 
+                mRecentOperations.remove(0);
+    
+            while (!mRecentOperations.isEmpty() && mRecentOperations.get(0).mTimestamp < cutoff)
+                mRecentOperations.remove(0);
+    
+            mRecentOperations.add(new RecentOperation(now, op.getClass()));
+        }
     }
 
-    synchronized public List<RecentOperation> getRecentOperations()  { return mRecentOperations; }
+    /**
+     * Get the list of recent operations. Note that the list is NOT THREAD SAFE. 
+     * Callers will need to synchronize on returned list whether reading or writing; otherwise a concurrent call to logOperation will cause ConcurrentModificationException. 
+     * @return
+     */
+    public List<RecentOperation> getRecentOperations()  { 
+        synchronized(mRecentOperations) {
+            return mRecentOperations;
+        }
+    }
 
     public final void encodeState(Element parent) {
         doEncodeState(parent);
