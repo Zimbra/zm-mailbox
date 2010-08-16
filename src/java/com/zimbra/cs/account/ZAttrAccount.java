@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 jhahm 20100812-0023 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -22041,213 +22041,64 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * end time of a working day (HHMM format, from 0000 to 2400)
+     * working hours for each day of the week
      *
-     * @return zimbraPrefCalendarWorkdayEndTime, or "1700" if unset
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1105)
-    public String getPrefCalendarWorkdayEndTime() {
-        return getAttr(Provisioning.A_zimbraPrefCalendarWorkdayEndTime, "1700");
-    }
-
-    /**
-     * end time of a working day (HHMM format, from 0000 to 2400)
-     *
-     * @param zimbraPrefCalendarWorkdayEndTime new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1105)
-    public void setPrefCalendarWorkdayEndTime(String zimbraPrefCalendarWorkdayEndTime) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarWorkdayEndTime, zimbraPrefCalendarWorkdayEndTime);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * end time of a working day (HHMM format, from 0000 to 2400)
-     *
-     * @param zimbraPrefCalendarWorkdayEndTime new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1105)
-    public Map<String,Object> setPrefCalendarWorkdayEndTime(String zimbraPrefCalendarWorkdayEndTime, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarWorkdayEndTime, zimbraPrefCalendarWorkdayEndTime);
-        return attrs;
-    }
-
-    /**
-     * end time of a working day (HHMM format, from 0000 to 2400)
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1105)
-    public void unsetPrefCalendarWorkdayEndTime() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarWorkdayEndTime, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * end time of a working day (HHMM format, from 0000 to 2400)
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1105)
-    public Map<String,Object> unsetPrefCalendarWorkdayEndTime(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarWorkdayEndTime, "");
-        return attrs;
-    }
-
-    /**
-     * start time of a working day (HHMM format, from 0000 to 2400)
-     *
-     * @return zimbraPrefCalendarWorkdayStartTime, or "0800" if unset
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1104)
-    public String getPrefCalendarWorkdayStartTime() {
-        return getAttr(Provisioning.A_zimbraPrefCalendarWorkdayStartTime, "0800");
-    }
-
-    /**
-     * start time of a working day (HHMM format, from 0000 to 2400)
-     *
-     * @param zimbraPrefCalendarWorkdayStartTime new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1104)
-    public void setPrefCalendarWorkdayStartTime(String zimbraPrefCalendarWorkdayStartTime) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarWorkdayStartTime, zimbraPrefCalendarWorkdayStartTime);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * start time of a working day (HHMM format, from 0000 to 2400)
-     *
-     * @param zimbraPrefCalendarWorkdayStartTime new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1104)
-    public Map<String,Object> setPrefCalendarWorkdayStartTime(String zimbraPrefCalendarWorkdayStartTime, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarWorkdayStartTime, zimbraPrefCalendarWorkdayStartTime);
-        return attrs;
-    }
-
-    /**
-     * start time of a working day (HHMM format, from 0000 to 2400)
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1104)
-    public void unsetPrefCalendarWorkdayStartTime() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarWorkdayStartTime, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * start time of a working day (HHMM format, from 0000 to 2400)
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1104)
-    public Map<String,Object> unsetPrefCalendarWorkdayStartTime(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarWorkdayStartTime, "");
-        return attrs;
-    }
-
-    /**
-     * seven-digit sequence indicating working (1) or non-working (0) days.
-     * first digit is Sunday, then Monday, and so on
-     *
-     * @return zimbraPrefCalendarWorkdays, or "0111110" if unset
+     * @return zimbraPrefCalendarWorkingHours, or "0:N:0800:1700,1:Y:0800:1700,2:Y:0800:1700,3:Y:0800:1700,4:Y:0800:1700,5:Y:0800:1700,6:N:0800:1700" if unset
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1103)
-    public String getPrefCalendarWorkdays() {
-        return getAttr(Provisioning.A_zimbraPrefCalendarWorkdays, "0111110");
+    public String getPrefCalendarWorkingHours() {
+        return getAttr(Provisioning.A_zimbraPrefCalendarWorkingHours, "0:N:0800:1700,1:Y:0800:1700,2:Y:0800:1700,3:Y:0800:1700,4:Y:0800:1700,5:Y:0800:1700,6:N:0800:1700");
     }
 
     /**
-     * seven-digit sequence indicating working (1) or non-working (0) days.
-     * first digit is Sunday, then Monday, and so on
+     * working hours for each day of the week
      *
-     * @param zimbraPrefCalendarWorkdays new value
+     * @param zimbraPrefCalendarWorkingHours new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1103)
-    public void setPrefCalendarWorkdays(String zimbraPrefCalendarWorkdays) throws com.zimbra.common.service.ServiceException {
+    public void setPrefCalendarWorkingHours(String zimbraPrefCalendarWorkingHours) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarWorkdays, zimbraPrefCalendarWorkdays);
+        attrs.put(Provisioning.A_zimbraPrefCalendarWorkingHours, zimbraPrefCalendarWorkingHours);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * seven-digit sequence indicating working (1) or non-working (0) days.
-     * first digit is Sunday, then Monday, and so on
+     * working hours for each day of the week
      *
-     * @param zimbraPrefCalendarWorkdays new value
+     * @param zimbraPrefCalendarWorkingHours new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1103)
-    public Map<String,Object> setPrefCalendarWorkdays(String zimbraPrefCalendarWorkdays, Map<String,Object> attrs) {
+    public Map<String,Object> setPrefCalendarWorkingHours(String zimbraPrefCalendarWorkingHours, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarWorkdays, zimbraPrefCalendarWorkdays);
+        attrs.put(Provisioning.A_zimbraPrefCalendarWorkingHours, zimbraPrefCalendarWorkingHours);
         return attrs;
     }
 
     /**
-     * seven-digit sequence indicating working (1) or non-working (0) days.
-     * first digit is Sunday, then Monday, and so on
+     * working hours for each day of the week
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1103)
-    public void unsetPrefCalendarWorkdays() throws com.zimbra.common.service.ServiceException {
+    public void unsetPrefCalendarWorkingHours() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarWorkdays, "");
+        attrs.put(Provisioning.A_zimbraPrefCalendarWorkingHours, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * seven-digit sequence indicating working (1) or non-working (0) days.
-     * first digit is Sunday, then Monday, and so on
+     * working hours for each day of the week
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -22255,9 +22106,9 @@ public class ZAttrAccount  extends MailTarget {
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1103)
-    public Map<String,Object> unsetPrefCalendarWorkdays(Map<String,Object> attrs) {
+    public Map<String,Object> unsetPrefCalendarWorkingHours(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarWorkdays, "");
+        attrs.put(Provisioning.A_zimbraPrefCalendarWorkingHours, "");
         return attrs;
     }
 

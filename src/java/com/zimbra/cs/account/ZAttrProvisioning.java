@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 jhahm 20100812-0023 */
+    /* build: unknown unknown unknown unknown */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5531,29 +5531,12 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarUseQuickAdd = "zimbraPrefCalendarUseQuickAdd";
 
     /**
-     * end time of a working day (HHMM format, from 0000 to 2400)
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1105)
-    public static final String A_zimbraPrefCalendarWorkdayEndTime = "zimbraPrefCalendarWorkdayEndTime";
-
-    /**
-     * seven-digit sequence indicating working (1) or non-working (0) days.
-     * first digit is Sunday, then Monday, and so on
+     * working hours for each day of the week
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1103)
-    public static final String A_zimbraPrefCalendarWorkdays = "zimbraPrefCalendarWorkdays";
-
-    /**
-     * start time of a working day (HHMM format, from 0000 to 2400)
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1104)
-    public static final String A_zimbraPrefCalendarWorkdayStartTime = "zimbraPrefCalendarWorkdayStartTime";
+    public static final String A_zimbraPrefCalendarWorkingHours = "zimbraPrefCalendarWorkingHours";
 
     /**
      * zimbraId of visible child accounts
