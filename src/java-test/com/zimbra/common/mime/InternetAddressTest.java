@@ -14,6 +14,8 @@
  */
 package com.zimbra.common.mime;
 
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -223,5 +225,16 @@ public class InternetAddressTest {
         test("RFC 2231 language in encoded-word",
                 "=?us-ascii*en?Q?Bob_the=20Builder?= <bob@example.com>",
                 "Bob the Builder", "bob@example.com");
+    }
+
+    @Test
+    public void parseHeader() {
+        String src = "mine:=?us-ascii?Q?Bob_?=\t=?us-ascii?Q?the_Builder_1?= <bob@example.com>;,=?us-ascii?Q?Bob the Builder 2?= <bob@example.com>";
+        List<InternetAddress> iaddrs = InternetAddress.parse(src);
+        Assert.assertEquals(2, iaddrs.size());
+        Assert.assertEquals("Bob the Builder 1", iaddrs.get(0).getPersonal());
+        Assert.assertEquals("bob@example.com", iaddrs.get(0).getAddress());
+        Assert.assertEquals("Bob the Builder 2", iaddrs.get(1).getPersonal());
+        Assert.assertEquals("bob@example.com", iaddrs.get(1).getAddress());
     }
 }

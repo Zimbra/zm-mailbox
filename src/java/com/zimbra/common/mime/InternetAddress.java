@@ -14,6 +14,7 @@
  */
 package com.zimbra.common.mime;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class InternetAddress {
@@ -79,11 +80,13 @@ public class InternetAddress {
 
     @Override
     public String toString() {
-        if (mDisplay != null)
+        if (mDisplay != null) {
             return MimeHeader.escape(mDisplay, mCharset, true) +
                 (mEmail != null ? (" <" + mEmail + '>') : "");
-        if (mEmail != null)
+        }
+        if (mEmail != null) {
             return mEmail;
+        }
         return "";
     }
 
@@ -97,9 +100,11 @@ public class InternetAddress {
         if (mDisplay != null) {
             return MimeHeader.quote(mDisplay) +
                 (mEmail != null ? (" <" + mEmail + '>') : "");
-        } else {
+        }
+        if (mEmail != null){
             return mEmail;
         }
+        return "";
     }
 
     /**
@@ -109,9 +114,60 @@ public class InternetAddress {
      * @param raw comma separated address strings
      * @return list of {@link InternetAddress}
      */
-    public List<InternetAddress> parse(String raw) {
-        //TODO: move MimeHeder.MimeAddressHeader to here
-        throw new UnsupportedOperationException();
+    public static List<InternetAddress> parse(String raw) {
+        byte[] array = raw.getBytes();
+        return parseHeader(array, 0, array.length);
+    }
+
+    static List<InternetAddress> parseHeader(final byte[] content,
+            final int start, final int length) {
+        // FIXME: will split the header incorrectly if there's a ',' in the
+        // middle of a domain literal ("@[...]")
+        boolean quoted = false, escaped = false, group = false, empty = true;
+        int pos = start, astart = pos, end = start + length, clevel = 0;
+        List<InternetAddress> iaddrs = new ArrayList<InternetAddress>();
+
+        while (pos < end) {
+            byte c = content[pos++];
+            if (c == '\r' || c == '\n') {
+                // ignore folding, even where it's not actually permitted
+                escaped = false;
+            } else if (quoted) {
+                quoted = !escaped && c == '"';
+                escaped = !escaped && c == '\\';
+            } else if (c == '(' || clevel > 0) {
+                // handle comments outside of quoted strings, even where they're
+                // not actually permitted
+                if (!escaped && (c == '(' || c == ')')) {
+                    clevel += c == '(' ? 1 : -1;
+                }
+                escaped = !escaped && c == '\\';
+                empty = false;
+            } else if (c == '"') {
+                quoted = true;
+                empty = false;
+            } else if (c == ',' || (c == ';' && group)) {
+                // this concludes the address portion of our program
+                if (!empty) {
+                    iaddrs.add(new InternetAddress(content,
+                            astart, pos - astart, null));
+                }
+                group = c == ';';
+                empty = true;
+                astart = pos;
+            } else if (c == ':' && !group) {
+                // ignore the group name that we've just passed
+                group = empty = true;
+                astart = pos;
+            } else if (c != ' ' && c != '\t' && empty) {
+                empty = false;
+            }
+        }
+        // don't forget the last address in the list
+        if (!empty) {
+            iaddrs.add(new InternetAddress(content, astart, pos - astart, null));
+        }
+        return iaddrs;
     }
 
     private void parse(byte[] content, int start, int length) {
