@@ -18,6 +18,7 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.mailbox.calendar.Geo;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
@@ -84,9 +85,9 @@ public class ZInvite implements ToZJSONObject {
     }
 
     public boolean getHasAcceptableComponent(){
-        if(mComponents == null && mComponents.isEmpty()) return false;
-        for(int i =0 ; i < mComponents.size(); i++){
-            if(mComponents.get(i) != null && !mComponents.get(i).getStatus().isCancelled()){
+        if (ListUtil.isEmpty(mComponents)) return false;
+        for (int i = 0 ; i < mComponents.size(); i++) {
+            if (mComponents.get(i) != null && !mComponents.get(i).getStatus().isCancelled()) {
                 return true;
             }
         }
