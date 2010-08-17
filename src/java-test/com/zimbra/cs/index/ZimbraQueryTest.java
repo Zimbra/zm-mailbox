@@ -19,8 +19,11 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.cs.account.MockProvisioning;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.queryparser.ParseException;
@@ -35,6 +38,11 @@ import com.zimbra.cs.mailbox.MockMailboxManager;
  * @author ysasaki
  */
 public class ZimbraQueryTest {
+
+    @BeforeClass
+    public static void init() {
+        Provisioning.setInstance(new MockProvisioning());
+    }
 
     @Test
     public void emptySubject() throws Exception {
