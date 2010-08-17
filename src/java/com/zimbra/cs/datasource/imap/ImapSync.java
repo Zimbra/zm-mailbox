@@ -18,6 +18,7 @@ import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.datasource.MailItemImport;
 import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.mailclient.auth.Authenticator;
+import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ListData;
 import com.zimbra.cs.mailclient.CommandFailedException;
@@ -52,7 +53,7 @@ public class ImapSync extends MailItemImport {
     private boolean fullSync;
     private Authenticator authenticator;
     private boolean reuseConnections;
-
+    
     private static final Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[:\\*\\?\"<>\\|]");
     private static final Log LOG = ZimbraLog.datasource;
 
@@ -221,14 +222,15 @@ public class ImapSync extends MailItemImport {
     
     private void syncFolders(Set<Integer> folderIds) throws ServiceException, IOException {
         // For offline full sync automatically re-enable sync on INBOX
-        if (dataSource.isOffline() && fullSync) {
+        if (dataSource.isImportOnly() || (dataSource.isOffline() && fullSync)) {
             SyncUtil.setSyncEnabled(mbox, Mailbox.ID_FOLDER_INBOX, true);
         }
         localRootFolder = getMailbox().getFolderById(dataSource.getFolderId());
         trackedFolders = ImapFolder.getFolders(dataSource);
         delimiter = connection.getDelimiter();
         syncRemoteFolders(ImapUtil.listFolders(connection, "*"));
-        syncLocalFolders(getLocalFolders());
+        if(!dataSource.isImportOnly())
+        	syncLocalFolders(getLocalFolders());        
         syncMessages(folderIds);
         finishSync();
     }
@@ -246,7 +248,7 @@ public class ImapSync extends MailItemImport {
         return mailFolders;
     }
 
-    public boolean isFullSync() {
+	public boolean isFullSync() {
         return fullSync;
     }
     

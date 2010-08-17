@@ -4964,4 +4964,15 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>working hours for each day of the week</desc>
 </attr>
 
+<attr id="1106" name="zimbraDataSourceImportOnly" type="boolean" cardinality="single" optionalIn="dataSource" since="7.0.0">
+  <desc>indicates that this datasource is used for one way (incoming) import vs. two-way sync</desc>
+</attr>
+
+<attr id="1107" name="zimbraDataSourceAuthMechanism" type="enum" value="PLAIN,GSSAPI,CRAM-MD5" cardinality="single" optionalIn="imapDataSource" since="7.0.0">
+  <desc>Which SASL authentication mechanism  to use for authenticating to IMAP server.</desc>
+</attr>
+
+<attr id="1108" name="zimbraDataSourceAuthorizationId" type="string" cardinality="single" optionalIn="imapDataSource" since="7.0.0">
+  <desc>authorizationId for SASL authentication</desc>
+</attr>
 </attrs>

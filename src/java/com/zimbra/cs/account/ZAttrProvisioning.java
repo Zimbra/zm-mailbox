@@ -152,6 +152,24 @@ public class ZAttrProvisioning {
         public boolean isNone() { return this == none;}
     }
 
+    public static enum DataSourceAuthMechanism {
+        GSSAPI("GSSAPI"),
+        PLAIN("PLAIN"),
+        CRAM_MD5("CRAM-MD5");
+        private String mValue;
+        private DataSourceAuthMechanism(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static DataSourceAuthMechanism fromString(String s) throws ServiceException {
+            for (DataSourceAuthMechanism value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isGSSAPI() { return this == GSSAPI;}
+        public boolean isPLAIN() { return this == PLAIN;}
+        public boolean isCRAM_MD5() { return this == CRAM_MD5;}
+    }
+
     public static enum DataSourceConnectionType {
         tls_if_available("tls_if_available"),
         tls("tls"),
@@ -2132,6 +2150,23 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourceAttribute = "zimbraDataSourceAttribute";
 
     /**
+     * Which SASL authentication mechanism to use for authenticating to IMAP
+     * server.
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1107)
+    public static final String A_zimbraDataSourceAuthMechanism = "zimbraDataSourceAuthMechanism";
+
+    /**
+     * authorizationId for SASL authentication
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1108)
+    public static final String A_zimbraDataSourceAuthorizationId = "zimbraDataSourceAuthorizationId";
+
+    /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
      * automated polling.
@@ -2249,6 +2284,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=717)
     public static final String A_zimbraDataSourceImportClassName = "zimbraDataSourceImportClassName";
+
+    /**
+     * indicates that this datasource is used for one way (incoming) import
+     * vs. two-way sync
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1106)
+    public static final String A_zimbraDataSourceImportOnly = "zimbraDataSourceImportOnly";
 
     /**
      * If the last data source sync failed, contains the error message. If

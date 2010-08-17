@@ -143,6 +143,10 @@ public class DataSource extends AccountProperty {
     
     public String getUsername() { return getAttr(Provisioning.A_zimbraDataSourceUsername); }
     
+    public String getAuthId() { return getAttr(Provisioning.A_zimbraDataSourceAuthorizationId); }
+    
+    public String getAuthMechanism() { return getAttr(Provisioning.A_zimbraDataSourceAuthMechanism); }
+    
     public String getDomain() { return getAttr(Provisioning.A_zimbraDataSourceDomain, null); }
     
     public Integer getPort() {
@@ -310,6 +314,10 @@ public class DataSource extends AccountProperty {
     boolean isRequestScopeDebugTraceOn = false;
     public synchronized void setRequestScopeDebugTraceOn(boolean b) {
         isRequestScopeDebugTraceOn = b;
+    }
+    
+    public boolean isImportOnly() {
+        return getBooleanAttr(Provisioning.A_zimbraDataSourceImportOnly, true);
     }
     
     public boolean isDebugTraceEnabled() {
