@@ -737,6 +737,7 @@
   <desc>Admin Console Domain Admin Alias Rights</desc>
   <rights>
     <r n="viewAccountAdminUI"/>
+    <r n="listAlias"/>  
   </rights>
 </right>
 
@@ -782,7 +783,6 @@
     <r n="domainAdminConsoleResourceRights"/>
     <r n="domainAdminConsoleSavedSearchRights"/>
     <!-- needed to check for create*Rights on the domain -->
-    <r n="listAlias"/>
     <r n="listDomain"/>
     <!-- <r n="domainAdminDomainRights"/> -->
   </rights>
