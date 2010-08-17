@@ -2362,6 +2362,7 @@
   <desc>Admin Console Alias Rights</desc>
   <rights>
     <r n="viewAccountAdminUI"/>
+    <r n="listAlias"/>  
   </rights>
 </right>
 
