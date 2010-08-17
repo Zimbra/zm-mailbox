@@ -129,7 +129,30 @@ class ImapFolderSync {
         }
         return tracker;
     }
-
+    
+    /**
+     * @param folder
+     * @throws ServiceException
+     * @throws IOException
+     * Deletes existing local folder if it was deleted remotely
+     */
+    public void purgeLocalFolder(Folder folder) throws ServiceException, IOException {
+        if (!ds.isSyncEnabled(folder)) {
+            return;
+        }
+        localFolder = new LocalFolder(mailbox, folder);
+        tracker = imapSync.getTrackedFolders().getByItemId(folder.getId());
+        if(tracker != null) { //this folder was in sync before
+        	remoteFolder = new RemoteFolder(connection, tracker.getRemoteId());
+        	if (!remoteFolder.exists()) {
+                remoteFolder.info("folder was deleted");
+ 	            if (ds.isSyncEnabled(folder)) //only delete local if sync enabled
+ 	                localFolder.delete();
+ 	            imapSync.deleteFolderTracker(tracker);
+                tracker = null;
+            }
+        }
+    }
     /*
      * Synchronizes existing local folder with no matching remote folder.
      * Returns tracker if successful otherwise returns null if remote folder

@@ -229,8 +229,11 @@ public class ImapSync extends MailItemImport {
         trackedFolders = ImapFolder.getFolders(dataSource);
         delimiter = connection.getDelimiter();
         syncRemoteFolders(ImapUtil.listFolders(connection, "*"));
-        if(!dataSource.isImportOnly())
-        	syncLocalFolders(getLocalFolders());        
+        if(!dataSource.isImportOnly()) {
+        	syncLocalFolders(getLocalFolders());
+        } else {
+        	purgeLocalFolders(getLocalFolders());
+        }
         syncMessages(folderIds);
         finishSync();
     }
@@ -267,6 +270,27 @@ public class ImapSync extends MailItemImport {
         }
     }
 
+    /*
+     * Check if any of local folders have been deleted remotely
+     */
+    private void purgeLocalFolders(List<Folder> folders) throws ServiceException {
+        for (Folder folder : folders) {
+            checkIsEnabled();
+            int id = folder.getId();
+            if (id != localRootFolder.getId() && !syncedFolders.containsKey(id)) {
+                try {
+                    folder = getFolder(id);
+                    if (folder != null) {
+                        ImapFolderSync ifs = new ImapFolderSync(this);
+                        ifs.purgeLocalFolder(folder);
+                    }
+                } catch (Exception e) {
+                    syncFailed(folder.getPath(), e);
+                }
+            }
+        }
+    }
+    
     private void syncLocalFolders(List<Folder> folders) throws ServiceException {
         for (Folder folder : folders) {
             checkIsEnabled();

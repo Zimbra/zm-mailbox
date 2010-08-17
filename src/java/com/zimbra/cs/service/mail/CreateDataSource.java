@@ -59,6 +59,8 @@ public class CreateDataSource extends MailDocumentHandler {
         dsAttrs.put(Provisioning.A_zimbraDataSourceFolderId, eDataSource.getAttribute(MailConstants.A_FOLDER));
         dsAttrs.put(Provisioning.A_zimbraDataSourceEnabled,
             LdapUtil.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_ENABLED)));
+        dsAttrs.put(Provisioning.A_zimbraDataSourceImportOnly,
+                LdapUtil.getBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_IS_IMPORTONLY,false)));
         dsAttrs.put(Provisioning.A_zimbraDataSourceHost, eDataSource.getAttribute(MailConstants.A_DS_HOST));
         dsAttrs.put(Provisioning.A_zimbraDataSourcePort, eDataSource.getAttribute(MailConstants.A_DS_PORT));
         dsAttrs.put(Provisioning.A_zimbraDataSourceConnectionType, eDataSource.getAttribute(MailConstants.A_DS_CONNECTION_TYPE));

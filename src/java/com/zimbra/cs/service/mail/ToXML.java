@@ -2025,7 +2025,8 @@ public class ToXML {
         m.addAttribute(MailConstants.A_NAME, ds.getName());
         m.addAttribute(MailConstants.A_FOLDER, ds.getFolderId());
         m.addAttribute(MailConstants.A_DS_IS_ENABLED, ds.isEnabled());
-
+        m.addAttribute(MailConstants.A_DS_IS_IMPORTONLY, ds.isImportOnly());
+        
         if (ds.getType() == DataSource.Type.pop3)
             m.addAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, ds.leaveOnServer());
 

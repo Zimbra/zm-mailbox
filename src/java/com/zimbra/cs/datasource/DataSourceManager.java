@@ -228,18 +228,14 @@ public class DataSourceManager {
                                   boolean fullSync) throws ServiceException {
         
         ImportStatus importStatus = getImportStatus(ds.getAccount(), ds);
-        if(ds.isImportOnly()) {
-        	ZimbraLog.datasource.info("Requested import via import-only datasource.");
-        } else {
-        	ZimbraLog.datasource.info("Requested import.");
-        }
+       	ZimbraLog.datasource.info("Requested import.");
         synchronized (importStatus) {
             if (importStatus.isRunning()) {
                 ZimbraLog.datasource.info("Attempted to start import while " +
                     " an import process was already running.  Ignoring the second request.");
                 return;
             }
-            if (DataSourceManager.getInstance().getMailbox(ds).getMailboxLock() != null && !ds.isImportOnly()) {
+            if (DataSourceManager.getInstance().getMailbox(ds).getMailboxLock() != null) {
                 ZimbraLog.datasource.info("Mailbox is in maintenance mode. Skipping import.");
                 return;
             }            

@@ -34,6 +34,7 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
     private String mUsername;
     private String mPassword;
     private String mFolderId;
+    private boolean mImportOnly;
     private DataSource.ConnectionType mConnectionType;
     
     public ZImapDataSource(Element e) throws ServiceException {
@@ -46,19 +47,27 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
         mFolderId = e.getAttribute(MailConstants.A_FOLDER);
         mConnectionType = DataSource.ConnectionType.fromString(
             e.getAttribute(MailConstants.A_DS_CONNECTION_TYPE));
+        mImportOnly = e.getAttributeBool(MailConstants.A_DS_IS_IMPORTONLY);
     }
 
     public ZImapDataSource(String name, boolean enabled, String host, int port,
+            String username, String password, String folderid,
+            DataSource.ConnectionType connectionType, boolean isImportOnly) {
+			mName = name;
+			mEnabled = enabled;
+			mHost = host;
+			mPort = port;
+			mUsername = username;
+			mPassword = password;
+			mFolderId = folderid;
+			mConnectionType = connectionType;
+			mImportOnly = isImportOnly;
+	}
+    
+    public ZImapDataSource(String name, boolean enabled, String host, int port,
                            String username, String password, String folderid,
                            DataSource.ConnectionType connectionType) {
-        mName = name;
-        mEnabled = enabled;
-        mHost = host;
-        mPort = port;
-        mUsername = username;
-        mPassword = password;
-        mFolderId = folderid;
-        mConnectionType = connectionType;
+        this(name,enabled,host,port,username,password,folderid,connectionType,false);
     }
 
     public ZImapDataSource(DataSource dsrc) throws ServiceException {
@@ -73,6 +82,7 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
         mPassword = dsrc.getDecryptedPassword();
         mFolderId = "" + dsrc.getFolderId();
         mConnectionType = dsrc.getConnectionType();
+        mImportOnly = dsrc.isImportOnly();
     }
 
     public Element toElement(Element parent) {
@@ -86,6 +96,7 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
         if (mPassword != null) src.addAttribute(MailConstants.A_DS_PASSWORD, mPassword);
         src.addAttribute(MailConstants.A_FOLDER, mFolderId);
         src.addAttribute(MailConstants.A_DS_CONNECTION_TYPE, mConnectionType.name());
+        src.addAttribute(MailConstants.A_DS_IS_IMPORTONLY, mImportOnly);
         return src;
     }
 
@@ -132,6 +143,7 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
             attrs.put(Provisioning.A_zimbraDataSourcePort, "" + mPort);
         if (mFolderId != null)
             attrs.put(Provisioning.A_zimbraDataSourceFolderId, mFolderId);
+        attrs.put(Provisioning.A_zimbraDataSourceImportOnly, mImportOnly);
         return attrs;
     }
 
@@ -145,6 +157,7 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
         zjo.put("username", mUsername);
         zjo.put("folderId", mFolderId);
         zjo.put("connectionType", mConnectionType.name());
+        zjo.put("importOnly",mImportOnly);
         return zjo;
     }
 
@@ -155,4 +168,12 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
     public String dump() {
         return ZJSONObject.toString(this);
     }
+
+	public void setImportOnly(boolean mImportOnly) {
+		this.mImportOnly = mImportOnly;
+	}
+
+	public boolean isImportOnly() {
+		return mImportOnly;
+	}
 }
