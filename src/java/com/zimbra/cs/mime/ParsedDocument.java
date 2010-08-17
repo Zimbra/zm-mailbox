@@ -32,6 +32,7 @@ import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraAnalyzer;
+import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.StoreManager;
 
@@ -104,8 +105,8 @@ public class ParsedDocument {
 
                 doc.add(new Field(LuceneFields.L_CONTENT, content.toString(),
                         Field.Store.NO, Field.Index.ANALYZED));
-                doc.add(new Field(LuceneFields.L_H_FROM, creator,
-                        Field.Store.NO, Field.Index.ANALYZED));
+                doc.add(new Field(LuceneFields.L_H_FROM,
+                        new RFC822AddressTokenStream(creator)));
                 doc.add(new Field(LuceneFields.L_FILENAME, filename,
                         Field.Store.YES, Field.Index.ANALYZED));
 

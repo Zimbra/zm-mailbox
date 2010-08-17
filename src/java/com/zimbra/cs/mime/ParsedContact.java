@@ -46,6 +46,7 @@ import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraAnalyzer;
+import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -486,11 +487,13 @@ public class ParsedContact {
         {
             StringBuilder emailSb  = new StringBuilder();
             for (String email : Contact.getEmailAddresses(emailFields, getFields())) {
-                emailSb.append(email).append(' ');
+                emailSb.append(email).append(',');
             }
             emailStr = emailSb.toString();
         }
-        String emailStrTokens = ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_H_TO, emailStr);
+
+        RFC822AddressTokenStream to = new RFC822AddressTokenStream(emailStr);
+        String emailStrTokens = StringUtil.join(" ", to.getAllTokens());
 
         StringBuilder searchText = new StringBuilder(emailStrTokens).append(' ');
         appendContactField(searchText, this, ContactConstants.A_company);
@@ -505,12 +508,11 @@ public class ParsedContact {
         contentText = new StringBuilder(emailStrTokens).append(' ').append(contentText).append(' ').append(contentStrIn);
 
         /* put the email addresses in the "To" field so they can be more easily searched */
-        doc.add(new Field(LuceneFields.L_H_TO, emailStr,
-                Field.Store.NO, Field.Index.ANALYZED));
+        doc.add(new Field(LuceneFields.L_H_TO, to));
 
         /* put the name in the "From" field since the MailItem table uses 'Sender'*/
-        doc.add(new Field(LuceneFields.L_H_FROM, Contact.getFileAsString(mFields),
-                Field.Store.NO, Field.Index.ANALYZED));
+        doc.add(new Field(LuceneFields.L_H_FROM,
+                new RFC822AddressTokenStream(Contact.getFileAsString(mFields))));
         /* bug 11831 - put contact searchable data in its own field so wildcard search works better  */
         doc.add(new Field(LuceneFields.L_CONTACT_DATA, searchText.toString(),
                 Field.Store.NO, Field.Index.ANALYZED));

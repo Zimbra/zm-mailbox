@@ -15,6 +15,7 @@
 package com.zimbra.cs.account;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +86,11 @@ public class MockProvisioning extends Provisioning {
     }
 
     @Override
+    public List<Zimlet> getObjectTypes() {
+        return Collections.emptyList();
+    }
+
+    @Override
     public void modifyAttrs(Entry entry, Map<String, ? extends Object> attrs,
             boolean checkImmutable) {
         entry.setAttrs(new HashMap<String, Object>(attrs));
@@ -130,11 +136,6 @@ public class MockProvisioning extends Provisioning {
 
     @Override
     public GlobalGrant getGlobalGrant() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<Zimlet> getObjectTypes() {
         throw new UnsupportedOperationException();
     }
 

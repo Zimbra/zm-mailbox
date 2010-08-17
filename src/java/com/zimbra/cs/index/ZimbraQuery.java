@@ -1734,42 +1734,18 @@ public final class ZimbraQuery {
             mTokens = new ArrayList<String>(1);
             mWildcardTerm = null;
 
-            // TODO: shameless hack for bug 28666 -- the custom TO/FROM/CC
-            // analyzer causing problems with wildcards here, so for now use the
-            // standard content analyzer when handling TO/FROM/CC searches. This
-            // is probably fine for western languages, but it likely creates
-            // problems with custom analyzers used for Asian languages.
-            // Investigate this issue.
-            if (!text.endsWith("*") || (qType != ZimbraQueryParser.TO &&
-                    qType != ZimbraQueryParser.CC &&
-                    qType != ZimbraQueryParser.FROM)) {
-                TokenStream source;
-                if (analyzer instanceof ZimbraAnalyzer) {
-                    source = ((ZimbraAnalyzer) analyzer).tokenStreamSearching(
-                            QueryTypeString(qType), new StringReader(text));
-                    if (source instanceof ZimbraAnalyzer.AddressTokenFilter) {
-                        // should we check for filed name also? probably not
-                        mSlop = 1;
-                    }
-                } else {
-                    source = analyzer.tokenStream(QueryTypeString(qType),
-                            new StringReader(text));
+            TokenStream stream = analyzer.tokenStream(
+                    QueryTypeString(qType), new StringReader(text));
+            try {
+                TermAttribute termAttr = stream.addAttribute(
+                        TermAttribute.class);
+                while (stream.incrementToken()) {
+                    mTokens.add(termAttr.term());
                 }
-
-                try {
-                    TermAttribute termAttr = source.addAttribute(
-                            TermAttribute.class);
-                    while (source.incrementToken()) {
-                        mTokens.add(termAttr.term());
-                    }
-                    source.end();
-                    source.close();
-                } catch (IOException ignore) {
-                }
-            } else {
-                mTokens.add(text);
+                stream.end();
+                stream.close();
+            } catch (IOException ignore) {
             }
-
 
             // okay, quite a bit of hackery here....basically, if they're doing a contact:
             // search AND they haven't manually specified a phrase query (expands to more than one term)
@@ -1810,11 +1786,6 @@ public final class ZimbraQuery {
                                 MAX_WILDCARD_TERMS);
                     }
 
-//                  if (!expandedAllTokens) {
-//                  throw MailServiceException.TOO_MANY_QUERY_TERMS_EXPANDED("Wildcard text: \""+wcToken
-//                  +"\" expands to too many terms (maximum allowed is "+MAX_WILDCARD_TERMS+")", wcToken+"*", MAX_WILDCARD_TERMS);
-//                  }
-
                     mQueryInfo.add(new WildcardExpansionQueryInfo(wcToken + "*",
                             expandedTokens.size(), expandedAllTokens));
                     //
@@ -1832,19 +1803,6 @@ public final class ZimbraQuery {
                     }
                 }
             }
-
-            // MailboxIndex mbidx = mbox.getMailboxIndex();
-            // if (mbidx != null) {
-            //     // don't check spelling for structured-data searches
-            //     if (qType != ZimbraQueryParser.FIELD) {
-            //         for (String token : mTokens) {
-            //             List<SpellSuggestQueryInfo.Suggestion> suggestions = mbidx.suggestSpelling(QueryTypeString(qType), token);
-            //             if (suggestions != null)
-            //                 mQueryInfo.add(new SpellSuggestQueryInfo(token, suggestions));
-            //             }
-            //         }
-            //     }
-            // }
         }
 
         @Override

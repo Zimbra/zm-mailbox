@@ -47,6 +47,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.calendar.Alarm;
@@ -392,11 +393,11 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                 doc.removeField(LuceneFields.L_H_SUBJECT);
 
                 for (String to : toAddrs) {
-                    doc.add(new Field(LuceneFields.L_H_TO, to,
-                            Field.Store.NO, Field.Index.ANALYZED));
+                    doc.add(new Field(LuceneFields.L_H_TO,
+                            new RFC822AddressTokenStream(to)));
                 }
-                doc.add(new Field(LuceneFields.L_H_FROM, orgToUse,
-                        Field.Store.NO, Field.Index.ANALYZED));
+                doc.add(new Field(LuceneFields.L_H_FROM,
+                        new RFC822AddressTokenStream(orgToUse)));
                 doc.add(new Field(LuceneFields.L_H_SUBJECT, nameToUse,
                         Field.Store.NO, Field.Index.ANALYZED));
                 toRet.add(zd);

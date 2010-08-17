@@ -19,8 +19,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Queue;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CharTokenizer;
@@ -34,6 +32,7 @@ import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.index.analysis.AddrCharTokenizer;
 
 /***
  * Global analyzer wrapper for Zimbra Indexer.
@@ -162,24 +161,8 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
         }
     }
 
-    // for indexing
     @Override
     public TokenStream tokenStream(String fieldName, Reader reader) {
-        return tokenStreamInternal(fieldName, reader, true);
-    }
-
-    // for searching
-    public TokenStream tokenStreamSearching(String fieldName, Reader reader) {
-        return tokenStreamInternal(fieldName, reader, false);
-    }
-
-    /*
-     * indexing: (bug 44191, see comments for AddressTokenFilter)
-     *
-     * @param indexing true if we are indexing, false if we are searching
-     */
-    private TokenStream tokenStreamInternal(String fieldName, Reader reader,
-            boolean indexing) {
         if (fieldName.equals(LuceneFields.L_H_MESSAGE_ID)) {
             return new DontTokenizer(reader);
         } else if (fieldName.equals(LuceneFields.L_FIELD)) {
@@ -194,7 +177,10 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
                 || fieldName.equals(LuceneFields.L_H_CC)
                 || fieldName.equals(LuceneFields.L_H_X_ENV_FROM)
                 || fieldName.equals(LuceneFields.L_H_X_ENV_TO)) {
-            return new AddressTokenFilter(new AddrCharTokenizer(reader), indexing);
+            // This is only for search. We don't need address-aware tokenization
+            // because we put all possible forms of address while indexing.
+            // Use RFC822AddressTokenStream for indexing.
+            return new AddrCharTokenizer(reader);
         } else if (fieldName.equals(LuceneFields.L_CONTACT_DATA)) {
             return new ContactDataFilter(new AddrCharTokenizer(reader)); // for bug 48146
         } else if (fieldName.equals(LuceneFields.L_FILENAME)) {
@@ -604,189 +590,6 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
 
     }
 
-    /***
-     * Email address tokenizer.  For example:
-     *   "Tim Brennan" <tim@bar.foo.com>
-     * Is tokenized as:
-     *    Tim
-     *    Brennan
-     *    tim
-     *    tim@foo.com
-     *    @foo.com
-     *    foo  -- for bug 30638
-     *
-     * @author tim
-     */
-    static class AddressTokenFilter extends MultiTokenFilter {
-
-        /*
-         * bug 44191
-         *
-         * The fix for bug 30638 (change 119098) broke searching fields using this filter,
-         * if the search string is a full email address.
-         * (see https://bugzilla.zimbra.com/show_bug.cgi?id=42874#c23)
-         *
-         * Fields using AddressTokenFilter are:
-         *     LuceneFields.L_H_FROM
-         *     LuceneFields.L_H_TO
-         *     LuceneFields.L_H_CC
-         *     LuceneFields.L_H_X_ENV_FROM
-         *     LuceneFields.L_H_X_ENV_TO
-         *
-         * This is because an email address, e.g., user1@zimbra.com is tokenized to:
-         *
-         * pre-change-119098 (i.e. FRANKLIN)
-         *     user1@zimbra.com
-         *     user1
-         *     @zimbra.com
-         *
-         * post-change-119098 (i.e. in GNR and leter)
-         *     user1@zimbra.com
-         *     @zimbra
-         *     user1
-         *     @zimbra.com
-         *     zimbra.com
-         *
-         * bug 44191 is:
-         *     The email address is indexed with the sequence of tokens produced by AddressTokenFilter,
-         *     and searched with the same sequence of terms using a Lucene PhraseQuery with slop 0
-         *     (i.e. exact match).  Using an index built in FRANKLIN, the GNR code cannot find terms
-         *     "@zimbra" and "zimbra.com".   The way PhraseQuery (with slop=0) works is that it has
-         *     to match all terms, in the same sequence, otherwise no hit.
-         *
-         *     Reindexing the whole mailbox on all mailboxes will fix the problem, but it is expensive.
-         *
-         * We put a fix in 6_0_5 (bug 42874) to reindex all contacts.  That fixed a mail filter
-         * problem when the filter is "Address in" "{from|to|cc|bcc}" "in" "My Contacts", because the
-         * search for that is a "to:{email address}" query.
-         *
-         * In GNR, we need to be able to find items indexed with the pre-change-119098 way,
-         * without having to reindex the entire mailbox.
-         *
-         * This is the solution for bug 44191:
-         * In FRANKLIN: no change, indexing and searching with the pre-change-119098 way.
-         *
-         * In GNR(and later):
-         *   - indexing: use the post-change-119098 way (for bug 30638, so searching by the "main" domain works)
-         *   - searching: use the pre-change-119098 way
-         *       This is because it just so happens that Terms produced/indexed by the pre-change-119098 code
-         *       can always be found by PhraseQuery with sloppiness set to 1, with index built by either
-         *       the pre-change-119098 or post-change-119098 way.
-         *
-         */
-
-        // whether to produce token with the main domain
-        // true: post-change-119098
-        // false: pre-change-119098
-        boolean mWantMainDomain;
-
-        Queue<Token> mSplitStrings = new LinkedList<Token>();
-
-        AddressTokenFilter(TokenFilter in, boolean wantMainDomain) {
-            super(in);
-            mIncludeSeparatorChar = true;
-            mMaxSplits = 4;
-            mWantMainDomain = wantMainDomain;
-        }
-
-        AddressTokenFilter(TokenStream in, boolean wantMainDomain) {
-            super(in);
-            mIncludeSeparatorChar = true;
-            mMaxSplits = 4;
-            mWantMainDomain = wantMainDomain;
-        }
-
-        @Override
-        protected int getNextSplit(String s) {
-            return s.indexOf("@");
-        }
-
-        /**
-         * On first call, we have one toplevel 'token' from our parent filter.
-         * The only interesting case is when there's an '@' sign such as:
-         * {@code foo@a.b.c.d}.
-         */
-        @Override
-        public void nextSplit() {
-            if (mSplitStrings.isEmpty()) {
-                String term = mCurToken.term();
-                // split on the "@"
-                String lhs = term.substring(0, mNextSplitPos);
-
-                // yes, we want to include the @!
-                String rhs = term.substring(mNextSplitPos);
-
-                if (mWantMainDomain) {
-                    // now, split the left part on the "."
-                    String[] lhsParts = lhs.split("\\.");
-                    if (lhsParts.length > 1) {
-                        for (String part : lhsParts) {
-                            mSplitStrings.add(new Token(part,
-                                    mCurToken.startOffset(),
-                                    mCurToken.endOffset(),
-                                    mCurToken.type()));
-                        }
-                    }
-
-                    // now, split the right part on the "."
-                    String[] rhsParts = rhs.split("\\.");
-                    if (rhsParts.length > 1) {
-                        // for bug 30638
-                        mSplitStrings.add(new Token(
-                                rhsParts[rhsParts.length - 2],
-                                mCurToken.startOffset(), mCurToken.endOffset(),
-                                mCurToken.type()));
-                    }
-
-                } else {
-                    // now, split the first part on the "."
-                    String[] lhsParts = lhs.split("\\.");
-                    if (lhsParts.length > 1) {
-                        int curOffset = mCurToken.startOffset();
-                        for (String part : lhsParts) {
-                            mSplitStrings.add(new Token(part,
-                                    curOffset, curOffset + part.length(),
-                                    mCurToken.type()));
-
-                            curOffset += part.length() + 1;
-                        }
-                    }
-                }
-
-                // the full part to the left of the @
-                mSplitStrings.add(new Token(lhs,
-                        mCurToken.startOffset(),
-                        mCurToken.startOffset() + mNextSplitPos,
-                        mCurToken.type()));
-
-                // the full part to the right of the @
-                mSplitStrings.add(new Token(rhs,
-                        mCurToken.startOffset() + mNextSplitPos,
-                        mCurToken.endOffset(), mCurToken.type()));
-
-                if (mWantMainDomain) {
-                    // the full part to the right of the @, not including the @
-                    // see bug 30638
-                    if (rhs.length() > 1) {
-                        mSplitStrings.add(new Token(rhs.substring(1),
-                                mCurToken.startOffset() + mNextSplitPos,
-                                mCurToken.endOffset(), mCurToken.type()));
-                    }
-                }
-            }
-
-            // split another piece, save our state, and return...
-            mNumSplits++;
-            Token result = mSplitStrings.remove();
-            setAttrs(result.term(), result.startOffset(), result.endOffset(),
-                    result.type());
-
-            if (mSplitStrings.isEmpty()) {
-                mCurToken.clear();
-            }
-        }
-    }
-
     static class FilenameTokenizer extends CharTokenizer {
 
         FilenameTokenizer(Reader reader) {
@@ -805,42 +608,6 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
                 default:
                     return true;
             }
-        }
-
-        @Override
-        protected char normalize(char c) {
-            return Character.toLowerCase(c);
-        }
-    }
-
-
-    /**
-     * Tokenizer for email addresses. Skips & Splits at \r\n<>\",\'
-     */
-    static class AddrCharTokenizer extends CharTokenizer {
-
-        AddrCharTokenizer(Reader reader) {
-            super(reader);
-        }
-
-        @Override
-        protected boolean isTokenChar(char ch) {
-            switch (ch) {
-                case ' ':
-                case '\r':
-                case '\n':
-                case '<':
-                case '>':
-                case '\"':
-                case ',':
-                case '\'':
-                case '(':
-                case ')':
-                case '[':
-                case ']':
-                    return false;
-            }
-            return true;
         }
 
         @Override
