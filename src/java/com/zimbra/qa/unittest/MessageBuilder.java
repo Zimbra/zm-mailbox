@@ -37,7 +37,8 @@ public class MessageBuilder {
     private String mSubject;
     private String mFrom;
     private String mSender;
-    private String mRecipient;
+    private String mToRecipient;
+    private String mCcRecipient;
     private String mBody;
     private Date mDate;
     private String mContentType;
@@ -79,11 +80,16 @@ public class MessageBuilder {
         return this;
     }
     
-    public MessageBuilder withRecipient(String recipient) {
-        mRecipient = recipient;
+    public MessageBuilder withToRecipient(String recipient) {
+        mToRecipient = recipient;
         return this;
     }
     
+    public MessageBuilder withCcRecipient(String recipient) {
+        mCcRecipient = recipient;
+        return this;
+    }
+
     public MessageBuilder withBody(String body) {
         mBody = body;
         return this;
@@ -117,8 +123,8 @@ public class MessageBuilder {
     
     public String create()
     throws MessagingException, ServiceException, IOException {
-        if (mRecipient == null) {
-            mRecipient = "user1";
+        if (mToRecipient == null) {
+            mToRecipient = "user1";
         }
         if (mFrom == null) {
             mFrom = "jspiccoli";
@@ -133,11 +139,15 @@ public class MessageBuilder {
             mBody = MessageBuilder.DEFAULT_MESSAGE_BODY;
         }
         mFrom = TestUtil.addDomainIfNecessary(mFrom);
-        mRecipient = TestUtil.addDomainIfNecessary(mRecipient);
+        mToRecipient = TestUtil.addDomainIfNecessary(mToRecipient);
         mSender = TestUtil.addDomainIfNecessary(mSender);
         
         MimeMessage msg = new MimeMessageWithNoId();
-        msg.setRecipient(RecipientType.TO, new InternetAddress(mRecipient));
+        msg.setRecipient(RecipientType.TO, new InternetAddress(mToRecipient));
+        if (mCcRecipient != null) {
+            mCcRecipient = TestUtil.addDomainIfNecessary(mCcRecipient);
+            msg.setRecipient(RecipientType.CC, new InternetAddress(mCcRecipient));
+        }
         msg.setFrom(new InternetAddress(mFrom));
         if (mSender != null) {
             msg.setSender(new InternetAddress(mSender));

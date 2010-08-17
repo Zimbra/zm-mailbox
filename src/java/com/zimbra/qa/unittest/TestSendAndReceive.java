@@ -203,7 +203,7 @@ public class TestSendAndReceive extends TestCase {
     throws Exception {
         // Generate original message.
         String subject = NAME_PREFIX + " testMalformedContentType";
-        MessageBuilder builder = new MessageBuilder().withFrom(USER_NAME).withRecipient(USER_NAME)
+        MessageBuilder builder = new MessageBuilder().withFrom(USER_NAME).withToRecipient(USER_NAME)
             .withSubject(subject).withAttachment("This is an attachment", "test.txt", MimeConstants.CT_TEXT_PLAIN);
         
         // Hack Content-Type so that it's invalid.

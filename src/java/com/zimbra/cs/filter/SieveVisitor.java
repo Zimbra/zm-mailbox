@@ -61,7 +61,7 @@ public abstract class SieveVisitor {
     
     @SuppressWarnings("unused")
     protected void visitHeaderTest(Node node, VisitPhase phase, RuleProperties props,
-        String header, StringComparison comparison, String value)
+        List<String> headers, StringComparison comparison, String value)
     throws ServiceException { }
     
     @SuppressWarnings("unused")
@@ -198,12 +198,12 @@ public abstract class SieveVisitor {
             } else if ("header".equalsIgnoreCase(nodeName)) {
                 String s = stripLeadingColon(getValue(node, 0, 0));
                 StringComparison comparison = StringComparison.fromString(s);
-                String header = getValue(node, 0, 1, 0, 0);
+                List<String> headers = getMultiValue(node, 0, 1, 0);
                 String value = getValue(node, 0, 2, 0, 0);
 
-                visitHeaderTest(node, VisitPhase.begin, props, header, comparison, value);
+                visitHeaderTest(node, VisitPhase.begin, props, headers, comparison, value);
                 accept(node, props);
-                visitHeaderTest(node, VisitPhase.end, props, header, comparison, value);
+                visitHeaderTest(node, VisitPhase.end, props, headers, comparison, value);
             } else if ("mime_header".equalsIgnoreCase(nodeName)) {
                 String s = stripLeadingColon(getValue(node, 0, 0));
                 StringComparison comparison = StringComparison.fromString(s);

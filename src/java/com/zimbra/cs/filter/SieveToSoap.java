@@ -17,6 +17,7 @@ package com.zimbra.cs.filter;
 import java.util.Date;
 import java.util.List;
 
+import com.zimbra.common.util.StringUtil;
 import org.apache.jsieve.parser.generated.Node;
 
 import com.zimbra.common.service.ServiceException;
@@ -132,11 +133,11 @@ public class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitHeaderTest(Node node, VisitPhase phase, RuleProperties props,
-                                   String header, StringComparison comparison, String value)
+                                   List<String> headers, StringComparison comparison, String value)
     throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_HEADER_TEST, props);
-            test.addAttribute(MailConstants.A_HEADER, header);
+            test.addAttribute(MailConstants.A_HEADER, StringUtil.join(",", headers));
             test.addAttribute(MailConstants.A_STRING_COMPARISON, comparison.toString());
             test.addAttribute(MailConstants.A_VALUE, value);
         }

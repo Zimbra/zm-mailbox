@@ -1,15 +1,15 @@
 require ["fileinto", "reject", "tag", "flag"];
 
 # Header, anyof, enabled
-if anyof (header :contains "to" "devel-db",
- header :contains "cc" "devel-db")
+if anyof (header :contains ["to"] "devel-db",
+ header :contains ["cc"] "devel-db")
 {
     fileinto "devel-db";
     stop;
 }
 # Header, allof, disabled
-disabled_if allof (header :contains "to" "james.apache.org",
- header :contains "cc" "james.apache.org")
+disabled_if allof (header :contains ["to"] "james.apache.org",
+ header :contains ["cc"] "james.apache.org")
 {
     fileInto "jSieve";
     stop;
@@ -69,9 +69,14 @@ if anyof (invite :method ["reply", "refresh", "counter"])
     keep;
 }
 # MIME header
-if allof (mime_header :contains "to" "james.apache.org",
- mime_header :contains "cc" "james.apache.org")
+if allof (mime_header :contains ["to"] "james.apache.org",
+ mime_header :contains ["cc"] "james.apache.org")
 {
     fileInto "jSieve";
     stop;
+}
+# Mutlple header names
+if allof (header :contains ["to","cc"] "james.apache.org")
+{
+    keep;
 }

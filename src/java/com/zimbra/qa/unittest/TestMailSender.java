@@ -145,7 +145,7 @@ extends TestCase {
         // Create a message with a different From header value.
         String from = TestUtil.getAddress("testRestrictEnvelopeSender");
         String subject = NAME_PREFIX + " testRestrictEnvelopeSender";
-        MessageBuilder builder = new MessageBuilder().withFrom(from).withRecipient(RECIPIENT_NAME)
+        MessageBuilder builder = new MessageBuilder().withFrom(from).withToRecipient(RECIPIENT_NAME)
             .withSubject(subject).withBody("Who are you?");
         String content = builder.create();
         MimeMessage msg = new FixedMimeMessage(JMSession.getSession(), new ByteArrayInputStream(content.getBytes()));

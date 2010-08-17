@@ -114,7 +114,7 @@ public class TestSmtpClient extends TestCase {
         }
         
         // Send.
-        String content = new MessageBuilder().withFrom(sender).withRecipient(recipients[0])
+        String content = new MessageBuilder().withFrom(sender).withToRecipient(recipients[0])
             .withSubject(subject).withBody(body).create();
         SmtpConfig config = new SmtpConfig(mHost);
         config.setPort(mPort);

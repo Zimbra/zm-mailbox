@@ -266,8 +266,8 @@ public class ZMailboxUtil implements DebugListener {
         CONVERSATION("help on conversation-related commands"),
         FILTER("help on filter-realted commnds",
                         "  {conditions}:\n" +
-                        "    header \"name\" is|not_is|contains|not_contains|matches|not_matches \"value\"\n" +
-                        "    header \"name\" exists|not_exists\n" +
+                        "    header \"comma-separated-names\" is|not_is|contains|not_contains|matches|not_matches \"value\"\n" +
+                        "    header \"comma-separated-names\" exists|not_exists\n" +
                         "    mime_header \"name\" is|not_is|contains|not_contains|matches|not_matches \"value\"\n" +
                         "    date before|not_before|after|not_after \"YYYYMMDD\"\n" +
                         "    size under|not_under|over|not_over \"1|1K|1M\"\n" +

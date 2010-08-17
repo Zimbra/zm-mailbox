@@ -160,12 +160,18 @@ public class SoapToSieve {
     private String generateHeaderTest(Element test, String testName)
     throws ServiceException {
         String header = test.getAttribute(MailConstants.A_HEADER);
+        if (!StringUtil.isNullOrEmpty(header)) {
+            String[] headerNames = header.split(",");
+            for (int i = 0; i < headerNames.length; i ++) {
+                headerNames[i] = StringUtil.enclose(FilterUtil.escape(headerNames[i]), '"');
+            }
+            header = new StringBuilder().append('[').append(StringUtil.join(",", headerNames)).append(']').toString();
+        }
         String s = test.getAttribute(MailConstants.A_STRING_COMPARISON);
         s = s.toLowerCase();
         StringComparison comparison = StringComparison.fromString(s);
         String value = test.getAttribute(MailConstants.A_VALUE);
-        String snippet = String.format("%s :%s \"%s\" \"%s\"",
-            testName, comparison, FilterUtil.escape(header), FilterUtil.escape(value));
+        String snippet = String.format("%s :%s %s \"%s\"", testName, comparison, header, FilterUtil.escape(value));
         
         // Bug 35983: disallow more than four asterisks in a row.
         if (comparison == StringComparison.matches && value != null && value.contains("*****")) {

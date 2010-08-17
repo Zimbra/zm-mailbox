@@ -389,7 +389,7 @@ extends TestCase {
         // Create a text/plain message with a text/html attachment.
         String subject = NAME_PREFIX + " testMimeHeader";
         String attachmentData = "<html><body>I'm so attached to you.</body></html>";
-        String content = new MessageBuilder().withSubject(subject).withRecipient(USER_NAME)
+        String content = new MessageBuilder().withSubject(subject).withToRecipient(USER_NAME)
             .withAttachment(attachmentData, "attachment.html", "text/html").create();
         
         // Create filter rules.
@@ -421,6 +421,45 @@ extends TestCase {
         assertTrue(tagIds.contains(mTag2.getId()));
     }
     
+    public void testToOrCc()
+    throws Exception {
+
+        // Create filter rules
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("to,cc", HeaderOp.CONTAINS, "checkthis.com"));
+        actions.add(new ZTagAction(mTag1.getName()));
+        rules.add(new ZFilterRule("testToOrCc", true, false, conditions, actions));
+        saveRules(mMbox, new ZFilterRules(rules));
+
+        // Deliver message 1 and make sure that tag 1 was applied
+        String subject = NAME_PREFIX + " testToOrCc 1";
+        String content = new MessageBuilder().withSubject(subject).withToRecipient(USER_NAME).withCcRecipient("cc@checkthis.com").create();
+        TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, content);
+        ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
+        Set<String> tagIds = new HashSet<String>();
+        assertNotNull(msg.getTagIds());
+        for (String tagId : msg.getTagIds().split(",")) {
+            tagIds.add(tagId);
+        }
+        assertEquals(1, tagIds.size());
+        assertTrue(tagIds.contains(mTag1.getId()));
+
+        // Deliver message 2 and make sure that tag 1 was applied
+        subject = NAME_PREFIX + " testToOrCc 2";
+        content = new MessageBuilder().withSubject(subject).withToRecipient("to@checkthis.com").withCcRecipient(USER_NAME).create();
+        TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, content);
+        msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
+        tagIds = new HashSet<String>();
+        assertNotNull(msg.getTagIds());
+        for (String tagId : msg.getTagIds().split(",")) {
+            tagIds.add(tagId);
+        }
+        assertEquals(1, tagIds.size());
+        assertTrue(tagIds.contains(mTag1.getId()));
+    }
+
     public void testMarkRead()
     throws Exception {
         String folderName = NAME_PREFIX + " testMarkRead";

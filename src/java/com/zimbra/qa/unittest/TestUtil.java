@@ -230,7 +230,7 @@ extends Assert {
 
     public static String getTestMessage(String subject, String recipient, String sender, Date date)
     throws ServiceException, MessagingException, IOException {
-        return new MessageBuilder().withSubject(subject).withRecipient(recipient)
+        return new MessageBuilder().withSubject(subject).withToRecipient(recipient)
             .withFrom(sender).withDate(date).create();
     }
 
