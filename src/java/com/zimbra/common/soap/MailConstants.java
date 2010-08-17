@@ -712,6 +712,7 @@ public class MailConstants {
     public static final String E_DS_UNKNOWN = "unknown";
     public static final String E_DS_LAST_ERROR = "lastError"; 
     public static final String A_DS_IS_ENABLED = "isEnabled";
+    public static final String A_DS_IS_IMPORTONLY = "importOnly";
     public static final String A_DS_HOST = "host";
     public static final String A_DS_PORT = "port";
     public static final String A_DS_CONNECTION_TYPE = "connectionType";
