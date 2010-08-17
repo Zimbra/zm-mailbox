@@ -176,6 +176,8 @@ public class ZPrefs {
 
     public String getTimeZoneCanonicalId() { return TZIDMapper.canonicalize(get(Provisioning.A_zimbraPrefTimeZoneId)); }
 
+    public String getDefaultPrintFontSize() {return get(Provisioning.A_zimbraPrefDefaultPrintFontSize);}
+
     private TimeZone mCachedTimeZone;
     private String mCachedTimeZoneId;
 
