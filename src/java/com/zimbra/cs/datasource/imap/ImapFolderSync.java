@@ -146,22 +146,19 @@ class ImapFolderSync {
             remoteFolder = new RemoteFolder(connection, tracker.getRemoteId());
             if (!remoteFolder.exists()) {
                 remoteFolder.info("folder was deleted");
-            	//if we are doing a one way import and this folder was already in sync, ignore remote changes
-                if(!ds.isImportOnly()) { 
-	                if (ds.isSyncEnabled(folder)) //only delete local if sync enabled
-	                    localFolder.delete(); //delete local folder
-	                imapSync.deleteFolderTracker(tracker);
-                }
+	            if (ds.isSyncEnabled(folder)) //only delete local if sync enabled
+	                localFolder.delete();
+	            imapSync.deleteFolderTracker(tracker);
                 tracker = null;
             } else if (!ds.isSyncCapable(folder) && !localFolder.getPath().equals(tracker.getLocalPath())) {
             	//we moved local into archive, so delete remote
-                if (deleteRemoteFolder(remoteFolder, tracker.getItemId())) { //deletes  remote folder
-                    imapSync.deleteFolderTracker(tracker); //deletes tracker for remote folder
+                if (deleteRemoteFolder(remoteFolder, tracker.getItemId())) { 
+                    imapSync.deleteFolderTracker(tracker);
                     tracker = null;
                 }
             }
-        } else if (ds.isSyncEnabled(folder) && !ds.isImportOnly()) { //did not find this folder in sync. New folder. For oe way import, do not create remote folders
-            remoteFolder = createRemoteFolder(folder); //creates remote folder
+        } else if (ds.isSyncEnabled(folder)) { //did not find this folder in sync. New folder. 
+            remoteFolder = createRemoteFolder(folder);
             if (remoteFolder == null)
                 return null;
             try {
@@ -197,6 +194,7 @@ class ImapFolderSync {
         return newFolder;
     }
 
+ 
     /*
      * Synchronizes messages between local and remote folder.
      */
@@ -233,7 +231,7 @@ class ImapFolderSync {
         if (!fullSync) {
             changes = MessageChanges.getChanges(
                 ds, localFolder.getFolder(), syncState.getLastChangeId());
-            if ((!changes.hasChanges() || ds.isImportOnly()) && mailboxInfo.getUidNext() == syncState.getLastUidNext()) {
+            if (!changes.hasChanges() && mailboxInfo.getUidNext() == syncState.getLastUidNext()) {
                 syncState.setLastChangeId(changes.getLastChangeId());
                 imapSync.putSyncState(localFolder.getId(), syncState);
                 return;
@@ -274,7 +272,7 @@ class ImapFolderSync {
                 moveMessages();
             }
             syncFlags(lastFetchedUid);
-        } else if (changes != null && !ds.isImportOnly()) {
+        } else if (changes != null) {
             int lastModSeq = syncState.getLastChangeId();
             if (lastModSeq > 0) {
                 // Push only changes for partial sync
@@ -612,14 +610,13 @@ class ImapFolderSync {
                         clearError(msgId);
                     } catch (MailServiceException.NoSuchItemException e) {
                         // Message was deleted locally
-                        if(!ds.isImportOnly())
-                        	deletedUids.add(uid);
+                       	deletedUids.add(uid);
                         
                         clearError(msgId);
                     } catch (Exception e) {
                         syncMessageFailed(msgId, "Unable to update message flags", e);
                     }
-                } else if (!ds.isImportOnly()){
+                } else {
                     deletedUids.add(uid);
                     clearError(msgId);
                 }
@@ -654,7 +651,7 @@ class ImapFolderSync {
             localFolder.setMessageFlags(id, newLocalFlags);
             stats.flagsUpdatedLocally++;
         }
-        if (newRemoteFlags != remoteFlags && !ds.isImportOnly()) {
+        if (newRemoteFlags != remoteFlags) {
             String uids = String.valueOf(msg.getUid());
             Flags toAdd = SyncUtil.getFlagsToAdd(flags, newRemoteFlags);
             Flags toRemove = SyncUtil.getFlagsToRemove(flags, newRemoteFlags);

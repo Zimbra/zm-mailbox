@@ -317,7 +317,7 @@ public class DataSource extends AccountProperty {
     }
     
     public boolean isImportOnly() {
-        return getBooleanAttr(Provisioning.A_zimbraDataSourceImportOnly, true);
+        return getBooleanAttr(Provisioning.A_zimbraDataSourceImportOnly, false);
     }
     
     public boolean isDebugTraceEnabled() {
