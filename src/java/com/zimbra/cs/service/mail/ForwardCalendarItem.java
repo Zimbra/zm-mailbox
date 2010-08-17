@@ -65,10 +65,21 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class ForwardCalendarItem extends CalendarRequest {
 
+    // bug 49820: If called from ZDesktop, use the requested/target account as authenticated account because
+    // ZD's authenticated account is the fake local@host.local account and we shouldn't use that value to set the
+    // Sender MIME header and SENT-BY iCalendar parameter in ORGANIZER property.
+    protected static Account getZDesktopSafeAuthenticatedAccount(ZimbraSoapContext zsc) throws ServiceException {
+        Account authAcct = getAuthenticatedAccount(zsc);
+        if (AccountUtil.isZDesktopLocalAccount(authAcct.getId()))
+            return getRequestedAccount(zsc);
+        else
+            return authAcct;
+    }
+
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Account senderAcct = getAuthenticatedAccount(zsc);
+        Account senderAcct = getZDesktopSafeAuthenticatedAccount(zsc);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
 

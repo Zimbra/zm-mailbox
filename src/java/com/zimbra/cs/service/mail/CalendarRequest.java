@@ -64,7 +64,6 @@ import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -687,9 +686,6 @@ public abstract class CalendarRequest extends MailDocumentHandler {
     public static boolean isOnBehalfOfRequest(ZimbraSoapContext zsc) throws ServiceException {
         if (!zsc.isDelegatedRequest())
             return false;
-        String zdLocalAcctId = LC.zdesktop_local_account_id.value();
-        if (zdLocalAcctId != null && zdLocalAcctId.equalsIgnoreCase(zsc.getAuthtokenAccountId()))
-            return false;
-        return true;
+        return !AccountUtil.isZDesktopLocalAccount(zsc.getAuthtokenAccountId());
     }
 }
