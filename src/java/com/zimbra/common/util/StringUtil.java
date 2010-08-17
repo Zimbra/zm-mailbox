@@ -712,4 +712,8 @@ public class StringUtil {
     public static String capitalize(String s) {
         return s.substring(0,1).toUpperCase() + s.substring(1);
     }
+
+    public static String enclose(String strToEnclose, char encloseWith) {
+        return new StringBuilder().append(encloseWith).append(strToEnclose).append(encloseWith).toString();
+    }
 }
