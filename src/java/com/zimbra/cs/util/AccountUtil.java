@@ -27,6 +27,7 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
@@ -321,5 +322,15 @@ public class AccountUtil {
         } else {
             ZimbraLog.addToContext(nameKey, acct.getName());
         }
+    }
+
+    /**
+     * True if accountId is the "local@host.local" special account of ZDesktop.
+     * @param accountId
+     * @return
+     */
+    public static boolean isZDesktopLocalAccount(String accountId) {
+        String zdLocalAcctId = LC.zdesktop_local_account_id.value();
+        return zdLocalAcctId != null && zdLocalAcctId.equalsIgnoreCase(accountId);
     }
 }

@@ -17,7 +17,6 @@ package com.zimbra.cs.mailbox;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -28,6 +27,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.redolog.op.RedoableOp;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.util.AccountUtil;
 
 public class OperationContext {
     public static final boolean CHECK_CREATED = false, CHECK_MODIFIED = true;
@@ -144,11 +144,7 @@ public class OperationContext {
     public boolean isOnBehalfOfRequest(Mailbox mbox) {
         if (!isDelegatedRequest(mbox))
             return false;
-        if (authuser != null) {
-            String zdLocalAcctId = LC.zdesktop_local_account_id.value();
-            return !authuser.getId().equalsIgnoreCase(zdLocalAcctId);
-        }
-        return false;
+        return authuser != null && !AccountUtil.isZDesktopLocalAccount(authuser.getId());
     }
     
     public OperationContext setRequestIP(String addr) {

@@ -53,7 +53,7 @@ public class ForwardAppointmentInvite extends ForwardAppointment {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Account senderAcct = getAuthenticatedAccount(zsc);
+        Account senderAcct = getZDesktopSafeAuthenticatedAccount(zsc);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
 
