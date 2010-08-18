@@ -26,6 +26,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
+import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.LockMgr;
 import com.zimbra.cs.dav.DavContext.Depth;
 import com.zimbra.cs.dav.LockMgr.LockScope;
@@ -88,6 +89,7 @@ public class Lock extends DavMethod {
 		LockMgr lockmgr = LockMgr.getInstance();
 		LockMgr.Lock lock = lockmgr.createLock(ctxt, owner, ctxt.getUri(), type, scope, d);
 		
+		ctxt.getResponse().addHeader(DavProtocol.HEADER_LOCK_TOKEN, lock.toLockTokenHeader());
 		ctxt.getDavResponse().addProperty(ctxt, new LockDiscovery(lock));
 		ctxt.setStatus(HttpServletResponse.SC_OK);
 		sendResponse(ctxt);
