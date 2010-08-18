@@ -2,20 +2,17 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on May 26, 2004
- */
 package com.zimbra.soap;
 
 import com.zimbra.common.service.ServiceException;
@@ -51,6 +48,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * @since May 26, 2004
  * @author schemers
  */
 public abstract class DocumentHandler {
@@ -84,29 +82,9 @@ public abstract class DocumentHandler {
             getLocalHost();
         return LOCAL_HOST_ID;
     }
-    
-    /**
-     * Guaranteed to be called by the engine before handle() is called.  If an exception is thrown,
-     * then the handler() is *not* called. 
-     * 
-     * If no exception is thrown, then the system guarantees that postHandle() will be called.
-     * 
-     * @param request
-     * @param context
-     * @return user-defined object which will be passed along to postHandle()
-     * 
-     */
-    public Object preHandle(Element request, Map<String, Object> context) throws ServiceException { return null; }
 
-    /**
-     * Guaranteed to be called by the engine after handle() is called.  (Called from a finally{} block)
-     *  
-     * @param userObj
-     */
-    public void postHandle(Object userObj) { }
-    
     public void preProxy(Element request, Map<String, Object> context) throws ServiceException {}
-    
+
     public void postProxy(Element request, Element response, Map<String, Object> context) throws ServiceException {}
 
     public abstract Element handle(Element request, Map<String, Object> context) throws ServiceException;
@@ -121,13 +99,13 @@ public abstract class DocumentHandler {
     /** Generates a new {@link com.zimbra.cs.mailbox.OperationContext}
      *  object reflecting the constraints serialized in the <tt>&lt;context></tt>
      *  element in the SOAP header.<p>
-     * 
+     *
      *  These optional constraints include:<ul>
      *  <li>the account ID from the auth token</li>
      *  <li>the highest change number the client knows about</li>
      *  <li>how stringently to check accessed items against the known change
      *      highwater mark</li></ul>
-     * 
+     *
      * @return A new OperationContext object */
     public static OperationContext getOperationContext(ZimbraSoapContext zsc, Map<String, Object> context) throws ServiceException {
         return getOperationContext(zsc, context == null ? null : (Session) context.get(SoapEngine.ZIMBRA_SESSION));
@@ -149,10 +127,10 @@ public abstract class DocumentHandler {
     public static Account getAuthenticatedAccount(ZimbraSoapContext zsc) throws ServiceException {
         String id = zsc.getAuthtokenAccountId();
         AuthToken at = zsc.getAuthToken();
-        
+
         if (GuestAccount.GUID_PUBLIC.equals(id) || (at != null && !at.isZimbraUser()))
             return new GuestAccount(at);
-        
+
         Account acct = Provisioning.getInstance().get(AccountBy.id, id, zsc.getAuthToken());
         if (acct == null)
             throw ServiceException.AUTH_REQUIRED();
@@ -178,7 +156,7 @@ public abstract class DocumentHandler {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(id);
         if (mbox != null)
             ZimbraLog.addMboxToContext(mbox.getId());
-        return mbox; 
+        return mbox;
     }
 
     private static boolean isRequestLocal(ZimbraSoapContext zsc) {
@@ -206,15 +184,15 @@ public abstract class DocumentHandler {
     public Boolean canAccessAccountCommon(ZimbraSoapContext zsc, Account target, boolean allowSelf) throws ServiceException {
         if (zsc.getAuthtokenAccountId() == null || target == null)
             return Boolean.FALSE;
-        
+
         if (allowSelf && target.getId().equals(zsc.getAuthtokenAccountId()))
             return Boolean.TRUE;
-        
+
         // 1. delegated auth case has been logged in SoapEngine
-        // 2. we do not want to log delegated request, where the target account is specified in 
+        // 2. we do not want to log delegated request, where the target account is specified in
         //    soap context header.  Usages for that route are family mailboxes and sharing access.
         //    we only want to log the "admin" accesses.
-        if (!zsc.getAuthToken().isDelegatedAuth() && !zsc.isDelegatedRequest()) 
+        if (!zsc.getAuthToken().isDelegatedAuth() && !zsc.isDelegatedRequest())
             logAuditAccess(null, zsc.getAuthtokenAccountId(), target.getId());
 
         return null;
@@ -242,7 +220,7 @@ public abstract class DocumentHandler {
      *  This should be overriden only on admin commands that can be run in a
      *  restricted "domain admin" mode. */
     public boolean domainAuthSufficient(Map<String, Object> context) {
-        return false; 
+        return false;
     }
 
     /** Returns whether the command is in the administration command set. */
@@ -268,7 +246,7 @@ public abstract class DocumentHandler {
      *  {@link Session}s.  (Those sessions are not deleted from the cache,
      *  though perhaps that's the right thing to do...)  If requested, also
      *  creates a new Session object associated with the given account.
-     * 
+     *
      * @param zsc         The parsed SOAP header for the auth request.
      * @param authToken   The new auth token created for the user.
      * @param context     The <code>SoapEngine</code>'s request state.
@@ -305,7 +283,7 @@ public abstract class DocumentHandler {
 
     /** Fetches the in-memory {@link Session} object appropriate for this
      *  request.  If none already exists, one is created if possible.
-     * 
+     *
      * @param zsc The encapsulation of the SOAP request's <tt>&lt;context</tt>
      *            element.
      * @return A {@link com.zimbra.cs.session.SoapSession}, or <tt>null</tt>. */
@@ -316,7 +294,7 @@ public abstract class DocumentHandler {
     /** Fetches a {@link Session} object to persist and manage state between
      *  SOAP requests.  If no appropriate session already exists, a new one
      *  is created if possible.
-     * 
+     *
      * @param zsc The encapsulation of the SOAP request's <tt>&lt;context</tt>
      *            element.
      * @param stype  The type of session needed.
@@ -364,7 +342,7 @@ public abstract class DocumentHandler {
                 } else if (stype == Session.Type.ADMIN) {
                     s = new AdminSession(authAccountId).register();
                 }
-            } catch (ServiceException e) { 
+            } catch (ServiceException e) {
                 ZimbraLog.session.info("exception while creating session", e);
             }
             if (s != null)
@@ -384,7 +362,7 @@ public abstract class DocumentHandler {
 
     /**
      * End the session immediately, removing it from the session cache and cleaning it up
-     * 
+     *
      * @param s
      */
     protected void endSession(Session s) {
@@ -396,7 +374,7 @@ public abstract class DocumentHandler {
      *  is homed.  This is similar to {@link Provisioning#getServer(Account),
      *  except that the account is specified by ID and exceptions are thrown
      *  on failure rather than returning null.
-     *  
+     *
      * @param acctId  The Zimbra ID of the account.
      * @throws ServiceException  The following error codes are possible:<ul>
      *    <li><tt>account.NO_SUCH_ACCOUNT</tt> - if there is no Account
@@ -454,19 +432,19 @@ public abstract class DocumentHandler {
 
     protected Element proxyRequest(Element request, Map<String, Object> context, String acctId) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        
-        // new context for proxied request has a different "requested account" 
+
+        // new context for proxied request has a different "requested account"
         // and an incremented hop count
         ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, acctId);
 
         return proxyRequest(request, context, getServer(acctId), zscTarget);
     }
-    
+
 
     protected Element proxyRequest(Element request, Map<String, Object> context, Server server)
     throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-     
+
         // new context for proxied request has an incremented hop count
         ZimbraSoapContext pxyCtxt = new ZimbraSoapContext(zsc);
         return proxyRequest(request, context, server, pxyCtxt);
@@ -480,7 +458,7 @@ public abstract class DocumentHandler {
 
         if (isLocal)
             zsc.resetProxyAuthToken();
-            
+
         Element response = null;
         request.detach();
         if (isLocal && engine != null) {
@@ -518,7 +496,7 @@ public abstract class DocumentHandler {
 
         if (isLocal)
             zscProxy.resetProxyAuthToken();
-        
+
         if (zscProxy.isNotificationEnabled()) {
             // if we've got a SOAP session, make sure to use the appropriate remote session ID
             if (localSession instanceof SoapSession.DelegateSession)
@@ -544,7 +522,7 @@ public abstract class DocumentHandler {
      *     returns the account name if the account can be found by acctId,
      *     otherwise returns the acctId if not null,
      *     otherwise returns empty string.
-     * 
+     *
      * @param prov
      * @param acctId
      * @return
@@ -561,19 +539,19 @@ public abstract class DocumentHandler {
 
         return acctId;
     }
-    
+
     public void logAuditAccess(String delegatingAcctId, String authedAcctId, String targetAcctId) {
         if (!ZimbraLog.misc.isInfoEnabled())
             return;
-        
+
         // 8 => "Response".length()
         String reqName = mResponseQName.getQualifiedName().substring(0, mResponseQName.getQualifiedName().length()-8);
-        
+
         Provisioning prov = Provisioning.getInstance();
         String delegatingAcctName = getAccountLogName(prov, delegatingAcctId);
         String authedAcctName = getAccountLogName(prov, authedAcctId);
         String targetAcctName = getAccountLogName(prov, targetAcctId);
-        
+
         ZimbraLog.misc.info("delegated access: doc=" + reqName +
             (delegatingAcctId==null?"" : ", delegating account="+delegatingAcctName) +
             ", authenticated account=" + authedAcctName +

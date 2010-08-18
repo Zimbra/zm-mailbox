@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,13 +28,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 
+ *
  * @zm-service-description		The Admin Service includes commands for server, account
  * and mailbox administration.
  *
  */
 public class AdminService implements DocumentService {
 
+    @Override
     public void registerHandlers(DocumentDispatcher dispatcher) {
         dispatcher.registerHandler(AdminConstants.PING_REQUEST, new Ping());
         dispatcher.registerHandler(AdminConstants.CHECK_HEALTH_REQUEST, new CheckHealth());
@@ -101,7 +102,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.CHECK_HOSTNAME_RESOLVE_REQUEST, new CheckHostnameResolve());
         dispatcher.registerHandler(AdminConstants.CHECK_EXCHANGE_AUTH_REQUEST, new CheckExchangeAuth());
         dispatcher.registerHandler(AdminConstants.CHECK_DOMAIN_MX_RECORD_REQUEST, new CheckDomainMXRecord ());
-        
+
         dispatcher.registerHandler(AdminConstants.CREATE_VOLUME_REQUEST, new CreateVolume());
         dispatcher.registerHandler(AdminConstants.GET_VOLUME_REQUEST, new GetVolume());
         dispatcher.registerHandler(AdminConstants.GET_ALL_VOLUMES_REQUEST, new GetAllVolumes());
@@ -169,9 +170,6 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.AUTO_COMPLETE_GAL_REQUEST, new AutoCompleteGal());
         dispatcher.registerHandler(AdminConstants.SEARCH_GAL_REQUEST, new SearchGal());
 
-        // throttling
-        dispatcher.registerHandler(AdminConstants.SET_THROTTLE_REQUEST, new SetThrottle());
-
         // data source
         dispatcher.registerHandler(AdminConstants.GET_DATA_SOURCES_REQUEST, new GetDataSources());
         dispatcher.registerHandler(AdminConstants.CREATE_DATA_SOURCE_REQUEST, new CreateDataSource());
@@ -182,29 +180,29 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.FIX_CALENDAR_TZ_REQUEST, new FixCalendarTZ());
         // calendar item end time fixup
         dispatcher.registerHandler(AdminConstants.FIX_CALENDAR_END_TIME_REQUEST, new FixCalendarEndTime());
-        
+
         // admin saved searches
         dispatcher.registerHandler(AdminConstants.GET_ADMIN_SAVED_SEARCHES_REQUEST, new GetAdminSavedSearches());
         dispatcher.registerHandler(AdminConstants.MODIFY_ADMIN_SAVED_SEARCHES_REQUEST, new ModifyAdminSavedSearches());
-        
+
         dispatcher.registerHandler(AdminConstants.ADD_ACCOUNT_LOGGER_REQUEST, new AddAccountLogger());
         dispatcher.registerHandler(AdminConstants.REMOVE_ACCOUNT_LOGGER_REQUEST, new RemoveAccountLogger());
         dispatcher.registerHandler(AdminConstants.GET_ACCOUNT_LOGGERS_REQUEST, new GetAccountLoggers());
         dispatcher.registerHandler(AdminConstants.GET_ALL_ACCOUNT_LOGGERS_REQUEST, new GetAllAccountLoggers());
-        
+
         dispatcher.registerHandler(AdminConstants.CHECK_DIRECTORY_REQUEST, new CheckDirectory());
-        
+
         dispatcher.registerHandler(AdminConstants.FLUSH_CACHE_REQUEST, new FlushCache());
-        
+
         dispatcher.registerHandler(AdminConstants.COUNT_ACCOUNT_REQUEST, new CountAccount());
-        
+
         dispatcher.registerHandler(AdminConstants.GET_SHARE_INFO_REQUEST, new GetShareInfo());
         dispatcher.registerHandler(AdminConstants.GET_PUBLISHED_SHARE_INFO_REQUEST, new GetPublishedShareInfo());
         dispatcher.registerHandler(AdminConstants.PUBLISH_SHARE_INFO_REQUEST, new PublishShareInfo());
-        
-        
+
+
         dispatcher.registerHandler(AdminConstants.GET_SERVER_NIFS_REQUEST, new GetServerNIFs());
-        
+
         // f/b mgmt
         dispatcher.registerHandler(AdminConstants.GET_ALL_FREE_BUSY_PROVIDERS_REQUEST, new GetAllFreeBusyProviders());
         dispatcher.registerHandler(AdminConstants.GET_FREE_BUSY_QUEUE_INFO_REQUEST, new GetFreeBusyQueueInfo());
@@ -227,13 +225,13 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.GRANT_RIGHT_REQUEST, new GrantRight());
         dispatcher.registerHandler(AdminConstants.MODIFY_DELEGATED_ADMIN_CONSTRAINTS_REQUEST, new ModifyDelegatedAdminConstraints());
         dispatcher.registerHandler(AdminConstants.REVOKE_RIGHT_REQUEST, new RevokeRight());
-        
+
         // admin wait set
-        dispatcher.registerHandler(AdminConstants.ADMIN_CREATE_WAIT_SET_REQUEST, new AdminCreateWaitSetRequest());        
-        dispatcher.registerHandler(AdminConstants.ADMIN_WAIT_SET_REQUEST, new AdminWaitSetRequest());        
+        dispatcher.registerHandler(AdminConstants.ADMIN_CREATE_WAIT_SET_REQUEST, new AdminCreateWaitSetRequest());
+        dispatcher.registerHandler(AdminConstants.ADMIN_WAIT_SET_REQUEST, new AdminWaitSetRequest());
         dispatcher.registerHandler(AdminConstants.ADMIN_DESTROY_WAIT_SET_REQUEST, new AdminDestroyWaitSetRequest());
         dispatcher.registerHandler(AdminConstants.QUERY_WAIT_SET_REQUEST, new QueryWaitSet());
-        
+
         // zimbraXMPPComponent object class
         dispatcher.registerHandler(AdminConstants.CREATE_XMPPCOMPONENT_REQUEST, new CreateXMPPComponent());
         dispatcher.registerHandler(AdminConstants.GET_XMPPCOMPONENT_REQUEST, new GetXMPPComponent());
@@ -247,7 +245,7 @@ public class AdminService implements DocumentService {
         // memcached
         dispatcher.registerHandler(AdminConstants.RELOAD_MEMCACHED_CLIENT_CONFIG_REQUEST, new ReloadMemcachedClientConfig());
         dispatcher.registerHandler(AdminConstants.GET_MEMCACHED_CLIENT_CONFIG_REQUEST, new GetMemcachedClientConfig());
-        
+
         // noop
         dispatcher.registerHandler(AdminConstants.NO_OP_REQUEST, new NoOp());
     }
@@ -260,17 +258,17 @@ public class AdminService implements DocumentService {
     public static Map<String, Object> getAttrs(Element request) throws ServiceException {
         return getAttrs(request, false);
     }
-    
+
     /**
-     * Given: 
+     * Given:
      *     <request>
      *        <a n="name">VALUE</a>
      *        <a n="name2">VALUE</a>
      *        ...
      *      <request>
-     *      
+     *
      * Return a map of name,value pairs
-     *        
+     *
      * @param request
      * @return
      * @throws ServiceException
@@ -284,5 +282,5 @@ public class AdminService implements DocumentService {
                 StringUtil.addToMultiMap(result, name, value);
         }
         return result;
-    }    
+    }
 }

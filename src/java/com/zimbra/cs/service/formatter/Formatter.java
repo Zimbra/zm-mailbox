@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -34,9 +34,6 @@ import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.operation.BlockingOperation;
-import com.zimbra.cs.operation.Requester;
-import com.zimbra.cs.operation.Scheduler.Priority;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -59,42 +56,39 @@ public abstract class Formatter {
     public boolean requiresAuth() {
         return true;
     }
-    
+
     /**
-     * 
+     *
      * @return true if this formatter can be blocked by zimbraAttachmentsBlocked attr.
      */
     public abstract boolean canBeBlocked();
-    
+
     // eventually get this from query param ?start=long|YYYYMMMDDHHMMSS
     public long getDefaultStartTime() {
         return -1;
     }
-    
+
     public long getDefaultEndTime() {
         return -1;
     }
-    
+
     public String getDefaultSearchTypes() {
         return MailboxIndex.SEARCH_FOR_MESSAGES;
     }
 
-    public final void format(UserServlet.Context context) throws UserServletException, IOException, ServletException, ServiceException {
-        BlockingOperation op = BlockingOperation.schedule(this.getClass().getSimpleName()+"(FORMAT)", null, context.opContext, context.targetMailbox, Requester.REST, Priority.BATCH, 1);
+    public final void format(UserServlet.Context context)
+        throws UserServletException, IOException, ServletException, ServiceException {
 
         try {
             formatCallback(context);
             updateClient(context, null);
         } catch (Exception e) {
             updateClient(context, e);
-        } finally {
-            op.finish();
         }
     }
 
     public final void save(UserServlet.Context context, String contentType, Folder folder, String filename)
-    throws UserServletException, IOException, ServletException, ServiceException {
-        BlockingOperation op = BlockingOperation.schedule(this.getClass().getSimpleName()+"(SAVE)", null, context.opContext, context.targetMailbox, Requester.REST, Priority.BATCH, 1);
+        throws UserServletException, IOException, ServletException, ServiceException {
 
         Mailbox mbox = context.targetMailbox;
         try {
@@ -105,15 +99,15 @@ public abstract class Formatter {
             updateClient(context, e);
         } finally {
             mbox.clearIndexImmediatelyMode();
-            op.finish();
         }
     }
 
     public abstract void formatCallback(UserServlet.Context context)
-    throws UserServletException, ServiceException, IOException, ServletException;
+        throws UserServletException, ServiceException, IOException, ServletException;
 
     public void saveCallback(UserServlet.Context context, String contentType, Folder folder, String filename)
-    throws UserServletException, ServiceException, IOException, ServletException {
+        throws UserServletException, ServiceException, IOException, ServletException {
+
         throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for save");
     }
 
@@ -127,7 +121,7 @@ public abstract class Formatter {
         if (context.respListItems != null) {
             return context.respListItems.iterator();
         }
-        
+
         assert(context.target != null);
         String query = context.getQueryString();
         if (query != null) {
@@ -135,14 +129,14 @@ public abstract class Formatter {
                 if (context.target instanceof Folder) {
                     Folder f = (Folder) context.target;
                     if (f.getId() != Mailbox.ID_FOLDER_USER_ROOT)
-                        query = "in:" + f.getPath() + " " + query; 
+                        query = "in:" + f.getPath() + " " + query;
                 }
                 String searchTypes = context.getTypesString();
                 if (searchTypes == null)
                     searchTypes = getDefaultSearchTypes();
                 byte[] types = MailboxIndex.parseTypesString(searchTypes);
                 ZimbraQueryResults results = context.targetMailbox.search(context.opContext, query, types, SortBy.DATE_DESCENDING, context.getOffset() + context.getLimit());
-                return new QueryResultIterator(results);                
+                return new QueryResultIterator(results);
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 throw ServiceException.FAILURE("search error", e);
@@ -173,9 +167,9 @@ public abstract class Formatter {
                 return context.targetMailbox.getItemList(context.opContext, MailItem.TYPE_MESSAGE, folder.getId());
         }
     }
-    
+
     /**
-     * 
+     *
      * @param attr
      * @param accountId
      * @return
@@ -192,11 +186,12 @@ public abstract class Formatter {
 
     protected static class QueryResultIterator implements Iterator<MailItem> {
         private ZimbraQueryResults mResults;
-        
+
         QueryResultIterator(ZimbraQueryResults results) {
             mResults = results;
         }
 
+        @Override
         public boolean hasNext() {
             if (mResults == null)
                 return false;
@@ -208,6 +203,7 @@ public abstract class Formatter {
             }
         }
 
+        @Override
         public MailItem next() {
             if (mResults == null)
                 return null;
@@ -216,11 +212,12 @@ public abstract class Formatter {
                 if (hit != null)
                     return hit.getMailItem();
             } catch (ServiceException e) {
-                ZimbraLog.misc.warn("caught exception", e);                
+                ZimbraLog.misc.warn("caught exception", e);
             }
             return null;
         }
 
+        @Override
         public void remove() {
             throw new UnsupportedOperationException();
         }
@@ -233,10 +230,10 @@ public abstract class Formatter {
             mResults = null;
         }
     }
-    
+
     protected PrintWriter updateClient(Context context, boolean flush) throws IOException {
         PrintWriter pw;
-        
+
         if (context.params.get(PROGRESS) == null) {
             context.resp.reset();
             context.resp.setContentType("text/html; charset=\"utf-8\"");
@@ -317,7 +314,7 @@ public abstract class Formatter {
                 out.print("    window.parent." + callback + "('success');");
             } else {
                 String result = exception != null ? "fail" : "warn";
-                
+
                 out.print("    window.parent." + callback + "('" + result + "'");
                 if (exception != null) {
                     out.print(",\n\t");
