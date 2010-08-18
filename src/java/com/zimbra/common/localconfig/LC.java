@@ -1195,7 +1195,7 @@ public class LC {
         mailboxd_java_heap_new_size_percent.setDefault("25");
 
         mailboxd_java_options = new KnownKey("mailboxd_java_options");
-        mailboxd_java_options.setDefault("-server -Djava.awt.headless=true -Dsun.net.inetaddr.ttl=${networkaddress_cache_ttl} -XX:+UseConcMarkSweepGC -XX:NewRatio=2 -XX:PermSize=128m -XX:MaxPermSize=128m -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime");
+        mailboxd_java_options.setDefault("-server -Djava.awt.headless=true -Dsun.net.inetaddr.ttl=${networkaddress_cache_ttl} -XX:+UseConcMarkSweepGC -XX:PermSize=128m -XX:MaxPermSize=128m -XX:SoftRefLRUPolicyMSPerMB=1 -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime");
 
         mailboxd_pidfile = new KnownKey("mailboxd_pidfile");
         mailboxd_pidfile.setDefault("${zimbra_log_directory}" + FS + "mailboxd.pid");

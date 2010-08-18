@@ -17,7 +17,6 @@ package com.zimbra.common.localconfig;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
-import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -170,7 +169,11 @@ public abstract class LocalConfigUpgrade {
 	mjo = mjo.replaceAll("^\\s*\\Q" + option + "\\E\\s*$", "");
 	return mjo;
     }
-    
+
+    private static String removeOptionWithValue(String mjo, String option) {
+        return mjo.replaceAll("\\s*\\Q" + option + "=\\E\\w+", "");
+    }
+
     private static class LocalConfigUpgradeSwitchToCMS extends LocalConfigUpgrade {
 	
 	LocalConfigUpgradeSwitchToCMS(String bug) {
@@ -202,14 +205,14 @@ public abstract class LocalConfigUpgrade {
 	
 	private String modify(String mjo) {
 	    mjo = removeOption(mjo, "-XX:+UseParallelGC");
-	
+	    mjo = removeOptionWithValue(mjo, "-XX:NewRatio");
+
 	    mjo = appendOptionIfNotPresent(mjo, "-XX:+UseConcMarkSweepGC");
 	    mjo = appendOptionIfNotPresent(mjo, "-verbose:gc");
 	    mjo = appendOptionIfNotPresent(mjo, "-XX:+PrintGCDetails");
 	    mjo = appendOptionIfNotPresent(mjo, "-XX:+PrintGCTimeStamps");
 	    mjo = appendOptionIfNotPresent(mjo, "-XX:+PrintGCApplicationStoppedTime");
 	    
-	    mjo = appendOptionIfNoOptionBeginsWith(mjo, "-XX:NewRatio=", "-XX:NewRatio=2");
 	    mjo = appendOptionIfNoOptionBeginsWith(mjo, "-XX:PermSize=", "-XX:PermSize=128m");
 	    mjo = appendOptionIfNoOptionBeginsWith(mjo, "-XX:MaxPermSize=", "-XX:MaxPermSize=128m");
 	    mjo = appendOptionIfNoOptionBeginsWith(mjo, "-XX:SoftRefLRUPolicyMSPerMB=", "-XX:SoftRefLRUPolicyMSPerMB=1"); 
