@@ -72,7 +72,7 @@ class AppendMessage {
         this.handler = handler;
         this.tag = tag;
     }
-    
+
     private void parse(ImapRequest req) throws ImapParseException, IOException {
         if (req.peekChar() == '(') {
             flagNames = req.readFlags();
@@ -128,7 +128,7 @@ class AppendMessage {
         flagNames = null;
     }
 
-    public int storeContent(Object mboxObj, Object folderObj) throws IOException, ServiceException, ImapParseException {
+    public int storeContent(Object mboxObj, Object folderObj) throws IOException, ServiceException {
         try {
             checkDate(content);
             if (mboxObj instanceof Mailbox)
@@ -155,9 +155,13 @@ class AppendMessage {
         Message msg = mbox.addMessage(handler.getContext(), pm, folder.getId(), true, flags, Tag.bitmaskToTags(tags));
         if (msg != null && sflags != 0 && handler.getState() == ImapHandler.State.SELECTED) {
             ImapFolder selectedFolder = handler.getSelectedFolder();
-            ImapMessage i4msg = selectedFolder.getById(msg.getId());
-            if (i4msg != null)
-                i4msg.setSessionFlags(sflags, selectedFolder);
+            // remember, selected folder may be on another host (i.e. mProxy != null)
+            //   (note that this leaves session flags unset on remote appended messages) 
+            if (selectedFolder != null) {
+                ImapMessage i4msg = selectedFolder.getById(msg.getId());
+                if (i4msg != null)
+                    i4msg.setSessionFlags(sflags, selectedFolder);
+            }
         }
         return msg == null ? -1 : msg.getId();
     }
@@ -179,7 +183,7 @@ class AppendMessage {
             }
         }
     }
-    
+
     private Blob doCatenate() throws IOException, ImapParseException, ServiceException {
         // translate CATENATE (...) directives into Blob
         BlobBuilder bb = StoreManager.getInstance().getBlobBuilder();
@@ -202,7 +206,7 @@ class AppendMessage {
             content = null;
         }
     }
-    
+
     private void copyBytes(InputStream is, BlobBuilder bb) throws IOException {
         try {
             bb.append(is);
@@ -236,16 +240,16 @@ class AppendMessage {
         }
     }
 
-    public static Date getSentDate(InternetHeaders ih) throws MessagingException {
-	String s = ih.getHeader("Date", null);
-	if (s != null) {
+    public static Date getSentDate(InternetHeaders ih) {
+        String s = ih.getHeader("Date", null);
+        if (s != null) {
             try {
                 return new MailDateFormat().parse(s);
-	    } catch (ParseException pex) {
-		return null;
-	    }
-	}
-	return null;
+            } catch (ParseException pex) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private ImapCredentials getCredentials() {
