@@ -375,7 +375,7 @@ public class ImapPath implements Comparable<ImapPath> {
                         mFolder = resolved.getFirst();
                         mItemId = new ItemId(resolved.getFirst());
                     }
-                    if (!isMountpoint || mFolder == null)
+                    if (!isMountpoint)
                         return mReferent;
                 } else if (!(mFolder instanceof Mountpoint)) {
                     return mReferent;
@@ -386,10 +386,34 @@ public class ImapPath implements Comparable<ImapPath> {
             } catch (ServiceException e) {
                 return mReferent;
             }
+        } else if (mboxobj instanceof ZMailbox) {
+            String accountId = mCredentials == null ? null : mCredentials.getAccountId();
+            if (mFolder == null) {
+                ZMailbox zmbx = (ZMailbox) mboxobj;
+                String path = asZimbraPath();
+                try {
+                    for (int index = path.length(); index != -1; index = path.lastIndexOf('/', index - 1)) {
+                        ZFolder zfolder = zmbx.getFolderByPath(path.substring(0, index));
+                        if (zfolder != null) {
+                            subpathRemote = path.substring(Math.min(path.length(), index + 1));
+    
+                            if (zfolder instanceof ZMountpoint || subpathRemote.isEmpty()) {
+                                mFolder = zfolder;
+                                mItemId = new ItemId(zfolder.getId(), accountId);
+                            }
+                            break;
+                        }
+                    }
+                } catch (ServiceException e) {}
+            }
+
+            if (!(mFolder instanceof ZMountpoint))
+                return mReferent;
+
+            // somewhere along the specified path is a visible mountpoint owned by the user
+            iidRemote = new ItemId(((ZMountpoint) mFolder).getCanonicalRemoteId(), accountId);
         } else {
-            // FIXME: are there any cases where we'd need to implement this branch?
-            iidRemote = null;
-            subpathRemote = null;
+            return mReferent;
         }
 
         // don't allow mountpoints that point at the same mailbox (as it can cause infinite loops)
@@ -412,7 +436,7 @@ public class ImapPath implements Comparable<ImapPath> {
             } catch (ServiceException e) {
             }
         } else {
-            Account acct = Provisioning.getInstance().get(AccountBy.id, mCredentials.getAccountId());
+            Account acct = mCredentials == null ? null : Provisioning.getInstance().get(AccountBy.id, mCredentials.getAccountId());
             if (acct == null)
                 return mReferent;
             try {
@@ -561,8 +585,11 @@ public class ImapPath implements Comparable<ImapPath> {
             ZFolder.View view = zfolder.getDefaultView();
             if (view == ZFolder.View.appointment || view == ZFolder.View.task || view == ZFolder.View.wiki || view == ZFolder.View.document)
                 return false;
-            // hide all remote searchfolders and mountpoints
-            if (zfolder instanceof ZSearchFolder || zfolder instanceof ZMountpoint)
+            // hide other users' mountpoints and mountpoints that point to the same mailbox
+            if (zfolder instanceof ZMountpoint && mReferent == this && mScope != Scope.UNPARSED)
+                return false;
+            // hide all remote searchfolders
+            if (zfolder instanceof ZSearchFolder)
                 return false;
         }
         return (mReferent == this ? true : mReferent.isVisible());
