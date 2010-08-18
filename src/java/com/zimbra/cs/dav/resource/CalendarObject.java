@@ -372,7 +372,7 @@ public interface CalendarObject {
         }
 
         @Override
-        public InputStream getRawContent(DavContext ctxt) throws IOException, DavException {
+        public InputStream getContent(DavContext ctxt) throws IOException, DavException {
             return new ByteArrayInputStream(getVcalendar(ctxt, null).getBytes("UTF-8"));
         }
 

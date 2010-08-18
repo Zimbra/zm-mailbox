@@ -14,7 +14,9 @@
  */
 package com.zimbra.cs.dav.resource;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,6 +76,25 @@ public class Collection extends MailItemResource {
         }
     }
 
+    @Override
+    public String getContentType(DavContext ctxt) {
+        if (ctxt.isWebRequest())
+            return MimeConstants.CT_TEXT_PLAIN;
+        return MimeConstants.CT_TEXT_XML;
+    }
+    
+    @Override
+    public boolean hasContent(DavContext ctxt) {
+        return true;
+    }
+    
+    @Override
+    public InputStream getContent(DavContext ctxt) throws IOException, DavException {
+        if (ctxt.isWebRequest())
+            return new ByteArrayInputStream(getTextContent(ctxt).getBytes("UTF-8"));
+        return new ByteArrayInputStream(getPropertiesAsText(ctxt).getBytes("UTF-8"));
+    }
+    
     @Override
     public boolean isCollection() {
         return true;

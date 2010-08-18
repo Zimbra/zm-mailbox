@@ -68,11 +68,6 @@ public class BrowseWrapper extends PhantomResource {
 	}
 	
 	@Override
-	public InputStream getContent(DavContext ctxt) {
-		return null;
-	}
-
-	@Override
 	public boolean isCollection() {
 		return true;
 	}

@@ -456,6 +456,8 @@ public class DavContext {
 	private static final String IPHONE = "iPhone/";
     private static final String ADDRESSBOOK = "Address";
     private static final String MICROSOFT = "Microsoft";
+    private static final String MSIE = "MSIE";
+    private static final String MOZILLA = "Mozilla";
 	
 	private boolean userAgentHeaderContains(String str) {
 		String userAgent = mReq.getHeader(DavProtocol.HEADER_USER_AGENT);
@@ -476,6 +478,10 @@ public class DavContext {
 	    return userAgentHeaderContains(MICROSOFT);
 	}
 
+	public boolean isWebRequest() {
+        return userAgentHeaderContains(MSIE) || userAgentHeaderContains(MOZILLA);
+	}
+	
     public static enum KnownUserAgent {
         iCal, iPhone, Evolution;
 

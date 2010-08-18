@@ -63,13 +63,18 @@ public class AddressObject extends MailItemResource {
     public AddressObject(DavContext ctxt, Contact item) throws ServiceException {
         super(ctxt, item);
         setProperty(DavElements.P_GETCONTENTTYPE, DavProtocol.VCARD_CONTENT_TYPE);
-        setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(mId));
+        
+        // size is approximate.  it just has to be non-zero as the actual content
+        // will be chunked to the client in GET response.
+        setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(item.getFields().size()));
     }
     
+    @Override
     public boolean isCollection() {
         return false;
     }
     
+    @Override
     public ResourceProperty getProperty(Element prop) {
         if (prop.getQName().equals(DavElements.CardDav.E_ADDRESS_DATA)) {
             return CardDavProperty.getAddressbookData(prop, this);
@@ -77,7 +82,8 @@ public class AddressObject extends MailItemResource {
         return super.getProperty(prop);
     }
     
-    protected InputStream getRawContent(DavContext ctxt) throws DavException, IOException {
+    @Override
+    public InputStream getContent(DavContext ctxt) throws DavException, IOException {
         try {
             return new ByteArrayInputStream(toVCard(ctxt).getBytes("UTF-8"));
         } catch (ServiceException e) {

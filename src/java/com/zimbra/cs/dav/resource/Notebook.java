@@ -53,7 +53,7 @@ public class Notebook extends MailItemResource {
 	}
 
 	@Override
-	public InputStream getRawContent(DavContext ctxt) throws IOException, DavException {
+	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
 		try {
 			if (mDoc.getType() == MailItem.TYPE_DOCUMENT)
 				return mDoc.getContentStream();

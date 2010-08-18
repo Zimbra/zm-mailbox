@@ -110,11 +110,6 @@ public class SearchWrapper extends PhantomResource {
 	}
 	
 	@Override
-	public InputStream getContent(DavContext ctxt) {
-		return null;
-	}
-
-	@Override
 	public boolean isCollection() {
 		return true;
 	}

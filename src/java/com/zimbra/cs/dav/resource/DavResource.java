@@ -62,7 +62,6 @@ public abstract class DavResource {
 		public InvalidResource(String uri, String owner) {
 			super(uri, owner);
 		}
-		public InputStream getContent(DavContext ctxt) { return null; }
 		public void delete(DavContext ctxt) { }
 		public boolean isCollection() { return false; }
 		public boolean isValid() { return false; }
@@ -189,8 +188,6 @@ public abstract class DavResource {
 	}
 	
 	public boolean hasContent(DavContext ctxt) {
-        if (isWebRequest(ctxt))
-            return true;
 		try {
 			return (getContentLength() > 0);
 		} catch (NumberFormatException e) {
@@ -199,8 +196,6 @@ public abstract class DavResource {
 	}
 	
 	public String getContentType(DavContext ctxt) {
-        if (isWebRequest(ctxt))
-            return "text/plain";
 		ResourceProperty prop = getProperty(DavElements.E_GETCONTENTTYPE);
 		if (prop != null)
 			return prop.getStringValue();
@@ -256,11 +251,9 @@ public abstract class DavResource {
 		return true;
 	}
 	
-	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
-        if (isWebRequest(ctxt))
-            return getTextContent(ctxt);
-        return getRawContent(ctxt);
-	}
+    public InputStream getContent(DavContext ctxt) throws IOException, DavException {
+        return new ByteArrayInputStream(getTextContent(ctxt).getBytes("UTF-8"));
+    }
 	
 	public abstract boolean isCollection();
 	
@@ -315,25 +308,11 @@ public abstract class DavResource {
 		throw new DavException("not supported", HttpServletResponse.SC_NOT_ACCEPTABLE);
 	}
 
-    protected boolean isWebRequest(DavContext ctxt) {
-        String userAgent = ctxt.getRequest().getHeader(DavProtocol.HEADER_USER_AGENT);
-        if (userAgent != null && 
-                (userAgent.indexOf("MSIE") >= 0 ||
-                 userAgent.indexOf("Mozilla") >= 0)) {
-            return true;
-        }
-        return false;
-    }
-    
-    protected InputStream getRawContent(DavContext ctxt) throws DavException, IOException {
-        return null;
-    }
-    
     protected QName[] getSupportedReports() {
         return new QName[0];
     }
     
-    protected InputStream getTextContent(DavContext ctxt) throws IOException {
+    protected String getTextContent(DavContext ctxt) throws IOException {
         StringBuilder buf = new StringBuilder();
         buf.append("Request\n\n");
         buf.append("\tAuthenticated user:\t").append(ctxt.getAuthAccount().getName()).append("\n");
@@ -349,6 +328,11 @@ public abstract class DavResource {
         } catch (ServiceException se) {
         }
         buf.append("\nProperties\n\n");
+        buf.append(getPropertiesAsText(ctxt));
+        return buf.toString();
+    }
+    
+    protected String getPropertiesAsText(DavContext ctxt) throws IOException {
         Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_PROP);
         for (ResourceProperty rp : mProps.values())
             rp.toElement(ctxt, e, false);
@@ -358,7 +342,6 @@ public abstract class DavResource {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         XMLWriter writer = new XMLWriter(baos, format);
         writer.write(e);
-        buf.append(new String(baos.toByteArray()));
-        return new ByteArrayInputStream(buf.toString().getBytes("UTF-8"));
+        return new String(baos.toByteArray());
     }
 }
