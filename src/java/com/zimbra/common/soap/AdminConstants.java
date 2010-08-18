@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,7 +31,7 @@ public class AdminConstants {
 
     public static final QName GET_ALL_LOCALES_REQUEST = QName.get("GetAllLocalesRequest", NAMESPACE);
     public static final QName GET_ALL_LOCALES_RESPONSE = QName.get("GetAllLocalesResponse", NAMESPACE);
-    
+
     public static final QName EXPORTMAILBOX_REQUEST = QName.get("ExportMailboxRequest", NAMESPACE);
     public static final QName EXPORTMAILBOX_RESPONSE = QName.get("ExportMailboxResponse", NAMESPACE);
 
@@ -84,7 +84,7 @@ public class AdminConstants {
     public static final QName DELETE_DOMAIN_RESPONSE = QName.get("DeleteDomainResponse", NAMESPACE);
     public static final QName GET_ALL_DOMAINS_REQUEST = QName.get("GetAllDomainsRequest", NAMESPACE);
     public static final QName GET_ALL_DOMAINS_RESPONSE = QName.get("GetAllDomainsResponse", NAMESPACE);
-    
+
 
     public static final QName CREATE_COS_REQUEST = QName.get("CreateCosRequest", NAMESPACE);
     public static final QName CREATE_COS_RESPONSE = QName.get("CreateCosResponse", NAMESPACE);
@@ -105,10 +105,10 @@ public class AdminConstants {
     public static final QName CREATE_SERVER_RESPONSE = QName.get("CreateServerResponse", NAMESPACE);
     public static final QName GET_SERVER_REQUEST = QName.get("GetServerRequest", NAMESPACE);
     public static final QName GET_SERVER_RESPONSE = QName.get("GetServerResponse", NAMESPACE);
-    
+
     public static final QName GET_SERVER_NIFS_REQUEST = QName.get("GetServerNIfsRequest", NAMESPACE);
-    public static final QName GET_SERVER_NIFS_RESPONSE = QName.get("GetServerNIfsResponse", NAMESPACE);    
-    
+    public static final QName GET_SERVER_NIFS_RESPONSE = QName.get("GetServerNIfsResponse", NAMESPACE);
+
     public static final QName MODIFY_SERVER_REQUEST = QName.get("ModifyServerRequest", NAMESPACE);
     public static final QName MODIFY_SERVER_RESPONSE = QName.get("ModifyServerResponse", NAMESPACE);
     public static final QName DELETE_SERVER_REQUEST = QName.get("DeleteServerRequest", NAMESPACE);
@@ -149,7 +149,7 @@ public class AdminConstants {
     public static final QName CHECK_EXCHANGE_AUTH_RESPONSE = QName.get("CheckExchangeAuthResponse", NAMESPACE);
     public static final QName CHECK_DOMAIN_MX_RECORD_REQUEST = QName.get("CheckDomainMXRecordRequest", NAMESPACE);
     public static final QName CHECK_DOMAIN_MX_RECORD_RESPONSE = QName.get("CheckDomainMXRecordResponse", NAMESPACE);
-    
+
     public static final QName AUTO_COMPLETE_GAL_REQUEST = QName.get("AutoCompleteGalRequest", NAMESPACE);
     public static final QName AUTO_COMPLETE_GAL_RESPONSE = QName.get("AutoCompleteGalResponse", NAMESPACE);
     public static final QName SEARCH_GAL_REQUEST = QName.get("SearchGalRequest", NAMESPACE);
@@ -256,7 +256,7 @@ public class AdminConstants {
     public static final QName GET_ALL_MAILBOXES_RESPONSE = QName.get("GetAllMailboxesResponse", NAMESPACE);
     public static final QName GET_MAILBOX_STATS_REQUEST = QName.get("GetMailboxStatsRequest", NAMESPACE);
     public static final QName GET_MAILBOX_STATS_RESPONSE = QName.get("GetMailboxStatsResponse", NAMESPACE);
-    
+
 
     public static final QName GET_MAIL_QUEUE_INFO_REQUEST = QName.get("GetMailQueueInfoRequest", NAMESPACE);
     public static final QName GET_MAIL_QUEUE_INFO_RESPONSE = QName.get("GetMailQueueInfoResponse", NAMESPACE);
@@ -279,9 +279,6 @@ public class AdminConstants {
     public static final QName INIT_NOTEBOOK_REQUEST  = QName.get("InitNotebookRequest",  NAMESPACE);
     public static final QName INIT_NOTEBOOK_RESPONSE = QName.get("InitNotebookResponse", NAMESPACE);
 
-    public static final QName SET_THROTTLE_REQUEST = QName.get("SetThrottleRequest", NAMESPACE);
-    public static final QName SET_THROTTLE_RESPOSNE = QName.get("SetThrottleResponse", NAMESPACE);
-
     // data sources
     public static final QName CREATE_DATA_SOURCE_REQUEST = QName.get("CreateDataSourceRequest", NAMESPACE);
     public static final QName CREATE_DATA_SOURCE_RESPONSE = QName.get("CreateDataSourceResponse", NAMESPACE);
@@ -298,7 +295,7 @@ public class AdminConstants {
     // calendar item end time fixup
     public static final QName FIX_CALENDAR_END_TIME_REQUEST = QName.get("FixCalendarEndTimeRequest", NAMESPACE);
     public static final QName FIX_CALENDAR_END_TIME_RESPONSE = QName.get("FixCalendarEndTimeResponse", NAMESPACE);
-    
+
     // Admin saved searches
     public static final QName GET_ADMIN_SAVED_SEARCHES_REQUEST = QName.get("GetAdminSavedSearchesRequest", NAMESPACE);
     public static final QName GET_ADMIN_SAVED_SEARCHES_RESPONSE = QName.get("GetAdminSavedSearchesResponse", NAMESPACE);
@@ -307,20 +304,20 @@ public class AdminConstants {
 
     public static final QName CHECK_DIRECTORY_REQUEST = QName.get("CheckDirectoryRequest", NAMESPACE);
     public static final QName CHECK_DIRECTORY_RESPONSE = QName.get("CheckDirectoryResponse", NAMESPACE);
-    
+
     public static final QName FLUSH_CACHE_REQUEST = QName.get("FlushCacheRequest", NAMESPACE);
     public static final QName FLUSH_CACHE_RESPONSE = QName.get("FlushCacheResponse", NAMESPACE);
 
     public static final QName COUNT_ACCOUNT_REQUEST = QName.get("CountAccountRequest", NAMESPACE);
     public static final QName COUNT_ACCOUNT_RESPONSE = QName.get("CountAccountResponse", NAMESPACE);
-    
+
     public static final QName GET_SHARE_INFO_REQUEST = QName.get("GetShareInfoRequest", NAMESPACE);
     public static final QName GET_SHARE_INFO_RESPONSE = QName.get("GetShareInfoResponse", NAMESPACE);
     public static final QName GET_PUBLISHED_SHARE_INFO_REQUEST = QName.get("GetPublishedShareInfoRequest", NAMESPACE);
     public static final QName GET_PUBLISHED_SHARE_INFO_RESPONSE = QName.get("GetPublishedShareInfoResponse", NAMESPACE);
     public static final QName PUBLISH_SHARE_INFO_REQUEST = QName.get("PublishShareInfoRequest", NAMESPACE);
     public static final QName PUBLISH_SHARE_INFO_RESPONSE = QName.get("PublishShareInfoResponse", NAMESPACE);
-    
+
     // Account loggers
     public static final QName ADD_ACCOUNT_LOGGER_REQUEST = QName.get("AddAccountLoggerRequest", NAMESPACE);
     public static final QName ADD_ACCOUNT_LOGGER_RESPONSE = QName.get("AddAccountLoggerResponse", NAMESPACE);
@@ -352,7 +349,7 @@ public class AdminConstants {
     public static final QName ADMIN_DESTROY_WAIT_SET_RESPONSE = QName.get("AdminDestroyWaitSetResponse", NAMESPACE);
     public static final QName QUERY_WAIT_SET_REQUEST = QName.get("QueryWaitSetRequest", NAMESPACE);
     public static final QName QUERY_WAIT_SET_RESPONSE = QName.get("QueryWaitSetResponse", NAMESPACE);
-    
+
     // XMPPComponent
     public static final QName CREATE_XMPPCOMPONENT_REQUEST = QName.get("CreateXMPPComponentRequest", NAMESPACE);
     public static final QName CREATE_XMPPCOMPONENT_RESPONSE = QName.get("CreateXMPPComponentResponse", NAMESPACE);
@@ -362,7 +359,7 @@ public class AdminConstants {
     public static final QName GET_ALL_XMPPCOMPONENTS_RESPONSE = QName.get("GetAllXMPPComponentsResponse", NAMESPACE);
     public static final QName DELETE_XMPPCOMPONENT_REQUEST = QName.get("DeleteXMPPComponentRequest", NAMESPACE);
     public static final QName DELETE_XMPPCOMPONENT_RESPONSE = QName.get("DeleteXMPPComponentResponse", NAMESPACE);
-    
+
     // rights
     public static final QName GET_RIGHT_REQUEST = QName.get("GetRightRequest", NAMESPACE);
     public static final QName GET_RIGHT_RESPONSE = QName.get("GetRightResponse", NAMESPACE);
@@ -390,14 +387,14 @@ public class AdminConstants {
     public static final QName GET_DELEGATED_ADMIN_CONSTRAINTS_RESPONSE = QName.get("GetDelegatedAdminConstraintsResponse", NAMESPACE);
     public static final QName MODIFY_DELEGATED_ADMIN_CONSTRAINTS_REQUEST = QName.get("ModifyDelegatedAdminConstraintsRequest", NAMESPACE);
     public static final QName MODIFY_DELEGATED_ADMIN_CONSTRAINTS_RESPONSE = QName.get("ModifyDelegatedAdminConstraintsResponse", NAMESPACE);
-    
+
     // Monitoring
     public static final QName GET_SERVER_STATS_REQUEST = QName.get("GetServerStatsRequest", NAMESPACE);
     public static final QName GET_SERVER_STATS_RESPONSE = QName.get("GetServerStatsResponse", NAMESPACE);
-    
+
     public static final QName GET_LOGGER_STATS_REQUEST = QName.get("GetLoggerStatsRequest", NAMESPACE);
     public static final QName GET_LOGGER_STATS_RESPONSE = QName.get("GetLoggerStatsResponse", NAMESPACE);
-    
+
     public static final QName SYNC_GAL_ACCOUNT_REQUEST = QName.get("SyncGalAccountRequest", NAMESPACE);
     public static final QName SYNC_GAL_ACCOUNT_RESPONSE = QName.get("SyncGalAccountResponse", NAMESPACE);
 
@@ -406,7 +403,7 @@ public class AdminConstants {
     public static final QName RELOAD_MEMCACHED_CLIENT_CONFIG_RESPONSE = QName.get("ReloadMemcachedClientConfigResponse", NAMESPACE);
     public static final QName GET_MEMCACHED_CLIENT_CONFIG_REQUEST = QName.get("GetMemcachedClientConfigRequest", NAMESPACE);
     public static final QName GET_MEMCACHED_CLIENT_CONFIG_RESPONSE = QName.get("GetMemcachedClientConfigResponse", NAMESPACE);
-    
+
     // noop
     public static final QName NO_OP_REQUEST = QName.get("NoOpRequest", NAMESPACE);
     public static final QName NO_OP_RESPONSE = QName.get("NoOpResponse", NAMESPACE);
@@ -421,7 +418,7 @@ public class AdminConstants {
     public static final String A_ACTIVE_SESSIONS = "activeSessions";
     public static final String A_CREATED_DATE = "cd";
     public static final String A_LAST_ACCESSED_DATE = "ld";
-    
+
     // Dump waitsets
     public static final String A_READY = "ready";
     public static final String A_OWNER = "owner";
@@ -489,14 +486,14 @@ public class AdminConstants {
     public static final String E_OWNER = "owner";
     public static final String E_SHARE = "share";
     public static final String E_DATASOURCE = "datasource";
-    
+
     public static final String A_ACCOUNT = "account";
     public static final String A_CALENDAR_RESOURCE = "calresource";
     public static final String A_COS = "cos";
     public static final String A_DISTRIBUTION_LIST = "distributionlist";
     public static final String A_DOMAIN = "domain";
     public static final String A_SERVER = "server";
-    
+
     public static final String A_ACTION = "action";
     public static final String A_APPLY_CONFIG = "applyConfig";
     public static final String A_APPLY_COS = "applyCos";
@@ -551,7 +548,7 @@ public class AdminConstants {
     public static final String E_TIMEZONE = "timezone";
     public static final String A_TIMEZONE_ID = "id";
     public static final String A_TIMEZONE_DISPLAYNAME = "displayName";
-    
+
     public static final String A_HEALTHY = "healthy";
     public static final String A_SIZE = "s";
     public static final String A_SERVICE = "service";
@@ -559,7 +556,7 @@ public class AdminConstants {
     public static final String A_TIME = "time";
     public static final String A_TYPES = "types";
     public static final String A_NUM_TABLES = "numTables";
-    
+
 
     public static final String A_NUM_EXECUTED = "numExecuted";
     public static final String A_NUM_SUCCEEDED= "numSucceeded";
@@ -577,7 +574,7 @@ public class AdminConstants {
     public static final String A_VOLUME_COMPRESS_BLOBS = "compressBlobs";
     public static final String A_VOLUME_COMPRESSION_THRESHOLD = "compressionThreshold";
     public static final String A_VOLUME_IS_CURRENT = "isCurrent";
-    
+
     // Blob consistency check
     public static final String E_MISSING_BLOBS = "missingBlobs";
     public static final String E_ITEM = "item";
@@ -604,9 +601,9 @@ public class AdminConstants {
     public static final String A_VERSION_INFO_HOST = "host";
     public static final String A_VERSION_INFO_TYPE = "type";
     public static final String A_VERSION_INFO_RELCLASS = "relclass";
-    public static final String A_VERSION_INFO_RELNUM = "relnum";    
+    public static final String A_VERSION_INFO_RELNUM = "relnum";
     public static final String A_VERSION_INFO_BUILDNUM = "buildnum";
-    
+
     public static final String E_LICENSE_EXPIRATION = "expiration";
     public static final String A_LICENSE_EXPIRATION_DATE = "date";
 
@@ -635,23 +632,23 @@ public class AdminConstants {
     public static final String A_TZFIXUP_AFTER = "after";
     public static final String A_TZFIXUP_SYNC = "sync";
     public static final String A_FLUSH = "flush";
-    
+
     // Account loggers
     public static final String E_LOGGER = "logger";
     public static final String E_ACCOUNT_LOGGER = "accountLogger";
     public static final String A_CATEGORY = "category";
     public static final String A_LEVEL = "level";
-    
+
     public static final String A_PROPAGATE = "propagate";
     public static final String A_START = "start";
     public static final String A_END = "end";
     public static final String A_PREFIX = "prefix";
     public static final String A_QUEUE = "queue";
-    
+
     // mailbox stats
     public static final String A_NUM_MBOXES = "numMboxes";
     public static final String A_TOTAL_SIZE = "totalSize";
-    
+
     // mailbox table
     public static final String A_MT_ID               = "id";
     public static final String A_MT_GROUPID          = "groupId";
@@ -668,7 +665,7 @@ public class AdminConstants {
     public static final String A_MT_NEWNESSAGES      = "newMessages";
     public static final String A_MT_IDXDEFERREDCOUNT = "idxDeferredCount";
     public static final String A_MI_HIGHEST_INDEXED  = "highestIndexed";
-    
+
     // right
     public static final String E_ALL         = "all";
     public static final String E_ATTRS       = "attrs";
@@ -703,12 +700,12 @@ public class AdminConstants {
     public static final String A_RIGHT       = "right";
     public static final String A_TARGET_TYPE = "targetType";
     public static final String A_SECRET      = "secret";
-    
+
     public static final String E_WAITSET = "waitSet";
-    
+
     // Monitoring
     public static final String E_STAT = "stat";
-    
+
     public static final String A_FULLSYNC = "fullSync";
     public static final String A_RESET    = "reset";
     public static final String A_HAS_KEYWORD = "hasKeyword";
@@ -719,16 +716,16 @@ public class AdminConstants {
     public static final String A_MEMCACHED_CLIENT_CONFIG_BINARY_PROTOCOL = "binaryProtocol";
     public static final String A_MEMCACHED_CLIENT_CONFIG_DEFAULT_EXPIRY_SECONDS = "defaultExpirySeconds";
     public static final String A_MEMCACHED_CLIENT_CONFIG_DEFAULT_TIMEOUT_MILLIS = "defaultTimeoutMillis";
-    
+
     // CheckExchangeAuth
     public static final String E_AUTH = "auth";
     public static final String A_URL = "url";
     public static final String A_USER = "user";
     public static final String A_PASS = "pass";
     public static final String A_SCHEME = "scheme";
-    
+
     // flush cache
     public static final String A_ALLSERVERS = "allServers";
-    
+
     public static final String A_SYNCHRONOUS = "synchronous";
 }

@@ -48,15 +48,15 @@ public class LC {
         return value;
     }
 
-	// Force reload of the config file
-	//
+    // Force reload of the config file
+    //
     public static String[] getAllKeys() {
         return LocalConfig.getInstance().allKeys();
     }
 
-	public static void readConfig() throws DocumentException, ConfigException {
-		LocalConfig.readConfig(null);
-	}
+    public static void readConfig() throws DocumentException, ConfigException {
+        LocalConfig.readConfig(null);
+    }
 
     static void init() {
         // This method is there to guarantee static initializer of this
@@ -154,8 +154,6 @@ public class LC {
     public static final KnownKey zimbra_rights_delegated_admin_supported;
 
     public static final KnownKey zimbra_spam_report_queue_size;
-
-    public static final KnownKey zimbra_throttle_op_concurrency;
 
     public static final KnownKey zimbra_web_generate_gzip;
 
@@ -786,9 +784,6 @@ public class LC {
         zimbra_spam_report_queue_size = new KnownKey("zimbra_spam_report_queue_size");
         zimbra_spam_report_queue_size.setDefault("100");
 
-        zimbra_throttle_op_concurrency = new KnownKey("zimbra_throttle_op_concurrency");
-        zimbra_throttle_op_concurrency.setDefault("1000,1000,1000,1000,1000");
-
         zimbra_web_generate_gzip = new KnownKey("zimbra_web_generate_gzip", "true");
 
         zimbra_im_chat_flush_time = new KnownKey("zimbra_im_chat_flush_time", "300");
@@ -1313,17 +1308,17 @@ public class LC {
         zimbra_mtareport_max_hosts = new KnownKey("zimbra_mtareport_max_hosts");
         zimbra_mtareport_max_hosts.setDefault("50");
 
-		zmmtaconfig_enable_config_restarts = new KnownKey("zmmtaconfig_enable_config_restarts");
-		zmmtaconfig_enable_config_restarts.setDefault("TRUE");
+        zmmtaconfig_enable_config_restarts = new KnownKey("zmmtaconfig_enable_config_restarts");
+        zmmtaconfig_enable_config_restarts.setDefault("TRUE");
 
-		zmmtaconfig_interval = new KnownKey("zmmtaconfig_interval");
-		zmmtaconfig_interval.setDefault("60");
+        zmmtaconfig_interval = new KnownKey("zmmtaconfig_interval");
+        zmmtaconfig_interval.setDefault("60");
 
-		zmmtaconfig_log_level = new KnownKey("zmmtaconfig_log_level");
-		zmmtaconfig_log_level.setDefault("3");
+        zmmtaconfig_log_level = new KnownKey("zmmtaconfig_log_level");
+        zmmtaconfig_log_level.setDefault("3");
 
-		zmmtaconfig_listen_port = new KnownKey("zmmtaconfig_listen_port");
-		zmmtaconfig_listen_port.setDefault("7171");
+        zmmtaconfig_listen_port = new KnownKey("zmmtaconfig_listen_port");
+        zmmtaconfig_listen_port.setDefault("7171");
 
         zimbra_auth_always_send_refer = new KnownKey("zimbra_auth_always_send_refer");
         zimbra_auth_always_send_refer.setDefault("false");
