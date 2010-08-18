@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.index;
 
+import java.util.Collections;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -31,6 +32,7 @@ import com.zimbra.cs.index.queryparser.Token;
 import com.zimbra.cs.index.queryparser.ZimbraQueryParser;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MockMailboxManager;
+import com.zimbra.cs.service.util.ItemId;
 
 /**
  * Unit test for {@link ZimbraQuery}.
@@ -40,8 +42,10 @@ import com.zimbra.cs.mailbox.MockMailboxManager;
 public class ZimbraQueryTest {
 
     @BeforeClass
-    public static void init() {
+    public static void init() throws Exception {
         Provisioning.setInstance(new MockProvisioning());
+        Provisioning.getInstance().createAccount("zero@zimbra.com", "secret",
+                Collections.singletonMap(Provisioning.A_zimbraId, (Object) "0"));
     }
 
     @Test
@@ -118,6 +122,27 @@ public class ZimbraQueryTest {
             Assert.fail();
         } catch (ParseException expected) {
         }
+    }
+
+    @Test
+    public void inAnyFolder() throws Exception {
+        Mailbox mbox = new MockMailboxManager().getMailboxByAccountId("0");
+
+        ZimbraQuery.BaseQuery query = ZimbraQuery.InQuery.Create(mbox, null, 0,
+                new ItemId("0", 1), null, true);
+        Assert.assertEquals("Q(IN,UNDER:ANY_FOLDER", query.toString());
+
+        query = ZimbraQuery.InQuery.Create(mbox, null, 0,
+                new ItemId("0", 1), null, false);
+        Assert.assertEquals("Q(IN,IN:1)", query.toString());
+
+        query = ZimbraQuery.InQuery.Create(mbox, null, 0,
+                new ItemId("1", 1), null, true);
+        Assert.assertEquals("Q(IN,UNDER:1:1)", query.toString());
+
+        query = ZimbraQuery.InQuery.Create(mbox, null, 0,
+                new ItemId("1", 1), null, false);
+        Assert.assertEquals("Q(IN,IN:1:1)", query.toString());
     }
 
 }

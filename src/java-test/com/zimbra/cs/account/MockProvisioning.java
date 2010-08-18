@@ -34,7 +34,8 @@ import com.zimbra.cs.mime.MimeTypeInfo;
  */
 public class MockProvisioning extends Provisioning {
 
-    private Map<String, Account> accounts = new HashMap<String, Account>();
+    private Map<String, Account> id2account = new HashMap<String, Account>();
+    private Map<String, Account> name2account = new HashMap<String, Account>();
     private Map<String, List<MimeTypeInfo>> mimeConfig =
         new HashMap<String, List<MimeTypeInfo>>();
     private Config config = new Config(new HashMap<String, Object>(), this);
@@ -46,7 +47,9 @@ public class MockProvisioning extends Provisioning {
 
         Account account = new Account(email, email, attrs, null, this);
         try {
-            return accounts.put(email, account);
+            name2account.put(email, account);
+            id2account.put(account.getId(), account);
+            return account;
         } finally {
             validate(ProvisioningValidator.CREATE_ACCOUNT_SUCCEEDED, email, account);
         }
@@ -54,7 +57,13 @@ public class MockProvisioning extends Provisioning {
 
     @Override
     public Account get(AccountBy keyType, String key) {
-        return accounts.get(key);
+        switch (keyType) {
+            case name:
+                return name2account.get(key);
+            case id:
+            default:
+                return id2account.get(key);
+        }
     }
 
     @Override

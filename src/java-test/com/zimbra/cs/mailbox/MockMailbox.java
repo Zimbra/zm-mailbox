@@ -18,8 +18,14 @@ package com.zimbra.cs.mailbox;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 
+/**
+ * Mock implementation of {@link Mailbox} for testing.
+ *
+ * @author ysasaki
+ */
 class MockMailbox extends Mailbox {
 
     private Account account;
@@ -44,6 +50,27 @@ class MockMailbox extends Mailbox {
     @Override
     public Account getAccount() {
         return account;
+    }
+
+    @Override
+    public String getAccountId() {
+        return account.getId();
+    }
+
+    @Override
+    public Folder getFolderById(OperationContext octxt, int id)
+        throws ServiceException {
+
+        return getFolderById(id);
+    }
+
+    @Override
+    public Folder getFolderById(int id) throws ServiceException {
+        MailItem.UnderlyingData data = new MailItem.UnderlyingData();
+        data.type = MailItem.TYPE_FOLDER;
+        data.id = id;
+        data.name = String.valueOf(id);
+        return new Folder(this, data);
     }
 
 }

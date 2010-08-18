@@ -861,43 +861,51 @@ public final class ZimbraQuery {
         public static final Integer IN_REMOTE_FOLDER = new Integer(-4);
         public static final Integer IN_NO_FOLDER = new Integer(-5);
 
+        /**
+         * @param analyzer not used
+         */
         public static BaseQuery Create(Mailbox mailbox, Analyzer analyzer,
                 int modifier, Integer folderId, boolean includeSubfolders)
                 throws ServiceException {
             if (folderId < 0) {
-                InQuery toRet = new InQuery(mailbox, null, null, null, folderId,
-                        includeSubfolders, analyzer, modifier);
-                // toRet.mSpecialTarget = folderId;
-                return toRet;
+                return new InQuery(null, null, null, folderId,
+                        includeSubfolders, modifier);
+            } else if (includeSubfolders &&
+                    folderId == Mailbox.ID_FOLDER_USER_ROOT) {
+                return new InQuery(null, null, null, IN_ANY_FOLDER,
+                        includeSubfolders, modifier);
             } else {
                 Folder folder = mailbox.getFolderById(null, folderId.intValue());
-                InQuery toRet = new InQuery(mailbox, folder, null, null, null,
-                        includeSubfolders, analyzer, modifier);
-                // toRet.mFolder = folder;
-                return toRet;
+                return new InQuery(folder, null, null, null,
+                        includeSubfolders, modifier);
             }
         }
 
+        /**
+         * @param analyzer not used
+         */
         public static BaseQuery Create(Mailbox mailbox, Analyzer analyzer,
                 int modifier, String folderName, boolean includeSubfolders)
                 throws ServiceException {
             Pair<Folder, String> result = mailbox.getFolderByPathLongestMatch(
                     null, Mailbox.ID_FOLDER_USER_ROOT, folderName);
-            return recursiveResolve(mailbox, analyzer, modifier,
-                    result.getFirst(), result.getSecond(), includeSubfolders);
+            return recursiveResolve(mailbox, modifier, result.getFirst(),
+                    result.getSecond(), includeSubfolders);
         }
 
+        /**
+         * @param analyzer not used
+         */
         public static BaseQuery Create(Mailbox mailbox, Analyzer analyzer,
                 int modifier, ItemId iid, String subfolderPath,
                 boolean includeSubfolders) throws ServiceException {
-            if (!iid.belongsTo(mailbox)) {
-                InQuery toRet = new InQuery(mailbox, null, iid, subfolderPath,
-                        null, includeSubfolders, analyzer, modifier);
-                // toRet.mFolder = null;
-                // toRet.mRemoteId = iid;
-                // toRet.mSubfolderPath = subfolderPath;
-                return toRet;
-            } else {
+
+            if (iid.belongsTo(mailbox)) { // local
+                if (includeSubfolders &&
+                        iid.getId() == Mailbox.ID_FOLDER_USER_ROOT) {
+                    return new InQuery(null, iid, subfolderPath, IN_ANY_FOLDER,
+                            includeSubfolders, modifier);
+                }
                 // find the base folder
                 Pair<Folder, String> result;
                 if (subfolderPath != null && subfolderPath.length() > 0) {
@@ -907,8 +915,11 @@ public final class ZimbraQuery {
                     Folder f = mailbox.getFolderById(null, iid.getId());
                     result = new Pair<Folder, String>(f, null);
                 }
-                return recursiveResolve(mailbox, analyzer, modifier,
-                        result.getFirst(), result.getSecond(), includeSubfolders);
+                return recursiveResolve(mailbox, modifier, result.getFirst(),
+                        result.getSecond(), includeSubfolders);
+            } else { // remote
+                return new InQuery(null, iid, subfolderPath, null,
+                        includeSubfolders, modifier);
             }
         }
 
@@ -916,51 +927,39 @@ public final class ZimbraQuery {
          * Resolve through local mountpoints until we get to the actual folder,
          * or until we get to a remote folder.
          */
-        private static BaseQuery recursiveResolve(Mailbox mailbox,
-                Analyzer analyzer, int modifier, Folder baseFolder,
-                String subfolderPath, boolean includeSubfolders)
-                throws ServiceException {
+        private static BaseQuery recursiveResolve(Mailbox mailbox, int modifier,
+                Folder baseFolder, String subfolderPath,
+                boolean includeSubfolders) throws ServiceException {
 
             if (!(baseFolder instanceof Mountpoint)) {
                 if (subfolderPath != null) {
                     throw MailServiceException.NO_SUCH_FOLDER(
                             baseFolder.getPath() + "/" + subfolderPath);
                 }
-                InQuery toRet = new InQuery(mailbox, baseFolder, null, null,
-                        null, includeSubfolders, analyzer, modifier);
-                // toRet.mFolder = baseFolder;
-                return toRet;
+                return new InQuery(baseFolder, null, null, null,
+                        includeSubfolders, modifier);
             } else {
                 Mountpoint mpt = (Mountpoint) baseFolder;
-
-                if  (mpt.isLocal()) {
-                    // local!
+                if (mpt.isLocal()) { // local
                     if (subfolderPath == null || subfolderPath.length() == 0) {
-                        InQuery toRet = new InQuery(mailbox, baseFolder, null,
-                                null, null, includeSubfolders, analyzer, modifier);
-                        // toRet.mFolder = baseFolder;
-                        return toRet;
+                        return new InQuery(baseFolder, null, null, null,
+                                includeSubfolders, modifier);
                     } else {
                         Folder newBase = mailbox.getFolderById(null,
                                 mpt.getRemoteId());
-                        return recursiveResolve(mailbox, analyzer, modifier,
+                        return recursiveResolve(mailbox, modifier,
                                 newBase, subfolderPath, includeSubfolders);
                     }
-                } else {
-                    // remote!
-                    InQuery toRet = new InQuery(mailbox, null, mpt.getTarget(),
-                            subfolderPath, null, includeSubfolders, analyzer,
-                            modifier);
-                    // toRet.mRemoteId = new ItemId(mpt.getOwnerId(), mpt.getRemoteId());
-                    // toRet.mSubfolderPath = subfolderPath;
-                    return toRet;
+                } else { // remote
+                    return new InQuery(null, mpt.getTarget(), subfolderPath,
+                            null, includeSubfolders, modifier);
                 }
             }
         }
 
-        private InQuery(Mailbox mailbox, Folder folder, ItemId remoteId,
+        private InQuery(Folder folder, ItemId remoteId,
                 String subfolderPath, Integer specialTarget,
-                boolean includeSubfolders, Analyzer analyzer, int modifier) {
+                boolean includeSubfolders, int modifier) {
             super(modifier, ZimbraQueryParser.IN);
             mFolder = folder;
             mRemoteId = remoteId;

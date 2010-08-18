@@ -15,7 +15,7 @@
 
 package com.zimbra.cs.mailbox;
 
-import java.util.HashMap;
+import java.util.Collections;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -24,6 +24,11 @@ import org.testng.Assert;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 
+/**
+ * Unit test for {@link ContactAutoComplete}.
+ *
+ * @author ysasaki
+ */
 public class ContactAutoCompleteTest {
 
     @BeforeClass
@@ -31,14 +36,14 @@ public class ContactAutoCompleteTest {
         Provisioning.setInstance(new MockProvisioning());
         MailboxManager.setInstance(new MockMailboxManager());
         Provisioning.getInstance().createAccount("test@zimbra.com", "secret",
-                new HashMap<String, Object>());
+                Collections.singletonMap(Provisioning.A_zimbraId, (Object) "0"));
     }
 
     @Test
     public void hitContact() throws Exception {
         ContactAutoComplete.AutoCompleteResult result =
             new ContactAutoComplete.AutoCompleteResult(10);
-        result.rankings = new ContactRankings("test@zimbra.com");
+        result.rankings = new ContactRankings("0");
         ContactAutoComplete.ContactEntry contact =
             new ContactAutoComplete.ContactEntry();
         contact.mDisplayName = "C1";
@@ -57,7 +62,7 @@ public class ContactAutoCompleteTest {
     public void hitGroup() throws Exception {
         ContactAutoComplete.AutoCompleteResult result =
             new ContactAutoComplete.AutoCompleteResult(10);
-        result.rankings = new ContactRankings("test@zimbra.com");
+        result.rankings = new ContactRankings("0");
         ContactAutoComplete.ContactEntry group =
             new ContactAutoComplete.ContactEntry();
         group.mDisplayName = "G1";
