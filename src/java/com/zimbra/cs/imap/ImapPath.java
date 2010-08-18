@@ -397,7 +397,7 @@ public class ImapPath implements Comparable<ImapPath> {
                         if (zfolder != null) {
                             subpathRemote = path.substring(Math.min(path.length(), index + 1));
     
-                            if (zfolder instanceof ZMountpoint || subpathRemote.isEmpty()) {
+                            if (zfolder instanceof ZMountpoint || subpathRemote.equals("")) {
                                 mFolder = zfolder;
                                 mItemId = new ItemId(zfolder.getId(), accountId);
                             }
