@@ -65,6 +65,9 @@ public class MailServiceException extends ServiceException {
     public static final String WRONG_MAILBOX   = "mail.WRONG_MAILBOX";
     public static final String MODIFY_CONFLICT = "mail.MODIFY_CONFLICT";
     public static final String TRY_AGAIN       = "mail.TRY_AGAIN";
+    public static final String CANNOT_LOCK     = "mail.CANNOT_LOCK";
+    public static final String CANNOT_UNLOCK   = "mail.CANNOT_UNLOCK";
+    public static final String LOCKED          = "mail.LOCKED";
 
     public static final String SCAN_ERROR      = "mail.SCAN_ERROR";
     public static final String UPLOAD_REJECTED = "mail.UPLOAD_REJECTED";
@@ -494,5 +497,25 @@ public class MailServiceException extends ServiceException {
     
     public static MailServiceException TEMPORARY_ANALYSIS_ERROR() {
         return new MailServiceException("Temporary Analysis Error", MailServiceException.TEMPORARY_ANALYSIS_ERROR, RECEIVERS_FAULT);
+    }
+
+    public static MailServiceException CANNOT_LOCK(int id) {
+        return new MailServiceException("cannot lock item: " + id, CANNOT_LOCK, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
+    }
+
+    public static MailServiceException CANNOT_LOCK(int id, String accountId) {
+        return new MailServiceException("cannot lock item: " + id, CANNOT_LOCK, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID), new Argument(ACCOUNT_ID, accountId, Argument.Type.ACCTID));
+    }
+
+    public static MailServiceException CANNOT_UNLOCK(int id) {
+        return new MailServiceException("cannot unlock item: " + id, CANNOT_UNLOCK, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
+    }
+
+    public static MailServiceException CANNOT_UNLOCK(int id, String accountId) {
+        return new MailServiceException("cannot unlock item: " + id, CANNOT_UNLOCK, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID), new Argument(ACCOUNT_ID, accountId, Argument.Type.ACCTID));
+    }
+    
+    public static MailServiceException LOCKED(int id) {
+        return new MailServiceException("item is locked: " + id, LOCKED, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
 }

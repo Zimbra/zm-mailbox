@@ -166,7 +166,10 @@ public abstract class RedoableOp {
 
     public static final int OP_SET_CUSTOM_DATA          = 73;
 
-    public static final int OP_LAST                     = 74;
+    public static final int OP_LOCK_ITEM                = 74;
+    public static final int OP_UNLOCK_ITEM              = 75;
+    
+    public static final int OP_LAST                     = 76;
 
 
     // Element index is same as Redoable.OP_* constants.
@@ -245,7 +248,9 @@ public abstract class RedoableOp {
         "FixCalendarItemTZ",            // 70
         "DateItem",
         "SetFolderDefaultView",
-        "SetCustomData"
+        "SetCustomData",
+        "LockItem",
+        "UnlockItem"
     };
 
     public static String getOpClassName(int opcode) {

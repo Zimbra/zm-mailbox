@@ -68,6 +68,8 @@ public class ItemAction extends MailDocumentHandler {
     public static final String OP_TRASH       = "trash";
     public static final String OP_RENAME      = "rename";
     public static final String OP_UPDATE      = "update";
+    public static final String OP_LOCK        = "lock";
+    public static final String OP_UNLOCK      = "unlock";
 
     @Override public Element handle(Element request, Map<String, Object> context)
     throws ServiceException, SoapFaultException {
@@ -165,6 +167,10 @@ public class ItemAction extends MailDocumentHandler {
                 MailItem.Color color = getColor(action);
                 localResults = ItemActionHelper.UPDATE(octxt, mbox, responseProto, local, type, tcon, name, iidFolder, flags, 
                         tags, color).getResult();
+            } else if (opStr.equals(OP_LOCK)) {
+                localResults = ItemActionHelper.LOCK(octxt, mbox, responseProto, local, type, tcon).getResult();
+            } else if (opStr.equals(OP_UNLOCK)) {
+                localResults = ItemActionHelper.UNLOCK(octxt, mbox, responseProto, local, type, tcon).getResult();
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + opStr, null);
             }

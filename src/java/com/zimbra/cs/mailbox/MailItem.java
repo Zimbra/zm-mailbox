@@ -203,6 +203,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         public int    modMetadata;
         public int    dateChanged;
         public int    modContent;
+        public String lockUser;
 
         /** Returns the item's blob digest, or <tt>null</tt> if the item has no blob. */
         public String getBlobDigest() {
@@ -233,6 +234,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             data.tags        = this.tags;
             data.subject     = this.subject;
             data.unreadCount = this.unreadCount;
+            data.lockUser    = this.lockUser;
             return data;
         }
 
@@ -275,6 +277,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         private static final String FN_MOD_METADATA = "modm";
         private static final String FN_MOD_CONTENT  = "modc";
         private static final String FN_DATE_CHANGED = "dc";
+        private static final String FN_LOCK_USER    = "lu";
 
         Metadata serialize() {
             Metadata meta = new Metadata();
@@ -297,6 +300,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             meta.put(FN_MOD_METADATA, modMetadata);
             meta.put(FN_MOD_CONTENT, modContent);
             meta.put(FN_DATE_CHANGED, dateChanged);
+            meta.put(FN_LOCK_USER, lockUser);
             return meta;
         }
 
@@ -320,6 +324,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             modMetadata = (int) meta.getLong(FN_MOD_METADATA, 0);
             modContent = (int) meta.getLong(FN_MOD_CONTENT, 0);
             dateChanged = (int) meta.getLong(FN_DATE_CHANGED, 0);
+            lockUser = meta.get(FN_LOCK_USER, null);
         }
     }
 
@@ -2905,6 +2910,64 @@ public abstract class MailItem implements Comparable<MailItem> {
         DbMailItem.saveData(this, mData.subject, sender, metadata);
     }
 
+    /**
+     * Locks this MailItem with exclusive write lock.
+     * When a MailItem is locked, only the user who locked the item 
+     * can move the item or change the content.
+     * 
+     * @param authuser
+     * @throws ServiceException
+     */
+    void lock(Account authuser) throws ServiceException {
+        if (!isLockingSupported())
+            throw MailServiceException.CANNOT_LOCK(mId);
+        if (mData.lockUser != null && 
+                mData.lockUser.compareToIgnoreCase(authuser.getId()) != 0)
+            throw MailServiceException.CANNOT_LOCK(mId, mData.lockUser);
+        mData.lockUser = authuser.getId();
+        saveMetadata();
+    }
+
+    /**
+     * Unlocks this MailItem.  The user who previously locked
+     * the item, or anyone who has admin privilige to this
+     * MailItem can perform unlock operation.
+     * 
+     * @param authuser
+     * @throws ServiceException
+     */
+    void unlock(Account authuser) throws ServiceException {
+        if (mData.lockUser == null)
+            return;
+        if (!isLockingSupported())
+            throw MailServiceException.CANNOT_UNLOCK(mId);
+        if (mData.lockUser.compareToIgnoreCase(authuser.getId()) != 0 &&
+                checkRights(ACL.RIGHT_ADMIN, authuser, false) == 0)
+            throw MailServiceException.CANNOT_UNLOCK(mId, mData.lockUser);
+        mData.lockUser = null;
+        saveMetadata();
+    }
+    
+    /**
+     * to be over-ridden by MailItem subclasses that support locking.
+     * @return true if the item supports locking
+     * @throws ServiceException
+     */
+    protected boolean isLockingSupported() throws ServiceException {
+        // locking is supported for Document item only
+        return false;
+    }
+    
+    /**
+     * @return true if the authenticated user has the lock, or
+     *              if the item is unlocked 
+     * @throws ServiceException
+     */
+    protected boolean hasLock() throws ServiceException {
+        if (!isLockingSupported() || mData.lockUser == null)
+            return true;
+        return mMailbox.getAuthenticatedAccount().getId().compareToIgnoreCase(mData.lockUser) == 0;
+    }
 
     private static final String CN_ID           = "id";
     private static final String CN_TYPE         = "type";

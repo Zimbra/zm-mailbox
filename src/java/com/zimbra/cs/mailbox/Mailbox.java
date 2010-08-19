@@ -7425,6 +7425,35 @@ public class Mailbox {
         ZimbraLog.cache.debug("Cache hit for " + MailItem.getNameForType(type) + " " + key + " in mailbox " + getId());
     }
 
+    public synchronized MailItem lock(OperationContext octxt, int itemId, byte type, String accountId) throws ServiceException {
+        LockItem redoRecorder = new LockItem(mId, itemId, type, accountId);
+
+        boolean success = false;
+        try {
+            beginTransaction("lock", octxt, redoRecorder);
+            MailItem item = getItemById(itemId, type);
+            item.lock(Provisioning.getInstance().getAccountById(accountId));
+            success = true;
+            return item;
+        } finally {
+            endTransaction(success);
+        }
+    }
+    
+    public synchronized void unlock(OperationContext octxt, int itemId, byte type, String accountId) throws ServiceException {
+        UnlockItem redoRecorder = new UnlockItem(mId, itemId, type, accountId);
+
+        boolean success = false;
+        try {
+            beginTransaction("unlock", octxt, redoRecorder);
+            MailItem item = getItemById(itemId, type);
+            item.unlock(Provisioning.getInstance().getAccountById(accountId));
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+    
     private static final String CN_ID         = "id";
     private static final String CN_ACCOUNT_ID = "account_id";
     private static final String CN_NEXT_ID    = "next_item_id";

@@ -30,6 +30,7 @@ import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.MailboxBlob;
+import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -173,7 +174,7 @@ public class Document extends MailItem {
         pd.setVersion(doc.getVersion());
         return doc;
     }
-
+    
     @Override void decodeMetadata(Metadata meta) throws ServiceException {
         // roll forward from the old versioning mechanism (old revisions are lost)
         MetadataList revlist = meta.getList(Metadata.FN_REVISIONS, true);
@@ -230,5 +231,21 @@ public class Document extends MailItem {
 
     @Override protected boolean trackUserAgentInMetadata() {
         return true;
+    }
+
+    @Override protected boolean isLockingSupported() {
+        return true;
+    }
+    
+    @Override MailboxBlob setContent(StagedBlob staged, Object content) throws ServiceException, IOException {
+        if (!hasLock())
+            throw MailServiceException.LOCKED(mId);
+        return super.setContent(staged, content);
+    }
+    
+    @Override boolean move(Folder target) throws ServiceException {
+        if (!hasLock())
+            throw MailServiceException.LOCKED(mId);
+        return super.move(target);
     }
 }

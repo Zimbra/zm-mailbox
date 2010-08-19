@@ -152,7 +152,22 @@ public class ItemActionHelper {
         return ia;
     }
                 
-    
+    public static ItemActionHelper LOCK(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+            List<Integer> ids, byte type, TargetConstraint tcon)
+    throws ServiceException {
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.LOCK, type, true, tcon);
+        ia.schedule();
+        return ia;
+    }
+
+    public static ItemActionHelper UNLOCK(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+            List<Integer> ids, byte type, TargetConstraint tcon)
+    throws ServiceException {
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.UNLOCK, type, true, tcon);
+        ia.schedule();
+        return ia;
+    }
+
     public static enum Op {
         TAG("tag"),
         FLAG("flag"),
@@ -163,8 +178,9 @@ public class ItemActionHelper {
         COPY("copy"),
         SPAM("spam"),
         RENAME("rename"),
-        UPDATE("update")
-        ;
+        UPDATE("update"),
+        LOCK("lock"),
+        UNLOCK("unlock");
         
         private String mStr;
 
@@ -370,6 +386,14 @@ public class ItemActionHelper {
                     getMailbox().setTags(getOpCtxt(), mIds, mItemType, mFlags, mTags, mTargetConstraint);
                 if (mColor != null)
                     getMailbox().setColor(getOpCtxt(), mIds, mItemType, mColor);
+                break;
+            case LOCK:
+                for (int id : mIds)
+                    getMailbox().lock(getOpCtxt(), id, mItemType, mAuthenticatedAccount.getId());
+                break;
+            case UNLOCK:
+                for (int id : mIds)
+                    getMailbox().unlock(getOpCtxt(), id, mItemType, mAuthenticatedAccount.getId());
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);
