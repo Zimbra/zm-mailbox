@@ -1466,7 +1466,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     throw ImapServiceException.CANT_RENAME_INBOX();
                 ZMailbox zmbx = (ZMailbox) mboxobj;
                 ZFolder zfolder = (ZFolder) oldPath.getFolder();
-                zmbx.renameFolder(zfolder.getId(), newPath.asResolvedPath());
+                zmbx.renameFolder(zfolder.getId(), "/" + newPath.asResolvedPath());
             } else {
                 ZimbraLog.imap.info("RENAME failed: cannot get mailbox for path: " + oldPath);
                 sendNO(tag, "RENAME failed");
