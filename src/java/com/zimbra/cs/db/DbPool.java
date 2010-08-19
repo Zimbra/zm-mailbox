@@ -298,6 +298,7 @@ public class DbPool {
         if (!isInitialized()) {
             throw ServiceException.FAILURE("Database connection pool not initialized.", null);
         }
+        assert(mbox == null || Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
         long start = ZimbraPerf.STOPWATCH_DB_CONN.start();
 
         // If the connection pool is overutilized, warn about potential leaks
