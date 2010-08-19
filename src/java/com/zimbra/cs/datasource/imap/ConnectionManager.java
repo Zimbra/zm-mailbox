@@ -27,6 +27,7 @@ import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.mailclient.MailConfig.Security;
 import com.zimbra.cs.mailclient.auth.Authenticator;
+import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.DataHandler;
 import com.zimbra.cs.mailclient.imap.IDInfo;
@@ -136,15 +137,19 @@ final class ConnectionManager {
     
     private static ImapConnection newConnection(DataSource ds, Authenticator auth)
         throws ServiceException {
-        ImapConnection ic = new ImapConnection(newImapConfig(ds));
+    	ImapConfig config = newImapConfig(ds);
+        ImapConnection ic = new ImapConnection(config);
         ic.setDataHandler(new FetchDataHandler());
         try {
             ic.connect();
             try {
-                if (auth != null) {
-                    ic.authenticate(auth);
-                } else {
+            	if(config.getMechanism() != null) {
+            	    auth = AuthenticatorFactory.getDefault().newAuthenticator(config, ds.getDecryptedPassword());
+            	}
+                if (auth == null) {
                     ic.login(ds.getDecryptedPassword());
+                } else {
+                    ic.authenticate(auth);
                 }
             } catch (CommandFailedException e) {
                 throw new LoginException(e.getError());
@@ -194,12 +199,14 @@ final class ConnectionManager {
         }
     }
     
-    private static ImapConfig newImapConfig(DataSource ds) {
+    public static ImapConfig newImapConfig(DataSource ds) {
         ImapConfig config = new ImapConfig();
         config.setHost(ds.getHost());
         config.setPort(ds.getPort());
         config.setAuthenticationId(ds.getUsername());
         config.setSecurity(getSecurity(ds));
+        config.setMechanism(ds.getAuthMechanism());
+        config.setAuthorizationId(ds.getAuthId());
         // bug 37982: Disable use of LITERAL+ due to problems with Yahoo IMAP.
         // Avoiding LITERAL+ also gives servers a chance to reject uploaded
         // messages that are too big, since the server must send a continuation
