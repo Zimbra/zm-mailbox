@@ -57,6 +57,8 @@ import com.zimbra.cs.util.tnef.mapi.ChangedInstanceInfo;
 import com.zimbra.cs.util.tnef.mapi.ExceptionInfoOverrideFlag;
 import com.zimbra.cs.util.tnef.mapi.MapiPropertyId;
 import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
+import com.zimbra.cs.util.tnef.mapi.TaskMode;
+import com.zimbra.cs.util.tnef.mapi.TaskStatus;
 import com.zimbra.cs.util.tnef.mapi.TimeZoneDefinition;
 import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.SentBy;
@@ -230,13 +232,22 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             DateTime icalStartDate = schedView.getStartTime();
             DateTime icalEndDate = schedView.getEndTime();
             DateTime icalDueDate = schedView.getDueDate();
+            DateTime icalDateTaskCompleted = schedView.getDateTaskCompleted();
             DateTime icalCreateDate =
-                MapiPropertyId.PidTagCreationTime.getUtcDateTime(schedView);
+                MapiPropertyId.PidTagCreationTime.getDateTimeAsUTC(schedView);
             DateTime icalLastModDate =
-                MapiPropertyId.PidTagLastModificationTime.getUtcDateTime(schedView);
+                MapiPropertyId.PidTagLastModificationTime.getDateTimeAsUTC(schedView);
             DateTime recurrenceIdDateTime = schedView.getRecurrenceIdTime();
             DateTime attendeeCriticalChange = schedView.getAttendeeCriticalChange();
             DateTime ownerCriticalChange = schedView.getOwnerCriticalChange();
+            int percentComplete = schedView.getPercentComplete();
+            TaskStatus taskStatus = schedView.getTaskStatus();
+            TaskMode taskMode = schedView.getTaskMode();
+            String mileage = schedView.getMileage();
+            String billingInfo = schedView.getBillingInfo();
+            String companies = schedView.getCompanies();
+            Integer actualEffort = schedView.getActualEffort();
+            Integer estimatedEffort = schedView.getEstimatedEffort();
             List <String> categories = schedView.getCategories();
             String descriptionText = null;
             String summary = null;
@@ -352,10 +363,27 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                         icalEndDate, endTimeTZinfo, isAllDayEvent);
             } else {
                 if (this.icalType == ICALENDAR_TYPE.VTODO) {
-                    IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTSTART,
-                            icalStartDate, startTimeTZinfo, true);
-                    IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DUE,
-                            icalDueDate, startTimeTZinfo, true);
+                    IcalUtil.addFloatingDateProperty(icalOutput, Property.DTSTART, icalStartDate);
+                    IcalUtil.addFloatingDateProperty(icalOutput, Property.DUE, icalDueDate);
+                    Status icalStatus = null;
+                    if (method.equals(Method.CANCEL)) {
+                        icalStatus = Status.VTODO_CANCELLED;
+                    } else if (taskStatus != null) {
+                        if (taskStatus.equals(TaskStatus.COMPLETE)) {
+                            icalStatus = Status.VTODO_COMPLETED;
+                        } else if (taskStatus.equals(TaskStatus.IN_PROGRESS)) {
+                            icalStatus = Status.VTODO_IN_PROCESS;
+                        }
+                    }
+                    IcalUtil.addProperty(icalOutput, icalStatus);
+
+                    if (percentComplete != 0) {
+                        IcalUtil.addProperty(icalOutput, Property.PERCENT_COMPLETE,
+                                percentComplete, false);
+                    }
+                    // COMPLETED must be a UTC DATE-TIME according to rfc5545
+                    IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.COMPLETED,
+                            icalDateTaskCompleted, null, false);
                 } else {
                     IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTSTART,
                             icalStartDate, startTimeTZinfo, isAllDayEvent);
@@ -406,6 +434,27 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                     IcalUtil.addProperty(icalOutput, myCategories);
                 }
             }
+            if (taskStatus != null) {
+                if  (   taskStatus.equals(TaskStatus.DEFERRED) ||
+                        taskStatus.equals(TaskStatus.WAITING_ON_OTHER) ) {
+                    IcalUtil.addProperty(icalOutput, "X-ZIMBRA-TASK-STATUS",
+                                taskStatus, false);
+                }
+            }
+            if ( (taskMode != null) && (!taskMode.equals(TaskMode.TASK_REQUEST))) {
+                IcalUtil.addProperty(icalOutput, "X-ZIMBRA-TASK-MODE",
+                            taskMode, false);
+            }
+            IcalUtil.addProperty(icalOutput, "X-ZIMBRA-MILEAGE",
+                        mileage, false);
+            IcalUtil.addProperty(icalOutput, "X-ZIMBRA-BILLING-INFO",
+                        billingInfo, false);
+            IcalUtil.addProperty(icalOutput, "X-ZIMBRA-COMPANIES",
+                        companies, false);
+            IcalUtil.addProperty(icalOutput, "X-ZIMBRA-ACTUAL-WORK-MINS",
+                        actualEffort, false);
+            IcalUtil.addProperty(icalOutput, "X-ZIMBRA-TOTAL-WORK-MINS",
+                        estimatedEffort, false);
             if (this.icalType == ICALENDAR_TYPE.VEVENT) {
                 IcalUtil.addProperty(icalOutput,
                         "X-MICROSOFT-CDO-ALLDAYEVENT",
@@ -837,6 +886,9 @@ private void addAttendee(ContentHandler icalOutput, InternetAddress ia,
 
     private void addStatusProperty(ContentHandler icalOutput, BusyStatus busyStatus)
                     throws ParserException, URISyntaxException, IOException, ParseException {
+        if (icalType.equals(ICALENDAR_TYPE.VTODO)) {
+            return;
+        }
         Status icalStatus = null;
         if (method.equals(Method.REQUEST)) {
             if (busyStatus == null) {

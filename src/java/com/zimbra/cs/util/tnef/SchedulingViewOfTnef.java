@@ -69,6 +69,8 @@ public class SchedulingViewOfTnef extends Message {
     private EnumSet <AppointmentStateFlags> appointmentStateFlagsMask;
     private TaskMode taskMode;
     private TaskStatus taskStatus;
+    private Integer percentComplete;
+    private DateTime dateTaskCompleted;
     private ICALENDAR_TYPE icalType;
 
     public SchedulingViewOfTnef() {
@@ -86,6 +88,7 @@ public class SchedulingViewOfTnef extends Message {
         recurrenceTZinfo = null;
         taskMode = null;
         taskStatus = null;
+        percentComplete = null;
         icalType = null;
     }
 
@@ -439,6 +442,34 @@ public class SchedulingViewOfTnef extends Message {
         return categories;
     }
 
+    public String getMileage() throws IOException {
+        return MapiPropertyId.PidLidMileage.getStringValue(this);
+    }
+
+    public String getBillingInfo() throws IOException {
+        return MapiPropertyId.PidLidBilling.getStringValue(this);
+    }
+
+    public String getCompanies() throws IOException {
+        return MapiPropertyId.PidLidCompanies.getStringValue(this);
+    }
+
+    public Integer getEstimatedEffort() throws IOException {
+        Integer myVal = MapiPropertyId.PidLidTaskEstimatedEffort.getIntegerValue(this);
+        if ( (myVal == null) || (myVal == 0) ) {
+            return null;
+        }
+        return myVal;
+    }
+
+    public Integer getActualEffort() throws IOException {
+        Integer myVal = MapiPropertyId.PidLidTaskActualEffort.getIntegerValue(this);
+        if ( (myVal == null) || (myVal == 0) ) {
+            return null;
+        }
+        return myVal;
+    }
+
     /**
      * PidLidOwnerCriticalChange - Specifies the date and time at which a Meeting
      * Request object was sent by the organizer.
@@ -446,7 +477,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public DateTime getOwnerCriticalChange() throws IOException {
-        return MapiPropertyId.PidLidOwnerCriticalChange.getUtcDateTime(this);
+        return MapiPropertyId.PidLidOwnerCriticalChange.getDateTimeAsUTC(this);
     }
 
     /**
@@ -456,7 +487,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public DateTime getAppointmentReplyTime() throws IOException {
-        return MapiPropertyId.PidLidAppointmentReplyTime.getUtcDateTime(this);
+        return MapiPropertyId.PidLidAppointmentReplyTime.getDateTimeAsUTC(this);
     }
 
     /**
@@ -510,14 +541,14 @@ public class SchedulingViewOfTnef extends Message {
                 return null;
             }
             timeVal =
-                MapiPropertyId.PidLidTaskStartDate.getUtcDateTime(this);
+                MapiPropertyId.PidLidTaskStartDate.getDateTimeAsUTC(this);
         } else {
             // PidLidAppointmentStartWhole - UTC start date and time for the event.
             timeVal =
-                MapiPropertyId.PidLidAppointmentStartWhole.getUtcDateTime(this);
+                MapiPropertyId.PidLidAppointmentStartWhole.getDateTimeAsUTC(this);
         }
         if (timeVal == null) {
-            timeVal = MapiPropertyId.PidTagStartDate.getUtcDateTime(this);
+            timeVal = MapiPropertyId.PidTagStartDate.getDateTimeAsUTC(this);
         }
         return timeVal;
     }
@@ -529,9 +560,9 @@ public class SchedulingViewOfTnef extends Message {
      */
     public DateTime getEndTime() throws IOException {
         DateTime timeVal =
-            MapiPropertyId.PidLidAppointmentEndWhole.getUtcDateTime(this);
+            MapiPropertyId.PidLidAppointmentEndWhole.getDateTimeAsUTC(this);
         if (timeVal == null) {
-            timeVal = MapiPropertyId.PidTagEndDate.getUtcDateTime(this);
+            timeVal = MapiPropertyId.PidTagEndDate.getDateTimeAsUTC(this);
         }
         return timeVal;
     }
@@ -546,7 +577,7 @@ public class SchedulingViewOfTnef extends Message {
             return null;
         }
         timeVal =
-            MapiPropertyId.PidLidTaskDueDate.getUtcDateTime(this);
+            MapiPropertyId.PidLidTaskDueDate.getDateTimeAsUTC(this);
         return timeVal;
     }
 
@@ -565,7 +596,7 @@ public class SchedulingViewOfTnef extends Message {
         //       but that is used for non-recurrence related objects
         //       to give the previous start time of a single appointment.
         DateTime recurrenceIdTime =
-            MapiPropertyId.PidLidExceptionReplaceTime.getUtcDateTime(this);
+            MapiPropertyId.PidLidExceptionReplaceTime.getDateTimeAsUTC(this);
         if (recurrenceIdTime != null) {
             sLog.debug("RECURRENCE-ID taken from PidLidExceptionReplaceTime");
         } else {
@@ -618,7 +649,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public DateTime getProposedStartTime() throws IOException {
-        return MapiPropertyId.PidLidAppointmentProposedStartWhole.getUtcDateTime(this);
+        return MapiPropertyId.PidLidAppointmentProposedStartWhole.getDateTimeAsUTC(this);
     }
 
     /**
@@ -628,7 +659,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public DateTime getProposedEndTime() throws IOException {
-        return MapiPropertyId.PidLidAppointmentProposedEndWhole.getUtcDateTime(this);
+        return MapiPropertyId.PidLidAppointmentProposedEndWhole.getDateTimeAsUTC(this);
     }
 
     /**
@@ -637,7 +668,7 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public DateTime getAttendeeCriticalChange() throws IOException {
-        return MapiPropertyId.PidLidAttendeeCriticalChange.getUtcDateTime(this);
+        return MapiPropertyId.PidLidAttendeeCriticalChange.getDateTimeAsUTC(this);
     }
 
     /**
@@ -841,20 +872,8 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public TaskMode getTaskMode() throws IOException {
-        if (taskMode != null) {
-            return taskMode;
-        }
-        Integer intVal = MapiPropertyId.PidLidTaskMode.getIntegerValue(this);
-        if (intVal == null) {
-            return null;
-        }
-        for (TaskMode curr : TaskMode.values()) {
-            if (curr.mapiPropValue() == intVal) {
-                taskMode = curr;
-                return taskMode;
-            }
-        }
-        return null;
+        initTaskStatusInfo();
+        return taskMode;
     }
 
     /**
@@ -862,20 +881,75 @@ public class SchedulingViewOfTnef extends Message {
      * @throws IOException
      */
     public TaskStatus getTaskStatus() throws IOException {
-        if (taskStatus != null) {
-            return taskStatus;
+        initTaskStatusInfo();
+        return taskStatus;
+    }
+
+    /**
+     * @return The value of PidLidPercentComplete adjusted to be between 0 and 100
+     * @throws IOException
+     */
+    public int getPercentComplete() throws IOException {
+        initTaskStatusInfo();
+        if (percentComplete == null) {
+            return 0;
+        } else {
+            return percentComplete;
         }
-        Integer intVal = MapiPropertyId.PidLidTaskStatus.getIntegerValue(this);
-        if (intVal == null) {
-            return null;
+    }
+
+    /**
+     * @return the time in UTC that the meeting object was sent or null
+     * @throws IOException
+     */
+    public DateTime getDateTaskCompleted() throws IOException {
+        initTaskStatusInfo();
+        return dateTaskCompleted;
+    }
+
+    private void initTaskStatusInfo() throws IOException {
+        if (this.getIcalType() != ICALENDAR_TYPE.VTODO) {
+            return;
         }
-        for (TaskStatus curr : TaskStatus.values()) {
-            if (curr.mapiPropValue() == intVal) {
-                taskStatus = curr;
-                return taskStatus;
+        if (percentComplete != null) {
+            return;
+        }
+        dateTaskCompleted =
+            MapiPropertyId.PidLidTaskDateCompleted.getDateTimeAsUTC(this);
+        Integer intVal;
+        taskMode = TaskMode.TASK_REQUEST;
+        intVal = MapiPropertyId.PidLidTaskMode.getIntegerValue(this);
+        if (intVal != null) {
+            for (TaskMode curr : TaskMode.values()) {
+                if (curr.mapiPropValue() == intVal) {
+                    taskMode = curr;
+                    break;
+                }
             }
         }
-        return null;
+        if (dateTaskCompleted != null) {
+            taskStatus = TaskStatus.COMPLETE;
+            percentComplete = new Integer(100);
+        } else {
+            taskStatus = TaskStatus.NOT_STARTED;
+            intVal = MapiPropertyId.PidLidTaskStatus.getIntegerValue(this);
+            if (intVal != null) {
+                for (TaskStatus curr : TaskStatus.values()) {
+                    if (curr.mapiPropValue() == intVal) {
+                        taskStatus = curr;
+                        break;
+                    }
+                }
+            }
+            Double fractionComplete;
+            fractionComplete = MapiPropertyId.PidLidPercentComplete.getDoubleValue(this);
+            if ( (fractionComplete == null) || (fractionComplete < 0) || (fractionComplete > 1) ) {
+                percentComplete = new Integer(0);
+            } else {
+                fractionComplete = fractionComplete * 100;
+                percentComplete = (int) Math.round(fractionComplete);
+            }
+        }
     }
 
     /**

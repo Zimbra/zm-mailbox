@@ -65,6 +65,12 @@ public class MapiPropertyId {
         new MapiPropertyId(MSGUID.PSETID_Common, 0x8518);
     public final static MapiPropertyId PidLidTaskGlobalId =
         new MapiPropertyId(MSGUID.PSETID_Common, 0x8519);
+    public final static MapiPropertyId PidLidMileage =
+        new MapiPropertyId(MSGUID.PSETID_Common, 0x8534);
+    public final static MapiPropertyId PidLidBilling =
+        new MapiPropertyId(MSGUID.PSETID_Common, 0x8535);
+    public final static MapiPropertyId PidLidCompanies =
+        new MapiPropertyId(MSGUID.PSETID_Common, 0x8539);
     public final static MapiPropertyId PidNameKeywords = 
         new MapiPropertyId(MSGUID.PS_PUBLIC_STRINGS, "Keywords");
     public final static MapiPropertyId PidNameCalendarUid =
@@ -137,49 +143,48 @@ public class MapiPropertyId {
     // PSETID_Task - MSGUID("{00062003-0000-0000-C000-000000000046}");
     public final static MapiPropertyId PidLidTaskStatus = 
         new MapiPropertyId(MSGUID.PSETID_Task, 0x8101);
+    /* PidLidPercentComplete - Double -value between 0 and 1! */ 
     public final static MapiPropertyId PidLidPercentComplete = 
         new MapiPropertyId(MSGUID.PSETID_Task, 0x8102);
-    // PidLidCommonStart should be UTC equivalent of PidLidTaskStartDate
+    // PidLidTaskStartDate - MS-OXOTASK this is start date in user's local timezone.
+    // MS-OXOTASK also says PidLidCommonStart should be UTC equivalent of PidLidTaskStartDate
     public final static MapiPropertyId PidLidTaskStartDate = 
         new MapiPropertyId(MSGUID.PSETID_Task, 0x8104);
-    // PidLidCommonEnd should be UTC equivalent of PidLidTaskDueDate
+    // PidLidTaskDueDate - MS-OXOTASK this is due date in user's local timezone.
+    // MS-OXOTASK also says PidLidCommonEnd should be UTC equivalent of PidLidTaskDueDate
     public final static MapiPropertyId PidLidTaskDueDate = 
         new MapiPropertyId(MSGUID.PSETID_Task, 0x8105);
     // PidLidTaskResetReminder 0x8107 - true if future instances need reminders
-    public final static MapiPropertyId PidLidTaskAccepted =
-        new MapiPropertyId(MSGUID.PSETID_Task, 0x8108);
-    public final static MapiPropertyId PidLidTaskDateCompleted =
+    // PidLidTaskAccepted 0x8108 - boolean 
+    public final static MapiPropertyId PidLidTaskDateCompleted = /* UTC value */
         new MapiPropertyId(MSGUID.PSETID_Task, 0x810f);
+    /* PidLidTaskActualEffort - Number of mins.  Works on assumption 8 hrs/day 5 days/week */
     public final static MapiPropertyId PidLidTaskActualEffort =
         new MapiPropertyId(MSGUID.PSETID_Task, 0x8110);
+    /* PidLidTaskEstimatedEffort - Number of mins.  Works on assumption 8 hrs/day 5 days/week */
     public final static MapiPropertyId PidLidTaskEstimatedEffort =
         new MapiPropertyId(MSGUID.PSETID_Task, 0x8111);
-    public final static MapiPropertyId PidLidTaskVersion =
+    public final static MapiPropertyId PidLidTaskVersion =  /* integer - suitable for iCal SEQUENCE */
         new MapiPropertyId(MSGUID.PSETID_Task, 0x8112);
     // PidLidTaskState 0x8113 - Current assignment state of Task Object 
-    public final static MapiPropertyId PidLidTaskLastUpdate =
-        new MapiPropertyId(MSGUID.PSETID_Task, 0x8115);
+    // PidLidTaskLastUpdate 0x8115 -  UTC value
+    // DeletedInstanceCount and ModifiedInstanceCount MUST be 0 - hence no EXDATE/RDATE
     public final static MapiPropertyId PidLidTaskRecurrence =
         new MapiPropertyId(MSGUID.PSETID_Task, 0x8116);
     // PidLidTaskAssigners 0x8117 - binary info on each of past assigners
+    // PidLidTaskStatusOnComplete - true if assignee asked to RSVP on completion.
     public final static MapiPropertyId PidLidTaskStatusOnComplete =
         new MapiPropertyId(MSGUID.PSETID_Task, 0x8119);
-    public final static MapiPropertyId PidLidTaskHistory =
-        new MapiPropertyId(MSGUID.PSETID_Task, 0x811a);
-    public final static MapiPropertyId PidLidTaskUpdates =
-        new MapiPropertyId(MSGUID.PSETID_Task, 0x811b);
-    public final static MapiPropertyId PidLidTaskComplete =
+    // PidLidTaskHistory 0x811a - indicates nature of last change
+    // PidLidTaskUpdates 0x811b - true if assignee asked to RSVP on changes
+    //    (c.f. PidLidTaskStatusOnComplete)
+    public final static MapiPropertyId PidLidTaskComplete = /* boolean */
         new MapiPropertyId(MSGUID.PSETID_Task, 0x811c);
-    public final static MapiPropertyId PidLidTaskFCreator =
-        new MapiPropertyId(MSGUID.PSETID_Task, 0x811e);
-    public final static MapiPropertyId PidLidTaskOwner =
-        new MapiPropertyId(MSGUID.PSETID_Task, 0x811f);
-    public final static MapiPropertyId PidLidTaskAssigner =
-        new MapiPropertyId(MSGUID.PSETID_Task, 0x8121);
-    public final static MapiPropertyId PidLidTaskLastUser =
-        new MapiPropertyId(MSGUID.PSETID_Task, 0x8122);
-    public final static MapiPropertyId PidLidTaskLastDelegate =
-        new MapiPropertyId(MSGUID.PSETID_Task, 0x8125);
+    // PidLidTaskFCreator 0x811e - boolean - false if task assigned by another user.
+    // PidLidTaskOwner 0x811f - String - name of task owner
+    // PidLidTaskAssigner 0x8121 - String - name user that last assigned task
+    // PidLidTaskLastUser 0x8122 - String - name of user who was last the owner
+    // PidLidTaskLastDelegate 0x8125 - name of mailbox's delegate who most recently assigned the task
     // PidLidTaskOwnership 0x8129 - values not assigned(0)/assigner copy(1)/assignee copy(2)
     // PidLidTaskAcceptanceState 0x812a - not assigned(0)/unknown(1)/assignee accepted(2)/assignee rejected(3)
 
@@ -261,7 +266,8 @@ public class MapiPropertyId {
     /**
      * Return the Integer value corresponding to a MAPI Property with value
      * PT_INT or PT_ERROR
-     * @param schedView
+     * @param schedView represents a TNEF which might contain a property with this
+     * object's ID.
      * @param defaultVal
      * @return
      * @throws IOException
@@ -277,7 +283,8 @@ public class MapiPropertyId {
     /**
      * Return the Integer value corresponding to a MAPI Property with value
      * PT_INT or PT_ERROR
-     * @param schedView
+     * @param schedView represents a TNEF which might contain a property with this
+     * object's ID.
      * @return
      * @throws IOException
      */
@@ -297,13 +304,40 @@ public class MapiPropertyId {
     }
 
     /**
+     * Return the Double value corresponding to a MAPI Property with value
+     * PT_DOUBLE
+     * @param schedView represents a TNEF which might contain a property with this
+     * object's ID.
+     * @return
+     * @throws IOException
+     */
+    public Double getDoubleValue(SchedulingViewOfTnef schedView) throws IOException {
+        MAPIValue mpValue = getFirstValue(schedView);
+        if (mpValue == null) {
+            return null;
+        }
+        Object obj = mpValue.getValue();
+        if (obj == null) {
+            return null;
+        }
+        if (obj instanceof Double) {
+            return (Double) obj;
+        }
+        return null;
+    }
+
+    /**
      * PT_SYSTIME properties wrap FILETIME which is a count of seconds since start of 1601
+     * Note that some PT_SYSTIME properties are actually stored such that if they are treated
+     * as UTC times, the day/month/year/hour/min etc components are correct in localtime.
+     * Calling this method for such properties will result in a DateTime which doesn't reflect
+     * the underlying real date and time on its own - but this can still be useful.
      * @param schedView
      * @return DateTime object equivalent to a PT_SYSTIME property where that property
      *         represents a time in UTC
      * @throws IOException
      */
-    public DateTime getUtcDateTime(SchedulingViewOfTnef schedView) throws IOException {
+    public DateTime getDateTimeAsUTC(SchedulingViewOfTnef schedView) throws IOException {
         Date javaDate = getDateValue(schedView);
         if (javaDate == null) {
             return null;
@@ -330,7 +364,8 @@ public class MapiPropertyId {
 
     /**
      * PT_SYSTIME properties wrap FILETIME which is a count of seconds since start of 1601
-     * @param schedView
+     * @param schedView represents a TNEF which might contain a property with this
+     * object's ID.
      * @return Long as seconds since start of 1601 equivalent to a PT_SYSTIME property
      * @throws IOException
      */

@@ -143,6 +143,19 @@ public class IcalUtil {
         return localTimeFmt.format(localTime);
     }
 
+    /**
+     * For use when the utcTime is based on a MAPI property whose value is UTC based rather than
+     * localtime based.
+     * @param icalOutput
+     * @param propName
+     * @param utcTime
+     * @param tzd
+     * @param useDateOnly
+     * @throws ParserException
+     * @throws URISyntaxException
+     * @throws ParseException
+     * @throws IOException
+     */
     public static void addPropertyFromUtcTimeAndZone(
             ContentHandler icalOutput, String propName,
             DateTime utcTime, TimeZoneDefinition tzd,
@@ -174,6 +187,34 @@ public class IcalUtil {
         if (useDateOnly) {
             icalOutput.parameter(Parameter.VALUE, Value.DATE.getValue());
         }
+        icalOutput.endProperty(propName);
+    }
+
+    /**
+     * Useful for handling date related properties based on MAPI properties whose value
+     * is specified as the offset from the Microsoft EPOC in 1601 BUT adjusted for localtime.
+     * i.e. <code>floatingDate</code> is not an accurate date but if it is treated as a UTC
+     * based date it will have the correct components.
+     *
+     * @param icalOutput
+     * @param propName
+     * @param floatingDate if treated as a UTC time then day/month/year etc will be correct.
+     * @throws ParserException
+     * @throws URISyntaxException
+     * @throws ParseException
+     * @throws IOException
+     */
+    public static void addFloatingDateProperty(
+            ContentHandler icalOutput, String propName,
+            DateTime floatingDate) throws ParserException, URISyntaxException, ParseException, IOException {
+        if (floatingDate == null) {
+            return;
+        }
+        java.util.TimeZone javaTZ = null;
+        javaTZ = TimeZone.getTimeZone(TimeZones.UTC_ID);
+        icalOutput.startProperty(propName);
+        icalOutput.propertyValue(iCalDateTimeValue(floatingDate, javaTZ, true));
+        icalOutput.parameter(Parameter.VALUE, Value.DATE.getValue());
         icalOutput.endProperty(propName);
     }
 
