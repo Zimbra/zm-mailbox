@@ -15,8 +15,6 @@
 
 package com.zimbra.cs.index;
 
-import org.apache.lucene.document.Document;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
@@ -34,22 +32,6 @@ public class CalendarItemHit extends ZimbraHit {
     /**
      * @param results
      * @param mbx
-     * @param d
-     * @param score
-     */
-    public CalendarItemHit(ZimbraQueryResultsImpl results, Mailbox mbx,
-            int mailItemId, Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
-        super(results, mbx, score);
-        mId = mailItemId;
-        if (ud != null) {
-            mCalItem = (CalendarItem)mbx.getItemFromUnderlyingData(ud);
-            mType = ud.type;
-        }
-    }
-
-    /**
-     * @param results
-     * @param mbx
      * @param id
      * @param score
      */
@@ -59,7 +41,7 @@ public class CalendarItemHit extends ZimbraHit {
 
         mId = id;
         if (ud != null) {
-            mCalItem = (CalendarItem)mbx.getItemFromUnderlyingData(ud);
+            mCalItem = (CalendarItem) mbx.toItem(ud);
             mType = ud.type;
         }
     }
@@ -71,7 +53,7 @@ public class CalendarItemHit extends ZimbraHit {
      * @param score
      */
     public CalendarItemHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id,
-        Document d, float score, CalendarItem calItem, byte type) throws ServiceException {
+        float score, CalendarItem calItem, byte type) {
         super(results, mbx, score);
 
         mId = id;

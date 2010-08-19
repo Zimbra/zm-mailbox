@@ -15,8 +15,6 @@
 
 package com.zimbra.cs.index;
 
-import java.io.IOException;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.ResultValidator.QueryResult;
 import com.zimbra.cs.mailbox.MailItem;
@@ -28,7 +26,7 @@ import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
  * potentially multiple query operations in a search. {@link QueryOperation}
  * return {@link ZimbraQueryResultsImpl} sets -- which can be iterated over to
  * get {@link ZimbraHit} objects.
- * <p
+ * <p>
  * The difference between a {@link QueryOperation} and a simple
  * {@link ZimbraQueryResultsImpl} set is that a {@link QueryOperation} knows how
  * to Optimize and Execute itself -- whereas a {@link QueryResult} set is just
@@ -40,16 +38,17 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
     static final int MIN_CHUNK_SIZE = 26;
     static final int MAX_CHUNK_SIZE = 5000;
 
-    protected SearchParams mParams;
+    protected QueryContext context;
+
+    @Override
+    public SortBy getSortBy() {
+        return context.getParams().getSortBy();
+    }
 
     /**
      * @return A representation of this operation as a parsable query string
      */
     abstract String toQueryString();
-
-    public SortBy getSortBy() {
-        return mParams.getSortBy();
-    }
 
     // based on data from our internal mail server:
     //
@@ -68,11 +67,19 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
         CONVERSATION, MESSAGE, ITEM;
     };
 
-    ////////////////////
-    // Top-Level Execution
-    final ZimbraQueryResults run(Mailbox mbox, MailboxIndex mbidx,
-            SearchParams params, int chunkSize) throws IOException, ServiceException {
-        mParams = params;
+    /**
+     * Executes the query.
+     *
+     * @param mbox mailbox to search
+     * @param params search parameters
+     * @param chunkSize A hint to the query operation telling it what size to
+     *  chunk data in. Higher numbers can be more efficient if you are using a
+     *  lot of results, but have more overhead.
+     * @return search results
+     * @throws ServiceException if an error occurred
+     */
+    final ZimbraQueryResults run(Mailbox mbox, SearchParams params,
+            int chunkSize) throws ServiceException {
         mIsToplevelQueryOp = true;
 
         chunkSize++; // one extra for checking the "more" flag at the end of the results
@@ -84,7 +91,7 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
         }
 
         Grouping retType = Grouping.ITEM; //MailboxIndex.SEARCH_RETURN_DOCUMENTS;
-        byte[] types = mParams.getTypes();
+        byte[] types = params.getTypes();
         for (int i = 0; i < types.length; i++) {
             if (types[i] == MailItem.TYPE_CONVERSATION) {
                 retType = Grouping.CONVERSATION; //MailboxIndex.SEARCH_RETURN_CONVERSATIONS;
@@ -104,96 +111,88 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
         boolean usePreloadingGrouper = true;
 
         // don't preload if all we want is IDs!
-        if (mParams.getMode() == SearchResultMode.IDS) {
+        if (params.getMode() == SearchResultMode.IDS) {
             usePreloadingGrouper = false;
         }
 
+        ZimbraQueryResultsImpl results = null;
         switch (retType) {
             case CONVERSATION: // MailboxIndex.SEARCH_RETURN_CONVERSATIONS:
-                if (mParams.getPrefetch() && usePreloadingGrouper) {
+                if (params.getPrefetch() && usePreloadingGrouper) {
                     chunkSize+= 2; // one for the ConvQueryResults, one for the Grouper
-                    setupResults(mbox, new ConvQueryResults(
+                    results = new ConvQueryResults(
                             new ItemPreloadingGrouper(this, chunkSize, mbox),
-                            types, mParams.getSortBy(), mParams.getMode()));
+                            types, params.getSortBy(), params.getMode());
                     chunkSize *= MESSAGES_PER_CONV_ESTIMATE; // guess 2 msgs per conv
                 } else {
                     chunkSize++; // one for the ConvQueryResults
-                    setupResults(mbox, new ConvQueryResults(this,
-                            types, mParams.getSortBy(), mParams.getMode()));
+                    results = new ConvQueryResults(this, types,
+                            params.getSortBy(), params.getMode());
                     chunkSize *= MESSAGES_PER_CONV_ESTIMATE;
                 }
                 preloadOuterResults = true;
                 break;
             case MESSAGE: //MailboxIndex.SEARCH_RETURN_MESSAGES:
-                if (mParams.getPrefetch()  && usePreloadingGrouper) {
+                if (params.getPrefetch()  && usePreloadingGrouper) {
                     chunkSize += 2; // one for the MsgQueryResults, one for the Grouper
-                    setupResults(mbox, new MsgQueryResults(
+                    results = new MsgQueryResults(
                             new ItemPreloadingGrouper(this, chunkSize, mbox),
-                            types, mParams.getSortBy(), mParams.getMode()));
+                            types, params.getSortBy(), params.getMode());
                 } else {
                     chunkSize++; // one for the MsgQueryResults
-                    setupResults(mbox, new MsgQueryResults(this,
-                            types, mParams.getSortBy(), mParams.getMode()));
+                    results = new MsgQueryResults(this, types,
+                            params.getSortBy(), params.getMode());
                 }
                 break;
             case ITEM: //MailboxIndex.SEARCH_RETURN_DOCUMENTS:
-                if (mParams.getPrefetch() && usePreloadingGrouper) {
+                if (params.getPrefetch() && usePreloadingGrouper) {
                     chunkSize++; // one for the grouper
-                    setupResults(mbox, new UngroupedQueryResults(
+                    results = new UngroupedQueryResults(
                             new ItemPreloadingGrouper(this, chunkSize, mbox),
-                            types, mParams.getSortBy(), mParams.getMode()));
+                            types, params.getSortBy(), params.getMode());
                 } else {
-                    setupResults(mbox, new UngroupedQueryResults(this,
-                            types, mParams.getSortBy(), mParams.getMode()));
+                    results = new UngroupedQueryResults(this, types,
+                            params.getSortBy(), params.getMode());
                 }
                 break;
+            default:
+                assert(false);
         }
 
-        prepare(mMailbox, mResults, mbidx, mParams, chunkSize);
+        begin(new QueryContext(mbox, results, params, chunkSize));
 
-        if (usePreloadingGrouper && preloadOuterResults && mParams.getPrefetch()) {
-            return new ItemPreloadingGrouper(mResults, outerChunkSize, mbox);
+        if (usePreloadingGrouper && preloadOuterResults && params.getPrefetch()) {
+            return new ItemPreloadingGrouper(results, outerChunkSize, mbox);
         } else {
-            return mResults;
+            return results;
         }
     }
 
-
-    /******************
-     *
-     * Hits iteration
-     *
-     *******************/
+    @Override
     public boolean hasNext() throws ServiceException {
         return peekNext() != null;
     }
 
     /**
+     * Begins query execution. It is allowed to grab and hold resources, which
+     * are then released via {@link #doneWithSearchResults()}.
+     * <p>
+     * IMPORTANT: {@link #begin(QueryContext)} and {@link #doneWithSearchResults()}
+     * must always be called in a pair. That is, if you call {@link #begin(QueryContext)},
+     * you MUST call {@link #doneWithSearchResults()}.
      *
-     * prepare() is the API which begins query execution.  It is allowed to grab and hold resources, which are then
-     * released via doneWithSearchResults().
-     *
-     *
-     * IMPORTANT IMPORTANT: prepare() and doneWithSearchResults must always be called in a pair.  That is,
-     * if you call prepare, you MUST call doneWithSearchResults.
-     *
-     * @param mbx
-     * @param res
-     * @param mbidx
-     * @param chunkSize A hint to the query operation telling it what size to chunk data in.  Higher numbers
-     *                   can be more efficient if you are using a lot of results, but have more overhead
-     * @throws IOException
-     * @throws ServiceException
+     * @param ctx various context parameters
+     * @throws ServiceException if an error occurred
      */
-    protected abstract void prepare(Mailbox mbx, ZimbraQueryResultsImpl res,
-            MailboxIndex mbidx, SearchParams params, int chunkSize)
-        throws IOException, ServiceException;
+    protected abstract void begin(QueryContext ctx) throws ServiceException;
 
+    @Override
     public ZimbraHit getFirstHit() throws ServiceException {
         resetIterator();
         return getNext();
     }
 
+    @Override
     public ZimbraHit skipToHit(int hitNo) throws ServiceException {
         resetIterator();
         for (int i = 0; i < hitNo; i++) {
@@ -204,12 +203,6 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
         }
         return getNext();
     }
-
-    /******************
-     *
-     * Internals
-     *
-     *******************/
 
     abstract QueryTargetSet getQueryTargets();
 
@@ -226,22 +219,6 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
     private boolean mIsToplevelQueryOp = false;
     protected boolean isTopLevelQueryOp() {
         return mIsToplevelQueryOp;
-    }
-
-    private ZimbraQueryResultsImpl mResults;
-    private Mailbox mMailbox;
-
-    final protected Mailbox getMailbox() {
-        return mMailbox;
-    }
-
-    final protected ZimbraQueryResultsImpl getResultsSet() {
-        return mResults;
-    }
-
-    final protected void setupResults(Mailbox mbx, ZimbraQueryResultsImpl res) {
-        mMailbox = mbx;
-        mResults = res;
     }
 
     /**
@@ -326,5 +303,36 @@ abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
      * @param cb - The callback
      */
     protected abstract void depthFirstRecurse(RecurseCallback cb);
+
+    protected static final class QueryContext {
+        private final Mailbox mailbox;
+        private final ZimbraQueryResultsImpl results;
+        private final SearchParams params;
+        private final int chunkSize;
+
+        QueryContext(Mailbox mbox, ZimbraQueryResultsImpl results,
+                SearchParams params, int chunkSize) {
+            this.mailbox = mbox;
+            this.results = results;
+            this.params = params;
+            this.chunkSize = chunkSize;
+        }
+
+        Mailbox getMailbox() {
+            return mailbox;
+        }
+
+        ZimbraQueryResultsImpl getResults() {
+            return results;
+        }
+
+        SearchParams getParams() {
+            return params;
+        }
+
+        int getChunkSize() {
+            return chunkSize;
+        }
+    }
 
 }

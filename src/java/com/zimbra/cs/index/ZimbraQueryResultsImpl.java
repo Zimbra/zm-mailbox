@@ -80,23 +80,31 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
         mCalItemHits = new LRUHashMap<Integer, CalendarItemHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
     };
 
+    @Override
     public abstract void doneWithSearchResults() throws ServiceException;
 
+    @Override
     public abstract ZimbraHit skipToHit(int hitNo) throws ServiceException;
 
+    @Override
     public boolean hasNext() throws ServiceException {
         return (peekNext() != null);
     }
 
+    /**
+     * @param messageId not used, but subclasses may
+     */
     protected MessageHit getCachedMessageHit(int messageId) {
         return null;
     }
 
+    @Override
     public ZimbraHit getFirstHit() throws ServiceException {
         resetIterator();
         return getNext();
     }
 
+    @Override
     public SortBy getSortBy() {
         return mSearchOrder;
     }
@@ -120,11 +128,11 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
         return ch;
     }
 
-    protected ContactHit getContactHit(Mailbox mbx, int mailItemId, Document d,
-            float score, MailItem.UnderlyingData ud) throws ServiceException {
+    protected ContactHit getContactHit(Mailbox mbx, int mailItemId, float score,
+            MailItem.UnderlyingData ud) throws ServiceException {
         ContactHit hit = mContactHits.get(mailItemId);
         if (hit == null) {
-            hit = new ContactHit(this, mbx, mailItemId, d, score, ud);
+            hit = new ContactHit(this, mbx, mailItemId, score, ud);
             mContactHits.put(mailItemId, hit);
         } else {
             hit.updateScore(score);
@@ -132,11 +140,11 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
         return hit;
     }
 
-    protected NoteHit getNoteHit(Mailbox mbx, int mailItemId, Document d,
-            float score, MailItem.UnderlyingData ud) throws ServiceException {
+    protected NoteHit getNoteHit(Mailbox mbx, int mailItemId, float score,
+            MailItem.UnderlyingData ud) throws ServiceException {
         NoteHit hit = mNoteHits.get(mailItemId);
         if (hit == null) {
-            hit = new NoteHit(this, mbx, mailItemId, d, score, ud);
+            hit = new NoteHit(this, mbx, mailItemId, score, ud);
             mNoteHits.put(mailItemId, hit);
         } else {
             hit.updateScore(score);
@@ -145,14 +153,10 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     }
 
     protected CalendarItemHit getAppointmentHit(Mailbox mbx, int mailItemId,
-            Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
+            float score, MailItem.UnderlyingData ud) throws ServiceException {
         CalendarItemHit hit = mCalItemHits.get(mailItemId);
         if (hit == null) {
-            if (d != null) {
-                hit = new CalendarItemHit(this, mbx, mailItemId, d, score, ud);
-            } else {
-                hit = new CalendarItemHit(this, mbx, mailItemId, score, ud);
-            }
+            hit = new CalendarItemHit(this, mbx, mailItemId, score, ud);
             mCalItemHits.put(mailItemId, hit);
         } else {
             hit.updateScore(score);
@@ -160,11 +164,11 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
         return hit;
     }
 
-    protected CalendarItemHit getTaskHit(Mailbox mbx, int mailItemId, Document d,
+    protected CalendarItemHit getTaskHit(Mailbox mbx, int mailItemId,
             float score, MailItem.UnderlyingData ud) throws ServiceException {
         CalendarItemHit hit = mCalItemHits.get(mailItemId);
         if (hit == null) {
-            hit = TaskHit.create(this, mbx, mailItemId, d, score, ud);
+            hit = TaskHit.create(this, mbx, mailItemId, score, ud);
             mCalItemHits.put(mailItemId, hit);
         } else {
             hit.updateScore(score);
@@ -256,16 +260,16 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
                 }
                 break;
             case MailItem.TYPE_CONTACT:
-                toRet = getContactHit(mbox, sr.id, null, score, ud);
+                toRet = getContactHit(mbox, sr.id, score, ud);
                 break;
             case MailItem.TYPE_NOTE:
-                toRet = getNoteHit(mbox, sr.id, null, score, ud);
+                toRet = getNoteHit(mbox, sr.id, score, ud);
                 break;
             case MailItem.TYPE_APPOINTMENT:
-                toRet = getAppointmentHit(mbox, sr.id, null, score, ud);
+                toRet = getAppointmentHit(mbox, sr.id, score, ud);
                 break;
             case MailItem.TYPE_TASK:
-                toRet = getTaskHit(mbox, sr.id, null, score, ud);
+                toRet = getTaskHit(mbox, sr.id, score, ud);
                 break;
             case MailItem.TYPE_DOCUMENT:
             case MailItem.TYPE_WIKI:

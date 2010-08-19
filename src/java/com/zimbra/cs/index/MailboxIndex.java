@@ -142,9 +142,6 @@ public final class MailboxIndex {
                 results = new ReSortingQueryResults(results, originalSort, params);
             }
             return results;
-        } catch (IOException e) {
-            zq.doneWithQuery();
-            throw e;
         } catch (ServiceException e) {
             zq.doneWithQuery();
             throw e;
@@ -271,7 +268,7 @@ public final class MailboxIndex {
         return ret.toString();
     }
 
-    public MailboxIndex(Mailbox mbox, String root) throws ServiceException {
+    public MailboxIndex(Mailbox mbox) throws ServiceException {
         long mailboxId = mbox.getId();
 
         mMailboxId = mailboxId;

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -78,13 +78,14 @@ public class IndexItem extends RedoableOp {
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mType = in.readByte();
-        if (getVersion().atLeast(1,8)) 
+        if (getVersion().atLeast(1,8))
             mDeleteFirst = in.readBoolean();
         else
             mDeleteFirst = false;
     }
 
-    @Override public void redo() throws Exception {
+    @Override
+    public void redo() throws Exception {
         long mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         MailItem item;
@@ -100,10 +101,10 @@ public class IndexItem extends RedoableOp {
             // problem.  So just ignore the NoSuchItemException.
             return;
         }
-        
+
         try {
             List<IndexDocument> docList = item.generateIndexData(true);
-            mbox.redoIndexItem(item, mDeleteFirst, mId, mType, getTimestamp(), getUnloggedReplay(), docList);
+            mbox.redoIndexItem(item, mDeleteFirst, mId, docList);
         } catch (Exception e) {
             // TODO - update the item and set the item's "unindexed" flag
             ZimbraLog.index.info("Caught exception attempting to replay IndexItem for ID "+mId+" item will not be indexed", e);
@@ -117,7 +118,7 @@ public class IndexItem extends RedoableOp {
      * and database commit is required for correct handling of crash
      * recovery, i.e. to avoid redoing an Index operation before redoing
      * the creation or value modification of the item being indexed.
-     * 
+     *
      * In particular, the commit record for IndexItem should never be
      * written to the redo stream before the commit record for the
      * parent transaction.  The Mailbox class manages all aspects of
@@ -127,7 +128,7 @@ public class IndexItem extends RedoableOp {
      * time after parent transaction commit, but a boundary case exists
      * in which the batch commit occurs before the main thread writes
      * commit record for parent transaction.
-     * 
+     *
      * To avoid that case, an IndexItem record is created in
      * commit-blocked mode.  Batch index commit thread will skip all
      * IndexItem transactions that are not allowed to commit yet.  The
@@ -155,7 +156,7 @@ public class IndexItem extends RedoableOp {
     @Override public synchronized void commit() {
         if (ZimbraLog.index.isDebugEnabled())
             ZimbraLog.index.debug(this.toString()+" committed");
-        
+
         // Don't check mCommitAllowed here.  It's the responsibility of
         // the caller.
         if (!mCommitAbortDone) {
@@ -190,7 +191,7 @@ public class IndexItem extends RedoableOp {
             if (mParentOp != null)
                 mParentOp.addChainedOp(this);
         } else {
-            if (ZimbraLog.index.isDebugEnabled()){ 
+            if (ZimbraLog.index.isDebugEnabled()){
                 if (mAttachedToParent && !mCommitAllowed) {
                     ZimbraLog.index.debug("Committing because attachToParent called twice!");
                 }

@@ -15,8 +15,6 @@
 
 package com.zimbra.cs.index;
 
-import org.apache.lucene.document.Document;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -31,13 +29,13 @@ public final class ContactHit extends ZimbraHit {
     private int mItemId;
 
     public ContactHit(ZimbraQueryResultsImpl results, Mailbox mbx, int itemId,
-            Document d, float score, MailItem.UnderlyingData ud) throws ServiceException {
+            float score, MailItem.UnderlyingData ud) throws ServiceException {
         super(results, mbx, score);
 
         mItemId = itemId;
 
         if (ud != null) {
-            mContact = (Contact) mbx.getItemFromUnderlyingData(ud);
+            mContact = (Contact) mbx.toItem(ud);
         }
     }
 

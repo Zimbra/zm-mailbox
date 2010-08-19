@@ -34,13 +34,8 @@ import com.zimbra.common.util.ZimbraLog;
 /**
  * LuceneQueryOperation.
  */
-class LuceneQueryOperation extends TextQueryOperation {
-    private TopDocs mTopDocs = null;
-    private int mTopDocsLen = 0; // number of hits fetched
-    private int mTopDocsChunkSize = 2000; // how many hits to fetch per step in lucene
-    private IndexSearcherRef mSearcher = null;
-    protected static final float sDbFirstTermFreqPerc;
-
+final class LuceneQueryOperation extends TextQueryOperation {
+    private static final float sDbFirstTermFreqPerc;
 
     static {
         float f = 0.8f;
@@ -52,6 +47,15 @@ class LuceneQueryOperation extends TextQueryOperation {
             f = 0.8f;
         }
         sDbFirstTermFreqPerc = f;
+    }
+
+    private TopDocs mTopDocs = null;
+    private int mTopDocsLen = 0; // number of hits fetched
+    private int mTopDocsChunkSize = 2000; // how many hits to fetch per step in lucene
+    private IndexSearcherRef mSearcher = null;
+
+    LuceneQueryOperation() {
+        mQuery = new BooleanQuery();
     }
 
     @Override
@@ -107,14 +111,14 @@ class LuceneQueryOperation extends TextQueryOperation {
         return false;
     }
 
+    @Override
     public void doneWithSearchResults() throws ServiceException {
         if (mSearcher != null) {
             mSearcher.dec();
-            // TODO potential leak? mSearcher = null;
         }
-    };
+    }
 
-    private void fetchFirstResults(int initialChunkSize) throws ServiceException {
+    private void fetchFirstResults(int initialChunkSize) {
         if (!mHaveRunSearch) {
             assert(mCurHitNo == 0);
             mTopDocsLen = 3*initialChunkSize;
@@ -227,16 +231,6 @@ class LuceneQueryOperation extends TextQueryOperation {
         }
     }
 
-    protected static LuceneQueryOperation doCreate() {
-        LuceneQueryOperation toRet = new LuceneQueryOperation();
-        toRet.mQuery = new BooleanQuery();
-        return toRet;
-    }
-
-    private LuceneQueryOperation() {
-    }
-
-
     /**
      * Execute the actual search via Lucene
      */
@@ -279,16 +273,13 @@ class LuceneQueryOperation extends TextQueryOperation {
     }
 
     @Override
-    protected void prepareThisOperation(ZimbraQueryResultsImpl res, MailboxIndex mbidx) {
-        try {
-            if (mbidx != null) {
-                mSearcher = mbidx.getIndexSearcherRef(res.getSortBy());
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            if (mSearcher != null) {
-                mSearcher.dec();
-                mSearcher = null;
+    protected void setupTextQueryOperation(QueryContext ctx) {
+        MailboxIndex midx = ctx.getMailbox().getMailboxIndex();
+        if (midx != null) {
+            try {
+                mSearcher = midx.getIndexSearcherRef(ctx.getResults().getSortBy());
+            } catch (IOException e) {
+                ZimbraLog.index_search.error("failed to obtain searcher", e);
             }
         }
     }
@@ -393,4 +384,5 @@ class LuceneQueryOperation extends TextQueryOperation {
         }
         return null;
     }
+
 }

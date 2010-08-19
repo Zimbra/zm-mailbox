@@ -15,8 +15,6 @@
 
 package com.zimbra.cs.index;
 
-import org.apache.lucene.document.Document;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -31,13 +29,13 @@ public final class NoteHit extends ZimbraHit {
     private int mMailItemId;
 
     public NoteHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId,
-            Document d, float score, MailItem.UnderlyingData ud)  throws ServiceException {
+            float score, MailItem.UnderlyingData ud)  throws ServiceException {
         super(results, mbx, score);
 
         mMailItemId = mailItemId;
 
         if (ud != null) {
-            mNote = (Note) mbx.getItemFromUnderlyingData(ud);
+            mNote = (Note) mbx.toItem(ud);
         }
     }
 

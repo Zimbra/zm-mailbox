@@ -13,8 +13,6 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- */
 package com.zimbra.cs.index;
 
 import java.text.ParseException;
@@ -65,7 +63,7 @@ public class MessageHit extends ZimbraHit {
         assert (mailItemId != 0);
         if (underlyingData != null) {
             if (results.getSearchMode() != SearchResultMode.IDS) {
-                mMessage = (Message)mbx.getItemFromUnderlyingData(underlyingData);
+                mMessage = (Message) mbx.toItem(underlyingData);
             }
         }
     }
@@ -79,7 +77,7 @@ public class MessageHit extends ZimbraHit {
         assert (mailItemId != 0);
         if (underlyingData != null) {
             if (results.getSearchMode() != SearchResultMode.IDS) {
-                mMessage = (Message)mbx.getItemFromUnderlyingData(underlyingData);
+                mMessage = (Message) mbx.toItem(underlyingData);
             }
         }
     }

@@ -200,7 +200,8 @@ public final class ZimbraQuery {
             mNext = next;
         }
 
-        @Override public String toString() {
+        @Override
+        public String toString() {
             return toString(0);
         }
 
@@ -352,7 +353,7 @@ public final class ZimbraQuery {
 
         @Override
         protected QueryOperation getQueryOperation(boolean truth) {
-            DBQueryOperation op = DBQueryOperation.Create();
+            DBQueryOperation op = new DBQueryOperation();
             op.addConvId(mMailbox, mConvId, calcTruth(truth));
             return op;
         }
@@ -375,7 +376,7 @@ public final class ZimbraQuery {
 
         @Override
         protected QueryOperation getQueryOperation(boolean truth) {
-            DBQueryOperation op = DBQueryOperation.Create();
+            DBQueryOperation op = new DBQueryOperation();
 
             truth = calcTruth(truth);
 
@@ -974,7 +975,7 @@ public final class ZimbraQuery {
                 if (mSpecialTarget == IN_NO_FOLDER) {
                     return new NoResultsQueryOperation();
                 } else if (mSpecialTarget == IN_ANY_FOLDER) {
-                    DBQueryOperation dbOp = DBQueryOperation.Create();
+                    DBQueryOperation dbOp = new DBQueryOperation();
                     dbOp.addAnyFolderClause(calcTruth(truth));
                     return dbOp;
                 } else {
@@ -1004,7 +1005,7 @@ public final class ZimbraQuery {
                 }
             }
 
-            DBQueryOperation dbOp = DBQueryOperation.Create();
+            DBQueryOperation dbOp = new DBQueryOperation();
             if (mFolder != null) {
                 if (mIncludeSubfolders) {
                     List<Folder> subFolders = mFolder.getSubfolderHierarchy();
@@ -1292,7 +1293,7 @@ public final class ZimbraQuery {
 
         @Override
         protected QueryOperation getQueryOperation(boolean truth) {
-            DBQueryOperation op = DBQueryOperation.Create();
+            DBQueryOperation op = new DBQueryOperation();
 
             truth = calcTruth(truth);
 
@@ -1360,7 +1361,7 @@ public final class ZimbraQuery {
 
         @Override
         protected QueryOperation getQueryOperation(boolean truth) {
-            DBQueryOperation op = DBQueryOperation.Create();
+            DBQueryOperation op = new DBQueryOperation();
             truth = calcTruth(truth);
 
             long highest = -1, lowest = -1;
@@ -1576,7 +1577,7 @@ public final class ZimbraQuery {
 
         @Override
         protected QueryOperation getQueryOperation(boolean truth) {
-            DBQueryOperation dbOp = DBQueryOperation.Create();
+            DBQueryOperation dbOp = new DBQueryOperation();
 
             dbOp.addTagClause(mTag, calcTruth(truth));
 
@@ -1632,7 +1633,7 @@ public final class ZimbraQuery {
 
         @Override
         protected QueryOperation getQueryOperation(boolean truth) {
-            DBQueryOperation dbOp = DBQueryOperation.Create();
+            DBQueryOperation dbOp = new DBQueryOperation();
 
             truth = calcTruth(truth);
 
@@ -1885,7 +1886,7 @@ public final class ZimbraQuery {
 
         @Override
         protected QueryOperation getQueryOperation(boolean truth) {
-            DBQueryOperation op = DBQueryOperation.Create();
+            DBQueryOperation op = new DBQueryOperation();
             truth = calcTruth(truth);
 
             if (mLt) {
@@ -1966,7 +1967,7 @@ public final class ZimbraQuery {
 
         @Override
         protected QueryOperation getQueryOperation(boolean truthiness) {
-            DBQueryOperation op = DBQueryOperation.Create();
+            DBQueryOperation op = new DBQueryOperation();
             truthiness = calcTruth(truthiness);
             op.addConvCountClause(mLowestCount, mLowerEq, mHighestCount, mHigherEq, truthiness);
             return op;
@@ -2011,7 +2012,7 @@ public final class ZimbraQuery {
 
         @Override
         protected QueryOperation getQueryOperation(boolean truth) {
-            DBQueryOperation op = DBQueryOperation.Create();
+            DBQueryOperation op = new DBQueryOperation();
             truth = calcTruth(truth);
 
             if (mLt) {
@@ -2976,12 +2977,10 @@ public final class ZimbraQuery {
      * @param proto The soap protocol the response should be returned with
      * @return Open ZimbraQueryResults -- YOU MUST CALL doneWithSearchResults() to release the results set!
      * @throws ServiceException
-     * @throws IOException
      */
-    final public ZimbraQueryResults execute() throws ServiceException, IOException {
-        MailboxIndex mbidx = mMbox.getMailboxIndex();
+    final public ZimbraQueryResults execute() throws ServiceException {
 
-        if (mOp!= null) {
+        if (mOp != null) {
             QueryTargetSet targets = mOp.getQueryTargets();
             assert(mOp instanceof UnionQueryOperation || targets.countExplicitTargets() <=1);
             assert(targets.size() >1 || !targets.hasExternalTargets() || mOp instanceof RemoteQueryOperation);
@@ -2991,7 +2990,7 @@ public final class ZimbraQuery {
 
             assert(mResults == null);
 
-            mResults = mOp.run(mMbox, mbidx, mParams, mChunkSize);
+            mResults = mOp.run(mMbox, mParams, mChunkSize);
 
             mResults = HitIdGrouper.Create(mResults, mParams.getSortBy());
 
@@ -3074,7 +3073,7 @@ public final class ZimbraQuery {
                         intersect.addQueryOp(newUnion);
 
                         for (Folder f : visibleFolders) {
-                            DBQueryOperation newOp = DBQueryOperation.Create();
+                            DBQueryOperation newOp = new DBQueryOperation();
                             newUnion.add(newOp);
                             newOp.addInClause(f, true);
                         }

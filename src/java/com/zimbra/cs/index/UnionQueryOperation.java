@@ -2,26 +2,18 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Oct 29, 2004
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 package com.zimbra.cs.index;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -33,21 +25,18 @@ import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
-
-/************************************************************************
- * 
- * UnionQueryOperation
+/**
+ * A list of query operations which are unioned together.
  *
- * 
- * -- a list of query operations which are unioned together.
- * 
- ***********************************************************************/
-class UnionQueryOperation extends CombiningQueryOperation
-{
+ * @since Oct 29, 2004
+ */
+final class UnionQueryOperation extends CombiningQueryOperation {
     private static Log mLog = LogFactory.getLog(UnionQueryOperation.class);
 
     private boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
+    private ZimbraHit mCachedNextHit = null;
 
+    @Override
     QueryTargetSet getQueryTargets() {
         QueryTargetSet toRet = new QueryTargetSet();
 
@@ -57,16 +46,11 @@ class UnionQueryOperation extends CombiningQueryOperation
         return toRet;
     }
 
-    /******************
-     * 
-     * Hits iteration
-     *
-     *******************/
+    @Override
     public void resetIterator() throws ServiceException {
         if (!atStart) {
-            for (Iterator iter = mQueryOperations.iterator(); iter.hasNext(); )
-            {
-                QueryOperation q = (QueryOperation)iter.next();
+            for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext(); ) {
+                QueryOperation q = iter.next();
                 q.resetIterator();
             }
             mCachedNextHit = null;
@@ -74,8 +58,7 @@ class UnionQueryOperation extends CombiningQueryOperation
         }
     }
 
-    private ZimbraHit mCachedNextHit = null;
-    
+    @Override
     public ZimbraHit getNext() throws ServiceException {
         atStart = false;
         ZimbraHit toRet = mCachedNextHit;
@@ -87,16 +70,14 @@ class UnionQueryOperation extends CombiningQueryOperation
         return toRet;
     }
 
-    public ZimbraHit peekNext() throws ServiceException
-    {
+    @Override
+    public ZimbraHit peekNext() {
         return mCachedNextHit;
     }
 
-    private void internalGetNext() throws ServiceException
-    {
+    private void internalGetNext() throws ServiceException {
         if (mCachedNextHit == null) {
-            
-            if (getResultsSet().getSortBy() == SortBy.NONE) {
+            if (context.getResults().getSortBy() == SortBy.NONE) {
                 for (QueryOperation op : mQueryOperations) {
                     mCachedNextHit = op.getNext();
                     if (mCachedNextHit != null)
@@ -109,14 +90,14 @@ class UnionQueryOperation extends CombiningQueryOperation
                 int currentBestHitOffset = -1;
                 ZimbraHit currentBestHit = null;
                 for (int i = 0; i < mQueryOperations.size(); i++) {
-                    QueryOperation op = (QueryOperation)(mQueryOperations.get(i));
+                    QueryOperation op = mQueryOperations.get(i);
                     if (op.hasNext()) {
                         if (currentBestHitOffset == -1) {
                             currentBestHitOffset = i;
                             currentBestHit = op.peekNext();
                         } else {
                             ZimbraHit opNext = op.peekNext();
-                            int result = opNext.compareBySortField(getResultsSet().getSortBy(), currentBestHit);
+                            int result = opNext.compareBySortField(context.getResults().getSortBy(), currentBestHit);
                             if (result < 0) {
                                 // "before"
                                 currentBestHitOffset = i;
@@ -126,7 +107,7 @@ class UnionQueryOperation extends CombiningQueryOperation
                     }
                 }
                 if (currentBestHitOffset > -1) {
-                    mCachedNextHit = ((QueryOperation)(mQueryOperations.get(currentBestHitOffset))).getNext();
+                    mCachedNextHit = mQueryOperations.get(currentBestHitOffset).getNext();
                     assert(mCachedNextHit == currentBestHit);
                 }
             }
@@ -134,30 +115,28 @@ class UnionQueryOperation extends CombiningQueryOperation
     }
 
 
+    @Override
     public void doneWithSearchResults() throws ServiceException {
-        for (Iterator iter = mQueryOperations.iterator(); iter.hasNext(); )
-        {
-            QueryOperation q = (QueryOperation)iter.next();
+        for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext(); ) {
+            QueryOperation q = iter.next();
             q.doneWithSearchResults();
         }
     }
 
-//    ArrayList<QueryOperation>mQueryOperations = new ArrayList<QueryOperation>();
-
+    @Override
     public boolean hasSpamTrashSetting() {
         boolean hasAll = true;
-        for (Iterator iter = mQueryOperations.iterator(); hasAll && iter.hasNext(); )
-        {
-            QueryOperation op = (QueryOperation)iter.next();
+        for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); hasAll && iter.hasNext(); ) {
+            QueryOperation op = iter.next();
             hasAll = op.hasSpamTrashSetting();
         }
         return hasAll;
     }
 
+    @Override
     void forceHasSpamTrashSetting() {
-        for (Iterator iter = mQueryOperations.iterator(); iter.hasNext(); )
-        {
-            QueryOperation op = (QueryOperation)iter.next();
+        for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext(); ) {
+            QueryOperation op = iter.next();
             op.forceHasSpamTrashSetting();
         }
     }
@@ -166,30 +145,32 @@ class UnionQueryOperation extends CombiningQueryOperation
         return targetOfParent;
     }
 
-
+    @Override
     boolean hasNoResults() {
         return false;
     }
+
+    @Override
     boolean hasAllResults() {
         return false;
     }
-    
+
+    @Override
     QueryOperation expandLocalRemotePart(Mailbox mbox) throws ServiceException {
-        ArrayList<QueryOperation> newList = new ArrayList<QueryOperation>();
+        List<QueryOperation> newList = new ArrayList<QueryOperation>();
         for (QueryOperation op : mQueryOperations) {
             newList.add(op.expandLocalRemotePart(mbox));
         }
         mQueryOperations = newList;
         return this;
     }
-    
-    QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) throws ServiceException
-    {
+
+    @Override
+    QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) throws ServiceException {
         ArrayList<QueryOperation> newList = new ArrayList<QueryOperation>();
 
-        for (Iterator iter = mQueryOperations.iterator(); iter.hasNext(); )
-        {
-            QueryOperation op = (QueryOperation)iter.next();
+        for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext(); ) {
+            QueryOperation op = iter.next();
             if (!op.hasSpamTrashSetting()) {
                 newList.add(op.ensureSpamTrashSetting(mbox, includeTrash, includeSpam));
             } else {
@@ -225,12 +206,12 @@ class UnionQueryOperation extends CombiningQueryOperation
         }
     }
 
+    @Override
     public QueryOperation optimize(Mailbox mbox) throws ServiceException {
         restartSubOpt:
             do {
-                for (Iterator iter = mQueryOperations.iterator(); iter.hasNext(); )
-                {
-                    QueryOperation q = (QueryOperation)iter.next();
+                for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext(); ) {
+                    QueryOperation q = iter.next();
                     QueryOperation newQ = q.optimize(mbox);
                     if (newQ != q) {
                         iter.remove();
@@ -243,14 +224,13 @@ class UnionQueryOperation extends CombiningQueryOperation
                 break;
             } while(true);
 
-    if (mQueryOperations.size() == 0) {
-        return new NoTermQueryOperation();
-    }
+        if (mQueryOperations.size() == 0) {
+            return new NoTermQueryOperation();
+        }
 
-    outer:
-        do {
+        outer: do {
             for (int i = 0; i < mQueryOperations.size(); i++) {
-                QueryOperation lhs = (QueryOperation)mQueryOperations.get(i);
+                QueryOperation lhs = mQueryOperations.get(i);
 
                 // if one of our direct children is an OR, then promote all of its
                 // elements to our level -- this can happen if a subquery has
@@ -262,7 +242,7 @@ class UnionQueryOperation extends CombiningQueryOperation
                 }
 
                 for (int j = i+1; j < mQueryOperations.size(); j++) {
-                    QueryOperation rhs = (QueryOperation)mQueryOperations.get(j);
+                    QueryOperation rhs = mQueryOperations.get(j);
                     QueryOperation joined = lhs.combineOps(rhs,true);
                     if (joined != null) {
                         mQueryOperations.remove(j);
@@ -275,16 +255,16 @@ class UnionQueryOperation extends CombiningQueryOperation
             break;
         } while(true);
 
+        // now - check to see if we have only one child -- if so, then WE can be
+        // eliminated, so push the child up
+        if (mQueryOperations.size() == 1) {
+            return mQueryOperations.get(0);
+        }
 
-    // now - check to see if we have only one child -- if so, then WE can be
-    // eliminated, so push the child up
-    if (mQueryOperations.size() == 1) {
-        return (QueryOperation)mQueryOperations.get(0);
+        return this;
     }
 
-    return this;
-    }
-
+    @Override
     String toQueryString() {
         StringBuilder ret = new StringBuilder("(");
 
@@ -302,9 +282,10 @@ class UnionQueryOperation extends CombiningQueryOperation
         return ret.toString();
     }
 
+    @Override
     public String toString() {
         StringBuilder retval = new StringBuilder("UNION{");
-        
+
         boolean atFirst = true;
 
         for (int i = 0; i < mQueryOperations.size(); i++) {
@@ -312,13 +293,14 @@ class UnionQueryOperation extends CombiningQueryOperation
                 atFirst = false;
             else
                 retval.append(" OR ");
-            
+
             retval.append(mQueryOperations.get(i).toString());
         }
         retval.append("}");
         return retval.toString();
     }
 
+    @Override
     public Object clone() {
         UnionQueryOperation toRet = null;
         toRet = (UnionQueryOperation)super.clone();
@@ -331,11 +313,9 @@ class UnionQueryOperation extends CombiningQueryOperation
 
         return toRet;
     }
-    
+
+    @Override
     protected QueryOperation combineOps(QueryOperation other, boolean union) {
-//        if (mLog.isDebugEnabled()) {
-//            mLog.debug("combineOps("+toString()+","+other.toString()+")");
-//        }
         if (union && other instanceof UnionQueryOperation) {
             mQueryOperations.addAll(((UnionQueryOperation)other).mQueryOperations);
             return this;
@@ -343,31 +323,34 @@ class UnionQueryOperation extends CombiningQueryOperation
         return null;
     }
 
-
-    protected void prepare(Mailbox mbx, ZimbraQueryResultsImpl res, MailboxIndex mbidx, SearchParams params, int chunkSize) throws ServiceException, IOException
-    {
-        mParams = params;
-        this.setupResults(mbx, res);
+    @Override
+    protected void begin(QueryContext ctx) throws ServiceException {
+        assert(context == null);
+        context = ctx;
 
         for (int i = 0; i < mQueryOperations.size(); i++) {
-            QueryOperation qop = (QueryOperation)mQueryOperations.get(i);
+            QueryOperation qop = mQueryOperations.get(i);
             if (mLog.isDebugEnabled()) {
-                mLog.debug("Executing: "+qop.toString());
+                mLog.debug("Executing: " + qop.toString());
             }
-            qop.prepare(mbx, res, mbidx, mParams, chunkSize+1); // add 1 to chunksize b/c we buffer
+            // add 1 to chunk size b/c we buffer
+            qop.begin(new QueryContext(ctx.getMailbox(), ctx.getResults(),
+                    ctx.getParams(), ctx.getChunkSize() + 1));
         }
 
         internalGetNext();
     }
-    
-    public List<QueryInfo> getResultInfo() { 
+
+    @Override
+    public List<QueryInfo> getResultInfo() {
         List<QueryInfo> toRet = new ArrayList<QueryInfo>();
         for (QueryOperation op : mQueryOperations) {
             toRet.addAll(op.getResultInfo());
         }
         return toRet;
     }
-    
+
+    @Override
     public int estimateResultSize() throws ServiceException {
         int total = 0;
         for (QueryOperation qop : mQueryOperations) {
@@ -376,10 +359,11 @@ class UnionQueryOperation extends CombiningQueryOperation
         }
         return total;
     }
-    
+
+    @Override
     protected void depthFirstRecurse(RecurseCallback cb) {
         for (int i = 0; i < mQueryOperations.size(); i++) {
-            QueryOperation op = (QueryOperation) mQueryOperations.get(i);
+            QueryOperation op = mQueryOperations.get(i);
             op.depthFirstRecurse(cb);
         }
         cb.recurseCallback(this);
