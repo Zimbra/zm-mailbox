@@ -35,33 +35,35 @@ public class DbImapFolder {
 
     public static ImapFolder getImapFolder(Mailbox mbox, DataSource ds, int itemId)
         throws ServiceException {
-        
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        try {
-            conn = DbPool.getConnection(mbox);
-            stmt = conn.prepareStatement(
-                "SELECT local_path, remote_path, uid_validity" +
-                " FROM " + getTableName(mbox) +
-                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "item_id = ? ");
-            int pos = DbMailItem.setMailboxId(stmt, mbox, 1);
-            stmt.setInt(pos, itemId);
-            rs = stmt.executeQuery();
-            if (!rs.next()) return null;
-            String localPath = rs.getString("local_path");
-            String remotePath = rs.getString("remote_path");
-            Long uidValidity = rs.getLong("uid_validity");
-            if (rs.wasNull()) {
-                uidValidity = null;
+        synchronized (DbMailItem.getSynchronizer(mbox)) {
+            
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+            try {
+                conn = DbPool.getConnection(mbox);
+                stmt = conn.prepareStatement(
+                    "SELECT local_path, remote_path, uid_validity" +
+                    " FROM " + getTableName(mbox) +
+                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "item_id = ? ");
+                int pos = DbMailItem.setMailboxId(stmt, mbox, 1);
+                stmt.setInt(pos, itemId);
+                rs = stmt.executeQuery();
+                if (!rs.next()) return null;
+                String localPath = rs.getString("local_path");
+                String remotePath = rs.getString("remote_path");
+                Long uidValidity = rs.getLong("uid_validity");
+                if (rs.wasNull()) {
+                    uidValidity = null;
+                }
+                return new ImapFolder(ds, itemId, remotePath, localPath, uidValidity);
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("Unable to get IMAP folder data", e);
+            } finally {
+                DbPool.closeResults(rs);
+                DbPool.closeStatement(stmt);
+                DbPool.quietClose(conn);
             }
-            return new ImapFolder(ds, itemId, remotePath, localPath, uidValidity);
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("Unable to get IMAP folder data", e);
-        } finally {
-            DbPool.closeResults(rs);
-            DbPool.closeStatement(stmt);
-            DbPool.quietClose(conn);
         }
     }
     
@@ -70,76 +72,80 @@ public class DbImapFolder {
      */
     public static ImapFolderCollection getImapFolders(Mailbox mbox, DataSource ds)
     throws ServiceException {
-        ImapFolderCollection imapFolders = new ImapFolderCollection();
-
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        try {
-            conn = DbPool.getConnection(mbox);
-
-            stmt = conn.prepareStatement(
-                "SELECT item_id, local_path, remote_path, uid_validity" +
-                " FROM " + getTableName(mbox) +
-                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ?");
-            int pos = 1;
-            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
-            stmt.setString(pos++, ds.getId());
-            rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                int itemId = rs.getInt("item_id");
-                String localPath = rs.getString("local_path");
-                String remotePath = rs.getString("remote_path");
-                Long uidValidity = rs.getLong("uid_validity");
-                if (rs.wasNull())
-                    uidValidity = null;
-
-                ImapFolder imapFolder = new ImapFolder(ds, itemId, remotePath, localPath, uidValidity);
-                imapFolders.add(imapFolder);
+        synchronized (DbMailItem.getSynchronizer(mbox)) {
+            ImapFolderCollection imapFolders = new ImapFolderCollection();
+    
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+            try {
+                conn = DbPool.getConnection(mbox);
+    
+                stmt = conn.prepareStatement(
+                    "SELECT item_id, local_path, remote_path, uid_validity" +
+                    " FROM " + getTableName(mbox) +
+                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ?");
+                int pos = 1;
+                pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+                stmt.setString(pos++, ds.getId());
+                rs = stmt.executeQuery();
+    
+                while (rs.next()) {
+                    int itemId = rs.getInt("item_id");
+                    String localPath = rs.getString("local_path");
+                    String remotePath = rs.getString("remote_path");
+                    Long uidValidity = rs.getLong("uid_validity");
+                    if (rs.wasNull())
+                        uidValidity = null;
+    
+                    ImapFolder imapFolder = new ImapFolder(ds, itemId, remotePath, localPath, uidValidity);
+                    imapFolders.add(imapFolder);
+                }
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("Unable to get IMAP folder data", e);
+            } finally {
+                DbPool.closeResults(rs);
+                DbPool.closeStatement(stmt);
+                DbPool.quietClose(conn);
             }
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("Unable to get IMAP folder data", e);
-        } finally {
-            DbPool.closeResults(rs);
-            DbPool.closeStatement(stmt);
-            DbPool.quietClose(conn);
+    
+            ZimbraLog.datasource.debug("Found %d folders for %s", imapFolders.size(), ds);
+            return imapFolders;
         }
-
-        ZimbraLog.datasource.debug("Found %d folders for %s", imapFolders.size(), ds);
-        return imapFolders;
     }
     
     public static ImapFolder createImapFolder(Mailbox mbox, DataSource ds, int itemId,
                                               String localPath, String remotePath, long uidValidity)
     throws ServiceException {
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        try {
-            conn = DbPool.getConnection(mbox);
-
-            ZimbraLog.datasource.debug(
-                "createImapFolder: itemId = %d, localPath = %s, remotePath = %s, uidValidity = %d",
-            itemId, localPath, remotePath, uidValidity);
-            stmt = conn.prepareStatement(
-                "INSERT INTO " + getTableName(mbox) +
-                " (" + DbMailItem.MAILBOX_ID + "item_id, data_source_id, local_path, remote_path, uid_validity) " +
-                "VALUES ("+DbMailItem.MAILBOX_ID_VALUE+"?, ?, ?, ?, ?)");
-            int pos = 1;
-            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
-            stmt.setInt(pos++, itemId);
-            stmt.setString(pos++, ds.getId());
-            stmt.setString(pos++, localPath);
-            stmt.setString(pos++, remotePath);
-            stmt.setLong(pos++, uidValidity);
-            stmt.executeUpdate();
-            conn.commit();
-            return new ImapFolder(ds, itemId, remotePath, localPath, uidValidity);
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("Unable to store IMAP message data", e);
-        } finally {
-            DbPool.closeStatement(stmt);
-            DbPool.quietClose(conn);
+        synchronized (DbMailItem.getSynchronizer(mbox)) {
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            try {
+                conn = DbPool.getConnection(mbox);
+    
+                ZimbraLog.datasource.debug(
+                    "createImapFolder: itemId = %d, localPath = %s, remotePath = %s, uidValidity = %d",
+                itemId, localPath, remotePath, uidValidity);
+                stmt = conn.prepareStatement(
+                    "INSERT INTO " + getTableName(mbox) +
+                    " (" + DbMailItem.MAILBOX_ID + "item_id, data_source_id, local_path, remote_path, uid_validity) " +
+                    "VALUES ("+DbMailItem.MAILBOX_ID_VALUE+"?, ?, ?, ?, ?)");
+                int pos = 1;
+                pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+                stmt.setInt(pos++, itemId);
+                stmt.setString(pos++, ds.getId());
+                stmt.setString(pos++, localPath);
+                stmt.setString(pos++, remotePath);
+                stmt.setLong(pos++, uidValidity);
+                stmt.executeUpdate();
+                conn.commit();
+                return new ImapFolder(ds, itemId, remotePath, localPath, uidValidity);
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("Unable to store IMAP message data", e);
+            } finally {
+                DbPool.closeStatement(stmt);
+                DbPool.quietClose(conn);
+            }
         }
     }
     
@@ -149,34 +155,36 @@ public class DbImapFolder {
     public static void updateImapFolder(ImapFolder imapFolder)
     throws ServiceException {
         Mailbox mbox = DataSourceManager.getInstance().getMailbox(imapFolder.getDataSource());
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        try {
-            conn = DbPool.getConnection(mbox);
-
-            stmt = conn.prepareStatement(
-                "UPDATE " + getTableName(mbox) +
-                " SET local_path = ?, remote_path = ?, uid_validity = ?" +
-                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ? AND item_id = ?");
-            int pos = 1;
-            stmt.setString(pos++, imapFolder.getLocalPath());
-            stmt.setString(pos++, imapFolder.getRemoteId());
-            stmt.setLong(pos++, imapFolder.getUidValidity());
-            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
-            stmt.setString(pos++, imapFolder.getDataSource().getId());
-            stmt.setInt(pos++, imapFolder.getItemId());
-            int numRows = stmt.executeUpdate();
-            if (numRows != 1) {
-                throw ServiceException.FAILURE(
-                    String.format("Incorrect number of rows updated (%d) for %s",
-                        numRows, imapFolder), null);
+        synchronized (DbMailItem.getSynchronizer(mbox)) {
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            try {
+                conn = DbPool.getConnection(mbox);
+    
+                stmt = conn.prepareStatement(
+                    "UPDATE " + getTableName(mbox) +
+                    " SET local_path = ?, remote_path = ?, uid_validity = ?" +
+                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ? AND item_id = ?");
+                int pos = 1;
+                stmt.setString(pos++, imapFolder.getLocalPath());
+                stmt.setString(pos++, imapFolder.getRemoteId());
+                stmt.setLong(pos++, imapFolder.getUidValidity());
+                pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+                stmt.setString(pos++, imapFolder.getDataSource().getId());
+                stmt.setInt(pos++, imapFolder.getItemId());
+                int numRows = stmt.executeUpdate();
+                if (numRows != 1) {
+                    throw ServiceException.FAILURE(
+                        String.format("Incorrect number of rows updated (%d) for %s",
+                            numRows, imapFolder), null);
+                }
+                conn.commit();
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("Unable to update " + imapFolder, e);
+            } finally {
+                DbPool.closeStatement(stmt);
+                DbPool.quietClose(conn);
             }
-            conn.commit();
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("Unable to update " + imapFolder, e);
-        } finally {
-            DbPool.closeStatement(stmt);
-            DbPool.quietClose(conn);
         }
     }
     
@@ -185,31 +193,33 @@ public class DbImapFolder {
      */
     public static void deleteImapData(Mailbox mbox, String dataSourceId)
     throws ServiceException {
-        ZimbraLog.datasource.info("Deleting IMAP data for DataSource %s", dataSourceId);
-
-        if (StringUtil.isNullOrEmpty(dataSourceId))
-            return;
-
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        try {
-            // Note: data in imap_message gets deleted implicitly by the
-            // foreign key cascading delete
-            conn = DbPool.getConnection(mbox);
-
-            stmt = conn.prepareStatement(
-                "DELETE FROM " + getTableName(mbox) +
-                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ?");
-            int pos = 1;
-            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
-            stmt.setString(pos++, dataSourceId);
-            stmt.executeUpdate();
-            conn.commit();
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("Unable to delete IMAP data", e);
-        } finally {
-            DbPool.closeStatement(stmt);
-            DbPool.quietClose(conn);
+        synchronized (DbMailItem.getSynchronizer(mbox)) {
+            ZimbraLog.datasource.info("Deleting IMAP data for DataSource %s", dataSourceId);
+    
+            if (StringUtil.isNullOrEmpty(dataSourceId))
+                return;
+    
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            try {
+                // Note: data in imap_message gets deleted implicitly by the
+                // foreign key cascading delete
+                conn = DbPool.getConnection(mbox);
+    
+                stmt = conn.prepareStatement(
+                    "DELETE FROM " + getTableName(mbox) +
+                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ?");
+                int pos = 1;
+                pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+                stmt.setString(pos++, dataSourceId);
+                stmt.executeUpdate();
+                conn.commit();
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("Unable to delete IMAP data", e);
+            } finally {
+                DbPool.closeStatement(stmt);
+                DbPool.quietClose(conn);
+            }
         }
     }
 
@@ -218,29 +228,31 @@ public class DbImapFolder {
      */
     public static void deleteImapFolder(Mailbox mbox, DataSource ds, ImapFolder folder)
     throws ServiceException {
-        ZimbraLog.datasource.info("Deleting IMAP data for %s in %s", folder, ds);
-        
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        try {
-            // Note: data in imap_message gets deleted implicitly by the
-            // foreign key cascading delete
-            conn = DbPool.getConnection(mbox);
-
-            stmt = conn.prepareStatement(
-                "DELETE FROM " + getTableName(mbox) +
-                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ? and item_id = ?");
-            int pos = 1;
-            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
-            stmt.setString(pos++, ds.getId());
-            stmt.setInt(pos++, folder.getItemId());
-            stmt.executeUpdate();
-            conn.commit();
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("Unable to delete IMAP folder", e);
-        } finally {
-            DbPool.closeStatement(stmt);
-            DbPool.quietClose(conn);
+        synchronized (DbMailItem.getSynchronizer(mbox)) {
+            ZimbraLog.datasource.info("Deleting IMAP data for %s in %s", folder, ds);
+            
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            try {
+                // Note: data in imap_message gets deleted implicitly by the
+                // foreign key cascading delete
+                conn = DbPool.getConnection(mbox);
+    
+                stmt = conn.prepareStatement(
+                    "DELETE FROM " + getTableName(mbox) +
+                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "data_source_id = ? and item_id = ?");
+                int pos = 1;
+                pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+                stmt.setString(pos++, ds.getId());
+                stmt.setInt(pos++, folder.getItemId());
+                stmt.executeUpdate();
+                conn.commit();
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("Unable to delete IMAP folder", e);
+            } finally {
+                DbPool.closeStatement(stmt);
+                DbPool.quietClose(conn);
+            }
         }
     }
 
