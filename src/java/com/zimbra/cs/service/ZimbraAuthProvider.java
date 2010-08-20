@@ -35,6 +35,10 @@ public class ZimbraAuthProvider extends AuthProvider{
         super(ZIMBRA_AUTH_PROVIDER);
     }
     
+    protected ZimbraAuthProvider(String name) {
+        super(name);
+    }
+
     // AP-TODO-6: dup in ZAuthToken, move to common?
     public static String cookieName(boolean isAdminReq) {
         return isAdminReq? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN;
@@ -70,7 +74,7 @@ public class ZimbraAuthProvider extends AuthProvider{
         return genAuthToken(encoded);
     }
     
-    private AuthToken genAuthToken(String encodedAuthToken) throws AuthProviderException, AuthTokenException {
+    protected AuthToken genAuthToken(String encodedAuthToken) throws AuthProviderException, AuthTokenException {
         if (StringUtil.isNullOrEmpty(encodedAuthToken))
             throw AuthProviderException.NO_AUTH_DATA();
         
