@@ -33,6 +33,6 @@ public class UnlockItem extends LockItem {
 
     @Override public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mbox.lock(getOperationContext(), mId, mType, mAccountId);
+        mbox.unlock(getOperationContext(), mId, mType, mAccountId);
     }
 }

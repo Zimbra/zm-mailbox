@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
@@ -38,6 +39,7 @@ public class Document extends MailItem {
     protected String mContentType;
     protected String mCreator;
     protected String mFragment;
+    protected String mLockOwner;
 
     public Document(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
@@ -154,7 +156,7 @@ public class Document extends MailItem {
         data.name        = name;
         data.subject     = name;
         data.setBlobDigest(pd.getDigest());
-        data.metadata    = encodeMetadata(meta, DEFAULT_COLOR_RGB, 1, extended, mimeType, pd.getCreator(), pd.getFragment()).toString();
+        data.metadata    = encodeMetadata(meta, DEFAULT_COLOR_RGB, 1, extended, mimeType, pd.getCreator(), pd.getFragment(), null).toString();
         return data;
     }
 
@@ -196,26 +198,28 @@ public class Document extends MailItem {
         mContentType = meta.get(Metadata.FN_MIME_TYPE);
         mCreator     = meta.get(Metadata.FN_CREATOR, mCreator);
         mFragment    = meta.get(Metadata.FN_FRAGMENT, mFragment);
+        mLockOwner   = meta.get(Metadata.FN_LOCK_OWNER, mLockOwner);
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mContentType, mCreator, mFragment);
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mContentType, mCreator, mFragment, mLockOwner);
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, String mimeType, String creator, String fragment) {
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, String mimeType, String creator, String fragment, String lockowner) {
         if (meta == null)
             meta = new Metadata();
         meta.put(Metadata.FN_MIME_TYPE, mimeType);
         meta.put(Metadata.FN_CREATOR, creator);
         meta.put(Metadata.FN_FRAGMENT, fragment);
+        meta.put(Metadata.FN_LOCK_OWNER, lockowner);
         return MailItem.encodeMetadata(meta, color, version, extended);
     }
-
 
     private static final String CN_FRAGMENT  = "fragment";
     private static final String CN_MIME_TYPE = "mime_type";
     private static final String CN_FILE_NAME = "filename";
     private static final String CN_EDITOR    = "edited_by";
+    private static final String CN_LOCKOWNER = "locked_by";
 
     @Override public String toString() {
         StringBuffer sb = new StringBuffer();
@@ -225,6 +229,8 @@ public class Document extends MailItem {
         sb.append(CN_MIME_TYPE).append(": ").append(mContentType).append(", ");
         appendCommonMembers(sb).append(", ");
         sb.append(CN_FRAGMENT).append(": ").append(mFragment);
+        if (mLockOwner != null)
+            sb.append(CN_LOCKOWNER).append(": ").append(mLockOwner);
         sb.append("}");
         return sb.toString();
     }
@@ -233,19 +239,37 @@ public class Document extends MailItem {
         return true;
     }
 
-    @Override protected boolean isLockingSupported() {
-        return true;
-    }
-    
     @Override MailboxBlob setContent(StagedBlob staged, Object content) throws ServiceException, IOException {
-        if (!hasLock())
-            throw MailServiceException.LOCKED(mId);
+        checkLock();
         return super.setContent(staged, content);
     }
     
     @Override boolean move(Folder target) throws ServiceException {
-        if (!hasLock())
-            throw MailServiceException.LOCKED(mId);
+        checkLock();
         return super.move(target);
+    }
+    
+    @Override void lock(Account authuser) throws ServiceException {
+        if (mLockOwner != null && 
+                !mLockOwner.equalsIgnoreCase(authuser.getId()))
+            throw MailServiceException.CANNOT_LOCK(mId, mLockOwner);
+        mLockOwner = authuser.getId();
+        saveMetadata();
+    }
+    
+    @Override void unlock(Account authuser) throws ServiceException {
+        if (mLockOwner == null)
+            return;
+        if (!mLockOwner.equalsIgnoreCase(authuser.getId()) &&
+                checkRights(ACL.RIGHT_ADMIN, authuser, false) == 0)
+            throw MailServiceException.CANNOT_UNLOCK(mId, mLockOwner);
+        mLockOwner = null;
+        saveMetadata();
+    }
+
+    protected void checkLock() throws ServiceException {
+        if (mLockOwner != null &&
+                !mMailbox.getAuthenticatedAccount().getId().equalsIgnoreCase(mLockOwner))
+            throw MailServiceException.LOCKED(mId, mLockOwner);
     }
 }

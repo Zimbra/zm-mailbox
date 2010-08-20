@@ -73,6 +73,7 @@ public class Metadata {
     static final String FN_INV             = "inv";
     static final String FN_BOUNDS          = "l";
     static final String FN_LAST_DATE       = "ld";
+    static final String FN_LOCK_OWNER      = "lo";
     static final String FN_MODSEQ          = "mseq";
     static final String FN_NUM_COMPONENTS  = "nc";
     static final String FN_NODES           = "no";

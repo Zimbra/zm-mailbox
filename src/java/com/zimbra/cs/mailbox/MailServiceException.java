@@ -515,7 +515,7 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("cannot unlock item: " + id, CANNOT_UNLOCK, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID), new Argument(ACCOUNT_ID, accountId, Argument.Type.ACCTID));
     }
     
-    public static MailServiceException LOCKED(int id) {
-        return new MailServiceException("item is locked: " + id, LOCKED, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
+    public static MailServiceException LOCKED(int id, String accountId) {
+        return new MailServiceException("item is locked: " + id, LOCKED, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID), new Argument(ACCOUNT_ID, accountId, Argument.Type.ACCTID));
     }
 }

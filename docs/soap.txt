@@ -1773,7 +1773,7 @@ originally intended.
 
 <ItemActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|read|flag|tag|move|trash|rename|update|color" 
+  <action id="{list}" op="delete|read|flag|tag|move|trash|rename|update|color|lock|unlock" 
          [tag="{id}"] [l="{folder}"] [name="{item-name}"] [color="{color}"] [rgb="{rgb-color}"]
          [tcon="[-]{constraint}"] [f="{flags}"] [t="{id-list}"]/>
 </ItemActionRequest>
