@@ -49,7 +49,7 @@ import java.util.Map;
 /**
  * @author schemers
  */
-public class ZimbraAuthToken extends AuthToken {
+public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private static final String C_ID  = "id";
     // original admin id
     private static final String C_AID  = "aid";    
@@ -448,6 +448,11 @@ public class ZimbraAuthToken extends AuthToken {
             return "RAW";
         }       
 
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
     }
 
     public static void main(String args[]) throws ServiceException, AuthTokenException {
