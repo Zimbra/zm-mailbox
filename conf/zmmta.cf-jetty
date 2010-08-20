@@ -106,6 +106,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF policy_time_limit				LOCAL postfix_policy_time_limit
 	POSTCONF queue_directory					            LOCAL postfix_queue_directory
 	POSTCONF smtpd_sasl_authenticated_header			LOCAL postfix_smtpd_sasl_authenticated_header
+	POSTCONF smtpd_sender_restrictions			LOCAL postfix_smtpd_sender_restrictions
 	POSTCONF sender_canonical_maps				        LOCAL postfix_sender_canonical_maps
 	POSTCONF sendmail_path						            LOCAL postfix_sendmail_path
 	POSTCONF smtpd_client_restrictions			      LOCAL postfix_smtpd_client_restrictions
