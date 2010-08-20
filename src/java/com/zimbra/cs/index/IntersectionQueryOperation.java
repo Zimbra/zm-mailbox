@@ -669,17 +669,16 @@ final class IntersectionQueryOperation extends CombiningQueryOperation {
             for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext();) {
                 QueryOperation op = iter.next();
                 if (op instanceof TextQueryOperation) {
-                    lop = (TextQueryOperation)op;
+                    lop = (TextQueryOperation) op;
                     iter.remove();
                     break;
                 }
             }
             if (lop != null) {
                 boolean foundIt = false;
-                for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext();) {
-                    QueryOperation op = iter.next();
+                for (QueryOperation op : mQueryOperations) {
                     if (op instanceof DBQueryOperation) {
-                        ((DBQueryOperation)op).addTextOp(lop);
+                        ((DBQueryOperation) op).setTextQueryOperation(lop);
                         foundIt = true;
                     }
                 }
@@ -687,7 +686,6 @@ final class IntersectionQueryOperation extends CombiningQueryOperation {
                     // add the lucene op back in!
                     addQueryOp(lop);
                 }
-
             }
         }
 

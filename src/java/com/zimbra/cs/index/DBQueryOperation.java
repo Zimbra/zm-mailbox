@@ -265,13 +265,14 @@ class DBQueryOperation extends QueryOperation {
     }
 
     /**
-     * In an INTERSECTION, we can gain some efficiencies by using the output of the Lucene op
-     * as parameters to our SearchConstraints....we do that by taking over the lucene op
-     *(it is removed from the enclosing Intersection) and handling it internally.
+     * In an INTERSECTION, we can gain some efficiencies by using the output of
+     * the Lucene op as parameters to our SearchConstraints....we do that by
+     * taking over the lucene op (it is removed from the enclosing Intersection)
+     * and handling it internally.
      *
-     * @param op
+     * @param op Lucene query operation
      */
-    void addTextOp(TextQueryOperation op) {
+    void setTextQueryOperation(TextQueryOperation op) {
         assert(mLuceneOp == null);
         mAllResultsQuery = false;
         mLuceneOp = op;
@@ -1137,6 +1138,7 @@ class DBQueryOperation extends QueryOperation {
         if (mLuceneOp != null) {
             mHitsPerChunk *= 2; // enlarge chunk size b/c of join
             mLuceneOp.setDBOperation(this);
+            // this is 2nd time to call begin() of this Lucene op.
             mLuceneOp.begin(new QueryContext(ctx.getMailbox(),
                     ctx.getResults(), ctx.getParams(), mHitsPerChunk));
         }

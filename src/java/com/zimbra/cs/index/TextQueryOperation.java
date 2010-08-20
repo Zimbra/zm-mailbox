@@ -266,17 +266,20 @@ abstract class TextQueryOperation extends QueryOperation {
             return mDBOp.estimateResultSize();
     }
 
+    /**
+     * Can be called more than once recursively from {@link DBQueryOperation}.
+     */
     @Override
     protected final void begin(QueryContext ctx) throws ServiceException {
-        assert(context == null);
         assert(!mHaveRunSearch);
         context = ctx;
-        if (mDBOp == null) {
-            // wrap ourselves in a DBQueryOperation, since we're eventually going to need to go to the DB
+        if (mDBOp == null) { // 1st time called
+            // wrap ourselves in a DBQueryOperation, since we're eventually
+            // going to need to go to the DB
             mDBOp = new DBQueryOperation();
-            mDBOp.addTextOp(this);
-            mDBOp.begin(ctx); // will call back into this function again!
-        } else {
+            mDBOp.setTextQueryOperation(this);
+            mDBOp.begin(ctx); // will call back into this method again!
+        } else { // 2nd time called
             setupTextQueryOperation(ctx);
         }
     }
@@ -307,7 +310,7 @@ abstract class TextQueryOperation extends QueryOperation {
     QueryOperation ensureSpamTrashSetting(Mailbox mbox, boolean includeTrash, boolean includeSpam) throws ServiceException {
         // wrap ourselves in a DBQueryOperation, since we're eventually going to need to go to the DB
         DBQueryOperation dbOp = new DBQueryOperation();
-        dbOp.addTextOp(this);
+        dbOp.setTextQueryOperation(this);
         return dbOp.ensureSpamTrashSetting(mbox, includeTrash, includeSpam);
     }
 
