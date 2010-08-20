@@ -294,6 +294,7 @@ public class LC {
     public static final KnownKey postfix_policy_time_limit;
     public static final KnownKey postfix_queue_directory;
     public static final KnownKey postfix_smtpd_sasl_authenticated_header;
+    public static final KnownKey postfix_smtpd_sender_restrictions;
     public static final KnownKey postfix_sender_canonical_maps;
     public static final KnownKey postfix_sendmail_path;
     public static final KnownKey postfix_smtpd_client_restrictions;
@@ -1109,6 +1110,9 @@ public class LC {
 
         postfix_smtpd_sasl_authenticated_header  = new KnownKey("postfix_smtpd_sasl_authenticated_header");
         postfix_smtpd_sasl_authenticated_header.setDefault("no");
+
+        postfix_smtpd_sender_restrictions  = new KnownKey("postfix_smtpd_sender_restrictions");
+        postfix_smtpd_sender_restrictions.setDefault("");
 
         postfix_sender_canonical_maps  = new KnownKey("postfix_sender_canonical_maps");
         postfix_sender_canonical_maps.setDefault("proxy:ldap:${zimbra_home}" + FS + "conf" + FS + "ldap-scm.cf");
