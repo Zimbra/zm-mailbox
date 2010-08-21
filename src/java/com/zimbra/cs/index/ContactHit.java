@@ -29,14 +29,10 @@ public final class ContactHit extends ZimbraHit {
     private int mItemId;
 
     public ContactHit(ZimbraQueryResultsImpl results, Mailbox mbx, int itemId,
-            float score, MailItem.UnderlyingData ud) throws ServiceException {
+            float score, Contact contact) {
         super(results, mbx, score);
-
         mItemId = itemId;
-
-        if (ud != null) {
-            mContact = (Contact) mbx.toItem(ud);
-        }
+        mContact = contact;
     }
 
     @Override

@@ -17,31 +17,17 @@ package com.zimbra.cs.index;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Task;
 import com.zimbra.cs.mailbox.calendar.Invite;
 
-/**
- *
- */
-public class TaskHit extends CalendarItemHit {
+public final class TaskHit extends CalendarItemHit {
 
-    public static TaskHit create(ZimbraQueryResultsImpl results, Mailbox mbx,
-            int mailItemId, float score, MailItem.UnderlyingData ud) throws ServiceException {
-        CalendarItem calItem = null;
-        byte type = MailItem.TYPE_TASK;
-        if (ud != null) {
-            calItem = (Task) mbx.toItem(ud);
-            type = ud.type;
-        }
-        return new TaskHit(results, mbx, mailItemId, score, calItem, type);
-    }
-
-    public TaskHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId,
-            float score, CalendarItem calItem, byte type) {
-        super(results, mbx, mailItemId, score, calItem, type);
+    TaskHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId,
+            float score, Task task) {
+        super(results, mbx, mailItemId, score, task,
+                task != null ? task.getType() : MailItem.TYPE_TASK);
     }
 
     public long getDueTime() throws ServiceException {

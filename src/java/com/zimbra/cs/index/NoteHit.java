@@ -28,15 +28,11 @@ public final class NoteHit extends ZimbraHit {
     private Note mNote = null;
     private int mMailItemId;
 
-    public NoteHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId,
-            float score, MailItem.UnderlyingData ud)  throws ServiceException {
+    NoteHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId,
+            float score, Note note) {
         super(results, mbx, score);
-
         mMailItemId = mailItemId;
-
-        if (ud != null) {
-            mNote = (Note) mbx.toItem(ud);
-        }
+        mNote = note;
     }
 
     @Override

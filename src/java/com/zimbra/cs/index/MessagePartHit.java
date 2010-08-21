@@ -20,6 +20,7 @@ import org.apache.lucene.document.Document;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.Message;
 
 /**
  * Inderect result object wrapped around Lucene {@link Document}.
@@ -39,20 +40,16 @@ import com.zimbra.cs.mailbox.MailItem;
 public final class MessagePartHit extends ZimbraHit {
 
     private Document mDoc = null;
-
     private MessageHit mMessage = null;
-
-    int mMailItemId = 0;
+    private int mMailItemId = 0;
 
     protected MessagePartHit(ZimbraQueryResultsImpl res, Mailbox mbx,
-            int mailItemId, Document d, float score, MailItem.UnderlyingData ud)
-        throws ServiceException {
-
+            int mailItemId, Document doc, float score, Message message) {
         super(res, mbx, score);
         mMailItemId = mailItemId;
-        mDoc = d;
-        if (ud != null) {
-            getMessageResult(ud);
+        mDoc = doc;
+        if (message != null) {
+            getMessageResult(message);
         }
     }
 
@@ -159,21 +156,17 @@ public final class MessagePartHit extends ZimbraHit {
         }
     }
 
-    ////////////////////////////////////////////////////
-    //
-    // Hierarchy access:
-    //
-    public MessageHit getMessageResult() throws ServiceException {
+    public MessageHit getMessageResult() {
         return getMessageResult(null);
     }
 
     /**
      * @return Message that contains this document
      */
-    public MessageHit getMessageResult(MailItem.UnderlyingData ud) throws ServiceException {
+    public MessageHit getMessageResult(Message message) {
         if (mMessage == null) {
             mMessage = getResults().getMessageHit(getMailbox(),
-                    new Integer(getItemId()), mDoc, getScore(), ud);
+                    getItemId(), mDoc, getScore(), message);
             mMessage.addPart(this);
             mMessage.cacheImapMessage(mCachedImapMessage);
             mMessage.cacheModifiedSequence(mCachedModseq);

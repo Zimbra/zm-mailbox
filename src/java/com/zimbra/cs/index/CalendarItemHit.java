@@ -29,35 +29,21 @@ public class CalendarItemHit extends ZimbraHit {
     protected CalendarItem mCalItem;
     private byte mType = MailItem.TYPE_UNKNOWN;
 
-    /**
-     * @param results
-     * @param mbx
-     * @param id
-     * @param score
-     */
-    public CalendarItemHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id,
-            float score, MailItem.UnderlyingData ud) throws ServiceException {
+    CalendarItemHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id,
+            float score, CalendarItem cal) {
         super(results, mbx, score);
-
         mId = id;
-        if (ud != null) {
-            mCalItem = (CalendarItem) mbx.toItem(ud);
-            mType = ud.type;
+        mCalItem = cal;
+        if (cal != null) {
+            mType = cal.getType();
         }
     }
 
-    /**
-     * @param results
-     * @param mbx
-     * @param id
-     * @param score
-     */
-    public CalendarItemHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id,
-        float score, CalendarItem calItem, byte type) {
+    CalendarItemHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id,
+            float score, CalendarItem cal, byte type) {
         super(results, mbx, score);
-
         mId = id;
-        mCalItem = calItem;
+        mCalItem = cal;
         mType = type;
     }
 

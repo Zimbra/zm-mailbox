@@ -30,15 +30,15 @@ public class MsgQueryResultsTest {
     @Test
     public void merge() throws Exception {
         MockQueryResults top = new MockQueryResults(SortBy.NONE);
-        top.add(new MessageHit(null, null, 1000, 0, null));
+        top.add(new MessageHit(null, null, 1000, null, 0, null));
         top.add(new MessagePartHit(null, null, 1000, null, 0, null));
         top.add(new MessagePartHit(null, null, 1000, null, 0, null));
-        top.add(new MessageHit(null, null, 1001, 0, null));
-        top.add(new MessageHit(null, null, 1001, 0, null));
+        top.add(new MessageHit(null, null, 1001, null, 0, null));
+        top.add(new MessageHit(null, null, 1001, null, 0, null));
         top.add(new MessagePartHit(null, null, 1001, null, 0, null));
         top.add(new MessagePartHit(null, null, 1001, null, 0, null));
-        top.add(new MessageHit(null, null, 1002, 0, null));
-        top.add(new MessageHit(null, null, 1003, 0, null));
+        top.add(new MessageHit(null, null, 1002, null, 0, null));
+        top.add(new MessageHit(null, null, 1003, null, 0, null));
 
         ProxiedHit phit = new ProxiedHit(null, null);
         phit.itemID = new ItemId("A", 1000);

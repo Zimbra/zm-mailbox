@@ -2120,25 +2120,45 @@ public class Mailbox {
     }
 
     /**
-     * Translates the data to a {@link MailItem}.
+     * Executes the callback within a mailbox transaction.
      * <p>
-     * This method is intented to be used by {@code ZimbraHit}. Since the caller
-     * is outside of mailbox transaction, the data might be stale.
+     * This method is intented to be used by search code. The search code
+     * directly fetch item data from DB. When it converts those bare data to
+     * {@link MailItem}, it must be within a mailbox transaction because they
+     * access {@link MailItem} cache.
      *
-     * @param data DB representation of the item
-     * @return item
-     * @throws ServiceException if an error occurred
+     * @param cb callback
      */
-    public synchronized MailItem toItem(MailItem.UnderlyingData data) throws ServiceException {
-        //data.flags |= Flag.BITMASK_UNCACHED;
+    public synchronized void execute(TransactionCallback cb) throws ServiceException {
+        cb.mailbox = this;
         boolean success = false;
         try {
-            beginTransaction("toItem", null);
-            MailItem item = getItem(data);
+            beginTransaction("callback", null);
+            cb.doInTransaction(this);
             success = true;
-            return item;
         } finally {
             endTransaction(success);
+        }
+    }
+
+    /**
+     * @see #doInTransaction(Mailbox)
+     */
+    public static abstract class TransactionCallback {
+        private Mailbox mailbox;
+
+        protected abstract void doInTransaction(Mailbox mbox) throws ServiceException;
+
+        /**
+         * Translates the DB representation to a {@link MailItem} object.
+         *
+         * @param data DB representation of {@link MailItem}
+         * @return item
+         * @throws ServiceException if an error occurred
+         */
+        protected final MailItem toItem(MailItem.UnderlyingData data)  throws ServiceException {
+            assert(mailbox.mCurrentChange.isActive());
+            return mailbox.getItem(data);
         }
     }
 
@@ -7439,7 +7459,7 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
+
     public synchronized void unlock(OperationContext octxt, int itemId, byte type, String accountId) throws ServiceException {
         UnlockItem redoRecorder = new UnlockItem(mId, itemId, type, accountId);
 
@@ -7453,7 +7473,7 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
+
     private static final String CN_ID         = "id";
     private static final String CN_ACCOUNT_ID = "account_id";
     private static final String CN_NEXT_ID    = "next_item_id";

@@ -23,8 +23,13 @@ import org.apache.lucene.document.Document;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbSearch.SearchResult;
 import com.zimbra.cs.imap.ImapMessage;
+import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Note;
+import com.zimbra.cs.mailbox.Task;
 
 /**
  * @since Oct 15, 2004
@@ -69,7 +74,6 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     ZimbraQueryResultsImpl(byte[] types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
         mTypes = types;
         mMode = mode;
-
         mSearchOrder = searchOrder;
 
         mConversationHits = new LRUHashMap<Integer, ConversationHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
@@ -89,13 +93,6 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     @Override
     public boolean hasNext() throws ServiceException {
         return (peekNext() != null);
-    }
-
-    /**
-     * @param messageId not used, but subclasses may
-     */
-    protected MessageHit getCachedMessageHit(int messageId) {
-        return null;
     }
 
     @Override
@@ -129,10 +126,10 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     }
 
     protected ContactHit getContactHit(Mailbox mbx, int mailItemId, float score,
-            MailItem.UnderlyingData ud) throws ServiceException {
+            Contact contact) {
         ContactHit hit = mContactHits.get(mailItemId);
         if (hit == null) {
-            hit = new ContactHit(this, mbx, mailItemId, score, ud);
+            hit = new ContactHit(this, mbx, mailItemId, score, contact);
             mContactHits.put(mailItemId, hit);
         } else {
             hit.updateScore(score);
@@ -141,10 +138,10 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     }
 
     protected NoteHit getNoteHit(Mailbox mbx, int mailItemId, float score,
-            MailItem.UnderlyingData ud) throws ServiceException {
+            Note note) {
         NoteHit hit = mNoteHits.get(mailItemId);
         if (hit == null) {
-            hit = new NoteHit(this, mbx, mailItemId, score, ud);
+            hit = new NoteHit(this, mbx, mailItemId, score, note);
             mNoteHits.put(mailItemId, hit);
         } else {
             hit.updateScore(score);
@@ -153,10 +150,10 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     }
 
     protected CalendarItemHit getAppointmentHit(Mailbox mbx, int mailItemId,
-            float score, MailItem.UnderlyingData ud) throws ServiceException {
+            float score, CalendarItem cal) {
         CalendarItemHit hit = mCalItemHits.get(mailItemId);
         if (hit == null) {
-            hit = new CalendarItemHit(this, mbx, mailItemId, score, ud);
+            hit = new CalendarItemHit(this, mbx, mailItemId, score, cal);
             mCalItemHits.put(mailItemId, hit);
         } else {
             hit.updateScore(score);
@@ -165,10 +162,10 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     }
 
     protected CalendarItemHit getTaskHit(Mailbox mbx, int mailItemId,
-            float score, MailItem.UnderlyingData ud) throws ServiceException {
+            float score, Task task) {
         CalendarItemHit hit = mCalItemHits.get(mailItemId);
         if (hit == null) {
-            hit = TaskHit.create(this, mbx, mailItemId, score, ud);
+            hit = new TaskHit(this, mbx, mailItemId, score, task);
             mCalItemHits.put(mailItemId, hit);
         } else {
             hit.updateScore(score);
@@ -176,15 +173,11 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
         return hit;
     }
 
-    protected MessageHit getMessageHit(Mailbox mbx, int mailItemId, Document d,
-            float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
+    protected MessageHit getMessageHit(Mailbox mbx, int mailItemId,
+            Document doc, float score, Message message) {
         MessageHit hit = mMessageHits.get(mailItemId);
         if (hit == null) {
-            if (d != null) {
-                hit = new MessageHit(this, mbx, mailItemId, d, score, underlyingData);
-            } else {
-                hit = new MessageHit(this, mbx, mailItemId, score, underlyingData);
-            }
+            hit = new MessageHit(this, mbx, mailItemId, doc, score, message);
             mMessageHits.put(mailItemId, hit);
         } else {
             hit.updateScore(score);
@@ -193,11 +186,11 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     }
 
     protected MessagePartHit getMessagePartHit(Mailbox mbx, int mailItemId,
-            Document d, float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
-        String partKey = Integer.toString(mailItemId) + "-" + d.get(LuceneFields.L_PARTNAME);
+            Document doc, float score, Message message) {
+        String partKey = Integer.toString(mailItemId) + "-" + doc.get(LuceneFields.L_PARTNAME);
         MessagePartHit hit = mPartHits.get(partKey);
         if (hit == null) {
-            hit = new MessagePartHit(this, mbx, mailItemId, d, score, underlyingData);
+            hit = new MessagePartHit(this, mbx, mailItemId, doc, score, message);
             mPartHits.put(partKey, hit);
         } else {
             hit.updateScore(score);
@@ -229,12 +222,12 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
      */
     ZimbraHit getZimbraHit(Mailbox mbox, float score, SearchResult sr,
             Document doc, SearchResult.ExtraData extra) throws ServiceException {
-        MailItem.UnderlyingData ud = null;
+        MailItem item = null;
         ImapMessage i4msg = null;
         int modseq = -1, parentId = 0;
         switch (extra) {
             case MAIL_ITEM:
-                ud = (MailItem.UnderlyingData) sr.extraData;
+                item = (MailItem) sr.extraData;
                 break;
             case IMAP_MSG:
                 i4msg = (ImapMessage) sr.extraData;
@@ -252,28 +245,28 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
             case MailItem.TYPE_CHAT:
             case MailItem.TYPE_MESSAGE:
                 if (doc != null) {
-                    toRet = getMessagePartHit(mbox, sr.id, doc, score, ud);
-                    toRet.cacheSortField(getSortBy(), sr.sortkey);
+                    toRet = getMessagePartHit(mbox, sr.id, doc, score, (Message) item);
                 } else {
-                    toRet = getMessageHit(mbox, sr.id, null, score, ud);
-                    toRet.cacheSortField(getSortBy(), sr.sortkey);
+                    toRet = getMessageHit(mbox, sr.id, null, score, (Message) item);
                 }
+                toRet.cacheSortField(getSortBy(), sr.sortkey);
                 break;
             case MailItem.TYPE_CONTACT:
-                toRet = getContactHit(mbox, sr.id, score, ud);
+                toRet = getContactHit(mbox, sr.id, score, (Contact) item);
                 break;
             case MailItem.TYPE_NOTE:
-                toRet = getNoteHit(mbox, sr.id, score, ud);
+                toRet = getNoteHit(mbox, sr.id, score, (Note) item);
                 break;
             case MailItem.TYPE_APPOINTMENT:
-                toRet = getAppointmentHit(mbox, sr.id, score, ud);
+                toRet = getAppointmentHit(mbox, sr.id, score, (CalendarItem) item);
                 break;
             case MailItem.TYPE_TASK:
-                toRet = getTaskHit(mbox, sr.id, score, ud);
+                toRet = getTaskHit(mbox, sr.id, score, (Task) item);
                 break;
             case MailItem.TYPE_DOCUMENT:
             case MailItem.TYPE_WIKI:
-                toRet = getDocumentHit(mbox, sr.id, doc, score, ud);
+                toRet = getDocumentHit(mbox, sr.id, doc, score,
+                        (com.zimbra.cs.mailbox.Document) item);
                 break;
             default:
                 assert(false);
@@ -292,14 +285,8 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
         return toRet;
     }
 
-    protected DocumentHit getDocumentHit(Mailbox mbx, int mailItemId, Document d,
-            float score, MailItem.UnderlyingData underlyingData) throws ServiceException {
-        DocumentHit hit;
-        if (d != null) {
-            hit = new DocumentHit(this, mbx, score, mailItemId, underlyingData, d);
-        } else {
-            hit = new DocumentHit(this, mbx, score, mailItemId, underlyingData);
-        }
-        return hit;
+    protected DocumentHit getDocumentHit(Mailbox mbx, int mailItemId,
+            Document luceneDoc, float score, com.zimbra.cs.mailbox.Document docItem) {
+        return new DocumentHit(this, mbx, score, mailItemId, luceneDoc, docItem);
     }
 }

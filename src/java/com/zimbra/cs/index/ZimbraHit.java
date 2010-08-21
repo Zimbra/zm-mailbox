@@ -405,6 +405,7 @@ public abstract class ZimbraHit {
             mSortOrder = sortOrder;
         }
 
+        @Override
         public int compare(ZimbraHit lhs, ZimbraHit rhs) {
             try {
                 int retVal = lhs.compareBySortField(mSortOrder, rhs);

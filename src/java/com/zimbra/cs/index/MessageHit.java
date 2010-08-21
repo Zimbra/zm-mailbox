@@ -28,7 +28,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.mime.ParsedAddress;
 
 import com.zimbra.common.util.Log;
@@ -42,7 +41,7 @@ import com.zimbra.common.util.LogFactory;
  * @since Oct 15, 2004
  * @author tim
  */
-public class MessageHit extends ZimbraHit {
+public final class MessageHit extends ZimbraHit {
 
     private static Log mLog = LogFactory.getLog(MessageHit.class);
 
@@ -53,33 +52,13 @@ public class MessageHit extends ZimbraHit {
     private int mMessageId = 0;
     private ConversationHit mConversationHit = null;
 
-    protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx,
-            int mailItemId, Document d, float score,
-            MailItem.UnderlyingData underlyingData) throws ServiceException {
+    MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx,
+            int mailItemId, Document doc, float score, Message message) {
         super(results, mbx, score);
-        mDoc = d;
-        assert (d != null);
+        assert(mailItemId != 0);
         mMessageId = mailItemId;
-        assert (mailItemId != 0);
-        if (underlyingData != null) {
-            if (results.getSearchMode() != SearchResultMode.IDS) {
-                mMessage = (Message) mbx.toItem(underlyingData);
-            }
-        }
-    }
-
-    protected MessageHit(ZimbraQueryResultsImpl results, Mailbox mbx,
-            int mailItemId, float score, MailItem.UnderlyingData underlyingData)
-        throws ServiceException {
-
-        super(results, mbx, score);
-        mMessageId = mailItemId;
-        assert (mailItemId != 0);
-        if (underlyingData != null) {
-            if (results.getSearchMode() != SearchResultMode.IDS) {
-                mMessage = (Message) mbx.toItem(underlyingData);
-            }
-        }
+        mDoc = doc;
+        mMessage = message;
     }
 
     int getFolderId() throws ServiceException {
@@ -254,11 +233,6 @@ public class MessageHit extends ZimbraHit {
     public String getSender() throws ServiceException {
         return new ParsedAddress(getMessage().getSender()).getSortString();
     }
-
-    ////////////////////////////////////////////////////
-    //
-    // Hierarchy access:
-    //
 
     /**
      * @return a ConversationResult corresponding to this message's
