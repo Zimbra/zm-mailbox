@@ -748,11 +748,15 @@ OR
             [ridZ="YYYYMMDD[ThhmmssZ]"]   // RECURRENCE-ID in "Z" (UTC) timezone, if this is an exception
            >
 
-           <s DATETIME> // Start date-time (required)
+           <s DATETIME
+              [u="millis since epoch"]  // set if non-all-day
+           /> // Start date-time (required)
            (
-              <e DATETIME> // End date-time
+              <e DATETIME
+                 [u="millis since epoch"]  // set if non-all-day
+              /> // End date-time
               OR
-              <dur DURATION>
+              <dur DURATION/>
            )
 
            [<exceptId .../>]  // RECURRENCE-ID, if this is an exception

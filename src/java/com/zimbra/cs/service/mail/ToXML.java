@@ -2188,6 +2188,7 @@ public class ToXML {
             String tzName = dtStart.getTZName();
             if (tzName != null)
                 dtStartElem.addAttribute(MailConstants.A_CAL_TIMEZONE, tzName);
+            dtStartElem.addAttribute(MailConstants.A_CAL_DATETIME_UTC, dtStart.getUtcTime());
         }
         return dtStartElem;
     }
@@ -2211,6 +2212,7 @@ public class ToXML {
             String tzName = dtEnd.getTZName();
             if (tzName != null)
                 dtEndElem.addAttribute(MailConstants.A_CAL_TIMEZONE, tzName);
+            dtEndElem.addAttribute(MailConstants.A_CAL_DATETIME_UTC, dtEnd.getUtcTime());
         } else {
             if (!isTodo) {
                 // See CalendarUtils.parseInviteElementCommon, where we parse DTEND
