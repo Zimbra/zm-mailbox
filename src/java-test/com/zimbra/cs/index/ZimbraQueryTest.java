@@ -55,7 +55,7 @@ public class ZimbraQueryTest {
                 mbox, ZimbraAnalyzer.getDefaultAnalyzer(),
                 0, 0, "");
         Assert.assertEquals(ZimbraQuery.TextQuery.class, query.getClass());
-        Assert.assertEquals("Q(UNKNOWN:(0),)", query.toString());
+        Assert.assertEquals("Q(UNKNOWN:(0))", query.toString());
     }
 
     @Test
@@ -143,6 +143,20 @@ public class ZimbraQueryTest {
         query = ZimbraQuery.InQuery.Create(mbox, null, 0,
                 new ItemId("1", 1), null, false);
         Assert.assertEquals("Q(IN,IN:1:1)", query.toString());
+    }
+
+    @Test
+    public void quoteFieldQuery() throws Exception {
+        Mailbox mbox = new MockMailboxManager().getMailboxByAccountId("0");
+        ZimbraQuery.BaseQuery query = ZimbraQuery.FieldQuery.Create(mbox,
+                ZimbraAnalyzer.getDefaultAnalyzer(), 0, ZimbraQueryParser.FIELD,
+                "#company", "zimbra:vmware");
+        Assert.assertEquals("#company:\"zimbra:vmware\"",
+                query.toQueryString("company:zimbra:vmware"));
+        Assert.assertEquals("#company:\"zimbra@vmware\"",
+                query.toQueryString("company:zimbra@vmware"));
+        Assert.assertEquals("#company:\"zimbra\\\"vmware\"",
+                query.toQueryString("company:zimbra\"vmware"));
     }
 
 }

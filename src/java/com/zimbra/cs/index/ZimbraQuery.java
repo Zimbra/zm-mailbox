@@ -180,8 +180,35 @@ public final class ZimbraQuery {
             return mNext;
         }
 
-        String getQueryOperatorString() {
-            return ZimbraQuery.unquotedTokenImage[mQueryType];
+        /**
+         * Reconstructs the query string.
+         *
+         * @param src parsed token value
+         * @return query string which can be used for proxying
+         */
+        String toQueryString(String src) {
+            String img = ZimbraQuery.unquotedTokenImage[mQueryType];
+            if (img.equals("#")) {
+                int delim = src.indexOf(':');
+                if (delim <= 0 || delim >= src.length() - 2) {
+                    return img + src;
+                }
+                StringBuilder buf = new StringBuilder(img);
+                buf.append(src.subSequence(0, delim + 1));
+                buf.append('"');
+                for (int i = delim + 1; i < src.length(); i++) {
+                    char ch = src.charAt(i);
+                    if (ch == '"') {
+                        buf.append("\\\"");
+                    } else {
+                        buf.append(ch);
+                    }
+                }
+                buf.append('"');
+                return buf.toString();
+            } else {
+                return img + src;
+            }
         }
 
         /**
@@ -779,7 +806,7 @@ public final class ZimbraQuery {
         protected QueryOperation getQueryOperation(boolean truth) {
             TextQueryOperation op = mMailbox.getMailboxIndex().createTextQueryOperation();
             Query q = new TermQuery(new Term(QueryTypeString(getQueryType()), mTarget));
-            op.addClause(getQueryOperatorString() + mTarget, q,calcTruth(truth));
+            op.addClause(toQueryString(mTarget), q, calcTruth(truth));
             return op;
         }
 
@@ -1133,7 +1160,7 @@ public final class ZimbraQuery {
             if (mValue != null) {
                 q = new TermQuery(new Term(mLuceneField, mValue));
             }
-            op.addClause(getQueryOperatorString()+mValue, q,calcTruth(truth));
+            op.addClause(toQueryString(mValue), q,calcTruth(truth));
 
             return op;
         }
@@ -1826,19 +1853,19 @@ public final class ZimbraQuery {
                 String fieldName = QueryTypeString(getQueryType());
 
                 if (mTokens.size() == 0) {
-                    textOp.setQueryString(getQueryOperatorString() + mOrigText);
+                    textOp.setQueryString(toQueryString(mOrigText));
                 } else if (mTokens.size() == 1) {
                     TermQuery term = new TermQuery(new Term(fieldName, mTokens.get(0)));
-                    textOp.addClause(getQueryOperatorString() + mOrigText,
-                            term, calcTruth(truth));
+                    textOp.addClause(toQueryString(mOrigText), term,
+                            calcTruth(truth));
                 } else if (mTokens.size() > 1) {
                     PhraseQuery phrase = new PhraseQuery();
                     phrase.setSlop(mSlop); // TODO configurable?
                     for (String token : mTokens) {
                         phrase.add(new Term(fieldName, token));
                     }
-                    textOp.addClause(getQueryOperatorString() + mOrigText,
-                            phrase, calcTruth(truth));
+                    textOp.addClause(toQueryString(mOrigText), phrase,
+                            calcTruth(truth));
                 }
 
                 if (mOredTokens.size() > 0) {
