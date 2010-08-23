@@ -1378,30 +1378,42 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
         // If we got a cancel request, check if this cancel will result in canceling the entire appointment.
         // If so, move the appointment to trash folder.
+        // Also at the same time, check if the cancel request is oudated, i.e. there is already a newer version
+        // of the invite.
         if (isCancel) {
             boolean cancelAll;
+            boolean outdated;
             if (!newInvite.hasRecurId()) {
                 cancelAll = true;
                 // Canceling series.  Check the sequencing requirement to make sure the invite isn't outdated.
                 Invite series = getInvite((RecurId) null);
-                if (series != null)
-                    cancelAll = newInvite.isSameOrNewerVersion(series);
-                // If series invite is not found, it's still a total cancel.
+                // If series invite is not found, assume cancel is not outdated.
+                outdated = series != null && !newInvite.isSameOrNewerVersion(series);
             } else {
                 // Canceling an instance.  It's a total cancel only if mInvites has one invite and it matches
                 // the recurrence id.  (subject to sequencing requirements)
                 cancelAll = false;
+                outdated = false;
                 Invite curr = getInvite(newInvite.getRecurId());
-                if (curr != null && newInvite.isSameOrNewerVersion(curr)) {
-                    cancelAll = true;
-                    // See if there any non-cancel invites besides the one being canceled.
-                    for (Invite inv : mInvites) {
-                        if (!inv.equals(curr) && !inv.isCancel()) {
-                            cancelAll = false;
-                            break;
+                if (curr != null) {
+                    if (newInvite.isSameOrNewerVersion(curr)) {
+                        cancelAll = true;
+                        // See if there any non-cancel invites besides the one being canceled.
+                        for (Invite inv : mInvites) {
+                            if (!inv.equals(curr) && !inv.isCancel()) {
+                                cancelAll = false;
+                                break;
+                            }
                         }
+                    } else {
+                        // There is already a newer invite.  Ignore the cancel.
+                        outdated = true;
                     }
                 }
+            }
+            if (outdated) {
+                ZimbraLog.calendar.info("Ignoring outdated cancel request");
+                return false;
             }
             if (cancelAll) {
                 Folder trash = mMailbox.getFolderById(Mailbox.ID_FOLDER_TRASH);
