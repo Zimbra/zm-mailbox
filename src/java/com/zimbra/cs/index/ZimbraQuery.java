@@ -1066,27 +1066,27 @@ public final class ZimbraQuery {
         @Override
         public String toString(int expLevel) {
             if (mSpecialTarget != null) {
-                String toRet;
+                StringBuilder buff = new StringBuilder(super.toString(expLevel));
                 if (!mIncludeSubfolders) {
-                    toRet = super.toString(expLevel) + ",IN:";
+                    buff.append(",IN:");
                 } else {
-                    toRet = super.toString(expLevel) + ",UNDER:";
+                    buff.append(",UNDER:");
                 }
 
                 if (mSpecialTarget == IN_ANY_FOLDER) {
-                    toRet = toRet + "ANY_FOLDER";
+                    buff.append("ANY_FOLDER");
                 } else if (mSpecialTarget == IN_LOCAL_FOLDER) {
-                    toRet = toRet + "LOCAL";
+                    buff.append("LOCAL");
                 } else if (mSpecialTarget == IN_REMOTE_FOLDER) {
-                    toRet = toRet + "REMOTE";
+                    buff.append("REMOTE");
                 }
-                return toRet;
+                return buff.toString();
             } else {
                 return super.toString(expLevel) + "," +
                     (mIncludeSubfolders ? "UNDER" : "IN") + ":" +
-                    (mRemoteId!=null ? mRemoteId.toString() :
+                    (mRemoteId != null ? mRemoteId.toString() :
                         (mFolder != null ? mFolder.getName() : "ANY_FOLDER")) +
-                        (mSubfolderPath != null ? "/"+mSubfolderPath : "") + ")";
+                        (mSubfolderPath != null ? "/" + mSubfolderPath : "") + ")";
             }
         }
 
@@ -1665,35 +1665,30 @@ public final class ZimbraQuery {
         }
     }
 
-
     public static class FieldQuery {
+
+        /**
+         * @param targetImg {@code field:}, {@code #something:} or
+         *  {@code field[something]:}
+         */
         public static TextQuery Create(Mailbox mbox, Analyzer analyzer,
                 int modifier, int qType, String targetImg, String text)
                 throws ServiceException {
-            // targetImg can be:
-            //      field:
-            //      #something:
-            //      field[something]:
 
             int open = targetImg.indexOf('[');
             if (open >= 0) {
-                String fieldName = null;
                 int close = targetImg.indexOf(']');
                 if (close >= 0 && close > open) {
-                    fieldName = targetImg.substring(open+1, close);
-                    System.out.println("Field is: \"" + fieldName + "\"");
+                    text = targetImg.substring(open + 1, close) + ":" + text;
                 }
-                text = fieldName + ":" + text;
-            } else {
-                if (targetImg.charAt(0) == '#') {
-                    String fieldName = targetImg.substring(1);
-                    text = fieldName + text;
-                }
+            } else if (targetImg.charAt(0) == '#') {
+                text = targetImg.substring(1) + text;
             }
 
             return new TextQuery(mbox, analyzer, modifier, qType, text);
         }
     }
+
     public static class TextQuery extends BaseQuery {
         private ArrayList<String> mTokens;
         private int mSlop;  // sloppiness for PhraseQuery
@@ -1760,7 +1755,7 @@ public final class ZimbraQuery {
             mOrigText = text;
 
             // must look at original text here b/c analyzer strips *'s
-            if (text.length() > 0 && text.charAt(text.length()-1) == '*') {
+            if (text.length() > 0 && text.charAt(text.length() - 1) == '*') {
                 // wildcard query!
                 String wcToken;
 
@@ -1771,7 +1766,7 @@ public final class ZimbraQuery {
                     wcToken = text;
                 }
 
-                if (wcToken.charAt(wcToken.length()-1) == '*') {
+                if (wcToken.charAt(wcToken.length() - 1) == '*') {
                     wcToken = wcToken.substring(0, wcToken.length()-1);
                 }
 
@@ -1822,28 +1817,28 @@ public final class ZimbraQuery {
                 if (mMailbox.getMailboxIndex() == null)
                     return new NoTermQueryOperation();
 
-                TextQueryOperation lop = mMailbox.getMailboxIndex().createTextQueryOperation();
+                TextQueryOperation textOp = mMailbox.getMailboxIndex().createTextQueryOperation();
 
                 for (QueryInfo inf : mQueryInfo) {
-                    lop.addQueryInfo(inf);
+                    textOp.addQueryInfo(inf);
                 }
 
                 String fieldName = QueryTypeString(getQueryType());
 
                 if (mTokens.size() == 0) {
-                    lop.setQueryString(this.getQueryOperatorString()+mOrigText);
+                    textOp.setQueryString(getQueryOperatorString() + mOrigText);
                 } else if (mTokens.size() == 1) {
-                    TermQuery q = null;
-                    String queryTerm = mTokens.get(0);
-                    q = new TermQuery(new Term(fieldName, queryTerm));
-                    lop.addClause(this.getQueryOperatorString()+mOrigText,  q,calcTruth(truth));
+                    TermQuery term = new TermQuery(new Term(fieldName, mTokens.get(0)));
+                    textOp.addClause(getQueryOperatorString() + mOrigText,
+                            term, calcTruth(truth));
                 } else if (mTokens.size() > 1) {
-                    PhraseQuery p = new PhraseQuery();
-                    p.setSlop(mSlop); // TODO configurable?
-                    for (int i=0; i<mTokens.size(); i++)
-                        p.add(new Term(fieldName, mTokens.get(i)));
-                    String qos = this.getQueryOperatorString();
-                    lop.addClause(qos+mOrigText, p,calcTruth(truth));
+                    PhraseQuery phrase = new PhraseQuery();
+                    phrase.setSlop(mSlop); // TODO configurable?
+                    for (String token : mTokens) {
+                        phrase.add(new Term(fieldName, token));
+                    }
+                    textOp.addClause(getQueryOperatorString() + mOrigText,
+                            phrase, calcTruth(truth));
                 }
 
                 if (mOredTokens.size() > 0) {
@@ -1853,23 +1848,29 @@ public final class ZimbraQuery {
                         orQuery.add(new TermQuery(new Term(fieldName, token)), Occur.SHOULD);
                     }
 
-                    lop.addClause("", orQuery, calcTruth(truth));
+                    textOp.addClause("", orQuery, calcTruth(truth));
                 }
 
-                return lop;
+                return textOp;
             }
         }
 
         @Override
         public String toString(int expLevel) {
-            String ret = super.toString(expLevel) + ",";
-            for (int i = 0; i < mTokens.size(); i++) {
-                ret += "," + (mTokens.get(i)).toString();
+            StringBuilder buff = new StringBuilder(super.toString(expLevel));
+            for (String token : mTokens) {
+                buff.append(',');
+                buff.append(token);
             }
             if (mWildcardTerm != null) {
-                ret += " WILDCARD=" + mWildcardTerm + " [" + mOredTokens.size() + " terms]";
+                buff.append(" WILDCARD=");
+                buff.append(mWildcardTerm);
+                buff.append(" [");
+                buff.append(mOredTokens.size());
+                buff.append(" terms]");
             }
-            return ret + ")";
+            buff.append(')');
+            return buff.toString();
         }
     }
 
@@ -2090,10 +2091,11 @@ public final class ZimbraQuery {
         unquotedTokenImage = new String[ZimbraQueryParserConstants.tokenImage.length];
         for (int i = 0; i < ZimbraQueryParserConstants.tokenImage.length; i++) {
             String str = ZimbraQueryParserConstants.tokenImage[i].substring(1, ZimbraQueryParserConstants.tokenImage[i].length()-1);
-            if ("FIELD".equals(str))
+            if ("FIELD".equals(str)) {
                 unquotedTokenImage[i] = "#"; // bug 22969 -- problem with proxying field queries
-            else
+            } else {
                 unquotedTokenImage[i] = str;
+            }
             sTokenImageMap.put(str, i);
         }
     }
@@ -2159,49 +2161,51 @@ public final class ZimbraQuery {
      * expensive for nontrivial cases.
      */
     private static class ParseTree {
-        private static final int STATE_AND    = 1;
-        private static final int STATE_OR     = 2;
+        private static final int STATE_AND = 1;
+        private static final int STATE_OR = 2;
 
         private static final boolean SPEW = false;
 
         static abstract class Node {
             boolean mTruthFlag = true;
 
-            protected Node() {}
+            Node() {
+            }
 
-            public void setTruth(boolean truth) { mTruthFlag = truth; };
-            public void invertTruth() {
+            void setTruth(boolean truth) {
+                mTruthFlag = truth;
+            };
+
+            void invertTruth() {
                 mTruthFlag = !mTruthFlag;
             }
 
-            public abstract void pushNotsDown();
-
-            public abstract Node simplify();
-
-            public abstract QueryOperation getQueryOperation();
+            abstract void pushNotsDown();
+            abstract Node simplify();
+            abstract QueryOperation getQueryOperation();
         }
 
         static class OperatorNode extends Node {
-            int mKind;
-            boolean mTruthFlag = true;
-            public List<Node> mNodes = new ArrayList<Node>();
+            private int mKind;
+            private boolean mTruthFlag = true;
+            private List<Node> mNodes = new ArrayList<Node>();
 
-            public OperatorNode(int kind) {
+            OperatorNode(int kind) {
                 mKind = kind;
             }
 
             @Override
-            public void setTruth(boolean truth) {
+            void setTruth(boolean truth) {
                 mTruthFlag = truth;
             };
 
             @Override
-            public void invertTruth() {
+            void invertTruth() {
                 mTruthFlag = !mTruthFlag;
             }
 
             @Override
-            public void pushNotsDown() {
+            void pushNotsDown() {
                 if (!mTruthFlag) { // ONLY push down if this is a "not"
                     mTruthFlag = !mTruthFlag;
 
@@ -2221,7 +2225,7 @@ public final class ZimbraQuery {
             }
 
             @Override
-            public Node simplify() {
+            Node simplify() {
                 boolean simplifyAgain;
                 do {
                     simplifyAgain = false;
@@ -2267,26 +2271,27 @@ public final class ZimbraQuery {
                 return this;
             }
 
-            public void add(Node subNode) {
+            void add(Node subNode) {
                 mNodes.add(subNode);
             }
 
             @Override
             public String toString() {
-                StringBuffer toRet = new StringBuffer(mTruthFlag ? "" : " NOT ");
+                StringBuilder buff = mTruthFlag ?
+                        new StringBuilder() : new StringBuilder(" NOT ");
 
-                toRet.append(mKind == STATE_AND ? " AND[" : " OR(");
+                buff.append(mKind == STATE_AND ? " AND[" : " OR(");
 
-                for (Node n : mNodes) {
-                    toRet.append(n.toString());
-                    toRet.append(", ");
+                for (Node node : mNodes) {
+                    buff.append(node.toString());
+                    buff.append(", ");
                 }
-                toRet.append(mKind == STATE_AND ? "] " : ") ");
-                return toRet.toString();
+                buff.append(mKind == STATE_AND ? "] " : ") ");
+                return buff.toString();
             }
 
             @Override
-            public QueryOperation getQueryOperation() {
+            QueryOperation getQueryOperation() {
                 assert(mTruthFlag == true); // we should have pushed the NOT's down the tree already
                 if (mKind == STATE_AND) {
                     if (ParseTree.SPEW) System.out.print(" AND(");
@@ -2325,59 +2330,57 @@ public final class ZimbraQuery {
         }
 
         static class ThingNode extends Node {
-            BaseQuery mThing;
+            private BaseQuery mThing;
 
-            public ThingNode(BaseQuery thing) {
+            ThingNode(BaseQuery thing) {
                 mThing = thing;
                 mTruthFlag = thing.mTruth;
             }
 
             @Override
-            public void invertTruth() {
+            void invertTruth() {
                 mTruthFlag = !mTruthFlag;
             }
 
             @Override
-            public void pushNotsDown() {
+            void pushNotsDown() {
             }
 
             @Override
-            public Node simplify() {
+            Node simplify() {
                 return this;
             }
 
             @Override
             public String toString() {
-                StringBuffer toRet = new StringBuffer(mTruthFlag ? "" : " NOT ");
-                toRet.append(mThing.toString());
-
-                return toRet.toString();
+                StringBuilder buff = mTruthFlag ?
+                        new StringBuilder() : new StringBuilder(" NOT ");
+                buff.append(mThing.toString());
+                return buff.toString();
             }
 
             @Override
-            public QueryOperation getQueryOperation() {
+            QueryOperation getQueryOperation() {
                 return mThing.getQueryOperation(mTruthFlag);
             }
         }
 
         static Node build(List<BaseQuery> clauses) {
             OperatorNode top = new OperatorNode(STATE_OR);
-
             OperatorNode cur = new OperatorNode(STATE_AND);
             top.add(cur);
 
             for (BaseQuery q : clauses) {
                 if (q instanceof ZimbraQuery.ConjQuery) {
-                    if (((ConjQuery)q).isOr()) {
+                    if (((ConjQuery) q).isOr()) {
                         cur = new OperatorNode(STATE_AND);
                         top.add(cur);
                     }
                 } else {
                     if (q instanceof SubQuery) {
-                        SubQuery sq = (SubQuery)q;
+                        SubQuery sq = (SubQuery) q;
                         Node subTree = build(sq.getSubClauses());
                         subTree.setTruth(!sq.isNegated());
-
                         cur.add(subTree);
                     } else {
                         cur.add(new ThingNode(q));
@@ -2584,7 +2587,6 @@ public final class ZimbraQuery {
         Analyzer analyzer = null;
         MailboxIndex mi = mbox.getMailboxIndex();
 
-        //
         // Step 1: parse the text using the JavaCC parser
         try {
             ZimbraQueryParser parser = new ZimbraQueryParser(
@@ -2603,8 +2605,6 @@ public final class ZimbraQuery {
             String sortByStr = parser.getSortByStr();
             if (sortByStr != null)
                 handleSortByOverride(sortByStr);
-        } catch (OutOfMemoryError e) {
-            throw e;
         } catch (Error e) {
             throw ServiceException.FAILURE(
                     "ZimbraQueryParser threw Error: " + e, e);
@@ -2622,7 +2622,6 @@ public final class ZimbraQuery {
             ZimbraLog.index_search.debug(str);
         }
 
-        //
         // Step 2: build a parse tree and push all the "NOT's" down to the
         // bottom level -- this is because we cannot invert result sets
         if (ParseTree.SPEW) {
@@ -2647,12 +2646,10 @@ public final class ZimbraQuery {
             System.out.println("PT: " + pt.toString());
         }
 
-        //
         // Store some variables that we'll need later
         mParseTree = pt;
         mOp = null;
 
-        //
         // handle the special "sort:" tag in the search string
         if (mSortByOverride != null) {
             if (ZimbraLog.index_search.isDebugEnabled())
@@ -2665,21 +2662,19 @@ public final class ZimbraQuery {
             params.setSortBy(mSortByOverride);
         }
 
-        //
         // Step 3: Convert list of BaseQueries into list of QueryOperations, then Optimize the Ops
-
         if (mClauses.size() > 0) {
             // this generates all of the query operations
             mOp = mParseTree.getQueryOperation();
 
             if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("OP=" + mOp.toString());
+                ZimbraLog.index_search.debug("OP=%s", mOp);
             }
 
             // expand the is:local and is:remote parts into in:(LIST)'s
             mOp = mOp.expandLocalRemotePart(mbox);
             if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("AFTEREXP=" + mOp.toString());
+                ZimbraLog.index_search.debug("AFTEREXP=%s", mOp);
             }
 
             // optimize the query down
@@ -2687,29 +2682,22 @@ public final class ZimbraQuery {
             if (mOp == null)
                 mOp = new NoResultsQueryOperation();
             if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("OPTIMIZED=" + mOp.toString());
+                ZimbraLog.index_search.debug("OPTIMIZED=%s", mOp);
             }
         }
 
-
-        //
         // STEP 4: use the OperationContext to update the set of visible referenced folders, local AND remote
-        //
-        if (mOp!= null) {
-            {
-                QueryTargetSet targets = mOp.getQueryTargets();
-                assert(mOp instanceof UnionQueryOperation ||
-                        targets.countExplicitTargets() <= 1);
-            }
+        if (mOp != null) {
+            QueryTargetSet queryTargets = mOp.getQueryTargets();
+            assert(mOp instanceof UnionQueryOperation ||
+                    queryTargets.countExplicitTargets() <= 1);
 
-            //
             // easiest to treat the query two unions: one the LOCAL and one REMOTE parts
-            //
             UnionQueryOperation remoteOps = new UnionQueryOperation();
             UnionQueryOperation localOps = new UnionQueryOperation();
 
             if (mOp instanceof UnionQueryOperation) {
-                UnionQueryOperation union = (UnionQueryOperation)mOp;
+                UnionQueryOperation union = (UnionQueryOperation) mOp;
                 // separate out the LOCAL vs REMOTE parts...
                 for (QueryOperation op : union.mQueryOperations) {
                     QueryTargetSet targets = op.getQueryTargets();
@@ -2742,14 +2730,14 @@ public final class ZimbraQuery {
                 }
             }
 
-            //
             // Handle the REMOTE side:
-            //
             if (!remoteOps.mQueryOperations.isEmpty()) {
                 // Since optimize() has already been run, we know that each of our ops
                 // only has one target (or none).  Find those operations which have
                 // an external target and wrap them in RemoteQueryOperations
-                for (int i = remoteOps.mQueryOperations.size()-1; i >= 0; i--) { // iterate backwards so we can remove/add w/o screwing iteration
+
+                // iterate backwards so we can remove/add w/o screwing iteration
+                for (int i = remoteOps.mQueryOperations.size()-1; i >= 0; i--) {
                     QueryOperation op = remoteOps.mQueryOperations.get(i);
 
                     QueryTargetSet targets = op.getQueryTargets();
@@ -2765,9 +2753,9 @@ public final class ZimbraQuery {
                         remoteOps.mQueryOperations.remove(i);
                         boolean foundOne = false;
                         // find a remoteOp to add this one to
-                        for (QueryOperation tryIt : remoteOps.mQueryOperations) {
-                            if (tryIt instanceof RemoteQueryOperation) {
-                                if (((RemoteQueryOperation)tryIt).tryAddOredOperation(op)) {
+                        for (QueryOperation remoteOp : remoteOps.mQueryOperations) {
+                            if (remoteOp instanceof RemoteQueryOperation) {
+                                if (((RemoteQueryOperation) remoteOp).tryAddOredOperation(op)) {
                                     foundOne = true;
                                     break;
                                 }
@@ -2782,13 +2770,13 @@ public final class ZimbraQuery {
                 }
 
                 // ...we need to call setup on every RemoteQueryOperation we end up with...
-                for (QueryOperation toSetup : remoteOps.mQueryOperations) {
-                    assert(toSetup instanceof RemoteQueryOperation);
+                for (QueryOperation remoteOp : remoteOps.mQueryOperations) {
+                    assert(remoteOp instanceof RemoteQueryOperation);
                     try {
-                        RemoteQueryOperation remote = (RemoteQueryOperation) toSetup;
-                        remote.setup(proto, octxt.getAuthToken(), params);
-                    } catch(Exception e) {
-                        ZimbraLog.index_search.info("Ignoring "+e+" during RemoteQuery generation for "+remoteOps.toString());
+                        ((RemoteQueryOperation) remoteOp).setup(proto, octxt.getAuthToken(), params);
+                    } catch (Exception e) {
+                        ZimbraLog.index_search.info("Ignoring " + e +
+                                " during RemoteQuery generation for " + remoteOps);
                     }
                 }
             }
@@ -3090,15 +3078,15 @@ public final class ZimbraQuery {
 
     @Override
     public String toString() {
-        String ret = "ZQ:\n";
-
+        StringBuilder buff = new StringBuilder("ZQ:\n");
         if (mClauses.size() > 0) {
             BaseQuery head = mClauses.get(0);
             for (BaseQuery q = head; q != null; q = q.getNext()) {
-                ret+=q.toString(1) + "\n";
+                buff.append(q.toString(1));
+                buff.append('\n');
             }
         }
-        return ret;
+        return buff.toString();
     }
 
     public String toQueryString() {

@@ -14,7 +14,7 @@
  */
 package com.zimbra.cs.index;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.zimbra.cs.account.Account;
@@ -46,82 +46,85 @@ final class RemoteQueryOperation extends FilterQueryOperation {
         assert(targets.countExplicitTargets() == 1);
         assert(targets.hasExternalTargets());
 
-        for (QueryTarget t : targets) {
-            assert(t != QueryTarget.LOCAL);
-            if (t != QueryTarget.UNSPECIFIED) {
-                if (mTarget == null)
-                    mTarget = t;
-                else
-                    if (!mTarget.equals(t))
+        for (QueryTarget target : targets) {
+            assert(target != QueryTarget.LOCAL);
+            if (target != QueryTarget.UNSPECIFIED) {
+                if (mTarget == null) {
+                    mTarget = target;
+                } else {
+                    if (!mTarget.equals(target)) {
                         return false;
+                    }
+                }
             }
         }
 
         assert(mTarget != null);
 
-        if (mOp == null)
+        if (mOp == null) {
             mOp = new UnionQueryOperation();
-
-        ((UnionQueryOperation)mOp).add(op);
+        }
+        ((UnionQueryOperation) mOp).add(op);
         return true;
     }
 
     @Override
     public String toString() {
-        return "REMOTE[" + mTarget.toString() + "]:" + mOp.toString();
+        return "REMOTE[" + mTarget + "]:" + mOp;
     }
 
     protected void setup(SoapProtocol proto, AuthToken authToken, SearchParams params)
-    throws ServiceException {
+        throws ServiceException {
+
         Provisioning prov  = Provisioning.getInstance();
         Account acct = prov.get(AccountBy.id, mTarget.toString(), authToken);
-        if (acct == null)
+        if (acct == null) {
             throw AccountServiceException.NO_SUCH_ACCOUNT(mTarget.toString());
+        }
 
         Server remoteServer = prov.getServer(acct);
 
-        if (ZimbraLog.index.isDebugEnabled())
-            ZimbraLog.index.debug("RemoteQuery of \""+mOp.toQueryString()+"\" sent to "+mTarget.toString()+" on server "+remoteServer.getName());
+        if (ZimbraLog.index_search.isDebugEnabled()) {
+            ZimbraLog.index_search.debug("RemoteQuery=\"%s\" target=%s server=%s",
+                    mOp.toQueryString(), mTarget, remoteServer.getName());
+        }
 
         String queryString = mOp.toQueryString();
-        mResults = new ProxiedQueryResults(proto, authToken, mTarget.toString(), remoteServer.getName(), params, queryString, params.getMode());
+        mResults = new ProxiedQueryResults(proto, authToken, mTarget.toString(),
+                remoteServer.getName(), params, queryString, params.getMode());
     }
 
     @Override
     public void resetIterator() throws ServiceException {
-        if (mResults != null)
+        if (mResults != null) {
             mResults.resetIterator();
+        }
     }
 
     @Override
     public ZimbraHit getNext() throws ServiceException {
-        if (mResults != null)
-            return mResults.getNext();
-        else
-            return null;
+        return mResults != null ? mResults.getNext() : null;
     }
 
     @Override
     public ZimbraHit peekNext() throws ServiceException {
-        if (mResults != null)
-            return mResults.peekNext();
-        else
-            return null;
+        return mResults != null ? mResults.peekNext() : null;
     }
 
     @Override
     public void doneWithSearchResults() throws ServiceException {
-        if (mResults != null)
+        if (mResults != null) {
             mResults.doneWithSearchResults();
-
+        }
         super.doneWithSearchResults();
     }
 
     @Override
     public List<QueryInfo> getResultInfo() {
-        if (mResults != null)
+        if (mResults != null) {
             return mResults.getResultInfo();
-        else
-            return new ArrayList<QueryInfo>();
+        } else {
+            return Collections.emptyList();
+        }
     }
 }

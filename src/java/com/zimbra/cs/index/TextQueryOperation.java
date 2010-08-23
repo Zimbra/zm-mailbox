@@ -28,7 +28,6 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.BooleanClause.Occur;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -93,16 +92,16 @@ abstract class TextQueryOperation extends QueryOperation {
      * Add the specified text clause at the toplevel
      *   (e.g. going in "a b c" if we addClause("d") we get "a b c d"
      *
-     *   @param queryStr - Appended to the end of the text-representation of this query
-     *   @param Query - Lucene Query term
-     *   @param truth - allows for negated query terms
+     * @param queryStr - Appended to the end of the text-representation of this query
+     * @param query - Lucene Query term
+     * @param truth - allows for negated query terms
      */
-    void addClause(String queryStr, Query q, boolean truth) {
-        mQueryString = mQueryString+" "+ (truth ? "" : "-") + queryStr;
+    void addClause(String queryStr, Query query, boolean truth) {
+        mQueryString = mQueryString + " " + (truth ? "" : "-") + queryStr;
         assert(!mHaveRunSearch);
 
         if (truth) {
-            mQuery.add(new BooleanClause(q, Occur.MUST));
+            mQuery.add(new BooleanClause(query, BooleanClause.Occur.MUST));
         } else {
             // Why do we add this here?  Because lucene won't allow naked "NOT" queries.
             // Why do we check against Partname=TOP instead of against "All"?  Well, it is a simple case
@@ -122,12 +121,17 @@ abstract class TextQueryOperation extends QueryOperation {
 
             // Parname:TOP now expanded to be (TOP or CONTACT or NOTE) to deal with extended partname assignemtns during indexing
             BooleanQuery top = new BooleanQuery();
-            top.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP)),Occur.SHOULD));
-            top.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT)),Occur.SHOULD));
-            top.add(new BooleanClause(new TermQuery(new Term(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE)),Occur.SHOULD));
-            mQuery.add(new BooleanClause(top, Occur.MUST));
-
-            mQuery.add(new BooleanClause(q, Occur.MUST_NOT));
+            top.add(new BooleanClause(new TermQuery(new Term(
+                    LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP)),
+                    BooleanClause.Occur.SHOULD));
+            top.add(new BooleanClause(new TermQuery(new Term(
+                    LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT)),
+                    BooleanClause.Occur.SHOULD));
+            top.add(new BooleanClause(new TermQuery(new Term(
+                    LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE)),
+                    BooleanClause.Occur.SHOULD));
+            mQuery.add(new BooleanClause(top, BooleanClause.Occur.MUST));
+            mQuery.add(new BooleanClause(query, BooleanClause.Occur.MUST_NOT));
         }
     }
 
@@ -148,8 +152,9 @@ abstract class TextQueryOperation extends QueryOperation {
         mCurHitNo = 0;
 
         BooleanQuery top = new BooleanQuery();
-        BooleanClause lhs = new BooleanClause(mQuery, Occur.MUST);
-        BooleanClause rhs = new BooleanClause(q, truth ? Occur.MUST : Occur.MUST_NOT);
+        BooleanClause lhs = new BooleanClause(mQuery, BooleanClause.Occur.MUST);
+        BooleanClause rhs = new BooleanClause(q, truth ?
+                BooleanClause.Occur.MUST : BooleanClause.Occur.MUST_NOT);
         top.add(lhs);
         top.add(rhs);
         mQuery = top;
@@ -223,7 +228,7 @@ abstract class TextQueryOperation extends QueryOperation {
     @Override
     String toQueryString() {
         StringBuilder ret = new StringBuilder("(");
-        ret.append(this.mQueryString);
+        ret.append(mQueryString);
         return ret.append(")").toString();
     }
 
