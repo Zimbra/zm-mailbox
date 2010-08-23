@@ -210,7 +210,7 @@ public class DebugConfig {
         disableCalendarTZMatchByRule = booleanValue("debug_disable_calendar_tz_match_by_rule", false);
 
         disableMimeConvertersForCalendarBlobs = booleanValue("debug_force_mime_converters_for_calendar_blobs", false);
-        enableTnefToICalendarConversion = booleanValue("debug_enable_tnef_to_icalendar_conversion", false);
+        enableTnefToICalendarConversion = booleanValue("debug_enable_tnef_to_icalendar_conversion", true);
 
         disableFoldersTagsCache = booleanValue("debug_disable_folders_tags_cache", false);
 
