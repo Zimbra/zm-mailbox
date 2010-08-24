@@ -235,7 +235,7 @@ public abstract class MimeHandler {
                 name = MimeUtility.decodeText(name);
             } catch (UnsupportedEncodingException e) { }
             doc.add(new Field(LuceneFields.L_FILENAME, name,
-                    Field.Store.YES, Field.Index.NOT_ANALYZED));
+                    Field.Store.YES, Field.Index.ANALYZED));
         }
         return doc;
     }
