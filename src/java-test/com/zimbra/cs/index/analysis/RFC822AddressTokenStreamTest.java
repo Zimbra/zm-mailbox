@@ -63,8 +63,24 @@ public class RFC822AddressTokenStreamTest {
                 "Pete(A wonderful \\) chap) <pete(his account)@silly.test(his host)>");
         Assert.assertEquals(Arrays.asList("pete", "wonderful", "chap", "pete",
                 "his", "account", "@silly.test", "his", "host",
-                "pete@silly.test", "pete", "@silly.test", "silly.test",
-                "silly", "@silly"),
+                "pete@silly.test", "pete", "@silly.test", "silly.test"),
+                ZimbraAnalyzerTest.toTokens(stream));
+    }
+
+    @Test
+    public void topPrivateDomain() throws Exception {
+        TokenStream stream = new RFC822AddressTokenStream("support@zimbra.com");
+        Assert.assertEquals(Arrays.asList("support@zimbra.com", "support",
+                "@zimbra.com", "zimbra.com", "zimbra", "@zimbra"),
+                ZimbraAnalyzerTest.toTokens(stream));
+
+        stream = new RFC822AddressTokenStream("support@zimbra.vmware.co.jp");
+        Assert.assertEquals(Arrays.asList("support@zimbra.vmware.co.jp",
+                "support", "@zimbra.vmware.co.jp", "zimbra.vmware.co.jp",
+                "vmware", "@vmware"), ZimbraAnalyzerTest.toTokens(stream));
+
+        stream = new RFC822AddressTokenStream("test@co.jp");
+        Assert.assertEquals(Arrays.asList("test@co.jp", "test", "@co.jp", "co.jp"),
                 ZimbraAnalyzerTest.toTokens(stream));
     }
 

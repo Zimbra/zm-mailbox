@@ -30,6 +30,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 
+import com.google.common.net.InternetDomainName;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.util.StringUtil;
 
@@ -37,15 +38,17 @@ import com.zimbra.common.util.StringUtil;
  * RFC822 address tokenizer.
  * <p>
  * For example:
- * {@literal "Tim Brennan" <tim@bar.foo.com>} is tokenized as:
+ * {@literal "Zimbra Japan" <support@zimbra.vmware.co.jp>} is tokenized as:
  * <ul>
- *  <li>tim
- *  <li>brennan
- *  <li>tim@bar.foo.com
- *  <li>tim
- *  <li>@bar.foo.com
- *  <li>bar.foo.com
- *  <li>foo
+ *  <li>zimbra japan
+ *  <li>zimbra
+ *  <li>japan
+ *  <li>support@zimbra.vmware.co.jp
+ *  <li>support
+ *  <li>@zimbra.vmware.co.jp
+ *  <li>zimbra.vmware.co.jp
+ *  <li>@vmware
+ *  <li>vmware
  * </ul>
  * <p>
  * We tokenize RFC822 addresses casually (relaxed parsing) and formally (strict
@@ -122,13 +125,14 @@ public final class RFC822AddressTokenStream extends TokenStream {
         tokens.add("@" + domain);
         tokens.add(domain);
 
-        String[] parts = domain.split("\\.");
-        if (parts.length > 1) { // "zimbra" of "lab.zimbra.com"
-            String part = parts[parts.length - 2];
-            tokens.add(part);
-            tokens.add("@" + part); // weird, but for backward compatibility
+        try {
+            String top = InternetDomainName.from(domain).topPrivateDomain().parts().get(0);
+            tokens.add(top);
+            tokens.add("@" + top); // for backward compatibility
+        } catch (IllegalArgumentException ignore) {
+        } catch (IllegalStateException ignore) {
+            // skip unless it's a valid domain
         }
-        //TODO: how about "zimbra" of "zimbra.co.jp"?
     }
 
     private void tokenize(InternetAddress iaddr, Set<String> emails) {

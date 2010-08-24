@@ -70,17 +70,17 @@ public class ParsedMessageTest {
                 LuceneFields.L_H_FROM).tokenStreamValue();
         Assert.assertEquals(Arrays.asList("pete", "wonderful", "chap", "pete",
                 "his", "account", "comment", "silly.test", "his", "host",
-                "pete@silly.test", "pete", "@silly.test", "silly.test", "silly", "@silly"),
+                "pete@silly.test", "pete", "@silly.test", "silly.test"),
                 from.getAllTokens());
 
         RFC822AddressTokenStream to = (RFC822AddressTokenStream) doc.getField(
                 LuceneFields.L_H_TO).tokenStreamValue();
         Assert.assertEquals(Arrays.asList("chris", "c@", "c", "xxx", "bbb",
                 "public.example", "joe@example.org", "joe", "@example.org",
-                "example.org", "example", "@example", "john", "jdoe@one.test", "jdoe",
-                "@one.test", "one.test", "one", "@one", "my", "dear", "friend", "the",
+                "example.org", "example", "@example", "john", "jdoe@one.test",
+                "jdoe", "@one.test", "one.test", "my", "dear", "friend", "the",
                 "end", "of", "the", "group", "c@public.example", "c",
-                "@public.example", "public.example", "public", "@public"),
+                "@public.example", "public.example"),
                 to.getAllTokens());
 
         RFC822AddressTokenStream cc = (RFC822AddressTokenStream) doc.getField(
