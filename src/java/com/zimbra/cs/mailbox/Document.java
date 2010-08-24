@@ -269,7 +269,9 @@ public class Document extends MailItem {
 
     protected void checkLock() throws ServiceException {
         Account authenticatedAccount = mMailbox.getAuthenticatedAccount();
-        if (mLockOwner != null && authenticatedAccount != null &&
+        if (authenticatedAccount == null)
+            authenticatedAccount = mMailbox.getAccount();
+        if (mLockOwner != null && 
                 !authenticatedAccount.getId().equalsIgnoreCase(mLockOwner))
             throw MailServiceException.LOCKED(mId, mLockOwner);
     }
