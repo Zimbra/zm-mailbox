@@ -6717,6 +6717,78 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * whether people search feature is enabled
+     *
+     * @return zimbraFeaturePeopleSearchEnabled, or true if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1109)
+    public boolean isFeaturePeopleSearchEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeaturePeopleSearchEnabled, true);
+    }
+
+    /**
+     * whether people search feature is enabled
+     *
+     * @param zimbraFeaturePeopleSearchEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1109)
+    public void setFeaturePeopleSearchEnabled(boolean zimbraFeaturePeopleSearchEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePeopleSearchEnabled, zimbraFeaturePeopleSearchEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether people search feature is enabled
+     *
+     * @param zimbraFeaturePeopleSearchEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1109)
+    public Map<String,Object> setFeaturePeopleSearchEnabled(boolean zimbraFeaturePeopleSearchEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePeopleSearchEnabled, zimbraFeaturePeopleSearchEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether people search feature is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1109)
+    public void unsetFeaturePeopleSearchEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePeopleSearchEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether people search feature is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1109)
+    public Map<String,Object> unsetFeaturePeopleSearchEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePeopleSearchEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether user is allowed to retrieve mail from an external POP3 data
      * source
      *

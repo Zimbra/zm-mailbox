@@ -3032,6 +3032,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureOutOfOfficeReplyEnabled = "zimbraFeatureOutOfOfficeReplyEnabled";
 
     /**
+     * whether people search feature is enabled
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1109)
+    public static final String A_zimbraFeaturePeopleSearchEnabled = "zimbraFeaturePeopleSearchEnabled";
+
+    /**
      * whether user is allowed to retrieve mail from an external POP3 data
      * source
      */
