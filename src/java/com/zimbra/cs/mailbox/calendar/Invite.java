@@ -2488,6 +2488,7 @@ public class Invite {
         inv.setClassPropSetByMe(classPropSetByMe());
         inv.setDontIndexMimeMessage(getDontIndexMimeMessage());
         inv.mLocalOnly = mLocalOnly;
+        inv.mDescInMeta = mDescInMeta;
         return inv;
     }
 
