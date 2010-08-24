@@ -12,16 +12,11 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Sep 7, 2004
- */
 package com.zimbra.cs.mailbox;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import org.apache.lucene.document.Field;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
@@ -33,8 +28,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
-
 /**
+ * @since Sep 7, 2004
  * @author dkarp
  */
 public class Note extends MailItem {
@@ -174,18 +169,11 @@ public class Note extends MailItem {
     @Override
     public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) {
         String toIndex = getText();
-
-        org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
-        doc.add(new Field(LuceneFields.L_CONTENT, toIndex,
-                Field.Store.NO, Field.Index.ANALYZED));
-        doc.add(new Field(LuceneFields.L_H_SUBJECT, toIndex,
-                Field.Store.NO, Field.Index.ANALYZED));
-        doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_NOTE,
-                Field.Store.YES, Field.Index.NOT_ANALYZED));
-
-        List<IndexDocument> toRet = new ArrayList<IndexDocument>(1);
-        toRet.add(new IndexDocument(doc));
-        return toRet;
+        IndexDocument doc = new IndexDocument();
+        doc.addContent(toIndex);
+        doc.addSubject(toIndex);
+        doc.addPartName(LuceneFields.L_PARTNAME_NOTE);
+        return Collections.singletonList(doc);
     }
 
 

@@ -25,13 +25,12 @@ import javax.activation.DataSource;
 import javax.mail.internet.MimeUtility;
 
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.convert.ConversionException;
-import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.object.MatchedObject;
@@ -176,6 +175,12 @@ public abstract class MimeHandler {
      */
     protected abstract String getContentImpl() throws MimeHandlerException;
 
+    /**
+     * Subclass should override.
+     *
+     * @return null
+     * @throws MimeHandlerException if a MIME parser error occurred.
+     */
     public ZVCalendar getICalendar() throws MimeHandlerException {
         return null;
     }
@@ -207,40 +212,39 @@ public abstract class MimeHandler {
      */
     public abstract boolean doConversion();
 
-    public Document getDocument() throws MimeHandlerException, ObjectHandlerException, ServiceException {
+    /**
+     * Returns a Lucene document to index this content.
+     *
+     * @return Lucene document
+     * @throws MimeHandlerException if a MIME parser error occurred
+     * @throws ObjectHandlerException if a Zimlet error occurred
+     * @throws ServiceException if other error occurred
+     */
+    public final Document getDocument()
+        throws MimeHandlerException, ObjectHandlerException, ServiceException {
 
-        /*
-         * Initialize the F_L_TYPE field with the content type from the
-         * specified DataSouce. Additionally, if DataSource is an instance
-         * of BlobDataSource (which it always should when creating a document),
-         * then also initialize F_L_BLOB_ID and F_L_SIZE fields.
-         */
+        IndexDocument doc = new IndexDocument(new Document());
+        doc.addMimeType(getContentType());
 
-        Document doc = new Document();
-        doc.add(new Field(LuceneFields.L_MIMETYPE, getContentType(),
-                Field.Store.YES, Field.Index.ANALYZED));
-
-        addFields(doc);
+        addFields(doc.toDocument());
         String content = getContent();
-        doc.add(new Field(LuceneFields.L_CONTENT, content,
-                Field.Store.NO, Field.Index.ANALYZED));
+        doc.addContent(content);
         getObjects(content, doc);
 
-        doc.add(new Field(LuceneFields.L_PARTNAME, mPartName,
-                Field.Store.YES, Field.Index.NOT_ANALYZED));
+        doc.addPartName(mPartName);
 
         String name = mDataSource.getName();
         if (name != null) {
             try {
                 name = MimeUtility.decodeText(name);
-            } catch (UnsupportedEncodingException e) { }
-            doc.add(new Field(LuceneFields.L_FILENAME, name,
-                    Field.Store.YES, Field.Index.ANALYZED));
+            } catch (UnsupportedEncodingException ignore) {
+            }
+            doc.addFilename(name);
         }
-        return doc;
+        return doc.toDocument();
     }
 
-    public static void getObjects(String text, Document doc)
+    public static void getObjects(String text, IndexDocument doc)
         throws ObjectHandlerException, ServiceException {
 
         if (DebugConfig.disableObjects) {
@@ -264,11 +268,18 @@ public abstract class MimeHandler {
             }
         }
         if (l_objects.length() > 0) {
-            doc.add(new Field(LuceneFields.L_OBJECTS, l_objects.toString(),
-                    Field.Store.NO, Field.Index.ANALYZED));
+            doc.addObjects(l_objects.toString());
         }
     }
 
+    /**
+     * Subclass should override.
+     *
+     * @param archiveDocInfo attachment info
+     * @param seq sequence number
+     * @return null
+     * @throws IOException if an IO error occurred.
+     */
     public AttachmentInfo getDocInfoFromArchive(AttachmentInfo archiveDocInfo,
             String seq) throws IOException {
         return null;

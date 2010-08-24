@@ -23,9 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LogByteSizeMergePolicy;
@@ -142,14 +140,17 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         return (t < c) ? t : c;
     }
 
+    @Override
     public long getBytesWritten() {
         return mIdxDirectory.getBytesWritten();
     }
 
+    @Override
     public long getBytesRead() {
         return mIdxDirectory.getBytesRead();
     }
 
+    @Override
     public String generateIndexId(int itemId) {
         return Integer.toString(itemId);
     }
@@ -204,6 +205,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         }
     }
 
+    @Override
     public void addDocument(IndexDocument[] docs, MailItem item, int itemId,
             String indexId, int modContent, long receivedDate, long size,
             String sortSubject, String sortSender, boolean deleteFirst)
@@ -218,46 +220,34 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
             try {
                 assert(mIndexWriter != null);
 
-                for (IndexDocument zdoc : docs) {
-                    Document doc = (Document) zdoc.getWrappedDocument();
+                for (IndexDocument doc : docs) {
                     // doc can be shared by multiple threads if multiple mailboxes
                     // are referenced in a single email
                     synchronized (doc) {
-                        doc.removeFields(LuceneFields.L_SORT_SUBJECT);
-                        doc.removeFields(LuceneFields.L_SORT_NAME);
+                        doc.removeSortSubject();
+                        doc.removeSortName();
 
-                        doc.add(new Field(LuceneFields.L_SORT_SUBJECT, sortSubject,
-                                Field.Store.NO, Field.Index.NOT_ANALYZED));
-                        doc.add(new Field(LuceneFields.L_SORT_NAME, sortSender,
-                                Field.Store.NO, Field.Index.NOT_ANALYZED));
+                        doc.addSortSubject(sortSubject);
+                        doc.addSortName(sortSender);
 
-                        doc.removeFields(LuceneFields.L_MAILBOX_BLOB_ID);
-                        doc.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, indexId,
-                                Field.Store.YES, Field.Index.NOT_ANALYZED));
+                        doc.removeMailboxBlobId();
+                        doc.addMailboxBlobId(indexId);
 
                         // If this doc is shared by multi threads, then the date might just be wrong,
                         // so remove and re-add the date here to make sure the right one gets written!
-                        doc.removeFields(LuceneFields.L_SORT_DATE);
-                        String dateString = DateTools.timeToString(receivedDate,
-                                DateTools.Resolution.MILLISECOND);
-                        doc.add(new Field(LuceneFields.L_SORT_DATE, dateString,
-                                Field.Store.YES, Field.Index.NOT_ANALYZED));
+                        doc.removeSortDate();
+                        doc.addSortDate(receivedDate);
 
-                        doc.removeFields(LuceneFields.L_SORT_SIZE);
-                        doc.add(new Field(LuceneFields.L_SORT_SIZE, Long.toString(size),
-                                Field.Store.YES, Field.Index.NO));
-
-                        if (null == doc.get(LuceneFields.L_ALL)) {
-                            doc.add(new Field(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE,
-                                    Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
-                        }
+                        doc.removeSortSize();
+                        doc.addSortSize(size);
+                        doc.addAll();
 
                         if (deleteFirst) {
                             String itemIdStr = indexId;
                             Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, itemIdStr);
-                            mIndexWriter.updateDocument(toDelete, doc);
+                            mIndexWriter.updateDocument(toDelete, doc.toDocument());
                         } else {
-                            mIndexWriter.addDocument(doc);
+                            mIndexWriter.addDocument(doc.toDocument());
                         }
 
                     } // synchronized(doc)
@@ -289,6 +279,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         }
     }
 
+    @Override
     public List<String> deleteDocuments(List<String> itemIds) throws IOException {
         synchronized (getLock()) {
             beginWriteOperation();
@@ -323,6 +314,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         }
     }
 
+    @Override
     public void deleteIndex() throws IOException {
         synchronized (getLock()) {
             flush();
@@ -408,6 +400,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
      * @return TRUE if all tokens were expanded
      *  or FALSE if no more tokens could be expanded
      */
+    @Override
     public boolean expandWildcardToken(Collection<String> toRet, String field,
             String token, int maxToReturn) throws ServiceException {
         // all lucene text should be in lowercase...
@@ -457,6 +450,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
     /**
      * Force all outstanding index writes to go through. Do not return until complete
      */
+    @Override
     public void flush() {
         synchronized (getLock()) {
             sIndexWritersCache.flush(this);
@@ -469,6 +463,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
      * @param collection - Strings which correspond to all of the domain terms stored in a given field.
      * @throws IOException
      */
+    @Override
     public void getDomainsForField(String fieldName, String regex,
             Collection<BrowseTerm> collection) throws IOException {
         if (regex == null) {
@@ -482,6 +477,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
      * @param collection - Strings which correspond to all of the attachment types in the index
      * @throws IOException
      */
+    @Override
     public void getAttachments(String regex, Collection<BrowseTerm> collection)
         throws IOException {
 
@@ -492,6 +488,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
                 new TermEnumCallback(collection));
     }
 
+    @Override
     public void getObjects(String regex, Collection<BrowseTerm> collection)
         throws IOException {
 
@@ -510,6 +507,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
      *
      * @throws IOException
      */
+    @Override
     public IndexSearcherRef getIndexSearcherRef() throws IOException {
         synchronized (getLock()) {
             return new IndexSearcherRef(getIndexReaderRef());
@@ -530,6 +528,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         return mMbidx.getLock();
     }
 
+    @Override
     public Sort getSort(SortBy searchOrder) {
         if (searchOrder == null || searchOrder == SortBy.NONE) {
             return null;
@@ -573,53 +572,12 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
 
                 mLatestSort = new Sort(new SortField(field, type, reverse));
                 mLatestSortBy = searchOrder;
-//
-//                switch (searchOrder) {
-//                    case NONE:
-//                        return null;
-//                    case DATE_DESCENDING:
-//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true));
-//                        mLatestSortBy = searchOrder;
-//                        break;
-//                    case DATE_ASCENDING:
-//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, false));
-//                        mLatestSortBy = searchOrder;
-//                        break;
-//                    case SUBJ_DESCENDING:
-//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, true));
-//                        mLatestSortBy = searchOrder;
-//                        break;
-//                    case SUBJ_ASCENDING:
-//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SUBJECT, SortField.STRING, false));
-//                        mLatestSortBy = searchOrder;
-//                        break;
-//                    case NAME_DESCENDING:
-//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, true));
-//                        mLatestSortBy = searchOrder;
-//                        break;
-//                    case NAME_ASCENDING:
-//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_NAME, SortField.STRING, false));
-//                        mLatestSortBy = searchOrder;
-//                        break;
-//                    case SIZE_DESCENDING:
-//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG, true));
-//                        mLatestSortBy = searchOrder;
-//                        break;
-//                    case SIZE_ASCENDING:
-//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_SIZE, SortField.LONG, false));
-//                        mLatestSortBy = searchOrder;
-//                        break;
-//                    case SCORE_DESCENDING:
-//                        return null;
-//                    default:
-//                        mLatestSort = new Sort(new SortField(LuceneFields.L_SORT_DATE, SortField.STRING, true));
-//                        mLatestSortBy = SortBy.DATE_ASCENDING;
-//                }
             }
             return mLatestSort;
         }
     }
 
+    @Override
     public List<SpellSuggestQueryInfo.Suggestion> suggestSpelling(String field,
             String token) throws ServiceException {
         LinkedList<SpellSuggestQueryInfo.Suggestion> toRet = null;
@@ -637,27 +595,20 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
 
                 if (freq == 0 && numDocs > 0) {
                     toRet = new LinkedList<SpellSuggestQueryInfo.Suggestion>();
-
-//                    float frequency = ((float)freq)/((float)numDocs);
-//
-//                    int suggestionDistance = Integer.MAX_VALUE;
-
                     FuzzyTermEnum fuzzyEnum = new FuzzyTermEnum(iReader, term, 0.5f, 1);
-                    if (fuzzyEnum != null) {
-                        do {
-                            Term cur = fuzzyEnum.term();
-                            if (cur != null) {
-                                String curText = cur.text();
-                                int curDiff = editDistance(curText, token, curText.length(), token.length());
+                    do {
+                        Term cur = fuzzyEnum.term();
+                        if (cur != null) {
+                            String curText = cur.text();
+                            int curDiff = editDistance(curText, token, curText.length(), token.length());
 
-                                SpellSuggestQueryInfo.Suggestion sug = new SpellSuggestQueryInfo.Suggestion();
-                                sug.mStr = curText;
-                                sug.mEditDist = curDiff;
-                                sug.mDocs = fuzzyEnum.docFreq();
-                                toRet.add(sug);
-                            }
-                        } while(fuzzyEnum.next());
-                    }
+                            SpellSuggestQueryInfo.Suggestion sug = new SpellSuggestQueryInfo.Suggestion();
+                            sug.mStr = curText;
+                            sug.mEditDist = curDiff;
+                            sug.mDocs = fuzzyEnum.docFreq();
+                            toRet.add(sug);
+                        }
+                    } while (fuzzyEnum.next());
                 }
             } finally {
                 searcher.dec();
@@ -829,6 +780,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         return (numFiles <= 0);
     }
 
+    @Override
     public void beginWriteOperation() throws IOException {
         assert(Thread.holdsLock(getLock()));
         if (beginWritingNestLevel == 0) {
@@ -839,6 +791,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         beginWritingNestLevel++;
     }
 
+    @Override
     public void endWriteOperation() throws IOException {
         assert(Thread.holdsLock(getLock()));
         assert(beginWritingNestLevel > 0);
@@ -1018,12 +971,14 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
             mCollection = collection;
         }
 
+        @Override
         public void onTerm(Term term, int docFreq) {
             String text = term.text();
             if (text.length() > 1 && text.charAt(0) == '@') {
                 mCollection.add(new BrowseTerm(text.substring(1), docFreq));
             }
         }
+
         private Collection<BrowseTerm> mCollection;
     }
 
@@ -1032,12 +987,14 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
             mCollection = collection;
         }
 
+        @Override
         public void onTerm(Term term, int docFreq) {
             String text = term.text();
             if (text.length() > 1) {
                 mCollection.add(new BrowseTerm(text, docFreq));
             }
         }
+
         private Collection<BrowseTerm> mCollection;
     }
 
@@ -1045,6 +1002,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         abstract void onTerm(Term term, int docFreq);
     }
 
+    @Override
     public void onReaderClose(IndexReaderRef ref) {
         synchronized (mOpenReaders) {
             mOpenReaders.remove(ref);
@@ -1053,6 +1011,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
 
     private List<IndexReaderRef> mOpenReaders = new ArrayList<IndexReaderRef>();
 
+    @Override
     public IndexReader reopenReader(IndexReader reader) throws IOException {
         return reader.reopen();
     }

@@ -43,9 +43,9 @@ import javax.mail.internet.MimeUtility;
 import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import com.google.common.base.Strings;
 import com.zimbra.cs.store.Blob;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentType;
@@ -918,29 +918,20 @@ public class ParsedMessage {
     private IndexDocument getMainBodyLuceneDocument(StringBuilder fullContent)
         throws MessagingException, ServiceException {
 
-        Document document = new Document();
-        IndexDocument zd = new IndexDocument(document);
-
-        document.add(new Field(LuceneFields.L_MIMETYPE, "message/rfc822",
-                Field.Store.YES, Field.Index.ANALYZED));
-        document.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP,
-                Field.Store.YES, Field.Index.NOT_ANALYZED));
-
-        document.add(new Field(LuceneFields.L_H_FROM, getFromTokenStream()));
-        document.add(new Field(LuceneFields.L_H_TO, getToTokenStream()));
-        document.add(new Field(LuceneFields.L_H_CC, getCcTokenStream()));
-
+        IndexDocument doc = new IndexDocument(new Document());
+        doc.addMimeType("message/rfc822");
+        doc.addPartName(LuceneFields.L_PARTNAME_TOP);
+        doc.addFrom(getFromTokenStream());
+        doc.addTo(getToTokenStream());
+        doc.addCc(getCcTokenStream());
         try {
-            document.add(new Field(LuceneFields.L_H_X_ENV_FROM,
-                    new RFC822AddressTokenStream(getMimeMessage().getHeader(
-                            "X-Envelope-From", ","))));
+            doc.addEnvFrom(new RFC822AddressTokenStream(
+                    getMimeMessage().getHeader("X-Envelope-From", ",")));
         } catch (MessagingException ignore) {
         }
-
         try {
-            document.add(new Field(LuceneFields.L_H_X_ENV_TO,
-                    new RFC822AddressTokenStream(getMimeMessage().getHeader(
-                            "X-Envelope-To", ","))));
+            doc.addEnvTo(new RFC822AddressTokenStream(
+                    getMimeMessage().getHeader("X-Envelope-To", ",")));
         } catch (MessagingException ignore) {
         }
 
@@ -949,15 +940,15 @@ public class ParsedMessage {
             msgId = "";
         }
         if (msgId.length() > 0) {
-            if (msgId.charAt(0) == '<')
+            if (msgId.charAt(0) == '<') {
                 msgId = msgId.substring(1);
-
-            if (msgId.charAt(msgId.length()-1) == '>')
-                msgId = msgId.substring(0, msgId.length()-1);
-
-            if (msgId.length() > 0)
-                document.add(new Field(LuceneFields.L_H_MESSAGE_ID, msgId,
-                        Field.Store.NO, Field.Index.NOT_ANALYZED));
+            }
+            if (msgId.charAt(msgId.length() - 1) == '>') {
+                msgId = msgId.substring(0, msgId.length() - 1);
+            }
+            if (msgId.length() > 0) {
+                doc.addMessageId(msgId);
+            }
         }
 
         // iterate all the message headers, add them to the structured-field data in the index
@@ -986,20 +977,18 @@ public class ParsedMessage {
         }
         if (fieldText.length() > 0) {
             // add key:value pairs to the structured FIELD lucene field
-            document.add(new Field(LuceneFields.L_FIELD, fieldText.toString(),
-                    Field.Store.NO, Field.Index.ANALYZED));
+            doc.addField(fieldText.toString());
         }
 
         //TODO this only modifies the local variable, hence no effect.
         String sortFrom = getParsedSender().getSortString();
-        if (sortFrom == null)
+        if (sortFrom == null) {
             sortFrom = "";
-        else if (sortFrom.length() > DbMailItem.MAX_SENDER_LENGTH)
+        } else if (sortFrom.length() > DbMailItem.MAX_SENDER_LENGTH) {
             sortFrom = sortFrom.substring(0, DbMailItem.MAX_SENDER_LENGTH);
-
+        }
         String subject = getSubject();
-        document.add(new Field(LuceneFields.L_H_SUBJECT, subject,
-                Field.Store.NO, Field.Index.ANALYZED));
+        doc.addSubject(subject);
 
         // add subject and from to main content for better searching
         StringBuilder contentPrepend = new StringBuilder(subject);
@@ -1019,12 +1008,10 @@ public class ParsedMessage {
         }
 
         String text = contentPrepend.toString() + " " + fullContent.toString();
-
-        document.add(new Field(LuceneFields.L_CONTENT, text,
-                Field.Store.NO, Field.Index.ANALYZED));
+        doc.addContent(text);
 
         try {
-            MimeHandler.getObjects(text, document);
+            MimeHandler.getObjects(text, doc);
         } catch (ObjectHandlerException e) {
             String msgid = getMessageID();
             String sbj = getSubject();
@@ -1043,10 +1030,8 @@ public class ParsedMessage {
         } else {
             attachments = attachments + "," + LuceneFields.L_ATTACHMENT_ANY;
         }
-        document.add(new Field(LuceneFields.L_ATTACHMENTS, attachments,
-                Field.Store.NO, Field.Index.ANALYZED));
-
-        return zd;
+        doc.addAttachments(attachments);
+        return doc;
     }
 
     /**
@@ -1055,27 +1040,24 @@ public class ParsedMessage {
      * attachment will show up if you do things like "type:pdf and from:foo"
      *
      * "this" --> top level doc
-     * @param d subdocument of top level
+     * @param doc sub-document of top level
      */
-    private IndexDocument setLuceneHeadersFromContainer(IndexDocument zd) {
-        Document doc = (Document) zd.getWrappedDocument();
-
+    private IndexDocument setLuceneHeadersFromContainer(IndexDocument doc) {
         //TODO this only modifies the local variable, hence no effect.
         String sortFrom = getParsedSender().getSortString();
         if (sortFrom != null && sortFrom.length() > DbMailItem.MAX_SENDER_LENGTH)
             sortFrom = sortFrom.substring(0, DbMailItem.MAX_SENDER_LENGTH);
 
-        doc.add(new Field(LuceneFields.L_H_FROM, getFromTokenStream()));
-        doc.add(new Field(LuceneFields.L_H_TO, getToTokenStream()));
-        doc.add(new Field(LuceneFields.L_H_CC, getCcTokenStream()));
+        doc.addFrom(getFromTokenStream());
+        doc.addTo(getToTokenStream());
+        doc.addCc(getCcTokenStream());
 
         String subject = getNormalizedSubject();
-        if (!StringUtil.isNullOrEmpty(subject)) {
-            doc.add(new Field(LuceneFields.L_H_SUBJECT, subject,
-                    Field.Store.NO, Field.Index.ANALYZED));
+        if (!Strings.isNullOrEmpty(subject)) {
+            doc.addSubject(subject);
         }
 
-        return zd;
+        return doc;
     }
 
     private static boolean isBouncedCalendar(MPartInfo mpi) {
@@ -1173,17 +1155,14 @@ public class ParsedMessage {
                     // Lucene document.  This is necessary so that we can tell the
                     // client what parts match if a search matched a particular
                     // part.
-                    IndexDocument zd = new IndexDocument(handler.getDocument());
+                    IndexDocument doc = new IndexDocument(handler.getDocument());
 
-                    String fn = handler.getFilename();
-                    if (fn != null && fn.length() > 0) {
-                        mFilenames.add(fn);
+                    String filename = handler.getFilename();
+                    if (!Strings.isNullOrEmpty(filename)) {
+                        mFilenames.add(filename);
                     }
-
-                    org.apache.lucene.document.Document doc = (org.apache.lucene.document.Document)(zd.getWrappedDocument());
-                    int partSize = mpi.getMimePart().getSize();
-                    doc.add(new Field(LuceneFields.L_SORT_SIZE, Integer.toString(partSize), Field.Store.YES, Field.Index.NO));
-                    mZDocuments.add(setLuceneHeadersFromContainer(zd));
+                    doc.addSortSize(mpi.getMimePart().getSize());
+                    mZDocuments.add(setLuceneHeadersFromContainer(doc));
                 }
             }
 
@@ -1209,26 +1188,41 @@ public class ParsedMessage {
                 }
             }
         } catch (MimeHandlerException e) {
-            mNumParseErrors++;
-            String pn = mpi.getPartName();
-            String ctype = mpi.getContentType();
-            String msgid = getMessageID();
-            sLog.warn("Unable to parse part %s (%s, %s) of message with Message-ID %s.",
-                pn, mpi.getFilename(), ctype, msgid, e);
-            if (ConversionException.isTemporaryCauseOf(e)) {
-                mTemporaryAnalysisFailure = true;
-            }
-            sLog.warn("Attachment will not be indexed.");
+            handleParseError(mpi, e);
         } catch (ObjectHandlerException e) {
-            mNumParseErrors++;
-            String pn = mpi.getPartName();
-            String ct = mpi.getContentType();
-            String msgid = getMessageID();
-            sLog.warn("Unable to parse part %s (%s, %s) of message with Message-ID %s." +
-                "  Object will not be indexed.",
-                pn, mpi.getFilename(), ct, msgid, e);
+            handleParseError(mpi, e);
         }
         return toRet;
+    }
+
+    /**
+     * Log the error and index minimum information.
+     *
+     * @param mpi MIME info
+     * @param error error to handle
+     */
+    private void handleParseError(MPartInfo mpi, Throwable error) {
+        mNumParseErrors++;
+
+        sLog.warn("Unable to parse part=%s filename=%s content-type=%s message-id=%s",
+            mpi.getPartName(), mpi.getFilename(), mpi.getContentType(), getMessageID(), error);
+        if (ConversionException.isTemporaryCauseOf(error)) {
+            mTemporaryAnalysisFailure = true;
+        }
+
+        if (!Strings.isNullOrEmpty(mpi.getFilename())) {
+            mFilenames.add(mpi.getFilename());
+        }
+
+        IndexDocument doc = new IndexDocument(new Document());
+        doc.addMimeType(mpi.getContentType());
+        doc.addPartName(mpi.getPartName());
+        doc.addFilename(mpi.getFilename());
+        try {
+            doc.addSortSize(mpi.getMimePart().getSize());
+        } catch (MessagingException ignore) {
+        }
+        mZDocuments.add(setLuceneHeadersFromContainer(doc));
     }
 
     private static final void appendToContent(StringBuilder sb, String s) {

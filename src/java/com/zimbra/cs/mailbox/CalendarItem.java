@@ -38,8 +38,6 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import org.apache.lucene.document.Field;
-
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
@@ -296,7 +294,6 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             // ATTENDIES (TO)
             for (ZAttendee at : inv.getAttendees()) {
                 try {
-                    //                        doc.add(new Field(LuceneFields.L_H_TO, at.getFriendlyAddress().toString(), Field.Store.NO, Field.Index.TOKENIZED));
                     toAddrs.add(at.getFriendlyAddress().toString());
                     s.append(at.getIndexString()).append(' ');
                 } catch (ServiceException e) {}
@@ -358,12 +355,10 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             List<IndexDocument> docList = new ArrayList<IndexDocument>();
 
             if (mm == null) { // no blob!
-                org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
+                IndexDocument doc = new IndexDocument();
                 // need to properly emulate an indexed Invite message here -- set the TOP partname
-                doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_TOP,
-                        Field.Store.YES, Field.Index.NOT_ANALYZED));
-
-                docList.add(new IndexDocument(doc));
+                doc.addPartName(LuceneFields.L_PARTNAME_TOP);
+                docList.add(doc);
             } else {
                 try {
                     ParsedMessage pm = new ParsedMessage(mm, mMailbox.attachmentsIndexingEnabled());
@@ -380,40 +375,32 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                 }
             }
 
-            for (IndexDocument zd: docList) {
-                org.apache.lucene.document.Document doc = (org.apache.lucene.document.Document)(zd.getWrappedDocument());
-                ////////////////////
+            for (IndexDocument doc : docList) {
                 // update the doc, overriding many of the fields with data from the appointment
+                doc.addContent(s.toString());
 
-                doc.add(new Field(LuceneFields.L_CONTENT, s.toString(),
-                        Field.Store.NO, Field.Index.ANALYZED));
-
-                doc.removeField(LuceneFields.L_H_TO);
-                doc.removeField(LuceneFields.L_H_FROM);
-                doc.removeField(LuceneFields.L_H_SUBJECT);
+                doc.removeTo();
+                doc.removeFrom();
+                doc.removeSubject();
 
                 for (String to : toAddrs) {
-                    doc.add(new Field(LuceneFields.L_H_TO,
-                            new RFC822AddressTokenStream(to)));
+                    doc.addTo(new RFC822AddressTokenStream(to));
                 }
-                doc.add(new Field(LuceneFields.L_H_FROM,
-                        new RFC822AddressTokenStream(orgToUse)));
-                doc.add(new Field(LuceneFields.L_H_SUBJECT, nameToUse,
-                        Field.Store.NO, Field.Index.ANALYZED));
-                toRet.add(zd);
+                doc.addFrom(new RFC822AddressTokenStream(orgToUse));
+                doc.addSubject(nameToUse);
+                toRet.add(doc);
             }
         }
 
         // set the "public" flag in the index for this appointment
         String itemClass;
-        if (this.isPublic())
+        if (this.isPublic()) {
             itemClass = INDEX_FIELD_ITEM_CLASS_PUBLIC;
-        else
+        } else {
             itemClass = INDEX_FIELD_ITEM_CLASS_PRIVATE;
-        for (IndexDocument zd: toRet) {
-            org.apache.lucene.document.Document doc = (org.apache.lucene.document.Document)(zd.getWrappedDocument());
-            doc.add(new Field(LuceneFields.L_FIELD, itemClass,
-                    Field.Store.NO, Field.Index.ANALYZED));
+        }
+        for (IndexDocument doc : toRet) {
+            doc.addField(itemClass);
         }
 
         return toRet;

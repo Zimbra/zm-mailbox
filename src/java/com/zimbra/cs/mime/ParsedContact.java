@@ -30,7 +30,6 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.apache.lucene.document.Field;
 import org.json.JSONException;
 
 import com.zimbra.common.mailbox.ContactConstants;
@@ -45,7 +44,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.IndexDocument;
-import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Contact;
@@ -407,14 +405,11 @@ public class ParsedContact {
             }
         }
 
-        mZDocuments.add(new IndexDocument(getPrimaryDocument(acct, attachContent.toString())));
-
-        // dumpLuceneDocuments();
+        mZDocuments.add(getPrimaryDocument(acct, attachContent.toString()));
     }
 
     public List<IndexDocument> getLuceneDocuments(Mailbox mbox) throws ServiceException {
         analyze(mbox);
-        // dumpLuceneDocuments();
         return mZDocuments;
     }
 
@@ -447,10 +442,9 @@ public class ParsedContact {
                 // part.
                 org.apache.lucene.document.Document doc = handler.getDocument();
                 if (doc != null) {
-                    doc.add(new Field(LuceneFields.L_SORT_SIZE,
-                            Integer.toString(attach.getSize()),
-                            Field.Store.YES, Field.Index.NO));
-                    mZDocuments.add(new IndexDocument(doc));
+                    IndexDocument idoc = new IndexDocument(doc);
+                    idoc.addSortSize(attach.getSize());
+                    mZDocuments.add(idoc);
                 }
             }
         }
@@ -463,8 +457,7 @@ public class ParsedContact {
         }
     }
 
-    private org.apache.lucene.document.Document getPrimaryDocument(Account acct, String contentStrIn) throws ServiceException {
-        org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
+    private IndexDocument getPrimaryDocument(Account acct, String contentStrIn) throws ServiceException {
 
         StringBuilder fieldText = new StringBuilder();
         StringBuilder contentText = new StringBuilder();
@@ -507,35 +500,22 @@ public class ParsedContact {
         // text
         contentText = new StringBuilder(emailStrTokens).append(' ').append(contentText).append(' ').append(contentStrIn);
 
+        IndexDocument doc = new IndexDocument();
+
         /* put the email addresses in the "To" field so they can be more easily searched */
-        doc.add(new Field(LuceneFields.L_H_TO, to));
+        doc.addTo(to);
 
         /* put the name in the "From" field since the MailItem table uses 'Sender'*/
-        doc.add(new Field(LuceneFields.L_H_FROM,
-                new RFC822AddressTokenStream(Contact.getFileAsString(mFields))));
+        doc.addFrom(new RFC822AddressTokenStream(Contact.getFileAsString(mFields)));
         /* bug 11831 - put contact searchable data in its own field so wildcard search works better  */
-        doc.add(new Field(LuceneFields.L_CONTACT_DATA, searchText.toString(),
-                Field.Store.NO, Field.Index.ANALYZED));
-        doc.add(new Field(LuceneFields.L_CONTENT, contentText.toString(),
-                Field.Store.NO, Field.Index.ANALYZED));
-        doc.add(new Field(LuceneFields.L_PARTNAME, LuceneFields.L_PARTNAME_CONTACT,
-                Field.Store.YES, Field.Index.NOT_ANALYZED));
+        doc.addContactData(searchText.toString());
+        doc.addContent(contentText.toString());
+        doc.addPartName(LuceneFields.L_PARTNAME_CONTACT);
 
         /* add key:value pairs to the structured FIELD lucene field */
-        doc.add(new Field(LuceneFields.L_FIELD, fieldText.toString(),
-                Field.Store.NO, Field.Index.ANALYZED));
+        doc.addField(fieldText.toString());
 
         return doc;
     }
 
-    private void dumpLuceneDocuments() {
-
-        StringBuilder sb = new StringBuilder();
-
-        for (IndexDocument id : mZDocuments) {
-            id.dump(sb);
-        }
-
-        ZimbraLog.index_add.debug("Contact lucene doc: \n" + sb.toString());
-    }
 }

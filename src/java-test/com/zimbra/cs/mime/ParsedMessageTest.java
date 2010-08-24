@@ -64,7 +64,7 @@ public class ParsedMessageTest {
         ParsedMessage msg = new ParsedMessage(raw.getBytes(), false);
         List<IndexDocument> docs = msg.getLuceneDocuments();
         Assert.assertEquals(1, docs.size());
-        Document doc = (Document) docs.get(0).getWrappedDocument();
+        Document doc = docs.get(0).toDocument();
 
         RFC822AddressTokenStream from = (RFC822AddressTokenStream) doc.getField(
                 LuceneFields.L_H_FROM).tokenStreamValue();
