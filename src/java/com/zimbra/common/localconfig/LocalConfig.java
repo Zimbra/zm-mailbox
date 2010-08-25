@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -42,18 +42,18 @@ public class LocalConfig {
     static final String E_KEY = "key";
     static final String A_NAME = "name";
     static final String E_VALUE = "value";
-    
+
     private String mConfigFile;
-    
+
     private String defaultConfigFile() {
-    	String zimbra_config = System.getProperty("zimbra.config");
-    	if (zimbra_config == null) {
-    		final String FS = File.separator;
-    		zimbra_config = FS + "opt" + FS + "zimbra" + FS + "conf" + FS + "localconfig.xml";
-    	}
-    	return zimbra_config;
+        String zimbra_config = System.getProperty("zimbra.config");
+        if (zimbra_config == null) {
+            final String FS = File.separator;
+            zimbra_config = FS + "opt" + FS + "zimbra" + FS + "conf" + FS + "localconfig.xml";
+        }
+        return zimbra_config;
     }
-        
+
     String getConfigFile() {
         return mConfigFile;
     }
@@ -61,19 +61,19 @@ public class LocalConfig {
     private Map<String, String> mConfiguredKeys = new HashMap<String, String>();
     private Map<String, String> mExpanded = new HashMap<String, String>();
 
-    void set(String key, String value) 
+    void set(String key, String value)
     {
         mConfiguredKeys.put(key, value);
     }
 
-    String getRaw(String key) 
+    String getRaw(String key)
     {
         if (mConfiguredKeys.containsKey(key))
             return mConfiguredKeys.get(key);
-        
+
         if (KnownKey.isKnown(key))
             return KnownKey.getDefaultValue(key);
-        
+
         return null;
     }
 
@@ -89,7 +89,7 @@ public class LocalConfig {
         }
 
         String key = value.substring(begin + 2, end);
-        
+
         if (seenKeys.contains(key)) {
             StringBuffer sb = new StringBuffer(128);
             sb.append("recursive expansion of key '" + key + "':");
@@ -97,14 +97,14 @@ public class LocalConfig {
                 sb.append(" ").append(seen);
             throw new ConfigException(sb.toString());
         }
-        
+
         seenKeys.add(key);
-        
+
         String replacement = getRaw(key);
         if (replacement == null)
             throw new ConfigException("null valued key '" + key + "' referenced");
         value.replace(begin, end+1, replacement);
-        
+
         return true;
     }
 
@@ -128,7 +128,7 @@ public class LocalConfig {
         }
         return null;
     }
-    
+
     //
     // Load & save
     //
@@ -143,7 +143,7 @@ public class LocalConfig {
         File directory = configFile.getCanonicalFile().getParentFile();
         File tempFile = File.createTempFile("localconfig.xml.", "", directory);
         FileWriter fileWriter = new FileWriter(tempFile);
-        
+
         xmlWriter.write(fileWriter);
         fileWriter.close();
         configFile.delete();
@@ -151,25 +151,25 @@ public class LocalConfig {
     }
 
     void backup(String suffix) throws IOException {
-	FileUtil.copy(new File(mConfigFile), new File(mConfigFile + suffix), true);
+    FileUtil.copy(new File(mConfigFile), new File(mConfigFile + suffix), true);
     }
-    
+
     public LocalConfig(String file) throws DocumentException, ConfigException {
         mConfigFile = file;
         if (mConfigFile == null) {
             mConfigFile = defaultConfigFile();
         }
-        
+
         File cf = new File(mConfigFile);
         if (cf.exists() && cf.canRead()) {
             SAXReader reader = new SAXReader();
             Document document = reader.read(cf);
             Element root = document.getRootElement();
-            
+
             if (!root.getName().equals(E_LOCALCONFIG))
                 throw new DocumentException("config file " + mConfigFile + " root tag is not " + E_LOCALCONFIG);
 
-            for (Iterator iter = root.elementIterator(E_KEY); iter.hasNext(); ) {
+            for (Iterator<?> iter = root.elementIterator(E_KEY); iter.hasNext(); ) {
                 Element ekey = (Element) iter.next();
                 String key = ekey.attributeValue(A_NAME);
                 String value = ekey.elementText(E_VALUE);
@@ -182,13 +182,13 @@ public class LocalConfig {
     }
 
     boolean isSet(String key) {
-        return mConfiguredKeys.containsKey(key) || KnownKey.isKnown(key); 
+        return mConfiguredKeys.containsKey(key) || KnownKey.isKnown(key);
     }
-    
+
     void remove(String key) {
         mConfiguredKeys.remove(key);
     }
-    
+
     //
     // Print
     //
@@ -220,7 +220,7 @@ public class LocalConfig {
             boolean add = true;
             if (KnownKey.isKnown(key)) {
                 String configuredValue = get(key);
-                String defaultValue = KnownKey.getDefaultValue(key); 
+                String defaultValue = KnownKey.getDefaultValue(key);
                 if (configuredValue.equals(defaultValue)) {
                     add = false;
                 }
@@ -263,19 +263,19 @@ public class LocalConfig {
      */
     String[] allKeys() {
         Set<String> union = new HashSet<String>();
-        
+
         // Add known keys.
         String[] knownKeys = KnownKey.getAll();
         for (int i = 0; i < knownKeys.length; i++)
             union.add(knownKeys[i]);
-        
+
         // Add set keys (this might contain unknown keys)
         for (String key : mConfiguredKeys.keySet())
             union.add(key);
-        
+
         return union.toArray(new String[0]);
     }
-    
+
     void print(OutputStream out, ConfigWriter writer, String[] keys) throws IOException, ConfigException {
         if (keys.length == 0) {
             keys = allKeys();
@@ -329,29 +329,37 @@ public class LocalConfig {
     //
     private void expandAll() throws ConfigException {
         String minimize = mConfiguredKeys.get(LC.zimbra_minimize_resources.key());
-        
-    	KnownKey.expandAll(this, minimize == null ? false : Boolean.valueOf(minimize));
-    	for (String key : mConfiguredKeys.keySet()) {
-    		mExpanded.put(key, expand(key, mConfiguredKeys.get(key)));
-    	}
+
+        KnownKey.expandAll(this, minimize == null ? false : Boolean.valueOf(minimize));
+        for (String key : mConfiguredKeys.keySet()) {
+            mExpanded.put(key, expand(key, mConfiguredKeys.get(key)));
+        }
     }
 
-    //
-    // The instance
-    //
-    private static LocalConfig mLocalConfig;
-    
+    /**
+     * The singleton instance. This is a volatile variable, so that we can
+     * reload the config file on the fly without locking.
+     */
+    private static volatile LocalConfig mLocalConfig;
+
     static LocalConfig getInstance() {
         return mLocalConfig;
     }
-    
-    static void readConfig(String path) throws DocumentException, ConfigException {
+
+    /**
+     * Loads the config file.
+     *
+     * @param path config file path or null to use the default path
+     * @throws DocumentException if the config file was syntactically invalid
+     * @throws ConfigException if the config file was semantically invalid
+     */
+    static synchronized void load(String path) throws DocumentException, ConfigException {
         mLocalConfig = new LocalConfig(path);
     }
 
     static {
         try {
-            readConfig(null);
+            load(null);
         } catch (DocumentException de) {
             throw new RuntimeException(de);
         } catch (ConfigException ce) {

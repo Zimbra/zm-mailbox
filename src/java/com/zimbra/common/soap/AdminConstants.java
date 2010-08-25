@@ -404,6 +404,10 @@ public class AdminConstants {
     public static final QName GET_MEMCACHED_CLIENT_CONFIG_REQUEST = QName.get("GetMemcachedClientConfigRequest", NAMESPACE);
     public static final QName GET_MEMCACHED_CLIENT_CONFIG_RESPONSE = QName.get("GetMemcachedClientConfigResponse", NAMESPACE);
 
+    // local config
+    public static final QName RELOAD_LOCAL_CONFIG_REQUEST = QName.get("ReloadLocalConfigRequest", NAMESPACE);
+    public static final QName RELOAD_LOCAL_CONFIG_RESPONSE = QName.get("ReloadLocalConfigResponse", NAMESPACE);
+
     // noop
     public static final QName NO_OP_REQUEST = QName.get("NoOpRequest", NAMESPACE);
     public static final QName NO_OP_RESPONSE = QName.get("NoOpResponse", NAMESPACE);

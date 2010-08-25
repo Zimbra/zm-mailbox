@@ -54,8 +54,14 @@ public class LC {
         return LocalConfig.getInstance().allKeys();
     }
 
-    public static void readConfig() throws DocumentException, ConfigException {
-        LocalConfig.readConfig(null);
+    /**
+     * Reloads the local config file.
+     *
+     * @throws DocumentException if the config file was syntactically invalid
+     * @throws ConfigException if the config file was semantically invalid
+     */
+    public static void reload() throws DocumentException, ConfigException {
+        LocalConfig.load(null);
     }
 
     static void init() {
