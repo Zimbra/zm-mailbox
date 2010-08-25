@@ -30,7 +30,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.index.MailboxIndex;
@@ -149,11 +148,10 @@ public class SearchConv extends Search {
                 // now create a soap transport to talk to the remote account
                 Account target = Provisioning.getInstance().get(AccountBy.id, cid.getAccountId(), zsc.getAuthToken());
                 SoapHttpTransport soapTransp = new SoapHttpTransport(AccountUtil.getSoapUri(target));
-                try {
-                    soapTransp.setAuthToken(zsc.getAuthToken().getEncoded());
-                } catch (AuthTokenException e) {
-                    throw ServiceException.FAILURE("AuthTokenException: ", e);
-                }
+
+                String proxyAuthToken = zsc.getAuthToken().getProxyAuthToken();
+                soapTransp.setAuthToken(proxyAuthToken != null ?
+                        proxyAuthToken : zsc.getRawAuthToken().getValue());
                 soapTransp.setTargetAcctId(target.getId());
                 soapTransp.setRequestProtocol(zsc.getResponseProtocol());
 
