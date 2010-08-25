@@ -5124,7 +5124,7 @@ public class ZAttrDomain extends NamedEntry {
      */
     @ZAttr(id=153)
     public String[] getGalLdapAttrMap() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap); return value.length > 0 ? value : new String[] {"co=workCountry","company=company","givenName,gn=firstName","sn=lastName","displayName,cn=fullName,fullName2,fullName3,fullName4,fullName5,fullName6,fullName7,fullName8,fullName9,fullName10","initials=initials","description=notes","l=workCity","physicalDeliveryOfficeName=office","ou=department","street,streetAddress=workStreet","postalCode=workPostalCode","facsimileTelephoneNumber,fax=workFax","homeTelephoneNumber,homePhone=homePhone","mobileTelephoneNumber,mobile=mobilePhone","pagerTelephoneNumber,pager=pager","telephoneNumber=workPhone","st=workState","zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16","title=jobTitle","whenChanged,modifyTimeStamp=modifyTimeStamp","whenCreated,createTimeStamp=createTimeStamp","zimbraId=zimbraId","objectClass=objectClass","zimbraMailForwardingAddress=zimbraMailForwardingAddress","zimbraCalResType=zimbraCalResType","zimbraCalResLocationDisplayName=zimbraCalResLocationDisplayName"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap); return value.length > 0 ? value : new String[] {"co=workCountry","company=company","givenName,gn=firstName","sn=lastName","displayName,cn=fullName,fullName2,fullName3,fullName4,fullName5,fullName6,fullName7,fullName8,fullName9,fullName10","initials=initials","description=notes","l=workCity","physicalDeliveryOfficeName=office","ou=department","street,streetAddress=workStreet","postalCode=workPostalCode","facsimileTelephoneNumber,fax=workFax","homeTelephoneNumber,homePhone=homePhone","mobileTelephoneNumber,mobile=mobilePhone","pagerTelephoneNumber,pager=pager","telephoneNumber=workPhone","st=workState","zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16","title=jobTitle","whenChanged,modifyTimeStamp=modifyTimeStamp","whenCreated,createTimeStamp=createTimeStamp","zimbraId=zimbraId","objectClass=objectClass","zimbraMailForwardingAddress=zimbraMailForwardingAddress","zimbraCalResType,msExchResourceSearchProperties=zimbraCalResType","zimbraCalResLocationDisplayName=zimbraCalResLocationDisplayName"};
     }
 
     /**
@@ -6062,6 +6062,149 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetGalLdapURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalLdapURL, "");
+        return attrs;
+    }
+
+    /**
+     * LDAP Gal attribute to contact value mapping. Each value is in the
+     * format of {gal contact filed}: {regex} {replacement}
+     *
+     * @return zimbraGalLdapValueMap, or empty array if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1110)
+    public String[] getGalLdapValueMap() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapValueMap); return value.length > 0 ? value : new String[] {"zimbraCalResType: [R|r]oom Location"};
+    }
+
+    /**
+     * LDAP Gal attribute to contact value mapping. Each value is in the
+     * format of {gal contact filed}: {regex} {replacement}
+     *
+     * @param zimbraGalLdapValueMap new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1110)
+    public void setGalLdapValueMap(String[] zimbraGalLdapValueMap) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalLdapValueMap, zimbraGalLdapValueMap);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP Gal attribute to contact value mapping. Each value is in the
+     * format of {gal contact filed}: {regex} {replacement}
+     *
+     * @param zimbraGalLdapValueMap new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1110)
+    public Map<String,Object> setGalLdapValueMap(String[] zimbraGalLdapValueMap, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalLdapValueMap, zimbraGalLdapValueMap);
+        return attrs;
+    }
+
+    /**
+     * LDAP Gal attribute to contact value mapping. Each value is in the
+     * format of {gal contact filed}: {regex} {replacement}
+     *
+     * @param zimbraGalLdapValueMap new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1110)
+    public void addGalLdapValueMap(String zimbraGalLdapValueMap) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraGalLdapValueMap, zimbraGalLdapValueMap);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP Gal attribute to contact value mapping. Each value is in the
+     * format of {gal contact filed}: {regex} {replacement}
+     *
+     * @param zimbraGalLdapValueMap new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1110)
+    public Map<String,Object> addGalLdapValueMap(String zimbraGalLdapValueMap, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraGalLdapValueMap, zimbraGalLdapValueMap);
+        return attrs;
+    }
+
+    /**
+     * LDAP Gal attribute to contact value mapping. Each value is in the
+     * format of {gal contact filed}: {regex} {replacement}
+     *
+     * @param zimbraGalLdapValueMap existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1110)
+    public void removeGalLdapValueMap(String zimbraGalLdapValueMap) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraGalLdapValueMap, zimbraGalLdapValueMap);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP Gal attribute to contact value mapping. Each value is in the
+     * format of {gal contact filed}: {regex} {replacement}
+     *
+     * @param zimbraGalLdapValueMap existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1110)
+    public Map<String,Object> removeGalLdapValueMap(String zimbraGalLdapValueMap, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraGalLdapValueMap, zimbraGalLdapValueMap);
+        return attrs;
+    }
+
+    /**
+     * LDAP Gal attribute to contact value mapping. Each value is in the
+     * format of {gal contact filed}: {regex} {replacement}
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1110)
+    public void unsetGalLdapValueMap() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalLdapValueMap, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP Gal attribute to contact value mapping. Each value is in the
+     * format of {gal contact filed}: {regex} {replacement}
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1110)
+    public Map<String,Object> unsetGalLdapValueMap(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalLdapValueMap, "");
         return attrs;
     }
 

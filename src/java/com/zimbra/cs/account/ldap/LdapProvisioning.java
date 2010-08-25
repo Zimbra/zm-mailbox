@@ -4798,8 +4798,7 @@ public class LdapProvisioning extends Provisioning {
     private synchronized LdapGalMapRules getGalRules(Domain d) {
         LdapGalMapRules rules = (LdapGalMapRules) d.getCachedData(DATA_GAL_RULES);
         if (rules == null) {
-            String[] attrs = d.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
-            rules = new LdapGalMapRules(attrs);
+            rules = new LdapGalMapRules(d);
             d.setCachedData(DATA_GAL_RULES, rules);
         }
         return rules;

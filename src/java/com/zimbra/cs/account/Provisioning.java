@@ -2047,5 +2047,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
             validator.refresh();
         }
     }
+    
+    public static String A_zimbraGalLdapValueMap = "zimbraGalLdapValueMap";
 
 }

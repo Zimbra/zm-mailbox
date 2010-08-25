@@ -34,26 +34,28 @@ class LdapGalMapRule {
 
     private String[] mLdapAttrs;
     private String[] mContactAttrs;
+    
+    // parallel array with mContactAttrs
+    private LdapGalValueMap[] mContactAttrsValueMaps;
    
-    public LdapGalMapRule(String rule) {
+    public LdapGalMapRule(String rule, Map<String, LdapGalValueMap> valueMaps) {
         int p = rule.indexOf('=');
         if (p != -1) {
             String ldapAttr = rule.substring(0, p);
             String contactAttr = rule.substring(p+1);
 
             mLdapAttrs = (ldapAttr.indexOf(',') != -1) ? ldapAttr.split(",") : new String[] { ldapAttr };
-            mContactAttrs = (contactAttr.indexOf(',') != -1) ? contactAttr.split(",") : new String[] { contactAttr };            
+            mContactAttrs = (contactAttr.indexOf(',') != -1) ? contactAttr.split(",") : new String[] { contactAttr };    
+            
+            mContactAttrsValueMaps = new LdapGalValueMap[mContactAttrs.length];
+            if (valueMaps != null) {
+                for (int i = 0; i < mContactAttrs.length; i++) {
+                    mContactAttrsValueMaps[i] = valueMaps.get(mContactAttrs[i]);
+                }
+            }
         }
     }
     
-    public static List<LdapGalMapRule> parseRules(String[] rules) {
-        ArrayList<LdapGalMapRule> result = new ArrayList<LdapGalMapRule>(rules.length);
-        for (String rule: rules) {
-            result.add(new LdapGalMapRule(rule));
-        }
-        return result;
-    }
-
     public String[] getLdapAttrs() {
         return mLdapAttrs;
     }
@@ -68,10 +70,25 @@ class LdapGalMapRule {
         if (index >= mContactAttrs.length) return index;
         for (int i=0; i < index; i++) {
             Object v = contactAttrs.get(mContactAttrs[i]);
-            if (v != null && v.equals(value)) return index;
+                    
+            if (v != null) {
+                value = mapValue(i, value);
+                if (v.equals(value))
+                    return index;
+            }
         }
-        contactAttrs.put(mContactAttrs[index++], value);
+        
+        contactAttrs.put(mContactAttrs[index], mapValue(index, value));
+        index++;
         return index;
+    }
+    
+    private Object mapValue(int index, Object value) {
+        LdapGalValueMap valueMap = mContactAttrsValueMaps[index];
+        if (valueMap != null)
+            return valueMap.apply(value);
+        else
+            return value;
     }
     
     void apply(Attributes ldapAttrs, Map<String,Object> contactAttrs) {

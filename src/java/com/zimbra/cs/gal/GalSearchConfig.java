@@ -94,9 +94,15 @@ public class GalSearchConfig {
 				mPageSize = ds.getIntAttr(Provisioning.A_zimbraGalSyncLdapPageSize, mPageSize);
 			}
 			String[] attrs = ds.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
-			if (attrs.length > 0)
-				mRules = new LdapGalMapRules(attrs);
-
+			String[] valueMap = ds.getMultiAttr(Provisioning.A_zimbraGalLdapValueMap);
+			if (attrs.length > 0 || valueMap.length > 0) {
+			    if (attrs.length == 0)
+			        attrs = domain.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
+			    if (valueMap.length == 0)
+			        valueMap = domain.getMultiAttr(Provisioning.A_zimbraGalLdapValueMap);
+				mRules = new LdapGalMapRules(attrs, valueMap);
+			}
+			
 			mFilter = GalUtil.expandFilter(null, mFilter, "", null, false);
 		}
 		private static final String DEFAULT_FILTER = "(&(|(displayName=*)(cn=*)(sn=*)(gn=*)(mail=*)(zimbraMailDeliveryAddress=*)(zimbraMailAlias=*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
@@ -104,7 +110,7 @@ public class GalSearchConfig {
 	
 	protected void loadZimbraConfig(Domain domain, GalOp op, GAL_SEARCH_TYPE stype) throws ServiceException {
 		
-        mRules = new LdapGalMapRules(domain.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap));
+        mRules = new LdapGalMapRules(domain);
         mOp = op;
         String filterName = null;
         
@@ -145,7 +151,7 @@ public class GalSearchConfig {
 	}
 	protected void loadConfig(Domain domain, GalOp op) throws ServiceException {
 		
-        mRules = new LdapGalMapRules(domain.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap));
+        mRules = new LdapGalMapRules(domain);
         mOp = op;
         
         GalMode galMode = domain.getGalMode();

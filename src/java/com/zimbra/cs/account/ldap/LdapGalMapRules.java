@@ -21,6 +21,12 @@ import java.util.Map;
 
 import javax.naming.directory.Attributes;
 
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Provisioning;
+
 /*
  * maps LDAP attrs into contact attrs. 
  */
@@ -28,12 +34,38 @@ public class LdapGalMapRules {
     
     private List<LdapGalMapRule> mRules;
     private List<String> mLdapAttrs;
+    private Map<String, LdapGalValueMap> mValueMaps;
 
-    public LdapGalMapRules(String[] rules) {
+    public LdapGalMapRules(String[] rules, String[] valueMaps) {
+        init(rules, valueMaps);
+    }
+    
+    public LdapGalMapRules(Config config) {
+        init(config);
+    }
+    
+    public LdapGalMapRules(Domain domain) {
+        init(domain);
+    }
+
+    private void init(Entry entry) {
+        init(entry.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap),
+             entry.getMultiAttr(Provisioning.A_zimbraGalLdapValueMap));
+    }
+    
+    private void init(String[] rules, String[] valueMaps) {
+        if (valueMaps !=  null) {
+            mValueMaps = new HashMap<String, LdapGalValueMap>(valueMaps.length);
+            for (String valueMap : valueMaps) {
+                LdapGalValueMap vMap = new LdapGalValueMap(valueMap);
+                mValueMaps.put(vMap.getFieldName(), vMap);
+            }
+        }
+        
         mRules = new ArrayList<LdapGalMapRule>(rules.length);
         mLdapAttrs = new ArrayList<String>();
         for (String rule: rules)
-        	add(rule);
+            add(rule);
     }
     
     public String[] getLdapAttrs() {
@@ -49,7 +81,7 @@ public class LdapGalMapRules {
     }
     
     public void add(String rule) {
-        LdapGalMapRule lgmr = new LdapGalMapRule(rule);
+        LdapGalMapRule lgmr = new LdapGalMapRule(rule, mValueMaps);
         mRules.add(lgmr);
         for (String ldapattr: lgmr.getLdapAttrs()) {
             mLdapAttrs.add(ldapattr);

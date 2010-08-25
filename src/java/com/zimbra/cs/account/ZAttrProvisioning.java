@@ -3382,6 +3382,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGalLdapURL = "zimbraGalLdapURL";
 
     /**
+     * LDAP Gal attribute to contact value mapping. Each value is in the
+     * format of {gal contact filed}: {regex} {replacement}
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1110)
+    public static final String A_zimbraGalLdapValueMap = "zimbraGalLdapValueMap";
+
+    /**
      * maximum number of gal entries to return from a search
      */
     @ZAttr(id=53)

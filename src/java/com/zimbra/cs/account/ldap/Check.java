@@ -193,8 +193,7 @@ public class Check {
 
         GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(attrs, galOp);
 
-        String[] galAttrs = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
-        LdapGalMapRules rules = new LdapGalMapRules(galAttrs);
+        LdapGalMapRules rules = new LdapGalMapRules(Provisioning.getInstance().getConfig());
 
         try {
             SearchGalResult result = null;
