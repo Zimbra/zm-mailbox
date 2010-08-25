@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 6.0.2_BETA1_1111 pshao 20100825-1243 */
 
     /**
      * RFC2256: descriptive information
@@ -9163,6 +9163,150 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetResponseHeader(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraResponseHeader, "");
+        return attrs;
+    }
+
+    /**
+     * SSL certificate
+     *
+     * @return zimbraSSLCertificate, or null if unset
+     *
+     * @since ZCS 5.0.0
+     */
+    @ZAttr(id=563)
+    public String getSSLCertificate() {
+        return getAttr(Provisioning.A_zimbraSSLCertificate, null);
+    }
+
+    /**
+     * SSL certificate
+     *
+     * @param zimbraSSLCertificate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
+     */
+    @ZAttr(id=563)
+    public void setSSLCertificate(String zimbraSSLCertificate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLCertificate, zimbraSSLCertificate);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL certificate
+     *
+     * @param zimbraSSLCertificate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
+     */
+    @ZAttr(id=563)
+    public Map<String,Object> setSSLCertificate(String zimbraSSLCertificate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLCertificate, zimbraSSLCertificate);
+        return attrs;
+    }
+
+    /**
+     * SSL certificate
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
+     */
+    @ZAttr(id=563)
+    public void unsetSSLCertificate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLCertificate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL certificate
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
+     */
+    @ZAttr(id=563)
+    public Map<String,Object> unsetSSLCertificate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLCertificate, "");
+        return attrs;
+    }
+
+    /**
+     * SSL private key
+     *
+     * @return zimbraSSLPrivateKey, or null if unset
+     *
+     * @since ZCS 5.0.0
+     */
+    @ZAttr(id=564)
+    public String getSSLPrivateKey() {
+        return getAttr(Provisioning.A_zimbraSSLPrivateKey, null);
+    }
+
+    /**
+     * SSL private key
+     *
+     * @param zimbraSSLPrivateKey new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
+     */
+    @ZAttr(id=564)
+    public void setSSLPrivateKey(String zimbraSSLPrivateKey) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLPrivateKey, zimbraSSLPrivateKey);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL private key
+     *
+     * @param zimbraSSLPrivateKey new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
+     */
+    @ZAttr(id=564)
+    public Map<String,Object> setSSLPrivateKey(String zimbraSSLPrivateKey, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLPrivateKey, zimbraSSLPrivateKey);
+        return attrs;
+    }
+
+    /**
+     * SSL private key
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.0
+     */
+    @ZAttr(id=564)
+    public void unsetSSLPrivateKey() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLPrivateKey, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL private key
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.0
+     */
+    @ZAttr(id=564)
+    public Map<String,Object> unsetSSLPrivateKey(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSSLPrivateKey, "");
         return attrs;
     }
 
