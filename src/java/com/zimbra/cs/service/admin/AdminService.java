@@ -12,10 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on May 26, 2004
- */
 package com.zimbra.cs.service.admin;
 
 import com.zimbra.common.service.ServiceException;
@@ -28,10 +24,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
  * @zm-service-description		The Admin Service includes commands for server, account
  * and mailbox administration.
  *
+ * @since May 26, 2004
  */
 public class AdminService implements DocumentService {
 
@@ -245,6 +241,9 @@ public class AdminService implements DocumentService {
         // memcached
         dispatcher.registerHandler(AdminConstants.RELOAD_MEMCACHED_CLIENT_CONFIG_REQUEST, new ReloadMemcachedClientConfig());
         dispatcher.registerHandler(AdminConstants.GET_MEMCACHED_CLIENT_CONFIG_REQUEST, new GetMemcachedClientConfig());
+
+        // local config
+        dispatcher.registerHandler(AdminConstants.RELOAD_LOCAL_CONFIG_REQUEST, new ReloadLocalConfig());
 
         // noop
         dispatcher.registerHandler(AdminConstants.NO_OP_REQUEST, new NoOp());
