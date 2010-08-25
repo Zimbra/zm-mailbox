@@ -92,6 +92,46 @@ public class ScheduleOutbox extends Collection {
                 rcptArray.add(rcpt);
             }
         }
+        // bug 49987: Workaround for an Apple iCal bug
+        // Don't send the CANCEL notification to anyone who is not listed as an ATTENDEE of the cancel
+        // component.  This attendee list is the inverse of the remaining attendees in the appointment.  Also
+        // make sure the cancel is not sent to the organizer.
+        boolean isCancel = ICalTok.CANCEL.toString().equalsIgnoreCase(vcalendar.getPropVal(ICalTok.METHOD, null));
+        if (isCancel) {
+            // Get list of attendees. (mailto:email values)
+            ArrayList<String> attendees = new ArrayList<String>();
+            String organizer = null;
+            for (Iterator<ZProperty> propsIter = req.getPropertyIterator(); propsIter.hasNext(); ) {
+                ZProperty prop = propsIter.next();
+                ICalTok token = prop.getToken();
+                if (ICalTok.ATTENDEE.equals(token))
+                    attendees.add(prop.getValue());
+                else if (ICalTok.ORGANIZER.equals(token))
+                    organizer = prop.getValue();
+            }
+            // Validate rcptArray against attendee list.
+            for (Iterator<String> rcptIter = rcptArray.iterator(); rcptIter.hasNext(); ) {
+                String rcpt = rcptIter.next();
+                boolean isAttendee = false;
+                if (rcpt != null) {
+                    // Rcpt must be an attendee of the cancel component.
+                    for (String at : attendees) {
+                        if (rcpt.equalsIgnoreCase(at)) {
+                            isAttendee = true;
+                            break;
+                        }
+                    }
+                    // But it can't be the organizer.
+                    if (isAttendee && rcpt.equalsIgnoreCase(organizer))
+                        isAttendee = false;
+                }
+                // Remove the invalid recipient.
+                if (!isAttendee) {
+                    ZimbraLog.dav.info("Ignoring recipient " + rcpt + " of CANCEL request; likely a client bug");
+                    rcptIter.remove();
+                }
+            }
+        }
 		Element scheduleResponse = ctxt.getDavResponse().getTop(DavElements.E_SCHEDULE_RESPONSE);
 		for (String rcpt : rcptArray) {
 		    rcpt = rcpt.trim();
