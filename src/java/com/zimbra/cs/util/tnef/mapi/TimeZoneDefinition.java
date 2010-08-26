@@ -96,9 +96,6 @@ public class TimeZoneDefinition {
      */
     public TimeZoneDefinition(MapiPropertyId mpi, RawInputStream ris)
                             throws IOException {
-        if ( (mpi == null) || (ris == null) ) {
-            throw new IOException("Problem getting timezone information");
-        }
         theZone = null;
         this.mpi = mpi;
         int MajorVersion = ris.readU8();

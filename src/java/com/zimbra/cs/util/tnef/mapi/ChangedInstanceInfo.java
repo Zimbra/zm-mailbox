@@ -6,6 +6,7 @@ import java.util.EnumSet;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.tnef.IcalUtil;
+import com.zimbra.cs.util.tnef.TNEFtoIcalendarServiceException;
 
 import net.fortuna.ical4j.model.DateTime;
 import net.freeutils.tnef.RawInputStream;
@@ -31,6 +32,8 @@ public class ChangedInstanceInfo {
     private long reminderDelta;
     private long meetingType;
     private EnumSet <ExceptionInfoOverrideFlag> overrideFlags;
+    private boolean hasExtendedInfo;
+    private boolean hasChangeHighlight;
     private long changeHighlightSize;
     private long changeHighlightValue;
     private byte[] chgHLReserved;
@@ -63,10 +66,12 @@ public class ChangedInstanceInfo {
         reminderDelta = 0;
         meetingType =0;
         overrideFlags = EnumSet.noneOf(ExceptionInfoOverrideFlag.class);
-        changeHighlightSize = 0;
+        hasExtendedInfo = false;
+        hasChangeHighlight = false;
+        changeHighlightSize = -1;
         changeHighlightValue = 0;
         chgHLReserved = null;
-        rsrvBlockEE1Size = 0;
+        rsrvBlockEE1Size = -1;
         rsrvBlockEE1 = null;
         eeStartMinsSince1601 = -1;
         eeEndMinsSince1601 = -1;
@@ -75,11 +80,11 @@ public class ChangedInstanceInfo {
         unicodeSubject = null;
         unicodeLocationLen = 0;
         unicodeLocation = null;
-        rsrvBlockEE2Size = 0;
+        rsrvBlockEE2Size = -1;
         rsrvBlockEE2 = null;
     }
  
-    public void readExceptionInfo(RawInputStream ris) throws IOException {
+    public void readExceptionInfo(RawInputStream ris) throws IOException, TNEFtoIcalendarServiceException {
         startMinsSince1601 = ris.readU32();
         endMinsSince1601 = ris.readU32();
         origStartMinsSince1601 = ris.readU32();
@@ -93,7 +98,8 @@ public class ChangedInstanceInfo {
             int subjectLenPlus1 = ris.readU16();
             int subjectLen = ris.readU16();
             if (subjectLenPlus1 != subjectLen + 1) {
-                throw new IOException("Corruption near subject specification");
+                throw TNEFtoIcalendarServiceException.RECURDEF_BAD_CHANGED_SUBJ(
+                    "Specified len=" + subjectLen + " len+1=" + subjectLenPlus1);
             }
             subject = IcalUtil.readString(ris, subjectLen, oemCodePage);
         }
@@ -110,7 +116,8 @@ public class ChangedInstanceInfo {
             int locLenPlus1 = ris.readU16();
             int locLen = ris.readU16();
             if (locLenPlus1 != locLen + 1) {
-                throw new IOException("Corruption near location specification");
+                throw TNEFtoIcalendarServiceException.RECURDEF_BAD_CHANGED_LOC(
+                    "Specified len=" + locLen + " len+1=" + locLenPlus1);
             }
             location = IcalUtil.readString(ris, locLen, oemCodePage);
         }
@@ -130,6 +137,8 @@ public class ChangedInstanceInfo {
 
     public void readExtendedException(RawInputStream ris,
             boolean hasChangeHighlight) throws IOException {
+        this.hasChangeHighlight = hasChangeHighlight;
+        this.hasExtendedInfo = true;
         if (hasChangeHighlight) {
             changeHighlightSize = ris.readU32();
             changeHighlightValue = ris.readU32();
@@ -150,6 +159,8 @@ public class ChangedInstanceInfo {
                 unicodeLocationLen = ris.readU16();
                 unicodeLocation = ris.readStringUnicode(unicodeLocationLen * 2);
             }
+            // Note that rsrvBlockEE1 being present does NOT imply
+            //       rsrvBlockEE2 is always present
             rsrvBlockEE2Size = ris.readU32();
             rsrvBlockEE2 = ris.readBytes((int)rsrvBlockEE2Size);
         }
@@ -194,33 +205,45 @@ public class ChangedInstanceInfo {
         if (overrideFlags.contains(ExceptionInfoOverrideFlag.ARO_APPTCOLOR)) {
             buf.append("        ApptColor:").append(apptColor).append("\n");
         }
-        if (changeHighlightSize != 0) {
-            buf.append("        changeHLSize:").append(changeHighlightSize).append("\n");
-            buf.append("        changeHLValue:").append(changeHighlightValue).append("\n");
-            buf.append("        chgHLReserved:")
-                .append(TNEFUtils.toHexString((byte[])chgHLReserved, (int)changeHighlightSize - 4))
-                .append("\n");
+        if (this.hasExtendedInfo) {
+            if (this.hasChangeHighlight) {
+                buf.append("        changeHLSize:").append(changeHighlightSize).append("\n");
+                buf.append("        changeHLValue:").append(changeHighlightValue).append("\n");
+                buf.append("        chgHLReserved:")
+                    .append(TNEFUtils.toHexString((byte[])chgHLReserved, (int)changeHighlightSize - 4))
+                    .append("\n");
+            }
+            if (rsrvBlockEE1Size != -1) {
+                buf.append("        rsrvBlockEE1Size:").append(rsrvBlockEE1Size).append("\n");
+                if (rsrvBlockEE1Size != 0) {
+                    buf.append("        rsrvBlockEE1:")
+                        .append(TNEFUtils.toHexString((byte[])rsrvBlockEE1, (int)rsrvBlockEE1Size))
+                        .append("\n");
+                }
+            }
+            this.infoOnLocalTimeSince1601Val(buf,
+                    "        ExtendedStartDate:", eeStartMinsSince1601);
+            this.infoOnLocalTimeSince1601Val(buf,
+                    "        ExtendedEndDate:", eeEndMinsSince1601);
+            this.infoOnLocalTimeSince1601Val(buf,
+                    "        ExtendedOriginalStartDate:", eeOrigStartMinsSince1601);
+            if (overrideFlags.contains(ExceptionInfoOverrideFlag.ARO_SUBJECT)) {
+                buf.append("        UnicodeSubjectLen:").append(unicodeSubjectLen).append("\n");
+                buf.append("        UnicodeSubject:").append(unicodeSubject).append("\n");
+            }
+            if (overrideFlags.contains(ExceptionInfoOverrideFlag.ARO_LOCATION)) {
+                buf.append("        UnicodeLocationLen:").append(unicodeLocationLen).append("\n");
+                buf.append("        UnicodeLocation:").append(unicodeLocation).append("\n");
+            }
+            if (rsrvBlockEE2Size != -1) {
+                buf.append("        rsrvBlockEE2Size:").append(rsrvBlockEE2Size).append("\n");
+                if (rsrvBlockEE2Size != 0) {
+                    buf.append("        rsrvBlockEE2:")
+                        .append(TNEFUtils.toHexString((byte[])rsrvBlockEE2, (int)rsrvBlockEE2Size))
+                        .append("\n");
+                }
+            }
         }
-        buf.append("        rsrvBlockEE1Size:").append(rsrvBlockEE1Size).append("\n");
-        buf.append("        rsrvBlockEE1:")
-            .append(TNEFUtils.toHexString((byte[])rsrvBlockEE1, (int)rsrvBlockEE1Size))
-            .append("\n");
-        this.infoOnLocalTimeSince1601Val(buf,
-                "        ExtendedStartDate:", eeStartMinsSince1601);
-        this.infoOnLocalTimeSince1601Val(buf,
-                "        ExtendedEndDate:", eeEndMinsSince1601);
-        this.infoOnLocalTimeSince1601Val(buf,
-                "        ExtendedOriginalStartDate:", eeOrigStartMinsSince1601);
-        if (overrideFlags.contains(ExceptionInfoOverrideFlag.ARO_SUBJECT)) {
-            buf.append("        UnicodeSubject:").append(unicodeSubject).append("\n");
-        }
-        if (overrideFlags.contains(ExceptionInfoOverrideFlag.ARO_LOCATION)) {
-            buf.append("        UnicodeLocation:").append(unicodeLocation).append("\n");
-        }
-        buf.append("        rsrvBlockEE2Size:").append(rsrvBlockEE2Size).append("\n");
-        buf.append("        rsrvBlockEE2:")
-            .append(TNEFUtils.toHexString((byte[])rsrvBlockEE2, (int)rsrvBlockEE2Size))
-            .append("\n");
         return buf.toString();
     }
 

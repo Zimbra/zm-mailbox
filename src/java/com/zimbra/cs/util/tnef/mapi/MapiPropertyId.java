@@ -137,6 +137,8 @@ public class MapiPropertyId {
         new MapiPropertyId(MSGUID.PSETID_Meeting, 0x001a);
     public final static MapiPropertyId PidLidCleanGlobalObjectId =
         new MapiPropertyId(MSGUID.PSETID_Meeting, 0x0023);
+    public final static MapiPropertyId PidLidMeetingType =
+        new MapiPropertyId(MSGUID.PSETID_Meeting, 0x0026);
     public final static MapiPropertyId PidLidStartRecurrenceTime = 
         new MapiPropertyId(MSGUID.PSETID_Meeting, 0x000e);
 

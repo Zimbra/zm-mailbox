@@ -157,9 +157,10 @@ public class RecurrenceDefinition {
      * @param ris
      * @param tz
      * @throws IOException
+     * @throws TNEFtoIcalendarServiceException 
      */
     public RecurrenceDefinition(RawInputStream ris,
-            TimeZoneDefinition tz, String oemCP) throws IOException {
+            TimeZoneDefinition tz, String oemCP) throws IOException, TNEFtoIcalendarServiceException {
         oemCodePage = oemCP;
         exdateTimes = null;
         rsrvdBlock1Size = -1;
@@ -209,8 +210,7 @@ public class RecurrenceDefinition {
                     haveWeekDayOccurNum = true;
                     break;
                 default:
-                    // TODO: Use custom ServiceException?
-                    throw new IOException("Unexpected PatternType in Recurrence Definition");
+                    throw TNEFtoIcalendarServiceException.RECURDEF_BAD_PATTERN(patternType.toString());
             }
     
             readEndType(ris);
@@ -613,7 +613,7 @@ public class RecurrenceDefinition {
         return theRule;
     }
 
-    private void readRecurrenceFrequency(RawInputStream ris) throws IOException {
+    private void readRecurrenceFrequency(RawInputStream ris) throws IOException, TNEFtoIcalendarServiceException {
         int mapiFrequency = ris.readU16();
 
         for (RecurrenceFrequency curr : RecurrenceFrequency.values()) {
@@ -623,13 +623,10 @@ public class RecurrenceDefinition {
             }
         }
 
-        // TODO: Would some sort of ParseException be more appropriate?
-        // TODO: Include the hex value of the property
-        throw new IOException("Invalid Frequency value " + mapiFrequency +
-                        " in MAPI recurrence definition property");
+        throw TNEFtoIcalendarServiceException.RECURDEF_BAD_FREQ("0x" + Integer.toHexString(mapiFrequency));
     }
 
-    private void readPatternType(RawInputStream ris) throws IOException {
+    private void readPatternType(RawInputStream ris) throws IOException, TNEFtoIcalendarServiceException {
         int pattType = ris.readU16();
 
         for (PatternType curr : PatternType.values()) {
@@ -639,13 +636,10 @@ public class RecurrenceDefinition {
             }
         }
 
-        // TODO: Would some sort of ParseException be more appropriate?
-        // TODO: Include the hex value of the property
-        throw new IOException("Invalid PatternType value " + pattType +
-                        " in MAPI recurrence definition property");
+        throw TNEFtoIcalendarServiceException.RECURDEF_BAD_PATTERN("0x" + Integer.toHexString(pattType));
     }
 
-    private void readMsCalScale(RawInputStream ris) throws IOException {
+    private void readMsCalScale(RawInputStream ris) throws IOException, TNEFtoIcalendarServiceException {
         int calType = ris.readU16();
 
         if (calType == 0) {
@@ -666,13 +660,10 @@ public class RecurrenceDefinition {
             }
         }
 
-        // TODO: Would some sort of ParseException be more appropriate?
-        // TODO: Include the hex value of the property
-        throw new IOException("Invalid MsCalScale value " + calType +
-                        " in MAPI recurrence definition property");
+        throw TNEFtoIcalendarServiceException.RECURDEF_BAD_MSCALSCALE("0x" + Integer.toHexString(calType));
     }
 
-    private void readEndType(RawInputStream ris) throws IOException {
+    private void readEndType(RawInputStream ris) throws IOException, TNEFtoIcalendarServiceException {
         long endTyp = ris.readU32();
 
         for (EndType curr : EndType.values()) {
@@ -686,13 +677,10 @@ public class RecurrenceDefinition {
             }
         }
 
-        // TODO: Would some sort of ParseException be more appropriate?
-        // TODO: Include the hex value of the property
-        throw new IOException("Invalid EndType value " + endTyp +
-                        " in MAPI recurrence definition property");
+        throw TNEFtoIcalendarServiceException.RECURDEF_BAD_ENDTYPE("0x" + Long.toHexString(endTyp));
     }
 
-    private void readFirstDayOfWeek(RawInputStream ris) throws IOException {
+    private void readFirstDayOfWeek(RawInputStream ris) throws IOException, TNEFtoIcalendarServiceException {
         long dow = ris.readU32();
 
         for (DayOfWeek curr : DayOfWeek.values()) {
@@ -702,10 +690,7 @@ public class RecurrenceDefinition {
             }
         }
 
-        // TODO: Would some sort of ParseException be more appropriate?
-        // TODO: Include the hex value of the property
-        throw new IOException("Invalid FirstDayOfWeek value " + dow +
-                        " in MAPI recurrence definition property");
+        throw TNEFtoIcalendarServiceException.RECURDEF_BAD_1ST_DOW("0x" + Long.toHexString(dow));
     }
 
     /**
@@ -771,7 +756,12 @@ public class RecurrenceDefinition {
             if (changedInstances != null) {
                 for (ChangedInstanceInfo cInst : changedInstances) {
                     if (cInst.getOrigStartMinsSince1601() == timeSince1601) {
-                        suffix = new String(" [changed]");
+                        EnumSet <ExceptionInfoOverrideFlag> overrideFlags = cInst.getOverrideFlags();
+                        if ( (overrideFlags == null) || (overrideFlags.isEmpty()) ) {
+                            suffix = new String(" [changed - exdate/rdate]");
+                        } else {
+                            suffix = new String(" [changed - exception]");
+                        }
                         break;
                     }
                 }
@@ -790,9 +780,23 @@ public class RecurrenceDefinition {
         infoOnLocalTimeSince1601Val(buf,
                 "    Last Instance's start=", endMinsSince1601);
         buf.append("    ReaderVersion2=0x")
-                .append(Long.toHexString(readerVersion2)).append("\n");
+                .append(Long.toHexString(readerVersion2));
+        if ( (readerVersion2 != 0x3006) && (readerVersion2 != 0) ) {
+            buf.append(" [ODD expected 0x3006 for event or 0x0 for task]");
+        }
+        buf.append("\n");
         buf.append("    WriterVersion2=0x")
-                .append(Long.toHexString(writerVersion2)).append("\n");
+                .append(Long.toHexString(writerVersion2));
+        if (writerVersion2 == 0x3006) {
+            buf.append(" [OL2000 style]");
+        } else if (writerVersion2 == 0x3007) {
+            buf.append(" [OLXP style]");
+        } else if (writerVersion2 == 0x3008) {
+            buf.append(" [OL2003 style]");
+        } else if (writerVersion2 == 0x3009) {
+            buf.append(" [OL2007 style]");
+        }
+        buf.append("\n");
         buf.append("    StartTimeOffset=").append(startTimeOffset).append("\n");
         buf.append("    EndTimeOffset=").append(endTimeOffset).append("\n");
         buf.append("    ExceptionCount=").append(exceptionCount).append("\n");

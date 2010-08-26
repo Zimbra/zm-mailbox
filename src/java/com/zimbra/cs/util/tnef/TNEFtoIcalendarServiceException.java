@@ -29,6 +29,13 @@ public class TNEFtoIcalendarServiceException extends ServiceException {
     public static final String NON_SOLAR_CALENDAR          = "tnef2ical.NON_SOLAR_CALENDAR";
     public static final String UNSUPPORTED_RECURRENCE_TYPE = "tnef2ical.UNSUPPORTED_RECURRENCE_TYPE";
     public static final String RRULE_PARSING_PROBLEM       = "tnef2ical.RRULE_PARSING_PROBLEM";
+    public static final String RECURDEF_BAD_PATTERN        = "tnef2ical.RECURDEF_BAD_PATTERN";
+    public static final String RECURDEF_BAD_FREQ           = "tnef2ical.RECURDEF_BAD_FREQ";
+    public static final String RECURDEF_BAD_MSCALSCALE     = "tnef2ical.RECURDEF_BAD_MSCALSCALE";
+    public static final String RECURDEF_BAD_ENDTYPE        = "tnef2ical.RECURDEF_BAD_ENDTYPE";
+    public static final String RECURDEF_BAD_1ST_DOW        = "tnef2ical.RECURDEF_BAD_1ST_DOW";
+    public static final String RECURDEF_BAD_CHANGED_SUBJ   = "tnef2ical.RECURDEF_BAD_CHANGED_SUBJ";
+    public static final String RECURDEF_BAD_CHANGED_LOC    = "tnef2ical.RECURDEF_BAD_CHANGED_LOC";
 
     /**
      * A public inner subclass whose purpose is to group various "TooComplex"
@@ -90,4 +97,45 @@ public class TNEFtoIcalendarServiceException extends ServiceException {
                 NON_SOLAR_CALENDAR, RECEIVERS_FAULT);
     }
 
+    public static TNEFtoIcalendarServiceException RECURDEF_BAD_PATTERN(String pattType) {
+        return new UnsupportedTnefCalendaringMsgException
+                ("TNEF recurrence definition contains unexpected PatternType:" + pattType,
+                RECURDEF_BAD_PATTERN, RECEIVERS_FAULT);
+    }
+
+    public static TNEFtoIcalendarServiceException RECURDEF_BAD_FREQ(String freqency) {
+        return new UnsupportedTnefCalendaringMsgException
+                ("TNEF recurrence definition contains unexpected frequency:" + freqency,
+                RECURDEF_BAD_FREQ, RECEIVERS_FAULT);
+    }
+
+    public static TNEFtoIcalendarServiceException RECURDEF_BAD_MSCALSCALE(String msCalScale) {
+        return new UnsupportedTnefCalendaringMsgException
+                ("TNEF recurrence definition contains unexpected X-MICROSOFT-CALSCALE setting:" + msCalScale,
+                RECURDEF_BAD_MSCALSCALE, RECEIVERS_FAULT);
+    }
+
+    public static TNEFtoIcalendarServiceException RECURDEF_BAD_ENDTYPE(String endType) {
+        return new UnsupportedTnefCalendaringMsgException
+                ("TNEF recurrence definition contains bad endtype specification:" + endType,
+                RECURDEF_BAD_ENDTYPE, RECEIVERS_FAULT);
+    }
+
+    public static TNEFtoIcalendarServiceException RECURDEF_BAD_1ST_DOW(String dow) {
+        return new UnsupportedTnefCalendaringMsgException
+                ("TNEF recurrence definition contains bad First Day Of Week specification:" + dow,
+                RECURDEF_BAD_1ST_DOW, RECEIVERS_FAULT);
+    }
+
+    public static TNEFtoIcalendarServiceException RECURDEF_BAD_CHANGED_SUBJ(String desc) {
+        return new UnsupportedTnefCalendaringMsgException
+                ("TNEF recurrence definition changed subject length info corrupt:" + desc,
+                RECURDEF_BAD_CHANGED_SUBJ, RECEIVERS_FAULT);
+    }
+
+    public static TNEFtoIcalendarServiceException RECURDEF_BAD_CHANGED_LOC(String desc) {
+        return new UnsupportedTnefCalendaringMsgException
+                ("TNEF recurrence definition changed location length info corrupt:" + desc,
+                RECURDEF_BAD_CHANGED_LOC, RECEIVERS_FAULT);
+    }
 }

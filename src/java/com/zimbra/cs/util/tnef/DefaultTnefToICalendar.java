@@ -56,6 +56,7 @@ import com.zimbra.cs.util.tnef.mapi.BusyStatus;
 import com.zimbra.cs.util.tnef.mapi.ChangedInstanceInfo;
 import com.zimbra.cs.util.tnef.mapi.ExceptionInfoOverrideFlag;
 import com.zimbra.cs.util.tnef.mapi.MapiPropertyId;
+import com.zimbra.cs.util.tnef.mapi.MeetingTypeFlag;
 import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
 import com.zimbra.cs.util.tnef.mapi.TaskMode;
 import com.zimbra.cs.util.tnef.mapi.TaskStatus;
@@ -161,7 +162,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                     partstat = PartStat.DECLINED;
                     replyWanted = false;
                 } else if (msgClass.startsWith("IPM.TaskRequest.Update")) {
-                    method = Method.REPLY; // TODO: Is this necessarily true?
+                    method = Method.REPLY;
                     partstat = PartStat.IN_PROCESS; // May be overridden?
                     replyWanted = false;
                 } else if (msgClass.startsWith("IPM.TaskRequest")) {
@@ -203,6 +204,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 }
                 if (schedView == null) {
                     sLog.debug("Unable to map class %s to ICALENDER - no properties found for sub-msg", msgClass);
+                    return false;
                 }
             }
             uid = schedView.getIcalUID();
@@ -213,6 +215,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             Integer importance = schedView.getMapiImportance();
             Clazz  icalClass = schedView.getIcalClass();
             Integer ownerApptId = schedView.getOwnerAppointmentId();
+            EnumSet <MeetingTypeFlag> meetingTypeFlags = schedView.getMeetingTypeFlags();
             BusyStatus busyStatus = schedView.getBusyStatus();
             BusyStatus intendedBusyStatus = schedView.getIntendedBusyStatus();
             // For some ICAL properties like TRANSP and STATUS, intendedBusyStatus
@@ -304,13 +307,11 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 }
             }
 
-            icalOutput.startComponent(icalType.toString());
-            //TODO - for text properties, need to handle line endings and strange
-            //       characters - also, OemCodePage may need to be taken into account.
             if (uid == null) {
-                // TODO: Would it be better to reject this?
-                uid = new String("No-original-valid-UID");
+                sLog.debug("Unable to map class %s to ICALENDER - no suitable value found for UID", msgClass);
+                return false;
             }
+            icalOutput.startComponent(icalType.toString());
 
             IcalUtil.addProperty(icalOutput, Property.UID, uid);
             if ( (attendeeCriticalChange != null) &&
@@ -392,9 +393,8 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 }
             }
 
-            // TODO: RECURRENCE-ID only makes sense in relation to a recurrence. It isn't
-            // just the original start date. Make sure we only output one if this is
-            // related to a recurring series.
+            // RECURRENCE-ID only makes sense in relation to a recurrence. It isn't
+            // just the original start date.
             if (recurrenceIdDateTime != null) {
                 IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.RECURRENCE_ID,
                         recurrenceIdDateTime, startTimeTZinfo, isAllDayEvent);
@@ -419,11 +419,12 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             IcalUtil.addProperty(icalOutput, priority);
 
             IcalUtil.addProperty(icalOutput, icalClass);
-            addStatusProperty(icalOutput, bestBusyStatus);
+            addStatusProperty(icalOutput, bestBusyStatus, meetingTypeFlags);
             addTranspProperty(icalOutput, bestBusyStatus);
             addAttendees(icalOutput, mimeMsg, partstat, replyWanted);
-            // TODO RESOURCES from PidLidNonSendableBcc with ';' replaced
-            // with ','.  These are resources without a mail address
+            // According to MS-OXCICAL, we could add "RESOURCES" properties from PidLidNonSendableBcc
+            // with ';' replaced with ','.  These are resources without a mail address
+            // Not done as Zimbra doesn't currently support "RESOURCES".
             if (categories != null) {
                 CategoryList cl = new CategoryList();
                 for (String category:categories) {
@@ -502,6 +503,8 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
             sLog.debug( "Unexpected ParseException thrown" , e);
         } catch (MessagingException e) {
             sLog.debug( "Unexpected MessagingException thrown" , e);
+        } catch (NegativeArraySizeException e) {
+            sLog.debug("Problem decoding TNEF for ICALENDAR", e);
         } catch (IOException e) {
             sLog.debug( "Unexpected IOException thrown" , e);
         } catch (UnsupportedTnefCalendaringMsgException e) {
@@ -514,7 +517,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                     tnefStream.close();
                 }
             } catch (IOException ioe) {
-                ioe.printStackTrace();
+                sLog.debug("Problem encountered closing TNEF stream", ioe);
             }
         }
         return conversionSuccessful;
@@ -528,6 +531,7 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 method.equals(Method.COUNTER) ) {
             // TNEF_to_iCalendar.pdf Spec = exclude RRULE and EXDATE for CANCEL/REPLY/COUNTER
             // By inference, as we only support EXDATE/RDATE pairs, don't want RDATE either
+            // Note that exception VEVENTs are similarly excluded - see addExceptions
             return;
         }
         if (recurDef != null) {
@@ -566,54 +570,62 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 String seriesSummary, String seriesLocation,
                 boolean seriesIsAllDay)
             throws ParserException, URISyntaxException, IOException, ParseException {
-        if (recurDef != null) {
-            for (ChangedInstanceInfo cInst : recurDef.getChangedInstances()) {
-                EnumSet <ExceptionInfoOverrideFlag> overrideFlags = cInst.getOverrideFlags();
-                // Note that modifications which are just a new time are represented
-                // in the ICALENDAR as an EXDATE/RDATE pair
-                if ( (overrideFlags == null) || (overrideFlags.isEmpty()) ) {
-                    continue;
-                }
-                icalOutput.startComponent(icalType.toString());
-                Boolean exceptIsAllDayEvent = cInst.isAllDayEvent();
-                if (exceptIsAllDayEvent == null) {
-                    exceptIsAllDayEvent = seriesIsAllDay;
-                }
-                String exceptSumm = cInst.getSummary();
-                if (exceptSumm == null) {
-                    exceptSumm = seriesSummary;
-                }
-                IcalUtil.addProperty(icalOutput, Property.SUMMARY, exceptSumm, false);
-                String exceptLocation = cInst.getLocation();
-                if (exceptLocation == null) {
-                    exceptLocation = seriesLocation;
-                }
-                IcalUtil.addProperty(icalOutput, Property.LOCATION, exceptLocation, false);
-                IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTSTART,
-                        cInst.getStartDate(), tzDef, exceptIsAllDayEvent);
-                IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTEND,
-                        cInst.getEndDate(), tzDef, exceptIsAllDayEvent);
-                IcalUtil.addProperty(icalOutput, Property.UID, uid);
-                IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.RECURRENCE_ID,
-                        cInst.getOriginalStartDate(), tzDef, seriesIsAllDay);
-                IcalUtil.addProperty(icalOutput, dtstamp);
-                BusyStatus exceptBusyStatus = cInst.getBusyStatus();
-                addStatusProperty(icalOutput, exceptBusyStatus);
-                addTranspProperty(icalOutput, exceptBusyStatus);
-                IcalUtil.addProperty(icalOutput, Property.SEQUENCE, sequenceNum, false);
-                if (method.equals(Method.REQUEST)) {
-                    IcalUtil.addProperty(icalOutput,
-                            "X-MICROSOFT-CDO-INTENDEDSTATUS",
-                            exceptBusyStatus, false);
-                }
-                IcalUtil.addProperty(icalOutput, "X-MICROSOFT-CDO-OWNERAPPTID",
-                            ownerApptId, false);
-                IcalUtil.addProperty(icalOutput,
-                        "X-MICROSOFT-CDO-ALLDAYEVENT",
-                        exceptIsAllDayEvent ? "TRUE" : "FALSE");
-                addAlarmComponent(icalOutput, cInst.getReminderDelta());
-                icalOutput.endComponent(icalType.toString());
+        if  (   method.equals(Method.REPLY) ||
+                method.equals(Method.CANCEL) ||
+                method.equals(Method.COUNTER) ) {
+            // TNEF_to_iCalendar.pdf Spec = exclude RRULE and EXDATE for CANCEL/REPLY/COUNTER
+            // By inference, don't want exceptions either.
+            return;
+        }
+        if (recurDef == null) {
+            return;
+        }
+        for (ChangedInstanceInfo cInst : recurDef.getChangedInstances()) {
+            EnumSet <ExceptionInfoOverrideFlag> overrideFlags = cInst.getOverrideFlags();
+            // Note that modifications which are just a new time are represented
+            // in the ICALENDAR as an EXDATE/RDATE pair
+            if ( (overrideFlags == null) || (overrideFlags.isEmpty()) ) {
+                continue;
             }
+            icalOutput.startComponent(icalType.toString());
+            Boolean exceptIsAllDayEvent = cInst.isAllDayEvent();
+            if (exceptIsAllDayEvent == null) {
+                exceptIsAllDayEvent = seriesIsAllDay;
+            }
+            String exceptSumm = cInst.getSummary();
+            if (exceptSumm == null) {
+                exceptSumm = seriesSummary;
+            }
+            IcalUtil.addProperty(icalOutput, Property.SUMMARY, exceptSumm, false);
+            String exceptLocation = cInst.getLocation();
+            if (exceptLocation == null) {
+                exceptLocation = seriesLocation;
+            }
+            IcalUtil.addProperty(icalOutput, Property.LOCATION, exceptLocation, false);
+            IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTSTART,
+                    cInst.getStartDate(), tzDef, exceptIsAllDayEvent);
+            IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.DTEND,
+                    cInst.getEndDate(), tzDef, exceptIsAllDayEvent);
+            IcalUtil.addProperty(icalOutput, Property.UID, uid);
+            IcalUtil.addPropertyFromUtcTimeAndZone(icalOutput, Property.RECURRENCE_ID,
+                    cInst.getOriginalStartDate(), tzDef, seriesIsAllDay);
+            IcalUtil.addProperty(icalOutput, dtstamp);
+            BusyStatus exceptBusyStatus = cInst.getBusyStatus();
+            addStatusProperty(icalOutput, exceptBusyStatus, null);
+            addTranspProperty(icalOutput, exceptBusyStatus);
+            IcalUtil.addProperty(icalOutput, Property.SEQUENCE, sequenceNum, false);
+            if (method.equals(Method.REQUEST)) {
+                IcalUtil.addProperty(icalOutput,
+                        "X-MICROSOFT-CDO-INTENDEDSTATUS",
+                        exceptBusyStatus, false);
+            }
+            IcalUtil.addProperty(icalOutput, "X-MICROSOFT-CDO-OWNERAPPTID",
+                        ownerApptId, false);
+            IcalUtil.addProperty(icalOutput,
+                    "X-MICROSOFT-CDO-ALLDAYEVENT",
+                    exceptIsAllDayEvent ? "TRUE" : "FALSE");
+            addAlarmComponent(icalOutput, cInst.getReminderDelta());
+            icalOutput.endComponent(icalType.toString());
         }
     }
 
@@ -696,11 +708,6 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
                 if (displayName != null) {
                     icalOutput.parameter(Parameter.CN, displayName);
                 }
-                // TODO: possibly only output if a RESOURCE - MS-OXCICAL :
-                // For attendees exported from the recipient table, this parameter SHOULD only
-                // be exported if the PidTagRecipientType is 0x00000003. In this case, the
-                // CUTYPE SHOULD be set to resource. For attendees exported from
-                // PidLidNonSendableTo and PidLidNonSendableCc, this parameter SHOULD be omitted.
                 icalOutput.parameter(Parameter.CUTYPE, CuType.INDIVIDUAL.getValue());
                 if (partstat != null) {
                     icalOutput.parameter(Parameter.PARTSTAT, partstat.getValue());
@@ -884,7 +891,8 @@ private void addAttendee(ContentHandler icalOutput, InternetAddress ia,
         }
     }
 
-    private void addStatusProperty(ContentHandler icalOutput, BusyStatus busyStatus)
+    private void addStatusProperty(ContentHandler icalOutput, BusyStatus busyStatus,
+                EnumSet <MeetingTypeFlag> meetingTypeFlags)
                     throws ParserException, URISyntaxException, IOException, ParseException {
         if (icalType.equals(ICALENDAR_TYPE.VTODO)) {
             return;
@@ -904,9 +912,17 @@ private void addAttendee(ContentHandler icalOutput, InternetAddress ia,
             }
         }
         else if (method.equals(Method.CANCEL)) {
-            // TODO: Test un-inviting attendees - should NOT be added then according to RFC
+            // RFC 5546 implies CANCEL to uninvited attendees should NOT have STATUS:CANCELLED
+            // One apparent difference is the value of PidLidMeetingType.
+            // This has value 0 for a meeting deletion and 0x20000=mtgInfo (Informational Update)
+            // in a cancellation sent to an uninvited attendee.
             if ( (busyStatus == null) || (busyStatus.equals(BusyStatus.FREE)) ) {
-                icalStatus = Status.VEVENT_CANCELLED;
+                if  (   (meetingTypeFlags != null) &&
+                        (meetingTypeFlags.contains(MeetingTypeFlag.MTG_INFO)) ) {
+                    sLog.debug("STATUS:CANCELLED suppressed - PidLidMeetingType has mtgInfo flag set");
+                } else {
+                    icalStatus = Status.VEVENT_CANCELLED;
+                }
             }
         }
         if (icalStatus != null) {

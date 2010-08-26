@@ -22,6 +22,7 @@ import java.util.List;
 
 import com.zimbra.cs.util.tnef.mapi.GlobalObjectId;
 import com.zimbra.cs.util.tnef.mapi.MapiPropertyId;
+import com.zimbra.cs.util.tnef.mapi.MeetingTypeFlag;
 import com.zimbra.cs.util.tnef.mapi.RecurrenceDefinition;
 import com.zimbra.cs.util.tnef.mapi.TZRule;
 import com.zimbra.cs.util.tnef.mapi.TaskMode;
@@ -146,9 +147,7 @@ public class SchedulingViewOfTnef extends Message {
                     } // switching on ID for LVL_ATTACHMENT
                     break;
                 case Attr.LVL_MESSAGE:
-                    if (isNeededAttribute(attr)) {
-                        super.addAttribute(attr);
-                    }
+                    super.addAttribute(attr);
                     break;
                 default:
                     throw new IOException("Invalid attribute level: " + attr.getLevel());
@@ -158,19 +157,6 @@ public class SchedulingViewOfTnef extends Message {
         if (attachmnt != null) {
             super.addAttachment(attachmnt);
         }
-    }
-
-    /**
-     * Tests if an interest has been registered in this attribute
-     * TODO: Actually provide a filtering mechanism...  This is intended
-     * mostly to save memory caching attributes we don't care about.
-     *
-     * @param attr the Attribute to test containing message data
-     * @return
-     * @throws IOException if an I/O error occurs
-     */
-    protected boolean isNeededAttribute(Attr attr) throws IOException {
-        return true;
     }
 
     /**
@@ -710,7 +696,7 @@ public class SchedulingViewOfTnef extends Message {
     }
 
     public RecurrenceDefinition getRecurrenceDefinition(
-            TimeZoneDefinition tzDef) throws IOException {
+            TimeZoneDefinition tzDef) throws IOException, TNEFtoIcalendarServiceException {
         RawInputStream tzRis;
         if (this.getIcalType() == ICALENDAR_TYPE.VTODO) {
             tzRis = MapiPropertyId.PidLidTaskRecurrence.getRawInputStreamValue(this);
@@ -738,7 +724,7 @@ public class SchedulingViewOfTnef extends Message {
             sLog.debug("No PR_RTF_COMPRESSED property found");
             return null;
         }
-        // TODO:  What impact does the OEMCodePage for the TNEF have on this?
+        // Question - does the OEMCodePage for the TNEF need to be factored in
         String rtfTxt = new String(
                 CompressedRTFInputStream.decompressRTF(
                         ris.toByteArray()));
@@ -814,6 +800,20 @@ public class SchedulingViewOfTnef extends Message {
             sLog.debug("Problem getting value of MAPI property " + mpi.toString() + " from TNEF", e);
         }
         return gid;
+    }
+
+    public EnumSet <MeetingTypeFlag> getMeetingTypeFlags() throws IOException {
+        EnumSet <MeetingTypeFlag> meetingTypeFlags = EnumSet.noneOf(MeetingTypeFlag.class);
+        Integer mtgType = MapiPropertyId.PidLidMeetingType.getIntegerValue(this);
+        if (mtgType != null) {
+            for (MeetingTypeFlag curr : MeetingTypeFlag.values()) {
+                int currFlagBit = curr.mapiFlagBit();
+                if ( (mtgType & currFlagBit) == currFlagBit) {
+                    meetingTypeFlags.add(curr);
+                }
+            }
+        }
+        return meetingTypeFlags;
     }
 
     /**

@@ -125,8 +125,9 @@ public class TZRule {
         try {
             theRule = new RRule(null, icalStandardRRuleString());
         } catch (ParseException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            if (sLog.isDebugEnabled()) {
+                sLog.debug("Parse problem processing STANDARD rule", e);
+            }
             theRule = null;
         }
         return theRule;
@@ -142,8 +143,9 @@ public class TZRule {
         try {
             theRule = new RRule(null, icalDaylightRRuleString());
         } catch (ParseException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            if (sLog.isDebugEnabled()) {
+                sLog.debug("Parse problem processing DAYLIGHT rule", e);
+            }
             theRule = null;
         }
         return theRule;
@@ -158,10 +160,10 @@ public class TZRule {
         if (!hasDaylightSaving()) {
             return null;
         }
-        // TODO: if getYear() is non-zero, only applies to this year
-        //       Assume does not result in a realistically different
-        //       Timezone in our simple view?  Believe some countries did
-        //       something different in Y2K - test those?
+        // If getYear() is non-zero, rule only applies to this year
+        // Zimbra only supports timezones with 1 yearly standard/daylight
+        // rule or just a standard rule.  This probably maps to the best
+        // behavior in this situation.
         StringBuffer rrule = new StringBuffer("FREQ=YEARLY;BYDAY=");
         DayOfWeek dow = getStandardDate().getDayOfWeek();
         int occurNum = getStandardDate().getDay();
@@ -381,7 +383,8 @@ public class TZRule {
      *       works well across many calendar client apps.
      *   Note: Some examples seen are similar to this but include the hour of the transition.
      *         Suspect that is useful - so including it.
-     *   TODO: Worth improving to see if can choose an accurate start date/time in 1971?
+     *   Zimbra replaces our timezones with closest matchin known ones, so not worth trying
+     *   to improve this to see if can choose an accurate start date/time in 1971.
      *
      * @param hr
      * @param min
