@@ -110,6 +110,7 @@ public class SaveDocument extends WikiDocumentHandler {
             if (doc.contentType == null || doc.contentType.trim().equals(""))
                 throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_CONTENT_TYPE, null);
 
+            String description = docElem.getAttribute(MailConstants.A_DESC, null);
             ItemId fid = new ItemId(docElem.getAttribute(MailConstants.A_FOLDER, DEFAULT_DOCUMENT_FOLDER), zsc);
 
             String id = docElem.getAttribute(MailConstants.A_ID, null);
@@ -128,7 +129,7 @@ public class SaveDocument extends WikiDocumentHandler {
             if (itemId == 0) {
                 // create a new page
                 try {
-                    docItem = mbox.createDocument(octxt, fid.getId(), doc.name, doc.contentType, getAuthor(zsc), is, MailItem.TYPE_DOCUMENT);
+                    docItem = mbox.createDocument(octxt, fid.getId(), doc.name, doc.contentType, getAuthor(zsc), description, is, MailItem.TYPE_DOCUMENT);
                 } catch (ServiceException e) {
                     if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
                         MailItem item = mbox.getItemByPath(octxt, doc.name, fid.getId());
@@ -151,7 +152,7 @@ public class SaveDocument extends WikiDocumentHandler {
                             new Argument(MailConstants.A_ID, oldPage.getId(), Argument.Type.IID),
                             new Argument(MailConstants.A_VERSION, oldPage.getLastVersion(), Argument.Type.NUM));
                 }
-                docItem = mbox.addDocumentRevision(octxt, itemId, is, getAuthor(zsc), doc.name);
+                docItem = mbox.addDocumentRevision(octxt, itemId, getAuthor(zsc), doc.name, description, is);
             }
 
             response = zsc.createElement(MailConstants.SAVE_DOCUMENT_RESPONSE);

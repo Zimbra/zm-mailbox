@@ -303,7 +303,7 @@ public class NativeFormatter extends Formatter {
         ParsedDocument pd = null;
 
         try {
-            pd = new ParsedDocument(is, filename, contentType, System.currentTimeMillis(), creator);
+            pd = new ParsedDocument(is, filename, contentType, System.currentTimeMillis(), creator, context.req.getHeader("X-Zimbra-Description"));
             item = mbox.getItemByPath(context.opContext, filename, folder.getId());
             // XXX: should we just overwrite here instead?
             if (!(item instanceof Document))

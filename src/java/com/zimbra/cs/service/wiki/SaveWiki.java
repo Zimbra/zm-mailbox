@@ -71,7 +71,7 @@ public class SaveWiki extends WikiDocumentHandler {
         WikiPage.WikiContext ctxt = new WikiPage.WikiContext(octxt, zsc.getAuthToken());
         if (itemId == 0) {
             // create a new page
-            wikiItem = mbox.createDocument(octxt, fid.getId(), subject, WikiItem.WIKI_CONTENT_TYPE, getAuthor(zsc), is, MailItem.TYPE_WIKI);
+            wikiItem = mbox.createDocument(octxt, fid.getId(), subject, WikiItem.WIKI_CONTENT_TYPE, getAuthor(zsc), null, is, MailItem.TYPE_WIKI);
         } else {
             // add a new revision
             WikiPage oldPage = WikiPage.findPage(ctxt, zsc.getRequestedAccountId(), itemId);
@@ -83,7 +83,7 @@ public class SaveWiki extends WikiDocumentHandler {
                         new Argument(MailConstants.A_ID, oldPage.getId(), Argument.Type.IID),
                         new Argument(MailConstants.A_VERSION, oldPage.getLastVersion(), Argument.Type.NUM));
             }
-            wikiItem = mbox.addDocumentRevision(octxt, itemId, is, getAuthor(zsc), subject);
+            wikiItem = mbox.addDocumentRevision(octxt, itemId, getAuthor(zsc), subject, null, is);
         }
 
         Element response = zsc.createElement(MailConstants.SAVE_WIKI_RESPONSE);

@@ -40,6 +40,8 @@ public class Document extends MailItem {
     protected String mCreator;
     protected String mFragment;
     protected String mLockOwner;
+    protected long   mLockTimestamp;
+    protected String mDescription;
 
     public Document(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
@@ -60,6 +62,18 @@ public class Document extends MailItem {
 
     public String getFragment() {
     	return mFragment == null ? "" : mFragment;
+    }
+    
+    public String getLockOwner() {
+        return mLockOwner;
+    }
+    
+    public long getLockTimestamp() {
+        return mLockTimestamp;
+    }
+    
+    public String getDescription() {
+        return mDescription == null ? "" : mDescription;
     }
 
     @Override boolean isTaggable()      { return true; }
@@ -83,7 +97,7 @@ public class Document extends MailItem {
             }
 
             synchronized (mMailbox) {
-                pd = new ParsedDocument(mblob.getLocalBlob(), getName(), getContentType(), getChangeDate(), getCreator());
+                pd = new ParsedDocument(mblob.getLocalBlob(), getName(), getContentType(), getChangeDate(), getCreator(), getDescription());
                 if (pd.hasTemporaryAnalysisFailure())
                     throw new MailItem.TemporaryIndexingException();
             }
@@ -156,7 +170,7 @@ public class Document extends MailItem {
         data.name        = name;
         data.subject     = name;
         data.setBlobDigest(pd.getDigest());
-        data.metadata    = encodeMetadata(meta, DEFAULT_COLOR_RGB, 1, extended, mimeType, pd.getCreator(), pd.getFragment(), null).toString();
+        data.metadata    = encodeMetadata(meta, DEFAULT_COLOR_RGB, 1, extended, mimeType, pd.getCreator(), pd.getFragment(), null, 0, pd.getDescription()).toString();
         return data;
     }
 
@@ -199,19 +213,23 @@ public class Document extends MailItem {
         mCreator     = meta.get(Metadata.FN_CREATOR, mCreator);
         mFragment    = meta.get(Metadata.FN_FRAGMENT, mFragment);
         mLockOwner   = meta.get(Metadata.FN_LOCK_OWNER, mLockOwner);
+        mDescription = meta.get(Metadata.FN_DESCRIPTION, mDescription);
+        mLockTimestamp = meta.getLong(Metadata.FN_LOCK_TIMESTAMP, 0);
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mContentType, mCreator, mFragment, mLockOwner);
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mContentType, mCreator, mFragment, mLockOwner, mLockTimestamp, mDescription);
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, String mimeType, String creator, String fragment, String lockowner) {
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, String mimeType, String creator, String fragment, String lockowner, long lockts, String description) {
         if (meta == null)
             meta = new Metadata();
         meta.put(Metadata.FN_MIME_TYPE, mimeType);
         meta.put(Metadata.FN_CREATOR, creator);
         meta.put(Metadata.FN_FRAGMENT, fragment);
         meta.put(Metadata.FN_LOCK_OWNER, lockowner);
+        meta.put(Metadata.FN_LOCK_TIMESTAMP, lockts);
+        meta.put(Metadata.FN_DESCRIPTION, description);
         return MailItem.encodeMetadata(meta, color, version, extended);
     }
 
@@ -220,6 +238,8 @@ public class Document extends MailItem {
     private static final String CN_FILE_NAME = "filename";
     private static final String CN_EDITOR    = "edited_by";
     private static final String CN_LOCKOWNER = "locked_by";
+    private static final String CN_LOCKTIMESTAMP = "locked_at";
+    private static final String CN_DESCRIPTION = "description";
 
     @Override public String toString() {
         StringBuffer sb = new StringBuffer();
@@ -229,8 +249,12 @@ public class Document extends MailItem {
         sb.append(CN_MIME_TYPE).append(": ").append(mContentType).append(", ");
         appendCommonMembers(sb).append(", ");
         sb.append(CN_FRAGMENT).append(": ").append(mFragment);
+        if (mDescription != null)
+            sb.append(CN_DESCRIPTION).append(": ").append(mDescription);
         if (mLockOwner != null)
             sb.append(CN_LOCKOWNER).append(": ").append(mLockOwner);
+        if (mLockTimestamp > 0)
+            sb.append(CN_LOCKTIMESTAMP).append(": ").append(mLockTimestamp);
         sb.append("}");
         return sb.toString();
     }
@@ -254,6 +278,8 @@ public class Document extends MailItem {
                 !mLockOwner.equalsIgnoreCase(authuser.getId()))
             throw MailServiceException.CANNOT_LOCK(mId, mLockOwner);
         mLockOwner = authuser.getId();
+        mLockTimestamp = System.currentTimeMillis();
+        markItemModified(Change.MODIFIED_METADATA);
         saveMetadata();
     }
     
@@ -264,6 +290,8 @@ public class Document extends MailItem {
                 checkRights(ACL.RIGHT_ADMIN, authuser, false) == 0)
             throw MailServiceException.CANNOT_UNLOCK(mId, mLockOwner);
         mLockOwner = null;
+        mLockTimestamp = 0;
+        markItemModified(Change.MODIFIED_METADATA);
         saveMetadata();
     }
 

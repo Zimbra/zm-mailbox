@@ -62,7 +62,7 @@ public class AddDocumentRevision extends SaveDocument {
 
         OperationContext octxt = getOperationContext();
         try {
-            mbox.addDocumentRevision(octxt, mDocId, getAdditionalDataStream(), getAuthor(), getFilename());
+            mbox.addDocumentRevision(octxt, mDocId, getAuthor(), getFilename(), getDescription(), getAdditionalDataStream());
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 mLog.info("Document revision " + getMessageId() + " is already in mailbox " + mboxId);

@@ -1973,6 +1973,11 @@ public class ToXML {
         Element elem = parent.addElement(MailConstants.E_DOC);
         encodeDocumentCommon(elem, ifmt, octxt, doc, fields);
         elem.addAttribute(MailConstants.A_CONTENT_TYPE, doc.getContentType());
+        String lockOwner = doc.getLockOwner();
+        if (lockOwner != null) {
+            elem.addAttribute(MailConstants.A_LOCKOWNER, lockOwner);
+            elem.addAttribute(MailConstants.A_LOCKTIMESTAMP, doc.getLockTimestamp());
+        }
         return elem;
     }
 
@@ -2000,6 +2005,9 @@ public class ToXML {
                 m.addAttribute(MailConstants.A_VERSION, doc.getVersion());
                 m.addAttribute(MailConstants.A_LAST_EDITED_BY, doc.getCreator());
                 m.addAttribute(MailConstants.A_MODIFIED_DATE, doc.getDate());
+                String description = doc.getDescription();
+                if (description != null && !description.equals(""))
+                    m.addAttribute(MailConstants.A_DESC, description);
                 String fragment = doc.getFragment();
                 if (fragment != null && !fragment.equals(""))
                     m.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);

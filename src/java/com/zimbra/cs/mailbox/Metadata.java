@@ -57,6 +57,7 @@ public class Metadata {
     static final String FN_CREATOR         = "cr";
     static final String FN_MIME_TYPE       = "ct";
     static final String FN_DRAFT           = "d";
+    static final String FN_DESCRIPTION     = "de";
     static final String FN_REPLY_ORIG      = "do";
     static final String FN_REPLY_TYPE      = "dt";
     static final String FN_ENTRIES         = "en";
@@ -74,6 +75,7 @@ public class Metadata {
     static final String FN_BOUNDS          = "l";
     static final String FN_LAST_DATE       = "ld";
     static final String FN_LOCK_OWNER      = "lo";
+    static final String FN_LOCK_TIMESTAMP  = "lt";
     static final String FN_MODSEQ          = "mseq";
     static final String FN_NUM_COMPONENTS  = "nc";
     static final String FN_NODES           = "no";

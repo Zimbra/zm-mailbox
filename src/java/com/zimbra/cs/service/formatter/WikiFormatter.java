@@ -244,7 +244,7 @@ public class WikiFormatter extends Formatter {
         String creator = (context.authAccount == null ? null : context.authAccount.getName());
         InputStream is = context.getRequestInputStream();
         Mailbox mbox = folder.getMailbox();
-        ParsedDocument pd = new ParsedDocument(is, filename, WikiItem.WIKI_CONTENT_TYPE, System.currentTimeMillis(), creator);
+        ParsedDocument pd = new ParsedDocument(is, filename, WikiItem.WIKI_CONTENT_TYPE, System.currentTimeMillis(), creator, null);
         MailItem item = null;
         
         try {

@@ -1095,8 +1095,8 @@ public abstract class ArchiveFormatter extends Formatter {
                         oldItem = oldDoc;
                         if (doc.getVersion() > oldDoc.getVersion())
                             newItem = mbox.addDocumentRevision(oc,
-                                oldDoc.getId(), ais.getInputStream(),
-				doc.getCreator(), doc.getName());
+                                oldDoc.getId(), doc.getCreator(),
+                                doc.getName(), doc.getDescription(), ais.getInputStream());
                         if (r != Resolve.Skip)
                             mbox.setDate(oc, newItem.getId(), doc.getType(),
                                 doc.getDate());
@@ -1106,12 +1106,12 @@ public abstract class ArchiveFormatter extends Formatter {
                     if (mi.getType() == MailItem.TYPE_DOCUMENT) {
                         newItem = mbox.createDocument(oc, fldr.getId(),
                             doc.getName(), doc.getContentType(),
-                            doc.getCreator(), ais.getInputStream());
+                            doc.getCreator(), doc.getDescription(), ais.getInputStream());
                     } else {
                         WikiItem wi = (WikiItem)mi;
                         
                         newItem = mbox.createWiki(oc, fldr.getId(),
-                            wi.getWikiWord(), wi.getCreator(),
+                            wi.getWikiWord(), wi.getCreator(), wi.getDescription(),
                             ais.getInputStream());
                     }
                     mbox.setDate(oc, newItem.getId(), doc.getType(),
@@ -1475,15 +1475,15 @@ public abstract class ArchiveFormatter extends Formatter {
                         throw MailServiceException.NO_SUCH_ITEM(oldItem.getId());
                     } else if (r != Resolve.Skip) {
                         newItem = mbox.addDocumentRevision(oc, oldItem.getId(),
-                            ais.getInputStream(), creator, oldItem.getName());
+                            creator, oldItem.getName(), null, ais.getInputStream());
                     }
                 } catch (NoSuchItemException e) {
                     if (type == MailItem.TYPE_WIKI) {
                         newItem = mbox.createWiki(oc, fldr.getId(), file,
-                            creator, ais.getInputStream());
+                            creator, null, ais.getInputStream());
                     } else {
                         newItem = mbox.createDocument(oc, fldr.getId(),
-                            file, null, creator, ais.getInputStream());
+                            file, null, creator, null, ais.getInputStream());
                     }
                 }
                 if (newItem != null) {

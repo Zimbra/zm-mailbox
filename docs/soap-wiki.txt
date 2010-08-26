@@ -42,7 +42,7 @@
 // When <m> is used, the document is retrieved from an existing message in the mailbox,
 // identified by the msg-id and part-id.
 <SaveDocumentRequest>
-  <doc [id="{item-id}" ver="{last-known-version}"] [name="{file-name}"] [ct="{content-type}"] [l="{folder-id}"]>
+  <doc [id="{item-id}" ver="{last-known-version}"] [name="{file-name}"] [ct="{content-type}"] [l="{folder-id}"] [desc="{description}"]>
     [<upload id="{upload-id}"/>]
     [<m id="{msg-id}" part="{part-id}"/>]
     [<content>{inlined-document-content-string}</content>]
@@ -78,7 +78,7 @@
 // REQUEST:
 //
 //<SaveDocumentRequest xmlns:ns0="urn:zimbraMail">
-//  <doc ver="1" id="574">
+//  <doc ver="1" id="574" desc="rev 2.0">
 //    <upload id="18baa043-394f-42ae-be8a-110b279cb696:fcb572ce-2a81-4ad3-b55b-cb998c47b416"/>
 //  </doc>
 //</SaveDocumentRequest>
@@ -275,7 +275,7 @@
 </ListDocumentRevisionsRequest>
 
 <ListDocumentRevisionsResponse>
-  [<doc name="{name}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" d="{created-date}" md="{modified-date}" l="{folder}" [f="{flags}"] [t="{tags}"]>
+  [<doc name="{name}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" d="{created-date}" md="{modified-date}" l="{folder}" [f="{flags}"] [t="{tags}"] [lo="{accountId-of-lock-owner}"] [desc="{optional-description}]>
      <fr>... fragment ...</fr>
   </doc>]+
 </ListDocumentRevisionsResponse>

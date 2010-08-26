@@ -30,6 +30,7 @@ public class SaveDocument extends CreateMessage {
     private String mMimeType;
     private String mAuthor;
     private byte mItemType;
+    private String mDescription;
 
     public SaveDocument() {
     }
@@ -73,6 +74,14 @@ public class SaveDocument extends CreateMessage {
     public void setItemType(byte type) {
         mItemType = type;
     }
+    
+    public String getDescription() {
+        return mDescription;
+    }
+    
+    public void setDescription(String d) {
+        mDescription = d;
+    }
 
     public void setDocument(ParsedDocument doc) {
         setFilename(doc.getFilename());
@@ -85,6 +94,8 @@ public class SaveDocument extends CreateMessage {
         out.writeUTF(mMimeType);
         out.writeUTF(mAuthor);
         out.writeByte(mItemType);
+        if (getVersion().atLeast(1, 29))
+            out.writeUTF(mDescription);
         super.serializeData(out);
     }
 
@@ -93,6 +104,8 @@ public class SaveDocument extends CreateMessage {
         mMimeType = in.readUTF();
         mAuthor = in.readUTF();
         mItemType = in.readByte();
+        if (getVersion().atLeast(1, 29))
+            mDescription = in.readUTF();
         super.deserializeData(in);
     }
 
@@ -101,7 +114,7 @@ public class SaveDocument extends CreateMessage {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {
-            mbox.createDocument(getOperationContext(), getFolderId(), mFilename, mMimeType, mAuthor, getAdditionalDataStream(), mItemType);
+            mbox.createDocument(getOperationContext(), getFolderId(), mFilename, mMimeType, mAuthor, mDescription, getAdditionalDataStream(), mItemType);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 mLog.info("Document " + getMessageId() + " is already in mailbox " + mboxId);

@@ -43,6 +43,7 @@ public final class ParsedDocument {
     private IndexDocument mZDocument = null;
     private String mFragment;
     private long mCreatedDate;
+    private String mDescription;
 
     /** if TRUE then there was a _temporary_ failure analyzing the message.  We should attempt
      * to re-index this message at a later time */
@@ -51,12 +52,12 @@ public final class ParsedDocument {
     private static Blob saveInputAsBlob(InputStream in) throws ServiceException, IOException {
         return StoreManager.getInstance().storeIncoming(in, 0, null);
     }
-    public ParsedDocument(InputStream in, String filename, String ctype, long createdDate, String creator)
+    public ParsedDocument(InputStream in, String filename, String ctype, long createdDate, String creator, String description)
         throws ServiceException, IOException {
-        this(saveInputAsBlob(in), filename, ctype, createdDate, creator);
+        this(saveInputAsBlob(in), filename, ctype, createdDate, creator, description);
     }
 
-    public ParsedDocument(Blob blob, String filename, String ctype, long createdDate, String creator)
+    public ParsedDocument(Blob blob, String filename, String ctype, long createdDate, String creator, String description)
         throws ServiceException, IOException {
 
         mBlob = blob;
@@ -66,6 +67,7 @@ public final class ParsedDocument {
         mFilename = filename;
         mCreatedDate = createdDate;
         mCreator = creator;
+        mDescription = description;
 
         try {
             MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, filename);
@@ -98,6 +100,7 @@ public final class ParsedDocument {
                 appendToContent(content, filename);
                 appendToContent(content, ZimbraAnalyzer.getAllTokensConcatenated(LuceneFields.L_FILENAME, filename));
                 appendToContent(content, textContent);
+                appendToContent(content, description);
 
                 mZDocument.addContent(content.toString());
                 mZDocument.addFrom(new RFC822AddressTokenStream(creator));
@@ -118,6 +121,8 @@ public final class ParsedDocument {
     }
 
     private static final void appendToContent(StringBuilder sb, String s) {
+        if (s == null)
+            return;
         if (sb.length() > 0) {
             sb.append(' ');
         }
@@ -178,6 +183,10 @@ public final class ParsedDocument {
 
     public long getCreatedDate() {
         return mCreatedDate;
+    }
+    
+    public String getDescription() {
+        return mDescription;
     }
 
     public boolean hasTemporaryAnalysisFailure() {
