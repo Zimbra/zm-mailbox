@@ -1,0 +1,109 @@
+Setup Development Environment for Mac OSX
+================================================================================
+
+1. Download Perforce - P4 Command-Line Client
+  http://www.perforce.com/perforce/downloads/index.html
+  Macintosh > Mac OSX for PPC/x86 > P4
+2. $ mv p4 /usr/local/bin
+3. $ chmod +x /usr/local/bin/p4
+
+More information is available at:
+http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#1070774
+
+4. $ vi ~/.bash_profile
+
+  export P4PORT=perforce-zimbra.eng.vmware.com:1666
+  export P4USER={your p4 username}
+  export P4PASSWD={your p4 password}
+  export P4CONFIG=.p4config
+  export P4HOST=localhost
+  export P4EDITOR=/usr/bin/vi
+  export PATH=$PATH:/opt/zimbra/bin
+
+5. $ source ~/.bash_profile
+6. $ mkdir -p /opt/zimbra
+7. $ mkdir ~/p4/main & cd ~/p4/main
+8. $ vi .p4config
+  P4CLIENT={your p4 username}-main
+9. $ p4 client
+
+  View:
+   //depot/main/... //{workspace}/...
+   -//depot/main/ThirdPartyBuilds/... //{workspace}/ThirdPartyBuilds/...
+   +//depot/main/ThirdPartyBuilds/MACOSXx86_10.6/... //{workspace}/ThirdPartyBuilds/MACOSXx86_10.6/...
+   +//depot/main/ThirdPartyBuilds/OSXx86_64/... //{workspace}/ThirdPartyBuilds/OSXx86_64/...
+   +//depot/main/ThirdPartyBuilds/OSXx86/... //{workspace}/ThirdPartyBuilds/OSXx86/...
+   -//depot/main/Gallery/... //{workspace}/Gallery/...
+   -//depot/main/pmweb/... //{workspace}/pmweb/...
+   -//depot/main/Prototypes/... //{workspace}/Prototypes/...
+   -//depot/main/Support/... //{workspace}/Support/...
+   -//depot/main/ZimbraSupportPortal/... //{workspace}/ZimbraSupportPortal/...
+
+10. $ p4 sync
+
+11. Download MySQL - MySQL Community Server & install it.
+  http://dev.mysql.com/downloads/mysql/
+  GA > Mac OSX ver 10.6 (x86, 64-bit)
+
+12. $ sudo ln -s /usr/local/mysql /opt/zimbra/mysql
+13. $ sudo vi /opt/zimbra/mysql/data/my.cnf
+
+  [mysqld]
+  bind-address = localhost
+  port = 7306
+
+14. $ sudo -b /opt/zimbra/mysql/bin/mysqld_safe --user=mysql
+  * With MySQLStartupItem package installed, mysqld will start automatically on reboot.
+  * MySQL log file can be found at: /opt/zimbra/mysql/data/{server-name}.err
+
+15. $ /opt/zimbra/mysql/bin/mysqladmin -u root password zimbra
+
+
+16. $ sudo visudo
+
+  {username} ALL=NOPASSWD:/opt/zimbra/libexec/zmslapd
+
+  * {username} is your local username and be sure to insert a [TAB] between {username} and "ALL".
+
+17. $ cd ~/p4/main/ZimbraServer
+18. $ ant reset-all
+
+  * $ ant -p
+  Buildfile: build.xml
+
+  Main targets:
+
+   build-init              Creates directories required for compiling
+   clean                   Deletes classes from build directories
+   clean-opt-zimbra        Deletes deployed jars, classes, and zimlets
+   dev-dist                Initializes build/dist
+   dir-init                Creates directories in /opt/zimbra
+   init-opt-zimbra         Copies build/dist to /opt/zimbra
+   reset-all               Reset the world plus jetty and OpenLDAP
+   reset-jetty             Resets jetty
+   reset-open-ldap         Resets OpenLDAP
+   reset-the-world         Reset the world
+   reset-the-world-stage1  Cleans deployed files, compiles, and initializes /opt/zimbra.
+   reset-the-world-stage2  Run when web server is running.
+   service-deploy          Not just war file deployment, but a /opt/zimbra refresh as well!
+   stop-webserver          Stops Jetty.  If Jetty is not installed, does nothing.
+   test                    Run unit tests
+  Default target: jar
+
+19. open http://localhost:7070/zimbra
+
+  Username: user1 / Password: test123
+
+ * Admin console - https://localhost:7071/zimbraAdmin
+
+  Username: admin / Password: test123
+
+
+CONFIGURE JDK FOR ZIMBRA COMMAND LINE TOOLS
+================================================================================
+
+Command-line tools like zmprov, zmmailbox, zmsoap, etc., depend on the JDK to be
+in /opt/zimbra/java.
+
+1. $ cd /opt/zimbra
+2. $ sudo ln -s /System/Library/Frameworks/JavaVM.framework/Versions/1.6/Home/ java
