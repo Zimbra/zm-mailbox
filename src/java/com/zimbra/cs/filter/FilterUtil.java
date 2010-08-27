@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,7 +23,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -58,7 +57,7 @@ public class FilterUtil {
 
     public enum Condition {
         allof, anyof;
-        
+
         public static Condition fromString(String value)
         throws ServiceException {
             if (value == null) {
@@ -71,7 +70,7 @@ public class FilterUtil {
                     "Invalid value: " + value + ", valid values: " + Arrays.asList(Condition.values()), e);
             }
         }
-        
+
     }
 
     public enum Flag {
@@ -110,7 +109,7 @@ public class FilterUtil {
 
     public enum NumberComparison {
         over, under;
-        
+
         public static NumberComparison fromString(String value)
         throws ServiceException {
             if (value == null) {
@@ -127,7 +126,7 @@ public class FilterUtil {
 
     public enum DateComparison {
         before, after;
-        
+
         public static DateComparison fromString(String value)
         throws ServiceException {
             if (value == null) {
@@ -141,7 +140,7 @@ public class FilterUtil {
             }
         }
     }
-    
+
     /**
      * Returns a Sieve-escaped version of the given string.  Replaces <tt>\</tt> with
      * <tt>\\</tt> and <tt>&quot;</tt> with <tt>\&quot;</tt>.
@@ -154,7 +153,7 @@ public class FilterUtil {
         s = s.replace("\"", "\\\"");
         return s;
     }
-    
+
     /**
      * Removes escape characters from a Sieve string literal.
      */
@@ -169,7 +168,7 @@ public class FilterUtil {
      * exists in the map, uses the next available index instead.  This way we
      * guarantee that we don't lose data if the client sends two elements with
      * the same index, or doesn't specify the index at all.
-     * 
+     *
      * @return the index used to insert the value
      */
     public static <T> int addToMap(Map<Integer, T> map, int initialKey, T value) {
@@ -193,13 +192,13 @@ public class FilterUtil {
             return 0;
         }
     }
-    
+
     /**
      * Parses a Sieve size string and returns the integer value.
      * The string may end with <tt>K</tt> (kilobytes), <tt>M</tt> (megabytes)
      * or <tt>G</tt> (gigabytes).  If the units are not specified, the
      * value is in bytes.
-     * 
+     *
      * @throws NumberFormatException if the value cannot be parsed
      */
     public static int parseSize(String sizeString) {
@@ -220,7 +219,7 @@ public class FilterUtil {
         }
         return Integer.parseInt(sizeString) * multiplier;
     }
-    
+
     /**
      * Adds a message to the given folder.  Handles both local folders and mountpoints.
      * @return the id of the new message, or <tt>null</tt> if it was a duplicate
@@ -234,7 +233,7 @@ public class FilterUtil {
         Folder folder = folderAndPath.getFirst();
         String remainingPath = folderAndPath.getSecond();
         ZimbraLog.filter.debug("Attempting to file to %s, remainingPath=%s.", folder, remainingPath);
-        
+
         if (folder instanceof Mountpoint) {
             Mountpoint mountpoint = (Mountpoint) folder;
             ZMailbox remoteMbox = getRemoteZMailbox(mbox, mountpoint);
@@ -306,7 +305,7 @@ public class FilterUtil {
         if (authToken == null) {
             authToken = AuthProvider.getAuthToken(localMbox.getAccount());
         }
-        
+
         // Get ZMailbox
         Account account = Provisioning.getInstance().get(AccountBy.id, mountpoint.getOwnerId());
         ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(account));
@@ -320,11 +319,11 @@ public class FilterUtil {
 
     public static void redirect(Mailbox sourceMbox, MimeMessage msg, String destinationAddress)
     throws ServiceException {
-        SMTPMessage outgoingMsg = null;
-        
+        MimeMessage outgoingMsg;
+
         try {
             if (!isMailLoop(sourceMbox, msg)) {
-                outgoingMsg = new SMTPMessage(msg);
+                outgoingMsg = new Mime.FixedMimeMessage(msg);
                 outgoingMsg.setHeader(HEADER_FORWARDED, sourceMbox.getAccount().getName());
                 outgoingMsg.saveChanges();
             } else {
@@ -333,18 +332,23 @@ public class FilterUtil {
             }
         } catch (MessagingException e) {
             try {
-                // Workaround for bug 16525
-                outgoingMsg = new SMTPMessage(msg) {
-                    @Override protected void updateHeaders() throws MessagingException {
-                        setHeader("MIME-Version", "1.0");  if (getMessageID() == null) updateMessageID();
+                // If MimeMessage.saveChanges fails, create a copy of the message
+                // that doesn't recursively call updateHeaders() upon saveChanges().
+                // This uses double the memory on malformed messages, but it should
+                // avoid having a deep-buried misparse throw off the whole forward.
+                outgoingMsg = new Mime.FixedMimeMessage(msg) {
+                    @Override
+                    protected void updateHeaders() throws MessagingException {
+                        setHeader("MIME-Version", "1.0");
+                        updateMessageID();
                     }
                 };
                 ZimbraLog.filter.info("Message format error detected.  Wrapper class in use.  %s", e.toString());
-            } catch (MessagingException e2) {
-                throw ServiceException.FAILURE("Message format error detected.  Workaround failed.", e2);
+            } catch (MessagingException again) {
+                throw ServiceException.FAILURE("Message format error detected.  Workaround failed.", again);
             }
         }
-        
+
         MailSender sender = sourceMbox.getMailSender().setSaveToSent(false).setSkipSendAsCheck(true);
         if (Provisioning.getInstance().getLocalServer().isMailRedirectSetEnvelopeSender()) {
             // Set envelope sender to the account name (bug 31309).
@@ -364,7 +368,7 @@ public class FilterUtil {
         sender.setRecipients(destinationAddress);
         sender.sendMimeMessage(null, sourceMbox, outgoingMsg);
     }
-    
+
     /**
      * Returns <tt>true</tt> if the current account's name is
      * specified in one of the X-Zimbra-Forwarded headers.

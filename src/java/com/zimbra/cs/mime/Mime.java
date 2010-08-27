@@ -2,20 +2,17 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on Apr 17, 2004
- */
 package com.zimbra.cs.mime;
 
 import java.io.ByteArrayInputStream;
@@ -60,6 +57,7 @@ import javax.mail.internet.ParseException;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.QCodec;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeCompoundHeader;
 import com.zimbra.common.mime.MimeConstants;
@@ -72,38 +70,94 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.JMSession;
 
 /**
+ * @since Apr 17, 2004
  * @author schemers
  */
 public class Mime {
 
-    static Log sLog = LogFactory.getLog(Mime.class);
+    private static Log sLog = LogFactory.getLog(Mime.class);
 
     private static final int MAX_DECODE_BUFFER = 2048;
 
-    private static final Set<String> TRANSFER_ENCODINGS = new HashSet<String>(Arrays.asList(
-            MimeConstants.ET_7BIT, MimeConstants.ET_8BIT, MimeConstants.ET_BINARY, MimeConstants.ET_QUOTED_PRINTABLE, MimeConstants.ET_BASE64
-    ));
+    private static final Set<String> TRANSFER_ENCODINGS = Sets.newHashSet(
+            MimeConstants.ET_7BIT, MimeConstants.ET_8BIT, MimeConstants.ET_BINARY,
+            MimeConstants.ET_QUOTED_PRINTABLE, MimeConstants.ET_BASE64);
+
+    private static final Set<String> INLINEABLE_TYPES = Sets.newHashSet(
+            "image/jpeg", "image/png", "image/gif");
+
+    private static Set<String> TEXT_ALTERNATES = Sets.newHashSet(
+            MimeConstants.CT_TEXT_ENRICHED, MimeConstants.CT_TEXT_HTML);
+
+    private static Set<String> HTML_ALTERNATES = Sets.newHashSet(
+            MimeConstants.CT_TEXT_ENRICHED, MimeConstants.CT_TEXT_PLAIN);
+
+    private static Set<String> KNOWN_MULTIPART_TYPES = Sets.newHashSet(
+            MimeConstants.CT_MULTIPART_ALTERNATIVE,
+            MimeConstants.CT_MULTIPART_DIGEST,
+            MimeConstants.CT_MULTIPART_MIXED,
+            MimeConstants.CT_MULTIPART_REPORT,
+            MimeConstants.CT_MULTIPART_RELATED,
+            MimeConstants.CT_MULTIPART_SIGNED,
+            MimeConstants.CT_MULTIPART_ENCRYPTED);
+
+    /**
+     * Max length (in bytes) that a MIME multipart preamble can be before we
+     * give up and wrap the whole multipart in a text/plain.
+     */
+    private static final int MAX_PREAMBLE_LENGTH = 1024;
 
     public static class FixedMimeMessage extends MimeMessage {
-        public FixedMimeMessage(Session s)  { super(s); }
-        public FixedMimeMessage(Session s, InputStream is) throws MessagingException  { super(s, is); }
-        public FixedMimeMessage(MimeMessage mm) throws MessagingException  { super(mm); }
+        public FixedMimeMessage(Session session)  {
+            super(session);
+        }
 
-        public Session getSession() { return this.session; }
-        public FixedMimeMessage setSession(Session s)  { session = s;  return this; }
+        public FixedMimeMessage(Session session, InputStream is) throws MessagingException {
+            super(session, is);
+        }
 
-        @Override protected void updateHeaders() throws MessagingException {
-            String msgid = getMessageID();
+        public FixedMimeMessage(MimeMessage source) throws MessagingException  {
+            super(source);
+        }
+
+        public Session getSession() {
+            return session;
+        }
+
+        public FixedMimeMessage setSession(Session session) {
+            this.session = session;
+            return this;
+        }
+
+        /**
+         * This implementation sets the default Content-Transfer-Encoding which
+         * is 7bit as per RFC822 before JavaMail tries to detect one. We don't
+         * want JavaMail's detection algorithm because it causes wrong encoding
+         * problems.
+         *
+         * @see MimeUtility#getEncoding(DataSource)
+         */
+        @Override
+        protected void updateHeaders() throws MessagingException {
+            if (getEncoding() == null) {
+                setHeader("Content-Transfer-Encoding", MimeConstants.ET_DEFAULT);
+            }
             super.updateHeaders();
-            if (msgid != null)
-                setHeader("Message-ID", msgid);
+        }
+
+        /**
+         * This implementation doesn't overwrite Message-ID if it already exits.
+         */
+        @Override
+        protected void updateMessageID() throws MessagingException {
+            if (getMessageID() == null) {
+                super.updateMessageID();
+            }
         }
     }
 
-    private static final Set<String> INLINEABLE_TYPES = new HashSet<String>(Arrays.asList("image/jpeg", "image/png", "image/gif"));
-
     /**
-     * return complete List of MPartInfo objects. 
+     * return complete List of MPartInfo objects.
      * @param mm
      * @return
      * @throws IOException
@@ -209,10 +263,6 @@ public class Mime {
         return multi;
     }
 
-    /** Max length (in bytes) that a MIME multipart preamble can be before
-     *  we give up and wrap the whole multipart in a text/plain. */
-    private static final int MAX_PREAMBLE_LENGTH = 1024;
-
     /** Returns whether the given "boundary" string occurs within the first
      *  {@link #MAX_PREAMBLE_LENGTH} bytes of the {@link MimePart}'s content.*/
     private static boolean findStartBoundary(MimePart mp, String boundary) throws IOException {
@@ -274,9 +324,22 @@ public class Mime {
 
         public ContentType getParsedContentType()  { return mContentType; }
 
-        public String getContentType()         { return mContentType.toString(); }
-        public String getName()                { return null; }
-        public OutputStream getOutputStream()  { throw new UnsupportedOperationException(); }
+        @Override
+        public String getContentType() {
+            return mContentType.toString();
+        }
+
+        @Override
+        public String getName() {
+            return null;
+        }
+
+        @Override
+        public OutputStream getOutputStream() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public InputStream getInputStream() throws IOException {
             try {
                 return getRawInputStream(mMimePart);
@@ -293,7 +356,8 @@ public class Mime {
             super(mp, ctype);
         }
 
-        @Override public InputStream getInputStream() throws IOException {
+        @Override
+        public InputStream getInputStream() throws IOException {
             return new RawContentInputStream(super.getInputStream());
         }
 
@@ -325,11 +389,13 @@ public class Mime {
                 mEpilogue[boundary.length + 4] = mEpilogue[boundary.length + 5] = '-';
             }
 
-            @Override public int available() throws IOException {
+            @Override
+            public int available() throws IOException {
                 return mPrologue.length - mPrologueIndex + super.available() + mEpilogue.length - mEpilogueIndex;
             }
 
-            @Override public int read() throws IOException {
+            @Override
+            public int read() throws IOException {
                 int c;
                 if (mInPrologue) {
                     c = mPrologue[mPrologueIndex++];
@@ -353,7 +419,8 @@ public class Mime {
                 return c;
             }
 
-            @Override public int read(byte[] b, int off, int len) throws IOException {
+            @Override
+            public int read(byte[] b, int off, int len) throws IOException {
                 if (b == null)
                     throw new NullPointerException();
                 else if ((off < 0) || (off > b.length) || (len < 0) || ((off + len) > b.length) || ((off + len) < 0))
@@ -456,7 +523,7 @@ public class Mime {
         repairTransferEncoding(textPart);
         return decodeText(textPart.getInputStream(), textPart.getContentType(), defaultCharset);
     }
-    
+
     /** Returns a <tt>Reader</tt> for the text content of the <tt>MimePart</tt>.  If the
      *  part's specified charset is unknown, defaults first to the user's
      *  preferred charset and then to the to the system's default charset.
@@ -488,11 +555,25 @@ public class Mime {
             type = contentType;
         }
 
-        public String getContentType() { return type; }
-        public String getName()        { return null; }
+        @Override
+        public String getContentType() {
+            return type;
+        }
 
-        public InputStream getInputStream()   { return is; }
-        public OutputStream getOutputStream() { return null; }
+        @Override
+        public String getName() {
+            return null;
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            return is;
+        }
+
+        @Override
+        public OutputStream getOutputStream() {
+            return null;
+        }
     }
 
     public static MimePart getMimePart(MimePart mp, String part) throws IOException, MessagingException {
@@ -534,7 +615,7 @@ public class Mime {
                         if (index != 1)
                             return null;
                     } else {
-                    	i--;
+                        i--;
                     }
                     mp = content;
                     continue;
@@ -549,9 +630,9 @@ public class Mime {
      * Returns true if we consider this to be an attachment for the sake of "filtering" by attachments.
      * i.e., if someone searches for messages with attachment types of "text/plain", we probably wouldn't want
      * every multipart/mixed message showing up, since 99% of them will have a first body part of text/plain.
-     * 
+     *
      * Note: Zimbra folder sharing notifications are not considered attachments for this purpose.
-     * 
+     *
      * @param mpi
      * @return
      */
@@ -586,7 +667,7 @@ public class Mime {
                 }
             }
         }
-        
+
         // Zimbra folder sharing notifications are not considered attachments.
         if (ctype.equals(MimeConstants.CT_XML_ZIMBRA_SHARE))
             return false;
@@ -594,7 +675,7 @@ public class Mime {
         // computer-readable sections of multipart/reports aren't considered attachments
         if (ctype.equals("message/disposition-notification") || ctype.equals("message/delivery-status"))
             return false;
-        
+
         return true;
      }
 
@@ -604,15 +685,15 @@ public class Mime {
       * empty set if there are no attachments.
       */
      public static Set<String> getAttachmentTypeList(List<MPartInfo> parts) {
-         // get a set of all the content types 
-         HashSet<String> set = new HashSet<String>();
+         // get a set of all the content types
+         Set<String> set = new HashSet<String>();
          for (MPartInfo mpi : parts) {
              if (mpi.isFilterableAttachment())
                  set.add(mpi.getContentType());
          }
          return set;
      }
- 
+
      /** Returns true if any of the given message parts qualify as top-level
       *  "attachments" for the purpose of displaying the little paperclip icon
       *  in the web UI.  Note that Zimbra folder sharing notifications are
@@ -624,7 +705,7 @@ public class Mime {
          }
          return false;
      }
-	
+
     /** Returns true if any of the given message parts has a content-type
      *  of text/calendar */
     public static boolean hasTextCalenndar(List<MPartInfo> parts) {
@@ -778,7 +859,7 @@ public class Mime {
      *  charset for decoding the text.  If not, we fall back to the user's
      *  default charset preference.  If both of those options fail, the
      *  platform default is used.
-     * 
+     *
      * @param input  The InputStream to decode.
      * @param contentType  The Content-Type of the stream, which must be "text/*".
      * @parame defaultCharset  The user's default charset preference */
@@ -808,14 +889,14 @@ public class Mime {
      *  charset for decoding the text.  If not, we fall back to the user's
      *  default charset preference.  If both of those options fail, the
      *  platform default is used.
-     * 
+     *
      * @param input  The InputStream to decode.
      * @param contentType  The stream's Content-Type, which must be "text/*".
      * @param defaultCharset  The user's default charset preference */
     public static Reader getTextReader(InputStream input, String contentType, String defaultCharset) {
         Reader reader = null;
 
-    	String charset = getCharset(contentType);
+        String charset = getCharset(contentType);
         if (charset != null) {
             charset = charset.toLowerCase();
             // windows-1252 is a superset of iso-8859-1 and they're often confused, so use cp1252 in its place
@@ -964,14 +1045,14 @@ public class Mime {
     }
 
     public static Set<MPartInfo> getBody(List<MPartInfo> parts, boolean preferHtml) {
-     	if (parts.isEmpty())
-     		return Collections.emptySet();
+         if (parts.isEmpty())
+             return Collections.emptySet();
 
         Set<MPartInfo> bodies = null;
 
-     	// if top-level has no children, then it is the body
-     	MPartInfo top = parts.get(0);
-     	if (!top.getContentType().startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
+         // if top-level has no children, then it is the body
+         MPartInfo top = parts.get(0);
+         if (!top.getContentType().startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
             if (!top.getDisposition().equals(Part.ATTACHMENT))
                 (bodies = new HashSet<MPartInfo>(1)).add(top);
         } else {
@@ -986,7 +1067,7 @@ public class Mime {
     /**
      * Returns the decoded and unfolded value for the given header name.  If
      * multiple headers with the same name exist, returns the first one.
-     * If the header does not exist, returns <tt>null</tt>. 
+     * If the header does not exist, returns <tt>null</tt>.
      */
     public static String getHeader(MimePart part, String headerName) {
         try {
@@ -1004,9 +1085,9 @@ public class Mime {
             return null;
         }
     }
-    
+
     private static final String[] NO_HEADERS = new String[0];
-    
+
     /**
      * Returns the decoded and unfolded values for the given header name,
      * or an empty array if no headers with the given name exist.
@@ -1083,14 +1164,6 @@ public class Mime {
         }
         return decoded;
     }
-    
-    private static Set<String> TEXT_ALTERNATES = new HashSet<String>(Arrays.asList(MimeConstants.CT_TEXT_ENRICHED, MimeConstants.CT_TEXT_HTML));
-    private static Set<String> HTML_ALTERNATES = new HashSet<String>(Arrays.asList(MimeConstants.CT_TEXT_ENRICHED, MimeConstants.CT_TEXT_PLAIN));
-
-    private static Set<String> KNOWN_MULTIPART_TYPES = new HashSet<String>(Arrays.asList(
-            MimeConstants.CT_MULTIPART_ALTERNATIVE, MimeConstants.CT_MULTIPART_DIGEST, MimeConstants.CT_MULTIPART_MIXED, MimeConstants.CT_MULTIPART_REPORT,
-            MimeConstants.CT_MULTIPART_RELATED, MimeConstants.CT_MULTIPART_SIGNED, MimeConstants.CT_MULTIPART_ENCRYPTED
-    ));
 
     private static Set<MPartInfo> getBodySubparts(MPartInfo base, boolean preferHtml) {
         // short-circuit malformed messages and message subparts
@@ -1224,7 +1297,7 @@ public class Mime {
         thread.start();
         return in;
     }
-    
+
     /**
      * Returns the size of this <tt>MimePart</tt>'s content.  If the content
      * is encoded, returns the size of the decoded content.
