@@ -21,7 +21,9 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.EntrySearchFilter;
@@ -31,6 +33,9 @@ import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Term;
+import com.zimbra.cs.gal.FilteredGalSearchResultCallback;
+import com.zimbra.cs.gal.GalSearchControl;
+import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class SearchCalendarResources extends AccountDocumentHandler {
@@ -41,12 +46,13 @@ public class SearchCalendarResources extends AccountDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Element response = zsc.createElement(AccountConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         Account account = getRequestedAccount(getZimbraSoapContext(context));
 
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 
+        /*
+        Element response = zsc.createElement(AccountConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         String sortBy = request.getAttribute(AccountConstants.A_SORT_BY, null);
         boolean sortAscending = request.getAttributeBool(AccountConstants.A_SORT_ASCENDING, true);
         String attrsStr = request.getAttribute(AccountConstants.A_ATTRS, null);
@@ -62,6 +68,9 @@ public class SearchCalendarResources extends AccountDocumentHandler {
             ToXML.encodeCalendarResource(response, resource);
         }
         return response;
+        */
+        
+        return searchGal(zsc, account, request);
     }
 
     public static EntrySearchFilter parseSearchFilter(Element request) throws ServiceException {
@@ -125,5 +134,20 @@ public class SearchCalendarResources extends AccountDocumentHandler {
                 Provisioning.ACCOUNT_STATUS_MAINTENANCE);
         Multi activeOrMaint = new Multi(false, AndOr.or, active, maint);
         sFilterActiveResourcesOnly = new EntrySearchFilter(activeOrMaint);
+    }
+    
+    private static Element searchGal(ZimbraSoapContext zsc, Account account, Element request) throws ServiceException {
+        GalSearchParams params = new GalSearchParams(account, zsc);
+        params.setQuery(".");
+        params.setType(Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE);
+        params.setLimit(1000);
+        params.setResponseName(AdminConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
+        
+        EntrySearchFilter filter = parseSearchFilter(request);
+        params.setResultCallback(new FilteredGalSearchResultCallback(params, filter));
+        
+        GalSearchControl gal = new GalSearchControl(params);
+        gal.search();  
+        return params.getResultCallback().getResponse();
     }
 }

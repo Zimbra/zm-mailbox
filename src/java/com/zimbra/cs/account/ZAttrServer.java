@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100825-1243 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100827-0955 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -2247,13 +2247,13 @@ public class ZAttrServer extends NamedEntry {
      * Comma separated list of Contact attributes that should be hidden from
      * clients and export of contacts.
      *
-     * @return zimbraContactHiddenAttributes, or "dn,zimbraAccountCalendarUserType,zimbraCalResType,zimbraCalResLocationDisplayName,zimbraCalResCapacity,zimbraCalResContactEmail,vcardUID,vcardURL,vcardXProps" if unset
+     * @return zimbraContactHiddenAttributes, or "dn,zimbraAccountCalendarUserType,zimbraCalResType,zimbraCalResLocationDisplayName,vcardUID,vcardURL,vcardXProps" if unset
      *
      * @since ZCS 6.0.6
      */
     @ZAttr(id=1086)
     public String getContactHiddenAttributes() {
-        return getAttr(Provisioning.A_zimbraContactHiddenAttributes, "dn,zimbraAccountCalendarUserType,zimbraCalResType,zimbraCalResLocationDisplayName,zimbraCalResCapacity,zimbraCalResContactEmail,vcardUID,vcardURL,vcardXProps");
+        return getAttr(Provisioning.A_zimbraContactHiddenAttributes, "dn,zimbraAccountCalendarUserType,zimbraCalResType,zimbraCalResLocationDisplayName,vcardUID,vcardURL,vcardXProps");
     }
 
     /**

@@ -48,6 +48,9 @@ public class LdapGalValueMap {
     }
     
     private String replace(String value) {
+        if (mRegex == null)
+            return value;
+        
         Matcher matcher = mRegex.matcher(value);
         if (matcher.matches())
             return matcher.replaceAll(mReplacement);
@@ -64,5 +67,9 @@ public class LdapGalValueMap {
         newVal = valueMap.apply(new String[]{"Room", "room"});
         for (String v : (String[])newVal)
             System.out.println(v);
+        
+        valueMap = new LdapGalValueMap("zimbraAccountCalendarUserType: Room|Equipment RESOURCE");
+        newVal = valueMap.apply("Equipment");
+        System.out.println((String)newVal);
     }
 }

@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100825-1243 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100827-0955 */
 
     /**
      * RFC2256: descriptive information
@@ -5187,13 +5187,13 @@ public class ZAttrConfig extends Entry {
      * Comma separated list of Contact attributes that should be hidden from
      * clients and export of contacts.
      *
-     * @return zimbraContactHiddenAttributes, or "dn,zimbraAccountCalendarUserType,zimbraCalResType,zimbraCalResLocationDisplayName,zimbraCalResCapacity,zimbraCalResContactEmail,vcardUID,vcardURL,vcardXProps" if unset
+     * @return zimbraContactHiddenAttributes, or "dn,zimbraAccountCalendarUserType,zimbraCalResType,zimbraCalResLocationDisplayName,vcardUID,vcardURL,vcardXProps" if unset
      *
      * @since ZCS 6.0.6
      */
     @ZAttr(id=1086)
     public String getContactHiddenAttributes() {
-        return getAttr(Provisioning.A_zimbraContactHiddenAttributes, "dn,zimbraAccountCalendarUserType,zimbraCalResType,zimbraCalResLocationDisplayName,zimbraCalResCapacity,zimbraCalResContactEmail,vcardUID,vcardURL,vcardXProps");
+        return getAttr(Provisioning.A_zimbraContactHiddenAttributes, "dn,zimbraAccountCalendarUserType,zimbraCalResType,zimbraCalResLocationDisplayName,vcardUID,vcardURL,vcardXProps");
     }
 
     /**
@@ -8216,7 +8216,7 @@ public class ZAttrConfig extends Entry {
      */
     @ZAttr(id=153)
     public String[] getGalLdapAttrMap() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap); return value.length > 0 ? value : new String[] {"co=workCountry","company=company","givenName,gn=firstName","sn=lastName","displayName,cn=fullName,fullName2,fullName3,fullName4,fullName5,fullName6,fullName7,fullName8,fullName9,fullName10","initials=initials","description=notes","l=workCity","physicalDeliveryOfficeName=office","ou=department","street,streetAddress=workStreet","postalCode=workPostalCode","facsimileTelephoneNumber,fax=workFax","homeTelephoneNumber,homePhone=homePhone","mobileTelephoneNumber,mobile=mobilePhone","pagerTelephoneNumber,pager=pager","telephoneNumber=workPhone","st=workState","zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16","title=jobTitle","whenChanged,modifyTimeStamp=modifyTimeStamp","whenCreated,createTimeStamp=createTimeStamp","zimbraId=zimbraId","objectClass=objectClass","zimbraMailForwardingAddress=zimbraMailForwardingAddress","zimbraCalResType,msExchResourceSearchProperties=zimbraCalResType","zimbraCalResLocationDisplayName=zimbraCalResLocationDisplayName"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap); return value.length > 0 ? value : new String[] {"co=workCountry","company=company","givenName,gn=firstName","sn=lastName","displayName,cn=fullName,fullName2,fullName3,fullName4,fullName5,fullName6,fullName7,fullName8,fullName9,fullName10","initials=initials","description=notes","l=workCity","physicalDeliveryOfficeName=office","ou=department","street,streetAddress=workStreet","postalCode=workPostalCode","facsimileTelephoneNumber,fax=workFax","homeTelephoneNumber,homePhone=homePhone","mobileTelephoneNumber,mobile=mobilePhone","pagerTelephoneNumber,pager=pager","telephoneNumber=workPhone","st=workState","zimbraMailDeliveryAddress,zimbraMailAlias,mail=email,email2,email3,email4,email5,email6,email7,email8,email9,email10,email11,email12,email13,email14,email15,email16","title=jobTitle","whenChanged,modifyTimeStamp=modifyTimeStamp","whenCreated,createTimeStamp=createTimeStamp","zimbraId=zimbraId","objectClass=objectClass","zimbraMailForwardingAddress=zimbraMailForwardingAddress","zimbraCalResType,msExchResourceSearchProperties=zimbraCalResType","zimbraCalResLocationDisplayName,displayName=zimbraCalResLocationDisplayName","zimbraCalResBuilding=zimbraCalResBuilding","zimbraCalResCapacity,msExchResourceCapacity=zimbraCalResCapacity","zimbraCalResFloor=zimbraCalResFloor","zimbraCalResSite=zimbraCalResSite","zimbraCalResContactEmail=zimbraCalResContactEmail","msExchResourceSearchProperties=zimbraAccountCalendarUserType"};
     }
 
     /**
@@ -8533,7 +8533,7 @@ public class ZAttrConfig extends Entry {
      */
     @ZAttr(id=1110)
     public String[] getGalLdapValueMap() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapValueMap); return value.length > 0 ? value : new String[] {"zimbraCalResType: [R|r]oom Location"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraGalLdapValueMap); return value.length > 0 ? value : new String[] {"zimbraCalResType: Room Location","zimbraAccountCalendarUserType: Room|Equipment RESOURCE"};
     }
 
     /**

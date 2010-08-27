@@ -78,6 +78,15 @@ public class ToXML {
         encodeAttrs(resElem, attrs, AccountConstants.A_N, reqAttrs, attrRightChecker);
         return resElem;
     }
+    
+    public static Element encodeCalendarResource(Element parent, String id, String name, Map attrs,
+            Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
+        Element resElem = parent.addElement(AccountConstants.E_CALENDAR_RESOURCE);
+        resElem.addAttribute(AccountConstants.A_NAME, name);
+        resElem.addAttribute(AccountConstants.A_ID, id);
+        encodeAttrs(resElem, attrs, AccountConstants.A_N, reqAttrs, attrRightChecker);
+        return resElem;
+    }
 
     static void encodeAttrs(Element e, Map attrs, Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
         encodeAttrs(e, attrs, AccountConstants.A_N, reqAttrs, attrRightChecker);

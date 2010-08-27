@@ -32,7 +32,7 @@ import com.zimbra.cs.service.util.ItemIdFormatter;
 
 public class GalSearchResultCallback implements GalContact.Visitor {
     private Element mResponse;
-	private ItemIdFormatter mFormatter;
+	protected ItemIdFormatter mFormatter;
 	private boolean mIdOnly;
 	private GalOp mOp;
     
