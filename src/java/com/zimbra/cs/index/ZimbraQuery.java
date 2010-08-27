@@ -2638,15 +2638,13 @@ public final class ZimbraQuery {
         }
 
         if (ZimbraLog.index_search.isDebugEnabled()) {
-            String str = this.toString() + " search([";
-            for (int i = 0; i < mParams.getTypes().length; i++) {
-                if (i > 0) {
-                    str += ",";
-                }
-                str+=mParams.getTypes()[i];
-            }
-            str += "]," + mParams.getSortBy() + ")";
-            ZimbraLog.index_search.debug(str);
+            StringBuilder buf = new StringBuilder(toString());
+            buf.append(" search([");
+            buf.append(mParams.getTypesStr());
+            buf.append("],");
+            buf.append(mParams.getSortBy());
+            buf.append(')');
+            ZimbraLog.index_search.debug(buf.toString());
         }
 
         // Step 2: build a parse tree and push all the "NOT's" down to the
