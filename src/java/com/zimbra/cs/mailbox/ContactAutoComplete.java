@@ -453,10 +453,10 @@ public class ContactAutoComplete {
             Map<ItemId, Mountpoint> mountpoints = new HashMap<ItemId, Mountpoint>();
             if (folderIDs == null) {
                 for (Folder folder : mbox.getFolderList(octxt, SortBy.NONE)) {
-                    if (folder.getDefaultView() != MailItem.TYPE_CONTACT) {
+                    if (folder.getDefaultView() != MailItem.TYPE_CONTACT ||
+                            folder.inTrash()) {
                         continue;
-                    }
-                    if (folder instanceof Mountpoint) {
+                    } else if (folder instanceof Mountpoint) {
                         Mountpoint mp = (Mountpoint) folder;
                         mountpoints.put(mp.getTarget(), mp);
                         if (mIncludeSharedFolders) {
