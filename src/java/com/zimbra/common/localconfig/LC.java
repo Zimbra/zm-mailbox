@@ -325,7 +325,7 @@ public class LC {
     public static final KnownKey sqlite_sync_mode;
 
     public static final KnownKey mailboxd_directory;
-    public static final KnownKey mailboxd_java_heap_memory_percent;
+    public static final KnownKey mailboxd_java_heap_size;
     public static final KnownKey mailboxd_java_heap_new_size_percent;
     public static final KnownKey mailboxd_thread_stack_size;
     public static final KnownKey mailboxd_java_options;
@@ -1195,8 +1195,7 @@ public class LC {
         mailboxd_directory = new KnownKey("mailboxd_directory");
         mailboxd_directory.setDefault("${zimbra_home}" + FS + "mailboxd");
 
-        mailboxd_java_heap_memory_percent = new KnownKey("mailboxd_java_heap_memory_percent");
-        mailboxd_java_heap_memory_percent.setDefault("30");
+        mailboxd_java_heap_size = new KnownKey("mailboxd_java_heap_size");
 
         mailboxd_thread_stack_size = new KnownKey("mailboxd_thread_stack_size");
         mailboxd_thread_stack_size.setDefault("256k");
