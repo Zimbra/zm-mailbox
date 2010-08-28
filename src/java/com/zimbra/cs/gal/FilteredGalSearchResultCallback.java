@@ -1,11 +1,11 @@
 package com.zimbra.cs.gal;
 
+import java.util.Set;
 import java.util.Stack;
 
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
@@ -16,10 +16,12 @@ import com.zimbra.cs.mailbox.Contact;
 
 public class FilteredGalSearchResultCallback extends GalSearchResultCallback {
 
+    Set<String> mAttrs;
     EntrySearchFilter mFilter;
     
-    public FilteredGalSearchResultCallback(GalSearchParams params, EntrySearchFilter filter) {
+    public FilteredGalSearchResultCallback(GalSearchParams params, EntrySearchFilter filter, Set<String> attrs) {
         super(params);
+        mAttrs = attrs;
         mFilter = filter;
     }
 
@@ -27,7 +29,7 @@ public class FilteredGalSearchResultCallback extends GalSearchResultCallback {
         if (matched(contact))
             com.zimbra.cs.service.account.ToXML.encodeCalendarResource(getResponse(), 
                     mFormatter.formatItemId(contact), contact.get(ContactConstants.A_email), 
-                    contact.getAllFields(), null, null);
+                    contact.getAllFields(), mAttrs, null);
         return null; // return null because we don't want the sort field (sf) attr added to each hit
     }
     
@@ -35,7 +37,7 @@ public class FilteredGalSearchResultCallback extends GalSearchResultCallback {
         if (matched(galContact))
             com.zimbra.cs.service.account.ToXML.encodeCalendarResource(getResponse(), 
                     galContact.getId(), galContact.getSingleAttr("email"), 
-                    galContact.getAttrs(), null, null);
+                    galContact.getAttrs(), mAttrs, null);
     }
     
     private boolean matched(Contact c) {

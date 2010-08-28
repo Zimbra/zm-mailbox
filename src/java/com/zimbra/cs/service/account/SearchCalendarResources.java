@@ -15,9 +15,12 @@
 
 package com.zimbra.cs.service.account;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -50,25 +53,6 @@ public class SearchCalendarResources extends AccountDocumentHandler {
 
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
-
-        /*
-        Element response = zsc.createElement(AccountConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
-        String sortBy = request.getAttribute(AccountConstants.A_SORT_BY, null);
-        boolean sortAscending = request.getAttributeBool(AccountConstants.A_SORT_ASCENDING, true);
-        String attrsStr = request.getAttribute(AccountConstants.A_ATTRS, null);
-        String[] attrs = attrsStr == null ? null : attrsStr.split(",");
-
-        EntrySearchFilter filter = parseSearchFilter(request);
-        filter.andWith(sFilterActiveResourcesOnly);
-
-        Provisioning prov = Provisioning.getInstance();
-        List resources = prov.searchCalendarResources(prov.getDomain(account), filter, attrs, sortBy, sortAscending);
-        for (Iterator iter = resources.iterator(); iter.hasNext(); ) {
-            CalendarResource resource = (CalendarResource) iter.next();
-            ToXML.encodeCalendarResource(response, resource);
-        }
-        return response;
-        */
         
         return searchGal(zsc, account, request);
     }
@@ -144,7 +128,12 @@ public class SearchCalendarResources extends AccountDocumentHandler {
         params.setResponseName(AdminConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         
         EntrySearchFilter filter = parseSearchFilter(request);
-        params.setResultCallback(new FilteredGalSearchResultCallback(params, filter));
+        
+        String attrsStr = request.getAttribute(AccountConstants.A_ATTRS, null);
+        String[] attrs = attrsStr == null ? null : attrsStr.split(",");
+        Set<String> attrsSet = attrs == null ? null : new HashSet<String>(Arrays.asList(attrs));
+        
+        params.setResultCallback(new FilteredGalSearchResultCallback(params, filter, attrsSet));
         
         GalSearchControl gal = new GalSearchControl(params);
         gal.search();  

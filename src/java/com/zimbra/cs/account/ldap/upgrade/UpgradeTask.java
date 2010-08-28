@@ -33,7 +33,8 @@ public enum UpgradeTask {
     BUG_43147(GalSyncAccountContactLimit.class),
     BUG_46297(ZimbraContactHiddenAttributes.class),
     BUG_46883(ZimbraContactRankingTableSize.class),
-    BUG_46961(zimbraGalLdapAttrMap_fullName.class);
+    BUG_46961(zimbraGalLdapAttrMap_fullName.class),
+    BUG_42828(zimbraGalLdapAttrMap_externalCalendarResource.class);
     
     
     private Class mUpgradeClass;
