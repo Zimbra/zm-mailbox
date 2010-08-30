@@ -76,7 +76,21 @@ public class FixedMimeMessageTest {
         Assert.assertNull(message.getEncoding());
         message.setHeader("X-TEST", "test");
         message.saveChanges();
-        Assert.assertEquals("7bit", message.getEncoding());
+        Assert.assertNull(message.getEncoding());
+
+        message = new FixedMimeMessage(JMSession.getSession());
+        message.setHeader("X-TEST", "test");
+        message.setText("\u3042\u3042\u3042\u3044\u3044\u3044\u3046\u3046\u3046\u3048\u3048\u3048\u304a\u304a\u304a",
+                "ISO-2022-JP");
+        message.saveChanges();
+        Assert.assertEquals("quoted-printable", message.getEncoding());
+
+        message = new FixedMimeMessage(JMSession.getSession());
+        message.setHeader("X-TEST", "test");
+        message.setText("\u3042\u3042\u3042\u3044\u3044\u3044\u3046\u3046\u3046\u3048\u3048\u3048\u304a\u304a\u304a",
+                "UTF-8");
+        message.saveChanges();
+        Assert.assertEquals("base64", message.getEncoding());
     }
 
 }

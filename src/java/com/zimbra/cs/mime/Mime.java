@@ -130,22 +130,6 @@ public class Mime {
         }
 
         /**
-         * This implementation sets the default Content-Transfer-Encoding which
-         * is 7bit as per RFC822 before JavaMail tries to detect one. We don't
-         * want JavaMail's detection algorithm because it causes wrong encoding
-         * problems.
-         *
-         * @see MimeUtility#getEncoding(DataSource)
-         */
-        @Override
-        protected void updateHeaders() throws MessagingException {
-            if (getEncoding() == null) {
-                setHeader("Content-Transfer-Encoding", MimeConstants.ET_DEFAULT);
-            }
-            super.updateHeaders();
-        }
-
-        /**
          * This implementation doesn't overwrite Message-ID if it already exits.
          */
         @Override
