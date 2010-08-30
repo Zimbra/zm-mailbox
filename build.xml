@@ -602,7 +602,7 @@
       <delete dir="${zimbra.home.dir}/zimlets-deployed" failonerror="false"/>
       <delete dir="${zimbra.home.dir}/zimlets-properties" failonerror="false"/>
         <delete failonerror="false">
-          <fileset dir="${jetty.home.dir}/common/lib" includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mysql-connector-java*.jar,mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor*.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,jython*.jar"/>
+          <fileset dir="${jetty.home.dir}/common/lib" includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mysql-connector-java*.jar,mail.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor*.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,jython*.jar"/>
       </delete>
     </target>
 
@@ -872,7 +872,7 @@
               file="${config.dir}/jetty-6.1/log4j.properties${production.suffix}" overwrite="true"/>
         <copy todir="${dist.dir}/jetty/common/lib" overwrite="true">
             <fileset dir="${common.jars.dir}"
-                     includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mail.jar,activation.jar,zimbra-native.jar,bouncycastle.jar,commons-cli*.jar,commons-codec*.jar,commons-dbcp*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,yuicompressor*jar,dom4j*.jar,ganymed-ssh2*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,guava*.jar"/>
+                     includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mail.jar,zimbra-native.jar,bouncycastle.jar,commons-cli*.jar,commons-codec*.jar,commons-dbcp*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,yuicompressor*jar,dom4j*.jar,ganymed-ssh2*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,guava*.jar"/>
         </copy>
         <copy todir="${dist.dir}/jetty/common/endorsed" overwrite="true">
             <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
@@ -1809,117 +1809,117 @@
         </java>
     </target>
 
-    <target name="server2-war">
-        <copy file="${config.dir}/web.xml${production.suffix}" tofile="${build.dir}/web.xml" overwrite="true"/>
-        <replace file="${build.dir}/web.xml">
-            <replacefilter token="7070" value="11070"/>
-            <replacefilter token="7443" value="11443"/>
-            <replacefilter token="7071" value="11071"/>
-            <replacefilter token="7072" value="11072"/>
-            <replacefilter token="7867" value="11867"/>
-        </replace>
-        <antcall target="war">
-            <param name="zimbra.server.hostname" value="${zimbra.alt.hostname}"/>
-            <param name="war.web.xml" value="${build.dir}/web.xml"/>
-        </antcall>
-    </target>
-
-  <target name="server2-deploy" depends="server2-war">
-        <delete dir="${jetty.alt.dir}/webapps/service"/>
-        <delete file="${jetty.alt.dir}/webapps/service.war"/>
-        <copy file="${warfile}" todir="${jetty.alt.dir}/webapps"/>
-        <mkdir dir='${jetty.alt.dir}/webapps/service'/>
-        <unzip dest="${jetty.alt.dir}/webapps/service" src="${jetty.alt.dir}/webapps/${warfilename}"/>
+  <target name="server2-war">
+    <copy file="${config.dir}/web.xml${production.suffix}" tofile="${build.dir}/web.xml" overwrite="true"/>
+    <replace file="${build.dir}/web.xml">
+      <replacefilter token="7070" value="11070"/>
+      <replacefilter token="7443" value="11443"/>
+      <replacefilter token="7071" value="11071"/>
+      <replacefilter token="7072" value="11072"/>
+      <replacefilter token="7867" value="11867"/>
+    </replace>
+    <antcall target="war">
+      <param name="zimbra.server.hostname" value="${zimbra.alt.hostname}"/>
+      <param name="war.web.xml" value="${build.dir}/web.xml"/>
+    </antcall>
   </target>
 
-    <target name="server2-reset">
-        <antcall target="clean"/>
-        <mkdir dir="${build.classes.dir}"/>
-        <mkdir dir="${generated.java.dir}"/>
-        <delete dir="${zimbra.home.dir}/redolog-2"/>
-        <mkdir dir="${zimbra.home.dir}/redolog-2/archive"/>
+  <target name="server2-deploy" depends="server2-war">
+    <delete dir="${jetty.alt.dir}/webapps/service"/>
+    <delete file="${jetty.alt.dir}/webapps/service.war"/>
+    <copy file="${warfile}" todir="${jetty.alt.dir}/webapps"/>
+    <mkdir dir='${jetty.alt.dir}/webapps/service'/>
+    <unzip dest="${jetty.alt.dir}/webapps/service" src="${jetty.alt.dir}/webapps/${warfilename}"/>
+  </target>
 
-        <antcall target="reset-jetty">
-            <param name="jetty.home.dir" value="${jetty.alt.dir}"/>
-        </antcall>
-        <antcall target="dir-init-jetty">
-            <param name="jetty.home.dir" value="${jetty.alt.dir}"/>
-        </antcall>
+  <target name="server2-reset">
+    <antcall target="clean"/>
+    <mkdir dir="${build.classes.dir}"/>
+    <mkdir dir="${generated.java.dir}"/>
+    <delete dir="${zimbra.home.dir}/redolog-2"/>
+    <mkdir dir="${zimbra.home.dir}/redolog-2/archive"/>
 
-        <antcall target="server2-war"/>
+    <antcall target="reset-jetty">
+      <param name="jetty.home.dir" value="${jetty.alt.dir}"/>
+    </antcall>
+    <antcall target="dir-init-jetty">
+      <param name="jetty.home.dir" value="${jetty.alt.dir}"/>
+    </antcall>
 
-        <antcall target="dev-dist-jetty">
-            <param name="dist.jetty.dir" value="${dist.jetty.alt.dir}"/>
-        </antcall>
-        <mkdir dir="${dist.dir}/log-2"/>
-        <replace dir="${dist.jetty.alt.dir}/etc">
-            <replacefilter token="7070" value="11070"/>
-            <replacefilter token="7443" value="11443"/>
-            <replacefilter token="7071" value="11071"/>
-            <replacefilter token="7072" value="11072"/>
-            <replacefilter token="7867" value="11867"/>
-            <replacefilter token="localconfig.xml" value="localconfig-2.xml"/>
-            <replacefilter token="/opt/zimbra/log" value="/opt/zimbra/log-2"/>
-            <replacefilter token="/opt/zimbra/jetty" value="${jetty.alt.dir}"/>
-        </replace>
+    <antcall target="server2-war"/>
 
-        <antcall target="server2-generate-localconfig"/>
-        <echo>Updating primary server localconfig to reflect mock-multiserver install</echo>
-        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-e debug_mock_multiserver_install=true"/>
-        </java>
+    <antcall target="dev-dist-jetty">
+      <param name="dist.jetty.dir" value="${dist.jetty.alt.dir}"/>
+    </antcall>
+    <mkdir dir="${dist.dir}/log-2"/>
+    <replace dir="${dist.jetty.alt.dir}/etc">
+      <replacefilter token="7070" value="11070"/>
+      <replacefilter token="7443" value="11443"/>
+      <replacefilter token="7071" value="11071"/>
+      <replacefilter token="7072" value="11072"/>
+      <replacefilter token="7867" value="11867"/>
+      <replacefilter token="localconfig.xml" value="localconfig-2.xml"/>
+      <replacefilter token="/opt/zimbra/log" value="/opt/zimbra/log-2"/>
+      <replacefilter token="/opt/zimbra/jetty" value="${jetty.alt.dir}"/>
+    </replace>
 
-      <antcall target="localhost-ssl-cert">
-        <param name="jetty.conf.dir" value="${jetty.alt.dir}/etc"/>
-      </antcall>
+    <antcall target="server2-generate-localconfig"/>
+    <echo>Updating primary server localconfig to reflect mock-multiserver install</echo>
+    <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+      <arg line="-e debug_mock_multiserver_install=true"/>
+    </java>
 
-        <copy todir="${zimbra.home.dir}">
-            <fileset dir="${dist.dir}"/>
-        </copy>
-        <mkdir dir='${jetty.alt.dir}/webapps/service'/>
-        <unzip dest="${jetty.alt.dir}/webapps/service" src="${jetty.alt.dir}/webapps/${warfilename}"/>
+    <antcall target="localhost-ssl-cert">
+      <param name="jetty.conf.dir" value="${jetty.alt.dir}/etc"/>
+    </antcall>
 
-        <antcall target="server2-provision-ldap"/>
-    </target>
+    <copy todir="${zimbra.home.dir}">
+      <fileset dir="${dist.dir}"/>
+    </copy>
+    <mkdir dir='${jetty.alt.dir}/webapps/service'/>
+    <unzip dest="${jetty.alt.dir}/webapps/service" src="${jetty.alt.dir}/webapps/${warfilename}"/>
+
+    <antcall target="server2-provision-ldap"/>
+  </target>
 
 
   <!-- ========================================================= -->
   <!--                          rights                           -->
   <!-- ========================================================= -->
 
-    <target name="generate-domainadmin-rights-xml" depends="set-buildinfo-vars,compile">
-        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
-            <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-            <arg line="-a genDomainAdminSetAttrsRights -r conf/rights/zimbra-rights-domainadmin.xml -t conf/rights/zimbra-rights-domainadmin.xml-template"/>
-        </java>
-    </target>
+  <target name="generate-domainadmin-rights-xml" depends="set-buildinfo-vars,compile">
+    <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
+      <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+      <arg line="-a genDomainAdminSetAttrsRights -r conf/rights/zimbra-rights-domainadmin.xml -t conf/rights/zimbra-rights-domainadmin.xml-template"/>
+    </java>
+  </target>
 
-    <target name="generate-rights-java" depends="set-buildinfo-vars,compile">
-        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
-            <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-            <arg line="-a genRightConsts -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/RightConsts.java"/>
-        </java>
-        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
-            <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-            <arg line="-a genAdminRights -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/AdminRights.java"/>
-        </java>
-        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
-            <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-            <arg line="-a genUserRights -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/UserRights.java"/>
-        </java>
-    </target>
+  <target name="generate-rights-java" depends="set-buildinfo-vars,compile">
+    <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
+      <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+      <arg line="-a genRightConsts -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/RightConsts.java"/>
+    </java>
+    <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
+      <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+      <arg line="-a genAdminRights -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/AdminRights.java"/>
+    </java>
+    <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
+      <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+      <arg line="-a genUserRights -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/UserRights.java"/>
+    </java>
+  </target>
 
   <target name="generate-rights">
     <antcall target="generate-domainadmin-rights-xml"/>
     <antcall target="generate-rights-java"/>
-    </target>
+  </target>
 
   <target name="generate-rights-txt">
-        <antcall target="zmprov">
-          <!-- our core admin SOAP -->
-            <param name="args" value="grd com.zimbra.cs.service.admin"/>
-          <param name="output" value="docs/rights.txt"/>
-        </antcall>
+    <antcall target="zmprov">
+      <!-- our core admin SOAP -->
+      <param name="args" value="grd com.zimbra.cs.service.admin"/>
+      <param name="output" value="docs/rights.txt"/>
+    </antcall>
   </target>
 
   <!--
@@ -1929,21 +1929,21 @@
      ZimbraXMbxSearch>ant deploy
   -->
   <target name="generate-rights-ext-txt">
-      <antcall target="zmprov">
-        <!-- known admin extensions, dump them in one file for now -->
-          <param name="args"
-            value="grd com.zimbra.bp
-                       com.zimbra.cert
-                           com.zimbra.cs.network
-                       com.zimbra.cs.network.license.service
-                       com.zimbra.cs.service.backup
-                       com.zimbra.cs.service.hsm
-                       com.zimbra.xmbxsearch
-                       com.zimbra.cert
-                       com.zimbra.cs.service.versioncheck
-                       com.zimbra.license.service"/>
-          <param name="output" value="docs/rights-ext.txt"/>
-      </antcall>
+    <antcall target="zmprov">
+      <!-- known admin extensions, dump them in one file for now -->
+      <param name="args"
+        value="grd com.zimbra.bp
+               com.zimbra.cert
+               com.zimbra.cs.network
+               com.zimbra.cs.network.license.service
+               com.zimbra.cs.service.backup
+               com.zimbra.cs.service.hsm
+               com.zimbra.xmbxsearch
+               com.zimbra.cert
+               com.zimbra.cs.service.versioncheck
+               com.zimbra.license.service"/>
+      <param name="output" value="docs/rights-ext.txt"/>
+    </antcall>
   </target>
 
   <target name="refresh-rights">
@@ -1951,16 +1951,16 @@
     <sleep seconds="2"/>
 
     <!-- copy from source to dist -->
-        <echo>Copying right definition files from ${config.dir}/rights to ${dist.dir}/conf/rights</echo>
+    <echo>Copying right definition files from ${config.dir}/rights to ${dist.dir}/conf/rights</echo>
     <copy todir="${dist.dir}/conf/rights" overwrite="true">
-            <fileset dir="${config.dir}/rights" includes="*.xml"/>
-        </copy>
+      <fileset dir="${config.dir}/rights" includes="*.xml"/>
+    </copy>
 
     <!-- copy from dist to zimbra home -->
-        <echo>Copying right definition files from ${dist.dir}/conf/rights to ${zimbra.home.dir}/conf/rights</echo>
-        <copy todir="${zimbra.home.dir}/conf/rights" overwrite="true">
-            <fileset dir="${dist.dir}/conf/rights" includes="*.xml"/>
-        </copy>
+    <echo>Copying right definition files from ${dist.dir}/conf/rights to ${zimbra.home.dir}/conf/rights</echo>
+    <copy todir="${zimbra.home.dir}/conf/rights" overwrite="true">
+      <fileset dir="${dist.dir}/conf/rights" includes="*.xml"/>
+    </copy>
 
     <antcall target="start-webserver"/>
   </target>
@@ -1968,68 +1968,67 @@
   <property name="admin-name" value="admin@${defaultdomain.name}"/>
 
   <target name="grant-rights">
-    <antcall target="zmprov"> <param name="args" value="grr global usr ${admin-name} getAccount"/>           </antcall>
-      <antcall target="zmprov"> <param name="args" value="grr global usr ${admin-name} getAccountInfo"/>       </antcall>
-      <antcall target="zmprov"> <param name="args" value="grr global usr ${admin-name} getAccountMembership"/> </antcall>
-    <antcall target="zmprov"> <param name="args" value="grr global usr ${admin-name} getDomain"/>            </antcall>
-    <antcall target="zmprov"> <param name="args" value="grr global usr ${admin-name} getGlobalConfig"/>      </antcall>
-    <antcall target="zmprov"> <param name="args" value="grr global usr ${admin-name} getMailboxInfo"/>       </antcall>
-    </target>
+    <antcall target="zmprov"><param name="args" value="grr global usr ${admin-name} getAccount"/></antcall>
+    <antcall target="zmprov"><param name="args" value="grr global usr ${admin-name} getAccountInfo"/></antcall>
+    <antcall target="zmprov"><param name="args" value="grr global usr ${admin-name} getAccountMembership"/></antcall>
+    <antcall target="zmprov"><param name="args" value="grr global usr ${admin-name} getDomain"/></antcall>
+    <antcall target="zmprov"><param name="args" value="grr global usr ${admin-name} getGlobalConfig"/></antcall>
+    <antcall target="zmprov"><param name="args" value="grr global usr ${admin-name} getMailboxInfo"/></antcall>
+  </target>
 
   <target name="upgrade-domain-admin">
     <echo>Upgrading domain admin</echo>
-        <java classname="com.zimbra.cs.account.ldap.upgrade.LdapUpgrade" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-b 18277"/>
-        </java>
+    <java classname="com.zimbra.cs.account.ldap.upgrade.LdapUpgrade" fork="true" classpathref="class.path" failonerror="true">
+      <arg line="-b 18277"/>
+    </java>
   </target>
 
   <target name="create-admin">
     <antcall target="zmprov">
-            <param name="args" value="ca ${admin-name} test123 zimbraIsAdminAccount TRUE"/>
-        </antcall>
-    </target>
+      <param name="args" value="ca ${admin-name} test123 zimbraIsAdminAccount TRUE"/>
+    </antcall>
+  </target>
 
-    <target name="validate-rights">
-        <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
-            <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-            <arg line="-a validate -i conf/rights"/>
-        </java>
-    </target>
+  <target name="validate-rights">
+    <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
+      <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+      <arg line="-a validate -i conf/rights"/>
+    </java>
+  </target>
 
-    <target name="zmprov">
-      <echo>zmprov ${args}  (output=${output})</echo>
-        <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true" output="${output}">
-            <arg line="${args}"/>
-        </java>
+  <target name="zmprov">
+    <echo>zmprov ${args}  (output=${output})</echo>
+    <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true" output="${output}">
+      <arg line="${args}"/>
+    </java>
   </target>
 
 
-    <target name="test-compile" depends="compile">
-        <mkdir dir="${test.classes.dir}"/>
-        <javac srcdir="${test.src.dir}" destdir="${test.classes.dir}"
-          debug="true" classpathref="class.path" target="${javac.target}"/>
-    </target>
+  <target name="test-compile" depends="compile">
+    <mkdir dir="${test.classes.dir}"/>
+    <javac srcdir="${test.src.dir}" destdir="${test.classes.dir}"
+      debug="true" classpathref="class.path" target="${javac.target}"/>
+  </target>
 
-    <target name="test" depends="test-compile" description="Run unit tests">
-        <delete dir="${test.dir}" quiet="true"/>
-        <mkdir dir="${test.dir}/output"/>
-        <mkdir dir="${test.dir}/report"/>
-        <junit printsummary="on" haltonfailure="on" tempdir="${test.dir}">
-            <classpath refid="class.path"/>
-            <classpath path="${test.classes.dir}"/>
-            <formatter type="xml"/>
-            <batchtest todir="${test.dir}/output">
-                <fileset dir="${test.src.dir}">
-                    <include name="**/*Test.java"/>
-                </fileset>
-            </batchtest>
-        </junit>
-        <junitreport todir="${test.dir}/report">
-            <fileset dir="${test.dir}/output"/>
-            <report todir="${test.dir}/report"/>
-        </junitreport>
-        <echo>Test Report: ${test.dir}/report/index.html</echo>
-    </target>
+  <target name="test" depends="test-compile" description="Run unit tests">
+    <delete dir="${test.dir}" quiet="true"/>
+    <mkdir dir="${test.dir}/output"/>
+    <mkdir dir="${test.dir}/report"/>
+    <junit printsummary="on" haltonfailure="on" tempdir="${test.dir}">
+      <classpath refid="class.path"/>
+      <classpath path="${test.classes.dir}"/>
+      <formatter type="xml"/>
+      <batchtest todir="${test.dir}/output">
+        <fileset dir="${test.src.dir}">
+          <include name="**/*Test.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
+    <junitreport todir="${test.dir}/report">
+      <fileset dir="${test.dir}/output"/>
+      <report todir="${test.dir}/report"/>
+    </junitreport>
+    <echo>Test Report: ${test.dir}/report/index.html</echo>
+  </target>
 
 </project>
-

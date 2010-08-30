@@ -336,6 +336,7 @@ public class FilterUtil {
                 // that doesn't recursively call updateHeaders() upon saveChanges().
                 // This uses double the memory on malformed messages, but it should
                 // avoid having a deep-buried misparse throw off the whole forward.
+                // TODO: With JavaMail 1.4.3, this workaround might not be needed any more.
                 outgoingMsg = new Mime.FixedMimeMessage(msg) {
                     @Override
                     protected void updateHeaders() throws MessagingException {
