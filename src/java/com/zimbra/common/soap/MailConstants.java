@@ -756,7 +756,8 @@ public class MailConstants {
     public static final String E_CHUNK = "chunk";
     public static final String A_DISP = "disp";
     public static final String A_DESC = "desc";
-    public static final String A_LOCKOWNER = "lo";
+    public static final String A_LOCKOWNER_ID = "loid";
+    public static final String A_LOCKOWNER_EMAIL = "loe";
     public static final String A_LOCKTIMESTAMP = "lt";
     
     // WaitSet
