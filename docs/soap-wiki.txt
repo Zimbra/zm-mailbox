@@ -275,7 +275,7 @@
 </ListDocumentRevisionsRequest>
 
 <ListDocumentRevisionsResponse>
-  [<doc name="{name}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" d="{created-date}" md="{modified-date}" l="{folder}" [f="{flags}"] [t="{tags}"] [lo="{accountId-of-lock-owner}"] [desc="{optional-description}]>
+  [<doc name="{name}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" d="{created-date}" md="{modified-date}" l="{folder}" [f="{flags}"] [t="{tags}"] [loid="{lock-owner-account-id}"] [loe="{lock-owner-email}"] [desc="{optional-description}]>
      <fr>... fragment ...</fr>
   </doc>]+
 </ListDocumentRevisionsResponse>

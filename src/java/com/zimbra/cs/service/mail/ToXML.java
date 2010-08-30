@@ -1975,7 +1975,18 @@ public class ToXML {
         elem.addAttribute(MailConstants.A_CONTENT_TYPE, doc.getContentType());
         String lockOwner = doc.getLockOwner();
         if (lockOwner != null) {
-            elem.addAttribute(MailConstants.A_LOCKOWNER, lockOwner);
+            Account a;
+            try {
+                a = Provisioning.getInstance().getAccountById(lockOwner);
+                if (a != null)
+                    elem.addAttribute(MailConstants.A_LOCKOWNER_EMAIL, a.getName());
+                else
+                    ZimbraLog.soap.warn("lock owner not found: %s", lockOwner);
+            } catch (ServiceException e) {
+                ZimbraLog.soap.warn("can't lookup lock owner", e);
+            }
+                
+            elem.addAttribute(MailConstants.A_LOCKOWNER_ID, lockOwner);
             elem.addAttribute(MailConstants.A_LOCKTIMESTAMP, doc.getLockTimestamp());
         }
         return elem;
