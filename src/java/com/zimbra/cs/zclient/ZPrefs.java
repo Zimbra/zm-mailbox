@@ -73,6 +73,8 @@ public class ZPrefs {
 
     public boolean getReadingPaneEnabled() { return getBool(Provisioning.A_zimbraPrefReadingPaneEnabled); }
 
+    public String getReadingPaneLocation() { return get(Provisioning.A_zimbraPrefReadingPaneLocation); }
+
     public boolean getMailSignatureEnabled() { return getBool(Provisioning.A_zimbraPrefMailSignatureEnabled); }
 
     public boolean getIncludeSpamInSearch() { return getBool(Provisioning.A_zimbraPrefIncludeSpamInSearch); }
