@@ -183,7 +183,7 @@ public abstract class HttpStoreManager extends StoreManager {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         PostMethod post = new PostMethod(getPostUrl(mbox));
         try {
-            post.setRequestEntity(new InputStreamRequestEntity(pin, actualSize, "application/octet-stream"));
+            HttpClientUtil.addInputStreamToHttpMethod(post, pin, actualSize, "application/octet-stream");
             int statusCode = HttpClientUtil.executeMethod(client, post);
             if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED && statusCode != HttpStatus.SC_NO_CONTENT)
                 throw ServiceException.FAILURE("error POSTing blob: " + post.getStatusText(), null);

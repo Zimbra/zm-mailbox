@@ -40,16 +40,13 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.util.MapUtil;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
@@ -60,6 +57,7 @@ import org.json.JSONException;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.net.SocketFactories;
 import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -93,7 +91,32 @@ import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
-import com.zimbra.cs.zclient.event.*;
+import com.zimbra.cs.zclient.event.ZCreateAppointmentEvent;
+import com.zimbra.cs.zclient.event.ZCreateContactEvent;
+import com.zimbra.cs.zclient.event.ZCreateConversationEvent;
+import com.zimbra.cs.zclient.event.ZCreateEvent;
+import com.zimbra.cs.zclient.event.ZCreateFolderEvent;
+import com.zimbra.cs.zclient.event.ZCreateMessageEvent;
+import com.zimbra.cs.zclient.event.ZCreateMountpointEvent;
+import com.zimbra.cs.zclient.event.ZCreateSearchFolderEvent;
+import com.zimbra.cs.zclient.event.ZCreateTagEvent;
+import com.zimbra.cs.zclient.event.ZCreateTaskEvent;
+import com.zimbra.cs.zclient.event.ZDeleteEvent;
+import com.zimbra.cs.zclient.event.ZEventHandler;
+import com.zimbra.cs.zclient.event.ZModifyAppointmentEvent;
+import com.zimbra.cs.zclient.event.ZModifyContactEvent;
+import com.zimbra.cs.zclient.event.ZModifyConversationEvent;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
+import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
+import com.zimbra.cs.zclient.event.ZModifyMailboxEvent;
+import com.zimbra.cs.zclient.event.ZModifyMessageEvent;
+import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
+import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
+import com.zimbra.cs.zclient.event.ZModifyTagEvent;
+import com.zimbra.cs.zclient.event.ZModifyTaskEvent;
+import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
+import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemFolderEvent;
+import com.zimbra.cs.zclient.event.ZRefreshEvent;
 
 import java.util.Iterator;
 
@@ -2005,7 +2028,7 @@ public class ZMailbox implements ToZJSONObject {
 
         int statusCode;
         try {
-            post.setRequestEntity(new InputStreamRequestEntity(in, contentLength, contentType));
+            post = HttpClientUtil.addInputStreamToHttpMethod(post, in, contentLength, contentType);
             statusCode = HttpClientUtil.executeMethod(client, post);
 
             // parse the response
@@ -2578,10 +2601,7 @@ public class ZMailbox implements ToZJSONObject {
             if (msecTimeout > -1)
                 post.getParams().setSoTimeout(msecTimeout);
             
-            RequestEntity entity = (length > 0) ?
-                    new InputStreamRequestEntity(is, length, contentType != null ? contentType:  "application/octet-stream") :
-                    new InputStreamRequestEntity(is, contentType);
-            post.setRequestEntity(entity);
+            post = HttpClientUtil.addInputStreamToHttpMethod(post, is, length, contentType != null ? contentType: "application/octet-stream");
             int statusCode = HttpClientUtil.executeMethod(client, post);
             // parse the response
             if (statusCode == 200) {

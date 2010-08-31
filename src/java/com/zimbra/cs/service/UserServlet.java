@@ -1423,6 +1423,8 @@ public class UserServlet extends ZimbraServlet {
             PutMethod method = new PutMethod(u.toString());
             String contentType = doc.getContentType();
             method.addRequestHeader("Content-Type", contentType);
+            method.setRequestEntity(new InputStreamRequestEntity(doc.getContentStream(), doc.getSize(), contentType));
+            method = HttpClientUtil.addInputStreamToHttpMethod(method, doc.getContentStream(), doc.getSize(), contentType);
             method.addRequestHeader("X-Zimbra-Description", doc.getDescription());
             method.setRequestEntity(new InputStreamRequestEntity(doc.getContentStream(), doc.getSize(), contentType));
             Pair<Header[], HttpMethod> pair = doHttpOp(authToken, method);
