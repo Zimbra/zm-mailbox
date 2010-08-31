@@ -954,7 +954,7 @@ public class ToXML {
         //encodeAlarmTimes(ie, cal);
 
         ie.addAttribute(MailConstants.A_CAL_SEQUENCE, inv.getSeqNo());
-        ie.addAttribute(MailConstants.A_ID, ifmt.formatItemId(inv.getMailItemId()));
+        ie.addAttribute(MailConstants.A_ID, inv.getMailItemId());
         ie.addAttribute(MailConstants.A_CAL_COMPONENT_NUM, inv.getComponentNum());
         if (inv.hasRecurId())
             ie.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, inv.getRecurId().toString());
