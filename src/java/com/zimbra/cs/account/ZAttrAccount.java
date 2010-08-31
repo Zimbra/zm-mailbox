@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 jhahm 20100830-1540 */
+    /* build: 6.0.2_BETA1_1111 jhahm 20100831-1347 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -22115,13 +22115,13 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * working hours for each day of the week
      *
-     * @return zimbraPrefCalendarWorkingHours, or "0:N:0800:1700,1:Y:0800:1700,2:Y:0800:1700,3:Y:0800:1700,4:Y:0800:1700,5:Y:0800:1700,6:N:0800:1700" if unset
+     * @return zimbraPrefCalendarWorkingHours, or "1:N:0800:1700,2:Y:0800:1700,3:Y:0800:1700,4:Y:0800:1700,5:Y:0800:1700,6:Y:0800:1700,7:N:0800:1700" if unset
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1103)
     public String getPrefCalendarWorkingHours() {
-        return getAttr(Provisioning.A_zimbraPrefCalendarWorkingHours, "0:N:0800:1700,1:Y:0800:1700,2:Y:0800:1700,3:Y:0800:1700,4:Y:0800:1700,5:Y:0800:1700,6:N:0800:1700");
+        return getAttr(Provisioning.A_zimbraPrefCalendarWorkingHours, "1:N:0800:1700,2:Y:0800:1700,3:Y:0800:1700,4:Y:0800:1700,5:Y:0800:1700,6:Y:0800:1700,7:N:0800:1700");
     }
 
     /**

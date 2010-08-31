@@ -53,20 +53,20 @@ public class WorkingHours extends AttributeCallback {
                 throw ServiceException.INVALID_REQUEST(
                         attrName + " day section \"" + days[i] + "\" must have 4 colon-separated parts", null);
 
-            // First part is day number, 0 (Sunday) to 6 (Saturday).
+            // First part is day number, 1 (Sunday) to 7 (Saturday).
             int dayNum = -1;
             try {
                 dayNum = Integer.parseInt(parts[0]);
             } catch (NumberFormatException e) {}
-            if (dayNum < 0 || dayNum > 6)
+            if (dayNum < 1 || dayNum > 7)
                 throw ServiceException.INVALID_REQUEST(
-                        attrName + " day section \"" + days[i] + "\" has invalid day number (must be 0 to 6)", null);
+                        attrName + " day section \"" + days[i] + "\" has invalid day number (must be 1 to 7)", null);
 
             // Don't allow specifying the same day twice.
-            if (daySpecified[dayNum] != 0)
+            if (daySpecified[dayNum-1] != 0)
                 throw ServiceException.INVALID_REQUEST(
                         attrName + " must not specify the same day more than once; found repeated day " + dayNum, null);
-            daySpecified[dayNum] = 1;
+            daySpecified[dayNum-1] = 1;
 
             // Second part is a flag indicating if the working hours for the day are in effect ("Y") or not ("N").
             if (parts[1].length() != 1)

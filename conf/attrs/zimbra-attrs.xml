@@ -4966,7 +4966,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="1103" name="zimbraPrefCalendarWorkingHours" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" callback="WorkingHours" since="7.0.0">
-  <defaultCOSValue>0:N:0800:1700,1:Y:0800:1700,2:Y:0800:1700,3:Y:0800:1700,4:Y:0800:1700,5:Y:0800:1700,6:N:0800:1700</defaultCOSValue>
+  <defaultCOSValue>1:N:0800:1700,2:Y:0800:1700,3:Y:0800:1700,4:Y:0800:1700,5:Y:0800:1700,6:Y:0800:1700,7:N:0800:1700</defaultCOSValue>
   <desc>working hours for each day of the week</desc>
 </attr>
 
