@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100827-0955 */
+    /* build: 6.0.2_BETA1_1111 jhahm 20100830-1540 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1600,6 +1600,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=515)
     public static final String A_zimbraBackupAutoGroupedThrottled = "zimbraBackupAutoGroupedThrottled";
+
+    /**
+     * Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target
+     * to allow a full or auto-grouped backup to start; 0 = no minimum is
+     * enforced. Examples: 25%, 10GB
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1111)
+    public static final String A_zimbraBackupMinFreeSpace = "zimbraBackupMinFreeSpace";
 
     /**
      * backup mode

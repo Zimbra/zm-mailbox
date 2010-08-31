@@ -4993,5 +4993,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>LDAP Gal attribute to contact value mapping. Each value is in the format of {gal contact filed}: {regex} {replacement}</desc>
 </attr>
 
+<attr id="1111" name="zimbraBackupMinFreeSpace" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="7.0.0">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target to allow a full or auto-grouped backup to start; 0 = no minimum is enforced.  Examples: 25%, 10GB</desc>
+</attr>
 
 </attrs>

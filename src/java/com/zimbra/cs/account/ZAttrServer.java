@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100827-0955 */
+    /* build: 6.0.2_BETA1_1111 jhahm 20100830-1540 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -845,6 +845,88 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetBackupAutoGroupedThrottled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraBackupAutoGroupedThrottled, "");
+        return attrs;
+    }
+
+    /**
+     * Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target
+     * to allow a full or auto-grouped backup to start; 0 = no minimum is
+     * enforced. Examples: 25%, 10GB
+     *
+     * @return zimbraBackupMinFreeSpace, or "0" if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1111)
+    public String getBackupMinFreeSpace() {
+        return getAttr(Provisioning.A_zimbraBackupMinFreeSpace, "0");
+    }
+
+    /**
+     * Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target
+     * to allow a full or auto-grouped backup to start; 0 = no minimum is
+     * enforced. Examples: 25%, 10GB
+     *
+     * @param zimbraBackupMinFreeSpace new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1111)
+    public void setBackupMinFreeSpace(String zimbraBackupMinFreeSpace) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupMinFreeSpace, zimbraBackupMinFreeSpace);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target
+     * to allow a full or auto-grouped backup to start; 0 = no minimum is
+     * enforced. Examples: 25%, 10GB
+     *
+     * @param zimbraBackupMinFreeSpace new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1111)
+    public Map<String,Object> setBackupMinFreeSpace(String zimbraBackupMinFreeSpace, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupMinFreeSpace, zimbraBackupMinFreeSpace);
+        return attrs;
+    }
+
+    /**
+     * Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target
+     * to allow a full or auto-grouped backup to start; 0 = no minimum is
+     * enforced. Examples: 25%, 10GB
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1111)
+    public void unsetBackupMinFreeSpace() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupMinFreeSpace, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target
+     * to allow a full or auto-grouped backup to start; 0 = no minimum is
+     * enforced. Examples: 25%, 10GB
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1111)
+    public Map<String,Object> unsetBackupMinFreeSpace(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraBackupMinFreeSpace, "");
         return attrs;
     }
 
