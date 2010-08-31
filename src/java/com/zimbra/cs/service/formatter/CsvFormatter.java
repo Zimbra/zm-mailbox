@@ -35,6 +35,7 @@ import com.zimbra.cs.service.mail.ImportContacts;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
 
 public class CsvFormatter extends Formatter {
@@ -96,7 +97,9 @@ public class CsvFormatter extends Formatter {
             
             ImportContacts.ImportCsvContacts(context.opContext, context.targetMailbox, iidFolder, contacts);
         } catch (ContactCSV.ParseException e) {
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "could not parse csv file");
+            ZimbraLog.misc.debug("ContactCSV - ParseException thrown", e);
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
+                    "Could not parse csv file - Reason : " + e.getMessage());
         } finally {
             reader.close();
         }

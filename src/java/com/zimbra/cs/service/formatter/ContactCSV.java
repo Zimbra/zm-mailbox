@@ -43,6 +43,8 @@ public class ContactCSV {
 
     private static final String FORMAT_ZIMBRA_CSV = "zimbra-csv";
 
+    private int mLineNumber;
+    private int mCurrContactStartLineNum;
     private HashMap<String, Integer> mFieldCols;
     private ArrayList<String> mFields;
 
@@ -50,6 +52,7 @@ public class ContactCSV {
      * read a line of fields into an array list. blank fields (,, or ,"",) will be null. 
      */
     private boolean parseLine(BufferedReader reader, List<String> result, boolean parsingHeader) throws IOException, ParseException {
+        mCurrContactStartLineNum = mLineNumber;
         result.clear();
         int ch;
         boolean inField = false;
@@ -64,11 +67,13 @@ public class ContactCSV {
                     else result.add(null);
                     break;
                 case '\n':
+                    mLineNumber++;
                     if (result.size() > 0)
                         return true;
                     else
                         break;
                 case '\r':
+                    mLineNumber++;
                     // peek for \n
                     reader.mark(1);
                     ch = reader.read();
@@ -99,7 +104,7 @@ public class ContactCSV {
 
         if (firstChar != -1) sb.append((char)firstChar);
         int ch;
-        reader.mark(1);        
+        reader.mark(1);
         while ((ch = reader.read()) != -1) {
             if (ch == '"' && doubleQuotes) {
                 reader.mark(1);
@@ -109,20 +114,32 @@ public class ContactCSV {
                     if (sb.length() == 0) return null;
                     else return sb.toString();
                 }
-                sb.append((char)ch);                    
+                sb.append((char)ch);
             } else if (ch == ',' && !doubleQuotes) {
                 //reader.reset();
                 return sb.toString();
             } else if ((ch == '\r' || ch == '\n') && !doubleQuotes) {
-                reader.reset();
-                return sb.toString();
+                    reader.reset();
+                    return sb.toString();
             } else {
-                sb.append((char)ch);                
+                sb.append((char)ch);
+                if (ch == '\r') {
+                    // peek for \n
+                    reader.mark(1);
+                    ch = reader.read();
+                    if (ch == '\n')
+                        sb.append((char)ch);
+                    else
+                        reader.reset();
+                }
+                if ((ch == '\r') || (ch == '\n'))
+                    mLineNumber++;
             }
-            reader.mark(1);            
+            reader.mark(1);
         }
         if (doubleQuotes)
-            throw new ParseException("end of stream reached while parsing field");
+            throw new ParseException("End of stream reached while parsing field.\nCurrent contact definition started at line "
+                    + mCurrContactStartLineNum);
         else 
             return sb.toString();
     }
@@ -130,6 +147,8 @@ public class ContactCSV {
     /**
      */
     private void initFields(BufferedReader reader, String fmt) throws IOException, ParseException {
+        mLineNumber = 1;
+        mCurrContactStartLineNum = 1;
         mFields = new ArrayList<String>();
 
         if (!parseLine(reader, mFields, true))
@@ -314,7 +333,8 @@ public class ContactCSV {
             }
             return result;
         } catch (IOException ioe) {
-            throw new ParseException(ioe.getMessage(), ioe);
+            ZimbraLog.misc.debug("Encountered IOException", ioe);
+            throw new ParseException(ioe.getMessage() + " at line number " + mLineNumber, ioe);
         }
     }
 
