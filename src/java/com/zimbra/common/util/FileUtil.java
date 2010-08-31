@@ -540,4 +540,17 @@ public class FileUtil {
             throw new IOException("renaming destination file " + dst.getPath() + " already exists");
         throw new IOException("file renaming failed: src=\"" + src.getPath() + "\" dst=\"" + dst.getPath() + "\"");
     }
+
+    /**
+     * Returns true if the IOException's message is a string that indicates out-of-disk error.
+     * The localconfig-configurable error strings are "No space left on device" (Linux, Mac) and
+     * "There is not enough space on the disk" (Windows).
+     * @param ioe
+     * @return
+     */
+    public static boolean isOutOfDiskError(IOException ioe) {
+        String msg = ioe.getMessage();
+        return msg != null &&
+               (msg.equalsIgnoreCase(LC.out_of_disk_error_unix.value()) || msg.equalsIgnoreCase(LC.out_of_disk_error_windows.value()));
+    }
 }

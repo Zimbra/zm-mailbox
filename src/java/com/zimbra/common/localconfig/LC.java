@@ -613,6 +613,9 @@ public class LC {
     public static final KnownKey zdesktop_local_account_id = new KnownKey(
         "zdesktop_local_account_id", null, "ZDesktop special local account");
 
+    public static final KnownKey out_of_disk_error_unix;
+    public static final KnownKey out_of_disk_error_windows;
+
     static {
         @SuppressWarnings("unused")
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
@@ -1651,6 +1654,14 @@ public class LC {
 
         smtp_to_lmtp_enabled = new KnownKey("smtp_to_lmtp_enabled", "false");
         smtp_to_lmtp_port = new KnownKey("smtp_to_lmtp_port", "7024");
+
+        out_of_disk_error_unix = new KnownKey("out_of_disk_error_unix");
+        out_of_disk_error_unix.setDefault("No space left on device");
+        out_of_disk_error_unix.setDoc("IOException message string for out of disk error on Unix operating systems");
+
+        out_of_disk_error_windows = new KnownKey("out_of_disk_error_windows");
+        out_of_disk_error_windows.setDefault("There is not enough space on the disk");
+        out_of_disk_error_windows.setDoc("IOException message string for out of disk error on Windows");
 
         // NOTE: When adding a new KnownKey, you do not need to call
         //       setDoc. The documentation string will come from the
