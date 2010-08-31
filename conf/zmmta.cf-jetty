@@ -291,6 +291,7 @@ SECTION cbpolicyd
 	if SERVICE !cbpolicyd
 		POSTCONF smtpd_end_of_data_restrictions
 	fi
+  RESTART cbpolicyd mta
 
 SECTION stats
 	REWRITE conf/stats.conf.in conf/stats.conf
