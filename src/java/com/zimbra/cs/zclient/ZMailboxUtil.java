@@ -1491,7 +1491,8 @@ public class ZMailboxUtil implements DebugListener {
             }
             
             if (zid != null || (type == GranteeType.all || type == GranteeType.pub)) {
-                grantee = zid;
+                if (zid != null)
+                    grantee = zid;
                 mMbox.modifyFolderRevokeGrant(folderId, grantee);
             } else {
                 // zid is null
