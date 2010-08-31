@@ -318,6 +318,23 @@ public class LC {
     public static final KnownKey postfix_virtual_mailbox_maps;
     public static final KnownKey postfix_virtual_transport;
 
+    public static final KnownKey cbpolicyd_pid_file;
+    public static final KnownKey cbpolicyd_log_file;
+    public static final KnownKey cbpolicyd_db_file;
+    public static final KnownKey cbpolicyd_log_level;
+    public static final KnownKey cbpolicyd_log_mail;
+    public static final KnownKey cbpolicyd_log_detail;
+    public static final KnownKey cbpolicyd_bind_host;
+    public static final KnownKey cbpolicyd_bind_port;
+    public static final KnownKey cbpolicyd_timeout;
+    public static final KnownKey cbpolicyd_bypass_timeout;
+    public static final KnownKey cbpolicyd_bypass_mode;
+    public static final KnownKey cbpolicyd_module_accesscontrol;
+    public static final KnownKey cbpolicyd_module_greylisting;
+    public static final KnownKey cbpolicyd_module_checkhelo;
+    public static final KnownKey cbpolicyd_module_checkspf;
+    public static final KnownKey cbpolicyd_module_quotas;
+
     public static final KnownKey sqlite_shared_cache_enabled;
     public static final KnownKey sqlite_cache_size;
     public static final KnownKey sqlite_journal_mode;
@@ -1188,6 +1205,48 @@ public class LC {
 
         postfix_virtual_transport  = new KnownKey("postfix_virtual_transport");
         postfix_virtual_transport.setDefault("error");
+
+        cbpolicyd_pid_file = new KnownKey("cbpolicyd_pid_file");
+        cbpolicyd_pid_file.setDefault("${zimbra_log_directory}" + FS + "cbpolicyd.pid");
+
+        cbpolicyd_log_file = new KnownKey("cbpolicyd_log_file");
+        cbpolicyd_log_file.setDefault("${zimbra_log_directory}" + FS + "cbpolicyd.log");
+
+        cbpolicyd_log_level = new KnownKey("cbpolicyd_log_level");
+        cbpolicyd_log_level.setDefault("3");
+
+        cbpolicyd_db_file = new KnownKey("cbpolicyd_db_file");
+        cbpolicyd_db_file.setDefault("${zimbra_home}" + FS + "data" + FS + "cbpolicyd" + FS + "db" + FS + "cbpolicyd.sqlitedb");
+
+        cbpolicyd_log_mail = new KnownKey("cbpolicyd_log_mail");
+        cbpolicyd_log_mail.setDefault("main");
+
+        cbpolicyd_log_detail = new KnownKey("cbpolicyd_log_detail");
+        cbpolicyd_log_detail.setDefault("modules");
+
+        cbpolicyd_bind_host = new KnownKey("cbpolicyd_bind_host");
+        cbpolicyd_bind_host.setDefault("127.0.0.1");
+        cbpolicyd_bind_port = new KnownKey("cbpolicyd_bind_port");
+        cbpolicyd_bind_port.setDefault("10031");
+
+        cbpolicyd_timeout = new KnownKey("cbpolicyd_timeout");
+        cbpolicyd_timeout.setDefault("120");
+
+        cbpolicyd_bypass_timeout = new KnownKey("cbpolicyd_bypass_timeout");
+        cbpolicyd_bypass_timeout.setDefault("30");
+        cbpolicyd_bypass_mode = new KnownKey("cbpolicyd_bypass_mode");
+        cbpolicyd_bypass_mode.setDefault("tempfail");
+
+        cbpolicyd_module_accesscontrol = new KnownKey("cbpolicyd_module_accesscontrol");
+        cbpolicyd_module_accesscontrol.setDefault("0");
+        cbpolicyd_module_greylisting = new KnownKey("cbpolicyd_module_greylisting");
+        cbpolicyd_module_greylisting.setDefault("0");
+        cbpolicyd_module_checkhelo = new KnownKey("cbpolicyd_module_checkhelo");
+        cbpolicyd_module_checkhelo.setDefault("0");
+        cbpolicyd_module_checkspf = new KnownKey("cbpolicyd_module_checkspf");
+        cbpolicyd_module_checkspf.setDefault("0");
+        cbpolicyd_module_quotas = new KnownKey("cbpolicyd_module_quotas");
+        cbpolicyd_module_quotas.setDefault("1");
 
         sqlite_shared_cache_enabled = new KnownKey("sqlite_shared_cache_enabled", "false");
         sqlite_cache_size = new KnownKey("sqlite_cache_size", "500");
