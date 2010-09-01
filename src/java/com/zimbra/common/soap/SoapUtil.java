@@ -19,7 +19,7 @@ import java.util.Arrays;
 import com.google.common.base.Strings;
 import com.zimbra.common.auth.ZAuthToken;
 
-final class SoapUtil {
+public final class SoapUtil {
 
     private SoapUtil() {
     }
@@ -35,7 +35,7 @@ final class SoapUtil {
      * @param authToken The authorization token for the user
      * @return A new {@code contex} Element in the appropriate markup
      */
-    static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken) {
+    public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken) {
         Element ctxt = protocol.getFactory().createElement(HeaderConstants.CONTEXT);
         if (authToken != null)
             authToken.encodeSoapCtxt(ctxt);
@@ -54,12 +54,12 @@ final class SoapUtil {
      * @return A new {@code context} Element in the appropriate markup
      * @see #toCtxt(com.zimbra.common.soap.SoapProtocol, String, boolean)
      */
-    static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken, String sessionId, int sequence) {
+    public static Element toCtxt(SoapProtocol protocol, ZAuthToken authToken, String sessionId, int sequence) {
         Element ctxt = toCtxt(protocol, authToken);
         return addSessionToCtxt(ctxt, authToken == null ? null : sessionId, sequence);
     }
 
-    static Element disableNotificationOnCtxt(Element ctxt) {
+    public static Element disableNotificationOnCtxt(Element ctxt) {
         if (ctxt == null)
             return ctxt;
         if (!ctxt.getName().equals(HeaderConstants.E_CONTEXT))
@@ -83,7 +83,7 @@ final class SoapUtil {
      * @return The passed-in {@code <context>} Element.
      * @see #toCtxt
      */
-    static Element addSessionToCtxt(Element ctxt, String sessionId, long sequence) {
+    public static Element addSessionToCtxt(Element ctxt, String sessionId, long sequence) {
         if (ctxt == null)
             return ctxt;
         if (!ctxt.getName().equals(HeaderConstants.E_CONTEXT))
@@ -101,7 +101,7 @@ final class SoapUtil {
         return ctxt;
     }
 
-    static Element addTargetAccountToCtxt(Element ctxt, String targetAccountId, String targetAccountName) {
+    public static Element addTargetAccountToCtxt(Element ctxt, String targetAccountId, String targetAccountName) {
         if (ctxt == null)
             return ctxt;
         if (!ctxt.getName().equals(HeaderConstants.E_CONTEXT))
@@ -127,7 +127,7 @@ final class SoapUtil {
      * @throws IllegalArgumentException if the given Element's name is not {@code context}
      * @see #toCtxt(SoapProtocol, ZAuthToken)
      */
-    static Element addUserAgentToCtxt(Element ctxt, String name, String version) {
+    public static Element addUserAgentToCtxt(Element ctxt, String name, String version) {
         if (ctxt == null || Strings.isNullOrEmpty(name))
             return ctxt;
         if (!ctxt.getName().equals(HeaderConstants.E_CONTEXT))
@@ -150,7 +150,7 @@ final class SoapUtil {
      * @throws IllegalArgumentException if the given Element's name is not {@code context}
      * @see #toCtxt(SoapProtocol, ZAuthToken)
      */
-    static Element addChangeTokenToCtxt(Element ctxt, String token, String type) {
+    public static Element addChangeTokenToCtxt(Element ctxt, String token, String type) {
         if (ctxt == null || Strings.isNullOrEmpty(token))
             return ctxt;
         if (!ctxt.getName().equalsIgnoreCase(HeaderConstants.E_CONTEXT))
@@ -163,7 +163,7 @@ final class SoapUtil {
         return ctxt;
     }
 
-    static Element addResponseProtocolToCtxt(Element ctxt, SoapProtocol proto) {
+    public static Element addResponseProtocolToCtxt(Element ctxt, SoapProtocol proto) {
         if (ctxt == null)
             return ctxt;
         if (!ctxt.getName().equals(HeaderConstants.E_CONTEXT))
