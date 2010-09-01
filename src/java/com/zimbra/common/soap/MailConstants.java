@@ -182,6 +182,7 @@ public class MailConstants {
     public static final QName SEND_INVITE_REPLY_REQUEST = QName.get("SendInviteReplyRequest", NAMESPACE);
     public static final QName ICAL_REPLY_REQUEST = QName.get("ICalReplyRequest", NAMESPACE);
     public static final QName GET_FREE_BUSY_REQUEST = QName.get("GetFreeBusyRequest", NAMESPACE);
+    public static final QName GET_WORKING_HOURS_REQUEST = QName.get("GetWorkingHoursRequest", NAMESPACE);
     public static final QName GET_ICAL_REQUEST = QName.get("GetICalRequest", NAMESPACE);
     public static final QName ANNOUNCE_ORGANIZER_CHANGE_REQUEST = QName.get("AnnounceOrganizerChangeRequest", NAMESPACE);
     public static final QName DISMISS_CALITEM_ALARM_REQUEST = QName.get("DismissCalendarItemAlarmRequest", NAMESPACE);
