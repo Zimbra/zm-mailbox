@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -16,7 +16,7 @@ package com.zimbra.common.soap;
 
 import org.dom4j.QName;
 
-public class HeaderConstants {
+public final class HeaderConstants {
     public static final QName CONTEXT = QName.get("context", ZimbraNamespace.ZIMBRA);
     public static final String E_A          = "a";
     public static final String E_FORMAT     = "format";
@@ -40,6 +40,7 @@ public class HeaderConstants {
     public static final String A_CHANGE_ID  = "token";
     public static final String E_TARGET_SERVER = "targetServer";
     public static final String E_USER_AGENT = "userAgent";
+    public static final String E_VIA = "via";
     public static final String A_N          = "n";
     public static final String A_NAME       = "name";
     public static final String A_VERSION    = "version";
@@ -52,4 +53,7 @@ public class HeaderConstants {
     public static final String CHANGE_CREATED  = "new";
     public static final String SESSION_MAIL  = "mail";
     public static final String SESSION_ADMIN = "admin";
+
+    private HeaderConstants() {
+    }
 }

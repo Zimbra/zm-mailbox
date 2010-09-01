@@ -31,7 +31,7 @@ import org.apache.log4j.PropertyConfigurator;
  *
  * @author schemers
  */
-public class ZimbraLog {
+public final class ZimbraLog {
 
     /**
      * "ip" key for context. IP of request
@@ -81,6 +81,12 @@ public class ZimbraLog {
      * "ua" key for context.  The name of the client application.
      */
     private static final String C_USER_AGENT = "ua";
+
+    /**
+     * List of IP addresses and user-agents of the proxy chain.
+     * was sent.
+     */
+    private static final String C_VIA = "via";
 
     /**
      * "msgid" key for context.  The Message-ID header of the message being
@@ -380,6 +386,9 @@ public class ZimbraLog {
      */
     public static final Map<String, String> CATEGORY_DESCRIPTIONS;
 
+    private ZimbraLog() {
+    }
+
     /**
      * Returns a new <tt>Set</tt> that contains the values of
      * {@link #C_NAME} and {@link #C_ANAME} if they are set.
@@ -463,8 +472,8 @@ public class ZimbraLog {
     //this is called from offline and only at LC init so we are taking chances with race
     private static final Set<String> CONTEXT_FILTER = new HashSet<String>();
     public static void addContextFilters(String filters) {
-    	for (String item : filters.split(","))
-    		CONTEXT_FILTER.add(item);
+        for (String item : filters.split(","))
+            CONTEXT_FILTER.add(item);
     }
 
     /**
@@ -541,7 +550,7 @@ public class ZimbraLog {
      * logging context.
      */
     public static void addItemToContext(int itemId) {
-    	addToContext(C_ITEM, Integer.toString(itemId));
+        addToContext(C_ITEM, Integer.toString(itemId));
     }
 
     /**
@@ -558,7 +567,7 @@ public class ZimbraLog {
      * logging context.
      */
     public static void removeItemFromContext(int itemId) {
-    	removeFromContext(C_ITEM);
+        removeFromContext(C_ITEM);
     }
 
     /**
@@ -652,6 +661,15 @@ public class ZimbraLog {
     }
 
     /**
+     * Adds {@code via} to the current thread's logging context.
+     *
+     * @param value
+     */
+    public static void addViaToContext(String value) {
+        ZimbraLog.addToContext(C_VIA, value);
+    }
+
+    /**
      * Clears the current thread's logging context.
      *
      */
@@ -685,9 +703,9 @@ public class ZimbraLog {
         }
         p.put("log4j.appender.A1.layout", "org.apache.log4j.PatternLayout");
         if (showThreads) {
-        	p.put("log4j.appender.A1.layout.ConversionPattern", "[%t] [%x] %p: %m%n");
+            p.put("log4j.appender.A1.layout.ConversionPattern", "[%t] [%x] %p: %m%n");
         } else {
-        	p.put("log4j.appender.A1.layout.ConversionPattern", "[%x] %p: %m%n");
+            p.put("log4j.appender.A1.layout.ConversionPattern", "[%x] %p: %m%n");
         }
         PropertyConfigurator.configure(p);
     }
@@ -722,7 +740,7 @@ public class ZimbraLog {
      */
     public static void toolSetupLog4j(String defaultLevel, String propsFile) {
         if (propsFile != null && new File(propsFile).exists()) {
-        	PropertyConfigurator.configure(propsFile);
+            PropertyConfigurator.configure(propsFile);
         } else {
             toolSetupLog4j(defaultLevel, null, false);
         }
@@ -730,10 +748,10 @@ public class ZimbraLog {
 
     private static void encodeArg(StringBuilder sb, String name, String value) {
         if (value == null) {
-        	value = "";
+            value = "";
         }
         if (value.indexOf(';') != -1) {
-        	value = value.replaceAll(";", ";;");
+            value = value.replaceAll(";", ";;");
         }
         // replace returns ref to original string if char to replace doesn't exist
         value = value.replace('\r', ' ');
@@ -755,7 +773,7 @@ public class ZimbraLog {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < args.length; i += 2) {
             if (i > 0) {
-            	sb.append(' ');
+                sb.append(' ');
             }
             encodeArg(sb, args[i], args[i + 1]);
         }
@@ -775,18 +793,18 @@ public class ZimbraLog {
         boolean needSpace = false;
         for (int i = 0; i < args.length; i += 2) {
             if (needSpace) {
-            	sb.append(' ');
+                sb.append(' ');
             } else {
-            	needSpace = true;
+                needSpace = true;
             }
             encodeArg(sb, args[i], args[i + 1]);
         }
         if (extraArgs != null) {
-        	for (Map.Entry<String, ?> entry : extraArgs.entrySet()) {
+            for (Map.Entry<String, ?> entry : extraArgs.entrySet()) {
                 if (needSpace) {
-                	sb.append(' ');
+                    sb.append(' ');
                 } else {
-                	needSpace = true;
+                    needSpace = true;
                 }
                 String name = entry.getKey();
                 Object value = entry.getValue();

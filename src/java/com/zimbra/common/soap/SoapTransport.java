@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * SoapTransport.java
  */
 package com.zimbra.common.soap;
 
@@ -29,12 +25,15 @@ import org.dom4j.io.SAXReader;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.Map;
 
 /**
  * Abstract class for sending a soap message.
+ * <p>
+ * TODO: validation
  */
-
 public abstract class SoapTransport {
 
     private SoapProtocol mRequestProto;
@@ -42,7 +41,7 @@ public abstract class SoapTransport {
     private boolean mPrettyPrint;
     private ZAuthToken mAuthToken;
     private String mTargetAcctId = null;
-    private String mTargetAcctName = null;    
+    private String mTargetAcctName = null;
     private String mSessionId = null;
     private String mClientIp = null;
     private long mMaxNotifySeq = -1;
@@ -50,13 +49,21 @@ public abstract class SoapTransport {
     private String mUserAgentName;
     private String mUserAgentVersion;
     private DebugListener mDebugListener;
-    
+
     private static String sDefaultUserAgentName = "ZCS";
     private static String sDefaultUserAgentVersion;
-    
+    private static final ViaHolder viaHolder = new ViaHolder();
+
+    private static final class ViaHolder extends ThreadLocal<Deque<String>> {
+        @Override
+        protected Deque<String> initialValue() {
+            return new LinkedList<String>();
+        }
+    }
+
     public interface DebugListener {
-        public void sendSoapMessage(Element envelope);
-        public void receiveSoapMessage(Element envelope);
+        void sendSoapMessage(Element envelope);
+        void receiveSoapMessage(Element envelope);
     }
 
     protected SoapTransport() {
@@ -89,29 +96,29 @@ public abstract class SoapTransport {
 
     // AP-TODO-7: retire this?
     public void setAuthToken(String authToken) {
-    	mAuthToken = new ZAuthToken(null, authToken, null);
+        mAuthToken = new ZAuthToken(null, authToken, null);
     }
-    
+
     public void setAuthToken(ZAuthToken authToken) {
         mAuthToken = authToken;
     }
-    
+
     public ZAuthToken getAuthToken() {
         return mAuthToken;
     }
-    
+
     public void setTargetAcctId(String acctId) {
         mTargetAcctId = acctId;
     }
-    
+
     public String getTargetAcctId() {
         return mTargetAcctId;
     }
-    
+
     public void setTargetAcctName(String acctName) {
         mTargetAcctName = acctName;
     }
-    
+
     /**
      * @return Zimbra context (&lt;context xmlns="urn:zimbra"&gt;) from last invoke, if there was one present.
      */
@@ -134,13 +141,13 @@ public abstract class SoapTransport {
     }
 
     public String getClientIp() { return mClientIp; }
-    
+
     public void setMaxNotifySeq(long seq) {
         mMaxNotifySeq = seq;
     }
 
     public long getMaxNotifySeq() { return mMaxNotifySeq; }
-    
+
     /**
      * Sets the SOAP client name and version number.
      * @param name the SOAP client name
@@ -150,7 +157,7 @@ public abstract class SoapTransport {
         mUserAgentName = name;
         mUserAgentVersion = version;
     }
-    
+
     /**
      * Sets the default SOAP client name and version.  These global value are
      * used when the instance-level values are not specified.
@@ -163,7 +170,7 @@ public abstract class SoapTransport {
             sDefaultUserAgentVersion = defaultVersion;
         }
     }
-    
+
     public String getUserAgentName() {
         if (mUserAgentName != null) {
             return mUserAgentName;
@@ -171,7 +178,7 @@ public abstract class SoapTransport {
             return sDefaultUserAgentName;
         }
     }
-    
+
     public String getUserAgentVersion() {
         if (mUserAgentVersion != null) {
             return mUserAgentVersion;
@@ -179,7 +186,31 @@ public abstract class SoapTransport {
             return sDefaultUserAgentVersion;
         }
     }
-    
+
+    /**
+     * Sets a {@code via} header value to the current thread context.
+     * <p>
+     * This is intended to be called by the SOAP engine if the current thread is
+     * a SOAP handler. All subsequent SOAP requests, i.e. proxy requests will
+     * include this {@code via} header, so that we can track the proxy chain.
+     * Since a SOAP handler may dispatch another SOAP handler recursively in
+     * the same thread, this is internally maintained by a stack.
+     *
+     * @param value {@code via} header value
+     */
+    public static void setVia(String value) {
+        viaHolder.get().push(value);
+    }
+
+    /**
+     * Removes the {@code via} header from the current thread context.
+     *
+     * @see #setVia(String)
+     */
+    public static void clearVia() {
+        viaHolder.get().pop();
+    }
+
     /** Sets the version of SOAP to use when generating requests. */
     public void setRequestProtocol(SoapProtocol proto) {
         if (proto != null)
@@ -206,11 +237,14 @@ public abstract class SoapTransport {
         return mResponseProto == null ? mRequestProto : mResponseProto;
     }
 
-    protected Element generateSoapMessage(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType) {
-    	if (raw) {
-            if (mDebugListener != null)
+    protected final Element generateSoapMessage(Element document, boolean raw, boolean noSession,
+            String requestedAccountId, String changeToken, String tokenType) {
+
+        if (raw) {
+            if (mDebugListener != null) {
                 mDebugListener.sendSoapMessage(document);
-    		return document;
+            }
+            return document;
         }
 
         // don't use the default protocol version if it's incompatible with the passed-in request
@@ -235,14 +269,20 @@ public abstract class SoapTransport {
         }
         SoapUtil.addTargetAccountToCtxt(context, targetId, targetName);
         SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
-        if (mUserAgentName != null)
-            SoapUtil.addUserAgentToCtxt(context, mUserAgentName, mUserAgentVersion);
-        if (responseProto != proto)
+        SoapUtil.addUserAgentToCtxt(context, getUserAgentName(), getUserAgentVersion());
+        if (responseProto != proto) {
             SoapUtil.addResponseProtocolToCtxt(context, responseProto);
+        }
+
+        String via = viaHolder.get().peek();
+        if (via != null) {
+            context.addUniqueElement(HeaderConstants.E_VIA).setText(via);
+        }
 
         Element envelope = proto.soapEnvelope(document, context);
-        if (mDebugListener != null)
+        if (mDebugListener != null) {
             mDebugListener.sendSoapMessage(envelope);
+        }
         return envelope;
     }
 
@@ -256,13 +296,13 @@ public abstract class SoapTransport {
         } catch (DocumentException de) {
             throw new SoapParseException("unable to parse response", envelopeStr);
         }
-        
+
         if (mDebugListener != null) mDebugListener.receiveSoapMessage(env);
 
         return raw ? env : extractBodyElement(env);
     }
 
-    /* use SAXReader to parse large soap response. caller must provide list of handlers, which are <path, handler> pairs. 
+    /* use SAXReader to parse large soap response. caller must provide list of handlers, which are <path, handler> pairs.
      * to reduce memory usage, a handler may call Element.detach() in ElementHandler.onEnd() to prune off processed elements
      * */
     void parseLargeSoapResponse(Reader inputReader, Map<String, ElementHandler> handlers) throws ServiceException {
@@ -270,14 +310,14 @@ public abstract class SoapTransport {
         for(Map.Entry<String, ElementHandler> entry : handlers.entrySet()) {
             saxReader.addHandler(entry.getKey(), entry.getValue());
         }
-        
+
         try {
             saxReader.read(inputReader);
         } catch (DocumentException e) {
             throw ServiceException.SAX_READER_ERROR(e.getMessage(), e.getCause());
         }
     }
-    
+
     public Element extractBodyElement(Element env) throws SoapParseException, SoapFaultException {
         SoapProtocol proto = SoapProtocol.determineProtocol(env);
         if (proto == null)
@@ -307,16 +347,16 @@ public abstract class SoapTransport {
 
     /**
      * Sends the specified document as a Soap message
-     * and parses the response as a Soap message. <p> 
+     * and parses the response as a Soap message. <p>
      * Uses the <code>invoke(document, raw, noNotify)</code> method
      * and passes <code>false</code> and <code>false</code>.
      *
      * @throws IOException
-     * @throws ServiceException 
+     * @throws ServiceException
      *
      */
     public final Element invoke(Element document) throws IOException, ServiceException {
-    	return invoke(document, false, false, null);
+        return invoke(document, false, false, null);
     }
 
     /**
@@ -324,10 +364,10 @@ public abstract class SoapTransport {
      * @param envelope
      * @return
      * @throws IOException
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     public final Element invokeRaw(Element envelope) throws IOException, ServiceException {
-    	return invoke(envelope, true, false, null);
+        return invoke(envelope, true, false, null);
     }
 
     /**
@@ -336,47 +376,46 @@ public abstract class SoapTransport {
      * @param document
      * @return
      * @throws IOException
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     public final Element invokeWithoutSession(Element document) throws IOException, ServiceException {
-    	return invoke(document, false, true, null);
+        return invoke(document, false, true, null);
     }
 
     /**
      * Sends the specified document as a Soap message
-     * and parses the response as a Soap message. <p /> 
-     * 
-     * If <code>raw</code> is true, then it expects <code>document</code> to already be 
+     * and parses the response as a Soap message. <p />
+     *
+     * If <code>raw</code> is true, then it expects <code>document</code> to already be
      * a &lt;soap:Envelope&gt; element, otherwise it wraps it in an envelope/body.
-     * 
+     *
      * If <tt>noSession</tt> is true, no session object is created/accessed for this request.
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     public final Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId) throws IOException, ServiceException {
-    	return invoke(document, raw, noSession, requestedAccountId, null, null);
+        return invoke(document, raw, noSession, requestedAccountId, null, null);
     }
 
     /**
      * Sends the specified document as a Soap message
-     * and parses the response as a Soap message. <p /> 
-     * 
+     * and parses the response as a Soap message. <p />
+     *
      * If <code>changeToken</code> is non-null, it's used in the soap context to
      * detect modify conflict.
      */
-    public abstract Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType) 
-    	throws ServiceException, IOException;
-    
+    public abstract Element invoke(Element document, boolean raw, boolean noSession, String requestedAccountId, String changeToken, String tokenType)
+        throws ServiceException, IOException;
+
     /**
-     * Sets the number of milliseconds to wait when reading data 
-     * during a invoke call. 
+     * Sets the number of milliseconds to wait when reading data during a invoke
+     * call.
+     * <p>
+     * This implementation has no effect. Subclasses may override this method.
+     *
+     * @param ms read timeout
      */
-    public void setTimeout(int newTimeout) {
+    public void setTimeout(int ms) {
         // do nothing by default
     }
 
 }
-
-/*
- * TODOs:
- * validation
- */
