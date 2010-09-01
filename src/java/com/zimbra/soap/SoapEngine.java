@@ -92,7 +92,7 @@ public final class SoapEngine {
 
     SoapEngine() {
         mDispatcher = new DocumentDispatcher();
-        SoapTransport.setDefaultUserAgent("zsc", BuildInfo.VERSION);
+        SoapTransport.setDefaultUserAgent("ZSC", BuildInfo.VERSION);
     }
 
     /*
