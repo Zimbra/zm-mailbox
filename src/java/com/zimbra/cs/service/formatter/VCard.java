@@ -76,6 +76,7 @@ public class VCard {
     private enum Encoding { NONE, B, Q };
 
     private static class VCardProperty {
+        private String group;
         private String name;
         private Set<String> params = new HashSet<String>();
         private String charset;
@@ -95,7 +96,7 @@ public class VCard {
         }
 
         private void reset() {
-            name = value = null;
+            group = name = value = null;
             charset = MimeConstants.P_CHARSET_UTF8;
             params.clear();
             encoding = Encoding.NONE;
@@ -120,6 +121,8 @@ public class VCard {
                 if ((c = line.charAt(i)) == '.')  start = i + 1;
                 else if (c == ';')                break;
             }
+            if (start != 0)
+                group = line.substring(0, start - 1);
             name = line.substring(start, i).trim().toUpperCase();
 
             // get the property's parameters
@@ -151,6 +154,10 @@ public class VCard {
             return name;
         }
 
+        String getGroup() {
+            return group;
+        }
+        
         String getValue() {
             // if it's a 2.1 vCard, decode the property value if necessary
             try {
@@ -218,7 +225,9 @@ public class VCard {
             } else if (name.startsWith("X-")) {
                 String decodedValue = vcfDecode(vcprop.getValue());
                 // handle multiple occurrences of xprops with the same key
-                Object val = xprops.get(name);
+                String group = vcprop.getGroup();
+                String key = (group == null) ? name : group + "." + name;
+                Object val = xprops.get(key);
                 if (val != null) {
                     if (val instanceof ArrayList) {
                         @SuppressWarnings("unchecked")
@@ -228,10 +237,10 @@ public class VCard {
                         ArrayList<String> valArray = new ArrayList<String>();
                         valArray.add((String)val);
                         valArray.add(decodedValue);
-                        xprops.put(name, valArray);
+                        xprops.put(key, valArray);
                     }
                 } else {
-                    xprops.put(name, decodedValue);
+                    xprops.put(key, decodedValue);
                 }
             } else if (!PROPERTY_NAMES.contains(name)) {
                 continue;
