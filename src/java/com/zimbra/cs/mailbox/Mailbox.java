@@ -1900,7 +1900,7 @@ public class Mailbox {
                type == MailItem.TYPE_MOUNTPOINT;
     }
 
-    private <T extends MailItem> T checkAccess(T item) throws ServiceException {
+    protected <T extends MailItem> T checkAccess(T item) throws ServiceException {
         if (item == null || item.canAccess(ACL.RIGHT_READ))
             return item;
         throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
