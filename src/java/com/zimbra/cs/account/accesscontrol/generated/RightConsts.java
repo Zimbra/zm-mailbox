@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100707-0107 */
+    /* build: unknown unknown unknown unknown */
 
 
     /*
@@ -36,19 +36,33 @@ public class RightConsts {
 
     /**
      * automatically add meeting invites from grantee to the target&#039;s
-     * calendar
+     * calendar. e.g. (1) When user Y is invited to a meeting, an appointment
+     * is added to his calendar automatically(tentatively) only if invite is
+     * from A, B, C or anyone in group G. (2) Conf room Y can only be booked
+     * by users A, B, C and group G.
      */
     public static final String RT_invite = "invite";
 
     /**
-     * login as
+     * login as another user. Currently this is only honored for imap/pop3
+     * login
      */
     public static final String RT_loginAs = "loginAs";
 
     /**
-     * send as
+     * reply to messages in a shared folder as the owner of the folder
      */
     public static final String RT_sendAs = "sendAs";
+
+    /**
+     * send mails to distribution list
+     */
+    public static final String RT_sendToDistList = "sendToDistList";
+
+    /**
+     * view distribution list members
+     */
+    public static final String RT_viewDistList = "viewDistList";
 
     /**
      * view free/busy

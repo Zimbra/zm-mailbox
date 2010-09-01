@@ -221,9 +221,12 @@ public class LdapProvisioning extends Provisioning {
     public double getXMPPCacheHitRate() { return sXMPPComponentCache.getHitRate(); }
 
     protected LdapDIT mDIT;
-
+    private Groups mAllDLs; // email addresses of all distribution lists on the system
+    
     public LdapProvisioning() {
         setDIT();
+        mAllDLs = new Groups(this);
+        
         register(new Validators.DomainAccountValidator());
         register(new Validators.DomainMaxAccountsValidator());
     }
@@ -235,7 +238,7 @@ public class LdapProvisioning extends Provisioning {
     public LdapDIT getDIT() {
         return mDIT;
     }
-
+    
     /*
      * Contains parallel arrays of old addrs and new addrs as a result of domain change
      */
@@ -1425,11 +1428,17 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public void addAlias(DistributionList dl, String alias) throws ServiceException {
         addAliasInternal(dl, alias);
+        mAllDLs.addGroup(dl);
     }
 
     @Override
     public void removeAlias(DistributionList dl, String alias) throws ServiceException {
+        // make a copy of all addrs of this DL, after the delete all aliases on this dl
+        // object will be gone, but we need to remove them from the allgroups cache after the DL is deleted
+        Set<String> addrs = new HashSet<String>(dl.getMultiAttrSet(Provisioning.A_mail));
+        
         removeAliasInternal(dl, alias);
+        mAllDLs.removeGroup(addrs);
     }
 
     private boolean isEntryAlias(Attributes attrs) throws NamingException {
@@ -2778,6 +2787,7 @@ public class LdapProvisioning extends Provisioning {
 
             DistributionList dlist = getDistributionListById(zimbraIdStr, zlc);
             AttributeManager.getInstance().postModify(listAttrs, dlist, attrManagerContext, true);
+            mAllDLs.addGroup(dlist);
             return dlist;
 
         } catch (NameAlreadyBoundException nabe) {
@@ -2946,6 +2956,10 @@ public class LdapProvisioning extends Provisioning {
         if (dl == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(zimbraId);
 
+        // make a copy of all addrs of this DL, after the delete all aliases on this dl
+        // object will be gone, but we need to remove them from the allgroups cache after the DL is deleted
+        Set<String> addrs = new HashSet<String>(dl.getMultiAttrSet(Provisioning.A_mail));
+        
         // remove the DL from all DLs
         removeAddressFromAllDistributionLists(dl.getName()); // this doesn't throw any exceptions
 
@@ -2973,6 +2987,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             zlc = new ZimbraLdapContext(true);
             zlc.unbindEntry(dl.getDN());
+            mAllDLs.removeGroup(addrs);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge distribution list: "+zimbraId, e);
         } finally {
@@ -2987,6 +3002,11 @@ public class LdapProvisioning extends Provisioning {
         return getDistributionListByQuery(mDIT.mailBranchBaseDN(),
                                           LdapFilter.distributionListByName(listAddress),
                                           null, null);
+    }
+    
+    @Override
+    public boolean isDistributionList(String addr) {
+        return mAllDLs.isGroup(addr);
     }
 
     //

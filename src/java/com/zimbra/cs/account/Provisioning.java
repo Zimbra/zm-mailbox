@@ -1051,6 +1051,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void removeAlias(DistributionList dl, String alias) throws ServiceException;
 
     public abstract void renameDistributionList(String zimbraId, String newName) throws ServiceException;
+    
+    public boolean isDistributionList(String addr) {
+        return false;
+    }
 
     public abstract Zimlet getZimlet(String name) throws ServiceException;
 

@@ -3315,4 +3315,21 @@ delete - delete the ranking information for the email address
 
 Ajax client can use this request to ask the server for help in generating a proper, globally unique UUID.
 
----------
+
+-----------------------------
+
+<GetDistributionListMembersRequest [limit="{limit}"] [offset="{offset}"]>
+  <dl>{dl-name}</dl>
+</GetDistributionListMembersRequest>
+
+<GetDistributionListMembersResponse more="{more-flag}" [total="{total}"]>
+    <dlm isDL="1|0">{member email}</dlm>+
+</GetDistributionListMembersResponse>
+
+Notes:
+    limit - the number of members to return (0 is default and means all)
+    offset - the starting offset (0, 25, etc)
+
+    more-flag = true if more members left to return
+    total = total number of distribution lists (not affected by limit/offset)
+    isDL = whether this member itself is a distribution list, default is 0

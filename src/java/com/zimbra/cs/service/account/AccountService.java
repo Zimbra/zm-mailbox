@@ -85,6 +85,10 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.GET_WHITE_BLACK_LIST_REQUEST, new GetWhiteBlackList());
         dispatcher.registerHandler(AccountConstants.MODIFY_WHITE_BLACK_LIST_REQUEST, new ModifyWhiteBlackList());
         
+        // distribution list
+        dispatcher.registerHandler(AccountConstants.GET_DISTRIBUTION_LIST_MEMBERS_REQUEST, new GetDistributionListMembers());
+        
+        // misc
         dispatcher.registerHandler(AccountConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());
 
     }
