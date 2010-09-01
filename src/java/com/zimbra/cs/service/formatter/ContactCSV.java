@@ -303,6 +303,25 @@ public class ContactCSV {
             }
         }
 
+        // Bug 50069 - Lines with single blank in them got imported as a blank contact
+        // Initial fix idea was for parseField to return the trimmed version of the string
+        // However, this from rfc4180 - Common Format and MIME Type for Comma-Separated
+        // Values (CSV) Files :
+        //     "Spaces are considered part of a field and should not be ignored."
+        // suggests that might be an invalid thing to do, so now just reject the contact
+        // if the whole line would collapse to an empty string with trim.
+        if (contact.size() == 1) {
+            boolean onlyBlank = true;
+            for (String val : contact.values()) {
+                if (!val.trim().equals("")) {
+                    onlyBlank = false;
+                    break;
+                }
+            }
+            if (onlyBlank)
+                contact = new HashMap<String, String>();
+        }
+
         return contact;
     }
 
