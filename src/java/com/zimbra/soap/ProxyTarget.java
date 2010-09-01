@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on 2005. 3. 3.
  */
 package com.zimbra.soap;
 
@@ -33,7 +29,10 @@ import com.zimbra.cs.httpclient.URLUtil;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
-public class ProxyTarget {
+/**
+ * @since 2005. 3. 3.
+ */
+public final class ProxyTarget {
 
     private Server mServer;
     private AuthToken mAuthToken;
@@ -114,9 +113,10 @@ public class ProxyTarget {
             return new Pair<Element, Element>(null, dispatch(request));
 
         SoapProtocol proto = request instanceof Element.JSONElement ? SoapProtocol.SoapJS : SoapProtocol.Soap12;
-        if (proto == SoapProtocol.Soap12 && zsc.getRequestProtocol() == SoapProtocol.Soap11)
+        if (proto == SoapProtocol.Soap12 && zsc.getRequestProtocol() == SoapProtocol.Soap11) {
             proto = SoapProtocol.Soap11;
-        Element envelope = proto.soapEnvelope(request, zsc.toProxyCtxt(proto));
+        }
+        Element envelope = proto.soapEnvelope(request, zsc.toProxyContext(proto));
 
         SoapHttpTransport transport = null;
         try {
@@ -138,7 +138,8 @@ public class ProxyTarget {
         }
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "ProxyTarget(url=" + mURL + ")";
     }
 }

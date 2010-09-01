@@ -12,18 +12,18 @@ http://server/service/home/[&tilde;][{username}]/[{folder}]?[{query-params}]
        start={time}
        end={time}
        sync="1"
-       
+
           {types}   = comma-separated list.  Legal values are:
                       appointment|chat|contact|conversation|document|
                       message|tag|task|wiki
                       (default is &quot;conversation&quot;)
-                       
+
           {auth-types} = comma-separated list. Legal values are:
                          co     cookie
                          ba     basic auth
                          nsc    do not set a cookie when using basic auth
                          (default is &quot;co,ba&quot;, i.e. check both)
-                         
+
          {time} = (time in milliseconds) |
                   YYYY/dd/mm |
                   mm/dd/YYYY |
@@ -32,9 +32,9 @@ http://server/service/home/[&tilde;][{username}]/[{folder}]?[{query-params}]
 ----------------------
 
 URL for posting to SOAP is:
- 
+
 /service/soap/
- 
+
 -------------------------------
 
 urn:zimbra  -- top-level namespace for global attributes/elements
@@ -43,13 +43,14 @@ urn:zimbra  -- top-level namespace for global attributes/elements
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
   <soap:Header>
     <context xmlns="urn:zimbra">
-       <authToken>...</authToken>
-       [<session [id="{returned-from-server-in-last-response}" [seq="{highest_notification_received}"] [type="admin"]/>]
-       [<account by="name|id">{account-name-or-id}</account>]
-       [<change token="{change-id}" [type="mod|new"]/>]
-       [<targetServer>{proxy-target-server-id}</targetServer>]
-       [<userAgent name="{client-name}" [version="{client-version}"]/>]
-       [<format type="{response-format}" />]
+      <authToken>...</authToken>
+      [<session [id="{returned-from-server-in-last-response}" [seq="{highest_notification_received}"] [type="admin"]/>]
+      [<account by="name|id">{account-name-or-id}</account>]
+      [<change token="{change-id}" [type="mod|new"]/>]
+      [<targetServer>{proxy-target-server-id}</targetServer>]
+      [<userAgent name="{client-name}" [version="{client-version}"]/>]
+      [<via>{request-ip(user-agent)[,...]}</via>
+      [<format type="{response-format}" />]
     </context>
   </soap:Header>
   <soap:Body>
@@ -59,7 +60,7 @@ urn:zimbra  -- top-level namespace for global attributes/elements
 </soap:Envelope>
 
 Notification Reliability
-   To ensure that the client receives all notifications, the client 
+   To ensure that the client receives all notifications, the client
 must send the highest known notification ID (the highest <notify>
 block that the client has received and processed) so that the server
 can discard them once it knows they have been received.  If the client
@@ -71,9 +72,9 @@ Race Conditions
 
 To avoid race conditions, the client may specify the highest change ID
 that it knows about in the <change> header element.  The default behavior
-(type="mod") will cause mail.MODIFY_CONFLICT to be thrown if we try to 
+(type="mod") will cause mail.MODIFY_CONFLICT to be thrown if we try to
 modify an object that has been touched (flags, tags, folders, etc.) since
-the specified change ID.  Alternatively, type="new" will throw 
+the specified change ID.  Alternatively, type="new" will throw
 mail.MODIFY_CONFLICT if we try to modify an object that has been created
 or whose content has been modified since the specified change ID.
 
@@ -101,17 +102,17 @@ maintain a session for them.  This is done by specifying a <session/>
 element in the request.
 
 When sessions are explicitly requested by the client, the server
-will return the client's active session ID in the response's <session/> 
+will return the client's active session ID in the response's <session/>
 header element.  If this session ID is different from the one sent by the
 client (or if the client requested a new session by including just a bare
 "<session/>" inn the header), the client should assume the old session
 (if any) has expired and immediately start using the returned session ID.
 
 If a new session is created (due to no session ID being supplied in the request
-or the old session timing out), the response context header will contain a 
-<refresh> block containing the current set of tags and folders.  If there 
-have been any changes to the mailbox since the last soap operation (including 
-changes made due to this operation), there will also be a <notify> block in 
+or the old session timing out), the response context header will contain a
+<refresh> block containing the current set of tags and folders.  If there
+have been any changes to the mailbox since the last soap operation (including
+changes made due to this operation), there will also be a <notify> block in
 the response context containing information on the deleted, created, and
 modified items in the mailbox.  (Note that a session will not return any
 notifications if <nonotify/> was ever specified in a <context> request
@@ -121,7 +122,7 @@ element involving the session.)  If there is a session, there will be a
   - deleted has just id
   - created has full ToXML item dump
   - modified has type/id, modified fields
- 
+
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
   [<soap:Header>
      <context xmlns="urn:zimbra">
@@ -157,18 +158,18 @@ element involving the session.)  If there is a session, there will be a
           </modified>
         </notify>]+
      </context>
-   <soap:/Header>] 
+   <soap:/Header>]
   <soap:Body>
    <FooResponse ... [requestId="{client-generated-id}"]>
-   </FooResponse>  
+   </FooResponse>
   </soap:Body>
 </soap:Envelope>
 
 
 
-NOTES: The requestId="..." attribute is optional in the request body. If present, the server will 
+NOTES: The requestId="..." attribute is optional in the request body. If present, the server will
        include it in the response body element.
-       
+
 batch requests:
 
 <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
@@ -209,7 +210,7 @@ response:
             <folder .../>
           </folder>
         </refresh>]
-       [<notify seq="sequence-number">        
+       [<notify seq="sequence-number">
           <deleted ids="665,66,452,883"/>
           <created>
             <tag id="66" name="phlox" u="8"/>
@@ -221,7 +222,7 @@ response:
           </modified>
         </notify>]+
      </context>
-   <soap:/Header>] 
+   <soap:/Header>]
  <soap:Body>
   <BatchResponse xmlns="urn:zimbra">
     <soap:Fault requestId="1">
@@ -311,8 +312,8 @@ SOAP 1.2
     <soap:Detail>
       <Error xmlns="urn:zimbra">
         <Code>...</Code>
-        [<a n="name">VALUE</a>]* // error information (arguments, e.g. ID that was bad, or whatever) 
-      </Error>      
+        [<a n="name">VALUE</a>]* // error information (arguments, e.g. ID that was bad, or whatever)
+      </Error>
     </soap:Detail>
   </soap:Fault>
  </soap:Body>
@@ -328,8 +329,8 @@ SOAP 1.1
    <soap:detail>
      <Error xmlns="urn:zimbra">
         <Code>...</Code>
-        [<a n="name">VALUE</a>]* // error information (arguments, e.g. ID that was bad, or whatever) 
-      </Error>      
+        [<a n="name">VALUE</a>]* // error information (arguments, e.g. ID that was bad, or whatever)
+      </Error>
     </soap:detail>
   </soap:Fault>
  </soap:Body>
@@ -345,7 +346,7 @@ global soap/system errors used with zimbra:Error/Code:
  service.AUTH_REQUIRED    - an authtoken is required
  service.AUTH_EXPIRED     - authentication creds have expired
  service.WRONG_HOST       - operation is sent to a wrong host
- service.PROXY_ERROR      - unable to proxy operation 
+ service.PROXY_ERROR      - unable to proxy operation
  service.TOO_MANY_HOPS    - operation was proxied too many times
  service.INTERRUPTED      - index operation was interrupted
  service.NOT_IN_PROGRESS  - attempt to stop index operation when it was not in progress
@@ -353,13 +354,13 @@ global soap/system errors used with zimbra:Error/Code:
  service.NO_SPELL_CHECK_URL      - spellcheck is not available
  service.RESOURCE_UNREACHABLE    - unable to reach the remote resource
  service.TEMPORARILY_UNAVAILABLE - resource is temporarily unavailable
- service.NON_READONLY_OPERATION_DENIED - 
+ service.NON_READONLY_OPERATION_DENIED -
 
 -----------------------------
  urn:zimbraAccount
 
  account error/codes: (includes service.*):
- 
+
    account.AUTH_FAILED          - bad account/password
    account.CHANGE_PASSWORD      - password must be changed
    account.PASSWORD_LOCKED      - password can't be changed
@@ -398,7 +399,7 @@ global soap/system errors used with zimbra:Error/Code:
    account.TOO_MANY_SIGNATURES
    account.TOO_MANY_DATA_SOURCES
    account.TOO_MANY_SEARCH_RESULTS
-   
+
  <AuthRequest xmlns="urn:zimbraAccount">
    [<account by="name|id|foreignPrincipal">...</account>]
    [<password>...</password>]
@@ -409,12 +410,12 @@ global soap/system errors used with zimbra:Error/Code:
    [<attrs>[<attr name="..."/>...]</attrs>]
    [<requestedSkin>{skin}</requestedSkin>]
  </AuthRequest>
- 
+
  <AuthResponse">
    <authToken>...</authToken>
    <lifetime>...</lifetime>
    <session .../>
-   <refer>{mail-host}</refer>  
+   <refer>{mail-host}</refer>
    [<prefs><pref name="{name}" modified="{modified-time}">{value}</pref>...</prefs>]
    [<attrs><attr name="{name}">{value}</attr>...</attrs>]
    [<skin>{skin-name}</skin>]
@@ -429,14 +430,14 @@ an authToken can be passed instead of account/password/preauth to validate an ex
   {mail-host} = host additional SOAP requests should be directed to. Always returned, might be same as original host request was sent to.
 
   {virtual-host} = if specified (in conjunction with by="name"), virtual-host is used to determine the domain of the account name, if it
-                   does not include a domain component. For example, if the domain foo.com has a zimbraVirtualHostname of "mail.foo.com", 
+                   does not include a domain component. For example, if the domain foo.com has a zimbraVirtualHostname of "mail.foo.com",
                    and an auth request comes in for "joe" with a virtualHost of "mail.foo.com", then the request will be equivalent to
                    logging in with "joe@foo.com".
 
   only attrs that are allowed to be returned by GetInfo will be returned by this call
-  
+
   {requested-skin} = if specified the name of the skin requested by client
-  
+
   {skin-name} = if requested-skin specified, the name of the skin to use
 
 ---------
@@ -447,14 +448,14 @@ an authToken can be passed instead of account/password/preauth to validate an ex
    <password>...</password>
    [<virtualHost>{virtual-host}</virtualHost>]
  </ChangePasswordRequest>
- 
+
 <ChangePasswordResponse>
    <authToken>...</authToken>
    <lifetime>...</lifetime>
 <ChangePasswordResponse/>
- 
+
    {virtual-host} = if specified virtual-host is used to determine the domain of the account name, if it
-                   does not include a domain component. For example, if the domain foo.com has a zimbraVirtualHostname of "mail.foo.com", 
+                   does not include a domain component. For example, if the domain foo.com has a zimbraVirtualHostname of "mail.foo.com",
                    and an auth request comes in for "joe" with a virtualHost of "mail.foo.com", then the request will be equivalent to
                    logging in with "joe@foo.com".
 
@@ -474,16 +475,16 @@ effect if called in a <nosession> context.
    [<pref name="{name1}"/>
     <pref name="{name2}"/>]
  </GetPrefsRequest>
- 
+
  If no <pref> elements are provided, all known prefs are returned in the response.
  If <pref> elements are provided, only those prefs are returned in the response.
- 
+
 <GetPrefsResponse>
    <pref name="{name}">{value}</pref>
    ...
    <pref name="{name}">{value}</pref>
  </GetPrefsResponse>
- 
+
 ----------------------------
 
 <GetInfoRequest [sections="mbox,prefs,attrs,zimlets,props,idents,sigs,dsrcs,children"]>
@@ -495,7 +496,7 @@ effect if called in a <nosession> context.
    <version>{version}</version>
    <id>{account-id}</id>
    <name>{account-name}</name>
-   <lifetime>...</lifetime>   
+   <lifetime>...</lifetime>
    [<rest>{account-base-REST-url}</rest>
     <used>{used}</used>
     <prevSession>{previous-SOAP-session}</prevSession>
@@ -557,7 +558,7 @@ effect if called in a <nosession> context.
    </childAccounts>
    [<license status="inGracePeriod|bad"/>]
 </GetInfoResponse>
- 
+
   {version} = server version: <major>[.<minor>[.<maintenance>]][build] <release> <date>[ <type>]
   {account-name} = email address (user@domain)
   {life-time} = number of milliseconds until auth token expires
@@ -571,55 +572,55 @@ effect if called in a <nosession> context.
     {recent-messages} = number of messages received since the previous soap session, or since the last SOAP write op if we don't have a session
 
   prefs = user-settable preferences
-  attrs = account attrs that aren't user-settable, but the front-end needs. 
+  attrs = account attrs that aren't user-settable, but the front-end needs.
           Only attributes listed in zimbraAccountClientAttrs will be returned.
-          
+
   {mail-url} = URL to talk to for soap service for this account. i.e:
-  
+
        http://server:7070/service/soap/
 
        Multiple URLs can be returned if both http and https (SSL) are enabled. If only one of the two is enabled,
-       the only one URL will be returned.  
-       
+       the only one URL will be returned.
+
   {account-base-public-url} = base public URL for the requested account
 
-  license attribute is pertinent to the Network edition only.  this attribute is 
+  license attribute is pertinent to the Network edition only.  this attribute is
   present only when the installed license is NOT ok.
-  
+
   attrs under <childAccount>: including the following attrs of the child account:
         - displayName
 
   {data-source}: see GetDataSourcesRequest for details
-  
+
   {zimlet-presence}: mandatory | enabled | disabled
-  
+
 ----------------------------
 
 <GetAccountInfoRequest>
   <account by="id|name">...</account>
 </GetAccountInfoRequest>
- 
+
 <GetAccountInfoResponse>
    <name>{account-name}</name>
    <attr name="{name}">{value}</a>+
    <soapURL>{mail-url}</soapURL>+
    <publicURL>{account-base-public-url}</publicURL>
 </GetInfoResponse>
- 
+
   {account-name} = email address (user@domain)
 
   {attrs} = account attrs. Currently only two attrs are returned:
-  
+
       zimbraId       - the unique UUID of the zimbra account
       zimbraMailHost - the server on which this user's mail resides
 
   {mail-url} = URL to talk to for soap service for this account. i.e:
-  
+
        http://server:7070/service/soap/
 
        Multiple URLs can be returned if both http and https (SSL) are enabled. If only one of the two is enabled,
-       the only one URL will be returned.      
-       
+       the only one URL will be returned.
+
   {account-base-public-url} = base public URL for the requested account
 
 ----------------------------
@@ -630,11 +631,11 @@ effect if called in a <nosession> context.
   <skin name="{skin-name}"/>+
 </GetAvailableSkinsResponse>
 
-Returns intersection of installed skins on the server and the list 
+Returns intersection of installed skins on the server and the list
 specified in the zimbraAvailableSkin on an account (or its
-CoS).  If none is set in zimbraAvailableSkin, it returns the 
-entire list of installed skins.  The installed skin list is obtained 
-by a directory scan of the designated location of skins on a server.   
+CoS).  If none is set in zimbraAvailableSkin, it returns the
+entire list of installed skins.  The installed skin list is obtained
+by a directory scan of the designated location of skins on a server.
 
 ----------------------------
 
@@ -651,22 +652,22 @@ import and export of addressbook.
 
 
  <SearchGalRequest [type="{type}"] [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"]>
-  [<cursor id="{prevId}" sortVal="{prevSortValue}" endSortVal="{endSortValue}"/> ] 
+  [<cursor id="{prevId}" sortVal="{prevSortValue}" endSortVal="{endSortValue}"/> ]
    <name>...</name>
  </SearchGalRequest>
- 
+
  <SearchGalResponse more="{more}" sortBy="sort-by" offset="..." [tokenizeKey="{tokenize-key-op}"]>
    <cn>...</cn>*
  </SearchGalResponse>
 
   {more-flag} = 1 if the results were truncated.
-  
+
   {tokenize-key-op} = and|or
          - Not present if the search key was not tokenized.
          - Some clients backtrack on GAL results assuming the results of a more
-           specific key is the subset of a more generic key, and it checks cached 
-           results instead of issuing another SOAP request to the server.    
-           If search key was tokenized and expanded with AND or OR, this cannot 
+           specific key is the subset of a more generic key, and it checks cached
+           results instead of issuing another SOAP request to the server.
+           If search key was tokenized and expanded with AND or OR, this cannot
            be assumed.
 
   {type} = type of addresses to search
@@ -674,15 +675,15 @@ import and export of addressbook.
            "resource" for calendar resources
            "all" for combination of both types
            if omitted, defaults to "all"
-           
+
   see SearchRequest for use of cursor.
-  
+
 ----------------------------
 
  <AutoCompleteGalRequest [type="{type}"]>
    <name>...</name>
  </AutoCompleteGalRequest>
- 
+
  <AutoCompleteGalResponse more="{more}"  [tokenizeKey="{tokenize-key-op}"]>
    <cn>...</cn>*
  </AutoCompleteGalResponse>
@@ -695,15 +696,15 @@ import and export of addressbook.
            "resource" for calendar resources
            "all" for combination of both types
            if omitted, defaults to "accounts"
-           
+
   {more-flag} = 1 if the results were truncated.
-  
+
   {tokenize-key-op} = and|or
          - Not present if the search key was not tokenized.
          - Some clients backtrack on GAL results assuming the results of a more
-           specific key is the subset of a more generic key, and it checks cached 
-           results instead of issuing another SOAP request to the server.    
-           If search key was tokenized and expanded with AND or OR, this cannot 
+           specific key is the subset of a more generic key, and it checks cached
+           results instead of issuing another SOAP request to the server.
+           If search key was tokenized and expanded with AND or OR, this cannot
            be assumed.
 
 ----------------------------
@@ -717,7 +718,7 @@ import and export of addressbook.
 </AutoCompleteResponse>
 
   {folders} - comma separates list of folder IDs.
-  
+
   - the number of entries in the response is limited by Account/COS attribute
     zimbraContactAutoCompleteMaxResults with default value of 20.
   - email field contains comma separated email addresses in case of group
@@ -726,7 +727,7 @@ import and export of addressbook.
 ----------------------------
 
  <SyncGalRequest [token="{previous-token}] [idOnly={true|false}]"/>
- 
+
  <SyncGalResponse token="{new-token}">
    <cn>...</cn>*
    <deleted id="{itemId}">*
@@ -736,7 +737,7 @@ import and export of addressbook.
   id attribute without all the contact fields populated.  The sync client
   then should make batch request to the server to fetch the contact fields
   with <GetContactsRequest/>.
-  
+
 ----------------------------
 
  <SearchCalendarResourcesRequest
@@ -762,10 +763,10 @@ import and export of addressbook.
 
  Notes:
    SearchCalendarResourcesRequest:
-	 attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraCalResType")
-	 sortBy - name of attribute to sort on. default is the calendar resource name.
-	 sortAscending - whether to sort in ascending order (0/1), 1 is default
-	 must have exactly one <conds> child or exactly one <cond> child and no other child element
+   attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraCalResType")
+   sortBy - name of attribute to sort on. default is the calendar resource name.
+   sortAscending - whether to sort in ascending order (0/1), 1 is default
+   must have exactly one <conds> child or exactly one <cond> child and no other child element
 
    conds: denotes a compound condition
      must have 1 or more children
@@ -788,11 +789,11 @@ import and export of addressbook.
      value - value
 
 ----------------------------
-  
+
  <ModifyPrefsRequest>
    [<pref name="{name}">{value}</pref>...]+
  </ModifyPrefsRequest>
- 
+
  <ModifyPrefsResponse/>
 
  Notes:
@@ -835,13 +836,13 @@ import and export of addressbook.
 
 Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 
-	zimbraPrefBccAddress
+  zimbraPrefBccAddress
     zimbraPrefForwardIncludeOriginalText
     zimbraPrefForwardReplyFormat
     zimbraPrefForwardReplyPrefixChar
     zimbraPrefFromAddress
     zimbraPrefFromDisplay
-	zimbraPrefMailSignature
+  zimbraPrefMailSignature
     zimbraPrefMailSignatureEnabled
     zimbraPrefMailSignatureStyle
     zimbraPrefReplyIncludeOriginalText
@@ -856,7 +857,7 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
     zimbraPrefWhenSentToAddresses
     zimbraPrefWhenSentToEnabled
 
-    
+
 ---------
 
 <GetIdentitiesRequest/>
@@ -899,7 +900,7 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
   <signature name="{signature-name}" [id="{id}"]/>
     <content type="{text/plain | text/html}">{signature-value}</content>+
   </signature>
-</CreateSignatureRequest> 
+</CreateSignatureRequest>
 
 <CreateSignatureResponse>
   <signature id="{id}" name="{signature-name}"/>
@@ -907,12 +908,12 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 
 - If an id is provided it will be honored as the id for the signature.
 
-- CreateSignature will set account default signature to the signature being created 
+- CreateSignature will set account default signature to the signature being created
   if there is currently no default signature for the account.
-  
-- There can be at most one text/plain signatue and one text/html signature.  
-        
-        
+
+- There can be at most one text/plain signatue and one text/html signature.
+
+
 ---------
 
 <GetSignaturesRequest/>
@@ -934,11 +935,11 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 <ModifySignatureResponse/>
 
 - Changes attributes of the given signature.  Only the attributes specified in the request
-  are modified.  
+  are modified.
 
-- Server identify the signature by id, if the name attribute is present and is different 
+- Server identify the signature by id, if the name attribute is present and is different
   from the current name of the signature, the signature will be renamed.
-  
+
 ---------
 
 <DeleteSignatureRequest>
@@ -958,11 +959,11 @@ urn:zimbraMail
  Error code parameters:
        -  Error results have data parameters encoded in the
           soap:detail for the  error, in <a> elements:
-          
+
           [<a n="name">VALUE</a>]* // error information (arguments,
                e.g. ID that was bad, or whatever)
 
-       - See SOAP 1.1 or SOAP 1.2 section above.         
+       - See SOAP 1.1 or SOAP 1.2 section above.
 
  List of error codes:
    mail.MAINTENANCE        - in maintenance
@@ -1036,27 +1037,27 @@ Arguments:
          MISSING_TEXT_AFTER_TOFROMCC - user entered from: without required text
          LEXICAL_ERROR - Invalid character in search string or invalid operator name (e.g. "iis:foo")
          PARSER_ERROR - Missing operand after operator ("in:") or other general parse error, look at curTok
-         INVALID_DATE - Couldn't parse argument to date: (before: after: etc) query.  Check curTok. 
+         INVALID_DATE - Couldn't parse argument to date: (before: after: etc) query.  Check curTok.
 
 ------------------------------
-   
-<!-- 
+
+<!--
 
 defaults aren't normally included in the response, they may
 be shown here in examples though
 
 -->
- 
+
 Email addresses:
- 
+
  <e [t="{type}"] p="{personal-name}" a="{email-address}" d="{display-name}">{content}</e>
 
    {type} = (f)rom, (t)o, (c)c, (b)cc, (r)eply-to, (s)ender, read-receipt (n)otification
 
-   			Type is only sent when an individual message is returned. In the
+         Type is only sent when an individual message is returned. In the
             list of conversations, all the email addresseses returned for a conversation are a subset
             of the participants. In the list of messages in a converstation, the email addressses are
-            the senders. 
+            the senders.
 
    {personal-name} = the comment/name part of an address
    {email-address} = the user@domain part of an address
@@ -1064,9 +1065,9 @@ Email addresses:
                     if no personal, take string before "@" in email-address.
    {content} = the original email string as specified by the sender (since we can't reliably reconstruct it
                out of the components)
-   
+
 MimeParts:
- 
+
   <mp part="{mime-part-name}" body="{is-body}" s="{size-in-bytes} mid="{message-id} cid="{conv-id}" [truncated="1"]
        ct="{content-type}" name="{name}" cd="{content-disposition}" filename="{filename} ci="{content-id} cl="{content-location}">
     [<content>{content}</content>]
@@ -1084,21 +1085,21 @@ MimeParts:
    {cont-disp}    = MIME Content-Disposition
    {filename}     = filename attribute from the Content-Disposition param list
    {content-id}   = MIME Content-ID (for display of embedded images)
-   {content-location} = MIME/Microsoft Content-Location (for display of embedded images)   
+   {content-location} = MIME/Microsoft Content-Location (for display of embedded images)
    {cont-desc} = MIME Content-Description.  Note cont-desc is not currently used in the code.
    {content} = the content of the part, if requested
    {is-body} = set to 1, if this part is considered to be the "body" of the message for display
                purposes.
    {message-id} = item id of the enclosing message, only present if <mp> is not enclosed within a <m> element
- 
-Messages: 
- 
+
+Messages:
+
   <m id="{message-id}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" l="{folder} origid="{original-id}">
    <content>....</content>*
    <e .../>*
    <su>{subject}</su>
    <fr>{fragment}</fr>
-   
+
    <mid>{Message-ID header}</mid>
    [<inv>...</inv>]
    [<mp>...</mp>]
@@ -1120,12 +1121,12 @@ Messages:
   type (t="f|t|c")
   <inv ...>...</inv> = Parsed out iCal invite.  See soap-calendar.txt
   <mp ...>...</mp> =  The root MIME part of the message.  There is exactly 1 MIME part under
-  			   a message element.  The "body" will be tagged with body="1", and the content 
-  			   of the body will also be present
+           a message element.  The "body" will be tagged with body="1", and the content
+           of the body will also be present
   <content>  = the raw content of the message.  cannot have more than one of <mp>, <content> url, and <content> body.
 
 Conversations:
- 
+
   <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] d="{date}" f="{flags}" [elided="1"]>
     <e ...>*
     <su>{subject}</su>
@@ -1140,17 +1141,17 @@ Conversations:
   {fragment}  = fragment of most recent msg in converstation
   {num-msgs}  = number of messages in conversation without IMAP \Deleted flag set
   {all-msgs}  = total number of messages in conversation
-  
+
   <e ...>*     = zero or more participants in the converstations;
                  if elided="1", some participants are missing before the first returned <e> element
   <m>...</m>+  = one or more messages in the conversation. When doing search, the <m> elements returned
                  will only have the "id" attribute, and only messages that matched the search will be included.
-                 
+
 Folders:
 
   <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"]
-  		 u="{unread}" [i4u="{imap-unread}"] n="{msg-count}" [i4n="{imap-count}"] s="{total-size}" [view="{default-type}"]
-  		 [url="{remote-url}"] [perm="{effective-perms}"] [rest="{rest-url}"]>
+       u="{unread}" [i4u="{imap-unread}"] n="{msg-count}" [i4n="{imap-count}"] s="{total-size}" [view="{default-type}"]
+       [url="{remote-url}"] [perm="{effective-perms}"] [rest="{rest-url}"]>
     [<acl> <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" d="{grantee-name}" [pw="{password-for-guest}"] [key=="{access-key}"]/>* </acl>]
   </folder>
 
@@ -1177,7 +1178,7 @@ Folders:
     1 or more <grant> elements, with the following attributes:
 
     {rights}       = some combination of (r)ead, (w)rite, (i)nsert, (d)elete, (a)dminister, workflow action (x), view (p)rivate, view (f)reebusy
-    {grantee-type} = the type of grantee: "usr", "grp", "dom" (domain), "cos", 
+    {grantee-type} = the type of grantee: "usr", "grp", "dom" (domain), "cos",
                      "all" (all authenticated users), "pub" (public authenticated and unauthenticated access),
                      "guest" (non-Zimbra email address and password),
                      "key" (non-Zimbra email address and access key)
@@ -1224,19 +1225,19 @@ Tags:
                [resultMode="{result-mode}"]
                >
   *(<header n="{header-name}/>)
-  [<cursor id="prevId" sortVal="prevSortValue" endSortVal="endSortValue"/> ] 
+  [<cursor id="prevId" sortVal="prevSortValue" endSortVal="endSortValue"/> ]
           // sortVal should be set to the value of the 'sf' (SortField) attribute of the last
           // hit on the previous 'page' of search results.
           // endSortVal is NON-INCLUSIVE and optional (used for ranges)
 
   [   // OPTIONAL: client timezone identification (necessary to time-correct a user-specified date/time query)
-  
+
       <tz id="timezonename"/>    // References an existing server-known timezone by ID
-      
+
            OR
 
       // This format is identical to the one defined in soap-calendar.txt, make sure the documents stay in sync
-      <tz           
+      <tz
            id="timezonename"        // this name is ignored by the server, but it must be present
            stdoff="<minutes>"       // offset from UTC in standard time; local = UTC + offset
            [dayoff="<minutes>"]     // offset from UTC in daylight time; present only if DST is used
@@ -1250,7 +1251,7 @@ Tags:
                    wkday="<number>" // day of week; 1=Sunday, 2=Monday, etc.
                ]
                mon="<number>"        // month; 1=January, 2=February, etc.
-               [mday="<number>"]     // day of month (1..31) 
+               [mday="<number>"]     // day of month (1..31)
                hour="<number>"       // transition hour (0..23)
                min="<number>"        // transition minute (0..59)
                sec="<number>"        // transition second; 0..59, usually 0
@@ -1280,17 +1281,17 @@ Tags:
                                       //
                                       //
   ]
-  
+
   <query>{query-string}</query>
-  
+
 </SearchRequest>
 
 limit is an integer specifying the maximum number of results to return. if limt <= 0 or limit > 1000 then it defaults to 30.
 offset is an integer specifying the 0-based offset into the results list to return as
-	the first result for this search operation.  
+  the first result for this search operation.
 For example, limit=10 offset=30 will return the 31st through 40th results inclusive.
-For a response, the order of the returned results represents the sorted order.  There 
-	is not a separate index attribute or element.
+For a response, the order of the returned results represents the sorted order.  There
+  is not a separate index attribute or element.
 
 if fetch="1" (or fetch="first") is specified, the first hit will be expanded inline (messages only at present)
 if fetch="{item-id}", only the message with the given {item-id} is expanded inline
@@ -1307,7 +1308,7 @@ if recip="1" is specified
     + returned conversations whose first hit was sent by the user will contain
       that hit's "To:" recipients instead of the conversation's sender list
 
-   {group-by} = DEPRECATED.  Use TYPES instead.	
+   {group-by} = DEPRECATED.  Use TYPES instead.
    {types} 	= comma-separated list.  Legal values are:
                conversation|message|contact|appointment|task|wiki|document
                (default is "conversation")
@@ -1324,11 +1325,11 @@ if recip="1" is specified
                         sub-ops).  Server will throw an
                         IllegalArgumentException if the search is
                         invalid.
-                        
+
                ADDITIONAL SORT MODES FOR TASKS: valid only if types="task" (and task alone):
                         taskDueAsc|taskDueDesc|taskStatusAsc|taskStatusDesc|taskPercCompletedAsc|taskPercCompletedDesc
 
-  {more-flag} = 1 if there are more search results remaining. 
+  {more-flag} = 1 if there are more search results remaining.
   {content-matched} = 1 if the content of the message matched
   <mp> elements will be set for the first response if fetch=1
   <hp> elements may be present if any attachments matched
@@ -1357,8 +1358,8 @@ if recip="1" is specified
                       NORMAL|IDS
                   NORMAL : everything
                   IDS    : only IDs
-   
-  
+
+
 For the optional <cursor> element:
  -- The required parameters are (prevMailItemId, prevSortValue): these
     correspond to the last hit on the current page (assuming you're
@@ -1370,13 +1371,13 @@ For the optional <cursor> element:
     some).  The endSortVal paramater tells the cursor where to stop
     returning values
  -- Cursors are NOT legal if SortBy="none"
- 
- 
+
+
 conversation result:
 --------------------
 
 <SearchResponse sortBy="sort-by" offset="..." more="{more-flag}">
-  [ <info>   
+  [ <info>
       [ <wildcard str="foo*" expanded="1|0"/> ]
    </info> ]
   <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] d="{date}" f="{flags} [mbx="UID"] sf="SORT-FIELD-VALUE">
@@ -1407,7 +1408,7 @@ message result:
      <su>{subject}</su>
      <fr>{fragment}</fr>
     *(<header n="{header-name}">header content</header>)
-     [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only) 
+     [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only)
      <hp part="{mime-part-name}"/>+ // Hit Part -- indicator that the named part matched the search string
    </m>
 </SearchResponse>
@@ -1428,7 +1429,7 @@ appointment result:
 
 <appt|task id="appointment_mail_item_id"
        t="{tags}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" // standard hit data
-       l="{location}" score="..." [mbx="UID"] sf="SORT-FIELD-VALUE" // standard hit data    
+       l="{location}" score="..." [mbx="UID"] sf="SORT-FIELD-VALUE" // standard hit data
        [fba="F|B|T|U"]
        [transp="O|T"]
        status="TENT|CONF|CANC"
@@ -1436,7 +1437,7 @@ appointment result:
        [allDay="1"]             // if set, this is an "all day" appointment
        [otherAtt="1"]           // if set, this appointment has other attendees
        [alarm="1"] [recur="1"]
-       [name="NAME"] [loc="LOCATION"] 
+       [name="NAME"] [loc="LOCATION"]
        invId="default_invite_mail_item_id" compNum="default_invite_component_number"
        isOrg="default_am_i_organizer_flag"
        [priority="num"]
@@ -1513,7 +1514,7 @@ message-part result:
    [<info>...</info>]
     <mp part="{mime-part-name}" s="{size-in-bytes} mid="{message-id}"
         ct="{content-type}" name="{name}" filename="{filename}" score="..."/ sf="SORT-FIELD-VALUE">
- 
+
 </SearchResponse>
 
 
@@ -1521,7 +1522,7 @@ message-part result:
 -----------
 
 <SearchConvRequest cid="conversation-id" [limit="..."] [offset="..."] [sortBy="{sort-by}"] [types="{types}"] [nest="0|1"]
-				   [fetch="1|hits|all|{item-id}"] [max="{max-inlined-length}"] [html="1"] [read="1"] [neuter="0"]>
+           [fetch="1|hits|all|{item-id}"] [max="{max-inlined-length}"] [html="1"] [read="1"] [neuter="0"]>
   *(<header n="{header-name}/>)
   <query>{query-string}</query>
 </SearchConvRequest>
@@ -1545,7 +1546,7 @@ if nest="0" on the request, response looks like this:
     <su>{subject}</su>
     <fr>{fragment}</fr>
     *(<header n="{header-name}">header content</header>)
-    [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only) 
+    [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only)
     <hp part="{mime-part-name}"/> // Hit Part -- indicator that the named part matched the search string
   </m>*
 </SearchConvResponse>
@@ -1559,7 +1560,7 @@ if nest="1" on the request, response looks like this:
        <e .../>  <!- from only -->
        <su>{subject}</su>
        <fr>{fragment}</fr>
-       [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only) 
+       [<mp>...</mp>] // if fetch=1, the <mp>'s of the hit (first hit only)
        <hp part="{mime-part-name}"/> // Hit Part -- indicator that the named part matched the search string
      </m>*
    </c>
@@ -1568,7 +1569,7 @@ if nest="1" on the request, response looks like this:
    {cm} = 1 if the message matched the specified query string
 
    SEE SearchResponse for more info
-   
+
 
 ------------
 
@@ -1583,18 +1584,18 @@ if nest="1" on the request, response looks like this:
   {regex-string} = return only those results which match the specified regular expression
   {max} = return only a maximum number of entries as requested.  If more than {max}
           results exist, the server will return the first {max}, sorted by frequency
-  {browse-data} =  
+  {browse-data} =
       for attachments: content type (application/msword)
-      
+
       for objects: object type (url, etc)
-      
-      for domains: domains (stanford.edu, etc)                   
-      
+
+      for domains: domains (stanford.edu, etc)
+
       domain <bd> also contains the "h" attribute:
-      
+
       <bd h="{h-flags}">stanford.edu</bd>
-      
-      which indicates whether or not the domain was from the "From", "To", or "Cc" header. 
+
+      which indicates whether or not the domain was from the "From", "To", or "Cc" header.
       Valid flags are always one of: "f", "t", "ft", "c", "fc", "tc", "ftc"
 
 ----------
@@ -1632,7 +1633,7 @@ if nest="1" on the request, response looks like this:
                       folders you can't see (but *can* see >=1 subfolder) appear as <folder id="{id}" name="{name}"> hierarchy placeholders
 
   - if *no* folders are visible and visible=1, the response looks like <GetFolderResponse/>
-  
+
   - if "needGranteeName" is 0, grantee names in in forlder grants (the d attribute in <grant>) are omitted.
     default for needGranteeName is 1.
 
@@ -1699,8 +1700,8 @@ if <header>s are requested, any matching headers are inlined into the response
     a message stored as a subpart of some other mail-item, specifically for
     Messages stored as part of Appointments
 
-read="1" to mark the message as read, "0" to leave the read status unchanged.  
-	(default is 0.)
+read="1" to mark the message as read, "0" to leave the read status unchanged.
+  (default is 0.)
 raw="1" to return the raw message content rather than a parsed mime structure;
     (default is "0".  if message too big or not ASCII, a content servlet URL is returned)
 max="{max-inlined-length}" to limit the length of the text inlined into body <content> when raw="0"
@@ -1760,7 +1761,7 @@ originally intended.
 
   - if l is unset, name is the full path of the new folder; otherwise, name may not contain the folder separator '/'
   - if fie="1" is set, the server will fetch the folder if it already exists rather than throwing mail.ALREADY_EXISTS
-  - if url is set and sync="1" (default), synchronize folder content on folder creation	
+  - if url is set and sync="1" (default), synchronize folder content on folder creation
 
 <CreateFolderResponse>
   <folder id="..." name="..." l="{parent-folder}" [u="{unread count}"] [n="{msg count}"]/>
@@ -1773,7 +1774,7 @@ originally intended.
 
 <ItemActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|read|flag|tag|move|trash|rename|update|color|lock|unlock" 
+  <action id="{list}" op="delete|read|flag|tag|move|trash|rename|update|color|lock|unlock"
          [tag="{id}"] [l="{folder}"] [name="{item-name}"] [color="{color}"] [rgb="{rgb-color}"]
          [tcon="[-]{constraint}"] [f="{flags}"] [t="{id-list}"]/>
 </ItemActionRequest>
@@ -1794,22 +1795,22 @@ originally intended.
   For op="update", caller can specify any or all of: l="{folder}", name="{name}", color="{color}",
     t="{tag-id-list}", f="{flags}".  When modifying tags or flags, all specified tags and flags
     are set, and all others are unset.
-      
+
   For op="tag" or op="!tag", caller must specify tag="{id}".  This changes the state of
-    the specified tag without altering other tags.  
+    the specified tag without altering other tags.
 
   A trash operation on a remote item will cause it to be moved to the trash folder of its
   remote mailbox, not the local mailbox.
-  
+
   <action op="color" id="{list}" color="{new-color} rgb="{new-color-in-rgb}"/>
     - change the item's color to new color.  only one of color or rgb attribute
       needs to be present.  if both are present rgb value takes precedence.
       rgb is specified as CSS style #rrggbb
-      
+
   The <action> element in the response always contains the same id list that the client
   sent in the request.  Id's that were ignored due to constraints are included in the
-  id list. 
-    
+  id list.
+
 ---------
 
 <MsgActionRequest>
@@ -1826,12 +1827,12 @@ originally intended.
            list may only have 1 element for action "spam"
 
   For op="update", caller can specify any or all of: l="{folder}", name="{name}", color="{color}",
-    t="{tag-id-list}", f="{flags}".  
+    t="{tag-id-list}", f="{flags}".
 
   for op="!spam", can optionally specify a destination folder
-  
+
   See <ItemActionRequest> for more details.
-  
+
 ---------
 
 <ConvActionRequest>
@@ -1856,7 +1857,7 @@ originally intended.
   for op="!spam", can optionally specify a destination folder
 
   See <ItemActionRequest> for more details.
-  
+
 ---------
 
 <FolderActionRequest>
@@ -1894,26 +1895,26 @@ Actions:
 
   <action op="color" id="{list}" color="{new-color} rgb="{new-color-in-rgb}"/>
     - see ItemActionRequest
-    
+
   <action op="grant" id="{list}">
     <grant perm="..." gt="..." d="..." [pw="..."] [key="..."]/>
   </action>
     - add the <grant> object to the folder
 
   <action op="!grant" id="{list}" zid="{grantee-zimbra-id}"/>
-    - revoke access from {grantee-zimbra-id} 
+    - revoke access from {grantee-zimbra-id}
         (you can use "00000000-0000-0000-0000-000000000000" to revoke acces granted to "all"
         or use "99999999-9999-9999-9999-999999999999" to revoke acces granted to "pub" )
-        
+
   <action op="revokeorphangrants" id="{folder-id}" zid="{grantee-zimbra-id}" gt="{grantee-type}"/>
     - revoke orphan grants on the folder hierarchy granted to the grantee specified by zid and gt
       "orphan grant" is a grant whose grantee object is deleted/non-existing.  Server will throw
-      INVALID_REQUEST if zid points to an existing object, 
+      INVALID_REQUEST if zid points to an existing object,
       Only supported if gt is usr|grp|cos|dom; otherwise server will throw INVALID_REQUEST.
 
   <action op="url" id="{list}" url="{target-url}" [excludeFreeBusy="{exclude-free-busy-boolean}"]/>
     - set the synchronization url on the folder to {target-url}, empty the folder, and\
-      synchronize the folder's contents to the remote feed, also sets {exclude-free-busy-boolean} 
+      synchronize the folder's contents to the remote feed, also sets {exclude-free-busy-boolean}
 
   <action op="sync" id="{list}"/>
     - synchronize the folder's contents to the remote feed specified by the folder's {url}
@@ -2062,7 +2063,7 @@ u attribute is present iff count > 0
   <m aid="{uploaded-MIME-body-ID}" [origid="..." rt="r|w"]/>
 </SendMsgRequest>
 
-# If the message is saved to the sent folder then the id of the message is returned. 
+# If the message is saved to the sent folder then the id of the message is returned.
 # Otherwise, no id is returned -- just a <m></m> is returned.
 <SendMsgResponse>
   <m id="..." />
@@ -2077,7 +2078,7 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
                if the SendMsg request is re-sent but the message has not been modified, the client should use
                    the same {send-uid} and the server will try to check the status of the previous SendMsg attempt
 
----------------------------- 
+----------------------------
 
 # origid will be present if this is a reply or forward
 # Can we have more than one From: address?
@@ -2129,13 +2130,13 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
   </m>
 </SaveDraftResponse>
 
----------------------------- 
+----------------------------
 
 <SendDeliveryReportRequest mid="{message-id}"/>
 
 <SendDeliveryReportResponse/>
 
----------------------------- 
+----------------------------
 
   <AddMsgRequest>
     <m l="{folder}" [f="{flags}"] [t="{tags}"] [d="{received-date}"] [aid="{uploaded-MIME-body-ID}"] [noICal="0|1"]>
@@ -2144,7 +2145,7 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
        </content>
        [
          <inv uid="UID">...</inv> # MUST have UID
-       ] 
+       ]
       ...
     </m>
   </AddMsgRequest>
@@ -2153,14 +2154,14 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
             (d)raft, deleted (x), (n)otification sent
   {tags} = comma-separated list of tag IDs
   {folder} = folder pathname (starts with '/') or folder ID
-  {received-date} = (optional) time the message was originally received, in MILLISECONDS since the epoch 
+  {received-date} = (optional) time the message was originally received, in MILLISECONDS since the epoch
   {uploaded-MIME-body-ID} = ID of message uploaded via FileUploadServlet
 
   [noICal] = if TRUE, then don't process iCal attachments.  Default is FALSE.
      TODO: even if noICal is true, calendar should still link message to existing appointment
            (by UID) if the appointment already exists.
 
-  Note that the <m> element should include the <content> element with the 
+  Note that the <m> element should include the <content> element with the
   entire message's content.  (Omit <content> if you specify an "aid" attribute.)
   No <mp> elements should be provided within <m>.
 
@@ -2170,12 +2171,12 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
       rev="{revision-number}" md="{date-metadata-changed}" ms="{change-sequence}"/>
 </AddMsgResponse>
 
----------------------------- 
+----------------------------
 
   <RemoveAttachmentsRequest>
     <m id="{message-id}" part="{list-of-part-ids-to-remove}">
   </RemoveAttachmentsRequest>
-  
+
   {list-of-part-ids-to-remove} = comma-separated list of part IDs to strip from existing message body
 
 # NOTE that this operation is effectively a create and a delete, and thus the message's item ID will change
@@ -2185,10 +2186,10 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
         rev="{revision-number}" md="{date-metadata-changed}" ms="{change-sequence}"/>
   </RemoveAttachmentsResponse>
 
----------------------------- 
+----------------------------
 
-Contacts: 
- 
+Contacts:
+
   <cn id="{contact-id}" [t="{tags}"] [f="{flags}"] md="{modified-date}" [l="{folder}"] [fileAsStr="{file-as}"]>
     <a n="{attr-name}">{attr-data}</a>+
     <a n="{attr-name}" aid="{upload-id}"/>*
@@ -2313,7 +2314,7 @@ for op="update", caller can specify any or all of: l="{folder}", t="{tag-id-list
   </action>
 
   See <ItemActionRequest> for more details.
-  
+
 ----------
 
 <ImportContactsRequest ct="{content-type}" [l="{folder-id}"] [csvfmt="{csv-format}"]>
@@ -2484,7 +2485,7 @@ limited hanging NoOpRequests when a new request comes in.
 The server may reply with a "waitDisallowed" attribute on response to
 a request with wait="1".  If "waitDisallowed" is true, then
 blocking-NoOpRequests (ie requests with wait="1") are *not* allowed by
-the server right now, and the client should stop attempting them.  
+the server right now, and the client should stop attempting them.
 
 The client may specifiy a custom timeout-length for their request if
 they know something about the particular underlying network.  The
@@ -2565,7 +2566,7 @@ zimbra_noop_max_timeout)
 These APIs have been replaced with <GetFilterRulesRequest> and <ModifyFilterRulesRequest>,
 which offer improved ease of use and error handling.  The old APIs will continue
 to work in ZCS 6.0, and will be removed in the next major release.
-  
+
 ---------------------------
 
 <GetFilterRulesRequest/>
@@ -2594,7 +2595,7 @@ to work in ZCS 6.0, and will be removed in the next major release.
 
 <ModifyFilterRulesResponse/>
 
-    * Default value for "active" is 1. 
+    * Default value for "active" is 1.
 
 Tests:
 
@@ -2612,7 +2613,7 @@ Tests:
 
 Each test has the following optional attributes:
     * "negative": specifies a "not" condition for that test
-    * "index": specifies a guaranteed order for the test elements 
+    * "index": specifies a guaranteed order for the test elements
 
 Actions:
 
@@ -2639,7 +2640,7 @@ method values: anyrequest, anyreply, publish, request, reply, add, cancel, refre
   counter, declinecounter.  anyrequest matches publish, request, add, cancel,
   declinecounter.  anyreply matches reply, refresh, counter.  If no methods are
   specified, the test returns true for all invites.
- 
+
 <mimeHeaderTest> behaves just like <headerTest>, but matches headers on
   all MIME parts, instead of just the top-level headers.
 
@@ -2726,29 +2727,29 @@ java.util.Locale.getAvailableLocales(), sorted by display name (name attribute).
   ...
 </GetAvailableLocalesResponse>
 
-Returns intersection of all translated locales installed on the server and the list specified in zimbraAvailableLocale.  
+Returns intersection of all translated locales installed on the server and the list specified in zimbraAvailableLocale.
 The locale list in the response is sorted by display name (name attribute).
 
 {locale-id} : locale id. e.g. en_US
 {locale-name-in-preferred-locale} : locale name in the preferred locale
-                For example, if the locale is fr_CA and the preferred locale is en_US, name will contain "French (Canada)"; 
+                For example, if the locale is fr_CA and the preferred locale is en_US, name will contain "French (Canada)";
                 if the locale is en_US and the preferred locale is fr_CA, name will contain "anglais (Etats-Unis)"
-                
+
                 The preferred locale is determined with the following precedence:
                 (1) zimbraPrefLocale of the target account if it is present
                 (2) Otherwise the locale specified in the Accept-Language http header if it is present
-                (3) Otherwise the locale returned by Provisioning.getLocale, which uses a predefined fallback 
-                    chain to determine the preferable locale.  
-                   
+                (3) Otherwise the locale returned by Provisioning.getLocale, which uses a predefined fallback
+                    chain to determine the preferable locale.
+
 
 ---------------------------
 
 <TestDataSourceRequest>
   <pop3 host="pop.myisp.com" port="110" connectionType="cleartext|ssl"
     username="mylogin" password="mypassword" leaveOnServer="true|false"/>
-    
+
   or
-  
+
   <imap host="imap.myisp.com" port="143" connectionType="cleartext|ssl"
     username="mylogin" password="mypassword"/>
 </TestDataSourceRequest>
@@ -2760,16 +2761,16 @@ or
     [username="mylogin"] [password="mypassword"]/>
 
   or
-  
+
   <imap id="{id}" [host="imap.myisp.com"] [port="143"] [connectionType="cleartext|ssl"]
     [username="mylogin"] [password="mypassword"]/>
 </TestDataSourceRequest>
 
 <TestDataSourceResponse>
    <pop3 success="0|1" [error="Error message"]/>
-   
+
    or
-   
+
    <imap success="0|1" [error="Error message"]/>
 </TestDataSourceResponse>
 
@@ -2791,21 +2792,21 @@ emailAddress="changed-phoebe@google.com"
 <CreateDataSourceRequest/>
   <pop3 name="My POP3 Account" isEnabled="0|1" host="pop.myisp.com" port="110"
     connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
-    leaveOnServer="0|1" [pollingInterval="10m"] 
-    [emailAddress="{email-address}"] 
+    leaveOnServer="0|1" [pollingInterval="10m"]
+    [emailAddress="{email-address}"]
     [useAddressForForwardReply="0|1"]
     [defaultSignature="{default-signature-id}"]
     [fromDisplay="{from-display}"]
     [fromAddress="{from-address}"]
     [replyToAddress="{replyto-address}"]
     [replyToDisplay="{replyto-display}"]/>
-    
+
   or
-  
+
   <imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
     connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
-    [pollingInterval="10m"] 
-    [emailAddress="{email-address}"] 
+    [pollingInterval="10m"]
+    [emailAddress="{email-address}"]
     [useAddressForForwardReply="0|1"]
     [defaultSignature="{default-signature-id}"]
     [fromDisplay="{from-display}"]
@@ -2827,8 +2828,8 @@ the POP3 or IMAP protocol.  Only one data source is allowed per request.
 
 <GetDataSourcesResponse>
   *[<pop3 id="{id}" name="My POP3 Account" isEnabled="0|1" host="pop3.myisp.com" port="110"
-    username="mylogin" l="{folder-id}" leaveOnServer="0|1" [pollingInterval="10m"] 
-    [emailAddress="{email-address}"] 
+    username="mylogin" l="{folder-id}" leaveOnServer="0|1" [pollingInterval="10m"]
+    [emailAddress="{email-address}"]
     [useAddressForForwardReply="0|1"]
     [defaultSignature="{default-signature-id}"]
     [fromDisplay="{from-display}"]
@@ -2840,7 +2841,7 @@ the POP3 or IMAP protocol.  Only one data source is allowed per request.
    </pop3>]
   *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
     connectionType="cleartext|ssl" username="mylogin" l="{folder-id}" [pollingInterval="10m"]
-    [emailAddress="{email-address}"] 
+    [emailAddress="{email-address}"]
     [useAddressForForwardReply="0|1"]
     [defaultSignature="{default-signature-id}"]
     [fromDisplay="{from-display}"]
@@ -2867,9 +2868,9 @@ failingSince: if the most recent sync(s) failed, this attribute specifies
 <ModifyDataSourceRequest>
   *[<pop3 id="{id}" [name="My POP3 Account"] [isEnabled="0|1"] [host="pop3.myisp.com"]
     [port="110"] [connectionType="cleartext|ssl"] [username="mylogin"]
-    [password="mypassword"] [l="{folder-id}"] [leaveOnServer="0|1"] 
+    [password="mypassword"] [l="{folder-id}"] [leaveOnServer="0|1"]
     [pollingInterval="10m"]
-    [emailAddress="{email-address}"] 
+    [emailAddress="{email-address}"]
     [useAddressForForwardReply="0|1"]
     [defaultSignature="{default-signature-id}"]
     [fromDisplay="{from-display}"]
@@ -2879,7 +2880,7 @@ failingSince: if the most recent sync(s) failed, this attribute specifies
   *[<imap name="My IMAP Account" isEnabled="0|1" host="imap.myisp.com" port="143"
     connectionType="cleartext|ssl" username="mylogin" password="mypassword" l="{folder-id}"
     [pollingInterval="10m"]
-    [emailAddress="{email-address}"] 
+    [emailAddress="{email-address}"]
     [useAddressForForwardReply="0|1"]
     [defaultSignature="{default-signature-id}"]
     [fromDisplay="{from-display}"]
@@ -2976,27 +2977,27 @@ If <ace> elements are provided, only those ACEs with specified rights are return
 </GetPermissionResponse>
 
     {right}        = viewFreeBusy | invite
-    
+
     {deny}         = 1 | 0(default)
                      if a right is specifically denied
-    
-    {grantee-type} = the type of grantee: 
+
+    {grantee-type} = the type of grantee:
                      usr - Zimbra user
                      grp - Zimbra group(distribution list)
                      all - all authenticated users
                      gst - non-Zimbra email address and password (not yet supported)
                      key - external user with an accesskey
                      pub - public authenticated and unauthenticated access
-                     
-    {zimbra-id}    = zimbraId of the grantee                 
-                     
+
+    {zimbra-id}    = zimbraId of the grantee
+
     {grantee-name} = display name of the grantee.
                      ot present if {grantee-type} is "all" or "pub"
- 
+
     {pw}           = optional arguments.  password when {grantee-type} is "gst" (not yet supported)
-    
+
     {key}          = optional arguments.  access key when {grantee-type} is "key"
- 
+
 ---------------------------
 
 Grant account level permissions.
@@ -3006,18 +3007,18 @@ Grant account level permissions.
 </GrantPermissionRequest>
 
   If gt is:
-     usr - either zid or d is required. 
-     grp - either zid or d is required. 
+     usr - either zid or d is required.
+     grp - either zid or d is required.
      all - zid, d, pw are ignored
      gst - zid is ignored, d is required, pw is optional
      key - zid is ignored, d is required
      pub - zid, d, pw are ignored
-  
+
   For usr and grp:
      - if zid is provided, server will lookup the entry by zid and grantee type, and d is ignored.
      - if zid is not provided and d is provided, server will lookup the grantee by name and grantee type.
      if the lookup failed, NO_SUCH_ACCOUNT/NO_SUCH_DISTRIBUTION_LIST will be thrown.
-     
+
   If gt == key:
      - if key is given, server will use that as the access key for this grant
      - if key is not given, server will generate an access key
@@ -3054,15 +3055,15 @@ RevokePermissionResponse returns permissions that are successfully revoked.
 {target-type} = account | calresource
 
     Check if the authed user has the specified right(s) on a target.
-    
-    If the specified target cannot be found: 
+
+    If the specified target cannot be found:
     - if by is "id", throw NO_SUCH_ACCOUNT/NO_SUCH_CALENDAR_RESOURCE
     - if by is "name", return the default permission for the right.
-    
-e.g.   
-With user1's auth token, the following checks if user1 can invite user2 and 
+
+e.g.
+With user1's auth token, the following checks if user1 can invite user2 and
 view user2's free/busy.
- 
+
 <CheckPermissionRequest>
   <target type="account" by="name">user2@test.com</target>
   <right>invite</right>
@@ -3080,10 +3081,10 @@ allow = 1 | 0
         0: the authed user does not have the right on the target
         In CheckPermissionResponse, it is the AND result of each individual result
         In each <right> element, it is the result for that right.
-        
-    
+
+
 ---------------------------
-    
+
 <GetVersionInfoRequest/>
 
 <GetVersionInfoResponse>
@@ -3096,75 +3097,75 @@ server/globalconfig attribute is set to FALSE.
 ---------------------------
 
 <GetWhiteBlackListRequest/>
- 
+
 <GetWhiteBlackListResponse>
     <whiteList>
         <addr>...</addr>+
     </whiteList>
     <blackList>
         <addr>...</addr>+
-    </blackList>    
+    </blackList>
 </GetWhiteBlackListResponse>
- 
+
 ----------------------------
-  
+
 <ModifyWhiteBlackListRequest>
     [<whiteList>
         <addr [op="{op}"]>...</addr>+
     </whiteList>]
     [<blackList>
         <addr [op="{op}"]>...</addr>+
-    </blackList>]    
+    </blackList>]
 </ModifyWhiteBlackListRequest>
 
 Note:
-    If no <addr> is present in a list, it means to remove all addresses 
+    If no <addr> is present in a list, it means to remove all addresses
     in the list.
-    
+
     e.g. remove all addresses in the white list
          <ModifyWhiteBlackListRequest>
              <whiteList/>
          </ModifyWhiteBlackListRequest>
-    
+
 
 {op} = + | -
        + : add, ignored if the value already exists
        - : remove, ignored if the value does not exist
        if not present, replace the entire list with provided values.
-       
+
        Note, can't mix +/- with non-present op)
-       
+
        e.g.
        1. replace the entire white list with "foo", "bar".
               <whiteList>
                   <addr>foo</addr>
                   <addr>bar</addr>
-              </whiteList> 
-       
+              </whiteList>
+
        2. add values "foo" and "bar" to white list
               <whiteList>
                   <addr op="+">foo</addr>
                   <addr op="+">bar</addr>
-              </whiteList> 
-              
+              </whiteList>
+
        3. remove values "foo" and "bar" from white list
               <whiteList>
                   <addr op="-">foo</addr>
                   <addr op="-">bar</addr>
-              </whiteList> 
-              
+              </whiteList>
+
        4. add "foo" and remove 'bar"
               <whiteList>
                   <addr op="+">foo</addr>
                   <addr op="-">bar</addr>
               </whiteList>
- 
+
        5. mix +/- and non-present op - now allowed, INVALID_REQUEST will be thrown
               <whiteList>
                   <addr op="+">foo</addr>
                   <addr>bar</addr>
               </whiteList>
-   
+
 
 <ModifyWhiteBlackListResponse/>
 
@@ -3177,19 +3178,19 @@ Note:
 
 {grantee_type} = if <owner> is not specified: grp
                  if <owner> is specified: usr | grp | pub | all | cos | dom | guest | key
-                 
-                 Filters the result by the specified grantee type, only shares granted to 
-                 the grantee type will be returned.  If omitted, server will return shares 
-                 granted to all grantee types. 
 
-{grantee-id}   = if specified, filters the result by the specified grantee id.  
+                 Filters the result by the specified grantee type, only shares granted to
+                 the grantee type will be returned.  If omitted, server will return shares
+                 granted to all grantee types.
 
-{grantee-name} = if specified, filters the result by the specified grantee name. 
+{grantee-id}   = if specified, filters the result by the specified grantee id.
+
+{grantee-name} = if specified, filters the result by the specified grantee name.
 
 Notes on {grantee_type}, {grantee-id}, {grantee-name}:
   - it's recommended that only one of {grantee_type}, {grantee-id}, {grantee-name} is specified.
-  - if multiple are specified and they conflict, e.g. {grantee-type} is grp but 
-    {grantee-id} contains an account id, obviously no result will be returned because 
+  - if multiple are specified and they conflict, e.g. {grantee-type} is grp but
+    {grantee-id} contains an account id, obviously no result will be returned because
     no grant will be matching that condition.
 
 {owner-by}     = name | id
@@ -3197,13 +3198,13 @@ Notes on {grantee_type}, {grantee-id}, {grantee-name}:
                  return "no shares" instead of error when an invalid user name/id is used.
 
 Notes:
-- if <owner> is *not* specified, server will retrieve previously published (can only be done 
-  by admins) share info from entries the authed account can inherit shares from.  
-  e.g. all direct and indirect distribution lists the account belongs.  Currently share info 
-  can only be published on distribution lists.   Publishing of cos/domain/all/pub shares 
+- if <owner> is *not* specified, server will retrieve previously published (can only be done
+  by admins) share info from entries the authed account can inherit shares from.
+  e.g. all direct and indirect distribution lists the account belongs.  Currently share info
+  can only be published on distribution lists.   Publishing of cos/domain/all/pub shares
   are not supported.  Therefore those shares cannot be discovered if we go this route.
 
-- if <owner> *is* specified, server will iterate through the owner's mailbox to discover all  
+- if <owner> *is* specified, server will iterate through the owner's mailbox to discover all
   shares applicable to the authed user, instead of looking at any of the published share info.
   All applicable shares will be returned, including any shares that are:
         - shared with the account directly
@@ -3214,54 +3215,54 @@ Notes:
         - shared with the public                                        (*is* supported)
 
 
-    e.g. 
+    e.g.
     1. What folders are shared with any of the groups I belong to?
-    
+
         1a. folders of any user
                 <GetShareInfoRequest>
                     <grantee type="grp">
                 </GetShareInfoRequest>
-        
+
         1b. folders of a particular user
                 <GetShareInfoRequest>
                     <grantee type="grp">
-                    <owner by="name">user1@example.com</owner> 
+                    <owner by="name">user1@example.com</owner>
                 </GetShareInfoRequest>
 
     2. What folders does a particular user share with me?
-        2a. include all folders directly shared with me and shared 
+        2a. include all folders directly shared with me and shared
             with an entry I can inherit shares from:
                 <GetShareInfoRequest>
-                    <owner by="name">user1@example.com</owner> 
+                    <owner by="name">user1@example.com</owner>
                 </GetShareInfoRequest>
 
         2b. include only folders directly shared with me.
                 <GetShareInfoRequest>
                     <grantee type="usr">
-                    <owner by="name">user1@example.com</owner> 
+                    <owner by="name">user1@example.com</owner>
                 </GetShareInfoRequest>
 
     3. Show me all folders shared directly with me by any one.
            Not yet supported.
-    
-    
+
+
 <GetShareInfoResponse>
-    [<share ownerId="{owner-id}" ownerEmail={owner-email} [ownerName="{owner-display-name}"] 
-            folderId="{folder-id}" folderPath="{fully-qualified-path}" 
+    [<share ownerId="{owner-id}" ownerEmail={owner-email} [ownerName="{owner-display-name}"]
+            folderId="{folder-id}" folderPath="{fully-qualified-path}"
             view="{default-type}" [mid="{mountpoint-id}"] rights="{rights}"
             granteeType="{grantee-type}" granteeId="{grantee-id}" granteeName="{grantee-name}" [granteeDisplayName="{grantee-display-name}">]]+
 </GetShareInfoResponse>
 
-mid="{mountpoint-id}" : returned if the share is already mounted.  
-                        contains the folder id of the mountpoint in the local mailbox.  
-                        
-                        
----------------------------- 
+mid="{mountpoint-id}" : returned if the share is already mounted.
+                        contains the folder id of the mountpoint in the local mailbox.
+
+
+----------------------------
 
 <SendShareNotificationRequest>
     <share [l="{folder-id}"] [path="{fully-qualified-path}"]
            gt="{grantee-type}" [zid="{grantee-id}"] [d="{grantee-display-name}"]/>
-    [<notes>{notes}</notes>]       
+    [<notes>{notes}</notes>]
 </SendShareNotificationRequest>
 
 granteeType = usr | grp | guest
@@ -3273,7 +3274,7 @@ granteeType = usr | grp | guest
 
 <SendShareNotificationResponse/>
 
----------------------------- 
+----------------------------
 
 <GetEffectivePermsRequest>
   <folder l="{folder-id}"/>]
@@ -3284,9 +3285,9 @@ returns the effective permissions of the specified folder
 <GetEffectiveFolderPermsResponse>
   <folder perm="{permissions}"/>
 </GetEffectiveFolderPermsResponse>
-                       
 
----------------------------- 
+
+----------------------------
 
 <RankingActionRequest>
   <action op="reset|delete" [email="{email-address}"] />
@@ -3298,11 +3299,11 @@ reset - resets the contact ranking table for the account
 delete - delete the ranking information for the email address
 
 ----------------------------
-  
+
 <ModifyZimletPrefsRequest>
     <zimlet name="{name}" presence="{enabled|disabled}"/>+
 </ModifyZimletPrefsRequest>
- 
+
 <ModifyZimletPrefsResponse>
     <zimlet name="{name}" presence="{enabled|disabled}"/>+
 </ModifyZimletPrefsResponse>

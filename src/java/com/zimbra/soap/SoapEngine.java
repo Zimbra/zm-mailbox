@@ -23,6 +23,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapParseException;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -45,6 +46,7 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
@@ -57,7 +59,7 @@ import java.util.Map;
 /**
  * The soap engine.
  */
-public class SoapEngine {
+public final class SoapEngine {
 
     // attribute used to correlate requests and responses
     public static final String A_REQUEST_CORRELATOR = "requestId";
@@ -88,8 +90,9 @@ public class SoapEngine {
 
     private DocumentDispatcher mDispatcher;
 
-    public SoapEngine() {
+    SoapEngine() {
         mDispatcher = new DocumentDispatcher();
+        SoapTransport.setDefaultUserAgent("zsc", BuildInfo.VERSION);
     }
 
     /*
@@ -234,6 +237,10 @@ public class SoapEngine {
         if (zsc.getUserAgent() != null)
             ZimbraLog.addUserAgentToContext(zsc.getUserAgent());
 
+        if (zsc.getVia() != null) {
+            ZimbraLog.addViaToContext(zsc.getVia());
+        }
+
         logDebugSoapRequest(context, envelope);
 
         context.put(ZIMBRA_CONTEXT, zsc);
@@ -340,7 +347,7 @@ public class SoapEngine {
             return soapFault(soapProto, "cannot dispatch request", ServiceException.AUTH_REQUIRED());
 
         Element response = null;
-
+        SoapTransport.setVia(zsc.getNextVia());
         try {
             if (needsAdminAuth) {
                 AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(at);
@@ -405,8 +412,9 @@ public class SoapEngine {
                 context.put(ZIMBRA_SESSION, handler.getSession(zsc));
 
                 // try to proxy the request if necessary (don't proxy commands that don't require auth)
-                if (needsAuth || needsAdminAuth)
+                if (needsAuth || needsAdminAuth) {
                     response = handler.proxyIfNecessary(request, context);
+                }
             }
 
             // if no proxy, execute the request locally
@@ -445,6 +453,8 @@ public class SoapEngine {
                 Zimbra.halt("handler exception", e);
             mLog.warn("handler exception", e);
             // XXX: if the session was new, do we want to delete it?
+        } finally {
+            SoapTransport.clearVia();
         }
         return response;
     }
