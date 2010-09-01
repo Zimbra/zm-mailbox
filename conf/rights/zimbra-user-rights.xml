@@ -35,4 +35,8 @@
   <desc>send mails to distribution list</desc>
 </right>
 
+<right name="viewDistList" userRight="1" targetType="dl">
+  <desc>view distribution list members</desc>
+</right>
+
 </rights>
