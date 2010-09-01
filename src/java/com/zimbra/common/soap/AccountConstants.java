@@ -89,6 +89,10 @@ public class AccountConstants {
     public static final QName DELETE_SIGNATURE_REQUEST = QName.get("DeleteSignatureRequest", NAMESPACE);
     public static final QName DELETE_SIGNATURE_RESPONSE = QName.get("DeleteSignatureResponse", NAMESPACE);
      
+    // distribution list
+    public static final QName GET_DISTRIBUTION_LIST_MEMBERS_REQUEST = QName.get("GetDistributionListMembersRequest", NAMESPACE);
+    public static final QName GET_DISTRIBUTION_LIST_MEMBERS_RESPONSE = QName.get("GetDistributionListMembersResponse", NAMESPACE);
+    
     public static final QName GET_VERSION_INFO_REQUEST = QName.get("GetVersionInfoRequest", NAMESPACE);
     public static final QName GET_VERSION_INFO_RESPONSE = QName.get("GetVersionInfoResponse", NAMESPACE);
     
@@ -99,6 +103,8 @@ public class AccountConstants {
     public static final String E_LIFETIME = "lifetime";
     public static final String E_ACCOUNT = "account";
     public static final String E_CALENDAR_RESOURCE = "calresource";
+    public static final String E_DL = "dl";
+    public static final String E_DLM = "dlm";
     public static final String E_VERSION = "version";
     public static final String E_NAME = "name";
     public static final String E_ID = "id";
@@ -156,10 +162,12 @@ public class AccountConstants {
     public static final String A_NAME = "name";
     public static final String A_ID = "id";
     public static final String A_ID_ONLY = "idOnly";
+    public static final String A_isDL = "isDL";
     public static final String A_BY = "by";
     public static final String A_TYPE = "type";
     public static final String A_LIMIT = "limit";
     public static final String A_MORE = "more";
+    public static final String A_TOTAL = "total";
     public static final String A_ZIMLET = "zimlet";
     public static final String A_ZIMLET_BASE_URL = "baseUrl";
     public static final String A_ZIMLET_PRIORITY = "priority";
