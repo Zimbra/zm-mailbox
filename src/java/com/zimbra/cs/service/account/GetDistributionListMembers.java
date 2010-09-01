@@ -43,8 +43,7 @@ public class GetDistributionListMembers extends AccountDocumentHandler {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
             
         Element response = zsc.createElement(AccountConstants.GET_DISTRIBUTION_LIST_MEMBERS_RESPONSE);
-        Element dlElement = encodeDistributionList(response, distributionList);
-        encodeMembers(response, dlElement, distributionList, offset, limit);
+        encodeMembers(response, distributionList, offset, limit);
 
         return response;
     }
@@ -56,7 +55,7 @@ public class GetDistributionListMembers extends AccountDocumentHandler {
         return distributionList;
     }
     
-    private void encodeMembers(Element response, Element dlElement, DistributionList distributionList, 
+    private void encodeMembers(Element response, DistributionList distributionList, 
             int offset, int limit) throws ServiceException {
         String[] members = distributionList.getAllMembers();
         if (offset > 0 && offset >= members.length) {
@@ -74,7 +73,7 @@ public class GetDistributionListMembers extends AccountDocumentHandler {
         
         Provisioning prov = Provisioning.getInstance();
         for (int i = offset; i < stop; i++) {
-            Element eMember = dlElement.addElement(AccountConstants.E_DLM).setText(members[i]);
+            Element eMember = response.addElement(AccountConstants.E_DLM).setText(members[i]);
             if (prov.isDistributionList(members[i]))
                 eMember.addAttribute(AccountConstants.A_isDL, true);
         }
