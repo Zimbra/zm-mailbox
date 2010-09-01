@@ -674,10 +674,32 @@ OR
     <b s="START_MSECS_GMT" e="END_MSECS_GMT"/>*
     <t s="START_MSECS_GMT" e="END_MSECS_GMT"/>*
     <u s="START_MSECS_GMT" e="END_MSECS_GMT"/>* // a.k.a. out of office
-    <n s="START_MSECS_GMT" e="END_MSECS_GMT"/>* // could not retreive data for that user
+    <n s="START_MSECS_GMT" e="END_MSECS_GMT"/>* // could not retrieve data for that user
   </usr>  
 <GetFreeBusyResponse>
 
+
+//////////////////////////////////////////////////////////////////////
+//
+// GetWorkingHoursRequest
+//
+// (f)ree busy-(u)navailable or (n)o-data elements
+//
+// User's working hours within the given time range are expressed in a similar format as GetFreeBusy.
+// Working hours are indicated as free, non-working hours as unavailable/out of office.  The entire time
+// range is marked as unknown if there was an error determining the working hours, e.g. unknown user.
+//
+<GetWorkingHoursRequest s="RANGE_START_MSECS_GMT" e="RANGE_END_MSECS_GMT"
+  [id="zimbraId,..."]         // comma-separated list of zimbraId
+  [name="email,..."]          // comma-separated list of email
+/>
+<GetWorkingHoursResponse>
+  <usr id="id">  // id is always account email; it is not zimbraId as the attribute name may suggest
+    <f s="START_MSECS_GMT" e="END_MSECS_GMT"/>* // working hours
+    <u s="START_MSECS_GMT" e="END_MSECS_GMT"/>* // non-working hours
+    <n s="START_MSECS_GMT" e="END_MSECS_GMT"/>* // could not retrieve data for that user
+  </usr>  
+<GetWorkingHoursResponse>
 
 
 //////////////////////////////////////////////////////////////////////

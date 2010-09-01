@@ -341,6 +341,8 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
         public Interval getPrev() { return mPrev; }
         public boolean hasNext() { return mNext != null; }
         public Interval getNext() { return mNext; }
+
+        void setStatus(String status) { mStatus = status; }
     }
 
     public String getBusiest() {

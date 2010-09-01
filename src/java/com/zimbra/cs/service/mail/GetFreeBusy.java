@@ -50,18 +50,20 @@ public class GetFreeBusy extends MailDocumentHandler {
     
     private static final long MAX_PERIOD_SIZE_IN_DAYS = 200;
 
+    protected static void validateRange(long rangeStart, long rangeEnd) throws ServiceException {
+        if (rangeEnd < rangeStart)
+            throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
+        long days = (rangeEnd - rangeStart) / MSEC_PER_DAY;
+        if (days > MAX_PERIOD_SIZE_IN_DAYS)
+            throw ServiceException.INVALID_REQUEST("Requested range is too large (Maximum "+MAX_PERIOD_SIZE_IN_DAYS+" days)", null);
+    }
+
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zc = getZimbraSoapContext(context);
         
         long rangeStart = request.getAttributeLong(MailConstants.A_CAL_START_TIME);
         long rangeEnd = request.getAttributeLong(MailConstants.A_CAL_END_TIME);
-        
-        if (rangeEnd < rangeStart)
-            throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
-
-        long days = (rangeEnd - rangeStart) / MSEC_PER_DAY;
-        if (days > MAX_PERIOD_SIZE_IN_DAYS)
-            throw ServiceException.INVALID_REQUEST("Requested range is too large (Maximum "+MAX_PERIOD_SIZE_IN_DAYS+" days)", null);
+        validateRange(rangeStart, rangeEnd);
 
         Element response = getResponseElement(zc);
         
