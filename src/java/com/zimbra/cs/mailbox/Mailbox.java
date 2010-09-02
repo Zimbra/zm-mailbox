@@ -4814,18 +4814,35 @@ public class Mailbox {
     }
 
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
-        return saveDraft(octxt, pm, id, null, null, null, null);
+        return saveDraft(octxt, pm, id, null, null, null, null, 0);
     }
 
+    /**
+     * Saves draft.
+     *
+     * @param octxt
+     * @param pm
+     * @param id
+     * @param origId
+     * @param replyType
+     * @param identityId
+     * @param accountId
+     * @param autoSendTime time at which the draft needs to be auto-sent. Note that this method does not schedule
+     *                     the task for auto-sending the draft. It just persists this time for tracking purposes. 
+     * @return
+     * @throws IOException
+     * @throws ServiceException
+     * @see com.zimbra.cs.service.mail.SaveDraft#handle(com.zimbra.common.soap.Element, java.util.Map)
+     */
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id,
-        String origId, String replyType, String identityId, String accountId)
+                             String origId, String replyType, String identityId, String accountId, long autoSendTime)
     throws IOException, ServiceException {
         if (id == ID_AUTO_INCREMENT) {
             // special-case saving a new draft
             Message.DraftInfo dinfo = null;
             if ((replyType != null && origId != null) || (identityId != null && !identityId.equals("")) ||
                 (accountId != null && !accountId.equals("")))
-                dinfo = new Message.DraftInfo(replyType, origId, identityId, accountId);
+                dinfo = new Message.DraftInfo(replyType, origId, identityId, accountId, autoSendTime);
 
             return addMessage(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME,
                               null, ID_AUTO_INCREMENT, ":API:", dinfo, null, null);

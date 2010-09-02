@@ -19,6 +19,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
@@ -30,11 +31,17 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.mailbox.AutoSendDraftTask;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.ScheduledTaskManager;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
+import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
+import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
+import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.util.ItemId;
@@ -107,13 +114,19 @@ public class SaveDraft extends MailDocumentHandler {
         }
 
         ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
+
+        Element autoSendTimeElem = request.getOptionalElement(MailConstants.E_AUTO_SEND_TIME);
+        long autoSendTime = 0;
+        if (autoSendTimeElem != null) {
+            autoSendTime = getAutoSendTime(autoSendTimeElem, mbox);
+        }
+
         Message msg;
-        
         try {
             String origid = iidOrigid == null ? null : iidOrigid.toString(account == null ?
                 mbox.getAccountId() : account);
             
-            msg = mbox.saveDraft(octxt, pm, id, origid, replyType, identity, account);
+            msg = mbox.saveDraft(octxt, pm, id, origid, replyType, identity, account, autoSendTime);
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOException while saving draft", e);
         }
@@ -135,9 +148,40 @@ public class SaveDraft extends MailDocumentHandler {
             }
         }
 
+        if (id != Mailbox.ID_AUTO_INCREMENT) {
+            // Cancel any existing auto-send task for this draft
+            ScheduledTaskManager.cancel(AutoSendDraftTask.class.getName(),
+                                        "autoSendDraftTask" + Integer.toString(id),
+                                        mbox.getId(),
+                                        true);
+        }
+
+        if (autoSendTime != 0) {
+            // schedule a new auto-send-draft task
+            AutoSendDraftTask autoSendDraftTask = new AutoSendDraftTask();
+            autoSendDraftTask.setMailboxId(mbox.getId());
+            autoSendDraftTask.setExecTime(new Date(autoSendTime));
+            autoSendDraftTask.setProperty("draftId", Integer.toString(msg.getId()));
+            ScheduledTaskManager.schedule(autoSendDraftTask);
+        }
+
         Element response = zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
         // FIXME: inefficient -- this recalculates the MimeMessage (but SaveDraft is called rarely)
         ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, -1, true, true, null, true);
         return response;
+    }
+
+    private static long getAutoSendTime(Element autoSendTimeElem, Mailbox mbox) throws ServiceException {
+        String d = autoSendTimeElem.getAttribute(MailConstants.A_CAL_DATETIME);
+        String tzId = autoSendTimeElem.getAttribute(MailConstants.A_CAL_TIMEZONE, null);
+        ICalTimeZone tz = WellKnownTimeZones.getTimeZoneById(tzId);
+        ICalTimeZone acctTz = ICalTimeZone.getAccountTimeZone(mbox.getAccount());
+        ParsedDateTime parsedDateTime;
+        try {
+            parsedDateTime = ParsedDateTime.parse(d, new TimeZoneMap(acctTz), tz, acctTz);
+        } catch (ParseException e) {
+            throw ServiceException.INVALID_REQUEST("Error in parsing draft auto send time", e);
+        }
+        return parsedDateTime.getUtcTime();
     }
 }

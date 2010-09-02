@@ -76,16 +76,24 @@ public class Message extends MailItem {
         String replyType;
         String origId;
 
-        public DraftInfo()  { }
-        public DraftInfo(String ident)                        { identityId = ident; }
-        public DraftInfo(String rt, String id)                { replyType = rt;  origId = id; }
-        public DraftInfo(String rt, String id, String ident)  { replyType = rt;  origId = id;  identityId = ident; }
-        public DraftInfo(String rt, String id, String ident, String account)  { replyType = rt;  origId = id;  identityId = ident; accountId = account; }
-        public DraftInfo(Metadata meta) {
+        // time in UTC millis at which the draft is intended to be auto-sent by the server
+        // zero value implies a normal draft, i.e. no auto-send intended
+        long autoSendTime;
+
+        public DraftInfo(String rt, String id, String ident, String account, long autoSendTime) {
+            replyType = rt;
+            origId = id;
+            identityId = ident;
+            accountId = account;
+            this.autoSendTime = autoSendTime;
+        }
+
+        public DraftInfo(Metadata meta) throws ServiceException {
             accountId = meta.get(Metadata.FN_ACCOUNT_ID, null);
             identityId = meta.get(Metadata.FN_IDENTITY_ID, null);
             replyType = meta.get(Metadata.FN_REPLY_TYPE, null);
             origId = meta.get(Metadata.FN_REPLY_ORIG, null);
+            autoSendTime = meta.getLong(Metadata.FN_AUTO_SEND_TIME, 0);
         }
     }
 
@@ -1163,6 +1171,7 @@ public class Message extends MailItem {
             dmeta.put(Metadata.FN_REPLY_TYPE, dinfo.replyType);
             dmeta.put(Metadata.FN_IDENTITY_ID, dinfo.identityId);
             dmeta.put(Metadata.FN_ACCOUNT_ID, dinfo.accountId);
+            dmeta.put(Metadata.FN_AUTO_SEND_TIME, dinfo.autoSendTime);
             meta.put(Metadata.FN_DRAFT, dmeta);
         }
 

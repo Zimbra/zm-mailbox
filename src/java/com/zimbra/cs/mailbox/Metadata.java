@@ -60,6 +60,7 @@ public class Metadata {
     static final String FN_DESCRIPTION     = "de";
     static final String FN_REPLY_ORIG      = "do";
     static final String FN_REPLY_TYPE      = "dt";
+    static final String FN_AUTO_SEND_TIME  = "ast";
     static final String FN_ENTRIES         = "en";
     static final String FN_FRAGMENT        = "f";
     static final String FN_FIRST           = "f";
