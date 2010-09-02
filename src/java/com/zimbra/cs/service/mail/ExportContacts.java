@@ -60,7 +60,8 @@ public class ExportContacts extends MailDocumentHandler  {
         	contacts = new ArrayList<Contact>();
         
         try {
-            ContactCSV.toCSV(format, contacts.iterator(), sb);
+            ContactCSV contactCSV = new ContactCSV();
+            contactCSV.toCSV(format, contacts.iterator(), sb);
         } catch (ContactCSV.ParseException e) {
             throw MailServiceException.UNABLE_TO_EXPORT_CONTACTS(e.getMessage(), e);
         }

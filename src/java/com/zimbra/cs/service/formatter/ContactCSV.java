@@ -41,18 +41,58 @@ import org.dom4j.QName;
 
 public class ContactCSV {
 
+    public static final char DEFAULT_FIELD_SEPARATOR = ',';
+    // CSV files intended for use in locales where ',' as the decimal separator
+    // typically use ';' as a field separator instead of ','.
+    public static final char[] SUPPORTED_SEPARATORS = { DEFAULT_FIELD_SEPARATOR, ';' };
     private static final String FORMAT_ZIMBRA_CSV = "zimbra-csv";
 
     private int mLineNumber;
     private int mCurrContactStartLineNum;
     private HashMap<String, Integer> mFieldCols;
     private ArrayList<String> mFields;
+    private boolean mDetectFieldSeparator;
+    private boolean mKnowFieldSeparator;
+    private char mFieldSeparator;
+
+    public ContactCSV() {
+        this(DEFAULT_FIELD_SEPARATOR, true);
+    }
+
+    public ContactCSV(char defaultFieldSeparator, boolean detectFieldSeparator) {
+        mFieldSeparator = defaultFieldSeparator;
+        mDetectFieldSeparator = detectFieldSeparator;
+        // If we are not doing auto-detect, defaultFieldSeparator MUST be the separator
+        mKnowFieldSeparator = !detectFieldSeparator;
+    }
+
+    /**
+     * Implicit assumption, the first field name will not contain any of the supported separators
+     * @param testChar
+     * @return
+     */
+    private boolean isFieldSeparator(int testChar) {
+        if (mKnowFieldSeparator)
+            return (testChar == mFieldSeparator);
+        for (char possSep : SUPPORTED_SEPARATORS) {
+            if (possSep == testChar) {
+                if ((ZimbraLog.misc.isDebugEnabled()) && (possSep != DEFAULT_FIELD_SEPARATOR))
+                    ZimbraLog.misc.debug("CSV Separator character used='%c'", possSep);
+                mKnowFieldSeparator = true;
+                mFieldSeparator = possSep;
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * read a line of fields into an array list. blank fields (,, or ,"",) will be null. 
      */
     private boolean parseLine(BufferedReader reader, List<String> result, boolean parsingHeader) throws IOException, ParseException {
         mCurrContactStartLineNum = mLineNumber;
+        if (parsingHeader && mDetectFieldSeparator)
+            mKnowFieldSeparator = false;
         result.clear();
         int ch;
         boolean inField = false;
@@ -61,10 +101,6 @@ public class ContactCSV {
                 case '"':
                     inField = true;
                     result.add(parseField(reader, true, -1, parsingHeader, result.size()));
-                    break;
-                case ',':
-                    if (inField) inField = false;
-                    else result.add(null);
                     break;
                 case '\n':
                     mLineNumber++;
@@ -82,9 +118,15 @@ public class ContactCSV {
                         return true;
                     else
                         break;
-                default: // start of field
-                    result.add(parseField(reader, false, ch, parsingHeader, result.size())); // eats trailing ','
-                    inField = false;
+                default:
+                    if (isFieldSeparator(ch)) {
+                        if (inField) inField = false;
+                        else result.add(null);
+                    } else {
+                        // start of field
+                        result.add(parseField(reader, false, ch, parsingHeader, result.size())); // eats trailing field separator
+                        inField = false;
+                    }
                     break;
             }
         }
@@ -115,7 +157,7 @@ public class ContactCSV {
                     else return sb.toString();
                 }
                 sb.append((char)ch);
-            } else if (ch == ',' && !doubleQuotes) {
+            } else if (ch == mFieldSeparator && !doubleQuotes) {
                 //reader.reset();
                 return sb.toString();
             } else if ((ch == '\r' || ch == '\n') && !doubleQuotes) {
@@ -214,7 +256,7 @@ public class ContactCSV {
             return;
         }
 
-        int comma = value.indexOf(',');
+        int comma = value.indexOf(mFieldSeparator);
         if (comma > 0) {
             // Brown, James
             contact.put(lastNameField, value.substring(0, comma).trim());
@@ -539,7 +581,7 @@ public class ContactCSV {
         return mDefaultFormat;
     }
     
-    public static void toCSV(String format, Iterator contacts, StringBuffer sb) throws ParseException {
+    public void toCSV(String format, Iterator contacts, StringBuffer sb) throws ParseException {
         if (mKnownFormats == null)
             return;
 
@@ -549,7 +591,7 @@ public class ContactCSV {
             return;
         
         if (fmt.allFields()) {
-            ArrayList<Map> allContacts = new ArrayList<Map>();
+            ArrayList<Map <String, String>> allContacts = new ArrayList<Map <String, String>>();
             HashSet<String> fields = new HashSet<String>();
             while (contacts.hasNext()) {
                 Object obj = contacts.next();
@@ -563,7 +605,7 @@ public class ContactCSV {
             allFields.addAll(fields);
             Collections.sort(allFields);
             addFieldDef(allFields, sb);
-            for (Map contactMap : allContacts)
+            for (Map <String, String> contactMap : allContacts)
                 toCSVContact(allFields, contactMap, sb);
             return;
         }
@@ -578,7 +620,7 @@ public class ContactCSV {
         }
     }
 
-    private static void addFieldValue(Map contact, String name, String field, StringBuffer sb) {
+    private static void addFieldValue(Map <String, String> contact, String name, String field, StringBuffer sb) {
         String value = (String) contact.get((field == null) ? name : field);
         if (value == null) value = "";
         sb.append('"');
@@ -586,29 +628,29 @@ public class ContactCSV {
         sb.append('"');
     }
 
-    private static void toCSVContact(List<String> fields, Map contact, StringBuffer sb) {
+    private void toCSVContact(List<String> fields, Map <String,String> contact, StringBuffer sb) {
         boolean first = true;
         for (String f : fields) {
             if (!first)
-                sb.append(',');
+                sb.append(mFieldSeparator);
             addFieldValue(contact, f, f, sb);
             first = false;
         }
         sb.append("\n");
     }
 
-    private static void toCSVContact(CsvFormat fmt, Contact c, StringBuffer sb) {
+    private void toCSVContact(CsvFormat fmt, Contact c, StringBuffer sb) {
         boolean first = true;
         for (CsvColumn col : fmt.columns) {
             if (!first)
-                sb.append(',');
+                sb.append(mFieldSeparator);
             if (col.mapToTag) {
             	try {
             		boolean firstTag = true;
                 	sb.append('"');
                 	for (Tag t : c.getTagList()) {
                 		if (!firstTag)
-                			sb.append(',');
+                			sb.append(mFieldSeparator);
                 		sb.append(t.getName());
                 		firstTag = false;
                 	}
@@ -622,11 +664,11 @@ public class ContactCSV {
         sb.append("\n");
     }
     
-    private static void addFieldDef(List<String> fields, StringBuffer sb) {
+    private void addFieldDef(List<String> fields, StringBuffer sb) {
         boolean first = true;
         for (String f : fields) {
             if (!first)
-                sb.append(',');
+                sb.append(mFieldSeparator);
             sb.append('"');
             sb.append(f);
             sb.append('"');
@@ -635,11 +677,11 @@ public class ContactCSV {
         sb.append("\n");
     }
     
-    private static void addFieldDef(CsvFormat fmt, StringBuffer sb) {
+    private void addFieldDef(CsvFormat fmt, StringBuffer sb) {
         boolean first = true;
         for (CsvColumn col : fmt.columns) {
             if (!first)
-                sb.append(',');
+                sb.append(mFieldSeparator);
             sb.append('"');
             sb.append(col.name);
             sb.append('"');

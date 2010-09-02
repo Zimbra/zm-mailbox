@@ -58,7 +58,8 @@ public class CsvFormatter extends Formatter {
         try {
             iterator = getMailItems(context, -1, -1, Integer.MAX_VALUE);
             String format = context.req.getParameter(UserServlet.QP_CSVFORMAT);
-            ContactCSV.toCSV(format, iterator, sb);
+            ContactCSV contactCSV = new ContactCSV();
+            contactCSV.toCSV(format, iterator, sb);
         } catch (ContactCSV.ParseException e) {
             throw MailServiceException.UNABLE_TO_IMPORT_CONTACTS("could not generate CSV", e);
         } finally {
