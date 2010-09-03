@@ -25,7 +25,7 @@ import org.dom4j.io.SAXReader;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Deque;
+//import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Map;
 
@@ -54,9 +54,19 @@ public abstract class SoapTransport {
     private static String sDefaultUserAgentVersion;
     private static final ViaHolder viaHolder = new ViaHolder();
 
+    /*
     private static final class ViaHolder extends ThreadLocal<Deque<String>> {
         @Override
         protected Deque<String> initialValue() {
+            return new LinkedList<String>();
+        }
+    }
+    */
+
+    //TODO: Switch back to above on Sep/11/2010.
+    private static final class ViaHolder extends ThreadLocal<LinkedList<String>> {
+        @Override
+        protected LinkedList<String> initialValue() {
             return new LinkedList<String>();
         }
     }
@@ -199,7 +209,8 @@ public abstract class SoapTransport {
      * @param value {@code via} header value
      */
     public static void setVia(String value) {
-        viaHolder.get().push(value);
+        //viaHolder.get().push(value);
+        viaHolder.get().addFirst(value);
     }
 
     /**
@@ -208,7 +219,8 @@ public abstract class SoapTransport {
      * @see #setVia(String)
      */
     public static void clearVia() {
-        viaHolder.get().pop();
+        //viaHolder.get().pop();
+        viaHolder.get().removeFirst();
     }
 
     /** Sets the version of SOAP to use when generating requests. */
