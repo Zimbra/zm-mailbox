@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.apache.jsieve.SieveContext;
 import org.apache.jsieve.exception.InternetAddressException;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.Action;
@@ -34,7 +35,10 @@ public class DummyMailAdapter implements MailAdapter {
 
     private List mHeaders = new ArrayList(1);
     private List mActions = new ArrayList(1);
-    
+
+    public void setContext(SieveContext context) {
+    }
+
     public List getActions() {
         return mActions;
     }
@@ -71,6 +75,10 @@ public class DummyMailAdapter implements MailAdapter {
     
     public String getContentType() {
         return "text/plain";
+    }
+
+    public boolean isInBodyText(String phraseCaseInsensitive) throws SieveMailException {
+        return false;
     }
 
     public Address[] parseAddresses(String headerName) {
