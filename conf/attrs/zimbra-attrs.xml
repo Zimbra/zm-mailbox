@@ -4998,4 +4998,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Minimum percentage or TB/GB/MB/KB/bytes of free space on backup target to allow a full or auto-grouped backup to start; 0 = no minimum is enforced.  Examples: 25%, 10GB</desc>
 </attr>
 
+<attr id="1112" name="zimbraGalLdapGroupHandlerClass" type="string" max="1024" cardinality="single" optionalIn="globalConfig,domain,galDataSource" flags="domainInherited" since="7.0.0">
+  <globalConfigValue>com.zimbra.cs.gal.ZimbraGalGroupHandler</globalConfigValue>
+  <desc>the handler class for mapping groups from GAL source to zimbra GAL contacts</desc>
+</attr>
+
+
 </attrs>

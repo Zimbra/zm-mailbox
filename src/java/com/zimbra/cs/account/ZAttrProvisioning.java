@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 jhahm 20100831-1347 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100901-1544 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3341,6 +3341,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=52)
     public static final String A_zimbraGalLdapFilterDef = "zimbraGalLdapFilterDef";
+
+    /**
+     * the handler class for mapping groups from GAL source to zimbra GAL
+     * contacts
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1112)
+    public static final String A_zimbraGalLdapGroupHandlerClass = "zimbraGalLdapGroupHandlerClass";
 
     /**
      * kerberos5 keytab file path for external GAL queries

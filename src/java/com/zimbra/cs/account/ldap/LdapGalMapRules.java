@@ -21,11 +21,15 @@ import java.util.Map;
 
 import javax.naming.directory.Attributes;
 
+import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.gal.GalGroupHandler;
+import com.zimbra.cs.gal.ZimbraGalGroupHandler;
 
 /*
  * maps LDAP attrs into contact attrs. 
@@ -35,9 +39,10 @@ public class LdapGalMapRules {
     private List<LdapGalMapRule> mRules;
     private List<String> mLdapAttrs;
     private Map<String, LdapGalValueMap> mValueMaps;
+    private GalGroupHandler mGroupHandler;
 
-    public LdapGalMapRules(String[] rules, String[] valueMaps) {
-        init(rules, valueMaps);
+    public LdapGalMapRules(String[] rules, String[] valueMaps, String groupHandlerClass) {
+        init(rules, valueMaps, groupHandlerClass);
     }
     
     public LdapGalMapRules(Config config) {
@@ -50,10 +55,11 @@ public class LdapGalMapRules {
 
     private void init(Entry entry) {
         init(entry.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap),
-             entry.getMultiAttr(Provisioning.A_zimbraGalLdapValueMap));
+             entry.getMultiAttr(Provisioning.A_zimbraGalLdapValueMap), 
+             entry.getAttr(Provisioning.A_zimbraGalLdapGroupHandlerClass));
     }
     
-    private void init(String[] rules, String[] valueMaps) {
+    private void init(String[] rules, String[] valueMaps, String groupHandlerClass) {
         if (valueMaps !=  null) {
             mValueMaps = new HashMap<String, LdapGalValueMap>(valueMaps.length);
             for (String valueMap : valueMaps) {
@@ -66,6 +72,25 @@ public class LdapGalMapRules {
         mLdapAttrs = new ArrayList<String>();
         for (String rule: rules)
             add(rule);
+        
+        initGroupHandler(groupHandlerClass);
+    }
+    
+    private void initGroupHandler(String className) {
+        if (className != null && !className.equals("")) {
+            try {
+                try {
+                    mGroupHandler = (GalGroupHandler)Class.forName(className).newInstance();
+                } catch (ClassNotFoundException cnfe) {
+                    // ignore and look in extensions
+                    mGroupHandler = (GalGroupHandler)ExtensionUtil.findClass(className).newInstance();
+                }
+            } catch (Exception e) {
+                ZimbraLog.gal.error("could not instantiate GalGroupHandler interface of class '" + className + "'; defaulting to ZimbraGalGroupHandler", e);
+            }
+        }
+        if (mGroupHandler == null)
+            mGroupHandler = new ZimbraGalGroupHandler();
     }
     
     public String[] getLdapAttrs() {
@@ -77,6 +102,11 @@ public class LdapGalMapRules {
         for (LdapGalMapRule rule: mRules) {
             rule.apply(ldapAttrs, contactAttrs);
         }
+        
+        if (mGroupHandler.isGroup(ldapAttrs)) {
+            contactAttrs.put(ContactConstants.A_type, ContactConstants.TYPE_GROUP);
+        }
+        
         return contactAttrs;
     }
     

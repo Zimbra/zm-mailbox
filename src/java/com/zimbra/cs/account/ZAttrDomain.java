@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 jhahm 20100831-1347 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100901-1544 */
 
     /**
      * RFC2256: descriptive information
@@ -5571,6 +5571,83 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetGalLdapFilter(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalLdapFilter, "");
+        return attrs;
+    }
+
+    /**
+     * the handler class for mapping groups from GAL source to zimbra GAL
+     * contacts
+     *
+     * @return zimbraGalLdapGroupHandlerClass, or "com.zimbra.cs.gal.ZimbraGalGroupHandler" if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1112)
+    public String getGalLdapGroupHandlerClass() {
+        return getAttr(Provisioning.A_zimbraGalLdapGroupHandlerClass, "com.zimbra.cs.gal.ZimbraGalGroupHandler");
+    }
+
+    /**
+     * the handler class for mapping groups from GAL source to zimbra GAL
+     * contacts
+     *
+     * @param zimbraGalLdapGroupHandlerClass new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1112)
+    public void setGalLdapGroupHandlerClass(String zimbraGalLdapGroupHandlerClass) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalLdapGroupHandlerClass, zimbraGalLdapGroupHandlerClass);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the handler class for mapping groups from GAL source to zimbra GAL
+     * contacts
+     *
+     * @param zimbraGalLdapGroupHandlerClass new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1112)
+    public Map<String,Object> setGalLdapGroupHandlerClass(String zimbraGalLdapGroupHandlerClass, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalLdapGroupHandlerClass, zimbraGalLdapGroupHandlerClass);
+        return attrs;
+    }
+
+    /**
+     * the handler class for mapping groups from GAL source to zimbra GAL
+     * contacts
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1112)
+    public void unsetGalLdapGroupHandlerClass() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalLdapGroupHandlerClass, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the handler class for mapping groups from GAL source to zimbra GAL
+     * contacts
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1112)
+    public Map<String,Object> unsetGalLdapGroupHandlerClass(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalLdapGroupHandlerClass, "");
         return attrs;
     }
 
