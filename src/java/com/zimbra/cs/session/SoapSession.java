@@ -1273,9 +1273,6 @@ public class SoapSession extends Session {
         PendingModifications pms = ntfn.mMailboxChanges;
         RemoteNotifications rns = ntfn.mRemoteChanges;
 
-        // remote notifications get delivered *once*, then are discarded
-        ntfn.mRemoteChanges = null;
-
         Element eDeleted = eNotify.addUniqueElement(ZimbraNamespace.E_DELETED);
         StringBuilder deletedIds = new StringBuilder();
         if (pms != null && pms.deleted != null && pms.deleted.size() > 0) {
@@ -1314,7 +1311,7 @@ public class SoapSession extends Session {
                 if (debug)
                     ZimbraLog.session.debug("adding " + rns.created.size() + " proxied creates");
                 for (Element elt : rns.created)
-                    eCreated.addElement(elt.detach());
+                    eCreated.addElement(elt.clone().detach());
             }
         }
 
@@ -1358,7 +1355,7 @@ public class SoapSession extends Session {
                 if (debug)
                     ZimbraLog.session.debug("adding " + rns.modified.size() + " proxied modifies");
                 for (Element elt : rns.modified)
-                    eModified.addElement(elt.detach());
+                    eModified.addElement(elt.clone().detach());
             }
         }
         
