@@ -177,6 +177,13 @@ public final class ZimbraSoapContext {
      * @param targetAccountId different account ID from the original request
      */
     public ZimbraSoapContext(ZimbraSoapContext zsc, String targetAccountId) throws ServiceException {
+        this(zsc, targetAccountId, null);
+    }
+
+    /** Creates a <code>ZimbraSoapContext</code> from another existing
+     *  <code>ZimbraSoapContext</code> for use in proxying. 
+     *  If session is non-null, it will be used for proxy notifications*/
+    public ZimbraSoapContext(ZimbraSoapContext zsc, String targetAccountId, Session session) throws ServiceException {
         mUserAgent = zsc.mUserAgent;
         mRequestIP = zsc.mRequestIP;
         mVia = zsc.mVia;
@@ -192,6 +199,10 @@ public final class ZimbraSoapContext {
         mUnqualifiedItemIds = zsc.mUnqualifiedItemIds;
         mMountpointTraversed = zsc.mMountpointTraversed;
         setHopCount(zsc.mHopCount + 1);
+        if (session != null) {
+            mSessionEnabled = true;
+            mSessionInfo = new SessionInfo(session.getSessionId(), (session instanceof SoapSession?((SoapSession)session).getCurrentNotificationSequence():0),false);
+        }
     }
 
     /**

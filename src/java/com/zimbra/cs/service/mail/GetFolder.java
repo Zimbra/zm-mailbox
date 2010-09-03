@@ -21,19 +21,20 @@ package com.zimbra.cs.service.mail;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.FolderNode;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.Pair;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.OperationContextData;
+import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.util.Pair;
+import com.zimbra.cs.session.SoapSession;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetFolder extends MailDocumentHandler {
@@ -127,15 +128,7 @@ public class GetFolder extends MailDocumentHandler {
         // return the children of the remote folder as children of the mountpoint
         proxied = proxied.getOptionalElement(MailConstants.E_FOLDER);
         if (proxied != null) {
-            eRoot.addAttribute(MailConstants.A_REST_URL, proxied.getAttribute(MailConstants.A_REST_URL, null));
-            eRoot.addAttribute(MailConstants.A_RIGHTS, proxied.getAttribute(MailConstants.A_RIGHTS, null));
-
-            for (Element eRemote : proxied.listElements()) {
-                if (eRemote.getName().equals(MailConstants.E_ACL))
-                    eRoot.addUniqueElement(eRemote.detach());
-                else
-                    eRoot.addElement(eRemote.detach());
-            }
+            SoapSession.transferMountpointContents(eRoot, proxied); //args: to,from
         }
     }
 }
