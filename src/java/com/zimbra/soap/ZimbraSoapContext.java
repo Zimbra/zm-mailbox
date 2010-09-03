@@ -34,7 +34,6 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
@@ -42,8 +41,8 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.session.Session;
-import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.SessionCache;
+import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.SoapSession.PushChannel;
 
 /**
@@ -147,6 +146,13 @@ public class ZimbraSoapContext {
     /** Creates a <code>ZimbraSoapContext</code> from another existing
      *  <code>ZimbraSoapContext</code> for use in proxying. */
     public ZimbraSoapContext(ZimbraSoapContext zsc, String targetAccountId) throws ServiceException {
+        this(zsc, targetAccountId, null);
+    }
+
+    /** Creates a <code>ZimbraSoapContext</code> from another existing
+     *  <code>ZimbraSoapContext</code> for use in proxying. 
+     *  If session is non-null, it will be used for proxy notifications*/
+    public ZimbraSoapContext(ZimbraSoapContext zsc, String targetAccountId, Session session) throws ServiceException {
         mRawAuthToken = zsc.mRawAuthToken;
         mAuthToken = zsc.mAuthToken;
         mAuthTokenAccountId = zsc.mAuthTokenAccountId;
@@ -163,8 +169,11 @@ public class ZimbraSoapContext {
         mMountpointTraversed = zsc.mMountpointTraversed;
 
         setHopCount(zsc.mHopCount + 1);
+        if (session != null) {
+            mSessionEnabled = true;
+            mSessionInfo = new SessionInfo(session.getSessionId(), (session instanceof SoapSession?((SoapSession)session).getCurrentNotificationSequence():0),false);
+        }
     }
-    
 
     /** Creates a <code>ZimbraSoapContext</code> from the <tt>&lt;context></tt>
      *  {@link Element} from the SOAP header.
