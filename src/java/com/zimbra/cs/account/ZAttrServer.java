@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100901-1544 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100903-1655 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -350,6 +350,78 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetACE(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraACE, "");
+        return attrs;
+    }
+
+    /**
+     * number of admin initiated imap import handler threads
+     *
+     * @return zimbraAdminImapImportNumThreads, or 20 if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1113)
+    public int getAdminImapImportNumThreads() {
+        return getIntAttr(Provisioning.A_zimbraAdminImapImportNumThreads, 20);
+    }
+
+    /**
+     * number of admin initiated imap import handler threads
+     *
+     * @param zimbraAdminImapImportNumThreads new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1113)
+    public void setAdminImapImportNumThreads(int zimbraAdminImapImportNumThreads) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminImapImportNumThreads, Integer.toString(zimbraAdminImapImportNumThreads));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of admin initiated imap import handler threads
+     *
+     * @param zimbraAdminImapImportNumThreads new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1113)
+    public Map<String,Object> setAdminImapImportNumThreads(int zimbraAdminImapImportNumThreads, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminImapImportNumThreads, Integer.toString(zimbraAdminImapImportNumThreads));
+        return attrs;
+    }
+
+    /**
+     * number of admin initiated imap import handler threads
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1113)
+    public void unsetAdminImapImportNumThreads() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminImapImportNumThreads, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * number of admin initiated imap import handler threads
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1113)
+    public Map<String,Object> unsetAdminImapImportNumThreads(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminImapImportNumThreads, "");
         return attrs;
     }
 

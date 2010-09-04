@@ -4906,7 +4906,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to show Find Locations and Find Resources tabs for editing appointments</desc>
 </attr>
 
-<attr id="1093" name="zimbraGalAlwaysIncludeLocalCalendarResources" type="boolean" cardinality="single" optionalIn="domain,globalConfig" flags="domainInfo,domainInherited,domainAdminModifiable"  since="6.0.7">
+<attr id="1093" name="zimbraGalAlwaysIncludeLocalCalendarResources" type="boolean" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited,domainAdminModifiable"  since="6.0.7">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>
     When set to TRUE, GAL search will always include local
@@ -5003,5 +5003,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>the handler class for mapping groups from GAL source to zimbra GAL contacts</desc>
 </attr>
 
+<attr id="1113" name="zimbraAdminImapImportNumThreads" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="7.0.0">
+  <globalConfigValue>20</globalConfigValue>
+  <desc>number of admin initiated imap import handler threads</desc>
+</attr>
 
 </attrs>

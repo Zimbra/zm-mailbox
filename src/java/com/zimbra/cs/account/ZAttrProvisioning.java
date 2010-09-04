@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100901-1544 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100903-1655 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1324,6 +1324,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=803)
     public static final String A_zimbraAdminExtDisableUIUndeploy = "zimbraAdminExtDisableUIUndeploy";
+
+    /**
+     * number of admin initiated imap import handler threads
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1113)
+    public static final String A_zimbraAdminImapImportNumThreads = "zimbraAdminImapImportNumThreads";
 
     /**
      * SSL port for admin UI
