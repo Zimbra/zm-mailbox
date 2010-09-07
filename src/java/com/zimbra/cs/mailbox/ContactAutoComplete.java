@@ -94,6 +94,7 @@ public class ContactAutoComplete {
         String mDisplayName;
         String mLastName;
         String mDlist;
+        boolean mIsGroup;
         ItemId mId;
         int mFolderId;
         int mRanking;
@@ -131,6 +132,10 @@ public class ContactAutoComplete {
 
         public boolean isDlist() {
             return mDlist != null;
+        }
+        
+        public boolean isGroup() {
+            return mIsGroup;
         }
 
         public String getDisplayName() {
@@ -417,6 +422,7 @@ public class ContactAutoComplete {
                     entry.setName(fullName);
                     entry.mId = id;
                     entry.mFolderId = folderId;
+                    entry.mIsGroup = isGroup(attrs);
                     result.addEntry(entry);
                     ZimbraLog.gal.debug("adding " + entry.getEmail());
                     if (folderId == FOLDER_ID_GAL) {
@@ -438,9 +444,14 @@ public class ContactAutoComplete {
             entry.mDlist = (String) attrs.get(ContactConstants.A_dlist);
             entry.mId = id;
             entry.mFolderId = folderId;
+            entry.mIsGroup = isGroup(attrs);
             result.addEntry(entry);
             ZimbraLog.gal.debug("adding " + entry.getEmail());
         }
+    }
+    
+    private boolean isGroup(Map<String,? extends Object> attrs) {
+        return ContactConstants.TYPE_GROUP.equals((String) attrs.get(ContactConstants.A_type));
     }
 
     private void queryFolders(String str, Collection<Integer> folderIDs, int limit, AutoCompleteResult result) throws ServiceException {

@@ -714,7 +714,7 @@ import and export of addressbook.
 </AutoCompleteRequest>
 
 <AutoCompleteResponse canBeCached="0|1">
-  <match ranking="..." type="gal|group|contact|rankingTable" email="..." [display="..."] [id="..."] [l="..."]/>*
+  <match ranking="..." type="gal|contact|rankingTable" isGroup="1|0" email="..." [display="..."] [id="..."] [l="..."]/>*
 </AutoCompleteResponse>
 
   {folders} - comma separates list of folder IDs.
@@ -723,6 +723,7 @@ import and export of addressbook.
     zimbraContactAutoCompleteMaxResults with default value of 20.
   - email field contains comma separated email addresses in case of group
   - display field contains string that should be displayed by the client
+  - isGroup field contais if the entry is a group
 
 ----------------------------
 

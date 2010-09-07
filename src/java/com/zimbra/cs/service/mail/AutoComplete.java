@@ -82,6 +82,7 @@ public class AutoComplete extends MailDocumentHandler {
 	        cn.addAttribute(MailConstants.A_EMAIL, entry.getEmail());
 	        cn.addAttribute(MailConstants.A_MATCH_TYPE, getType(entry));
             cn.addAttribute(MailConstants.A_RANKING, Integer.toString(entry.getRanking()));
+            cn.addAttribute(MailConstants.A_IS_GROUP, entry.isGroup());
             ItemId id = entry.getId();
             if (id != null)
             	cn.addAttribute(MailConstants.A_ID, id.toString(authAccountId));
@@ -111,8 +112,6 @@ public class AutoComplete extends MailDocumentHandler {
 			return "gal";
 		else if (entry.getFolderId() == ContactAutoComplete.FOLDER_ID_UNKNOWN)
 			return "rankingTable";
-		else if (entry.isDlist())
-			return "group";
 		else
 			return "contact";
 	}
