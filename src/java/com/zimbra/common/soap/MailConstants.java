@@ -788,4 +788,5 @@ public class MailConstants {
     public static final String A_CANBECACHED = "canBeCached";
     public static final String A_DISPLAYNAME = "display";
     public static final String A_MATCH_TYPE = "type";
+    public static final String A_IS_GROUP = "isGroup";
 }
