@@ -279,17 +279,9 @@ public class SendInviteReply extends CalendarRequest {
                 // If we're replying to a non-exception instance of a recurring appointment, create a local
                 // exception instance first.  Then reply to it.
                 if (calItem != null && oldInv.isRecurrence() && exceptDt != null) {
-                    Invite localException = oldInv.newCopy();
-                    localException.setLocalOnly(true);
-    
-                    localException.setRecurrence(null);
-                    RecurId rid = new RecurId(exceptDt, RecurId.RANGE_NONE);
-                    localException.setRecurId(rid);
+                    Invite localException = oldInv.makeInstanceInvite(exceptDt);
                     long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
                     localException.setDtStamp(now);
-                    ParsedDateTime dtEnd = exceptDt.add(localException.getEffectiveDuration());
-                    localException.setDtStart(exceptDt);
-                    localException.setDtEnd(dtEnd);
     
                     String partStat = verb.getXmlPartStat();
                     localException.setPartStat(partStat);
@@ -316,7 +308,7 @@ public class SendInviteReply extends CalendarRequest {
                     calItem = safeGetCalendarItemById(mbox, octxt, calItemId);
                     if (calItem == null)
                         throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
-                    oldInv = calItem.getInvite(rid);
+                    oldInv = calItem.getInvite(new RecurId(exceptDt, RecurId.RANGE_NONE));
                 }
 
                 if (updateOrg && oldInv.hasOrganizer()) {

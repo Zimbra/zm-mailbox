@@ -50,9 +50,11 @@ import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.InviteChanges;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -104,26 +106,32 @@ public class Message extends MailItem {
         private int mCalendarItemId;
         private int mComponentNo;
         private Invite mInvite;  // set only when mCalendarItemId == CALITEM_ID_NONE
+        private InviteChanges mInviteChanges;
 
-        CalendarItemInfo(int calItemId, int componentNo, Invite inv) {
+        CalendarItemInfo(int calItemId, int componentNo, Invite inv, InviteChanges changes) {
             mCalendarItemId = calItemId;
             mComponentNo = componentNo;
             mInvite = inv;
+            mInviteChanges = changes;
         }
 
         public int getCalendarItemId()  { return mCalendarItemId; }
         public int getComponentNo()    { return mComponentNo; }
         public Invite getInvite() { return mInvite; }
+        public InviteChanges getInviteChanges() { return mInviteChanges; }
         public boolean calItemCreated() { return mCalendarItemId != CALITEM_ID_NONE; }
 
         private static final String FN_CALITEMID = "a";
         private static final String FN_COMPNO = "c";
         private static final String FN_INV = "inv";
+        private static final String FN_INV_CHANGES = "invChg";
 
         Metadata encodeMetadata() {
             Metadata meta = new Metadata();
             meta.put(FN_CALITEMID, mCalendarItemId);
             meta.put(FN_COMPNO, mComponentNo);
+            if (mInviteChanges != null && !mInviteChanges.noChange())
+                meta.put(FN_INV_CHANGES, mInviteChanges.toString());
             if (mInvite != null)
                 meta.put(FN_INV, Invite.encodeMetadata(mInvite));
             return meta; 
@@ -132,6 +140,8 @@ public class Message extends MailItem {
         static CalendarItemInfo decodeMetadata(Metadata meta, Mailbox mbox) throws ServiceException {
             int calItemId = (int) meta.getLong(FN_CALITEMID, CalendarItemInfo.CALITEM_ID_NONE);
             int componentNo = (int) meta.getLong(FN_COMPNO);
+            String changes = meta.get(FN_INV_CHANGES, null);
+            InviteChanges invChanges = changes != null ? new InviteChanges(changes) : null;
             Invite inv = null;
             Metadata metaInv = meta.getMap(FN_INV, true);
             if (metaInv != null) {
@@ -139,7 +149,7 @@ public class Message extends MailItem {
                 ICalTimeZone accountTZ = ICalTimeZone.getAccountTimeZone(mbox.getAccount());
                 inv = Invite.decodeMetadata(mboxId, metaInv, null, accountTZ);
             }
-            return new CalendarItemInfo(calItemId, componentNo, inv);
+            return new CalendarItemInfo(calItemId, componentNo, inv, invChanges);
         }
     }
 
@@ -689,6 +699,15 @@ public class Message extends MailItem {
             CalendarItem calItem = null;
             boolean success = false;
             try {
+                InviteChanges invChanges = null;
+                // Look for organizer-provided change list.
+                ZProperty changesProp = cur.getXProperty(ICalTok.X_ZIMBRA_CHANGES.toString());
+                if (changesProp != null) {
+                    invChanges = new InviteChanges(changesProp.getValue());
+                    // Don't let the x-prop propagate further.  This x-prop is used during transport only.  Presence
+                    // of this x-prop in the appointment object can confuse clients.
+                    cur.removeXProp(ICalTok.X_ZIMBRA_CHANGES.toString());
+                }
                 if (intendedForMe) {
                     cur.sanitize(true);
                     calItem = mMailbox.getCalendarItemByUid(cur.getUid());
@@ -754,6 +773,22 @@ public class Message extends MailItem {
                                     else
                                     	calFolderId = Mailbox.ID_FOLDER_CALENDAR;
                                 }
+
+                                // If organizer didn't provide X-ZIMBRA-CHANGES, calculate what changed by comparing
+                                // against the current appointment data.
+                                if (invChanges == null && !cur.isCancel()) {
+                                    Invite prev = calItem.getInvite(cur.getRecurId());
+                                    if (prev == null) {
+                                        // If incoming invite is a brand-new exception instance, we have to compare against
+                                        // the series data, but adjusted to the RECURRENCE-ID of the instance.
+                                        Invite series = calItem.getInvite(null);
+                                        if (series != null)
+                                            prev = series.makeInstanceInvite(cur.getRecurId().getDt());
+                                    }
+                                    if (prev != null)
+                                        invChanges = new InviteChanges(prev, cur);
+                                }
+
                                 modifiedCalItem = calItem.processNewInvite(pm, cur, calFolderId, discardExistingInvites);
                                 calItemFolderId = calFolderId;
                             }
@@ -761,7 +796,7 @@ public class Message extends MailItem {
                     }
 
                     int calItemId = calItem != null ? calItem.getId() : CalendarItemInfo.CALITEM_ID_NONE;
-                    CalendarItemInfo info = new CalendarItemInfo(calItemId, cur.getComponentNum(), cur);
+                    CalendarItemInfo info = new CalendarItemInfo(calItemId, cur.getComponentNum(), cur, invChanges);
                     mCalendarItemInfos.add(info);
                     updatedMetadata = true;
                     if (calItem != null && (calItemIsNew || modifiedCalItem))
@@ -769,7 +804,7 @@ public class Message extends MailItem {
                 } else {
                     // Not intended for me.  Just save the invite detail in metadata.
                     CalendarItemInfo info = new CalendarItemInfo(
-                            CalendarItemInfo.CALITEM_ID_NONE, cur.getComponentNum(), cur);
+                            CalendarItemInfo.CALITEM_ID_NONE, cur.getComponentNum(), cur, invChanges);
                     mCalendarItemInfos.add(info);
                     updatedMetadata = true;
                 }

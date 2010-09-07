@@ -62,6 +62,7 @@ import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.mailbox.calendar.Geo;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.InviteChanges;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.RecurId;
@@ -1666,6 +1667,15 @@ public class ToXML {
                 setCalendarItemType(ie, invite.getItemType());
                 encodeTimeZoneMap(ie, invite.getTimeZoneMap());
                 encodeInviteComponent(ie, ifmt, octxt, calItem, invite, fields, neuter);
+                ICalTok invMethod = Invite.lookupMethod(invite.getMethod());
+                if (ICalTok.REQUEST.equals(invMethod) || ICalTok.PUBLISH.equals(invMethod)) {
+                    InviteChanges invChanges = info.getInviteChanges();
+                    if (invChanges != null && !invChanges.noChange()) {
+                        Element comp = ie.getOptionalElement(MailConstants.E_INVITE_COMPONENT);
+                        if (comp != null)
+                            comp.addAttribute(MailConstants.A_CAL_CHANGES, invChanges.toString());
+                    }
+                }
             }
         }
 

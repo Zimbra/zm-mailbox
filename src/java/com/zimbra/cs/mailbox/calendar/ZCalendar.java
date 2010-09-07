@@ -104,7 +104,11 @@ public class ZCalendar {
 
         // set to TRUE in series update to tell attendee to discard all exceptions while applying new series
         // This is a ZCO special.
-        X_ZIMBRA_DISCARD_EXCEPTIONS;
+        X_ZIMBRA_DISCARD_EXCEPTIONS,
+
+        // tracks important data that changed in a modify operation
+        // comma-separated list of "time", "location", etc.  (See InviteChanges class for more info.)
+        X_ZIMBRA_CHANGES;
 
         public static ICalTok lookup(String str) 
         {

@@ -1157,7 +1157,7 @@ public class Invite {
      * 
      * @return
      */
-    public ParsedDuration getEffectiveDuration() throws ServiceException {
+    public ParsedDuration getEffectiveDuration() {
         if (mDuration != null)
             return mDuration;
         if (mStart == null)
@@ -1988,6 +1988,9 @@ public class Invite {
                                 case X_ZIMBRA_DISCARD_EXCEPTIONS:
                                     newInv.addXProp(prop);
                                     break;
+                                case X_ZIMBRA_CHANGES:
+                                    newInv.addXProp(prop);
+                                    break;
                                 }
                             }
                         }
@@ -2412,6 +2415,13 @@ public class Invite {
     public void addXProp(ZProperty prop) {
         mXProps.add(prop);
     }
+    public void removeXProp(String xpropName) {
+        for (Iterator<ZProperty> iter = mXProps.iterator(); iter.hasNext(); ) {
+            ZProperty prop = iter.next();
+            if (prop.getName().equalsIgnoreCase(xpropName))
+                iter.remove();
+        }
+    }
     public ZProperty getXProperty(String xpropName) {
         for (ZProperty prop : mXProps) {
             if (prop.getName().equalsIgnoreCase(xpropName))
@@ -2678,5 +2688,26 @@ public class Invite {
         mGeo = null;
         mAlarms.clear();
         mXProps.clear();
+    }
+
+    /**
+     * If this Invite is a series invite, create a new Invite object for the instance denoted by recurIdDt.
+     * Returns null if this Invite is not a series Invite. 
+     * @param recurIdDt
+     * @return
+     */
+    public Invite makeInstanceInvite(ParsedDateTime recurIdDt) {
+        if (!isRecurrence())
+            return null;
+        Invite instInv = newCopy();
+        instInv.setLocalOnly(true);
+        instInv.setRecurrence(null);
+        RecurId rid = new RecurId(recurIdDt, RecurId.RANGE_NONE);
+        instInv.setRecurId(rid);
+        instInv.setDtStamp(System.currentTimeMillis());
+        ParsedDateTime dtEnd = recurIdDt.add(instInv.getEffectiveDuration());
+        instInv.setDtStart(recurIdDt);
+        instInv.setDtEnd(dtEnd);
+        return instInv;
     }
 }

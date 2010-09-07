@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 
@@ -55,6 +56,8 @@ public class Util {
             ZProperty xprop = xpropsIter.next();
             String propName = xprop.getName();
             if (propName == null) continue;
+            // Never persist the transport-only special x-prop X-ZIMBRA-CHANGES.
+            if (propName.equalsIgnoreCase(ICalTok.X_ZIMBRA_CHANGES.toString())) continue;
             Metadata propMeta = new Metadata();
             propMeta.put(FN_NAME, propName);
             String propValue = xprop.getValue();
@@ -97,6 +100,8 @@ public class Util {
                 if (propMeta == null) continue;
                 String propName = propMeta.get(FN_NAME, null);
                 if (propName == null) continue;
+                // Never persist the transport-only special x-prop X-ZIMBRA-CHANGES.
+                if (propName.equalsIgnoreCase(ICalTok.X_ZIMBRA_CHANGES.toString())) continue;
                 ZProperty xprop = new ZProperty(propName);
                 String propValue = propMeta.get(FN_VALUE, null);
                 if (propValue != null)

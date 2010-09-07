@@ -116,6 +116,8 @@
             [completed="yyyyMMddThhmmssZ"]  // VTODO COMPLETED DATE-TIME
             [url="url"]         // URL
             [noBlob="1"]        // set if invite has no blob data, i.e. all data is in db metadata
+            [changes="comma-separated list of changed data in an updated invite"]
+                // Possible values are "subject", "location", "time" (start time, end time, or duration), and "recurrence".
         >
 
            <s DATETIME> // Start date-time (required)
@@ -768,6 +770,8 @@ OR
                                                       
             [isOrg="1"] // 1 if you are the Organizer of this event
             [ridZ="YYYYMMDD[ThhmmssZ]"]   // RECURRENCE-ID in "Z" (UTC) timezone, if this is an exception
+            [changes="comma-separated list of changed data in an updated invite"]
+                // Possible values are "subject", "location", "time" (start time, end time, or duration), and "recurrence".
            >
 
            <s DATETIME
