@@ -693,6 +693,7 @@ public class MailConstants {
     public static final String E_CAL_MINICAL_DATE = "date";
 
     public static final String A_CAL_INTENDED_FOR = "cif";
+    public static final String A_CAL_CHANGES = "changes";
 
     // spell checking
     public static final String A_AVAILABLE = "available";
