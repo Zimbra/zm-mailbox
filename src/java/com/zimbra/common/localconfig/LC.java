@@ -414,6 +414,11 @@ public class LC {
     public static final KnownKey data_source_imap_reuse_connections =
         new KnownKey("data_source_imap_reuse_connections", "false");
 
+    public static final KnownKey milter_max_idle_seconds = 
+        new KnownKey("milter_max_idle_seconds").setDefault(120);
+    public static final KnownKey milter_max_sessions =
+        new KnownKey("milter_max_sessions").setDefault(20000);
+    
     public static final KnownKey krb5_keytab;
     public static final KnownKey krb5_service_principal_from_interface_address;
     public static final KnownKey krb5_debug_enabled;

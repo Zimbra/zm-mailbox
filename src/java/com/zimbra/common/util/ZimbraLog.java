@@ -176,6 +176,11 @@ public final class ZimbraLog {
     public static final Log pop = LogFactory.getLog("zimbra.pop");
 
     /**
+     * the "zimbra.milter" logger. For MILTER-related events
+     */
+    public static final Log milter = LogFactory.getLog("zimbra.milter");
+    
+    /**
      * the "zimbra.mailbox" logger. For mailbox-related events.
      */
     public static final Log mailbox = LogFactory.getLog("zimbra.mailbox");
@@ -435,6 +440,7 @@ public final class ZimbraLog {
         descriptions.put(lmtp.getCategory(), "LMTP operations (incoming mail)");
         descriptions.put(smtp.getCategory(), "SMTP operations (outgoing mail)");
         descriptions.put(imap.getCategory(), "IMAP protocol operations");
+        descriptions.put(milter.getCategory(), "MILTER protocol operations");
         descriptions.put(pop.getCategory(), "POP protocol operations");
         descriptions.put(mailbox.getCategory(), "General mailbox operations");
         descriptions.put(calendar.getCategory(), "Calendar operations");
