@@ -17483,17 +17483,35 @@ public class ZAttrConfig extends Entry {
     /**
      * Value for postconf smtpd_sasl_auth_enable
      *
-     * @return zimbraMtaSaslAuthEnable, or true if unset
+     * <p>Valid values: [yes, no]
+     *
+     * @return zimbraMtaSaslAuthEnable, or ZAttrProvisioning.MtaSaslAuthEnable.yes if unset and/or has invalid value
      *
      * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=796)
-    public boolean isMtaSaslAuthEnable() {
-        return getBooleanAttr(Provisioning.A_zimbraMtaSaslAuthEnable, true);
+    public ZAttrProvisioning.MtaSaslAuthEnable getMtaSaslAuthEnable() {
+        try { String v = getAttr(Provisioning.A_zimbraMtaSaslAuthEnable); return v == null ? ZAttrProvisioning.MtaSaslAuthEnable.yes : ZAttrProvisioning.MtaSaslAuthEnable.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MtaSaslAuthEnable.yes; }
     }
 
     /**
      * Value for postconf smtpd_sasl_auth_enable
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @return zimbraMtaSaslAuthEnable, or "yes" if unset
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=796)
+    public String getMtaSaslAuthEnableAsString() {
+        return getAttr(Provisioning.A_zimbraMtaSaslAuthEnable, "yes");
+    }
+
+    /**
+     * Value for postconf smtpd_sasl_auth_enable
+     *
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSaslAuthEnable new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -17501,14 +17519,16 @@ public class ZAttrConfig extends Entry {
      * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=796)
-    public void setMtaSaslAuthEnable(boolean zimbraMtaSaslAuthEnable) throws com.zimbra.common.service.ServiceException {
+    public void setMtaSaslAuthEnable(ZAttrProvisioning.MtaSaslAuthEnable zimbraMtaSaslAuthEnable) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMtaSaslAuthEnable, zimbraMtaSaslAuthEnable ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraMtaSaslAuthEnable, zimbraMtaSaslAuthEnable.toString());
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
      * Value for postconf smtpd_sasl_auth_enable
+     *
+     * <p>Valid values: [yes, no]
      *
      * @param zimbraMtaSaslAuthEnable new value
      * @param attrs existing map to populate, or null to create a new map
@@ -17517,14 +17537,51 @@ public class ZAttrConfig extends Entry {
      * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=796)
-    public Map<String,Object> setMtaSaslAuthEnable(boolean zimbraMtaSaslAuthEnable, Map<String,Object> attrs) {
+    public Map<String,Object> setMtaSaslAuthEnable(ZAttrProvisioning.MtaSaslAuthEnable zimbraMtaSaslAuthEnable, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraMtaSaslAuthEnable, zimbraMtaSaslAuthEnable ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraMtaSaslAuthEnable, zimbraMtaSaslAuthEnable.toString());
         return attrs;
     }
 
     /**
      * Value for postconf smtpd_sasl_auth_enable
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraMtaSaslAuthEnable new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=796)
+    public void setMtaSaslAuthEnableAsString(String zimbraMtaSaslAuthEnable) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSaslAuthEnable, zimbraMtaSaslAuthEnable);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Value for postconf smtpd_sasl_auth_enable
+     *
+     * <p>Valid values: [yes, no]
+     *
+     * @param zimbraMtaSaslAuthEnable new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=796)
+    public Map<String,Object> setMtaSaslAuthEnableAsString(String zimbraMtaSaslAuthEnable, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMtaSaslAuthEnable, zimbraMtaSaslAuthEnable);
+        return attrs;
+    }
+
+    /**
+     * Value for postconf smtpd_sasl_auth_enable
+     *
+     * <p>Valid values: [yes, no]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -17539,6 +17596,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * Value for postconf smtpd_sasl_auth_enable
+     *
+     * <p>Valid values: [yes, no]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

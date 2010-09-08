@@ -436,6 +436,22 @@ public class ZAttrProvisioning {
         public boolean isDisabled() { return this == disabled;}
     }
 
+    public static enum MtaSaslAuthEnable {
+        yes("yes"),
+        no("no");
+        private String mValue;
+        private MtaSaslAuthEnable(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MtaSaslAuthEnable fromString(String s) throws ServiceException {
+            for (MtaSaslAuthEnable value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isYes() { return this == yes;}
+        public boolean isNo() { return this == no;}
+    }
+
     public static enum MtaTlsSecurityLevel {
         may("may"),
         none("none");
