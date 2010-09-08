@@ -4713,7 +4713,9 @@ public class LdapProvisioning extends Provisioning {
         int maxResults = token != null ? 0 : d.getIntAttr(Provisioning.A_zimbraGalMaxResults, DEFAULT_GAL_MAX_RESULTS);
         if (type == Provisioning.GalSearchType.resource)
             return searchResourcesGal(d, n, maxResults, token, galOp, visitor);
-
+        else if (type == Provisioning.GalSearchType.group)
+            return searchGroupsGal(d, n, maxResults, null, galOp, null);
+        
         GalMode mode = galMode != null ? galMode : GalMode.fromString(d.getAttr(Provisioning.A_zimbraGalMode));
         SearchGalResult results = null;
         if (mode == null || mode == GalMode.zimbra) {
@@ -4760,7 +4762,9 @@ public class LdapProvisioning extends Provisioning {
         int maxResults = Math.min(max, d.getIntAttr(Provisioning.A_zimbraGalMaxResults, DEFAULT_GAL_MAX_RESULTS));
         if (type == Provisioning.GalSearchType.resource)
             return searchResourcesGal(d, n, maxResults, null, galOp, null);
-
+        else if (type == Provisioning.GalSearchType.group)
+            return searchGroupsGal(d, n, maxResults, null, galOp, null);
+            
         GalMode mode = GalMode.fromString(d.getAttr(Provisioning.A_zimbraGalMode));
         SearchGalResult results = null;
         if (mode == null || mode == GalMode.zimbra) {
@@ -4827,6 +4831,11 @@ public class LdapProvisioning extends Provisioning {
     private SearchGalResult searchResourcesGal(Domain d, String n, int maxResults, String token, GalOp galOp, GalContact.Visitor visitor)
     throws ServiceException {
         return searchZimbraWithNamedFilter(d, galOp, GalNamedFilter.getZimbraCalendarResourceFilter(galOp), n, maxResults, token, visitor);
+    }
+    
+    private SearchGalResult searchGroupsGal(Domain d, String n, int maxResults, String token, GalOp galOp, GalContact.Visitor visitor)
+    throws ServiceException {
+        return searchZimbraWithNamedFilter(d, galOp, GalNamedFilter.getZimbraGroupFilter(galOp), n, maxResults, token, visitor);
     }
 
     private SearchGalResult searchZimbraGal(Domain d, String n, int maxResults, String token, GalOp galOp, GalContact.Visitor visitor)

@@ -121,18 +121,21 @@ public class GalSearchConfig {
 		case sync:
 			filterName = 
                 (stype == GalSearchType.all) ? "zimbraSync" :
-			    (stype == GalSearchType.resource) ? "zimbraResourceSync" : "zimbraAccountSync";
+			    (stype == GalSearchType.resource) ? "zimbraResourceSync" : 
+			    (stype == GalSearchType.group) ? "zimbraGroupSync" : "zimbraAccountSync";
 			break;
 		case search:
 			filterName = 
                 (stype == GalSearchType.all) ? "zimbraSearch" :
-			    (stype == GalSearchType.resource) ? "zimbraResources" : "zimbraAccounts";
+			    (stype == GalSearchType.resource) ? "zimbraResources" : 
+			    (stype == GalSearchType.group) ? "zimbraGroups" : "zimbraAccounts";
 			mTokenizeKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeSearchKey, null);
 			break;
 		case autocomplete:
 			filterName = 
                 (stype == GalSearchType.all) ? "zimbraAutoComplete" :
-			    (stype == GalSearchType.resource) ? "zimbraResourceAutoComplete" : "zimbraAccountAutoComplete";
+			    (stype == GalSearchType.resource) ? "zimbraResourceAutoComplete" : 
+			    (stype == GalSearchType.group) ? "zimbraGroupAutoComplete" : "zimbraAccountAutoComplete";
 			mTokenizeKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, null);
 			break;
 		}

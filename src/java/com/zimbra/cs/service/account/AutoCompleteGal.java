@@ -47,15 +47,7 @@ public class AutoCompleteGal extends AccountDocumentHandler {
             n = n.substring(0, n.length() - 1);
 
         String typeStr = request.getAttribute(AccountConstants.A_TYPE, "account");
-        Provisioning.GalSearchType type;
-        if (typeStr.equals("all"))
-            type = Provisioning.GalSearchType.all;
-        else if (typeStr.equals("account"))
-            type = Provisioning.GalSearchType.account;
-        else if (typeStr.equals("resource"))
-            type = Provisioning.GalSearchType.resource;
-        else
-            throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
+        Provisioning.GalSearchType type = Provisioning.GalSearchType.fromString(typeStr);
 
         GalSearchParams params = new GalSearchParams(account, zsc);
         params.setType(type);

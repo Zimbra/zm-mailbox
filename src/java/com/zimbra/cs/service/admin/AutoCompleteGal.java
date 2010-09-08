@@ -65,16 +65,8 @@ public class AutoCompleteGal extends AdminDocumentHandler {
         String typeStr = request.getAttribute(AdminConstants.A_TYPE, "account");
 
         int max = (int) request.getAttributeLong(AdminConstants.A_LIMIT);
-        Provisioning.GalSearchType type;
-        if (typeStr.equals("all"))
-            type = Provisioning.GalSearchType.all;
-        else if (typeStr.equals("account"))
-            type = Provisioning.GalSearchType.account;
-        else if (typeStr.equals("resource"))
-            type = Provisioning.GalSearchType.resource;
-        else
-            throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
-        
+        Provisioning.GalSearchType type = Provisioning.GalSearchType.fromString(typeStr);
+                
         Provisioning prov = Provisioning.getInstance();
         Domain d = prov.get(DomainBy.name, domain);
         if (d == null)

@@ -796,7 +796,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public static enum GalSearchType {
-        all, account, resource;
+        all, account, resource, group;
         
         public static GalSearchType fromString(String s) throws ServiceException {
             try {

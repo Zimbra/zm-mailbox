@@ -23,17 +23,22 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GalSearchType;
+import com.zimbra.cs.gal.FilteredGalSearchResultCallback;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchResultCallback;
@@ -274,9 +279,19 @@ public class ContactAutoComplete {
         }
 
         // query ranking table
-        for (ContactEntry entry : result.rankings.search(str)) {
-            result.addEntry(entry);
+        Collection<ContactEntry> rankingTableMatches = result.rankings.search(str);
+        
+        if (!rankingTableMatches.isEmpty()) {
+            Set<String> galGroups = new HashSet<String>();
+            queryGalGroups(str, galGroups);
+            
+            for (ContactEntry entry : rankingTableMatches) {
+                if (galGroups.contains(entry.getKey()))
+                    entry.mIsGroup = true;
+                result.addEntry(entry);
+            }
         }
+
         long t1 = System.currentTimeMillis();
 
         // search other folders
@@ -288,6 +303,9 @@ public class ContactAutoComplete {
         if (mIncludeGal && result.entries.size() < limit) {
             queryGal(str, result);
         }
+        
+        
+        
         long t3 = System.currentTimeMillis();
 
         ZimbraLog.gal.info("autocomplete: overall="+(t3-t0)+"ms, ranking="+(t1-t0)+"ms, folder="+(t2-t1)+"ms, gal="+(t3-t2)+"ms");
@@ -303,6 +321,32 @@ public class ContactAutoComplete {
         params.setType(mSearchType);
         params.setLimit(200);
         params.setResultCallback(new AutoCompleteCallback(str, result, params));
+        try {
+            try {
+                GalSearchControl gal = new GalSearchControl(params);
+                gal.autocomplete();
+            } catch (ServiceException e) {
+                if (ServiceException.PERM_DENIED.equals(e.getCode())) {
+                    ZimbraLog.gal.debug("cannot autocomplete gal:" + e.getMessage()); // do not log stack
+                } else {
+                    throw e;
+                }
+            }
+        } catch (Exception e) {
+            ZimbraLog.gal.warn("cannot autocomplete gal", e);
+            return;
+        }
+    }
+    
+    private void queryGalGroups(String str, Set<String> result) throws ServiceException {
+        Provisioning prov = Provisioning.getInstance();
+        Account account = prov.get(Provisioning.AccountBy.id, mAccountId);
+        ZimbraLog.gal.debug("querying gal for groups");
+        GalSearchParams params = new GalSearchParams(account);
+        params.setQuery(str);
+        params.setType(Provisioning.GalSearchType.group);
+        params.setLimit(200);
+        params.setResultCallback(new AutoCompleteGroupCallback(str, result,params));
         try {
             try {
                 GalSearchControl gal = new GalSearchControl(params);
@@ -365,6 +409,22 @@ public class ContactAutoComplete {
         public void setHasMoreResult(boolean more) {
         }
     }
+    
+    private class AutoCompleteGroupCallback extends AutoCompleteCallback {
+        Set<String> groupResult;
+        
+        public AutoCompleteGroupCallback(String str, Set<String> result, GalSearchParams params) {
+            super(str, null, params);
+            groupResult = result;
+        }
+
+        public void handleContactAttrs(Map<String,? extends Object> attrs) {
+            String email = (String)attrs.get(ContactConstants.A_email);
+            if (email != null)
+                groupResult.add((String)attrs.get(ContactConstants.A_email));
+        }
+    }
+    
     private boolean matches(String query, String text) {
         if (query == null || text == null) {
             return false;

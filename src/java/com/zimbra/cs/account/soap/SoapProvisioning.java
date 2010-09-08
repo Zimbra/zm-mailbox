@@ -1456,12 +1456,7 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public SearchGalResult autoCompleteGal(Domain d, String query, GalSearchType type, int limit) throws ServiceException {
-        String typeStr = null;
-
-        if (type == GalSearchType.all) typeStr = "all";
-        else if (type == GalSearchType.account) typeStr = "account";
-        else if (type == GalSearchType.resource) typeStr = "resource";
-        else typeStr = "all";
+        String typeStr = type == null ? GalSearchType.all.name() : type.name();
         
         XMLElement req = new XMLElement(AdminConstants.AUTO_COMPLETE_GAL_REQUEST);
         req.addElement(AdminConstants.E_NAME).setText(query);
@@ -1564,12 +1559,7 @@ public class SoapProvisioning extends Provisioning {
     }
     
     public SearchGalResult searchGal(Domain d, String query, GalSearchType type, String token, int limit, int offset, String sortBy) throws ServiceException {
-        String typeStr = null;
-
-        if (type == GalSearchType.all) typeStr = "all";
-        else if (type == GalSearchType.account) typeStr = "account";
-        else if (type == GalSearchType.resource) typeStr = "resource";
-        else typeStr = "all";
+        String typeStr = type == null ? GalSearchType.all.name() : type.name();
         
         XMLElement req = new XMLElement(AdminConstants.SEARCH_GAL_REQUEST);
         req.addElement(AdminConstants.E_NAME).setText(query);
