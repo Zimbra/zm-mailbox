@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100907-2151 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100908-1428 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -7326,13 +7326,13 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * Slides features enabled in briefcase
      *
-     * @return zimbraFeatureBriefcaseSlidesEnabled, or true if unset
+     * @return zimbraFeatureBriefcaseSlidesEnabled, or false if unset
      *
      * @since ZCS 6.0.2
      */
     @ZAttr(id=1054)
     public boolean isFeatureBriefcaseSlidesEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureBriefcaseSlidesEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureBriefcaseSlidesEnabled, false);
     }
 
     /**
@@ -7398,13 +7398,13 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * Spreadsheet features enabled in briefcase
      *
-     * @return zimbraFeatureBriefcaseSpreadsheetEnabled, or true if unset
+     * @return zimbraFeatureBriefcaseSpreadsheetEnabled, or false if unset
      *
      * @since ZCS 6.0.2
      */
     @ZAttr(id=1053)
     public boolean isFeatureBriefcaseSpreadsheetEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureBriefcaseSpreadsheetEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureBriefcaseSpreadsheetEnabled, false);
     }
 
     /**
@@ -9962,8 +9962,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether notebook feature should be allowed for this account or in this
-     * cos
+     * Deprecated since: 7.0.0. Deprecated per bug 50465. Orig desc: Whether
+     * notebook feature should be allowed for this account or in this cos
      *
      * @return zimbraFeatureNotebookEnabled, or true if unset
      */
@@ -9973,8 +9973,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether notebook feature should be allowed for this account or in this
-     * cos
+     * Deprecated since: 7.0.0. Deprecated per bug 50465. Orig desc: Whether
+     * notebook feature should be allowed for this account or in this cos
      *
      * @param zimbraFeatureNotebookEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9987,8 +9987,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether notebook feature should be allowed for this account or in this
-     * cos
+     * Deprecated since: 7.0.0. Deprecated per bug 50465. Orig desc: Whether
+     * notebook feature should be allowed for this account or in this cos
      *
      * @param zimbraFeatureNotebookEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -10002,8 +10002,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether notebook feature should be allowed for this account or in this
-     * cos
+     * Deprecated since: 7.0.0. Deprecated per bug 50465. Orig desc: Whether
+     * notebook feature should be allowed for this account or in this cos
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -10015,8 +10015,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Whether notebook feature should be allowed for this account or in this
-     * cos
+     * Deprecated since: 7.0.0. Deprecated per bug 50465. Orig desc: Whether
+     * notebook feature should be allowed for this account or in this cos
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

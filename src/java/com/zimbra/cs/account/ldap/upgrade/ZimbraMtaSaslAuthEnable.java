@@ -44,11 +44,17 @@ public class ZimbraMtaSaslAuthEnable extends LdapUpgrade {
         if (curValue != null) {
             String newValue =LdapUtil.LDAP_FALSE.equals(curValue) ? "no" : "yes";
             if (!curValue.equals(newValue)) {
-                System.out.println("    Setting " + attrName + " on " + entryName + " from " + curValue + " to " + newValue);
+                System.out.println("    Changing " + attrName + " on " + entryName + " from " + curValue + " to " + newValue);
                 
                 Map<String, Object> attr = new HashMap<String, Object>();
                 attr.put(attrName, newValue);
-                mProv.modifyAttrs(entry, attr);
+                try {
+                    LdapUpgrade.modifyAttrs(entry, zlc, attr);
+                } catch (NamingException e) {
+                    // log the exception and continue
+                    System.out.println("Caught NamingException while modifying " + entryName + " attribute " + attr);
+                    e.printStackTrace();
+                }
             }
         }
     }

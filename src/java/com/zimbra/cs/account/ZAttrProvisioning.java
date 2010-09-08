@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100907-2151 */
+    /* build: 6.0.2_BETA1_1111 pshao 20100908-1428 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3038,8 +3038,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureNewMailNotificationEnabled = "zimbraFeatureNewMailNotificationEnabled";
 
     /**
-     * Whether notebook feature should be allowed for this account or in this
-     * cos
+     * Deprecated since: 7.0.0. Deprecated per bug 50465. Orig desc: Whether
+     * notebook feature should be allowed for this account or in this cos
      */
     @ZAttr(id=356)
     public static final String A_zimbraFeatureNotebookEnabled = "zimbraFeatureNotebookEnabled";
