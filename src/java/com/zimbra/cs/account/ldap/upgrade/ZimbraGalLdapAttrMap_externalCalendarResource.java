@@ -7,9 +7,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 
-public class zimbraGalLdapAttrMap_externalCalendarResource extends LdapUpgrade {
+public class ZimbraGalLdapAttrMap_externalCalendarResource extends LdapUpgrade {
 
-    zimbraGalLdapAttrMap_externalCalendarResource() throws ServiceException {
+    ZimbraGalLdapAttrMap_externalCalendarResource() throws ServiceException {
     }
 
     @Override

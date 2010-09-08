@@ -21,9 +21,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 
-public class zimbraGalLdapAttrMap extends LdapUpgrade {
+public class ZimbraGalLdapAttrMap extends LdapUpgrade {
 
-    zimbraGalLdapAttrMap() throws ServiceException {
+    ZimbraGalLdapAttrMap() throws ServiceException {
     }
     
     @Override

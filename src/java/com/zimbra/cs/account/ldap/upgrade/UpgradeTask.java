@@ -28,14 +28,14 @@ public enum UpgradeTask {
     BUG_32719(ZimbraHsmPolicy.class),
     BUG_33814(ZimbraMtaAuthEnabled.class),
     BUG_41000(ZimbraGalLdapFilterDef_zimbraAutoComplete_zimbraSearch.class),
-    BUG_42877(zimbraGalLdapAttrMap.class),
+    BUG_42877(ZimbraGalLdapAttrMap.class),
     BUG_42896(ZimbraMailQuota_constraint.class),
     BUG_43147(GalSyncAccountContactLimit.class),
     BUG_46297(ZimbraContactHiddenAttributes.class),
     BUG_46883(ZimbraContactRankingTableSize.class),
-    BUG_46961(zimbraGalLdapAttrMap_fullName.class),
-    BUG_42828(zimbraGalLdapAttrMap_externalCalendarResource.class);
-    
+    BUG_46961(ZimbraGalLdapAttrMap_fullName.class),
+    BUG_42828(ZimbraGalLdapAttrMap_externalCalendarResource.class),
+    BUG_43779(ZimbraGalLdapFilterDef_zimbraGroup.class);
     
     private Class mUpgradeClass;
     

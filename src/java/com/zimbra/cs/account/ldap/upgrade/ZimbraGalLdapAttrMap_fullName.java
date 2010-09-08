@@ -7,9 +7,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 
-public class zimbraGalLdapAttrMap_fullName extends LdapUpgrade {
+public class ZimbraGalLdapAttrMap_fullName extends LdapUpgrade {
     
-    zimbraGalLdapAttrMap_fullName() throws ServiceException {
+    ZimbraGalLdapAttrMap_fullName() throws ServiceException {
     }
     
     @Override
