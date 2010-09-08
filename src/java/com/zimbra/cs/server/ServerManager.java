@@ -30,6 +30,9 @@ import com.zimbra.cs.pop3.MinaPop3Server;
 import com.zimbra.cs.pop3.Pop3Config;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.pop3.TcpPop3Server;
+import com.zimbra.cs.milter.MilterServer;
+import com.zimbra.cs.milter.MinaMilterServer;
+import com.zimbra.cs.milter.MilterConfig;
 import com.zimbra.cs.util.ZimbraApplication;
 
 import java.util.concurrent.ExecutorService;
@@ -45,6 +48,8 @@ public class ServerManager {
     private ImapServer imapSSLServer;
     private ExecutorService pop3NioHandlerPool;
     private ExecutorService imapNioHandlerPool;
+    private ExecutorService milterNioHandlerPool;
+    private MilterServer milterServer;
     
     private static final ServerManager INSTANCE = new ServerManager();
 
@@ -76,6 +81,11 @@ public class ServerManager {
                 imapSSLServer = startImapServer(true);
             }
         }
+        if (app.supports(MilterServer.class)) {
+            if (isEnabled(Provisioning.A_zimbraMilterServerEnabled)) {
+                milterServer = startMilterServer();
+            }
+        }
     }
 
     private static boolean isEnabled(String key) throws ServiceException {
@@ -89,8 +99,7 @@ public class ServerManager {
         server.start();
         return server;
     }
-
-
+    
     private Pop3Server startPop3Server(boolean ssl) throws ServiceException {
         Pop3Config config = new Pop3Config(ssl);
         if (pop3NioHandlerPool == null) {
@@ -113,6 +122,16 @@ public class ServerManager {
         return server;
     }
 
+    private MilterServer startMilterServer() throws ServiceException {
+        MilterConfig config = new MilterConfig();
+        if (milterNioHandlerPool == null) {
+            milterNioHandlerPool = newNioHandlerPool(config);
+        }
+        MilterServer server = new MinaMilterServer(config, milterNioHandlerPool);
+        server.start();
+        return server;
+    }
+    
     public void stopServers() throws ServiceException {
         if (lmtpServer != null) {
             lmtpServer.stop();
@@ -128,6 +147,9 @@ public class ServerManager {
         }
         if (imapSSLServer != null) {
             imapSSLServer.stop();
+        }
+        if (milterServer != null) {
+            milterServer.stop();
         }
     }
 

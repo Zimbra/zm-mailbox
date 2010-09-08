@@ -75,6 +75,11 @@ public class MinaSession {
         ioSession.write(org.apache.mina.common.ByteBuffer.wrap(bb));
     }
 
+    public synchronized void send(Object obj) throws IOException {
+        checkNotClosed();
+        ioSession.write(obj);
+    }
+    
     public boolean drainWriteQueue(long timeout) {
         return drainWriteQueue(0, timeout);
     }

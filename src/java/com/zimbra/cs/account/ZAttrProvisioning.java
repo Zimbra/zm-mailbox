@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100908-1428 */
+    /* build: 6.0.2_BETA1_1111 jmhe 20100908-0150 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4612,6 +4612,31 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=334)
     public static final String A_zimbraMessageIdDedupeCacheSize = "zimbraMessageIdDedupeCacheSize";
+
+    /**
+     * interface address(es) on which milter server should listen; if empty,
+     * binds to all interfaces
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1115)
+    public static final String A_zimbraMilterBindAddress = "zimbraMilterBindAddress";
+
+    /**
+     * port number on which milter server should listen
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1114)
+    public static final String A_zimbraMilterBindPort = "zimbraMilterBindPort";
+
+    /**
+     * whether milter server is enabled for a given server
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1116)
+    public static final String A_zimbraMilterServerEnabled = "zimbraMilterServerEnabled";
 
     /**
      * the file extension (without the .)

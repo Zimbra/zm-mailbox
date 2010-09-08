@@ -48,6 +48,7 @@ public class Config {
     public static final int D_IMAP_SSL_BIND_PORT = 993;
     public static final int D_POP3_BIND_PORT = 110;
     public static final int D_POP3_SSL_BIND_PORT = 995;
+    public static final int D_MILTER_BIND_PORT = 7026;
     
     public static final int D_SMTP_TIMEOUT = 60;
     public static final int D_SMTP_PORT = 25;

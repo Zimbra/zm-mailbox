@@ -5012,4 +5012,18 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>number of admin initiated imap import handler threads</desc>
 </attr>
 
+<attr id="1114" name="zimbraMilterBindPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="mailbox" since="7.0.0">
+  <globalConfigValue>7026</globalConfigValue>
+  <desc>port number on which milter server should listen</desc>
+</attr>
+
+<attr id="1115" name="zimbraMilterBindAddress" type="string" max="128" cardinality="multi" optionalIn="server" requiresRestart="mailbox" since="7.0.0">
+  <desc>interface address(es) on which milter server should listen; if empty, binds to all interfaces</desc>
+</attr>
+  
+<attr id="1116" name="zimbraMilterServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="7.0.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>whether milter server is enabled for a given server</desc>
+</attr>
+
 </attrs>
