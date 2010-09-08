@@ -26,7 +26,7 @@ import org.dom4j.QName;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning.GAL_SEARCH_TYPE;
+import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.resource.AddressObject;
@@ -312,7 +312,7 @@ public abstract class Filter {
                 ZimbraLog.dav.debug("Gal query: %s", query.toString());
 
                 GalSearchParams params = new GalSearchParams(ctxt.getAuthAccount());
-                params.setType(GAL_SEARCH_TYPE.USER_ACCOUNT);
+                params.setType(GalSearchType.account);
                 params.setQuery(query.toString());
                 params.setResultCallback(new Callback(ctxt, result, params));
                 GalSearchControl gal = new GalSearchControl(params);

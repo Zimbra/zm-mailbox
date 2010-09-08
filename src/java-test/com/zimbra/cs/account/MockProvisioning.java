@@ -436,13 +436,13 @@ public class MockProvisioning extends Provisioning {
 
     @Override
     public SearchGalResult searchGal(Domain d, String query,
-            GAL_SEARCH_TYPE type, String token) {
+            GalSearchType type, String token) {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public SearchGalResult autoCompleteGal(Domain d, String query,
-            GAL_SEARCH_TYPE type, int limit) {
+            GalSearchType type, int limit) {
         throw new UnsupportedOperationException();
     }
 

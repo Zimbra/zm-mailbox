@@ -135,7 +135,7 @@ public abstract class AdminAccessControl {
      * 
      * Note: this method is static and it checks the specified account.
      *
-     * @param account
+     * @param USER_ACCOUNT
      * @return
      */
     public static boolean isSufficientAdminForSoapDelegatedAuth(Account acct) {

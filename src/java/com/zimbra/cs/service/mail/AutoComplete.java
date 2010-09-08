@@ -38,7 +38,7 @@ public class AutoComplete extends MailDocumentHandler {
     	while (n.endsWith("*"))
     	    n = n.substring(0, n.length() - 1);
         
-    	Provisioning.GAL_SEARCH_TYPE type = getSearchType(request.getAttribute(MailConstants.A_TYPE, "account"));
+    	Provisioning.GalSearchType type = Provisioning.GalSearchType.fromString(request.getAttribute(MailConstants.A_TYPE, "account"));
         int limit = account.getContactAutoCompleteMaxResults();
         
 		AutoCompleteResult result = query(request, zsc, account, false, n, limit, type);		
@@ -63,7 +63,7 @@ public class AutoComplete extends MailDocumentHandler {
 		return array;
 	}
 		
-	protected AutoCompleteResult query(Element request, ZimbraSoapContext zsc, Account account, boolean excludeGal, String name, int limit, Provisioning.GAL_SEARCH_TYPE type) throws ServiceException {
+	protected AutoCompleteResult query(Element request, ZimbraSoapContext zsc, Account account, boolean excludeGal, String name, int limit, Provisioning.GalSearchType type) throws ServiceException {
        if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
        
@@ -92,19 +92,6 @@ public class AutoComplete extends MailDocumentHandler {
             if (entry.isDlist())
             	cn.addAttribute(MailConstants.A_DISPLAYNAME, entry.getDisplayName());
 		}
-	}
-	
-	protected Provisioning.GAL_SEARCH_TYPE getSearchType(String typeStr) throws ServiceException {
-        Provisioning.GAL_SEARCH_TYPE type;
-        if (typeStr.equals("all"))
-            type = Provisioning.GAL_SEARCH_TYPE.ALL;
-        else if (typeStr.equals("account"))
-            type = Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT;
-        else if (typeStr.equals("resource"))
-            type = Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE;
-        else
-            throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
-        return type;
 	}
 	
 	private String getType(ContactEntry entry) {

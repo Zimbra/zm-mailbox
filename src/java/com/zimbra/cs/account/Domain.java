@@ -23,7 +23,7 @@ package com.zimbra.cs.account;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning.GAL_SEARCH_TYPE;
+import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.account.Provisioning.GalMode;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.ZAttrProvisioning.DomainStatus;
@@ -95,15 +95,15 @@ public class Domain extends ZAttrDomain {
         return getProvisioning().searchCalendarResources(this, filter, returnAttrs, sortAttr, sortAscending);
     }
 
-    public SearchGalResult searchGal(String query, GAL_SEARCH_TYPE type, String token) throws ServiceException {
+    public SearchGalResult searchGal(String query, GalSearchType type, String token) throws ServiceException {
         return getProvisioning().searchGal(this, query, type, token);
     }
 
-    public SearchGalResult searchGal(String query, GAL_SEARCH_TYPE type, String token, GalContact.Visitor visitor) throws ServiceException {
+    public SearchGalResult searchGal(String query, GalSearchType type, String token, GalContact.Visitor visitor) throws ServiceException {
         return getProvisioning().searchGal(this, query, type, token, visitor);
     }
 
-    public SearchGalResult searchGal(String query, GAL_SEARCH_TYPE type, GalMode mode, String token) throws ServiceException {
+    public SearchGalResult searchGal(String query, GalSearchType type, GalMode mode, String token) throws ServiceException {
         return getProvisioning().searchGal(this, query, type, mode, token);
     }
 

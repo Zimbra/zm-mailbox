@@ -123,7 +123,7 @@ public class SearchCalendarResources extends AccountDocumentHandler {
     private static Element searchGal(ZimbraSoapContext zsc, Account account, Element request) throws ServiceException {
         GalSearchParams params = new GalSearchParams(account, zsc);
         params.setQuery(".");
-        params.setType(Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE);
+        params.setType(Provisioning.GalSearchType.resource);
         params.setLimit(1000);
         params.setResponseName(AdminConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         

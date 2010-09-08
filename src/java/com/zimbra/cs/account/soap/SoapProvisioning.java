@@ -1455,12 +1455,12 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public SearchGalResult autoCompleteGal(Domain d, String query, GAL_SEARCH_TYPE type, int limit) throws ServiceException {
+    public SearchGalResult autoCompleteGal(Domain d, String query, GalSearchType type, int limit) throws ServiceException {
         String typeStr = null;
 
-        if (type == GAL_SEARCH_TYPE.ALL) typeStr = "all";
-        else if (type == GAL_SEARCH_TYPE.USER_ACCOUNT) typeStr = "account";
-        else if (type == GAL_SEARCH_TYPE.CALENDAR_RESOURCE) typeStr = "resource";
+        if (type == GalSearchType.all) typeStr = "all";
+        else if (type == GalSearchType.account) typeStr = "account";
+        else if (type == GalSearchType.resource) typeStr = "resource";
         else typeStr = "all";
         
         XMLElement req = new XMLElement(AdminConstants.AUTO_COMPLETE_GAL_REQUEST);
@@ -1559,16 +1559,16 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, String token) throws ServiceException {
+    public SearchGalResult searchGal(Domain d, String query, GalSearchType type, String token) throws ServiceException {
     	return searchGal(d, query, type, token, 0, 0, null);
     }
     
-    public SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, String token, int limit, int offset, String sortBy) throws ServiceException {
+    public SearchGalResult searchGal(Domain d, String query, GalSearchType type, String token, int limit, int offset, String sortBy) throws ServiceException {
         String typeStr = null;
 
-        if (type == GAL_SEARCH_TYPE.ALL) typeStr = "all";
-        else if (type == GAL_SEARCH_TYPE.USER_ACCOUNT) typeStr = "account";
-        else if (type == GAL_SEARCH_TYPE.CALENDAR_RESOURCE) typeStr = "resource";
+        if (type == GalSearchType.all) typeStr = "all";
+        else if (type == GalSearchType.account) typeStr = "account";
+        else if (type == GalSearchType.resource) typeStr = "resource";
         else typeStr = "all";
         
         XMLElement req = new XMLElement(AdminConstants.SEARCH_GAL_REQUEST);

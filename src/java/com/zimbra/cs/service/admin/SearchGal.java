@@ -62,13 +62,13 @@ public class SearchGal extends AdminDocumentHandler {
         String token = request.getAttribute(AdminConstants.A_TOKEN, null);
         String galAcctId = request.getAttribute(AccountConstants.A_ID, null);
 
-        Provisioning.GAL_SEARCH_TYPE type;
+        Provisioning.GalSearchType type;
         if (typeStr.equals("all"))
-            type = Provisioning.GAL_SEARCH_TYPE.ALL;
+            type = Provisioning.GalSearchType.all;
         else if (typeStr.equals("account"))
-            type = Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT;
+            type = Provisioning.GalSearchType.account;
         else if (typeStr.equals("resource"))
-            type = Provisioning.GAL_SEARCH_TYPE.CALENDAR_RESOURCE;
+            type = Provisioning.GalSearchType.resource;
         else
             throw ServiceException.INVALID_REQUEST("Invalid search type: " + typeStr, null);
 

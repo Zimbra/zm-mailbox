@@ -324,7 +324,7 @@ public class TestGal extends TestCase {
         Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
         SearchGalResult galResult = mProv.autoCompleteGal(domain, 
                                                           QUERY,
-                                                          Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT, // Provisioning.GAL_SEARCH_TYPE.ALL, 
+                                                          Provisioning.GalSearchType.account, // Provisioning.GAL_SEARCH_TYPE.ALL, 
                                                           maxWanted);
         if (numResultsExpected != galResult.getNumMatches())
             dumpResult(galResult);
@@ -338,7 +338,7 @@ public class TestGal extends TestCase {
         Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
         SearchGalResult galResult = mProv.searchGal(domain, 
                                                     QUERY,
-                                                    Provisioning.GAL_SEARCH_TYPE.ALL, 
+                                                    Provisioning.GalSearchType.all, 
                                                     null);
         assertEquals(numResultsExpected, galResult.getNumMatches());
         boolean expectedHasMore = numResultsExpected < NUM_ACCOUNTS;
@@ -355,7 +355,7 @@ public class TestGal extends TestCase {
         Domain domain = mProv.get(DomainBy.name, DOMAIN_NAME);
         SearchGalResult galResult = mProv.searchGal(domain, 
                                                     QUERY,
-                                                    Provisioning.GAL_SEARCH_TYPE.ALL, 
+                                                    Provisioning.GalSearchType.all, 
                                                     token);
         assertEquals(numResultsExpected, galResult.getNumMatches());
         boolean expectedHasMore = numResultsExpected < numTotal;
@@ -539,12 +539,12 @@ public class TestGal extends TestCase {
         if (galOp == GalOp.GOP_AUTOCOMPLETE)
             galResult = mProv.autoCompleteGal(domain, 
                                               key,
-                                              Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT, // Provisioning.GAL_SEARCH_TYPE.ALL, 
+                                              Provisioning.GalSearchType.account, // Provisioning.GAL_SEARCH_TYPE.ALL, 
                                               10);
         else if (galOp == GalOp.GOP_SEARCH)
             galResult = mProv.searchGal(domain, 
                                         key,
-                                        Provisioning.GAL_SEARCH_TYPE.USER_ACCOUNT, 
+                                        Provisioning.GalSearchType.account, 
                                         null);
         else
             fail();

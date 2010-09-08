@@ -1856,8 +1856,8 @@ public class ProvUtil implements HttpDebugListener {
         Domain d = lookupDomain(domain);
 
         SearchGalResult result = (mProv instanceof SoapProvisioning) ?
-        		((SoapProvisioning)mProv).searchGal(d, query, Provisioning.GAL_SEARCH_TYPE.ALL, null, limit, offset, sortBy) :
-        		mProv.searchGal(d, query, Provisioning.GAL_SEARCH_TYPE.ALL, null);
+        		((SoapProvisioning)mProv).searchGal(d, query, Provisioning.GalSearchType.all, null, limit, offset, sortBy) :
+        		mProv.searchGal(d, query, Provisioning.GalSearchType.all, null);
         for (GalContact contact : result.getMatches())
             dumpContact(contact);
     }    
@@ -1869,7 +1869,7 @@ public class ProvUtil implements HttpDebugListener {
         
         Domain d = lookupDomain(domain);
 
-        SearchGalResult result = mProv.autoCompleteGal(d, query, Provisioning.GAL_SEARCH_TYPE.ALL, 100);
+        SearchGalResult result = mProv.autoCompleteGal(d, query, Provisioning.GalSearchType.all, 100);
         for (GalContact contact : result.getMatches())
             dumpContact(contact);
     }
@@ -1932,7 +1932,7 @@ public class ProvUtil implements HttpDebugListener {
         
         Domain d = lookupDomain(domain);
 
-        SearchGalResult result = mProv.searchGal(d, "", Provisioning.GAL_SEARCH_TYPE.ALL, token);
+        SearchGalResult result = mProv.searchGal(d, "", Provisioning.GalSearchType.all, token);
         if (result.getToken() != null)
             System.out.println("# token = "+result.getToken() + "\n");
         for (GalContact contact : result.getMatches())

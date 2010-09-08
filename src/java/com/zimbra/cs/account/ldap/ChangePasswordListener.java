@@ -70,7 +70,7 @@ public abstract class ChangePasswordListener {
      * The attrsToModify map should not be modified, other then for adding attributes defined in 
      * a LDAP schema extension. 
      * 
-     * @param account account object being modified
+     * @param USER_ACCOUNT account object being modified
      * @param newPassword Clear-text new password
      * @param context place to stash data between invocations of pre/postModify
      * @param attrsToModify a map of all the attributes being modified
@@ -82,7 +82,7 @@ public abstract class ChangePasswordListener {
     /**
      * called after a successful modify of the attributes. should not throw any exceptions.
      * 
-     * @param account account object being modified
+     * @param USER_ACCOUNT account object being modified
      * @param newPassword Clear-text new password
      * @param context place to stash data between invocations of pre/postModify
      */

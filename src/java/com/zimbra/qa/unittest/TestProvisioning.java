@@ -1396,7 +1396,7 @@ public class TestProvisioning extends TestCase {
         mProv.modifyAttrs(domain, attrs, true);
         Provisioning.SearchGalResult galResult = mProv.searchGal(domain,
                 ACCT_EMAIL,
-                Provisioning.GAL_SEARCH_TYPE.ALL,
+                Provisioning.GalSearchType.all,
                 null);
         List<GalContact> matches = galResult.getMatches();
         assertEquals(1, galResult.getNumMatches());
@@ -1412,7 +1412,7 @@ public class TestProvisioning extends TestCase {
         // auto complete Gal
         Provisioning.SearchGalResult galResult = mProv.autoCompleteGal(domain,
                                                                        query,
-                                                                       Provisioning.GAL_SEARCH_TYPE.ALL,
+                                                                       Provisioning.GalSearchType.all,
                                                                        100);
 
         List<GalContact> matches = galResult.getMatches();
@@ -1422,7 +1422,7 @@ public class TestProvisioning extends TestCase {
         // search gal
         galResult = mProv.searchGal(domain,
                                     query,
-                                    Provisioning.GAL_SEARCH_TYPE.ALL,
+                                    Provisioning.GalSearchType.all,
                                     null);
         matches = galResult.getMatches();
         assertEquals(1, galResult.getNumMatches());

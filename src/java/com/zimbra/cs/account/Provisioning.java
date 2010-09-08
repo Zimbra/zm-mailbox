@@ -795,8 +795,17 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return sb.toString();
     }
 
-    public static enum GAL_SEARCH_TYPE {
-        ALL, USER_ACCOUNT, CALENDAR_RESOURCE
+    public static enum GalSearchType {
+        all, account, resource;
+        
+        public static GalSearchType fromString(String s) throws ServiceException {
+            try {
+                return GalSearchType.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("Invalid search type: " + s, null);
+            }
+        }
+
     }
 
     /**
@@ -1482,7 +1491,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return List of GalContact objects
      * @throws ServiceException
      */
-    public abstract SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, String token) throws ServiceException;
+    public abstract SearchGalResult searchGal(Domain d, String query, GalSearchType type, String token) throws ServiceException;
 
     /**
      * Interface that invokes the visitor object for each match, instead of adding matches to the SearchGalResult.
@@ -1495,7 +1504,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return
      * @throws ServiceException
      */
-    public SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, String token, GalContact.Visitor visitor) throws ServiceException {
+    public SearchGalResult searchGal(Domain d, String query, GalSearchType type, String token, GalContact.Visitor visitor) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
@@ -1511,7 +1520,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return List of GalContact objects
      * @throws ServiceException
      */
-    public SearchGalResult searchGal(Domain d, String query, GAL_SEARCH_TYPE type, GalMode mode, String token) throws ServiceException {
+    public SearchGalResult searchGal(Domain d, String query, GalSearchType type, GalMode mode, String token) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
@@ -1524,7 +1533,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return List of GalContact objects
      * @throws ServiceException
      */
-    public abstract SearchGalResult autoCompleteGal(Domain d, String query, Provisioning.GAL_SEARCH_TYPE type, int limit) throws ServiceException;
+    public abstract SearchGalResult autoCompleteGal(Domain d, String query, Provisioning.GalSearchType type, int limit) throws ServiceException;
 
     /**
      * @param filter search filter

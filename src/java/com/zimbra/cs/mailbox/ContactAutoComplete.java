@@ -33,7 +33,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.GAL_SEARCH_TYPE;
+import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchResultCallback;
@@ -217,7 +217,7 @@ public class ContactAutoComplete {
     private boolean mIncludeSharedFolders;
     private Collection<String> mEmailKeys;
 
-    private GAL_SEARCH_TYPE mSearchType;
+    private GalSearchType mSearchType;
 
     private static final String[] DEFAULT_EMAIL_KEYS = {
         ContactConstants.A_email, ContactConstants.A_email2, ContactConstants.A_email3
@@ -241,7 +241,7 @@ public class ContactAutoComplete {
         if (mEmailKeys == null) {
             mEmailKeys = Arrays.asList(DEFAULT_EMAIL_KEYS);
         }
-        mSearchType = GAL_SEARCH_TYPE.USER_ACCOUNT;
+        mSearchType = GalSearchType.account;
     }
 
     public Collection<String> getEmailKeys() {
@@ -256,7 +256,7 @@ public class ContactAutoComplete {
         mIncludeGal = includeGal;
     }
 
-    public void setSearchType(GAL_SEARCH_TYPE type) {
+    public void setSearchType(GalSearchType type) {
         mSearchType = type;
     }
 

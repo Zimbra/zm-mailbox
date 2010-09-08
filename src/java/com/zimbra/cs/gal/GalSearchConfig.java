@@ -18,7 +18,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.GAL_SEARCH_TYPE;
+import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalUtil;
@@ -41,7 +41,7 @@ public class GalSearchConfig {
 	    }
 	}
     
-	public static GalSearchConfig create(Domain domain, GalOp op, GalType type, GAL_SEARCH_TYPE stype) throws ServiceException {
+	public static GalSearchConfig create(Domain domain, GalOp op, GalType type, GalSearchType stype) throws ServiceException {
 		switch (type) {
 		case zimbra:
 			return new ZimbraConfig(domain, op, stype);
@@ -56,7 +56,7 @@ public class GalSearchConfig {
 	}
 
 	private static class ZimbraConfig extends GalSearchConfig {
-		public ZimbraConfig(Domain domain, GalOp op, GAL_SEARCH_TYPE stype) throws ServiceException {
+		public ZimbraConfig(Domain domain, GalOp op, GalSearchType stype) throws ServiceException {
 			loadZimbraConfig(domain, op, stype);
 		}
 	}
@@ -111,7 +111,7 @@ public class GalSearchConfig {
 		private static final String DEFAULT_FILTER = "(&(|(displayName=*)(cn=*)(sn=*)(gn=*)(mail=*)(zimbraMailDeliveryAddress=*)(zimbraMailAlias=*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
 	}
 	
-	protected void loadZimbraConfig(Domain domain, GalOp op, GAL_SEARCH_TYPE stype) throws ServiceException {
+	protected void loadZimbraConfig(Domain domain, GalOp op, GalSearchType stype) throws ServiceException {
 		
         mRules = new LdapGalMapRules(domain);
         mOp = op;
@@ -120,19 +120,19 @@ public class GalSearchConfig {
 		switch (op) {
 		case sync:
 			filterName = 
-                (stype == GAL_SEARCH_TYPE.ALL) ? "zimbraSync" :
-			    (stype == GAL_SEARCH_TYPE.CALENDAR_RESOURCE) ? "zimbraResourceSync" : "zimbraAccountSync";
+                (stype == GalSearchType.all) ? "zimbraSync" :
+			    (stype == GalSearchType.resource) ? "zimbraResourceSync" : "zimbraAccountSync";
 			break;
 		case search:
 			filterName = 
-                (stype == GAL_SEARCH_TYPE.ALL) ? "zimbraSearch" :
-			    (stype == GAL_SEARCH_TYPE.CALENDAR_RESOURCE) ? "zimbraResources" : "zimbraAccounts";
+                (stype == GalSearchType.all) ? "zimbraSearch" :
+			    (stype == GalSearchType.resource) ? "zimbraResources" : "zimbraAccounts";
 			mTokenizeKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeSearchKey, null);
 			break;
 		case autocomplete:
 			filterName = 
-                (stype == GAL_SEARCH_TYPE.ALL) ? "zimbraAutoComplete" :
-			    (stype == GAL_SEARCH_TYPE.CALENDAR_RESOURCE) ? "zimbraResourceAutoComplete" : "zimbraAccountAutoComplete";
+                (stype == GalSearchType.all) ? "zimbraAutoComplete" :
+			    (stype == GalSearchType.resource) ? "zimbraResourceAutoComplete" : "zimbraAccountAutoComplete";
 			mTokenizeKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, null);
 			break;
 		}

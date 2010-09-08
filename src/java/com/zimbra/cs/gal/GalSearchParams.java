@@ -34,7 +34,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class GalSearchParams {
 	private GalSearchConfig mConfig;
-	private Provisioning.GAL_SEARCH_TYPE mType;
+	private Provisioning.GalSearchType mType;
 	private int mLimit;
 	private int mPageSize;
 	private String mQuery;
@@ -79,7 +79,7 @@ public class GalSearchParams {
 		return mConfig;
 	}
 	
-	public Provisioning.GAL_SEARCH_TYPE getType() {
+	public Provisioning.GalSearchType getType() {
 		return mType;
 	}
 
@@ -163,7 +163,7 @@ public class GalSearchParams {
 		mConfig = config;
 	}
 	
-	public void setType(Provisioning.GAL_SEARCH_TYPE type) {
+	public void setType(Provisioning.GalSearchType type) {
 		mType = type;
 	}
 	
