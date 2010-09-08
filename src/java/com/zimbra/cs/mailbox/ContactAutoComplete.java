@@ -47,7 +47,6 @@ import com.zimbra.cs.index.ProxiedHit;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.service.util.ItemId;
 
 public class ContactAutoComplete {
@@ -591,8 +590,6 @@ public class ContactAutoComplete {
                 }
             }
         } catch (IOException e) {
-            throw ServiceException.FAILURE(e.getMessage(), e);
-        } catch (ParseException e) {
             throw ServiceException.FAILURE(e.getMessage(), e);
         } finally {
             if (qres != null) {

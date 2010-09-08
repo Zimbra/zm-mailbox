@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -39,7 +39,6 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -202,7 +201,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             return CONTINUE_PROCESSING;
         }
     }
-    
+
     private boolean continueAuthentication(byte[] response) throws IOException {
         mAuthenticator.handle(response);
         if (mAuthenticator.isComplete()) {
@@ -219,7 +218,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         }
         return CONTINUE_PROCESSING;
     }
-    
+
     boolean isIdle() {
         return mIdleTag != null;
     }
@@ -822,7 +821,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         Pair<ImapSession, InitialFolderValues> selectdata = ImapSessionManager.openFolder(path, params, this);
         mSelectedFolder = selectdata.getFirst();
-        
+
         ZimbraLog.imap.info("selected folder " + selectdata.getFirst().getPath());
         return selectdata;
     }
@@ -946,7 +945,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     boolean doID(String tag, Map<String, String> attrs) throws IOException {
         if (attrs != null) {
             boolean ignore = false;
-            
+
             String origIp = attrs.get("X-ORIGINATING-IP");
             if (origIp != null) {
                 String curOrigRemoteIp = getOrigRemoteIpAddr();
@@ -960,15 +959,15 @@ public abstract class ImapHandler extends ProtocolHandler {
                         ZimbraLog.imap.error("IMAP ID with X-ORIGINATING-IP is allowed only once per session, received different IP: " + origIp + ", command ignored");
                     ignore = true;
                 }
-            } 
-            
+            }
+
             if (!ignore) {
                 String userAgent = attrs.get("name");
                 if (userAgent != null) {
                     String version = attrs.get("version");
                     if (version != null)
                         userAgent = userAgent + "/" + version; // conform to the way ZimberSoapContext build ua
-                    
+
                     String curUserAgent = getUserAgent();
                     if (curUserAgent == null) {
                         setUserAgent(userAgent);
@@ -982,7 +981,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     }
                 }
             }
-            
+
             if (!ignore)
                 ZimbraLog.imap.debug("IMAP client identified as: " + attrs);
         }
@@ -1054,7 +1053,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     boolean doLOGOUT(String tag) throws IOException {
         sendBYE();
         if (mCredentials != null)
-        	ZimbraLog.imap.info("dropping connection for user " + mCredentials.getUsername() + " (LOGOUT)");
+            ZimbraLog.imap.info("dropping connection for user " + mCredentials.getUsername() + " (LOGOUT)");
 
         sendOK(tag, "LOGOUT completed");
         return STOP_PROCESSING;
@@ -1136,7 +1135,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         try {
             // for some authenticators, actually do the authentication here
-            // for others (e.g. GSSAPI), auth is already done -- this is just a lookup and authorization check 
+            // for others (e.g. GSSAPI), auth is already done -- this is just a lookup and authorization check
             Account acct = auth.authenticate(username, authenticateId, password, AuthContext.Protocol.imap, getOrigRemoteIpAddr(), getUserAgent());
             if (acct == null) {
                 // auth failure was represented by Authenticator.authenticate() returning null
@@ -1176,7 +1175,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         if (!account.getBooleanAttr(Provisioning.A_zimbraImapEnabled, false)) {
             sendNO(tag, "account does not have IMAP access enabled");
             return null;
-        } else if (!ZimbraAuthenticator.MECHANISM.equals(mechanism) && !Provisioning.onLocalServer(account)) { 
+        } else if (!ZimbraAuthenticator.MECHANISM.equals(mechanism) && !Provisioning.onLocalServer(account)) {
             String correctHost = account.getMailHost();
             ZimbraLog.imap.info(command + " failed; should be on host " + correctHost);
             if (correctHost == null || correctHost.trim().equals("") || !extensionEnabled("LOGIN_REFERRALS"))
@@ -1222,7 +1221,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         try {
             Object mboxobj = path.getOwnerMailbox();
             if (!(mboxobj instanceof Mailbox)) {
-                // 6.3.1: "The SELECT command automatically deselects any currently selected mailbox 
+                // 6.3.1: "The SELECT command automatically deselects any currently selected mailbox
                 //         before attempting the new selection.  Consequently, if a mailbox is selected
                 //         and a SELECT command that fails is attempted, no mailbox is selected."
                 unsetSelectedFolder(true);
@@ -1250,7 +1249,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     permflags.add("\\*");
             }
         } catch (ServiceException e) {
-            // 6.3.1: "The SELECT command automatically deselects any currently selected mailbox 
+            // 6.3.1: "The SELECT command automatically deselects any currently selected mailbox
             //         before attempting the new selection.  Consequently, if a mailbox is selected
             //         and a SELECT command that fails is attempted, no mailbox is selected."
             unsetSelectedFolder(true);
@@ -1526,7 +1525,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             sendNO(tag, "SUBSCRIBE failed");
             return canContinue(e);
         }
-        
+
         sendNotifications(true, false);
         sendOK(tag, "SUBSCRIBE completed");
         return CONTINUE_PROCESSING;
@@ -1935,7 +1934,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             return false;
         }
 
-        // 6.3.9: "A special situation occurs when using LSUB with the % wildcard. Consider 
+        // 6.3.9: "A special situation occurs when using LSUB with the % wildcard. Consider
         //         what happens if "foo/bar" (with a hierarchy delimiter of "/") is subscribed
         //         but "foo" is not.  A "%" wildcard to LSUB must return foo, not foo/bar, in
         //         the LSUB response, and it MUST be flagged with the \Noselect attribute."
@@ -2072,7 +2071,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             // Append message parts and check message content size
             for (AppendMessage append : appends)
                 append.checkContent();
-            
+
             for (AppendMessage append : appends) {
                 int id = append.storeContent(mboxobj, folderobj);
                 if (id > 0)
@@ -2408,7 +2407,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 sendNO(tag, "DELETEACL failed");
                 return CONTINUE_PROCESSING;
             }
-    
+
             // figure out whose permissions are being revoked
             String granteeId = null;
             if (principal.equals("anyone")) {
@@ -2684,7 +2683,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         sendOK(tag, "UNSELECT completed");
         return CONTINUE_PROCESSING;
     }
-    
+
     private final int SUGGESTED_DELETE_BATCH_SIZE = 30;
 
     boolean doEXPUNGE(String tag, boolean byUID, String sequenceSet) throws IOException, ImapParseException {
@@ -2845,15 +2844,6 @@ public abstract class ImapHandler extends ProtocolHandler {
                     zqr.doneWithSearchResults();
                 }
             }
-        } catch (ParseException pe) {
-            // RFC 5182 2: "A SEARCH command with the SAVE result option that caused the server
-            //              to return the NO tagged response sets the value of the search result
-            //              variable to the empty sequence."
-            if (saveResults)
-                i4folder.saveSearchResults(new ImapMessageSet());
-            ZimbraLog.imap.warn(command + " failed (bad query)", pe);
-            sendNO(tag, command + " failed");
-            return CONTINUE_PROCESSING;
         } catch (ServiceException e) {
             // RFC 5182 2: "A SEARCH command with the SAVE result option that caused the server
             //              to return the NO tagged response sets the value of the search result
@@ -2922,7 +2912,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     private ZimbraQueryResults runSearch(ImapSearch i4search, ImapFolder i4folder, SortBy sort, Mailbox.SearchResultMode resultMode)
-    throws ImapParseException, ServiceException, ParseException {
+    throws ImapParseException, ServiceException {
         Mailbox mbox = i4folder.getMailbox();
         if (mbox == null)
             throw ServiceException.FAILURE("unexpected session close during search", null);
@@ -3008,10 +2998,6 @@ public abstract class ImapHandler extends ProtocolHandler {
             } finally {
                 zqr.doneWithSearchResults();
             }
-        } catch (ParseException pe) {
-            ZimbraLog.imap.warn("THREAD failed (bad query)", pe);
-            sendNO(tag, "THREAD failed");
-            return CONTINUE_PROCESSING;
         } catch (ServiceException e) {
             ZimbraLog.imap.warn("THREAD failed", e);
             sendNO(tag, "THREAD failed");
@@ -3348,7 +3334,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     }
 
     private enum StoreAction { REPLACE, ADD, REMOVE }
-    
+
     private final int SUGGESTED_BATCH_SIZE = 100;
 
     boolean doSTORE(String tag, String sequenceSet, List<String> flagNames, StoreAction operation, boolean silent, int modseq, boolean byUID)
@@ -3457,7 +3443,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                         // if it was a STORE [+-]?FLAGS.SILENT, temporarily disable notifications
                         if (silent && !modseqEnabled)
                             i4folder.disableNotifications();
-    
+
                         if (operation == StoreAction.REPLACE) {
                             // replace real tags and flags on all messages
                             mbox.setTags(getContext(), ArrayUtil.toIntArray(idlist), MailItem.TYPE_UNKNOWN, flags, tags, null);
@@ -3623,7 +3609,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Caught IOException executing " + this, e);
                     }
-                    
+
                     copies.addAll(copyMsgs);
                     for (MailItem target : copyMsgs)
                         createdList.add(target.getImapUid());
@@ -3688,7 +3674,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         //                an EXPUNGE response on.  This is because a client is not permitted
         //                to cascade several COPY commands together."
         sendNotifications(true, false);
-    	sendOK(tag, copyuid + command + " completed");
+        sendOK(tag, copyuid + command + " completed");
         return CONTINUE_PROCESSING;
     }
 
@@ -3702,7 +3688,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         ImapSession i4selected = getCurrentSession();
         if (i4selected == null || !i4selected.hasNotifications())
             return;
-        
+
         Mailbox mbox = i4selected.getMailbox();
         if (mbox == null)
             return;
@@ -3765,7 +3751,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     @Override public void dropConnection() {
         dropConnection(true);
     }
-    
+
     abstract protected void dropConnection(boolean sendBanner);
 
     abstract protected void flushOutput() throws IOException;
@@ -3786,11 +3772,11 @@ public abstract class ImapHandler extends ProtocolHandler {
     void sendGreeting() throws IOException {
         sendUntagged("OK " + mConfig.getGreeting(), true);
     }
-    
+
     void sendBYE() {
         sendBYE(mConfig.getGoodbye());
     }
-    
+
     void sendBYE(String msg) {
         try {
             sendUntagged("BYE " + msg, true);

@@ -41,7 +41,6 @@ import org.apache.lucene.document.Field;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -118,7 +117,7 @@ public class IndexEditor {
 
     public interface QueryRunner {
         ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy)
-            throws IOException, ParseException, MailServiceException, ServiceException;
+            throws IOException, MailServiceException, ServiceException;
     }
 
     public class SingleQueryRunner implements QueryRunner {
@@ -130,7 +129,7 @@ public class IndexEditor {
 
         @Override
         public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy)
-            throws IOException, MailServiceException, ParseException, ServiceException {
+            throws IOException, MailServiceException, ServiceException {
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
             SearchParams params = new SearchParams();
             params.setQueryStr(qstr);
@@ -164,7 +163,7 @@ public class IndexEditor {
 
         @Override
         public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy)
-            throws IOException, MailServiceException, ParseException, ServiceException {
+            throws IOException, MailServiceException, ServiceException {
 
             MultiQueryResults all = new MultiQueryResults(100, sortBy);
             for (int i = 0; i < mMailboxId.length; i++) {
@@ -191,7 +190,7 @@ public class IndexEditor {
 
 
     public void doQuery(QueryRunner runner, boolean dump, int groupBy)
-        throws MailServiceException, IOException, ParseException, ServiceException {
+        throws MailServiceException, IOException, ServiceException {
 
         while (true) {
             outputStream.print("Query> ");
@@ -691,10 +690,6 @@ public class IndexEditor {
                     }
                 } else if (command.equals("dumpall")) {
                     dumpAll(mailboxId);
-                } else if (command.equals("unit")) {
-                    TestSearch.runTests();
-//                  } else if (command.equals("archive")) {
-//                  archive(mailboxId);
                 } else if (command.equals("verify")) {
                     checkIndex(mailboxId, false);
                 } else if (command.equals("repair")) {

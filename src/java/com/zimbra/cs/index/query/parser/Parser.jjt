@@ -1,0 +1,215 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2010 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
+options {    JDK_VERSION = "1.6";    STATIC = false;
+    JAVA_UNICODE_ESCAPE = true;
+    IGNORE_CASE = true;
+    ERROR_REPORTING = true;
+    VISITOR = true;
+    VISITOR_DATA_TYPE = "Void";
+    VISITOR_RETURN_TYPE = "void";
+    VISITOR_EXCEPTION = "QueryParserException, com.zimbra.common.service.ServiceException";
+    TRACK_TOKENS = true;
+    SUPPORT_CLASS_VISIBILITY_PUBLIC = false;
+}PARSER_BEGIN(Parser)package com.zimbra.cs.index.query.parser;
+
+final class Parser {
+}PARSER_END(Parser)
+SKIP : {
+    " " | "\t"
+}
+
+TOKEN : {
+    <AND: ("and" | "&&")>
+|   <OR: ("or" | "||")>
+|   <NOT: ("not" | "!")>
+|   <LPAREN: "(">
+|   <RPAREN: ")">
+|   <PLUS: "+">
+|   <MINUS: "-">
+|   <TERM: <_TERM_START_CHAR> (<_TERM_CHAR>)*>
+|   <#_TERM_START_CHAR: (~["{", "}", " ", "\t", "\n", "\r", ":", "+", "-", "\"", "(", ")"] | <_ESCAPED_QUOTE>)>
+|   <#_TERM_CHAR: (<_TERM_START_CHAR> | "-" | "+" | "@")>
+|   <QUOTED_TERM: "\"" (<_ESCAPED_QUOTE> | ~["\n", "\""])* "\"">
+|   <#_ESCAPED_QUOTE: "\\\"">
+|   <BRACED_TERM: "{" (~["}"])+ "}">
+}
+
+TOKEN : {
+    <CONTENT: "content:">
+|   <SUBJECT: "subject:">
+|   <MSGID: "msgid:">
+|   <ENVTO: "envto:">
+|   <ENVFROM: "envfrom:">
+|   <CONTACT: "contact:">
+|   <TO: "to:">
+|   <FROM: "from:">
+|   <CC: "cc:">
+|   <TOFROM: "tofrom:">
+|   <TOCC: "tocc:">
+|   <FROMCC: "fromcc:">
+|   <TOFROMCC: "tofromcc:">
+|   <IN: "in:">
+|   <UNDER: "under:">
+|   <INID: "inid:">
+|   <UNDERID: "underid:">
+|   <HAS: "has:">
+|   <FILENAME: "filename:">
+|   <TYPE: "type:">
+|   <ATTACHMENT: "attachment:">
+|   <IS: "is:">
+|   <DATE: "date:">
+|   <DAY: "day:">
+|   <WEEK: "week:">
+|   <MONTH: "month:">
+|   <YEAR: "year:">
+|   <AFTER: "after:">
+|   <BEFORE: "before:">
+|   <SIZE: "size:">
+|   <BIGGER: "bigger:" | "larger:">
+|   <SMALLER: "smaller:">
+|   <TAG: "tag:">
+|   <MESSAGE: "message:">
+|   <MY: "my:">
+|   <MODSEQ: "modseq:">
+|   <CONV: "conv:">
+|   <CONV_COUNT: "conv-count:">
+|   <CONV_MINM: "conv-minm:">
+|   <CONV_MAXM: "conv-maxm:">
+|   <CONV_START: "conv-start:">
+|   <CONV_END: "conv-end:">
+|   <APPT_START: "appt-start:">
+|   <APPT_END: "appt-end:">
+|   <AUTHOR: "author:">
+|   <TITLE: "title:">
+|   <KEYWORDS: "keywords:">
+|   <COMPANY: "company:">
+|   <METADATA: "metadata:">
+|   <ITEM: "item:">
+|   <SORTBY: "sortby:">
+|   <SORT: "sort:">
+|   <FIELD: <_FIELD1> | <_FIELD2>>
+|   <#_FIELD1: "field" ("[" <TERM> "]")? ":">
+|   <#_FIELD2: "#" <TERM> ":">
+}
+SimpleNode parse() #Root : {
+}{    Query() ["\r" | <EOF>] { return jjtThis; }
+}
+private void Query() : {
+}
+{
+    [SortBy()] Clause() [SortBy()] ([Conjunction()] Clause() [SortBy()])*
+}
+
+private void Clause() : {
+}
+{
+    [Modifier()]
+    (        <LPAREN> Query() <RPAREN>
+    |   TextClause()
+    |   ItemClause()
+    |   DateClause()
+    |   DefaultClause()
+    )
+}
+
+private void DefaultClause() : {
+}
+{
+    <TERM> | <QUOTED_TERM>}
+
+private void TextClause() : {
+}
+{    TextField() TextTerm()
+}
+
+private void ItemClause() : {}
+{
+    <ITEM> ItemTerm()}
+
+private void DateClause() : {}
+{    DateField() DateTerm()
+}
+
+private void TextField() #void : {
+}
+{    <FIELD> | <MSGID> | <MODSEQ> | <TYPE> | <MY> | <IS> | <TAG> | <CONTACT>
+|   <FROM> | <TO> | <CC> | <ENVFROM> | <ENVTO>
+|   <TOFROM> | <TOCC> | <FROMCC> | <TOFROMCC>
+|   <SUBJECT> | <MESSAGE> | <CONTENT>
+|   <IN> | <INID> | <UNDER> | <UNDERID>
+|   <ATTACHMENT> | <HAS> | <FILENAME>
+|   <AUTHOR> | <TITLE> | <KEYWORDS> | <COMPANY> | <METADATA>
+|   <CONV> | <CONV_COUNT> | <CONV_MINM> | <CONV_MAXM>
+|   <SIZE> | <BIGGER> | <SMALLER>
+}
+
+private void DateField() #void : {
+}
+{    <DATE> | <DAY> | <MONTH> | <WEEK> | <YEAR>
+|   <AFTER> | <BEFORE> | <CONV_START> | <CONV_END> | <APPT_START> | <APPT_END>
+}
+
+private void Conjunction() : {
+}
+{
+    <AND> | <OR>
+}
+
+private void Modifier() : {
+}
+{
+    <PLUS> | <MINUS> | <NOT>
+}
+
+private void DateModifier() : {
+}
+{
+    <NOT>
+}
+
+private void SortBy() : {
+}
+{
+    (<SORTBY> | <SORT>) <TERM>
+}
+
+private void TextTerm() : {
+}
+{
+    (<LPAREN> [Modifier()] TextTerm() ([Conjunction()] [Modifier()] TextTerm())* <RPAREN>)
+|   <TERM> | <QUOTED_TERM>
+}
+
+/**
+ * Allows {}'s, so these are legal: 'item:{1,2,3}', 'item:({1,2,3} or {4,5,6})'.
+ */
+private void ItemTerm() : {
+}
+{
+    (<LPAREN> [Modifier()] ItemTerm() ([Conjunction()] [Modifier()] ItemTerm())* <RPAREN>)
+|   <TERM> | <QUOTED_TERM>
+|   <BRACED_TERM>
+}
+
+/**
+ * Allows starting - (minus) signs, and we don't want to interpret those as
+ * a NOT, like we do in other cases.
+ */
+private void DateTerm() : {
+}
+{
+    (<LPAREN> [DateModifier()] DateTerm() ([Conjunction()] [DateModifier()] DateTerm())* <RPAREN>)
+|   [<MINUS> | <PLUS>] (<TERM> | <QUOTED_TERM>)
+}

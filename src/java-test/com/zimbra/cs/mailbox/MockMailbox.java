@@ -73,4 +73,12 @@ class MockMailbox extends Mailbox {
         return new Folder(this, data);
     }
 
+    @Override
+    public Tag getTagByName(String name) throws ServiceException {
+        MailItem.UnderlyingData data = new MailItem.UnderlyingData();
+        data.type = MailItem.TYPE_TAG;
+        data.name = name;
+        return new Tag(this, data);
+    }
+
 }

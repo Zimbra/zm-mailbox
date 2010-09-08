@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -44,7 +44,6 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -56,7 +55,7 @@ public class AddressBookTest extends AbstractTest {
     static final String GAL = "GAL";
     static final byte[] SEARCH_TYPE = { MailItem.TYPE_CONTACT };
     private static Log mLog = LogFactory.getLog(AddressBookTest.class);
-    
+
     @Override
     protected boolean executeBasic(MailAdapter mail, Arguments arguments, SieveContext context)
             throws SieveException {
@@ -119,8 +118,8 @@ public class AddressBookTest extends AbstractTest {
 
         // There MUST NOT be any further arguments
         if (argumentsIter.hasNext())
-            throw new SyntaxException("Found unexpected argument(s)");               
-        
+            throw new SyntaxException("Found unexpected argument(s)");
+
         if (! (mail instanceof ZimbraMailAdapter))
             return false;
         return test(mail, comparator, headers, abooks);
@@ -147,7 +146,7 @@ public class AddressBookTest extends AbstractTest {
                                 iaddrStr = iaddr.getAddress();
                             } catch (AddressException e1) {
                             }
-                            results = mbox.search(new OperationContext(mbox), "To:" + iaddrStr, 
+                            results = mbox.search(new OperationContext(mbox), "To:" + iaddrStr,
                                     SEARCH_TYPE, SortBy.DATE_ASCENDING, 100);
                             mLog.debug("searching for " + iaddrStr);
                             if (results.hasNext()) {
@@ -155,7 +154,6 @@ public class AddressBookTest extends AbstractTest {
                                 return true;
                             }
                         } catch (IOException e) {
-                        } catch (ParseException e) {
                         } catch (ServiceException e) {
                         } finally {
                             if (results != null) {
@@ -167,12 +165,12 @@ public class AddressBookTest extends AbstractTest {
                         }
                     }
                 }
-                
+
             } // searching other address database like GAL
         }
         return false;
     }
-    
+
     @Override
     protected void validateArguments(Arguments arguments, SieveContext context) {
     }

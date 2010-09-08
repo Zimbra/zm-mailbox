@@ -85,7 +85,6 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
@@ -3506,11 +3505,10 @@ public class Mailbox {
      * @param chunkSize A hint to the search engine telling it the size of the result set you are expecting
      * @return
      * @throws IOException
-     * @throws ParseException
      * @throws ServiceException
      */
     public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, SortBy sortBy, int chunkSize)
-    throws IOException, ParseException, ServiceException {
+        throws IOException, ServiceException {
         SearchParams params = new SearchParams();
         params.setQueryStr(queryString);
         params.setTimeZone(null);
@@ -3548,10 +3546,9 @@ public class Mailbox {
      * @param params Search Parameters
      * @return
      * @throws IOException
-     * @throws ParseException
      * @throws ServiceException
      */
-    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, SearchParams params) throws IOException, ParseException, ServiceException {
+    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, SearchParams params) throws IOException, ServiceException {
         return mIndexHelper.search(proto, octxt, params);
     }
 
@@ -3562,10 +3559,9 @@ public class Mailbox {
      *         search parts) are re-written using ID's.  This is useful in some situations where you want to proxy the search
      *         request (since you cannot directly proxy a search request with local folder names in it)
      * @throws IOException
-     * @throws ParseException
      * @throws ServiceException
      */
-    public String getRewrittenQueryString(OperationContext octxt, SearchParams params) throws ParseException, ServiceException {
+    public String getRewrittenQueryString(OperationContext octxt, SearchParams params) throws ServiceException {
         if (octxt == null)
             throw ServiceException.INVALID_REQUEST("The OperationContext must not be null", null);
 
@@ -4828,7 +4824,7 @@ public class Mailbox {
      * @param identityId
      * @param accountId
      * @param autoSendTime time at which the draft needs to be auto-sent. Note that this method does not schedule
-     *                     the task for auto-sending the draft. It just persists this time for tracking purposes. 
+     *                     the task for auto-sending the draft. It just persists this time for tracking purposes.
      * @return
      * @throws IOException
      * @throws ServiceException

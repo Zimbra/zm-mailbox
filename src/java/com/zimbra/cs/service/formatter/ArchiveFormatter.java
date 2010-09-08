@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -71,7 +71,10 @@ public abstract class ArchiveFormatter extends Formatter {
     private static enum Resolve { Modify, Replace, Reset, Skip }
 
     private static final class SortPath implements Comparator<MailItem> {
-        SortPath()  {}
+        SortPath() {
+        }
+
+        @Override
         public int compare(MailItem m1, MailItem m2) {
             try {
                 int ret = m1.getPath().compareTo(m2.getPath());
@@ -89,19 +92,19 @@ public abstract class ArchiveFormatter extends Formatter {
         public int getType();
         public boolean isUnread();
     }
-    
+
     public abstract interface ArchiveOutputEntry {
         public void setUnread();
         public void setSize(long size);
     }
-    
+
     public abstract interface ArchiveInputStream {
         public void close() throws IOException;
         public InputStream getInputStream();
         public ArchiveInputEntry getNextEntry() throws IOException;
         public int read(byte[] buf, int offset, int len) throws IOException;
     }
-    
+
     public abstract interface ArchiveOutputStream {
         public void close() throws IOException;
         public void closeEntry() throws IOException;
@@ -113,23 +116,23 @@ public abstract class ArchiveFormatter extends Formatter {
         public void write(byte[] buf) throws IOException;
         public void write(byte[] buf, int offset, int len) throws IOException;
     }
-    
+
     @Override public String getDefaultSearchTypes() {
         return MailboxIndex.SEARCH_FOR_EVERYTHING;
     }
 
     @Override public boolean canBeBlocked() { return true; }
-    
+
     @Override public boolean supportsSave() { return true; }
 
     protected boolean getDefaultMeta() { return true; }
 
     protected abstract ArchiveInputStream getInputStream(Context context,
         String charset) throws IOException, ServiceException, UserServletException;
-    
+
     protected abstract ArchiveOutputStream getOutputStream(Context context,
         String charset) throws IOException;
-    
+
     @Override public void formatCallback(Context context) throws IOException,
         ServiceException, UserServletException {
         HashMap<Integer, Integer> cnts = new HashMap<Integer, Integer>();
@@ -189,7 +192,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 if (Arrays.binarySearch(searchTypes, MailItem.TYPE_CONVERSATION) >= 0) {
                     int i = 0;
                     byte newTypes[] = new byte[searchTypes.length - 1];
-                
+
                     for (byte type : searchTypes)
                         if (type != MailItem.TYPE_CONVERSATION)
                             newTypes[i++] = type;
@@ -224,7 +227,7 @@ public abstract class ArchiveFormatter extends Formatter {
 
                 if (context.target instanceof Folder) {
                     Folder f = (Folder)context.target;
-                    
+
                     if (f.getId() != Mailbox.ID_FOLDER_USER_ROOT) {
                         conversations = false;
                         saveTargetFolder = true;
@@ -234,12 +237,12 @@ public abstract class ArchiveFormatter extends Formatter {
                 }
                 if (query == null || query.equals("")) {
                     SortPath sp = new SortPath();
-                    
+
                     for (byte type : sysTypes) {
                         List<MailItem> items =
                             context.targetMailbox.getItemList(
                             context.opContext, type);
-                        
+
                         Collections.sort(items, sp);
                         for (MailItem item : items)
                             aos = saveItem(context, item, fldrs, cnts, names,
@@ -249,12 +252,8 @@ public abstract class ArchiveFormatter extends Formatter {
                         conversations = true;
                     query = "is:local";
                 }
-                try {
-                    results = context.targetMailbox.search(context.opContext,
-                        query, searchTypes, SortBy.NONE, 4096);
-                } catch (com.zimbra.cs.index.queryparser.ParseException e) {
-                    throw ServiceException.PARSE_ERROR(e.getLocalizedMessage(), e);
-                }
+                results = context.targetMailbox.search(context.opContext,
+                    query, searchTypes, SortBy.NONE, 4096);
                 try {
                     while (results.hasNext()) {
                         if (saveTargetFolder) {
@@ -267,7 +266,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     }
                     if (conversations) {
                         for (MailItem item : context.targetMailbox.getItemList(
-                            context.opContext, MailItem.TYPE_CONVERSATION)) 
+                            context.opContext, MailItem.TYPE_CONVERSATION))
                             aos = saveItem(context, item, fldrs, cnts, names,
                                 false, aos);
                     }
@@ -300,8 +299,8 @@ public abstract class ArchiveFormatter extends Formatter {
             }
         }
     }
-    
-    private ArchiveOutputStream saveItem(Context context, MailItem mi, 
+
+    private ArchiveOutputStream saveItem(Context context, MailItem mi,
         HashMap<Integer, String> fldrs, HashMap<Integer, Integer> cnts,
         Set<String> names, boolean version, ArchiveOutputStream aos) throws
         ServiceException {
@@ -313,7 +312,7 @@ public abstract class ArchiveFormatter extends Formatter {
         InputStream is = null;
         String metaParam = context.params.get(UserServlet.QP_META);
         boolean meta = metaParam == null ? getDefaultMeta() : !metaParam.equals("0");
-        
+
         if (charset == null)
             charset = UTF8;
         if (!version && mi.isTagged(Flag.ID_FLAG_VERSIONED)) {
@@ -326,7 +325,7 @@ public abstract class ArchiveFormatter extends Formatter {
         switch (mi.getType()) {
         case MailItem.TYPE_APPOINTMENT:
             Appointment appt = (Appointment)mi;
-            
+
             if (!appt.isPublic() && !appt.allowPrivateAccess(context.authAccount,
                 context.isUsingAdminPrivileges()))
                 return aos;
@@ -342,7 +341,7 @@ public abstract class ArchiveFormatter extends Formatter {
             break;
         case MailItem.TYPE_CONTACT:
             Contact ct = (Contact)mi;
-            
+
             name = ct.getFileAsString();
             if (!meta)
                 ext = "vcf";
@@ -361,10 +360,10 @@ public abstract class ArchiveFormatter extends Formatter {
             break;
         case MailItem.TYPE_MESSAGE:
             Message msg = (Message)mi;
-            
+
             if (msg.hasCalendarItemInfos()) {
                 Set<Integer> calItems = new HashSet<Integer>();
-                
+
                 for (Iterator<CalendarItemInfo> it = msg.getCalendarItemInfoIterator();
                     it.hasNext(); )
                     calItems.add(it.next().getCalendarItemId());
@@ -382,7 +381,7 @@ public abstract class ArchiveFormatter extends Formatter {
             break;
         case MailItem.TYPE_TASK:
             Task task = (Task)mi;
-            
+
             if (!task.isPublic() && !task.allowPrivateAccess(context.authAccount,
                 context.isUsingAdminPrivileges()))
                 return aos;
@@ -397,7 +396,7 @@ public abstract class ArchiveFormatter extends Formatter {
         fldr = fldrs.get(fid);
         if (fldr == null) {
             Folder f = mi.getMailbox().getFolderById(context.opContext, fid);
-            
+
             cnts.put(fid, 1);
             fldr = f.getPath();
             if (fldr.startsWith("/"))
@@ -407,11 +406,11 @@ public abstract class ArchiveFormatter extends Formatter {
         } else if (!(mi instanceof Folder)) {
             final int BATCH = 500;
             int cnt = cnts.get(fid) + 1;
-            
+
             cnts.put(fid, cnt);
             cnt /= BATCH;
             if (cnt > 0)
-                fldr = fldr + '!' + cnt; 
+                fldr = fldr + '!' + cnt;
         }
         try {
             ArchiveOutputEntry aoe;
@@ -439,7 +438,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 aoe.setUnread();
             if (meta) {
                 byte[] metaData = new ItemData(mi, extra).encode();
-                
+
                 aoe.setSize(metaData.length);
                 aos.putNextEntry(aoe);
                 aos.write(metaData);
@@ -455,7 +454,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 OperationContext octxt = new OperationContext(context.authAccount,
                     context.isUsingAdminPrivileges());
                 StringWriter writer = new StringWriter();
-                
+
                 if (!instances.isEmpty()) {
                     calItems.add(ci);
                     context.targetMailbox.writeICalendarForCalendarItems(
@@ -465,17 +464,17 @@ public abstract class ArchiveFormatter extends Formatter {
                 }
             } else if (mi instanceof Contact) {
                 VCard vcf = VCard.formatContact((Contact)mi);
-                
+
                 data = vcf.formatted.getBytes(charset);
             } else if (mi instanceof Message) {
                 if (context.hasPart()) {
                     MimeMessage mm = ((Message)mi).getMimeMessage();
-                    
+
                     for (String part : context.getPart().split(",")) {
                         BufferStream bs;
                         MimePart mp = Mime.getMimePart(mm, part);
                         long sz;
-                        
+
                         if (mp == null)
                             throw MailServiceException.NO_SUCH_PART(part);
                         name = Mime.getFilename(mp);
@@ -487,7 +486,7 @@ public abstract class ArchiveFormatter extends Formatter {
                             name = "attachment";
                         } else {
                             int dot = name.lastIndexOf('.');
-                            
+
                             if (dot != -1 && dot < name.length() - 1) {
                                 ext = name.substring(dot + 1);
                                 name = name.substring(0, dot);
@@ -547,7 +546,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 } else {
                     // Read headers into memory to compute size
                     byte headerData[] = HeadersOnlyInputStream.getHeaders(is);
-                    
+
                     aoe.setSize(headerData.length);
                     aos.putNextEntry(aoe);
                     aos.write(headerData);
@@ -561,12 +560,12 @@ public abstract class ArchiveFormatter extends Formatter {
         }
         return aos;
     }
-    
+
     protected String getEntryName(MailItem mi, String fldr, String name,
         String ext, Set<String> names) {
         int counter = 0;
         String lpath, path;
-        
+
         if ((name == null || name.length() == 0) &&
             (name = mi.getName()).length() == 0 &&
             (name = mi.getSubject()).length() == 0)
@@ -590,10 +589,10 @@ public abstract class ArchiveFormatter extends Formatter {
         names.add(lpath);
         return path;
     }
-    
+
     @Override public void saveCallback(Context context, String contentType,
         Folder fldr, String file) throws IOException, ServiceException {
-	    Exception ex = null;
+        Exception ex = null;
         ItemData id = null;
         Map<String, Integer> digestMap = new HashMap<String, Integer>();
         List<ServiceException> errs = new LinkedList<ServiceException>();
@@ -607,7 +606,7 @@ public abstract class ArchiveFormatter extends Formatter {
         String subfolder = context.params.get("subfolder");
         String timestamp = context.params.get("timestamp");
         String timeout = context.params.get("timeout");
- 
+
         if (charset == null)
             charset = UTF8;
         try {
@@ -631,7 +630,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     if (type == MailItem.TYPE_CONVERSATION) {
                         int idx = 0;
                         byte[] newTypes = new byte[searchTypes.length - 1];
-    
+
                         for (byte t : searchTypes)
                             if (t != MailItem.TYPE_CONVERSATION)
                                 newTypes[idx++] = t;
@@ -644,7 +643,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 ais = getInputStream(context, charset);
             } catch (Exception e) {
                 String filename = context.params.get(UserServlet.UPLOAD_NAME);
-                
+
                 throw FormatterServiceException.INVALID_FORMAT(filename == null ?
                     "unknown" : filename);
             }
@@ -656,7 +655,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 for (Folder f : flist) {
                     try {
                         List<Integer> delIds;
-                        
+
                         if (System.currentTimeMillis() - last > interval) {
                             updateClient(context, true);
                             last = System.currentTimeMillis();
@@ -672,7 +671,7 @@ public abstract class ArchiveFormatter extends Formatter {
                         } else {
                             byte[] delTypes = new byte[searchTypes.length - 1];
                             int i = 0;
-                            
+
                             for (byte type : searchTypes)
                                 if (type != MailItem.TYPE_CONVERSATION)
                                     delTypes[i++] = type;
@@ -681,10 +680,10 @@ public abstract class ArchiveFormatter extends Formatter {
                         }
                         if (delIds == null)
                             continue;
-        
+
                         int delIdsArray[] = new int[delIds.size()];
                         int i = 0;
-                        
+
                         for (Integer del : delIds)
                             if (del >= Mailbox.FIRST_USER_ID)
                                 delIdsArray[i++] = del;
@@ -713,7 +712,7 @@ public abstract class ArchiveFormatter extends Formatter {
             try {
                 ArchiveInputEntry aie;
                 Boolean meta = false;
-                
+
                 while ((aie = ais.getNextEntry()) != null) {
                     if (System.currentTimeMillis() - last > interval) {
                         updateClient(context, true);
@@ -783,7 +782,7 @@ public abstract class ArchiveFormatter extends Formatter {
     private void addError(List<ServiceException> errs, ServiceException ex) {
         StringBuilder s = new StringBuilder(ex.getLocalizedMessage() == null ?
             ex.toString() : ex.getLocalizedMessage());
-        
+
         errs.add(ex);
         if (ex.getArgs() != null) {
             s.append(':');
@@ -796,7 +795,7 @@ public abstract class ArchiveFormatter extends Formatter {
     private Folder createParent(Context context, Map<Object, Folder> fmap,
         String path, byte view) throws ServiceException {
         String parent = path.substring(0, path.lastIndexOf('/'));
-        
+
         if (parent.equals(""))
             parent = "/";
         return createPath(context, fmap, parent, view);
@@ -805,7 +804,7 @@ public abstract class ArchiveFormatter extends Formatter {
     private Folder createPath(Context context, Map<Object, Folder> fmap,
         String path, byte view) throws ServiceException {
         Folder fldr;
-        
+
         if ((fldr = fmap.get(path)) == null) {
             try {
                 fldr = context.targetMailbox.getFolderByPath(context.opContext,
@@ -830,7 +829,7 @@ public abstract class ArchiveFormatter extends Formatter {
     private long getTagBitmask(OperationContext oc, Mailbox mbox, ItemData id)
         throws IOException {
         long bitmask = 0;
-    	
+
         if (id.tags != null && id.tags.length() > 0) {
             // pre 6.0.6 versions had numeric tags strings, not names
             if (Character.isDigit(id.tags.charAt(0)) && id.tags.indexOf(':') == -1)
@@ -838,7 +837,7 @@ public abstract class ArchiveFormatter extends Formatter {
             try {
                 for (String name : id.tags.split(":")) {
                     Tag tag;
-                    
+
                     try {
                         tag = mbox.getTagByName(name);
                     } catch (MailServiceException e) {
@@ -860,10 +859,10 @@ public abstract class ArchiveFormatter extends Formatter {
         ArchiveInputEntry aie) throws IOException {
         if (aie == null)
             return null;
-        
+
         int dsz = (int)aie.getSize();
         byte[] data;
-        
+
         if (dsz == 0) {
             return null;
         } else if (dsz == -1) {
@@ -890,7 +889,7 @@ public abstract class ArchiveFormatter extends Formatter {
         Map<Object, Folder> fmap, Map<String, Integer> digestMap,
         Map<Integer, Integer> idMap, int[] ids, byte[] searchTypes, Resolve r,
         ItemData id, ArchiveInputStream ais, ArchiveInputEntry aie,
-        List<ServiceException> errs) throws MessagingException, ServiceException {
+        List<ServiceException> errs) throws ServiceException {
         try {
             Mailbox mbox = fldr.getMailbox();
             MailItem mi = MailItem.constructItem(mbox, id.ud);
@@ -901,7 +900,7 @@ public abstract class ArchiveFormatter extends Formatter {
             boolean root = fldr.getId() == Mailbox.ID_FOLDER_ROOT ||
                 fldr.getId() == Mailbox.ID_FOLDER_USER_ROOT ||
                 id.path.startsWith(fldr.getPath() + '/');
-    
+
             if ((ids != null && Arrays.binarySearch(ids, id.ud.id) < 0) ||
                 (searchTypes != null && Arrays.binarySearch(searchTypes,
                 id.ud.type) < 0))
@@ -920,13 +919,13 @@ public abstract class ArchiveFormatter extends Formatter {
             case MailItem.TYPE_APPOINTMENT:
             case MailItem.TYPE_TASK:
                 CalendarItem ci = (CalendarItem)mi;
-    
+
                 fldr = createPath(context, fmap, path, ci.getType() ==
                     MailItem.TYPE_APPOINTMENT ? Folder.TYPE_APPOINTMENT :
                     Folder.TYPE_TASK);
                 if (!root || r != Resolve.Reset) {
                     CalendarItem oldCI = null;
-                    
+
                     try {
                         oldCI = mbox.getCalendarItemByUid(oc, ci.getUid());
                     } catch (Exception e) {
@@ -945,7 +944,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     SetCalendarItemData exceptionScids[] = null;
                     Invite invs[] = ci.getInvites();
                     MimeMessage mm;
-                    
+
                     if (invs != null && invs.length > 0) {
                         defScid.mInv = invs[0];
                         if (blobMimeMsgMap != null && (mm =
@@ -956,7 +955,7 @@ public abstract class ArchiveFormatter extends Formatter {
                             exceptionScids = new SetCalendarItemData[invs.length - 1];
                             for (int i = 1; i < invs.length; i++) {
                                 SetCalendarItemData scid = new SetCalendarItemData();
-                                
+
                                 scid.mInv = invs[i];
                                 if (blobMimeMsgMap != null && (mm =
                                     blobMimeMsgMap.get(
@@ -978,13 +977,13 @@ public abstract class ArchiveFormatter extends Formatter {
             case MailItem.TYPE_CHAT:
                 Chat chat = (Chat)mi;
                 byte[] content = readArchiveEntry(ais, aie);
-                
+
                 pm = new ParsedMessage(content, mi.getDate(),
                     mbox.attachmentsIndexingEnabled());
                 fldr = createPath(context, fmap, path, Folder.TYPE_CHAT);
                 if (root && r != Resolve.Reset) {
                     Chat oldChat = null;
-                    
+
                     try {
                         oldChat = mbox.getChatById(oc, chat.getId());
                         if (oldChat.getFolderId() != fldr.getId())
@@ -1011,7 +1010,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 break;
             case MailItem.TYPE_CONVERSATION:
                 Conversation cv = (Conversation)mi;
-    
+
                 if (r != Resolve.Reset && r != Resolve.Skip) {
                     try {
                         oldItem = mbox.getConversationByHash(oc, Mailbox.getHash(
@@ -1022,18 +1021,18 @@ public abstract class ArchiveFormatter extends Formatter {
                 break;
             case MailItem.TYPE_CONTACT:
                 Contact ct = (Contact)mi;
-                
+
                 fldr = createPath(context, fmap, path, Folder.TYPE_CONTACT);
                 if (root && r != Resolve.Reset) {
                     Contact oldContact = null;
-                    
+
                     try {
                         oldContact = mbox.getContactById(oc, ct.getId());
                         if (oldContact.getFolderId() != fldr.getId())
                             oldContact = null;
                     } catch (Exception e) {
                     }
-                    
+
                     if (oldContact != null) {
                         String email = string(ct.get(ContactConstants.A_email));
                         String first = string(ct.get(ContactConstants.A_firstName));
@@ -1041,7 +1040,7 @@ public abstract class ArchiveFormatter extends Formatter {
                         String oldemail = string(oldContact.get(ContactConstants.A_email));
                         String oldfirst = string(oldContact.get(ContactConstants.A_firstName));
                         String oldname = string(oldContact.get(ContactConstants.A_fullName));
-                        
+
                         if (email.equals(oldemail) && first.equals(oldfirst) &&
                             name.equals(oldname)) {
                             if (r == Resolve.Replace) {
@@ -1067,7 +1066,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 Document doc = (Document)mi;
                 Document oldDoc = null;
                 Integer oldId = idMap.get(mi.getId());
-                
+
                 fldr = createParent(context, fmap, path, doc.getType() ==
                     MailItem.TYPE_DOCUMENT ? Folder.TYPE_DOCUMENT :
                     Folder.TYPE_WIKI);
@@ -1109,7 +1108,7 @@ public abstract class ArchiveFormatter extends Formatter {
                             doc.getCreator(), doc.getDescription(), ais.getInputStream());
                     } else {
                         WikiItem wi = (WikiItem)mi;
-                        
+
                         newItem = mbox.createWiki(oc, fldr.getId(),
                             wi.getWikiWord(), wi.getCreator(), wi.getDescription(),
                             ais.getInputStream());
@@ -1128,7 +1127,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 ACL acl = f.getACL();
                 Folder oldF = null;
                 byte view = f.getDefaultView();
-                
+
                 if (view == MailItem.TYPE_CONVERSATION ||
                     view == MailItem.TYPE_FLAG || view == MailItem.TYPE_TAG)
                     break;
@@ -1143,7 +1142,7 @@ public abstract class ArchiveFormatter extends Formatter {
                             mbox.setFolderUrl(oc, oldF.getId(), f.getUrl());
                         if (doACL) {
                             ACL oldACL = oldF.getACL();
-                            
+
                             if ((acl == null && oldACL != null) ||
                                 (acl != null && (oldACL == null || !acl.equals(oldACL))))
                                 mbox.setPermissions(oc, oldF.getId(), acl);
@@ -1164,7 +1163,7 @@ public abstract class ArchiveFormatter extends Formatter {
             case MailItem.TYPE_MESSAGE:
                 Message msg = (Message)mi;
                 Message oldMsg = null;
-                
+
                 fldr = createPath(context, fmap, path, Folder.TYPE_MESSAGE);
                 if (root && r != Resolve.Reset) {
                     try {
@@ -1177,7 +1176,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 }
                 if (oldMsg == null) {
                     Integer digestId = digestMap.get(path);
-                    
+
                     if (digestId == null) {
                         digestMap.clear();
                         digestMap.put(path, -1);
@@ -1213,7 +1212,7 @@ public abstract class ArchiveFormatter extends Formatter {
             case MailItem.TYPE_MOUNTPOINT:
                 Mountpoint mp = (Mountpoint)mi;
                 MailItem oldMP = null;
-                
+
                 try {
                     oldMP = mbox.getItemByPath(oc, path);
                     if (oldMP.getType() == mi.getType())
@@ -1237,7 +1236,7 @@ public abstract class ArchiveFormatter extends Formatter {
             case MailItem.TYPE_NOTE:
                 Note note = (Note)mi;
                 Note oldNote = null;
-    
+
                 fldr = createPath(context, fmap, path, Folder.TYPE_NOTE);
                 try {
                     for (Note listNote : mbox.getNoteList(oc, fldr.getId())) {
@@ -1268,7 +1267,7 @@ public abstract class ArchiveFormatter extends Formatter {
             case MailItem.TYPE_SEARCHFOLDER:
                 SearchFolder sf = (SearchFolder)mi;
                 MailItem oldSF = null;
-                
+
                 try {
                     oldSF = mbox.getItemByPath(oc, path);
                     if (oldSF.getType() == mi.getType())
@@ -1294,10 +1293,10 @@ public abstract class ArchiveFormatter extends Formatter {
                 break;
             case MailItem.TYPE_TAG:
                 Tag tag = (Tag)mi;
-                
+
                 try {
                     Tag oldTag = mbox.getTagByName(tag.getName());
-                    
+
                     oldItem = oldTag;
                 } catch (Exception e) {
                 }
@@ -1311,7 +1310,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 if (mi.getColor() != newItem.getColor())
                     mbox.setColor(oc, newItem.getId(), newItem.getType(),
                         mi.getColor());
-                
+
                 if (!id.flags.equals(newItem.getFlagString()) || !id.tagsEqual(newItem))
                     mbox.setTags(oc, newItem.getId(), newItem.getType(),
                         Flag.flagsToBitmask(id.flags), getTagBitmask(oc, mbox, id),
@@ -1400,11 +1399,11 @@ public abstract class ArchiveFormatter extends Formatter {
                     !((view == Folder.TYPE_DOCUMENT || view == Folder.TYPE_WIKI) &&
                     (fldr.getDefaultView() == Folder.TYPE_DOCUMENT ||
                     fldr.getDefaultView() == Folder.TYPE_WIKI)))
-	                throw FormatterServiceException.INVALID_TYPE(
-	                    Folder.getNameForType(view), fldr.getPath());
+                    throw FormatterServiceException.INVALID_TYPE(
+                        Folder.getNameForType(view), fldr.getPath());
             } else {
                 String s = fldr.getPath();
-                
+
                 if (!s.endsWith("/"))
                     s += '/';
                 if (dir.startsWith(s))
@@ -1417,14 +1416,14 @@ public abstract class ArchiveFormatter extends Formatter {
                 boolean continueOnError = context.ignoreAndContinueOnError();
                 boolean preserveExistingAlarms = context.preserveAlarms();
                 InputStream is = ais.getInputStream();
-                
+
                 try {
                     if (aie.getSize() <=
                         LC.calendar_ics_import_full_parse_max_size.intValue()) {
                         List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(is, UTF8);
                         ImportInviteVisitor visitor = new ImportInviteVisitor(oc,
                             fldr, preserveExistingAlarms);
-                        
+
                         Invite.createFromCalendar(context.targetAccount, null,
                             icals, true, continueOnError, visitor);
                     } else {
@@ -1446,7 +1445,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 } else {
                     List<VCard> cards = VCard.parseVCard(new String(
                         readArchiveEntry(ais, aie), UTF8));
-                    
+
                     if (cards == null || cards.size() == 0 ||
                         (cards.size() == 1 && cards.get(0).fields.isEmpty())) {
                         addError(errs, FormatterServiceException.
@@ -1465,7 +1464,7 @@ public abstract class ArchiveFormatter extends Formatter {
             case MailItem.TYPE_WIKI:
                 String creator = (context.authAccount == null ? null :
                     context.authAccount.getName());
-                
+
                 try {
                     oldItem = mbox.getItemByPath(oc, file, fldr.getId());
                     if (oldItem.getType() != type) {

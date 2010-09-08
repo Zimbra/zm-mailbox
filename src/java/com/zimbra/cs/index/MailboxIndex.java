@@ -12,10 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Jul 26, 2004
- */
 package com.zimbra.cs.index;
 
 import java.io.IOException;
@@ -27,7 +23,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -38,7 +33,9 @@ import com.zimbra.cs.store.file.Volume;
 import com.zimbra.cs.util.Zimbra;
 
 /**
- * Encapsulates the Index for one particular mailbox
+ * Encapsulates the Index for one particular mailbox.
+ *
+ * @since Jul 26, 2004
  */
 public final class MailboxIndex {
     /**
@@ -52,12 +49,11 @@ public final class MailboxIndex {
      *        contains a text part.  Searches without a text part can be run even if the text index is behind.
      * @return
      * @throws IOException
-     * @throws ParseException
      * @throws ServiceException
      */
     public static ZimbraQueryResults search(SoapProtocol proto,
             OperationContext octxt, Mailbox mbox, SearchParams params,
-            boolean textIndexOutOfSync) throws IOException, ParseException, ServiceException {
+            boolean textIndexOutOfSync) throws IOException, ServiceException {
 
         if (ZimbraLog.index_search.isDebugEnabled()) {
             ZimbraLog.index_search.debug("SearchRequest: " + params.getQueryStr());

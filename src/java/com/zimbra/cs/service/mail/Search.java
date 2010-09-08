@@ -40,9 +40,14 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.im.provider.ZimbraRoutingTableImpl;
-import com.zimbra.cs.index.*;
+import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.index.QueryInfo;
+import com.zimbra.cs.index.ResultsPager;
+import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
-import com.zimbra.cs.index.queryparser.ParseException;
+import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.ZimbraHit;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
@@ -126,21 +131,6 @@ public class Search extends MailDocumentHandler  {
             results = mbox.search(zsc.getResponseProtocol(), octxt, params);
         } catch (IOException e) {
             throw ServiceException.FAILURE("IO error", e);
-        } catch (ParseException e) {
-            MailServiceException me = null;
-            String message = e.getMessage();
-            if (e.code != null)
-                message = e.code;
-            if (e.expectedTokenSequences != null) {
-                // this is a direct ParseException from JavaCC - don't return their long message as the code
-                message = "PARSER_ERROR";
-            }
-            if (e.currentToken != null) {
-                me = MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, e.currentToken.image, e.currentToken.beginColumn, message);
-            } else {
-                me = MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, "", -1, message);
-            }
-            throw me;
         }
         return results;
     }

@@ -27,9 +27,8 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.ZimbraQuery;
-import com.zimbra.cs.index.queryparser.ParseException;
-import com.zimbra.cs.index.queryparser.Token;
-import com.zimbra.cs.index.queryparser.ZimbraQueryParser;
+import com.zimbra.cs.index.query.parser.QueryParserException;
+import com.zimbra.cs.index.query.parser.QueryParser;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MockMailboxManager;
 import com.zimbra.cs.service.util.ItemId;
@@ -61,39 +60,35 @@ public class ZimbraQueryTest {
     @Test
     public void parseDate() throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        ZimbraQuery.DateQuery query = new ZimbraQuery.DateQuery(
-                ZimbraAnalyzer.getDefaultAnalyzer(), ZimbraQueryParser.DATE);
+        ZimbraQuery.DateQuery query = new ZimbraQuery.DateQuery(QueryParser.DATE);
         TimeZone tz = TimeZone.getTimeZone("UTC");
-        Token token = Token.newToken(0);
-        String expected = "Q(DATE,DATE,Sat Jan 23 00:00:00 UTC 2010)";
+        String expected = "Q(DATE,DATE,20100123000000)";
 
-        query.parseDate(0, "1/23/2010", token, tz, Locale.ENGLISH);
+        query.parseDate("1/23/2010", tz, Locale.ENGLISH);
         Assert.assertEquals(expected, query.toString());
 
-        query.parseDate(0, "23/1/2010", token, tz, Locale.FRENCH);
+        query.parseDate("23/1/2010", tz, Locale.FRENCH);
         Assert.assertEquals(expected, query.toString());
 
-        query.parseDate(0, "23.1.2010", token, tz, Locale.GERMAN);
+        query.parseDate("23.1.2010", tz, Locale.GERMAN);
         Assert.assertEquals(expected, query.toString());
 
-        query.parseDate(0, "23/1/2010", token, tz, Locale.ITALIAN);
+        query.parseDate("23/1/2010", tz, Locale.ITALIAN);
         Assert.assertEquals(expected, query.toString());
 
-        query.parseDate(0, "2010/1/23", token, tz, Locale.JAPANESE);
+        query.parseDate("2010/1/23", tz, Locale.JAPANESE);
         Assert.assertEquals(expected, query.toString());
 
-        query.parseDate(0, "2010. 1. 23", token, tz, Locale.KOREAN);
+        query.parseDate("2010. 1. 23", tz, Locale.KOREAN);
         Assert.assertEquals(expected, query.toString());
     }
 
     @Test
     public void parseDateFallback() throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        ZimbraQuery.DateQuery query = new ZimbraQuery.DateQuery(
-                ZimbraAnalyzer.getDefaultAnalyzer(), ZimbraQueryParser.DATE);
-        query.parseDate(0, "1/23/2010", Token.newToken(0),
-                TimeZone.getTimeZone("UTC"), Locale.GERMAN);
-        Assert.assertEquals("Q(DATE,DATE,Sat Jan 23 00:00:00 UTC 2010)",
+        ZimbraQuery.DateQuery query = new ZimbraQuery.DateQuery(QueryParser.DATE);
+        query.parseDate("1/23/2010", TimeZone.getTimeZone("UTC"), Locale.GERMAN);
+        Assert.assertEquals("Q(DATE,DATE,20100123000000)",
                 query.toString());
     }
 
@@ -120,7 +115,7 @@ public class ZimbraQueryTest {
         try {
             query = new ZimbraQuery.SizeQuery(0, 0, "x KB");
             Assert.fail();
-        } catch (ParseException expected) {
+        } catch (QueryParserException expected) {
         }
     }
 
@@ -128,20 +123,17 @@ public class ZimbraQueryTest {
     public void inAnyFolder() throws Exception {
         Mailbox mbox = new MockMailboxManager().getMailboxByAccountId("0");
 
-        ZimbraQuery.BaseQuery query = ZimbraQuery.InQuery.Create(mbox, null, 0,
+        ZimbraQuery.BaseQuery query = ZimbraQuery.InQuery.Create(mbox, 0,
                 new ItemId("0", 1), null, true);
-        Assert.assertEquals("Q(IN,UNDER:ANY_FOLDER", query.toString());
+        Assert.assertEquals("Q(IN,UNDER:ANY_FOLDER)", query.toString());
 
-        query = ZimbraQuery.InQuery.Create(mbox, null, 0,
-                new ItemId("0", 1), null, false);
+        query = ZimbraQuery.InQuery.Create(mbox, 0, new ItemId("0", 1), null, false);
         Assert.assertEquals("Q(IN,IN:1)", query.toString());
 
-        query = ZimbraQuery.InQuery.Create(mbox, null, 0,
-                new ItemId("1", 1), null, true);
+        query = ZimbraQuery.InQuery.Create(mbox, 0, new ItemId("1", 1), null, true);
         Assert.assertEquals("Q(IN,UNDER:1:1)", query.toString());
 
-        query = ZimbraQuery.InQuery.Create(mbox, null, 0,
-                new ItemId("1", 1), null, false);
+        query = ZimbraQuery.InQuery.Create(mbox, 0, new ItemId("1", 1), null, false);
         Assert.assertEquals("Q(IN,IN:1:1)", query.toString());
     }
 
@@ -149,7 +141,7 @@ public class ZimbraQueryTest {
     public void quoteFieldQuery() throws Exception {
         Mailbox mbox = new MockMailboxManager().getMailboxByAccountId("0");
         ZimbraQuery.BaseQuery query = ZimbraQuery.FieldQuery.Create(mbox,
-                ZimbraAnalyzer.getDefaultAnalyzer(), 0, ZimbraQueryParser.FIELD,
+                ZimbraAnalyzer.getDefaultAnalyzer(), 0, QueryParser.FIELD,
                 "#company", "zimbra:vmware");
         Assert.assertEquals("#company:\"zimbra:vmware\"",
                 query.toQueryString("company:zimbra:vmware"));

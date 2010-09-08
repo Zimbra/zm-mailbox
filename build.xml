@@ -1,10 +1,8 @@
 <project name="ZimbraServer" default="jar">
 
-    <property file='build-custom.properties'/>
-
-    <property environment="env"/>
-
-    <property name="javac.target" value="1.6"/>
+  <property file='build-custom.properties'/>
+  <property environment="env"/>
+  <property name="javac.target" value="1.6"/>
 
     <!-- The OS user running ZCS.  Use ZIMBRA_USER environment variable
           if set.  If not, default to "zimbra". -->
@@ -52,43 +50,43 @@
         <isset property="is-production"/>
     </condition>
 
-    <property name="build.dir" location="build"/>
-    <property name="build.classes.dir" location="${build.dir}/classes"/>
-    <property name="build.zmprov" location="${build.dir}/data/zmprov.txt"/>
-    <property name="dist.dir" location="build/dist"/>
-    <property name="dist.db.dir" location="build/dist/db"/>
-    <property name="dist.jetty.dir" location="${dist.dir}/jetty"/>
-    <property name="generated.java.dir" location="${build.dir}/generated/src/java"/>
-    <property name="warfilename" value="service.war"/>
-    <property name="warfile" location="${build.dir}/${warfilename}"/>
-    <property name="jarfile" location="${build.dir}/zimbrastore.jar"/>
-    <property name="common.dir" location="../ZimbraCommon"/>
-    <property name="common.classes.dir" location="${common.dir}/build/classes"/>
-    <property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar"/>
-    <property name="common.jars.dir" location="${common.dir}/jars"/>
+  <property name="build.dir" location="build"/>
+  <property name="build.classes.dir" location="${build.dir}/classes"/>
+  <property name="build.zmprov" location="${build.dir}/data/zmprov.txt"/>
+  <property name="dist.dir" location="build/dist"/>
+  <property name="dist.db.dir" location="build/dist/db"/>
+  <property name="dist.jetty.dir" location="${dist.dir}/jetty"/>
+  <property name="generated.java.dir" location="${build.dir}/generated/src/java"/>
+  <property name="warfilename" value="service.war"/>
+  <property name="warfile" location="${build.dir}/${warfilename}"/>
+  <property name="jarfile" location="${build.dir}/zimbrastore.jar"/>
+  <property name="common.dir" location="../ZimbraCommon"/>
+  <property name="common.classes.dir" location="${common.dir}/build/classes"/>
+  <property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar"/>
+  <property name="common.jars.dir" location="${common.dir}/jars"/>
 
-    <property name="im.dir" location="../ZimbraIM"/>
-    <property name="im.classes.dir" location="${im.dir}/build/classes"/>
-    <property name="im.jarfile" location="${im.dir}/build/zimbraim.jar"/>
-    <property name="im.jars.dir" location="${im.dir}/jars"/>
+  <property name="im.dir" location="../ZimbraIM"/>
+  <property name="im.classes.dir" location="${im.dir}/build/classes"/>
+  <property name="im.jarfile" location="${im.dir}/build/zimbraim.jar"/>
+  <property name="im.jars.dir" location="${im.dir}/jars"/>
 
-    <property name="jars.dir" location="jars"/>
-    <property name="lib.dir" location="lib"/>
-    <property name="tools.lib.dir" location="tools/lib"/>
-    <property name="src.dir" location="src"/>
-    <property name="src.java.dir" location="${src.dir}/java"/>
-    <property name="test.dir" location="${build.dir}/test"/>
-    <property name="test.src.dir" location="${src.dir}/java-test"/>
-    <property name="test.classes.dir" location="${build.dir}/test-classes"/>
-    <property name="config.dir" location="conf"/>
+  <property name="jars.dir" location="jars"/>
+  <property name="lib.dir" location="lib"/>
+  <property name="tools.lib.dir" location="tools/lib"/>
+  <property name="src.dir" location="src"/>
+  <property name="src.java.dir" location="${src.dir}/java"/>
+  <property name="test.dir" location="${build.dir}/test"/>
+  <property name="test.src.dir" location="${src.dir}/java-test"/>
+  <property name="test.classes.dir" location="${build.dir}/test-classes"/>
+  <property name="config.dir" location="conf"/>
   <property name="war.web.xml" location="${config.dir}/web.xml${production.suffix}"/>
-    <property name="jetty.xml.file" location='${config.dir}/jetty-6.1/jetty.xml' />
+  <property name="jetty.xml.file" location='${config.dir}/jetty-6.1/jetty.xml' />
 
-    <property name="deploy.war" value="${warfile}"/>
-    <property name="deploy.host" value="127.0.0.1"/>
-    <property name="deploy.port" value="7070"/>
-    <property name="ldap.host" value="127.0.0.1"/>
-    <property name="ldap.port" value="389"/>
+  <property name="deploy.war" value="${warfile}"/>
+  <property name="deploy.host" value="127.0.0.1"/>
+  <property name="deploy.port" value="7070"/>
+  <property name="ldap.host" value="127.0.0.1"/>
+  <property name="ldap.port" value="389"/>
   <property name="ldap.service.windows" value="CDSSilverSlapd" />
 
     <condition property="remote.deploy.host" value="${env.ZIMBRA_REMOTE_DEPLOY_HOST}">
@@ -308,30 +306,10 @@
         </javadoc>
     </target>
 
-    <target name="javacc-internal">
-        <mkdir dir="${output.dir}"/>
-        <java classname="org.javacc.parser.Main" fork="true" classpathref="class.path" failonerror="true">
-            <sysproperty key="install.root" file="${javacc.home}"/>
-            <arg value="-OUTPUT_DIRECTORY=${output.dir}"/>
-            <arg value="${target}"/>
-        </java>
-    </target>
-
-    <!-- invoke the "javacc" task with (target.classdir=com/foo/bar and target="gub.jj")  -->
-    <target name="javacc">
-        <antcall target="javacc-internal">
-            <!-- <param name="output.dir" location="${generated.java.dir}/${target.classdir}"/> -->
-            <param name="output.dir" location="${src.java.dir}/${target.classdir}"/>
-            <param name="target" location="${src.java.dir}/${target.classdir}/${target}"/>
-        </antcall>
-    </target>
-
-    <target name="javacc-ZimbraQueryParser">
-        <antcall target="javacc">
-            <param name="target.classdir" value="com/zimbra/cs/index/queryparser"/>
-            <param name="target" value="ZimbraQueryParser.jj"/>
-        </antcall>
-    </target>
+  <target name="javacc">
+    <jjtree javacchome="${jars.dir}" target="${src.java.dir}/com/zimbra/cs/index/query/parser/Parser.jjt"/>
+    <javacc javacchome="${jars.dir}" target="${src.java.dir}/com/zimbra/cs/index/query/parser/Parser.jj"/>
+  </target>
 
     <target name="set-buildinfo-vars">
         <tstamp/>

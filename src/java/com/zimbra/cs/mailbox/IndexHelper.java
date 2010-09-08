@@ -44,8 +44,6 @@ import com.zimbra.cs.mailbox.Mailbox.BatchedIndexStatus;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.index.queryparser.ParseException;
-
 
 /**
  * Helper class -- basically a dumping ground to move all of the index-oriented things out of Mailbox
@@ -108,7 +106,7 @@ public class IndexHelper {
     final private Mailbox getMailbox() { return mMbox; }
     final MailboxIndex getMailboxIndex() { return mMailboxIndex; }
 
-    ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, SearchParams params) throws IOException, ParseException, ServiceException {
+    ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, SearchParams params) throws IOException, ServiceException {
         if (Thread.holdsLock(getMailbox()))
             throw ServiceException.INVALID_REQUEST("Must not call Mailbox.search() while holding Mailbox lock", null);
         if (octxt == null)

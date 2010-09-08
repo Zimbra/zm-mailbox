@@ -30,7 +30,6 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -138,9 +137,6 @@ public abstract class Formatter {
                 ZimbraQueryResults results = context.targetMailbox.search(context.opContext, query, types, SortBy.DATE_DESCENDING, context.getOffset() + context.getLimit());
                 return new QueryResultIterator(results);
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                throw ServiceException.FAILURE("search error", e);
-            } catch (ParseException e) {
                 throw ServiceException.FAILURE("search error", e);
             }
         } else if (context.target instanceof Folder) {

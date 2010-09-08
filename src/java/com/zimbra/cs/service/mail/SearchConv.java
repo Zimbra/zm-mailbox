@@ -23,7 +23,6 @@ import java.util.Map;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
-import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -40,7 +39,6 @@ import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -158,23 +156,6 @@ public class SearchConv extends Search {
                 // and just pass the response on through!
                 Element response = soapTransp.invokeWithoutSession(proxyRequest);
                 return response.detach();
-            } catch (ParseException e) {
-                MailServiceException me = null;
-                String message = e.getMessage();
-                if (e.code != null)
-                    message = e.code;
-                if (e.expectedTokenSequences != null) {
-                    // this is a direct ParseException from JavaCC - don't return their long message as the code
-                    message = "PARSER_ERROR";
-                }
-                if (e.currentToken != null) {
-                    me = MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(),
-                            e, e.currentToken.image, e.currentToken.beginColumn, message);
-                } else {
-                    me = MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(),
-                            e, "", -1, message);
-                }
-                throw me;
             } catch (IOException e) {
                 throw ServiceException.FAILURE("IOException: ", e);
             } catch (SoapFaultException e) {

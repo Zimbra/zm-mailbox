@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -51,7 +51,6 @@ import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedAddress;
@@ -74,7 +73,7 @@ public class MailSender {
 
     public static final String MSGTYPE_REPLY = Flag.getAbbreviation(Flag.ID_FLAG_REPLIED) + "";
     public static final String MSGTYPE_FORWARD = Flag.getAbbreviation(Flag.ID_FLAG_FORWARDED) + "";
-    
+
     private Boolean mSaveToSent;
     private Collection<InternetAddress> mSaveContacts;
     private Collection<Upload> mUploads;
@@ -90,18 +89,18 @@ public class MailSender {
     private int mCurrentHostIndex = 0;
     private List<String> mRecipients = new ArrayList<String>();
     private String mEnvelopeFrom;
-    
+
     public MailSender()  { }
-    
+
     /**
      * Specifies the contacts to save in the <tt>Emailed Contacts</tt> folder.
-     * @param savedContacts contacts or <tt>null</tt> 
+     * @param savedContacts contacts or <tt>null</tt>
      */
     public MailSender setSaveContacts(Collection<InternetAddress> saveContacts) {
         mSaveContacts = saveContacts;
         return this;
     }
-    
+
     /**
      * Specifies the uploads to attach to the outgoing message.
      * @param uploads the uploads or <tt>null</tt>
@@ -146,7 +145,7 @@ public class MailSender {
         mForceSendPartial = ignore;
         return this;
     }
-    
+
     /**
      * @param replyToSender if <tt>true</tt>, set the <tt>Reply-To<tt>
      * header to the same value as the <tt>Sender</tt> header.  The
@@ -156,7 +155,7 @@ public class MailSender {
         mReplyToSender = replyToSender;
         return this;
     }
-    
+
     /**
      * @param skip if <tt>true</tt>, don't confirm that the user can send
      * the message from the specified address.  The default is <tt>false</tt>.
@@ -206,7 +205,7 @@ public class MailSender {
     /**
      * Specifies the recipients for the outgoing message.  The default
      * behavior is to use the recipients specified in the headers of
-     * the <tt>MimeMessage</tt>. 
+     * the <tt>MimeMessage</tt>.
      */
     public MailSender setRecipients(String ... recipients) {
         mRecipients.clear();
@@ -217,7 +216,7 @@ public class MailSender {
         }
         return this;
     }
-    
+
     /**
      * Sets the address sent for <tt>MAIL FROM</tt> in the SMTP session.
      * Default behavior: if <tt>zimbraSmtpRestrictEnvelopeFrom</tt> is <tt>true</tt>,
@@ -229,7 +228,7 @@ public class MailSender {
         mEnvelopeFrom = address;
         return this;
     }
-    
+
     public static int getSentFolderId(Mailbox mbox, Identity identity) throws ServiceException {
         int folderId = Mailbox.ID_FOLDER_SENT;
         String sentFolder = identity.getAttr(Provisioning.A_zimbraPrefSentMailFolder, null);
@@ -240,23 +239,23 @@ public class MailSender {
         }
         return folderId;
     }
-    
+
     /**
-     * Getter save to sent flag - exposed for OfflineMailSender 
+     * Getter save to sent flag - exposed for OfflineMailSender
      */
     protected Boolean getSaveToSent() {
         return mSaveToSent;
     }
 
     /**
-     * Getter for Collection of contacts to save - exposed for OfflineMailSender 
+     * Getter for Collection of contacts to save - exposed for OfflineMailSender
      */
     protected Collection<InternetAddress> getSaveContacts() {
         return mSaveContacts;
     }
 
     /**
-     * Getter for original message Id - exposed for OfflineMailSender 
+     * Getter for original message Id - exposed for OfflineMailSender
      */
     protected ItemId getOriginalMessageId() {
         return mOriginalMessageId;
@@ -270,7 +269,7 @@ public class MailSender {
     }
 
     /**
-     * Getter for identity - exposed for OfflineMailSender 
+     * Getter for identity - exposed for OfflineMailSender
      */
     protected Identity getIdentity() {
         return mIdentity;
@@ -291,14 +290,14 @@ public class MailSender {
     }
 
     /**
-     * Getter for recipient List - exposed for OfflineMailSender 
+     * Getter for recipient List - exposed for OfflineMailSender
      */
     protected List<String> getRecipients() {
         return mRecipients;
     }
 
     /**
-     * Getter for Collection of uploads - exposed for OfflineMailSender  
+     * Getter for Collection of uploads - exposed for OfflineMailSender
      */
     protected Collection<Upload> getUploads() {
         return mUploads;
@@ -370,7 +369,7 @@ public class MailSender {
         mReplyToSender = replyToSender;
         return sendMimeMessage(octxt, mbox, mm);
     }
-    
+
     /**
      * Sends a message.
      */
@@ -408,7 +407,7 @@ public class MailSender {
                         mEnvelopeFrom = ((InternetAddress) envAddress).getAddress();
                 }
             }
-            
+
             // run any pre-send/pre-save MIME mutators
             try {
                 for (Class<? extends MimeVisitor> vclass : MimeVisitor.getMutators())
@@ -459,7 +458,7 @@ public class MailSender {
             // for delegated sends where the authenticated user is reflected in the Sender header (c.f. updateHeaders),
             //   automatically save a copy to the "From" user's mailbox
             Message msg = null;
-            if (hasRecipients && isDelegatedRequest && mm.getSender() != null && acct.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true)) { 
+            if (hasRecipients && isDelegatedRequest && mm.getSender() != null && acct.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true)) {
                 int flags = Flag.BITMASK_UNREAD | Flag.BITMASK_FROM_ME;
                 // save the sent copy using the target's credentials, as the sender doesn't necessarily have write access
                 OperationContext octxtTarget = new OperationContext(acct);
@@ -500,20 +499,20 @@ public class MailSender {
                 }
                 if (mSaveContacts != null)
                     saveNewContacts(mSaveContacts, octxt, authMailbox);
-                
+
                 // disable server side detection of new contacts
                 if (false && authuser.getBooleanAttr(Provisioning.A_zimbraPrefAutoAddAddressEnabled, false)) {
                     Collection<InternetAddress> newContacts = getNewContacts(sentAddresses, authuser, octxt, authMailbox);
                     saveNewContacts(newContacts, octxt, authMailbox);
                 }
             }
-            
+
             return (rollback[0] != null ? rollback[0].msgId : null);
 
         } catch (SafeSendFailedException sfe) {
             Address[] invalidAddrs = sfe.getInvalidAddresses();
             Address[] validUnsentAddrs = sfe.getValidUnsentAddresses();
-            if (invalidAddrs != null && invalidAddrs.length > 0) { 
+            if (invalidAddrs != null && invalidAddrs.length > 0) {
                 StringBuilder msg = new StringBuilder("Invalid address").append(invalidAddrs.length > 1 ? "es: " : ": ");
                 for (int i = 0; i < invalidAddrs.length; i++) {
                     if (i > 0)
@@ -556,13 +555,13 @@ public class MailSender {
                 String uri = AccountUtil.getSoapUri(targetUser);
                 if (uri == null)
                     return null;
-                
+
                 AuthToken authToken = null;
                 if (octxt != null)
                     authToken = octxt.getAuthToken(false);
                 if (authToken == null)
                     authToken = AuthProvider.getAuthToken(authuser, isAdminRequest);
-                    
+
                 ZMailbox.Options options = new ZMailbox.Options(authToken.toZAuthToken(), uri);
                 options.setNoSession(true);
                 if (!targetUser.getId().equalsIgnoreCase(authuser.getId())) {
@@ -598,11 +597,11 @@ public class MailSender {
             ZimbraLog.smtp.info(msg);
         }
     }
-    
+
     public static final String X_ORIGINATING_IP = "X-Originating-IP";
     private static final String X_MAILER = "X-Mailer";
-    public static final String X_AUTHENTICATED_USER = "X-Authenticated-User"; 
-    
+    public static final String X_AUTHENTICATED_USER = "X-Authenticated-User";
+
     public static String formatXOrigIpHeader(String origIp) {
         return "[" + origIp + "]";
     }
@@ -610,13 +609,13 @@ public class MailSender {
     void updateHeaders(MimeMessage mm, Account acct, Account authuser, OperationContext octxt, String originIP,
                        boolean replyToSender, boolean skipSendAsCheck)
     throws MessagingException, ServiceException {
-	    Provisioning prov = Provisioning.getInstance();
+        Provisioning prov = Provisioning.getInstance();
         if (originIP != null) {
             boolean addOriginatingIP = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSmtpSendAddOriginatingIP, true);
             if (addOriginatingIP)
                 mm.addHeader(X_ORIGINATING_IP, formatXOrigIpHeader(originIP));
         }
-        
+
         boolean addMailer = prov.getConfig().getBooleanAttr(Provisioning.A_zimbraSmtpSendAddMailer, true);
         if (addMailer) {
             String ua = octxt != null ? octxt.getUserAgent() : null;
@@ -777,7 +776,7 @@ public class MailSender {
                         sentAddresses.addAll(Arrays.asList(sent));
                     break;
                 } catch (MessagingException e) {
-                    Exception chained = e.getNextException(); 
+                    Exception chained = e.getNextException();
                     if (chained instanceof ConnectException || chained instanceof UnknownHostException) {
                         String hostString = (hostname != null ? " " + hostname : "");
                         ZimbraLog.smtp.warn("Unable to connect to SMTP server%s: %s.", hostString, chained.toString());
@@ -813,14 +812,14 @@ public class MailSender {
         }
         return sentAddresses;
     }
-    
+
     private String getNextHost() {
         if (mSession != null && mCurrentHostIndex < mSmtpHosts.size()) {
             return mSmtpHosts.get(mCurrentHostIndex++);
         }
         return null;
     }
-    
+
     private void sendMessageToHost(String hostname, MimeMessage mm, Address[] rcptAddresses, boolean sendPartial)
     throws MessagingException {
         mSession.getProperties().setProperty("mail.smtp.host", hostname);
@@ -852,7 +851,7 @@ public class MailSender {
             }
         }
     }
-    
+
     public List<InternetAddress> getNewContacts(Collection<Address> contacts, Account authuser, OperationContext octxt, Object authmbox) {
         if (contacts.isEmpty())
             return Collections.emptyList();
@@ -875,7 +874,7 @@ public class MailSender {
                 }
             }
         }
-        
+
         byte[] types = { MailItem.TYPE_CONTACT };
         String query = buf.toString();
         try {
@@ -932,17 +931,14 @@ public class MailSender {
         } catch (IOException e) {
             ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
             newContacts.clear();
-        } catch (ParseException e) {
-            ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
-            newContacts.clear();
         }
-        
+
         List<InternetAddress> ret = new ArrayList<InternetAddress>();
         if (!newContacts.isEmpty())
             ret.addAll(newContacts.values());
         return ret;
     }
-    
+
     public void saveNewContacts(Collection<InternetAddress> newContacts, OperationContext octxt, Object authMailbox) {
         for (InternetAddress inetaddr : newContacts) {
             ZimbraLog.smtp.debug("adding new contact: " + inetaddr);
@@ -978,7 +974,7 @@ public class MailSender {
         public String getMessage() {
             return mMex.getMessage();
         }
-        
+
         @Override
         public synchronized Exception getNextException() {
             return mMex.getNextException();
