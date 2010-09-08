@@ -54,6 +54,7 @@ import com.zimbra.cs.mailbox.calendar.CalendarUser;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.InviteChanges;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
@@ -1633,9 +1634,20 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                     // that way the numbers all match up as the list contracts!
                     idxsToRemove.add(0, new Integer(i));
 
-                    // clean up any old REPLYs that have been made obsolete by this new invite
-                    mReplyList.removeObsoleteEntries(newInvite.getRecurId(), newInvite.getSeqNo(),
-                                                     newInvite.getDTStamp());
+                    boolean invalidateReplies = false;
+                    if (!discardExistingInvites) {
+                        InviteChanges invChg = new InviteChanges(cur, newInvite);
+                        invalidateReplies = invChg.isReplyInvalidatingChange();
+                    }
+                    if (discardExistingInvites || invalidateReplies) {
+                        // clean up any old REPLYs that have been made obsolete by this new invite
+                        mReplyList.removeObsoleteEntries(newInvite.getRecurId(), newInvite.getSeqNo(), newInvite.getDTStamp());
+                    } else {
+                        // If the change is minor, don't discard earlier replies.  Organizer may have incremented the
+                        // sequence unnecessarily, and we have to cope with this by bumping up the sequence in the
+                        // replies accordingly.
+                        mReplyList.upgradeEntriesToNewSeq(newInvite.getRecurId(), newInvite.getSeqNo(), newInvite.getDTStamp());
+                    }
 
                     prev = cur;
                     modifiedCalItem = true;
@@ -2496,6 +2508,26 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                     iter.remove();
                 }
             }
+        }
+
+        void upgradeEntriesToNewSeq(RecurId recurId, int seqNo, long dtStamp) {
+            List<ReplyInfo> upgraded = new ArrayList<ReplyInfo>();
+            for (Iterator<ReplyInfo> iter = mReplies.iterator(); iter.hasNext();) {
+                ReplyInfo cur = iter.next();
+                if (recurMatches(cur.mRecurId, recurId)) {
+                    if (cur.mSeqNo < seqNo) {
+                        // Upgrade the reply to the new sequence and dtstamp by removing the old and adding a new one.
+                        iter.remove();
+                        ReplyInfo reply = new ReplyInfo(cur.getAttendee(), seqNo, dtStamp, recurId);
+                        upgraded.add(reply);
+                    }
+                } else if (recurId == null) {
+                    // We're updating the series and the current reply is for an instance.
+                    // Toss the instance reply because the series update can impact the exceptions.
+                    iter.remove();
+                }
+            }
+            mReplies.addAll(upgraded);
         }
 
         boolean maybeStoreNewReply(Invite inv, ZAttendee at) throws ServiceException {

@@ -76,6 +76,16 @@ public class InviteChanges {
     public boolean changedRecurrence()  { return changed(RECURRENCE); }
     public boolean changedSubject()     { return changed(SUBJECT); }
 
+    /**
+     * Returns true if the change is significant enough to invalidate earlier replies.  Changes to meeting location,
+     * time, and/or recurrence warrant a new reply.  See Section 2.1.4 Component Revisions in RFC5546 (iTIP) for
+     * more info.
+     * @return
+     */
+    public boolean isReplyInvalidatingChange() {
+        return changed(LOCATION | TIME | RECURRENCE);
+    }
+
     private void diffInvites(Invite inv1, Invite inv2) {
         // Subject
         if (!StringUtil.equal(inv1.getName(), inv2.getName()))
