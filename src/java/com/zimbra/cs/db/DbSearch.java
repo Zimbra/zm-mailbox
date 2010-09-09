@@ -125,7 +125,7 @@ public class DbSearch {
             private SortBy mSort;
             SearchResultComparator(SortBy sort)  { mSort = sort; }
 
-            public int compare(SearchResult o1, SearchResult o2) {
+            @Override public int compare(SearchResult o1, SearchResult o2) {
                 switch (mSort.getCriterion()) {
                     case SIZE:
                     case DATE:
@@ -246,7 +246,8 @@ public class DbSearch {
         StringBuilder statement = new StringBuilder(" ORDER BY ");
         statement.append(sortField(sort, useAlias, true)).append(direction);
         // when two items match in their sort field, let's use item ID as the tie breaker
-        statement.append(", mi.id").append(direction);
+        //   (commented out as a result of perf issues -- see bug 50469)
+//        statement.append(", mi.id").append(direction);
         return statement.toString();
     }
 
