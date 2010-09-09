@@ -31,6 +31,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.TruncatingWriter;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.cs.account.Account;
@@ -1716,8 +1717,16 @@ public class ToXML {
 
         String ctype = StringUtil.stripControlCharacters(mpi.getContentType());
 
-        if (excludeCalendarParts && MimeConstants.CT_TEXT_CALENDAR.equalsIgnoreCase(ctype))
-            return null;
+        if (excludeCalendarParts && MimeConstants.CT_TEXT_CALENDAR.equalsIgnoreCase(ctype)) {
+            // A true calendar part has "method" parameter in the content type.  Otherwise it's just an attachment
+            // that happens to be a .ics file.
+            try {
+                String ctStr = mpi.getMimePart().getContentType();
+                ContentType ct = new ContentType(ctStr);
+                if (ct.getParameter("method") != null)
+                    return null;
+            } catch (MessagingException e) {}
+        }
 
         Element elem = parent.addElement(MailConstants.E_MIMEPART);
         MimePart mp = mpi.getMimePart();
