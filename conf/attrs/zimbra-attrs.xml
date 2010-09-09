@@ -3784,7 +3784,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>If true, an X-Authenticated-User header will be added to messages sent via SendMsgRequest.</desc>
 </attr>
 
-<attr id="748" name="zimbraMailPurgeUseChangeDateForTrash" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="5.0.17">
+<attr id="748" name="zimbraMailPurgeUseChangeDateForTrash" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="5.0.17">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>
     If TRUE, a message is purged from trash based on the date that it was moved
