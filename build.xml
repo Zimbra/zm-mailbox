@@ -307,8 +307,10 @@
     </target>
 
   <target name="javacc">
-    <jjtree javacchome="${jars.dir}" target="${src.java.dir}/com/zimbra/cs/index/query/parser/Parser.jjt"/>
-    <javacc javacchome="${jars.dir}" target="${src.java.dir}/com/zimbra/cs/index/query/parser/Parser.jj"/>
+    <jjtree javacchome="${jars.dir}" target="${src.java.dir}/com/zimbra/cs/index/query/parser/Parser.jjt"
+      outputdirectory="${src.java.dir}/com/zimbra/cs/index/query/parser/"/>
+    <javacc javacchome="${jars.dir}" target="${src.java.dir}/com/zimbra/cs/index/query/parser/Parser.jj"
+      outputdirectory="${src.java.dir}/com/zimbra/cs/index/query/parser/"/>
   </target>
 
     <target name="set-buildinfo-vars">
