@@ -26,8 +26,27 @@ import org.apache.lucene.analysis.Analyzer;
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import static com.zimbra.cs.index.ZimbraQuery.*;
+
+import com.zimbra.cs.index.query.AddrQuery;
+import com.zimbra.cs.index.query.AttachmentQuery;
 import com.zimbra.cs.index.query.BuiltInQuery;
+import com.zimbra.cs.index.query.ConjQuery;
+import com.zimbra.cs.index.query.ConvCountQuery;
+import com.zimbra.cs.index.query.ConvQuery;
+import com.zimbra.cs.index.query.DateQuery;
+import com.zimbra.cs.index.query.DomainQuery;
+import com.zimbra.cs.index.query.HasQuery;
+import com.zimbra.cs.index.query.InQuery;
+import com.zimbra.cs.index.query.ItemQuery;
+import com.zimbra.cs.index.query.ModseqQuery;
+import com.zimbra.cs.index.query.Query;
+import com.zimbra.cs.index.query.SenderQuery;
+import com.zimbra.cs.index.query.SizeQuery;
+import com.zimbra.cs.index.query.SubQuery;
+import com.zimbra.cs.index.query.SubjectQuery;
+import com.zimbra.cs.index.query.TagQuery;
+import com.zimbra.cs.index.query.TextQuery;
+import com.zimbra.cs.index.query.TypeQuery;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ItemId;
@@ -61,7 +80,7 @@ final class QueryParserVisitor implements ParserVisitor, ParserConstants, Parser
         folder2id.put("contacts", Mailbox.ID_FOLDER_CONTACTS);
     }
 
-    private List<BaseQuery> terms = new LinkedList<BaseQuery>();
+    private List<Query> terms = new LinkedList<Query>();
     private String sortBy;
     private final Mailbox mailbox;
     private final Analyzer analyzer;
@@ -106,7 +125,7 @@ final class QueryParserVisitor implements ParserVisitor, ParserConstants, Parser
         }
     }
 
-    List<BaseQuery> getQuery() {
+    List<Query> getQuery() {
         return terms;
     }
 
@@ -114,10 +133,10 @@ final class QueryParserVisitor implements ParserVisitor, ParserConstants, Parser
         return sortBy;
     }
 
-    private List<BaseQuery> toQuery(SimpleNode node) throws QueryParserException, ServiceException {
+    private List<Query> toQuery(SimpleNode node) throws QueryParserException, ServiceException {
         assert(node.id == JJTQUERY);
 
-        List<BaseQuery> result = new LinkedList<BaseQuery>();
+        List<Query> result = new LinkedList<Query>();
         ConjQuery conj = null;
         for (int i = 0; i < node.jjtGetNumChildren(); i++) {
             SimpleNode child = (SimpleNode) node.jjtGetChild(i);
@@ -146,7 +165,7 @@ final class QueryParserVisitor implements ParserVisitor, ParserConstants, Parser
         return result;
     }
 
-    private BaseQuery toClause(SimpleNode node) throws QueryParserException, ServiceException {
+    private Query toClause(SimpleNode node) throws QueryParserException, ServiceException {
         assert(node.id == JJTCLAUSE);
         int num = node.jjtGetNumChildren();
         assert(num > 0 && num <= 2);
@@ -172,52 +191,52 @@ final class QueryParserVisitor implements ParserVisitor, ParserConstants, Parser
         }
     }
 
-    private BaseQuery toSubQuery(int mod, SimpleNode node)
+    private Query toSubQuery(int mod, SimpleNode node)
         throws QueryParserException, ServiceException {
         assert(node.id == JJTQUERY);
         return new SubQuery(mod, toQuery(node));
     }
 
-    private BaseQuery toTextClause(int mod, SimpleNode node)
+    private Query toTextClause(int mod, SimpleNode node)
         throws QueryParserException, ServiceException {
 
         assert(node.id == JJTTEXTCLAUSE);
         assert(node.jjtGetNumChildren() == 1);
 
-        return toTerm(node.jjtGetFirstToken().kind, mod,
+        return toTerm(mod, node.jjtGetFirstToken(),
                 (SimpleNode) node.jjtGetChild(0));
     }
 
-    private BaseQuery toDefaultClause(int mod, SimpleNode node)
+    private Query toDefaultClause(int mod, SimpleNode node)
         throws QueryParserException, ServiceException {
 
         assert(node.id == JJTDEFAULTCLAUSE);
 
-        return createQuery(defaultField, mod,
+        return createQuery(mod, Token.newToken(defaultField),
                 node.jjtGetFirstToken(), toString(node));
     }
 
-    private BaseQuery toItemClause(int mod, SimpleNode node)
+    private Query toItemClause(int mod, SimpleNode node)
         throws QueryParserException, ServiceException {
 
         assert(node.id == JJTITEMCLAUSE);
         assert(node.jjtGetNumChildren() == 1);
 
-        return toTerm(node.jjtGetFirstToken().kind, mod,
+        return toTerm(mod, node.jjtGetFirstToken(),
                 (SimpleNode) node.jjtGetChild(0));
     }
 
-    private BaseQuery toDateClause(int mod, SimpleNode node)
+    private Query toDateClause(int mod, SimpleNode node)
         throws QueryParserException, ServiceException {
 
         assert(node.id == JJTDATECLAUSE);
         assert(node.jjtGetNumChildren() == 1);
 
-        return toTerm(node.jjtGetFirstToken().kind, mod,
+        return toTerm(mod, node.jjtGetFirstToken(),
                 (SimpleNode) node.jjtGetChild(0));
     }
 
-    private BaseQuery toTerm(int kind, int mod, SimpleNode node)
+    private Query toTerm(int mod, Token field, SimpleNode node)
         throws QueryParserException, ServiceException {
 
         assert(node.id == JJTDATETERM || node.id == JJTTEXTTERM ||
@@ -225,9 +244,9 @@ final class QueryParserVisitor implements ParserVisitor, ParserConstants, Parser
 
         if (node.jjtGetNumChildren() == 0) {
             Token token = node.jjtGetFirstToken();
-            return createQuery(kind, mod, token, toString(node));
+            return createQuery(mod, field, token, toString(node));
         } else {
-            List<BaseQuery> sub = new LinkedList<BaseQuery>();
+            List<Query> sub = new LinkedList<Query>();
             ConjQuery conj = null;
             int submod = 0;
             for (int i = 0; i < node.jjtGetNumChildren(); i++) {
@@ -247,7 +266,7 @@ final class QueryParserVisitor implements ParserVisitor, ParserConstants, Parser
                                 conj = null;
                             }
                         }
-                        sub.add(toTerm(kind, submod, child));
+                        sub.add(toTerm(submod, field, child));
                         submod = 0;
                         break;
                     case JJTCONJUNCTION:
@@ -324,10 +343,10 @@ final class QueryParserVisitor implements ParserVisitor, ParserConstants, Parser
         sortBy = node.jjtGetFirstToken().next.image;
     }
 
-    private BaseQuery createQuery(int kind, int mod, Token token, String text)
+    private Query createQuery(int mod, Token field, Token term, String text)
         throws QueryParserException, ServiceException {
 
-        switch (kind) {
+        switch (field.kind) {
           case HAS:
             if (text.equalsIgnoreCase("attachment")) {
                 return new AttachmentQuery(mailbox, mod, "any");
@@ -354,7 +373,7 @@ final class QueryParserVisitor implements ParserVisitor, ParserConstants, Parser
               }
               iid = new ItemId(iidStr, (String) null);
               try {
-                  return InQuery.Create(mailbox, mod, iid, subfolderPath, (kind == UNDERID));
+                  return InQuery.Create(mailbox, mod, iid, subfolderPath, (field.kind == UNDERID));
               } catch (ServiceException e) {
                   // bug: 18623 -- dangling mountpoints create problems with 'is:remote'
                   ZimbraLog.index.debug("Ignoring INID/UNDERID clause b/c of ServiceException", e);
@@ -365,9 +384,9 @@ final class QueryParserVisitor implements ParserVisitor, ParserConstants, Parser
           case IN: {
               Integer folderId = folder2id.get(text.toLowerCase());
               if (folderId != null) {
-                  return InQuery.Create(mailbox, mod, folderId, (kind == UNDER));
+                  return InQuery.Create(mailbox, mod, folderId, (field.kind == UNDER));
               } else {
-                  return InQuery.Create(mailbox, mod, text, (kind == UNDER));
+                  return InQuery.Create(mailbox, mod, text, (field.kind == UNDER));
               }
           }
           case TAG:
@@ -376,12 +395,12 @@ final class QueryParserVisitor implements ParserVisitor, ParserConstants, Parser
               try {
                   return BuiltInQuery.getQuery(text.toLowerCase(), mailbox, analyzer, mod);
               } catch (IllegalArgumentException e) {
-                  throw new QueryParserException("UNKNOWN_TEXT_AFTER_IS", token);
+                  throw new QueryParserException("UNKNOWN_TEXT_AFTER_IS", term);
               }
           case CONV:
               return ConvQuery.create(mailbox, mod, text);
           case CONV_COUNT:
-              return ConvCountQuery.create(mod, kind, text);
+              return ConvCountQuery.create(mod, field.kind, text);
           case DATE:
           case DAY:
           case WEEK:
@@ -393,7 +412,7 @@ final class QueryParserVisitor implements ParserVisitor, ParserConstants, Parser
           case CONV_END:
           case APPT_START:
           case APPT_END: {
-              DateQuery query = new DateQuery(kind);
+              DateQuery query = new DateQuery(field.kind);
               query.parseDate(text, timezone, locale);
               return query;
           }
@@ -402,35 +421,47 @@ final class QueryParserVisitor implements ParserVisitor, ParserConstants, Parser
           case FROMCC:
           case TOFROMCC:
               if (Strings.isNullOrEmpty(text)) {
-                 throw new QueryParserException("MISSING_TEXT_AFTER_TOFROMCC", token);
+                 throw new QueryParserException("MISSING_TEXT_AFTER_TOFROMCC", term);
               }
-              return AddrQuery.createFromTarget(mailbox, analyzer, mod, kind, text);
+              return AddrQuery.createFromTarget(mailbox, analyzer, mod, field.kind, text);
           case FROM:
               if (Strings.isNullOrEmpty(text)) {
-                  throw new QueryParserException("MISSING_TEXT_AFTER_TOFROMCC", token);
+                  throw new QueryParserException("MISSING_TEXT_AFTER_TOFROMCC", term);
               }
-              return SenderQuery.create(mailbox, analyzer, mod, kind, text);
+              return SenderQuery.create(mailbox, analyzer, mod, field.kind, text);
           case TO:
           case ENVTO:
           case ENVFROM:
           case CC:
               if (Strings.isNullOrEmpty(text)) {
-                  throw new QueryParserException("MISSING_TEXT_AFTER_TOFROMCC", token);
+                  throw new QueryParserException("MISSING_TEXT_AFTER_TOFROMCC", term);
               }
               if (text.startsWith("@")) {
-                  return new DomainQuery(mailbox, mod, kind, text);
+                  return new DomainQuery(mailbox, mod, field.kind, text);
               }
-            return new TextQuery(mailbox, analyzer, mod, kind, text);
+            return new TextQuery(mailbox, analyzer, mod, field.kind, text);
           case MODSEQ:
-            return new ModseqQuery(mod, kind, text);
+            return new ModseqQuery(mod, field.kind, text);
           case SIZE:
           case BIGGER:
           case SMALLER:
-              return new SizeQuery(mod, kind, text);
+              return new SizeQuery(mod, field.kind, text);
           case SUBJECT:
-              return SubjectQuery.create(mailbox, analyzer, mod, kind, text);
+              return SubjectQuery.create(mailbox, analyzer, mod, field.kind, text);
+          case FIELD:
+              int open = field.image.indexOf('[');
+              if (open >= 0) {
+                  int close = field.image.indexOf(']');
+                  if (close >= 0 && close > open) {
+                      text = field.image.substring(open + 1, close) + ":" + text;
+                  }
+              } else if (field.image.charAt(0) == '#') {
+                  text = field.image.substring(1) + text;
+              }
+
+              return new TextQuery(mailbox, analyzer, mod, field.kind, text);
           default:
-              return new TextQuery(mailbox, analyzer, mod, kind, text);
+              return new TextQuery(mailbox, analyzer, mod, field.kind, text);
         }
     }
 }

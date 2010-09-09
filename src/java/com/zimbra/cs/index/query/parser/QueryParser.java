@@ -22,7 +22,7 @@ import java.util.TimeZone;
 import org.apache.lucene.analysis.Analyzer;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.index.ZimbraQuery.BaseQuery;
+import com.zimbra.cs.index.query.Query;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -96,7 +96,7 @@ public final class QueryParser implements ParserConstants {
      * @return query clauses
      * @throws ServiceException if a grammar error detected
      */
-    public List<BaseQuery> parse(String src) throws ServiceException {
+    public List<Query> parse(String src) throws ServiceException {
         Parser parser = new Parser(new StringReader(src));
         SimpleNode node;
         try {

@@ -403,7 +403,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
      * NumberTokenStream converted into ascii-sortable (base-36 ascii encoded)
      * numbers.
      */
-    static class SizeTokenFilter extends TokenFilter {
+    public static final class SizeTokenFilter extends TokenFilter {
         private TermAttribute termAttr = addAttribute(TermAttribute.class);
 
         SizeTokenFilter(TokenStream in) {

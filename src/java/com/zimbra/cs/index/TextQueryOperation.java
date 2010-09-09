@@ -32,7 +32,7 @@ import org.apache.lucene.search.TermQuery;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 
-abstract class TextQueryOperation extends QueryOperation {
+public abstract class TextQueryOperation extends QueryOperation {
     protected int mCurHitNo = 0; // our offset into the hits
     protected boolean mHaveRunSearch = false;
     protected String mQueryString = "";
@@ -96,7 +96,7 @@ abstract class TextQueryOperation extends QueryOperation {
      * @param query - Lucene Query term
      * @param truth - allows for negated query terms
      */
-    void addClause(String queryStr, Query query, boolean truth) {
+    public void addClause(String queryStr, Query query, boolean truth) {
         mQueryString = mQueryString + " " + (truth ? "" : "-") + queryStr;
         assert(!mHaveRunSearch);
 
@@ -195,7 +195,7 @@ abstract class TextQueryOperation extends QueryOperation {
      * to proxy this search somewhere else -- used when dealing with wildcard searches.
      * @param queryStr
      */
-    void setQueryString(String queryStr) {
+    public void setQueryString(String queryStr) {
         assert(mQueryString.length() == 0);
         mQueryString = queryStr;
     }
@@ -259,7 +259,7 @@ abstract class TextQueryOperation extends QueryOperation {
      *
      * @param inf
      */
-    void addQueryInfo(QueryInfo inf) {
+    public void addQueryInfo(QueryInfo inf) {
         mQueryInfo.add(inf);
     }
 

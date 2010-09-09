@@ -28,7 +28,7 @@ import com.zimbra.common.util.LogFactory;
 /**
  * Set of query results ANDed together.
  */
-final class IntersectionQueryOperation extends CombiningQueryOperation {
+public final class IntersectionQueryOperation extends CombiningQueryOperation {
     private static Log mLog = LogFactory.getLog(IntersectionQueryOperation.class);
     private boolean noHits = false;
 
@@ -486,7 +486,7 @@ final class IntersectionQueryOperation extends CombiningQueryOperation {
         return this;
     }
 
-    void addQueryOp(QueryOperation op) {
+    public void addQueryOp(QueryOperation op) {
         assert(op!=null);
         mQueryOperations.add(op);
     }

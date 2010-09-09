@@ -37,7 +37,7 @@ import com.zimbra.cs.mailbox.Mailbox;
  *
  * @author tim
  */
-final class NoTermQueryOperation extends QueryOperation {
+public final class NoTermQueryOperation extends QueryOperation {
 
     @Override
     protected void begin(QueryContext ctx) {

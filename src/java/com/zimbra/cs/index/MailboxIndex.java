@@ -290,7 +290,7 @@ public final class MailboxIndex {
                 " directory: " + mTextIndex + " Analyzer=" + mAnalyzer);
     }
 
-    TextQueryOperation createTextQueryOperation() {
+    public TextQueryOperation createTextQueryOperation() {
         return sIndexFactory.createTextQueryOperation();
     }
 
@@ -506,7 +506,7 @@ public final class MailboxIndex {
     /**
      * @return TRUE if all tokens were expanded or FALSE if no more tokens could be expanded
      */
-    boolean expandWildcardToken(Collection<String> toRet, String field,
+    public boolean expandWildcardToken(Collection<String> toRet, String field,
             String token, int maxToReturn) throws ServiceException {
         return mTextIndex.expandWildcardToken(toRet, field, token, maxToReturn);
     }

@@ -28,7 +28,7 @@ import com.zimbra.cs.mailbox.Mailbox;
  *
  * @since Nov 12, 2004
  */
-final class NoResultsQueryOperation extends QueryOperation {
+public final class NoResultsQueryOperation extends QueryOperation {
 
     @Override
     public SortBy getSortBy() {

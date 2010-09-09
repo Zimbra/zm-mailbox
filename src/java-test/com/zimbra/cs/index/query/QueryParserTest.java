@@ -16,6 +16,7 @@ package com.zimbra.cs.index.query;
 
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.List;
 import java.util.TimeZone;
 
 import org.apache.lucene.document.DateTools;
@@ -169,98 +170,98 @@ public class QueryParserTest {
         final long JAN2 = 1167696000000L;
 
         String src = "date:01/01/2007";
-        ZimbraQuery.DateQuery dq = (ZimbraQuery.DateQuery) parser.parse(src).get(0);
+        DateQuery dq = (DateQuery) parser.parse(src).get(0);
         Assert.assertEquals(JAN1, dq.getLowestTime());
         Assert.assertEquals(true, dq.isLowestInclusive());
         Assert.assertEquals(JAN2, dq.getHighestTime());
         Assert.assertEquals(false, dq.isHighestInclusive());
 
         src = "date:<01/01/2007";
-        dq = (ZimbraQuery.DateQuery) parser.parse(src).get(0);
+        dq = (DateQuery) parser.parse(src).get(0);
         Assert.assertEquals(-1L, dq.getLowestTime());
         Assert.assertEquals(false, dq.isLowestInclusive());
         Assert.assertEquals(JAN1, dq.getHighestTime());
         Assert.assertEquals(false, dq.isHighestInclusive());
 
         src = "before:01/01/2007";
-        dq = (ZimbraQuery.DateQuery) parser.parse(src).get(0);
+        dq = (DateQuery) parser.parse(src).get(0);
         Assert.assertEquals(-1L, dq.getLowestTime());
         Assert.assertEquals(false, dq.isLowestInclusive());
         Assert.assertEquals(JAN1, dq.getHighestTime());
         Assert.assertEquals(false, dq.isHighestInclusive());
 
         src = "date:<=01/01/2007";
-        dq = (ZimbraQuery.DateQuery) parser.parse(src).get(0);
+        dq = (DateQuery) parser.parse(src).get(0);
         Assert.assertEquals(-1L, dq.getLowestTime());
         Assert.assertEquals(false, dq.isLowestInclusive());
         Assert.assertEquals(JAN2, dq.getHighestTime());
         Assert.assertEquals(false, dq.isHighestInclusive());
 
         src = "date:>01/01/2007";
-        dq = (ZimbraQuery.DateQuery) parser.parse(src).get(0);
+        dq = (DateQuery) parser.parse(src).get(0);
         Assert.assertEquals(JAN2, dq.getLowestTime());
         Assert.assertEquals(true, dq.isLowestInclusive());
         Assert.assertEquals(-1L, dq.getHighestTime());
         Assert.assertEquals(false, dq.isHighestInclusive());
 
         src = "after:01/01/2007";
-        dq = (ZimbraQuery.DateQuery) parser.parse(src).get(0);
+        dq = (DateQuery) parser.parse(src).get(0);
         Assert.assertEquals(JAN2, dq.getLowestTime());
         Assert.assertEquals(true, dq.isLowestInclusive());
         Assert.assertEquals(-1L, dq.getHighestTime());
         Assert.assertEquals(false, dq.isHighestInclusive());
 
         src = "date:>=01/01/2007";
-        dq = (ZimbraQuery.DateQuery) parser.parse(src).get(0);
+        dq = (DateQuery) parser.parse(src).get(0);
         Assert.assertEquals(JAN1, dq.getLowestTime());
         Assert.assertEquals(true, dq.isLowestInclusive());
         Assert.assertEquals(-1L, dq.getHighestTime());
         Assert.assertEquals(false, dq.isHighestInclusive());
 
         src = "date:" + JAN1;
-        dq = (ZimbraQuery.DateQuery) parser.parse(src).get(0);
+        dq = (DateQuery) parser.parse(src).get(0);
         Assert.assertEquals(JAN1, dq.getLowestTime());
         Assert.assertEquals(true, dq.isLowestInclusive());
         Assert.assertEquals(JAN1 + 1000L, dq.getHighestTime());
         Assert.assertEquals(false, dq.isHighestInclusive());
 
         src = "date:<" + JAN1;
-        dq = (ZimbraQuery.DateQuery) parser.parse(src).get(0);
+        dq = (DateQuery) parser.parse(src).get(0);
         Assert.assertEquals(-1L, dq.getLowestTime());
         Assert.assertEquals(false, dq.isLowestInclusive());
         Assert.assertEquals(JAN1, dq.getHighestTime());
         Assert.assertEquals(false, dq.isHighestInclusive());
 
         src = "before:" + JAN1;
-        dq = (ZimbraQuery.DateQuery) parser.parse(src).get(0);
+        dq = (DateQuery) parser.parse(src).get(0);
         Assert.assertEquals(-1L, dq.getLowestTime());
         Assert.assertEquals(false, dq.isLowestInclusive());
         Assert.assertEquals(JAN1, dq.getHighestTime());
         Assert.assertEquals(false, dq.isHighestInclusive());
 
         src = "date:<=" + JAN1;
-        dq = (ZimbraQuery.DateQuery) parser.parse(src).get(0);
+        dq = (DateQuery) parser.parse(src).get(0);
         Assert.assertEquals(-1L, dq.getLowestTime());
         Assert.assertEquals(false, dq.isLowestInclusive());
         Assert.assertEquals(JAN1 + 1000, dq.getHighestTime());
         Assert.assertEquals(false, dq.isHighestInclusive());
 
         src = "date:>" + JAN1;
-        dq = (ZimbraQuery.DateQuery) parser.parse(src).get(0);
+        dq = (DateQuery) parser.parse(src).get(0);
         Assert.assertEquals(JAN1 + 1000L, dq.getLowestTime());
         Assert.assertEquals(true, dq.isLowestInclusive());
         Assert.assertEquals(-1L, dq.getHighestTime());
         Assert.assertEquals(false, dq.isHighestInclusive());
 
         src = "after:" + JAN1;
-        dq = (ZimbraQuery.DateQuery) parser.parse(src).get(0);
+        dq = (DateQuery) parser.parse(src).get(0);
         Assert.assertEquals(JAN1 + 1000L, dq.getLowestTime());
         Assert.assertEquals(true, dq.isLowestInclusive());
         Assert.assertEquals(-1L, dq.getHighestTime());
         Assert.assertEquals(false, dq.isHighestInclusive());
 
         src = "date:>=" + JAN1;
-        dq = (ZimbraQuery.DateQuery) parser.parse(src).get(0);
+        dq = (DateQuery) parser.parse(src).get(0);
         Assert.assertEquals(JAN1, dq.getLowestTime());
         Assert.assertEquals(true, dq.isLowestInclusive());
         Assert.assertEquals(-1L, dq.getHighestTime());
@@ -448,13 +449,18 @@ public class QueryParserTest {
                 ZimbraQuery.toString(parser.parse(src)));
     }
 
-
     @Test
-    public void calendar() throws Exception {
-
-//        assertTrue(runTestQuery(mM, "before:-1d before:(-1d 10d -100d 1w -10w -100h 1y -10y)", false, NO_EXPECTED_CHECK));
-//        assertTrue(runTestQuery(mM, "after:-1d after:(01/01/2001 2/2/2002)", false, NO_EXPECTED_CHECK));
-        //assertTrue(runTestQuery(mM, "after:-1d after:(01/01/2001 2001/01/02 +1d -1d +10d -100d +1w -10w -100h 1y -10y)", false, NO_EXPECTED_CHECK));
+    public void field() throws Exception {
+        String src = "#company:\"zimbra:vmware\"";
+        List<Query> result = parser.parse(src);
+        Assert.assertEquals("Q(l.field,company:zimbra:vmware)",
+                ZimbraQuery.toString(result));
+        Assert.assertEquals("#company:\"zimbra:vmware\"",
+                result.get(0).toQueryString("company:zimbra:vmware"));
+        Assert.assertEquals("#company:\"zimbra@vmware\"",
+                result.get(0).toQueryString("company:zimbra@vmware"));
+        Assert.assertEquals("#company:\"zimbra\\\"vmware\"",
+                result.get(0).toQueryString("company:zimbra\"vmware"));
     }
 
 }

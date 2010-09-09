@@ -34,7 +34,7 @@ import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
  *
  * @since Oct 15, 2004
  */
-abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
+public abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
     static final int MIN_CHUNK_SIZE = 26;
     static final int MAX_CHUNK_SIZE = 5000;
 

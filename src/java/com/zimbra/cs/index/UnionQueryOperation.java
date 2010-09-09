@@ -30,7 +30,7 @@ import com.zimbra.common.util.LogFactory;
  *
  * @since Oct 29, 2004
  */
-final class UnionQueryOperation extends CombiningQueryOperation {
+public final class UnionQueryOperation extends CombiningQueryOperation {
     private static Log mLog = LogFactory.getLog(UnionQueryOperation.class);
 
     private boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next

@@ -54,7 +54,7 @@ import com.zimbra.cs.service.util.ItemId;
  *
  * @since Oct 29, 2004
  */
-class DBQueryOperation extends QueryOperation {
+public class DBQueryOperation extends QueryOperation {
 
     private int mSizeEstimate = -1; // will only be set if the search parameters call for it
     private int mCountDbResults = -1; // count of DB hits
@@ -112,9 +112,6 @@ class DBQueryOperation extends QueryOperation {
         NO_LUCENE,
         DB_FIRST,
         LUCENE_FIRST;
-    }
-
-    DBQueryOperation() {
     }
 
     /**
@@ -274,7 +271,7 @@ class DBQueryOperation extends QueryOperation {
         mLuceneOp = op;
     }
 
-    void addItemIdClause(Mailbox mbox, ItemId itemId, boolean truth) {
+    public void addItemIdClause(Mailbox mbox, ItemId itemId, boolean truth) {
         mAllResultsQuery = false;
         if (itemId.belongsTo(mbox)) {
             // LOCAL
@@ -287,94 +284,47 @@ class DBQueryOperation extends QueryOperation {
 
     }
 
-    /**
-     * @param lowest
-     * @param highest
-     * @param truth
-     * @throws ServiceException
-     */
-    void addDateClause(long lowestDate, boolean lowestEq, long highestDate, boolean highestEq, boolean truth)  {
+    public void addDateClause(long lowestDate, boolean lowestEq, long highestDate, boolean highestEq, boolean truth)  {
         mAllResultsQuery = false;
         topLevelAndedConstraint().addDateClause(lowestDate, lowestEq, highestDate, highestEq, truth);
     }
 
-    /**
-     * @param lowest
-     * @param highest
-     * @param truth
-     * @throws ServiceException
-     */
-    void addCalStartDateClause(long lowestDate, boolean lowestEq, long highestDate, boolean highestEq, boolean truth)  {
+    public void addCalStartDateClause(long lowestDate, boolean lowestEq, long highestDate, boolean highestEq, boolean truth)  {
         mAllResultsQuery = false;
         topLevelAndedConstraint().addCalStartDateClause(lowestDate, lowestEq, highestDate, highestEq, truth);
     }
 
-    /**
-     * @param lowest
-     * @param highest
-     * @param truth
-     * @throws ServiceException
-     */
-    void addCalEndDateClause(long lowestDate, boolean lowestEq, long highestDate, boolean highestEq, boolean truth)  {
+    public void addCalEndDateClause(long lowestDate, boolean lowestEq, long highestDate, boolean highestEq, boolean truth)  {
         mAllResultsQuery = false;
         topLevelAndedConstraint().addCalEndDateClause(lowestDate, lowestEq, highestDate, highestEq, truth);
     }
 
-    /**
-     * @param lowest
-     * @param lowestEq
-     * @param highest
-     * @param highestEq
-     * @param truth
-     */
-    void addConvCountClause(long lowest, boolean lowestEq, long highest, boolean highestEq, boolean truth)  {
+    public void addConvCountClause(long lowest, boolean lowestEq, long highest, boolean highestEq, boolean truth)  {
         mAllResultsQuery = false;
         topLevelAndedConstraint().addConvCountClause(lowest, lowestEq, highest, highestEq, truth);
     }
 
-    void addModSeqClause(long lowest, boolean lowestEq, long highest, boolean highestEq, boolean truth)  {
+    public void addModSeqClause(long lowest, boolean lowestEq, long highest, boolean highestEq, boolean truth)  {
         mAllResultsQuery = false;
         topLevelAndedConstraint().addModSeqClause(lowest, lowestEq, highest, highestEq, truth);
     }
 
-    /**
-     * @param lowest
-     * @param highest
-     * @param truth
-     * @throws ServiceException
-     */
-    void addSizeClause(long lowestSize, long highestSize, boolean truth)  {
+    public void addSizeClause(long lowestSize, long highestSize, boolean truth)  {
         mAllResultsQuery = false;
         topLevelAndedConstraint().addSizeClause(lowestSize, highestSize, truth);
     }
 
-    /**
-     * @param lowest
-     * @param highest
-     * @param truth
-     * @throws ServiceException
-     */
-    void addRelativeSubject(String lowestSubj, boolean lowerEqual, String highestSubj, boolean higherEqual, boolean truth)  {
+    public void addRelativeSubject(String lowestSubj, boolean lowerEqual, String highestSubj, boolean higherEqual, boolean truth)  {
         mAllResultsQuery = false;
         topLevelAndedConstraint().addSubjectRelClause(lowestSubj, lowerEqual, highestSubj, higherEqual, truth);
     }
 
-    /**
-     * @param lowest
-     * @param highest
-     * @param truth
-     * @throws ServiceException
-     */
-    void addRelativeSender(String lowestSubj, boolean lowerEqual, String highestSubj, boolean higherEqual, boolean truth)  {
+    public void addRelativeSender(String lowestSubj, boolean lowerEqual, String highestSubj, boolean higherEqual, boolean truth)  {
         mAllResultsQuery = false;
         topLevelAndedConstraint().addSenderRelClause(lowestSubj, lowerEqual, highestSubj, higherEqual, truth);
     }
 
-    /**
-     * @param convId
-     * @param prohibited
-     */
-    void addConvId(Mailbox mbox, ItemId convId, boolean truth) {
+    public void addConvId(Mailbox mbox, ItemId convId, boolean truth) {
         mAllResultsQuery = false;
         if (convId.belongsTo(mbox)) {
             // LOCAL!
@@ -395,7 +345,7 @@ class DBQueryOperation extends QueryOperation {
     /**
      * Handles 'is:local' clause meaning all local folders
      */
-    void addIsLocalClause() {
+    public void addIsLocalClause() {
         if (!mQueryTarget.isCompatibleLocal()) {
             throw new IllegalArgumentException("Cannot addIsLocalFolderClause b/c DBQueryOperation already has a remote target");
         }
@@ -408,7 +358,7 @@ class DBQueryOperation extends QueryOperation {
     /**
      * Handles 'is:local' clause meaning all local folders
      */
-    void addIsRemoteClause() {
+    public void addIsRemoteClause() {
         if (mQueryTarget == QueryTarget.LOCAL) {
             throw new IllegalArgumentException("Cannot addIsRemoteFolderClause b/c DBQueryOperation already has a local target");
         }
@@ -425,23 +375,21 @@ class DBQueryOperation extends QueryOperation {
     /**
      * Handles query clause that resolves to a remote folder.
      */
-    void addInRemoteFolderClause(ItemId remoteFolderId, String subfolderPath, boolean includeSubfolders, boolean truth)
-    {
+    public void addInRemoteFolderClause(ItemId remoteFolderId, String subfolderPath,
+            boolean includeSubfolders, boolean truth) {
         mAllResultsQuery = false;
 
-        if (mQueryTarget != QueryTarget.UNSPECIFIED && !mQueryTarget.toString().equals(remoteFolderId.getAccountId()))
+        if (mQueryTarget != QueryTarget.UNSPECIFIED &&
+                !mQueryTarget.toString().equals(remoteFolderId.getAccountId())) {
             throw new IllegalArgumentException("Cannot addInClause b/c DBQueryOperation already has an incompatible remote target");
+        }
 
         mQueryTarget = new QueryTarget(remoteFolderId.getAccountId());
-        topLevelAndedConstraint().addInRemoteFolderClause(remoteFolderId, subfolderPath, includeSubfolders, truth);
+        topLevelAndedConstraint().addInRemoteFolderClause(remoteFolderId,
+                subfolderPath, includeSubfolders, truth);
     }
 
-    /**
-     * @param folder
-     * @param truth
-     */
-    void addInClause(Folder folder, boolean truth)
-    {
+    public void addInClause(Folder folder, boolean truth) {
         mAllResultsQuery = false;
 
         assert(!(folder instanceof Mountpoint) || ((Mountpoint)folder).isLocal());
@@ -457,7 +405,7 @@ class DBQueryOperation extends QueryOperation {
         topLevelAndedConstraint().addInClause(folder, truth);
     }
 
-    void addAnyFolderClause(boolean truth) {
+    public void addAnyFolderClause(boolean truth) {
         topLevelAndedConstraint().addAnyFolderClause(truth);
 
         if (!truth) {
@@ -467,28 +415,9 @@ class DBQueryOperation extends QueryOperation {
         }
     }
 
-    /**
-     * @param tag
-     * @param truth
-     */
-    void addTagClause(Tag tag, boolean truth) {
+    public void addTagClause(Tag tag, boolean truth) {
         mAllResultsQuery = false;
         topLevelAndedConstraint().addTagClause(tag, truth);
-    }
-
-    /**
-     * @param type
-     * @param truth
-     */
-    void addTypeClause(byte type, boolean truth) {
-        mAllResultsQuery = false;
-        if (truth) {
-            if (!mTypes.contains(type))
-                mTypes.add(type);
-        } else {
-            if (!mExcludeTypes.contains(type))
-                mExcludeTypes.add(type);
-        }
     }
 
     private static final class ScoredDBHit implements Comparable<ScoredDBHit> {
