@@ -245,6 +245,9 @@ public class AdminService implements DocumentService {
         // local config
         dispatcher.registerHandler(AdminConstants.RELOAD_LOCAL_CONFIG_REQUEST, new ReloadLocalConfig());
 
+        // wiki migration
+        dispatcher.registerHandler(AdminConstants.MIGRATE_ACCOUNT_REQUEST, new MigrateAccount());
+        
         // noop
         dispatcher.registerHandler(AdminConstants.NO_OP_REQUEST, new NoOp());
     }
