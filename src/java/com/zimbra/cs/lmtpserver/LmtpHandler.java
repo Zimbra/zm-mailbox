@@ -329,7 +329,10 @@ public abstract class LmtpHandler extends ProtocolHandler {
 
 	LmtpReply reply = mConfig.getLmtpBackend().getAddressStatus(addr);
 	if (reply.success()) {
-	    mEnvelope.addRecipient(addr);
+	    if (addr.isOnLocalServer())
+            mEnvelope.addLocalRecipient(addr);
+        else
+            mEnvelope.addRemoteRecipient(addr);
 	}
 	sendReply(reply);
     }

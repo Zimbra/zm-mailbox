@@ -126,7 +126,10 @@ public class DeliveryServlet extends ZimbraServlet {
             String tags = req.getParameter(PARAM_TAGS_PREFIX + i);
             recipient.setTags(tags);
 
-            envelope.addRecipient(recipient);
+            if (recipient.isOnLocalServer())
+                envelope.addLocalRecipient(recipient);
+            else
+                envelope.addRemoteRecipient(recipient);
         }
 
         if (!envelope.getRecipients().isEmpty()) {

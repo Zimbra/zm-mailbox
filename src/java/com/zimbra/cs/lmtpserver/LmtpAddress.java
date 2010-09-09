@@ -33,7 +33,10 @@ public class LmtpAddress {
     private String mFolder = null;
     private String mFlags = null;
     private String mTags = null;
-    
+
+    private boolean mOnLocalServer = true;
+    private String mRemoteServer; // if mOnLocalServer is false
+
     public LmtpAddress(String arg, String[] allowedParameters, String rcptDelim) {
 	mAllowedParameters = allowedParameters;
 	mParameters = new HashMap<String, String>();
@@ -551,5 +554,21 @@ public class LmtpAddress {
 
     public String toString() {
 	return mEmailAddress;
+    }
+
+    public boolean isOnLocalServer() {
+    return mOnLocalServer;
+    }
+
+    public void setOnLocalServer(boolean onLocalServer) {
+    this.mOnLocalServer = onLocalServer;
+    }
+
+    public String getRemoteServer() {
+    return mRemoteServer;
+    }
+
+    public void setRemoteServer(String remoteServer) {
+    this.mRemoteServer = remoteServer;
     }
 }
