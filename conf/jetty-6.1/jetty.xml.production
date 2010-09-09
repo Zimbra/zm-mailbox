@@ -74,7 +74,7 @@
     <Call name="addConnector">
       <Arg>
         <New id="admin" class="org.mortbay.jetty.security.SslSelectChannelConnector">
-          <Set name="Port">7071</Set>
+          <Set name="Port">%%zimbraAdminPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set>
 	  <Set name="lowResourceMaxIdleTime">1000</Set>
