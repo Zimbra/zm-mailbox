@@ -85,13 +85,13 @@ log4j.logger.org.apache.commons.httpclient.HttpMethodBase=ERROR
 log4j.logger.net.spy.memcached=WARN
 
 log4j.additivity.zimbra.sync=false
-log4j.logger.zimbra.sync=DEBUG,SYNC
+log4j.logger.zimbra.sync=INFO,SYNC
 log4j.additivity.zimbra.synctrace=false
 log4j.logger.zimbra.synctrace=INFO,SYNCTRACE
 log4j.additivity.zimbra.syncstate=false
 log4j.logger.zimbra.syncstate=INFO,SYNCSTATE
 log4j.additivity.zimbra.wbxml=false
-log4j.logger.zimbra.wbxml=DEBUG,WBXML
+log4j.logger.zimbra.wbxml=INFO,WBXML
 
 log4j.logger.zimbra=INFO
 log4j.logger.zimbra.op=WARN
