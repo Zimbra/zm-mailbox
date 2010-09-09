@@ -408,6 +408,10 @@ public class AdminConstants {
     public static final QName RELOAD_LOCAL_CONFIG_REQUEST = QName.get("ReloadLocalConfigRequest", NAMESPACE);
     public static final QName RELOAD_LOCAL_CONFIG_RESPONSE = QName.get("ReloadLocalConfigResponse", NAMESPACE);
 
+    // wiki migration
+    public static final QName MIGRATE_ACCOUNT_REQUEST = QName.get("MigrateAccountRequest", NAMESPACE);
+    public static final QName MIGRATE_ACCOUNT_RESPONSE = QName.get("MigrateAccountResponse", NAMESPACE);
+    
     // noop
     public static final QName NO_OP_REQUEST = QName.get("NoOpRequest", NAMESPACE);
     public static final QName NO_OP_RESPONSE = QName.get("NoOpResponse", NAMESPACE);
@@ -732,4 +736,6 @@ public class AdminConstants {
     public static final String A_ALLSERVERS = "allServers";
 
     public static final String A_SYNCHRONOUS = "synchronous";
+    
+    public static final String E_MIGRATE = "migrate";
 }
