@@ -16,10 +16,6 @@ options {    JDK_VERSION = "1.6";    STATIC = false;
     JAVA_UNICODE_ESCAPE = true;
     IGNORE_CASE = true;
     ERROR_REPORTING = true;
-    VISITOR = true;
-    VISITOR_DATA_TYPE = "Void";
-    VISITOR_RETURN_TYPE = "void";
-    VISITOR_EXCEPTION = "QueryParserException, com.zimbra.common.service.ServiceException";
     TRACK_TOKENS = true;
     SUPPORT_CLASS_VISIBILITY_PUBLIC = false;
 }PARSER_BEGIN(Parser)package com.zimbra.cs.index.query.parser;

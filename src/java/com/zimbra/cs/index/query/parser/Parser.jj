@@ -17,10 +17,6 @@ options {    JDK_VERSION = "1.6";    STATIC = false;
     JAVA_UNICODE_ESCAPE = true;
     IGNORE_CASE = true;
     ERROR_REPORTING = true;
-                   
-                               
-                                 
-                                                                                           
                         
     SUPPORT_CLASS_VISIBILITY_PUBLIC = false;
 }PARSER_BEGIN(Parser)package com.zimbra.cs.index.query.parser;
