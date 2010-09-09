@@ -3013,11 +3013,12 @@ public abstract class ImapHandler extends ProtocolHandler {
                 result.append('(').append(getMessageId(it.next(), byUID));
                 if (it.hasNext()) {
                     result.append(' ');
-                    if (thread.size() == 2)
+                    if (thread.size() == 2) {
                         result.append(getMessageId(it.next(), byUID));
-                    else
+                    } else {
                         while (it.hasNext())
                             result.append('(').append(getMessageId(it.next(), byUID)).append(')');
+                    }
                 }
                 result.append(')');
             }
@@ -3118,7 +3119,9 @@ public abstract class ImapHandler extends ProtocolHandler {
             }
         }
 
-        if (!byUID) {
+        // if we're using sequence numbers and the requested set isn't an empty "$" SEARCHRES set,
+        //   make sure it's not just a set of nothing but expunged messages
+        if (!byUID && !i4set.isEmpty()) {
             boolean nonePresent = true;
             for (ImapMessage i4msg : i4set) {
                 if (!i4msg.isExpunged()) {
