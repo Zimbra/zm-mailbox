@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100908-1428 */
+    /* build: 7.0.0_BETA1_1111 pshao 20100908-1657 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -9441,6 +9441,340 @@ public class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMessageCacheSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMessageCacheSize, "");
+        return attrs;
+    }
+
+    /**
+     * interface address(es) on which milter server should listen; if empty,
+     * binds to all interfaces
+     *
+     * @return zimbraMilterBindAddress, or empty array if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1115)
+    public String[] getMilterBindAddress() {
+        return getMultiAttr(Provisioning.A_zimbraMilterBindAddress);
+    }
+
+    /**
+     * interface address(es) on which milter server should listen; if empty,
+     * binds to all interfaces
+     *
+     * @param zimbraMilterBindAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1115)
+    public void setMilterBindAddress(String[] zimbraMilterBindAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterBindAddress, zimbraMilterBindAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address(es) on which milter server should listen; if empty,
+     * binds to all interfaces
+     *
+     * @param zimbraMilterBindAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1115)
+    public Map<String,Object> setMilterBindAddress(String[] zimbraMilterBindAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterBindAddress, zimbraMilterBindAddress);
+        return attrs;
+    }
+
+    /**
+     * interface address(es) on which milter server should listen; if empty,
+     * binds to all interfaces
+     *
+     * @param zimbraMilterBindAddress new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1115)
+    public void addMilterBindAddress(String zimbraMilterBindAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMilterBindAddress, zimbraMilterBindAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address(es) on which milter server should listen; if empty,
+     * binds to all interfaces
+     *
+     * @param zimbraMilterBindAddress new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1115)
+    public Map<String,Object> addMilterBindAddress(String zimbraMilterBindAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMilterBindAddress, zimbraMilterBindAddress);
+        return attrs;
+    }
+
+    /**
+     * interface address(es) on which milter server should listen; if empty,
+     * binds to all interfaces
+     *
+     * @param zimbraMilterBindAddress existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1115)
+    public void removeMilterBindAddress(String zimbraMilterBindAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMilterBindAddress, zimbraMilterBindAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address(es) on which milter server should listen; if empty,
+     * binds to all interfaces
+     *
+     * @param zimbraMilterBindAddress existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1115)
+    public Map<String,Object> removeMilterBindAddress(String zimbraMilterBindAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMilterBindAddress, zimbraMilterBindAddress);
+        return attrs;
+    }
+
+    /**
+     * interface address(es) on which milter server should listen; if empty,
+     * binds to all interfaces
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1115)
+    public void unsetMilterBindAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterBindAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * interface address(es) on which milter server should listen; if empty,
+     * binds to all interfaces
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1115)
+    public Map<String,Object> unsetMilterBindAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterBindAddress, "");
+        return attrs;
+    }
+
+    /**
+     * port number on which milter server should listen
+     *
+     * <p>Use getMilterBindPortAsString to access value as a string.
+     *
+     * @see #getMilterBindPortAsString()
+     *
+     * @return zimbraMilterBindPort, or 7026 if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1114)
+    public int getMilterBindPort() {
+        return getIntAttr(Provisioning.A_zimbraMilterBindPort, 7026);
+    }
+
+    /**
+     * port number on which milter server should listen
+     *
+     * @return zimbraMilterBindPort, or "7026" if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1114)
+    public String getMilterBindPortAsString() {
+        return getAttr(Provisioning.A_zimbraMilterBindPort, "7026");
+    }
+
+    /**
+     * port number on which milter server should listen
+     *
+     * @param zimbraMilterBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1114)
+    public void setMilterBindPort(int zimbraMilterBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterBindPort, Integer.toString(zimbraMilterBindPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which milter server should listen
+     *
+     * @param zimbraMilterBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1114)
+    public Map<String,Object> setMilterBindPort(int zimbraMilterBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterBindPort, Integer.toString(zimbraMilterBindPort));
+        return attrs;
+    }
+
+    /**
+     * port number on which milter server should listen
+     *
+     * @param zimbraMilterBindPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1114)
+    public void setMilterBindPortAsString(String zimbraMilterBindPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterBindPort, zimbraMilterBindPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which milter server should listen
+     *
+     * @param zimbraMilterBindPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1114)
+    public Map<String,Object> setMilterBindPortAsString(String zimbraMilterBindPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterBindPort, zimbraMilterBindPort);
+        return attrs;
+    }
+
+    /**
+     * port number on which milter server should listen
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1114)
+    public void unsetMilterBindPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterBindPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * port number on which milter server should listen
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1114)
+    public Map<String,Object> unsetMilterBindPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterBindPort, "");
+        return attrs;
+    }
+
+    /**
+     * whether milter server is enabled for a given server
+     *
+     * @return zimbraMilterServerEnabled, or false if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1116)
+    public boolean isMilterServerEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraMilterServerEnabled, false);
+    }
+
+    /**
+     * whether milter server is enabled for a given server
+     *
+     * @param zimbraMilterServerEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1116)
+    public void setMilterServerEnabled(boolean zimbraMilterServerEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterServerEnabled, zimbraMilterServerEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether milter server is enabled for a given server
+     *
+     * @param zimbraMilterServerEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1116)
+    public Map<String,Object> setMilterServerEnabled(boolean zimbraMilterServerEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterServerEnabled, zimbraMilterServerEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether milter server is enabled for a given server
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1116)
+    public void unsetMilterServerEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterServerEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether milter server is enabled for a given server
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1116)
+    public Map<String,Object> unsetMilterServerEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterServerEnabled, "");
         return attrs;
     }
 

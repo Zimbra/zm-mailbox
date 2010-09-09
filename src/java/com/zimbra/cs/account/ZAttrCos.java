@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20100908-1428 */
+    /* build: 7.0.0_BETA1_1111 pshao 20100908-1657 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -10336,6 +10336,88 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetMailMinPollingInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailMinPollingInterval, "");
+        return attrs;
+    }
+
+    /**
+     * If TRUE, a message is purged from Spam based on the date that it was
+     * moved to the Spam folder. If FALSE, a message is purged from Spam
+     * based on the date that it was added to the mailbox.
+     *
+     * @return zimbraMailPurgeUseChangeDateForSpam, or true if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1117)
+    public boolean isMailPurgeUseChangeDateForSpam() {
+        return getBooleanAttr(Provisioning.A_zimbraMailPurgeUseChangeDateForSpam, true);
+    }
+
+    /**
+     * If TRUE, a message is purged from Spam based on the date that it was
+     * moved to the Spam folder. If FALSE, a message is purged from Spam
+     * based on the date that it was added to the mailbox.
+     *
+     * @param zimbraMailPurgeUseChangeDateForSpam new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1117)
+    public void setMailPurgeUseChangeDateForSpam(boolean zimbraMailPurgeUseChangeDateForSpam) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeUseChangeDateForSpam, zimbraMailPurgeUseChangeDateForSpam ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If TRUE, a message is purged from Spam based on the date that it was
+     * moved to the Spam folder. If FALSE, a message is purged from Spam
+     * based on the date that it was added to the mailbox.
+     *
+     * @param zimbraMailPurgeUseChangeDateForSpam new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1117)
+    public Map<String,Object> setMailPurgeUseChangeDateForSpam(boolean zimbraMailPurgeUseChangeDateForSpam, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeUseChangeDateForSpam, zimbraMailPurgeUseChangeDateForSpam ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * If TRUE, a message is purged from Spam based on the date that it was
+     * moved to the Spam folder. If FALSE, a message is purged from Spam
+     * based on the date that it was added to the mailbox.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1117)
+    public void unsetMailPurgeUseChangeDateForSpam() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeUseChangeDateForSpam, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * If TRUE, a message is purged from Spam based on the date that it was
+     * moved to the Spam folder. If FALSE, a message is purged from Spam
+     * based on the date that it was added to the mailbox.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1117)
+    public Map<String,Object> unsetMailPurgeUseChangeDateForSpam(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailPurgeUseChangeDateForSpam, "");
         return attrs;
     }
 

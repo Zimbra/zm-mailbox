@@ -5026,4 +5026,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether milter server is enabled for a given server</desc>
 </attr>
 
+<attr id="1117" name="zimbraMailPurgeUseChangeDateForSpam" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="7.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>
+    If TRUE, a message is purged from Spam based on the date that it was moved
+    to the Spam folder.  If FALSE, a message is purged from Spam based on the
+    date that it was added to the mailbox.
+  </desc>
+</attr>
+
 </attrs>

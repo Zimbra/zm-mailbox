@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 jmhe 20100908-0150 */
+    /* build: 7.0.0_BETA1_1111 pshao 20100908-1657 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4344,6 +4344,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=542)
     public static final String A_zimbraMailPurgeSleepInterval = "zimbraMailPurgeSleepInterval";
+
+    /**
+     * If TRUE, a message is purged from Spam based on the date that it was
+     * moved to the Spam folder. If FALSE, a message is purged from Spam
+     * based on the date that it was added to the mailbox.
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1117)
+    public static final String A_zimbraMailPurgeUseChangeDateForSpam = "zimbraMailPurgeUseChangeDateForSpam";
 
     /**
      * If TRUE, a message is purged from trash based on the date that it was
