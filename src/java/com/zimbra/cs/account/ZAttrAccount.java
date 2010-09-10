@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20100908-1657 */
+    /* build: 6.0.2_BETA1_1111 dnault 20100910-1107 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -9965,11 +9965,11 @@ public class ZAttrAccount  extends MailTarget {
      * Deprecated since: 7.0.0. Deprecated per bug 50465. Orig desc: Whether
      * notebook feature should be allowed for this account or in this cos
      *
-     * @return zimbraFeatureNotebookEnabled, or true if unset
+     * @return zimbraFeatureNotebookEnabled, or false if unset
      */
     @ZAttr(id=356)
     public boolean isFeatureNotebookEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureNotebookEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraFeatureNotebookEnabled, false);
     }
 
     /**

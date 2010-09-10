@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20100908-1657 */
+    /* build: 6.0.2_BETA1_1111 dnault 20100910-1107 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -9445,8 +9445,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if empty,
-     * binds to all interfaces
+     * interface address(es) on which milter server should listen; if not
+     * specified, binds to 127.0.0.1
      *
      * @return zimbraMilterBindAddress, or empty array if unset
      *
@@ -9458,8 +9458,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if empty,
-     * binds to all interfaces
+     * interface address(es) on which milter server should listen; if not
+     * specified, binds to 127.0.0.1
      *
      * @param zimbraMilterBindAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9474,8 +9474,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if empty,
-     * binds to all interfaces
+     * interface address(es) on which milter server should listen; if not
+     * specified, binds to 127.0.0.1
      *
      * @param zimbraMilterBindAddress new value
      * @param attrs existing map to populate, or null to create a new map
@@ -9491,8 +9491,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if empty,
-     * binds to all interfaces
+     * interface address(es) on which milter server should listen; if not
+     * specified, binds to 127.0.0.1
      *
      * @param zimbraMilterBindAddress new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9507,8 +9507,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if empty,
-     * binds to all interfaces
+     * interface address(es) on which milter server should listen; if not
+     * specified, binds to 127.0.0.1
      *
      * @param zimbraMilterBindAddress new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -9524,8 +9524,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if empty,
-     * binds to all interfaces
+     * interface address(es) on which milter server should listen; if not
+     * specified, binds to 127.0.0.1
      *
      * @param zimbraMilterBindAddress existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9540,8 +9540,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if empty,
-     * binds to all interfaces
+     * interface address(es) on which milter server should listen; if not
+     * specified, binds to 127.0.0.1
      *
      * @param zimbraMilterBindAddress existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -9557,8 +9557,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if empty,
-     * binds to all interfaces
+     * interface address(es) on which milter server should listen; if not
+     * specified, binds to 127.0.0.1
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -9572,8 +9572,8 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * interface address(es) on which milter server should listen; if empty,
-     * binds to all interfaces
+     * interface address(es) on which milter server should listen; if not
+     * specified, binds to 127.0.0.1
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

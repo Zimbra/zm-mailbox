@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 jmhe 20100908-0150 */
+    /* build: 6.0.2_BETA1_1111 dnault 20100910-1107 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3393,8 +3393,8 @@ public class ZAttrProvisioning {
 
     /**
      * LDAP page size for paged search control while accessing LDAP server
-     * for GAL. This apples to both Zimbra and external LDAP servers. A value
-     * of 0 means paging is not enabled.
+     * for GAL. This applies to both Zimbra and external LDAP servers. A
+     * value of 0 means paging is not enabled.
      *
      * @since ZCS 5.0.1
      */
@@ -3533,7 +3533,7 @@ public class ZAttrProvisioning {
 
     /**
      * LDAP page size for paged search control while accessing LDAP server
-     * for GAL sync. This apples to both Zimbra and external LDAP servers. A
+     * for GAL sync. This applies to both Zimbra and external LDAP servers. A
      * value of 0 means paging is not enabled. If not set fallback to
      * zimbraGalLdapPageSize
      *

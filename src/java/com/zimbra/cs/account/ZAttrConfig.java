@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20100908-1657 */
+    /* build: 6.0.2_BETA1_1111 dnault 20100910-1107 */
 
     /**
      * RFC2256: descriptive information
@@ -8674,8 +8674,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * LDAP page size for paged search control while accessing LDAP server
-     * for GAL. This apples to both Zimbra and external LDAP servers. A value
-     * of 0 means paging is not enabled.
+     * for GAL. This applies to both Zimbra and external LDAP servers. A
+     * value of 0 means paging is not enabled.
      *
      * @return zimbraGalLdapPageSize, or 1000 if unset
      *
@@ -8688,8 +8688,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * LDAP page size for paged search control while accessing LDAP server
-     * for GAL. This apples to both Zimbra and external LDAP servers. A value
-     * of 0 means paging is not enabled.
+     * for GAL. This applies to both Zimbra and external LDAP servers. A
+     * value of 0 means paging is not enabled.
      *
      * @param zimbraGalLdapPageSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8705,8 +8705,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * LDAP page size for paged search control while accessing LDAP server
-     * for GAL. This apples to both Zimbra and external LDAP servers. A value
-     * of 0 means paging is not enabled.
+     * for GAL. This applies to both Zimbra and external LDAP servers. A
+     * value of 0 means paging is not enabled.
      *
      * @param zimbraGalLdapPageSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8723,8 +8723,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * LDAP page size for paged search control while accessing LDAP server
-     * for GAL. This apples to both Zimbra and external LDAP servers. A value
-     * of 0 means paging is not enabled.
+     * for GAL. This applies to both Zimbra and external LDAP servers. A
+     * value of 0 means paging is not enabled.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -8739,8 +8739,8 @@ public class ZAttrConfig extends Entry {
 
     /**
      * LDAP page size for paged search control while accessing LDAP server
-     * for GAL. This apples to both Zimbra and external LDAP servers. A value
-     * of 0 means paging is not enabled.
+     * for GAL. This applies to both Zimbra and external LDAP servers. A
+     * value of 0 means paging is not enabled.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -9048,7 +9048,7 @@ public class ZAttrConfig extends Entry {
 
     /**
      * LDAP page size for paged search control while accessing LDAP server
-     * for GAL sync. This apples to both Zimbra and external LDAP servers. A
+     * for GAL sync. This applies to both Zimbra and external LDAP servers. A
      * value of 0 means paging is not enabled. If not set fallback to
      * zimbraGalLdapPageSize
      *
@@ -9063,7 +9063,7 @@ public class ZAttrConfig extends Entry {
 
     /**
      * LDAP page size for paged search control while accessing LDAP server
-     * for GAL sync. This apples to both Zimbra and external LDAP servers. A
+     * for GAL sync. This applies to both Zimbra and external LDAP servers. A
      * value of 0 means paging is not enabled. If not set fallback to
      * zimbraGalLdapPageSize
      *
@@ -9081,7 +9081,7 @@ public class ZAttrConfig extends Entry {
 
     /**
      * LDAP page size for paged search control while accessing LDAP server
-     * for GAL sync. This apples to both Zimbra and external LDAP servers. A
+     * for GAL sync. This applies to both Zimbra and external LDAP servers. A
      * value of 0 means paging is not enabled. If not set fallback to
      * zimbraGalLdapPageSize
      *
@@ -9100,7 +9100,7 @@ public class ZAttrConfig extends Entry {
 
     /**
      * LDAP page size for paged search control while accessing LDAP server
-     * for GAL sync. This apples to both Zimbra and external LDAP servers. A
+     * for GAL sync. This applies to both Zimbra and external LDAP servers. A
      * value of 0 means paging is not enabled. If not set fallback to
      * zimbraGalLdapPageSize
      *
@@ -9117,7 +9117,7 @@ public class ZAttrConfig extends Entry {
 
     /**
      * LDAP page size for paged search control while accessing LDAP server
-     * for GAL sync. This apples to both Zimbra and external LDAP servers. A
+     * for GAL sync. This applies to both Zimbra and external LDAP servers. A
      * value of 0 means paging is not enabled. If not set fallback to
      * zimbraGalLdapPageSize
      *

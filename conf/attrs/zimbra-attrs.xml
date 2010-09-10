@@ -2943,7 +2943,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="583" name="zimbraGalLdapPageSize" type="integer" max="1000" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="5.0.1">
   <globalConfigValue>1000</globalConfigValue>
   <desc>LDAP page size for paged search control while accessing LDAP server for GAL.  
-        This apples to both Zimbra and external LDAP servers.
+        This applies to both Zimbra and external LDAP servers.
         A value of 0 means paging is not enabled. 
   </desc>
 </attr>
@@ -3013,7 +3013,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="597" name="zimbraGalSyncLdapPageSize" type="integer" max="1000" cardinality="single" optionalIn="globalConfig,domain,galDataSource" flags="domainInherited" since="5.0.2">
   <globalConfigValue>1000</globalConfigValue>
   <desc>LDAP page size for paged search control while accessing LDAP server for GAL sync.  
-        This apples to both Zimbra and external LDAP servers.
+        This applies to both Zimbra and external LDAP servers.
         A value of 0 means paging is not enabled. 
         If not set fallback to zimbraGalLdapPageSize
   </desc>
