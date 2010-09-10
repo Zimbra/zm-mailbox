@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20100908-1657 */
+    /* build: 7.0.0_BETA1_1111 jmhe 20100908-0150 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4624,8 +4624,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMessageIdDedupeCacheSize = "zimbraMessageIdDedupeCacheSize";
 
     /**
-     * interface address(es) on which milter server should listen; if empty,
-     * binds to all interfaces
+     * interface address(es) on which milter server should listen; if not
+     * specified, binds to 127.0.0.1
      *
      * @since ZCS 7.0.0
      */

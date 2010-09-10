@@ -5018,7 +5018,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="1115" name="zimbraMilterBindAddress" type="string" max="128" cardinality="multi" optionalIn="server" requiresRestart="mailbox" since="7.0.0">
-  <desc>interface address(es) on which milter server should listen; if empty, binds to all interfaces</desc>
+  <desc>interface address(es) on which milter server should listen; if not specified, binds to 127.0.0.1</desc>
 </attr>
   
 <attr id="1116" name="zimbraMilterServerEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="7.0.0">
