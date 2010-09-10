@@ -40,18 +40,18 @@ public class CalItemReminderService extends MailboxListener {
         if (mods.created != null) {
             for (Map.Entry<PendingModifications.ModificationKey, MailItem> entry : mods.created.entrySet()) {
                 MailItem item = entry.getValue();
-                if (item instanceof Appointment) {
+                if (item instanceof CalendarItem) {
                     if (ZimbraLog.scheduler.isDebugEnabled())
                         ZimbraLog.scheduler.debug("Handling creation of calendar item (id=" + item.getId() + ",mailboxId=" + item.getMailboxId() + ")");
-                    scheduleNextReminder((Appointment) item);
+                    scheduleNextReminder((CalendarItem) item);
                 }
             }
         }
         if (mods.modified != null) {
             for (Map.Entry<PendingModifications.ModificationKey, PendingModifications.Change> entry : mods.modified.entrySet()) {
                 PendingModifications.Change change = entry.getValue();
-                if (change.what instanceof Appointment) {
-                    Appointment calItem = (Appointment) change.what;
+                if (change.what instanceof CalendarItem) {
+                    CalendarItem calItem = (CalendarItem) change.what;
                     if (ZimbraLog.scheduler.isDebugEnabled())
                         ZimbraLog.scheduler.debug("Handling modification of calendar item (id=" + calItem.getId() + ",mailboxId=" + calItem.getMailboxId() + ")");
                     boolean calItemCanceled = false;
@@ -72,8 +72,8 @@ public class CalItemReminderService extends MailboxListener {
         if (mods.deleted != null) {
             for (Map.Entry<PendingModifications.ModificationKey, Object> entry : mods.deleted.entrySet()) {
                 Object deletedObj = entry.getValue();
-                if (deletedObj instanceof Appointment) {
-                    Appointment calItem = (Appointment) deletedObj;
+                if (deletedObj instanceof CalendarItem) {
+                    CalendarItem calItem = (CalendarItem) deletedObj;
                     if (ZimbraLog.scheduler.isDebugEnabled())
                         ZimbraLog.scheduler.debug("Handling deletion of calendar item (id=" + calItem.getId() + ",mailboxId=" + calItem.getMailboxId() + ")");
                     cancelExistingReminder(calItem);
@@ -167,6 +167,6 @@ public class CalItemReminderService extends MailboxListener {
     }
 
     public int registerForItemTypes() {
-        return MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT);
+        return MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT) | MailItem.typeToBitmask(MailItem.TYPE_TASK);
     }
 }

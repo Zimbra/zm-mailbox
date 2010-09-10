@@ -8,6 +8,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTask;
@@ -48,22 +49,30 @@ public class CalItemReminderTask extends ScheduledTask {
      * @throws Exception if unable to compute a result
      */
     public CalendarItem call() throws Exception {
+        if (ZimbraLog.scheduler.isDebugEnabled())
+            ZimbraLog.scheduler.debug("Running task %s", this);
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         if (mbox == null) {
-            ZimbraLog.scheduler.error("Error while running reminder task " + this + ". Mailbox does not exist.");
+            ZimbraLog.scheduler.error("Mailbox with id %s does not exist", getMailboxId());
             return null;
         }
         Integer calItemId = new Integer(getProperty("calItemId"));
-        CalendarItem calItem = (CalendarItem) mbox.getItemById(null, calItemId, MailItem.TYPE_APPOINTMENT);
-        if (calItem == null) {
-            ZimbraLog.scheduler.warn("Error while running reminder task " + this + ". Calendar item with id " + calItemId + " does not exist in mailbox.");
+        CalendarItem calItem;
+        try {
+            calItem = (CalendarItem) mbox.getItemById(null, calItemId, MailItem.TYPE_UNKNOWN);
+        } catch (MailServiceException.NoSuchItemException e) {
+            ZimbraLog.scheduler.warn("Calendar item with id %s does not exist", calItemId);
+            return null;
+        }
+        if (!(calItem.getType() == MailItem.TYPE_APPOINTMENT || calItem.getType() == MailItem.TYPE_TASK)) {
+            ZimbraLog.scheduler.error("Item with id %s is unexpectedly not a calendar item", calItemId);
             return null;
         }
         Integer invId = new Integer(getProperty("invId"));
         Integer compNum = new Integer(getProperty("compNum"));
         Invite invite = calItem.getInvite(invId, compNum);
         if (invite == null) {
-            ZimbraLog.scheduler.warn("Error while running reminder task " + this + ". Invite with id " + invId + " and comp num " + compNum + " does not exist.");
+            ZimbraLog.scheduler.warn("Invite with id %s and comp num %s does not exist", invId, compNum);
             return null;
         }
         sendReminderEmail(calItem, invite);
@@ -71,7 +80,7 @@ public class CalItemReminderTask extends ScheduledTask {
     }
 
     private void sendReminderEmail(CalendarItem calItem, Invite invite) throws MessagingException, ServiceException {
-        ZimbraLog.scheduler.debug("Creating reminder email for calendar item (id=" + calItem.getId() + ",mailboxId=" + calItem.getMailboxId() + ")");
+        ZimbraLog.scheduler.debug("Creating reminder email for calendar item (id=%s,mailboxId=%s)", calItem.getId(), calItem.getMailboxId());
         Account account = calItem.getAccount();
         Locale locale = account.getLocale();
         TimeZone tz = ICalTimeZone.getAccountTimeZone(account);
@@ -82,12 +91,15 @@ public class CalItemReminderTask extends ScheduledTask {
         mm.setFrom(acctAddr);
         String to = account.getAttr(Provisioning.A_zimbraPrefCalendarReminderEmail);
         if (to == null) {
-            ZimbraLog.scheduler.warn("Unable to send calendar reminder email since " + Provisioning.A_zimbraPrefCalendarReminderEmail + " is not set");
+            ZimbraLog.scheduler.warn("Unable to send calendar reminder email since %s is not set", Provisioning.A_zimbraPrefCalendarReminderEmail);
             return;
         }
         mm.setRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(to));
 
-        mm.setSubject(L10nUtil.getMessage(L10nUtil.MsgKey.calendarReminderEmailSubject, locale, calItem.getSubject()), MimeConstants.P_CHARSET_UTF8);
+        mm.setSubject(L10nUtil.getMessage(calItem.getType() == MailItem.TYPE_APPOINTMENT ? L10nUtil.MsgKey.apptReminderEmailSubject : L10nUtil.MsgKey.taskReminderEmailSubject, 
+                                          locale,
+                                          calItem.getSubject()),
+                      MimeConstants.P_CHARSET_UTF8);
 
         MimeMultipart mmp = new MimeMultipart("alternative");
         mm.setContent(mmp);
@@ -110,18 +122,27 @@ public class CalItemReminderTask extends ScheduledTask {
     private String getBody(CalendarItem calItem, Invite invite, boolean html, Locale locale, TimeZone tz) throws ServiceException {
         DateFormat dateTimeFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, locale);
         dateTimeFormat.setTimeZone(tz);
-
-        Date start = new Date(new Long(getProperty("nextInstStart")));
-        String formattedStart = dateTimeFormat.format(start);
-
         DateFormat onlyDateFormat = DateFormat.getDateInstance(DateFormat.SHORT, locale);
         onlyDateFormat.setTimeZone(tz);
         DateFormat onlyTimeFormat = DateFormat.getTimeInstance(DateFormat.SHORT, locale);
         onlyTimeFormat.setTimeZone(tz);
 
-        Date end = invite.getEffectiveDuration().addToDate(start);
-        String formattedEnd =
-                onlyDateFormat.format(start).equals(onlyDateFormat.format(end)) ? onlyTimeFormat.format(end) : dateTimeFormat.format(end);
+        String formattedStart = null;
+        String formattedEnd = null;
+        if (calItem.getType() == MailItem.TYPE_APPOINTMENT) {
+            Date start = new Date(new Long(getProperty("nextInstStart")));
+            formattedStart = dateTimeFormat.format(start);
+            Date end = invite.getEffectiveDuration().addToDate(start);
+            formattedEnd = onlyDateFormat.format(start).equals(onlyDateFormat.format(end)) ? onlyTimeFormat.format(end) : dateTimeFormat.format(end);
+        } else {
+            // start date and due date is optional for tasks
+            if (calItem.getStartTime() != 0) {
+                formattedStart = onlyDateFormat.format(new Date(calItem.getStartTime()));
+            }
+            if (calItem.getEndTime() != 0) {
+                formattedEnd = onlyDateFormat.format(new Date(calItem.getEndTime()));
+            }
+        }
 
         String location = invite.getLocation();
 
@@ -135,25 +156,25 @@ public class CalItemReminderTask extends ScheduledTask {
             }
         }
 
-        String calendar = calItem.getMailbox().getFolderById(calItem.getFolderId()).getName();
+        String folder = calItem.getMailbox().getFolderById(calItem.getFolderId()).getName();
 
         String description = html ? invite.getDescriptionHtml() : invite.getDescription();
 
-        return html ? L10nUtil.getMessage(L10nUtil.MsgKey.calendarReminderEmailBodyHtml,
+        return html ? L10nUtil.getMessage(calItem.getType() == MailItem.TYPE_APPOINTMENT ? L10nUtil.MsgKey.apptReminderEmailBodyHtml : L10nUtil.MsgKey.taskReminderEmailBodyHtml,
                                           locale,
                                           formattedStart,
                                           formattedEnd,
                                           location,
                                           organizer,
-                                          calendar,
+                                          folder,
                                           description) :
-                      L10nUtil.getMessage(L10nUtil.MsgKey.calendarReminderEmailBody,
+                      L10nUtil.getMessage(calItem.getType() == MailItem.TYPE_APPOINTMENT ? L10nUtil.MsgKey.apptReminderEmailBody : L10nUtil.MsgKey.taskReminderEmailBody,
                                           locale,
                                           formattedStart,
                                           formattedEnd,
                                           location,
                                           organizer,
-                                          calendar,
+                                          folder,
                                           description);
     }
 }
