@@ -253,15 +253,6 @@
   </servlet>
 
   <servlet>
-    <servlet-name>DeliveryServlet</servlet-name>
-    <servlet-class>com.zimbra.cs.lmtpserver.DeliveryServlet</servlet-class>
-    <init-param>
-      <param-name>allowed.ports</param-name>
-      <param-value>7072</param-value>
-    </init-param>
-  </servlet>
-
-  <servlet>
     <servlet-name>ZimletResources</servlet-name>
     <servlet-class>com.zimbra.cs.zimlet.ZimletResources</servlet-class>
     <init-param>
@@ -367,11 +358,6 @@
   <servlet-mapping>
     <servlet-name>DavServlet</servlet-name>
     <url-pattern>/dav/*</url-pattern>
-  </servlet-mapping>
-
-  <servlet-mapping>
-    <servlet-name>DeliveryServlet</servlet-name>
-    <url-pattern>/deliver</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
