@@ -32,8 +32,10 @@ public class AutoSendDraftTask extends ScheduledTask {
             return null;
         }
         Integer draftId = new Integer(getProperty("draftId"));
-        Message msg = (Message) mbox.getItemById(null, draftId, MailItem.TYPE_MESSAGE);
-        if (msg == null) {
+        Message msg;
+        try {
+            msg = (Message) mbox.getItemById(null, draftId, MailItem.TYPE_MESSAGE);
+        } catch (MailServiceException.NoSuchItemException e) {
             // Draft might have been deleted
             ZimbraLog.scheduler.debug("Draft message with id %s no longer exists in mailbox", draftId);
             return null;
