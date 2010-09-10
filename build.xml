@@ -577,7 +577,7 @@
     </target>
 
     <target name="clean-opt-zimbra" description="Deletes deployed jars, classes, and zimlets">
-  <!-- Delete jars, so that we don't leave cruft if a jar is upgraded with a new name. -->
+    <!-- Delete jars, so that we don't leave cruft if a jar is upgraded with a new name. -->
       <delete dir="${zimbra.home.dir}/lib/jars" failonerror="false"/>
       <delete dir="${zimbra.home.dir}/zimlets-deployed" failonerror="false"/>
       <delete dir="${zimbra.home.dir}/zimlets-properties" failonerror="false"/>
@@ -630,7 +630,6 @@
       <copy todir="${zimbra.home.dir}" overwrite="true">
         <fileset dir="${dist.dir}">
           <exclude name="conf/localconfig.xml"/><!-- don't trash zimbra_server_hostname -->
-          <exclude name="conf/log4j.properties"/>
           <exclude name="jetty/webapps/**"/><!-- deploy-war covers these -->
         </fileset>
       </copy>
