@@ -44,9 +44,9 @@ public class SubjectQueryTest {
     public void emptySubject() throws Exception {
         Mailbox mbox = new MockMailboxManager().getMailboxByAccountId("0");
         Query query = SubjectQuery.create(mbox,
-                ZimbraAnalyzer.getDefaultAnalyzer(), 0, "");
+                ZimbraAnalyzer.getDefaultAnalyzer(), "");
         Assert.assertEquals(TextQuery.class, query.getClass());
-        Assert.assertEquals("Q(UNKNOWN:(0))", query.toString());
+        Assert.assertEquals("Q(subject)", query.toString());
     }
 
 }

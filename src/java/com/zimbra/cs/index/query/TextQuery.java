@@ -29,15 +29,16 @@ import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanClause.Occur;
 
+import com.google.common.base.Preconditions;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.NoTermQueryOperation;
 import com.zimbra.cs.index.QueryInfo;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.index.TextQueryOperation;
 import com.zimbra.cs.index.WildcardExpansionQueryInfo;
-import com.zimbra.cs.index.query.parser.QueryParser;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -49,10 +50,10 @@ import com.zimbra.cs.mailbox.Mailbox;
 public final class TextQuery extends Query {
     private ArrayList<String> mTokens;
     private int mSlop;  // sloppiness for PhraseQuery
-
+    private final String field;
+    private final String term;
     private List<String> mOredTokens;
     private String mWildcardTerm;
-    private String mOrigText;
     private List<QueryInfo> mQueryInfo = new ArrayList<QueryInfo>();
     private Mailbox mMailbox;
 
@@ -60,26 +61,16 @@ public final class TextQuery extends Query {
         LC.zimbra_index_wildcard_max_terms_expanded.intValue();
 
     /**
-     * @param mbox
-     * @param analyzer
-     * @param modifier
-     * @param qType
-     * @param text A single search term. If text has multiple words, it is
-     * treated as a phrase (full exact match required) text may end in a *,
-     * which wildcards the last term.
-     * @throws ServiceException
+     * A single search term. If text has multiple words, it is treated as a
+     * phrase (full exact match required) text may end in a *, which wildcards
+     * the last term.
      */
-    public TextQuery(Mailbox mbox, Analyzer analyzer, int qType, String text)
+    public TextQuery(Mailbox mbox, Analyzer analyzer, String field, String text)
         throws ServiceException {
 
-        super(qType);
-
-        if (mbox == null) {
-            throw new IllegalArgumentException(
-                    "Must not pass a null mailbox into TextQuery constructor");
-        }
-
-        mMailbox = mbox;
+        mMailbox = Preconditions.checkNotNull(mbox);
+        this.field = field;
+        this.term = text;
         mOredTokens = new LinkedList<String>();
 
         // The set of tokens from the user's query. The way the parser
@@ -87,8 +78,7 @@ public final class TextQuery extends Query {
         mTokens = new ArrayList<String>(1);
         mWildcardTerm = null;
 
-        TokenStream stream = analyzer.tokenStream(
-                QueryTypeString(qType), new StringReader(text));
+        TokenStream stream = analyzer.tokenStream(field, new StringReader(text));
         try {
             TermAttribute termAttr = stream.addAttribute(
                     TermAttribute.class);
@@ -105,12 +95,11 @@ public final class TextQuery extends Query {
         // then lets hack their search and make it a * search.
         // for bug:17232 -- if the search string is ".", don't auto-wildcard it, because . is
         // supposed to match everything by default.
-        if (qType == QueryParser.CONTACT && mTokens.size() <= 1 && text.length() > 0
-                    && text.charAt(text.length() - 1) != '*' && !text.equals(".")) {
+        if (LuceneFields.L_CONTACT_DATA.equals(field) &&
+                mTokens.size() <= 1 && text.length() > 0 &&
+                text.charAt(text.length() - 1) != '*' && !text.equals(".")) {
             text = text + '*';
         }
-
-        mOrigText = text;
 
         // must look at original text here b/c analyzer strips *'s
         if (text.length() > 0 && text.charAt(text.length() - 1) == '*') {
@@ -135,8 +124,7 @@ public final class TextQuery extends Query {
                 boolean expandedAllTokens = false;
                 if (mbidx != null) {
                     expandedAllTokens = mbidx.expandWildcardToken(
-                            expandedTokens, QueryTypeString(qType), wcToken,
-                            MAX_WILDCARD_TERMS);
+                            expandedTokens, field, wcToken, MAX_WILDCARD_TERMS);
                 }
 
                 mQueryInfo.add(new WildcardExpansionQueryInfo(wcToken + "*",
@@ -158,8 +146,18 @@ public final class TextQuery extends Query {
         }
     }
 
+    /**
+     * Returns the Lucene field.
+     *
+     * @see LuceneFields
+     * @return lucene field
+     */
+    public String getField() {
+        return field;
+    }
+
     @Override
-    public QueryOperation getQueryOperation(boolean truth) {
+    public QueryOperation getQueryOperation(boolean bool) {
         if (mTokens.size() <= 0 && mOredTokens.size() <= 0) {
             // if we have no tokens, that is usually because the analyzer removed them
             // -- the user probably queried for a stop word like "a" or "an" or "the"
@@ -181,32 +179,27 @@ public final class TextQuery extends Query {
                 textOp.addQueryInfo(inf);
             }
 
-            String fieldName = QueryTypeString(getQueryType());
-
             if (mTokens.size() == 0) {
-                textOp.setQueryString(toQueryString(mOrigText));
+                textOp.setQueryString(toQueryString(field, term));
             } else if (mTokens.size() == 1) {
-                TermQuery term = new TermQuery(new Term(fieldName, mTokens.get(0)));
-                textOp.addClause(toQueryString(mOrigText), term,
-                        calcTruth(truth));
+                TermQuery query = new TermQuery(new Term(field, mTokens.get(0)));
+                textOp.addClause(toQueryString(field, term), query, evalBool(bool));
             } else if (mTokens.size() > 1) {
                 PhraseQuery phrase = new PhraseQuery();
                 phrase.setSlop(mSlop); // TODO configurable?
                 for (String token : mTokens) {
-                    phrase.add(new Term(fieldName, token));
+                    phrase.add(new Term(field, token));
                 }
-                textOp.addClause(toQueryString(mOrigText), phrase,
-                        calcTruth(truth));
+                textOp.addClause(toQueryString(field, term), phrase, evalBool(bool));
             }
 
             if (mOredTokens.size() > 0) {
                 // probably don't need to do this here...can probably just call addClause
                 BooleanQuery orQuery = new BooleanQuery();
                 for (String token : mOredTokens) {
-                    orQuery.add(new TermQuery(new Term(fieldName, token)), Occur.SHOULD);
+                    orQuery.add(new TermQuery(new Term(field, token)), Occur.SHOULD);
                 }
-
-                textOp.addClause("", orQuery, calcTruth(truth));
+                textOp.addClause("", orQuery, evalBool(bool));
             }
 
             return textOp;
@@ -214,8 +207,8 @@ public final class TextQuery extends Query {
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
-        super.dump(out);
+    public void dump(StringBuilder out) {
+        out.append(field);
         for (String token : mTokens) {
             out.append(',');
             out.append(token);
@@ -227,6 +220,5 @@ public final class TextQuery extends Query {
             out.append(mOredTokens.size());
             out.append(" terms]");
         }
-        return out.append(')');
     }
 }

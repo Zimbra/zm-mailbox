@@ -28,29 +28,27 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 public final class DomainQuery extends Query {
-    private String mTarget;
-    private Mailbox mMailbox;
+    private final String field;
+    private final String term;
+    private final Mailbox mailbox;
 
-    public DomainQuery(Mailbox mbox, int qType, String target) {
-        super(qType);
-        mTarget = target;
-        mMailbox = mbox;
+    public DomainQuery(Mailbox mbox, String field, String term) {
+        this.field = field;
+        this.term = term;
+        this.mailbox = mbox;
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean truth) {
-        TextQueryOperation op = mMailbox.getMailboxIndex().createTextQueryOperation();
-        op.addClause(toQueryString(mTarget),
-                new TermQuery(new Term(QueryTypeString(getQueryType()), mTarget)),
-                calcTruth(truth));
+    public QueryOperation getQueryOperation(boolean bool) {
+        TextQueryOperation op = mailbox.getMailboxIndex().createTextQueryOperation();
+        op.addClause(toQueryString(field, term),
+                new TermQuery(new Term(field, term)), evalBool(bool));
         return op;
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
-        super.dump(out);
-        out.append("-DOMAIN,");
-        out.append(mTarget);
-        return out.append(')');
+    public void dump(StringBuilder out) {
+        out.append("DOMAIN,");
+        out.append(term);
     }
 }

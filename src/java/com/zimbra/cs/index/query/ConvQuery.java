@@ -20,7 +20,6 @@ import java.util.List;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
-import com.zimbra.cs.index.query.parser.QueryParser;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ItemId;
 
@@ -35,7 +34,6 @@ public final class ConvQuery extends Query {
     private Mailbox mMailbox;
 
     private ConvQuery(Mailbox mbox, ItemId convId) throws ServiceException {
-        super(QueryParser.CONV);
         mMailbox = mbox;
         mConvId = convId;
 
@@ -63,18 +61,16 @@ public final class ConvQuery extends Query {
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean truth) {
+    public QueryOperation getQueryOperation(boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
-        op.addConvId(mMailbox, mConvId, calcTruth(truth));
+        op.addConvId(mMailbox, mConvId, evalBool(bool));
         return op;
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
-        super.dump(out);
-        out.append(',');
+    public void dump(StringBuilder out) {
+        out.append("CONV,");
         out.append(mConvId);
-        return out.append(')');
     }
 
 }

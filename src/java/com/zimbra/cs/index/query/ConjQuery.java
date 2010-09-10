@@ -42,7 +42,6 @@ public final class ConjQuery extends Query {
     private final Conjunction conjunction;
 
     public ConjQuery(Conjunction conj) {
-        super(0);
         conjunction = conj;
     }
 
@@ -51,10 +50,15 @@ public final class ConjQuery extends Query {
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
+    public StringBuilder toString(StringBuilder out) {
         out.append(' ');
-        out.append(conjunction);
+        dump(out);
         return out.append(' ');
+    }
+
+    @Override
+    public void dump(StringBuilder out) {
+        out.append(conjunction);
     }
 
     @Override

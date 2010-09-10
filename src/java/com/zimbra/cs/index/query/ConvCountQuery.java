@@ -29,10 +29,8 @@ public final class ConvCountQuery extends Query {
     private int mHighestCount;
     private boolean mHigherEq;
 
-    private ConvCountQuery(int qType, int lowestCount,
-            boolean lowerEq, int highestCount, boolean higherEq) {
-        super(qType);
-
+    private ConvCountQuery(int lowestCount, boolean lowerEq,
+            int highestCount, boolean higherEq) {
         mLowestCount = lowestCount;
         mLowerEq = lowerEq;
         mHighestCount = highestCount;
@@ -40,49 +38,47 @@ public final class ConvCountQuery extends Query {
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
-        super.dump(out);
-        out.append("ConvCount(");
+    public void dump(StringBuilder out) {
+        out.append("ConvCount");
         out.append(mLowerEq ? ">=" : ">");
         out.append(mLowestCount);
         out.append(' ');
         out.append(mHigherEq? "<=" : "<");
         out.append(mHighestCount);
-        return out.append(')');
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean truthiness) {
+    public QueryOperation getQueryOperation(boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
-        truthiness = calcTruth(truthiness);
-        op.addConvCountClause(mLowestCount, mLowerEq, mHighestCount, mHigherEq, truthiness);
+        op.addConvCountClause(mLowestCount, mLowerEq,
+                mHighestCount, mHigherEq, evalBool(bool));
         return op;
     }
 
-    public static Query create(int qType, String str) {
-        if (str.charAt(0) == '<') {
+    public static Query create(String term) {
+        if (term.charAt(0) == '<') {
             boolean eq = false;
-            if (str.charAt(1) == '=') {
+            if (term.charAt(1) == '=') {
                 eq = true;
-                str = str.substring(2);
+                term = term.substring(2);
             } else {
-                str = str.substring(1);
+                term = term.substring(1);
             }
-            int num = Integer.parseInt(str);
-            return new ConvCountQuery(qType, -1, false, num, eq);
-        } else if (str.charAt(0) == '>') {
+            int num = Integer.parseInt(term);
+            return new ConvCountQuery(-1, false, num, eq);
+        } else if (term.charAt(0) == '>') {
             boolean eq = false;
-            if (str.charAt(1) == '=') {
+            if (term.charAt(1) == '=') {
                 eq = true;
-                str = str.substring(2);
+                term = term.substring(2);
             } else {
-                str = str.substring(1);
+                term = term.substring(1);
             }
-            int num = Integer.parseInt(str);
-            return new ConvCountQuery(qType, num, eq, -1, false);
+            int num = Integer.parseInt(term);
+            return new ConvCountQuery(num, eq, -1, false);
         } else {
-            int num = Integer.parseInt(str);
-            return new ConvCountQuery(qType, num, true, num, true);
+            int num = Integer.parseInt(term);
+            return new ConvCountQuery(num, true, num, true);
         }
     }
 }

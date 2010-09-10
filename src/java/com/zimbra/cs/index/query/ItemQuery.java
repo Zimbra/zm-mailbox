@@ -21,7 +21,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.NoResultsQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
-import com.zimbra.cs.index.query.parser.QueryParser;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ItemId;
 
@@ -65,7 +64,6 @@ public final class ItemQuery extends Query {
     }
 
     ItemQuery(Mailbox mbox, boolean all, boolean none, List<ItemId> ids) {
-        super(QueryParser.ITEM);
         mIsAllQuery = all;
         mIsNoneQuery = none;
         mItemIds = ids;
@@ -73,26 +71,26 @@ public final class ItemQuery extends Query {
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean truth) {
+    public QueryOperation getQueryOperation(boolean bool) {
         DBQueryOperation dbOp = new DBQueryOperation();
 
-        truth = calcTruth(truth);
+        bool = evalBool(bool);
 
-        if (truth&&mIsAllQuery || !truth&&mIsNoneQuery) {
+        if (bool && mIsAllQuery || !bool && mIsNoneQuery) {
             // adding no constraints should match everything...
-        } else if (truth&&mIsNoneQuery || !truth&&mIsAllQuery) {
+        } else if (bool && mIsNoneQuery || !bool && mIsAllQuery) {
             return new NoResultsQueryOperation();
         } else {
             for (ItemId iid : mItemIds) {
-                dbOp.addItemIdClause(mMailbox, iid, truth);
+                dbOp.addItemIdClause(mMailbox, iid, bool);
             }
         }
         return dbOp;
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
-        super.dump(out);
+    public void dump(StringBuilder out) {
+        out.append("ITEMID");
         if (mIsAllQuery) {
             out.append(",all");
         } else if (mIsNoneQuery) {
@@ -103,6 +101,5 @@ public final class ItemQuery extends Query {
                 out.append(id.toString());
             }
         }
-        return out.append(')');
     }
 }

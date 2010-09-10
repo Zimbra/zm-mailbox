@@ -22,7 +22,6 @@ import org.apache.lucene.analysis.Analyzer;
 import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.service.ServiceException;
 
-import com.zimbra.cs.index.query.parser.QueryParser;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -121,26 +120,25 @@ public abstract class BuiltInQuery {
         .put("anywhere", new BuiltInQuery() {
             @Override
             Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
-                return InQuery.create(mbox, InQuery.IN_ANY_FOLDER, false);
+                return InQuery.create(InQuery.In.ANY, false);
             }
         })
         .put("local", new BuiltInQuery() {
             @Override
             Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
-                return InQuery.create(mbox, InQuery.IN_LOCAL_FOLDER, false);
+                return InQuery.create(InQuery.In.LOCAL, false);
             }
         })
         .put("remote", new BuiltInQuery() {
             @Override
             Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
-                return InQuery.create(mbox, InQuery.IN_REMOTE_FOLDER, true);
+                return InQuery.create(InQuery.In.REMOTE, true);
             }
         })
         .put("solo", new BuiltInQuery() {
             @Override
             Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
-                //TODO: don't refer a constant
-                return ConvCountQuery.create(QueryParser.CONV_COUNT, "1");
+                return ConvCountQuery.create("1");
             }
         })
         .put("sent", new BuiltInQuery() { // send by me

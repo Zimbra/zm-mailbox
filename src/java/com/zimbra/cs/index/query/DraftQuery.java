@@ -30,8 +30,8 @@ public final class DraftQuery extends TagQuery {
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
+    public void dump(StringBuilder out) {
         super.dump(out);
-        return out.append(getBool() ? ",DRAFT)" : ",UNDRAFT)");
+        out.append(getBool() ? ",DRAFT" : ",UNDRAFT");
     }
 }

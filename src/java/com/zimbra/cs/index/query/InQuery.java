@@ -16,6 +16,7 @@ package com.zimbra.cs.index.query;
 
 import java.util.List;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.cs.index.DBQueryOperation;
@@ -23,7 +24,6 @@ import com.zimbra.cs.index.IntersectionQueryOperation;
 import com.zimbra.cs.index.NoResultsQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.index.UnionQueryOperation;
-import com.zimbra.cs.index.query.parser.QueryParser;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -31,66 +31,101 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.util.ItemId;
 
 /**
- * Query in or under a folder.
+ * Query IN or UNDER a folder.
  *
  * @author tim
  * @author ysasaki
  */
 public final class InQuery extends Query {
-    public static final Integer IN_ANY_FOLDER = new Integer(-2);
-    public static final Integer IN_LOCAL_FOLDER = new Integer(-3);
-    public static final Integer IN_REMOTE_FOLDER = new Integer(-4);
-    public static final Integer IN_NO_FOLDER = new Integer(-5);
+
+    public enum In {
+        ANY, LOCAL, REMOTE, NONE
+    }
 
     private Folder mFolder;
     private ItemId mRemoteId = null;
     private String mSubfolderPath = null;
-    private Integer mSpecialTarget = null;
+    private In mSpecialTarget = null;
     private boolean mIncludeSubfolders = false;
 
-    public static Query create(Mailbox mailbox, Integer folderId,
-            boolean includeSubfolders) throws ServiceException {
-        if (folderId < 0) {
-            return new InQuery(null, null, null, folderId, includeSubfolders);
-        } else if (includeSubfolders &&
-                folderId == Mailbox.ID_FOLDER_USER_ROOT) {
-            return new InQuery(null, null, null, IN_ANY_FOLDER, includeSubfolders);
+    /**
+     * Creates a new {@link InQuery} by a folder ID.
+     *
+     * @param mbox mailbox
+     * @param fid folder ID
+     * @param under true to include sub folders, otherwise false
+     * @return query
+     * @throws ServiceException if an error occurred during mailbox access
+     */
+    public static InQuery create(Mailbox mbox, int fid, boolean under)
+        throws ServiceException {
+
+        if (under && fid == Mailbox.ID_FOLDER_USER_ROOT) {
+            return new InQuery(null, null, null, In.ANY, under);
         } else {
-            Folder folder = mailbox.getFolderById(null, folderId.intValue());
-            return new InQuery(folder, null, null, null, includeSubfolders);
+            Folder folder = mbox.getFolderById(null, fid);
+            return new InQuery(folder, null, null, null, under);
         }
     }
 
-    public static Query create(Mailbox mailbox, String folderName,
-            boolean includeSubfolders) throws ServiceException {
+    /**
+     * Creates a new {@link InQuery} by a folder name.
+     *
+     * @param mailbox mailbox
+     * @param folder folder name
+     * @param under true to include sub folders, otherwise false
+     * @return query
+     * @throws ServiceException if an error occurred during mailbox access
+     */
+    public static InQuery create(Mailbox mailbox, String folder, boolean under)
+        throws ServiceException {
+
         Pair<Folder, String> result = mailbox.getFolderByPathLongestMatch(
-                null, Mailbox.ID_FOLDER_USER_ROOT, folderName);
-        return recursiveResolve(mailbox, result.getFirst(), result.getSecond(),
-                includeSubfolders);
+                null, Mailbox.ID_FOLDER_USER_ROOT, folder);
+        return recursiveResolve(mailbox, result.getFirst(),
+                result.getSecond(), under);
     }
 
-    public static Query create(Mailbox mailbox, ItemId iid,
-            String subfolderPath, boolean includeSubfolders) throws ServiceException {
+    /**
+     * Creates a new {@link InQuery} with a special folder.
+     *
+     * @param in special folder
+     * @param under true to include sub folders, otherwise false
+     * @return query
+     */
+    public static InQuery create(In in, boolean under) {
+        return new InQuery(null, null, null, in, under);
+    }
+
+    /**
+     * Creates a new {@link InQuery} with item ID.
+     *
+     * @param mailbox mailbox
+     * @param iid item ID
+     * @param path sub folder path
+     * @param under true to include sub folders, otherwise false
+     * @return query
+     * @throws ServiceException if an error occurred during mailbox access
+     */
+    public static InQuery create(Mailbox mailbox, ItemId iid,
+            String path, boolean under) throws ServiceException {
 
         if (iid.belongsTo(mailbox)) { // local
-            if (includeSubfolders &&
-                    iid.getId() == Mailbox.ID_FOLDER_USER_ROOT) {
-                return new InQuery(null, iid, subfolderPath, IN_ANY_FOLDER,
-                        includeSubfolders);
+            if (under && iid.getId() == Mailbox.ID_FOLDER_USER_ROOT) {
+                return new InQuery(null, iid, path, In.ANY, under);
             }
             // find the base folder
             Pair<Folder, String> result;
-            if (subfolderPath != null && subfolderPath.length() > 0) {
-                result = mailbox.getFolderByPathLongestMatch(null,
-                        iid.getId(), subfolderPath);
+            if (!Strings.isNullOrEmpty(path)) {
+                result = mailbox.getFolderByPathLongestMatch(null, iid.getId(), path);
             } else {
-                Folder f = mailbox.getFolderById(null, iid.getId());
-                result = new Pair<Folder, String>(f, null);
+                Folder folder = mailbox.getFolderById(null, iid.getId());
+                result = new Pair<Folder, String>(folder, null);
             }
             return recursiveResolve(mailbox, result.getFirst(),
-                    result.getSecond(), includeSubfolders);
+                    result.getSecond(), under);
         } else { // remote
-            return new InQuery(null, iid, subfolderPath, null, includeSubfolders);
+            return new InQuery(null, iid, path, null, under);
         }
     }
 
@@ -98,73 +133,68 @@ public final class InQuery extends Query {
      * Resolve through local mountpoints until we get to the actual folder,
      * or until we get to a remote folder.
      */
-    private static Query recursiveResolve(Mailbox mailbox,
-            Folder baseFolder, String subfolderPath,
-            boolean includeSubfolders) throws ServiceException {
+    private static InQuery recursiveResolve(Mailbox mailbox, Folder folder,
+            String path, boolean under) throws ServiceException {
 
-        if (!(baseFolder instanceof Mountpoint)) {
-            if (subfolderPath != null) {
+        if (!(folder instanceof Mountpoint)) {
+            if (path != null) {
                 throw MailServiceException.NO_SUCH_FOLDER(
-                        baseFolder.getPath() + "/" + subfolderPath);
+                        folder.getPath() + "/" + path);
             }
-            return new InQuery(baseFolder, null, null, null, includeSubfolders);
+            return new InQuery(folder, null, null, null, under);
         } else {
-            Mountpoint mpt = (Mountpoint) baseFolder;
+            Mountpoint mpt = (Mountpoint) folder;
             if (mpt.isLocal()) { // local
-                if (subfolderPath == null || subfolderPath.length() == 0) {
-                    return new InQuery(baseFolder, null, null, null,
-                            includeSubfolders);
+                if (Strings.isNullOrEmpty(path)) {
+                    return new InQuery(folder, null, null, null, under);
                 } else {
-                    Folder newBase = mailbox.getFolderById(null,
-                            mpt.getRemoteId());
-                    return recursiveResolve(mailbox, newBase, subfolderPath,
-                            includeSubfolders);
+                    return recursiveResolve(mailbox,
+                            mailbox.getFolderById(null, mpt.getRemoteId()),
+                            path, under);
                 }
             } else { // remote
-                return new InQuery(null, mpt.getTarget(), subfolderPath,
-                        null, includeSubfolders);
+                return new InQuery(null, mpt.getTarget(), path, null, under);
             }
         }
     }
 
-    private InQuery(Folder folder, ItemId remoteId, String subfolderPath,
-            Integer specialTarget,  boolean includeSubfolders) {
-        super(QueryParser.IN);
+    private InQuery(Folder folder, ItemId remoteId,
+            String path, In special, boolean under) {
         mFolder = folder;
         mRemoteId = remoteId;
-        mSubfolderPath = subfolderPath;
-        mSpecialTarget = specialTarget;
-        mIncludeSubfolders = includeSubfolders;
+        mSubfolderPath = path;
+        mSpecialTarget = special;
+        mIncludeSubfolders = under;
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean truth) {
+    public QueryOperation getQueryOperation(boolean bool) {
         if (mSpecialTarget != null) {
-            if (mSpecialTarget == IN_NO_FOLDER) {
+            if (mSpecialTarget == In.NONE) {
                 return new NoResultsQueryOperation();
-            } else if (mSpecialTarget == IN_ANY_FOLDER) {
+            } else if (mSpecialTarget == In.ANY) {
                 DBQueryOperation dbOp = new DBQueryOperation();
-                dbOp.addAnyFolderClause(calcTruth(truth));
+                dbOp.addAnyFolderClause(evalBool(bool));
                 return dbOp;
             } else {
-                if (calcTruth(truth)) {
-                    if (mSpecialTarget == IN_REMOTE_FOLDER) {
+                if (evalBool(bool)) {
+                    if (mSpecialTarget == In.REMOTE) {
                         DBQueryOperation dbop = new DBQueryOperation();
                         dbop.addIsRemoteClause();
                         return dbop;
                     } else {
-                        assert(mSpecialTarget == IN_LOCAL_FOLDER);
+                        assert(mSpecialTarget == In.LOCAL);
                         DBQueryOperation dbop = new DBQueryOperation();
                         dbop.addIsLocalClause();
                         return dbop;
                     }
                 } else {
-                    if (mSpecialTarget == IN_REMOTE_FOLDER) {
+                    if (mSpecialTarget == In.REMOTE) {
                         DBQueryOperation dbop = new DBQueryOperation();
                         dbop.addIsLocalClause();
                         return dbop;
                     } else {
-                        assert(mSpecialTarget == IN_LOCAL_FOLDER);
+                        assert(mSpecialTarget == In.LOCAL);
                         DBQueryOperation dbop = new DBQueryOperation();
                         dbop.addIsRemoteClause();
                         return dbop;
@@ -178,7 +208,7 @@ public final class InQuery extends Query {
             if (mIncludeSubfolders) {
                 List<Folder> subFolders = mFolder.getSubfolderHierarchy();
 
-                if (calcTruth(truth)) {
+                if (evalBool(bool)) {
                     // (A or B or C)
                     UnionQueryOperation union = new UnionQueryOperation();
 
@@ -188,13 +218,12 @@ public final class InQuery extends Query {
                         if (f instanceof Mountpoint) {
                             Mountpoint mpt = (Mountpoint)f;
                             if (!mpt.isLocal()) {
-                                dbop.addInRemoteFolderClause(mpt.getTarget(), "", mIncludeSubfolders, calcTruth(truth));
+                                dbop.addInRemoteFolderClause(mpt.getTarget(), "", mIncludeSubfolders, evalBool(bool));
                             } else {
                                 // TODO FIXME handle local mountpoints. Don't forget to check for infinite recursion!
                             }
-
                         } else {
-                            dbop.addInClause(f, calcTruth(truth));
+                            dbop.addInClause(f, evalBool(bool));
                         }
                     }
                     return union;
@@ -208,22 +237,22 @@ public final class InQuery extends Query {
                         if (f instanceof Mountpoint) {
                             Mountpoint mpt = (Mountpoint)f;
                             if (!mpt.isLocal()) {
-                                dbop.addInRemoteFolderClause(mpt.getTarget(), "", mIncludeSubfolders, calcTruth(truth));
+                                dbop.addInRemoteFolderClause(mpt.getTarget(), "", mIncludeSubfolders, evalBool(bool));
                             } else {
                                 // TODO FIXME handle local mountpoints.  Don't forget to check for infinite recursion!
                             }
 
                         } else {
-                            dbop.addInClause(f, calcTruth(truth));
+                            dbop.addInClause(f, evalBool(bool));
                         }
                     }
                     return iop;
                 }
             } else {
-                dbOp.addInClause(mFolder, calcTruth(truth));
+                dbOp.addInClause(mFolder, evalBool(bool));
             }
         } else if (mRemoteId != null) {
-            dbOp.addInRemoteFolderClause(mRemoteId, mSubfolderPath, mIncludeSubfolders, calcTruth(truth));
+            dbOp.addInRemoteFolderClause(mRemoteId, mSubfolderPath, mIncludeSubfolders, evalBool(bool));
         } else {
             assert(false);
         }
@@ -232,26 +261,24 @@ public final class InQuery extends Query {
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
-        super.dump(out);
+    public void dump(StringBuilder out) {
+        out.append(mIncludeSubfolders ? "UNDER," : "IN,");
         if (mSpecialTarget != null) {
-            if (!mIncludeSubfolders) {
-                out.append(",IN:");
-            } else {
-                out.append(",UNDER:");
-            }
-
-            if (mSpecialTarget == IN_ANY_FOLDER) {
-                out.append("ANY_FOLDER");
-            } else if (mSpecialTarget == IN_LOCAL_FOLDER) {
-                out.append("LOCAL");
-            } else if (mSpecialTarget == IN_REMOTE_FOLDER) {
-                out.append("REMOTE");
+            switch (mSpecialTarget) {
+                case ANY:
+                    out.append("ANY_FOLDER");
+                    break;
+                case LOCAL:
+                    out.append("LOCAL");
+                    break;
+                case REMOTE:
+                    out.append("REMOTE");
+                    break;
+                case NONE:
+                    out.append("NONE");
+                    break;
             }
         } else {
-            out.append(',');
-            out.append(mIncludeSubfolders ? "UNDER" : "IN");
-            out.append(':');
             out.append(mRemoteId != null ? mRemoteId.toString() :
                     (mFolder != null ? mFolder.getName() : "ANY_FOLDER"));
             if (mSubfolderPath != null) {
@@ -259,7 +286,6 @@ public final class InQuery extends Query {
                 out.append(mSubfolderPath);
             }
         }
-        return out.append(')');
     }
 
 }

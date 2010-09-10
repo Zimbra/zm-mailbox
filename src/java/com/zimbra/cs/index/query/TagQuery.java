@@ -17,7 +17,6 @@ package com.zimbra.cs.index.query;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
-import com.zimbra.cs.index.query.parser.QueryParser;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 
@@ -33,24 +32,21 @@ public class TagQuery extends Query {
 
     public TagQuery(Mailbox mailbox, String name, boolean truth)
         throws ServiceException {
-
-        super(QueryParser.TAG);
         mTag = mailbox.getTagByName(name);
         setBool(truth);
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean truth) {
+    public QueryOperation getQueryOperation(boolean bool) {
         DBQueryOperation dbOp = new DBQueryOperation();
-        dbOp.addTagClause(mTag, calcTruth(truth));
+        dbOp.addTagClause(mTag, evalBool(bool));
         return dbOp;
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
-        super.dump(out);
-        out.append(',');
-        return out.append(mTag.getName());
+    public void dump(StringBuilder out) {
+        out.append("TAG,");
+        out.append(mTag.getName());
     }
 
 }

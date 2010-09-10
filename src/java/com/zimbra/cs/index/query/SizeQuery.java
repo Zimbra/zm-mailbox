@@ -14,11 +14,11 @@
  */
 package com.zimbra.cs.index.query;
 
+import java.text.ParseException;
+
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.index.ZimbraAnalyzer;
-import com.zimbra.cs.index.query.parser.QueryParser;
-import com.zimbra.cs.index.query.parser.QueryParserException;
 
 /**
  * Query by size.
@@ -27,25 +27,40 @@ import com.zimbra.cs.index.query.parser.QueryParserException;
  * @author ysasaki
  */
 public final class SizeQuery extends Query {
+    public enum Type {
+        EQ("="), GT(">"), LT("<");
+
+        private final String symbol;
+
+        private Type(String symbol) {
+            this.symbol = symbol;
+        }
+
+        @Override
+        public String toString() {
+            return symbol;
+        }
+    }
+
+    private final Type type;
     private String mSizeStr;
     private long mSize;
 
-    public SizeQuery(int target, String size) throws QueryParserException {
-        super(target);
-
-        boolean hasEQ = false;
-
+    public SizeQuery(Type type, String size) throws ParseException {
         mSizeStr = size;
 
         char ch = mSizeStr.charAt(0);
         if (ch == '>') {
-            setQueryType(QueryParser.BIGGER);
+            this.type = Type.GT;
             mSizeStr = mSizeStr.substring(1);
         } else if (ch == '<') {
-            setQueryType(QueryParser.SMALLER);
+            this.type = Type.LT;
             mSizeStr = mSizeStr.substring(1);
+        } else {
+            this.type = type;
         }
 
+        boolean hasEQ = false;
         ch = mSizeStr.charAt(0);
         if (ch == '=') {
             mSizeStr = mSizeStr.substring(1);
@@ -81,14 +96,17 @@ public final class SizeQuery extends Query {
         try {
             mSize = Integer.parseInt(mSizeStr.trim()) * multiplier;
         } catch (NumberFormatException e) {
-            throw new QueryParserException("PARSER_ERROR");
+            throw new ParseException(size, 0);
         }
 
         if (hasEQ) {
-            if (getQueryType() == QueryParser.BIGGER) {
-                mSize--; // correct since range constraint is strict >
-            } else if (getQueryType() == QueryParser.SMALLER) {
-                mSize++; // correct since range constraint is strict <
+            switch (this.type) {
+                case GT:
+                    mSize--; // correct since range constraint is strict >
+                    break;
+                case LT:
+                    mSize++; // correct since range constraint is strict <
+                    break;
             }
         }
 
@@ -99,38 +117,35 @@ public final class SizeQuery extends Query {
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean truth) {
+    public QueryOperation getQueryOperation(boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
+        long highest = -1;
+        long lowest = -1;
 
-        truth = calcTruth(truth);
-
-        long highest = -1, lowest = -1;
-
-        switch (getQueryType()) {
-            case QueryParser.BIGGER:
+        switch (type) {
+            case GT:
                 highest = -1;
                 lowest = mSize;
                 break;
-            case QueryParser.SMALLER:
+            case LT:
                 highest = mSize;
                 lowest = -1;
                 break;
-            case QueryParser.SIZE:
-                highest = mSize+1;
-                lowest = mSize-1;
+            case EQ:
+                highest = mSize + 1;
+                lowest = mSize - 1;
                 break;
             default:
                 assert(false);
         }
-        op.addSizeClause(lowest, highest, truth);
+        op.addSizeClause(lowest, highest, evalBool(bool));
         return op;
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
-        super.dump(out);
-        out.append(',');
+    public void dump(StringBuilder out) {
+        out.append("SIZE");
+        out.append(type);
         out.append(mSize);
-        return out.append(')');
     }
 }

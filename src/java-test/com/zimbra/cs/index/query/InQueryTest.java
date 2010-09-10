@@ -45,16 +45,16 @@ public class InQueryTest {
         Mailbox mbox = new MockMailboxManager().getMailboxByAccountId("0");
 
         Query query = InQuery.create(mbox, new ItemId("0", 1), null, true);
-        Assert.assertEquals("Q(IN,UNDER:ANY_FOLDER)", query.toString());
+        Assert.assertEquals("Q(UNDER,ANY_FOLDER)", query.toString());
 
         query = InQuery.create(mbox, new ItemId("0", 1), null, false);
-        Assert.assertEquals("Q(IN,IN:1)", query.toString());
+        Assert.assertEquals("Q(IN,1)", query.toString());
 
         query = InQuery.create(mbox, new ItemId("1", 1), null, true);
-        Assert.assertEquals("Q(IN,UNDER:1:1)", query.toString());
+        Assert.assertEquals("Q(UNDER,1:1)", query.toString());
 
         query = InQuery.create(mbox, new ItemId("1", 1), null, false);
-        Assert.assertEquals("Q(IN,IN:1:1)", query.toString());
+        Assert.assertEquals("Q(IN,1:1)", query.toString());
     }
 
 }

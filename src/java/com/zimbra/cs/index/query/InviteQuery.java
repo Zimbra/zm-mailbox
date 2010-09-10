@@ -30,9 +30,9 @@ public final class InviteQuery extends TagQuery {
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
+    public void dump(StringBuilder out) {
         super.dump(out);
-        return out.append(getBool() ? ",INVITE)" : ",NOT_INVITE)");
+        out.append(getBool() ? ",INVITE" : ",NOT_INVITE");
     }
 }
 

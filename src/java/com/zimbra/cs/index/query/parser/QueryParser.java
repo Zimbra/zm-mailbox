@@ -16,7 +16,6 @@ package com.zimbra.cs.index.query.parser;
 
 import java.io.StringReader;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -29,6 +28,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.query.AddrQuery;
 import com.zimbra.cs.index.query.AttachmentQuery;
 import com.zimbra.cs.index.query.BuiltInQuery;
@@ -51,6 +51,8 @@ import com.zimbra.cs.index.query.SubjectQuery;
 import com.zimbra.cs.index.query.TagQuery;
 import com.zimbra.cs.index.query.TextQuery;
 import com.zimbra.cs.index.query.TypeQuery;
+import static com.zimbra.cs.index.query.parser.ParserConstants.*;
+import static com.zimbra.cs.index.query.parser.ParserTreeConstants.*;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ItemId;
@@ -60,19 +62,21 @@ import com.zimbra.cs.service.util.ItemId;
  *
  * @author ysasaki
  */
-public final class QueryParser implements ParserConstants, ParserTreeConstants {
+public final class QueryParser {
 
-    private static final Map<String, Integer> str2jj = new HashMap<String, Integer>();
+    private static final Map<String, Integer> IMG2JJ;
     static {
+        ImmutableMap.Builder<String, Integer> builder = ImmutableMap.builder();
         for (int i = 0; i < tokenImage.length; i++) {
             String token = tokenImage[i];
             if (token.startsWith("\"") || token.endsWith(":\"")) {
-                str2jj.put(token.substring(1, token.length() - 1), i);
+                builder.put(token.substring(1, token.length() - 1), i);
             }
         }
+        IMG2JJ = builder.build();
     }
 
-    private static final Map<String, Integer> folder2id =
+    private static final Map<String, Integer> FOLDER2ID =
         new ImmutableMap.Builder<String, Integer>()
         .put("inbox", Mailbox.ID_FOLDER_INBOX)
         .put("trash", Mailbox.ID_FOLDER_TRASH)
@@ -80,6 +84,49 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
         .put("sent", Mailbox.ID_FOLDER_SENT)
         .put("drafts", Mailbox.ID_FOLDER_DRAFTS)
         .put("contacts", Mailbox.ID_FOLDER_CONTACTS)
+        .build();
+
+    private static final Map<Integer, String> JJ2LUCENE =
+        new ImmutableMap.Builder<Integer, String>()
+        .put(CONTACT, LuceneFields.L_CONTACT_DATA)
+        .put(CONTENT, LuceneFields.L_CONTENT)
+        .put(MSGID, LuceneFields.L_H_MESSAGE_ID)
+        .put(ENVFROM, LuceneFields.L_H_X_ENV_FROM)
+        .put(ENVTO, LuceneFields.L_H_X_ENV_TO)
+        .put(FROM, LuceneFields.L_H_FROM)
+        .put(TO, LuceneFields.L_H_TO)
+        .put(CC, LuceneFields.L_H_CC)
+        .put(SUBJECT, LuceneFields.L_H_SUBJECT)
+        .put(FILENAME, LuceneFields.L_FILENAME)
+        .put(TYPE, LuceneFields.L_MIMETYPE)
+        .put(ATTACHMENT, LuceneFields.L_ATTACHMENTS)
+        .put(FIELD, LuceneFields.L_FIELD)
+        .put(IN, "IN")
+        .put(HAS, "HAS")
+        .put(IS, "IS")
+        .put(DATE, "DATE")
+        .put(AFTER, "AFTER")
+        .put(BEFORE, "BEFORE")
+        .put(APPT_START, "APPT-START")
+        .put(APPT_END, "APPT-END")
+        .put(SIZE, "SIZE")
+        .put(BIGGER, "BIGGER")
+        .put(SMALLER, "SMALLER")
+        .put(TAG, "TAG")
+        .put(MY, "MY")
+        .put(MESSAGE, "MESSAGE")
+        .put(CONV, "CONV")
+        .put(CONV_COUNT, "CONV-COUNT")
+        .put(CONV_MINM, "CONV_MINM")
+        .put(CONV_MAXM, "CONV_MAXM")
+        .put(CONV_START, "CONV-START")
+        .put(CONV_END, "CONV-END")
+        .put(AUTHOR, "AUTHOR")
+        .put(TITLE, "TITLE")
+        .put(KEYWORDS,"KEYWORDS")
+        .put(COMPANY, "COMPANY")
+        .put(METADATA, "METADATA")
+        .put(ITEM, "ITEMID")
         .build();
 
     private final Mailbox mailbox;
@@ -125,7 +172,7 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
      * @throws ServiceException if the name is invalid
      */
     public void setDefaultField(String name) throws ServiceException {
-        Integer jj = str2jj.get(name);
+        Integer jj = IMG2JJ.get(name);
         if (jj == null) {
             throw MailServiceException.QUERY_PARSE_ERROR(
                     name, null, name, -1, "UNKNOWN_QUERY_TYPE");
@@ -161,7 +208,8 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
                     "", -1, e.getMessage());
         } catch (ParseException e) {
             throw MailServiceException.QUERY_PARSE_ERROR(src, e,
-                    e.currentToken.image, e.currentToken.beginColumn, e.getMessage());
+                    e.currentToken.image, e.currentToken.beginColumn,
+                    e.getMessage());
         }
 
         assert(node.id == JJTROOT);
@@ -169,13 +217,16 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
 
         try {
             return toQuery((SimpleNode) node.jjtGetChild(0));
-        } catch (QueryParserException e) {
+        } catch (ParseException e) {
             throw MailServiceException.QUERY_PARSE_ERROR(src, e,
-                    e.getText(), e.getErrorOffset(), e.getMessage());
+                    e.currentToken.image, e.currentToken.beginColumn,
+                    e.getMessage());
         }
     }
 
-    private List<Query> toQuery(SimpleNode node) throws QueryParserException, ServiceException {
+    private List<Query> toQuery(SimpleNode node)
+        throws ParseException, ServiceException {
+
         assert(node.id == JJTQUERY);
 
         List<Query> result = new LinkedList<Query>();
@@ -207,7 +258,9 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
         return result;
     }
 
-    private Query toClause(SimpleNode node) throws QueryParserException, ServiceException {
+    private Query toClause(SimpleNode node)
+        throws ParseException, ServiceException {
+
         assert(node.id == JJTCLAUSE);
         int num = node.jjtGetNumChildren();
         assert(num > 0 && num <= 2);
@@ -241,13 +294,14 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
     }
 
     private Query toSubQuery(SimpleNode node)
-        throws QueryParserException, ServiceException {
+        throws ParseException, ServiceException {
+
         assert(node.id == JJTQUERY);
         return new SubQuery(toQuery(node));
     }
 
     private Query toTextClause(SimpleNode node)
-        throws QueryParserException, ServiceException {
+        throws ParseException, ServiceException {
 
         assert(node.id == JJTTEXTCLAUSE);
         assert(node.jjtGetNumChildren() == 1);
@@ -256,7 +310,7 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
     }
 
     private Query toDefaultClause(SimpleNode node)
-        throws QueryParserException, ServiceException {
+        throws ParseException, ServiceException {
 
         assert(node.id == JJTDEFAULTCLAUSE);
 
@@ -265,7 +319,7 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
     }
 
     private Query toItemClause(SimpleNode node)
-        throws QueryParserException, ServiceException {
+        throws ParseException, ServiceException {
 
         assert(node.id == JJTITEMCLAUSE);
         assert(node.jjtGetNumChildren() == 1);
@@ -274,7 +328,7 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
     }
 
     private Query toDateClause(SimpleNode node)
-        throws QueryParserException, ServiceException {
+        throws ParseException, ServiceException {
 
         assert(node.id == JJTDATECLAUSE);
         assert(node.jjtGetNumChildren() == 1);
@@ -283,7 +337,7 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
     }
 
     private Query toTerm(Token field, SimpleNode node)
-        throws QueryParserException, ServiceException {
+        throws ParseException, ServiceException {
 
         assert(node.id == JJTDATETERM || node.id == JJTTEXTTERM ||
                 node.id == JJTITEMTERM);
@@ -401,7 +455,7 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
     }
 
     private Query createQuery(Token field, Token term, String text)
-        throws QueryParserException, ServiceException {
+        throws ParseException, ServiceException {
 
         switch (field.kind) {
           case HAS:
@@ -424,7 +478,7 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
               String subfolderPath = null;
               if (subfolderSplit > 0) {
                   iidStr = text.substring(0, subfolderSplit);
-                  subfolderPath = text.substring(subfolderSplit+1);
+                  subfolderPath = text.substring(subfolderSplit + 1);
               } else {
                   iidStr = text;
               }
@@ -434,12 +488,12 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
               } catch (ServiceException e) {
                   // bug: 18623 -- dangling mountpoints create problems with 'is:remote'
                   ZimbraLog.index.debug("Ignoring INID/UNDERID clause b/c of ServiceException", e);
-                  return InQuery.create(mailbox, InQuery.IN_NO_FOLDER, false);
+                  return InQuery.create(InQuery.In.NONE, false);
               }
           }
           case UNDER:
           case IN: {
-              Integer folderId = folder2id.get(text.toLowerCase());
+              Integer folderId = FOLDER2ID.get(text.toLowerCase());
               if (folderId != null) {
                   return InQuery.create(mailbox, folderId, (field.kind == UNDER));
               } else {
@@ -452,75 +506,93 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
               try {
                   return BuiltInQuery.getQuery(text.toLowerCase(), mailbox, analyzer);
               } catch (IllegalArgumentException e) {
-                  throw new QueryParserException("UNKNOWN_TEXT_AFTER_IS", term);
+                  throw exception("UNKNOWN_TEXT_AFTER_IS", term);
               }
           case CONV:
               return ConvQuery.create(mailbox, text);
           case CONV_COUNT:
-              return ConvCountQuery.create(field.kind, text);
+              return ConvCountQuery.create(text);
           case DATE:
+              return createDateQuery(DateQuery.Type.DATE, term, text);
           case DAY:
+              return createDateQuery(DateQuery.Type.DAY, term, text);
           case WEEK:
+              return createDateQuery(DateQuery.Type.WEEK, term, text);
           case MONTH:
+              return createDateQuery(DateQuery.Type.MONTH, term, text);
           case YEAR:
+              return createDateQuery(DateQuery.Type.YEAR, term, text);
           case AFTER:
+              return createDateQuery(DateQuery.Type.AFTER, term, text);
           case BEFORE:
+              return createDateQuery(DateQuery.Type.BEFORE, term, text);
           case CONV_START:
+              return createDateQuery(DateQuery.Type.CONV_START, term, text);
           case CONV_END:
+              return createDateQuery(DateQuery.Type.CONV_END, term, text);
           case APPT_START:
-          case APPT_END: {
-              DateQuery query = new DateQuery(field.kind);
-              query.parseDate(text, timezone, locale);
-              return query;
-          }
+              return createDateQuery(DateQuery.Type.APPT_START, term, text);
+          case APPT_END:
+              return createDateQuery(DateQuery.Type.APPT_END, term,text);
           case TOFROM:
               if (Strings.isNullOrEmpty(text)) {
-                  throw new QueryParserException("MISSING_TEXT_AFTER_TOFROM", term);
-               }
+                  throw exception("MISSING_TEXT_AFTER_TOFROM", term);
+              }
               return AddrQuery.create(mailbox, analyzer,
                       EnumSet.of(Address.TO, Address.FROM), text);
           case TOCC:
               if (Strings.isNullOrEmpty(text)) {
-                  throw new QueryParserException("MISSING_TEXT_AFTER_TOCC", term);
-               }
+                  throw exception("MISSING_TEXT_AFTER_TOCC", term);
+              }
               return AddrQuery.create(mailbox, analyzer,
                       EnumSet.of(Address.TO, Address.CC), text);
           case FROMCC:
               if (Strings.isNullOrEmpty(text)) {
-                  throw new QueryParserException("MISSING_TEXT_AFTER_FROMCC", term);
-               }
+                  throw exception("MISSING_TEXT_AFTER_FROMCC", term);
+              }
               return AddrQuery.create(mailbox, analyzer,
                       EnumSet.of(Address.FROM, Address.CC), text);
           case TOFROMCC:
               if (Strings.isNullOrEmpty(text)) {
-                  throw new QueryParserException("MISSING_TEXT_AFTER_TOFROMCC", term);
+                  throw exception("MISSING_TEXT_AFTER_TOFROMCC", term);
                }
               return AddrQuery.create(mailbox, analyzer,
                       EnumSet.of(Address.TO, Address.FROM, Address.CC), text);
           case FROM:
               if (Strings.isNullOrEmpty(text)) {
-                  throw new QueryParserException("MISSING_TEXT_AFTER_TOFROMCC", term);
+                  throw exception("MISSING_TEXT_AFTER_FROM", term);
               }
-              return SenderQuery.create(mailbox, analyzer, field.kind, text);
+              return SenderQuery.create(mailbox, analyzer, text);
           case TO:
-          case ENVTO:
-          case ENVFROM:
+              if (Strings.isNullOrEmpty(text)) {
+                  throw exception("MISSING_TEXT_AFTER_TO", term);
+              }
+              return createAddrDomainQuery(LuceneFields.L_H_TO, text);
           case CC:
               if (Strings.isNullOrEmpty(text)) {
-                  throw new QueryParserException("MISSING_TEXT_AFTER_TOFROMCC", term);
+                  throw exception("MISSING_TEXT_AFTER_CC", term);
               }
-              if (text.startsWith("@")) {
-                  return new DomainQuery(mailbox, field.kind, text);
+              return createAddrDomainQuery(LuceneFields.L_H_CC, text);
+          case ENVTO:
+              if (Strings.isNullOrEmpty(text)) {
+                  throw exception("MISSING_TEXT_AFTER_ENVTO", term);
               }
-              return new TextQuery(mailbox, analyzer, field.kind, text);
+              return createAddrDomainQuery(LuceneFields.L_H_X_ENV_TO, text);
+          case ENVFROM:
+              if (Strings.isNullOrEmpty(text)) {
+                  throw exception("MISSING_TEXT_AFTER_ENVFROM", term);
+              }
+              return createAddrDomainQuery(LuceneFields.L_H_X_ENV_FROM, text);
           case MODSEQ:
-              return new ModseqQuery(field.kind, text);
+              return new ModseqQuery(text);
           case SIZE:
+              return createSizeQuery(SizeQuery.Type.EQ, term, text);
           case BIGGER:
+              return createSizeQuery(SizeQuery.Type.GT, term, text);
           case SMALLER:
-              return new SizeQuery(field.kind, text);
+              return createSizeQuery(SizeQuery.Type.LT, term, text);
           case SUBJECT:
-              return SubjectQuery.create(mailbox, analyzer, field.kind, text);
+              return SubjectQuery.create(mailbox, analyzer, text);
           case FIELD:
               int open = field.image.indexOf('[');
               if (open >= 0) {
@@ -531,10 +603,47 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
               } else if (field.image.charAt(0) == '#') {
                   text = field.image.substring(1) + text;
               }
-
-              return new TextQuery(mailbox, analyzer, field.kind, text);
-          default:
-              return new TextQuery(mailbox, analyzer, field.kind, text);
+              return new TextQuery(mailbox, analyzer, LuceneFields.L_FIELD, text);
+          default: //TODO reachable?
+              return new TextQuery(mailbox, analyzer,
+                      JJ2LUCENE.get(field.kind), text);
         }
     }
+
+    private SizeQuery createSizeQuery(SizeQuery.Type type, Token term,
+            String text) throws ParseException {
+        try {
+            return new SizeQuery(type, text);
+        } catch (java.text.ParseException e) {
+            throw exception("INVALID_SIZE", term);
+        }
+    }
+
+    private DateQuery createDateQuery(DateQuery.Type type, Token term,
+            String text) throws ParseException {
+        DateQuery query = new DateQuery(type);
+        try {
+            query.parseDate(text, timezone, locale);
+        } catch (java.text.ParseException e) {
+            throw exception("INVALID_DATE", term);
+        }
+        return query;
+    }
+
+    private Query createAddrDomainQuery(String field, String term)
+        throws ServiceException {
+
+        if (term.startsWith("@")) {
+            return new DomainQuery(mailbox, field, term);
+        } else {
+            return new TextQuery(mailbox, analyzer, field, term);
+        }
+    }
+
+    private ParseException exception(String message, Token token) {
+        ParseException e = new ParseException(message);
+        e.currentToken = token;
+        return e;
+    }
+
 }

@@ -15,6 +15,7 @@
 package com.zimbra.cs.index.query;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -28,8 +29,6 @@ import org.apache.lucene.document.DateTools;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
-import com.zimbra.cs.index.query.parser.QueryParser;
-import com.zimbra.cs.index.query.parser.QueryParserException;
 
 /**
  * Query by absolute date or relative date.
@@ -102,15 +101,27 @@ import com.zimbra.cs.index.query.parser.QueryParserException;
  * @author ysasaki
  */
 public final class DateQuery extends Query {
+
+    public enum Type {
+        APPT_START, APPT_END, CONV_START, CONV_END,
+        BEFORE, AFTER, DATE, DAY, WEEK, MONTH, YEAR
+    }
+
+    private static final Pattern NUMERICDATE_PATTERN =
+        Pattern.compile("^([0-9]+)$");
+    private static final Pattern RELDATE_PATTERN =
+        Pattern.compile("([+-])([0-9]+)([mhdwy][a-z]*)?");
+
     private Date mDate = null;
     private Date mEndDate = null;
     private long mLowestTime;
     private boolean mLowerEq;
     private long mHighestTime;
     private boolean mHigherEq;
+    private final Type type;
 
-    public DateQuery(int qType) {
-        super(qType);
+    public DateQuery(Type type) {
+        this.type = type;
     }
 
     public long getLowestTime() {
@@ -130,33 +141,34 @@ public final class DateQuery extends Query {
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean truth) {
+    public QueryOperation getQueryOperation(boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
-
-        truth = calcTruth(truth);
-
-        if (this.getQueryType() == QueryParser.APPT_START) {
-            op.addCalStartDateClause(mLowestTime, mLowerEq, mHighestTime, mHigherEq, truth);
-        } else if (this.getQueryType() == QueryParser.APPT_END) {
-            op.addCalEndDateClause(mLowestTime, mLowerEq, mHighestTime, mHigherEq, truth);
-        } else{
-            op.addDateClause(mLowestTime, mLowerEq, mHighestTime, mHigherEq, truth);
+        switch (type) {
+            case APPT_START:
+                op.addCalStartDateClause(mLowestTime, mLowerEq,
+                        mHighestTime, mHigherEq, evalBool(bool));
+                break;
+            case APPT_END:
+                op.addCalEndDateClause(mLowestTime, mLowerEq,
+                        mHighestTime, mHigherEq, evalBool(bool));
+                break;
+            default:
+                op.addDateClause(mLowestTime, mLowerEq,
+                        mHighestTime, mHigherEq, evalBool(bool));
+                break;
         }
 
         return op;
     }
 
-    protected static final Pattern NUMERICDATE_PATTERN =
-        Pattern.compile("^([0-9]+)$");
-    protected static final Pattern RELDATE_PATTERN =
-        Pattern.compile("([+-])([0-9]+)([mhdwy][a-z]*)?");
-
-    public void parseDate(String s, TimeZone tz, Locale locale) throws QueryParserException {
-        // DATE: absolute-date = mm/dd/yyyy (locale sensitive) OR
-        //       relative-date = [+/-]nnnn{minute,hour,day,week,month,year}
-        // * need to figure out how to represent "this week", "last week",
-        // "this month", etc.
-
+    /**
+     * DATE: {@code absolute-date = mm/dd/yyyy} (locale sensitive)
+     *   OR  {@code relative-date = [+/-]nnnn{minute,hour,day,week,month,year}}
+     * <p>
+     * TODO need to figure out how to represent "this week", "last week",
+     * "this month", etc.
+     */
+    public void parseDate(String src, TimeZone tz, Locale locale) throws ParseException {
         mDate = null; // the beginning of the user-specified range (inclusive)
         mEndDate = null; // the end of the user-specified range (NOT-included in the range)
         mLowestTime = -1;
@@ -166,35 +178,36 @@ public final class DateQuery extends Query {
         boolean explicitGT = false;
         boolean explicitEq = false;
 
-        if (s.length() <= 0) {
-            throw new QueryParserException("INVALID_DATE");
+        if (src.length() <= 0) {
+            throw new ParseException(src, 0);
         }
 
         // remove trailing comma, for date:(12312, 123123, 123132) format
-        if (s.charAt(s.length() - 1) == ',') {
-            s = s.substring(0, s.length() - 1);
+        if (src.charAt(src.length() - 1) == ',') {
+            src = src.substring(0, src.length() - 1);
         }
 
-        if (s.length() <= 0) {
-            throw new QueryParserException("INVALID_DATE");
+        if (src.length() <= 0) {
+            throw new ParseException(src, 0);
         }
 
-        char ch = s.charAt(0);
+        char ch = src.charAt(0);
         if (ch == '<' || ch == '>') {
-            if (getQueryType() == QueryParser.BEFORE ||
-                    getQueryType() == QueryParser.AFTER) {
-                throw new QueryParserException("INVALID_DATE");
+            switch (type) {
+                case BEFORE:
+                case AFTER:
+                    throw new ParseException(src, 0);
             }
 
             hasExplicitComparasins = true;
 
-            if (s.length() <= 1) {
-                throw new QueryParserException("INVALID_DATE");
+            if (src.length() <= 1) {
+                throw new ParseException(src, 0);
             }
 
-            char ch2 = s.charAt(1);
-            if (ch2 == '=' && s.length() <= 2) {
-                throw new QueryParserException("INVALID_DATE");
+            char ch2 = src.charAt(1);
+            if (ch2 == '=' && src.length() <= 2) {
+                throw new ParseException(src, 0);
             }
 
             if (ch == '<') {
@@ -203,211 +216,198 @@ public final class DateQuery extends Query {
                 explicitGT = true;
             }
             if (ch2 == '=') {
-                s = s.substring(2); // chop off the <= or >=
+                src = src.substring(2); // chop off the <= or >=
                 explicitEq = true;
             } else {
-                s = s.substring(1); // chop off the < or >
+                src = src.substring(1); // chop off the < or >
             }
         }
 
-        if (s.length() <= 0) {
-            throw new QueryParserException("INVALID_DATE");
+        if (src.length() <= 0) {
+            throw new ParseException(src, 0);
         }
 
-
-        int origType = getQueryType();
-
-        if (s.equalsIgnoreCase("today")) {
-            s = "-0d";
+        if (src.equalsIgnoreCase("today")) {
+            src = "-0d";
         }
-        if (s.equalsIgnoreCase("yesterday")) {
-            s = "-1d";
+        if (src.equalsIgnoreCase("yesterday")) {
+            src = "-1d";
         }
 
         int field = 0;
-        switch (origType) {
-            case QueryParser.APPT_START:
-            case QueryParser.APPT_END:
-            case QueryParser.BEFORE:
-            case QueryParser.AFTER:
-            case QueryParser.DATE:
-            case QueryParser.DAY:
+        switch (type) {
+            case APPT_START:
+            case APPT_END:
+            case BEFORE:
+            case AFTER:
+            case DATE:
+            case DAY:
                 field = Calendar.DATE;
                 break;
-            case QueryParser.WEEK:
+            case WEEK:
                 field = Calendar.WEEK_OF_YEAR;
                 break;
-            case QueryParser.MONTH:
+            case MONTH:
                 field = Calendar.MONTH;
                 break;
-            case QueryParser.YEAR:
+            case YEAR:
                 field = Calendar.YEAR;
                 break;
         }
 
-        //
         // Now, do the actual parsing.  There are two cases: a relative date
         // or an absolute date.
-        //
-        {
 
-            String mod = null;
-            Matcher matcher = NUMERICDATE_PATTERN.matcher(s);
+        String mod = null;
+        Matcher matcher = NUMERICDATE_PATTERN.matcher(src);
+        if (matcher.lookingAt()) {
+            long dateLong = Long.parseLong(src);
+            mDate = new Date(dateLong);
+            mEndDate = new Date(dateLong + 1000);
+            // +1000 since SQL time is sec, java in msec
+        } else {
+            matcher = RELDATE_PATTERN.matcher(src);
             if (matcher.lookingAt()) {
-                long dateLong = Long.parseLong(s);
-                mDate = new Date(dateLong);
-                mEndDate = new Date(dateLong + 1000);
-                // +1000 since SQL time is sec, java in msec
-            } else {
-                matcher = RELDATE_PATTERN.matcher(s);
-                if (matcher.lookingAt()) {
-                    // RELATIVE DATE!
-                    String reltime;
-                    String what;
+                // RELATIVE DATE!
+                String reltime;
+                String what;
 
-                    mod = s.substring(matcher.start(1), matcher.end(1));
-                    reltime = s.substring(matcher.start(2), matcher.end(2));
+                mod = src.substring(matcher.start(1), matcher.end(1));
+                reltime = src.substring(matcher.start(2), matcher.end(2));
 
-                    if (matcher.start(3) == -1) {
-                        // no period specified -- use the defualt for the current operator
-                    } else {
-                        what = s.substring(matcher.start(3), matcher.end(3));
-
-                        switch (what.charAt(0)) {
-                            case 'm':
-                                field = Calendar.MONTH;
-                                if (what.length() > 1 && what.charAt(1) == 'i') {
-                                    field = Calendar.MINUTE;
-                                }
-                                break;
-                            case 'h':
-                                field = Calendar.HOUR_OF_DAY;
-                                break;
-                            case 'd':
-                                field = Calendar.DATE;
-                                break;
-                            case 'w':
-                                field = Calendar.WEEK_OF_YEAR;
-                                break;
-                            case 'y':
-                                field = Calendar.YEAR;
-                                break;
-                        }
-                    } // (else m.start(3) == -1
-
-
-                    GregorianCalendar cal = new GregorianCalendar();
-                    if (tz != null) {
-                        cal.setTimeZone(tz);
-                    }
-
-                    cal.setTime(new Date());
-
-                    //
-                    // special case 'day' clear all the fields that are lower than the one we're currently operating on...
-                    //
-                    //  E.G. "date:-1d"  people really expect that to mean 'midnight to midnight yesterday'
-                    switch (field) {
-                        case Calendar.YEAR:
-                            cal.set(Calendar.MONTH, 0);
-                            // fall-through
-                        case Calendar.MONTH:
-                            cal.set(Calendar.DAY_OF_MONTH, 1);
-                            cal.set(Calendar.HOUR_OF_DAY, 0);
-                            cal.set(Calendar.MINUTE, 0);
-                            cal.set(Calendar.SECOND, 0);
-                            break;
-                        case Calendar.WEEK_OF_YEAR:
-                            cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
-                            // fall-through
-                        case Calendar.DATE:
-                            cal.set(Calendar.HOUR_OF_DAY, 0);
-                            // fall-through
-                        case Calendar.HOUR:
-                        case Calendar.HOUR_OF_DAY:
-                            cal.set(Calendar.MINUTE, 0);
-                            // fall-through
-                        case Calendar.MINUTE:
-                            cal.set(Calendar.SECOND, 0);
-                    }
-
-                    int num = Integer.parseInt(reltime);
-                    if (mod.equals("-")) {
-                        num = num * -1;
-                    }
-
-                    cal.add(field,num);
-                    mDate = cal.getTime();
-
-                    cal.add(field,1);
-                    mEndDate = cal.getTime();
+                if (matcher.start(3) == -1) {
+                    // no period specified -- use the defualt for the current operator
                 } else {
-                    // ABSOLUTE dates:
-                    // use Locale information to parse date correctly
+                    what = src.substring(matcher.start(3), matcher.end(3));
 
-                    char first = s.charAt(0);
-                    if (first == '-' || first == '+') {
-                        s = s.substring(1);
+                    switch (what.charAt(0)) {
+                        case 'm':
+                            field = Calendar.MONTH;
+                            if (what.length() > 1 && what.charAt(1) == 'i') {
+                                field = Calendar.MINUTE;
+                            }
+                            break;
+                        case 'h':
+                            field = Calendar.HOUR_OF_DAY;
+                            break;
+                        case 'd':
+                            field = Calendar.DATE;
+                            break;
+                        case 'w':
+                            field = Calendar.WEEK_OF_YEAR;
+                            break;
+                        case 'y':
+                            field = Calendar.YEAR;
+                            break;
                     }
+                } // (else m.start(3) == -1
 
-                    DateFormat df;
-                    if (locale != null) {
-                        df = DateFormat.getDateInstance(DateFormat.SHORT, locale);
-                    } else {
-                        df = DateFormat.getDateInstance(DateFormat.SHORT);
-                    }
 
-                    df.setLenient(false);
-                    if (tz != null) {
-                        df.setTimeZone(tz);
-                    }
+                GregorianCalendar cal = new GregorianCalendar();
+                if (tz != null) {
+                    cal.setTimeZone(tz);
+                }
 
-                    try {
-                        mDate = df.parse(s);
-                    } catch (java.text.ParseException e) {
-                        // fall back to mm/dd/yyyy
-                        df = DateFormat.getDateInstance(DateFormat.SHORT);
-                        try {
-                            mDate = df.parse(s);
-                        } catch (java.text.ParseException again) {
-                            throw new QueryParserException("INVALID_DATE");
-                        }
-                    }
+                cal.setTime(new Date());
 
-                    Calendar cal = Calendar.getInstance();
-                    if (tz != null) {
-                        cal.setTimeZone(tz);
-                    }
+                // special case 'day' clear all the fields that are lower than the one we're currently operating on...
+                // E.G. "date:-1d"  people really expect that to mean 'midnight to midnight yesterday'
+                switch (field) {
+                    case Calendar.YEAR:
+                        cal.set(Calendar.MONTH, 0);
+                        // fall-through
+                    case Calendar.MONTH:
+                        cal.set(Calendar.DAY_OF_MONTH, 1);
+                        cal.set(Calendar.HOUR_OF_DAY, 0);
+                        cal.set(Calendar.MINUTE, 0);
+                        cal.set(Calendar.SECOND, 0);
+                        break;
+                    case Calendar.WEEK_OF_YEAR:
+                        cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
+                        // fall-through
+                    case Calendar.DATE:
+                        cal.set(Calendar.HOUR_OF_DAY, 0);
+                        // fall-through
+                    case Calendar.HOUR:
+                    case Calendar.HOUR_OF_DAY:
+                        cal.set(Calendar.MINUTE, 0);
+                        // fall-through
+                    case Calendar.MINUTE:
+                        cal.set(Calendar.SECOND, 0);
+                }
 
-                    cal.setTime(mDate);
+                int num = Integer.parseInt(reltime);
+                if (mod.equals("-")) {
+                    num = num * -1;
+                }
 
-                    cal.add(field,1);
-                    mEndDate = cal.getTime();
-                } // else (relative/absolute check)
-            } // else (numeric check)
+                cal.add(field,num);
+                mDate = cal.getTime();
 
-            if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("Parsed date range to: (" +
-                        mDate.toString() + "-" + mEndDate.toString() + ")");
-            }
+                cal.add(field,1);
+                mEndDate = cal.getTime();
+            } else {
+                // ABSOLUTE dates:
+                // use Locale information to parse date correctly
+
+                char first = src.charAt(0);
+                if (first == '-' || first == '+') {
+                    src = src.substring(1);
+                }
+
+                DateFormat df;
+                if (locale != null) {
+                    df = DateFormat.getDateInstance(DateFormat.SHORT, locale);
+                } else {
+                    df = DateFormat.getDateInstance(DateFormat.SHORT);
+                }
+
+                df.setLenient(false);
+                if (tz != null) {
+                    df.setTimeZone(tz);
+                }
+
+                try {
+                    mDate = df.parse(src);
+                } catch (java.text.ParseException e) {
+                    // fall back to mm/dd/yyyy
+                    df = DateFormat.getDateInstance(DateFormat.SHORT);
+                    mDate = df.parse(src);
+                }
+
+                Calendar cal = Calendar.getInstance();
+                if (tz != null) {
+                    cal.setTimeZone(tz);
+                }
+
+                cal.setTime(mDate);
+
+                cal.add(field,1);
+                mEndDate = cal.getTime();
+            } // else (relative/absolute check)
+        } // else (numeric check)
+
+        if (ZimbraLog.index_search.isDebugEnabled()) {
+            ZimbraLog.index_search.debug("Parsed date range to: (" +
+                    mDate.toString() + "-" + mEndDate.toString() + ")");
         }
 
         // convert BEFORE, AFTER and DATE to the right explicit params...
         if (!hasExplicitComparasins) {
-            switch(getQueryType()) {
-                case QueryParser.BEFORE:
+            switch (type) {
+                case BEFORE:
                     explicitLT = true;
                     explicitEq = false;
                     break;
-                case QueryParser.AFTER:
+                case AFTER:
                     explicitGT= true;
                     explicitEq = false;
                     break;
-                case QueryParser.YEAR:
-                case QueryParser.MONTH:
-                case QueryParser.DATE:
-                case QueryParser.APPT_START:
-                case QueryParser.APPT_END:
+                case YEAR:
+                case MONTH:
+                case DATE:
+                case APPT_START:
+                case APPT_END:
                     explicitEq = true;
                     break;
             }
@@ -471,32 +471,10 @@ public final class DateQuery extends Query {
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
-        super.dump(out);
-        out.append(',');
-
-        switch (getQueryType()) {
-            case QueryParser.BEFORE:
-                out.append("BEFORE");
-                break;
-            case QueryParser.AFTER:
-                out.append("AFTER");
-                break;
-            case QueryParser.DATE:
-                out.append("DATE");
-                break;
-            case QueryParser.APPT_START:
-                out.append("APPT-START");
-                break;
-            case QueryParser.APPT_END:
-                out.append("APPT-END");
-                break;
-            default:
-                assert(false);
-        }
-
+    public void dump(StringBuilder out) {
+        out.append("DATE,");
+        out.append(type);
         out.append(',');
         out.append(DateTools.dateToString(mDate, DateTools.Resolution.SECOND));
-        return out.append(')');
     }
 }

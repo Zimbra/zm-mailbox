@@ -25,17 +25,15 @@ import com.zimbra.cs.index.QueryOperation;
  * @author ysasaki
  */
 public class SubQuery extends Query {
-    private static final int SUBQUERY_TOKEN = 9999;
 
-    private List<Query> mSubClauses;
+    private final List<Query> clauses;
 
-    public SubQuery(List<Query> exp) {
-        super(SUBQUERY_TOKEN);
-        mSubClauses = exp;
+    public SubQuery(List<Query> clauses) {
+        this.clauses = clauses;
     }
 
     public List<Query> getSubClauses() {
-        return mSubClauses;
+        return clauses;
     }
 
     @Override
@@ -45,12 +43,18 @@ public class SubQuery extends Query {
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
+    public StringBuilder toString(StringBuilder out) {
         out.append(getModifier());
         out.append('(');
-        for (Query sub : mSubClauses) {
-            sub.dump(out);
-        }
+        dump(out);
         return out.append(')');
     }
+
+    @Override
+    public void dump(StringBuilder out) {
+        for (Query sub : clauses) {
+            sub.toString(out);
+        }
+    }
+
 }

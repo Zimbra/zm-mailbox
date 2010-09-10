@@ -30,9 +30,10 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 abstract class LuceneQuery extends Query {
-    private Mailbox mMailbox;
-    private String mLuceneField;
-    private String mValue;
+    private final Mailbox mailbox;
+    private final String luceneField;
+    private final String queryField;
+    private final String term;
 
     static void addMapping(Map<String, String> map, String[] array, String value) {
         for (int i = array.length - 1; i >= 0; i--) {
@@ -49,31 +50,26 @@ abstract class LuceneQuery extends Query {
         }
     }
 
-    LuceneQuery(Mailbox mbox, int target, String luceneField, String value) {
-        super(target);
-        mMailbox = mbox;
-        mLuceneField = luceneField;
-        mValue = value;
+    LuceneQuery(Mailbox mbox, String queryField, String luceneField, String term) {
+        this.mailbox = mbox;
+        this.queryField = queryField;
+        this.luceneField = luceneField;
+        this.term = term;
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean truth) {
-        TextQueryOperation op = mMailbox.getMailboxIndex().createTextQueryOperation();
-
-        op.addClause(toQueryString(mValue),
-                new TermQuery(new Term(mLuceneField, mValue)), calcTruth(truth));
-
+    public QueryOperation getQueryOperation(boolean bool) {
+        TextQueryOperation op = mailbox.getMailboxIndex().createTextQueryOperation();
+        op.addClause(queryField + term,
+                new TermQuery(new Term(luceneField, term)), evalBool(bool));
         return op;
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
-        super.dump(out);
+    public void dump(StringBuilder out) {
+        out.append(luceneField);
         out.append(',');
-        out.append(mLuceneField);
-        out.append(':');
-        out.append(mValue);
-        return out.append(')');
+        out.append(term);
     }
 
 }

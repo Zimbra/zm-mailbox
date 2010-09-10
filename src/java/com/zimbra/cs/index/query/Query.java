@@ -14,9 +14,12 @@
  */
 package com.zimbra.cs.index.query;
 
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.QueryOperation;
-import com.zimbra.cs.index.query.parser.QueryParser;
 
 /**
  * Abstract base class for queries.
@@ -44,28 +47,36 @@ public abstract class Query {
         }
     }
 
-    private boolean mTruth = true;
-    private Modifier modifier = Modifier.NONE;
-    private int mQueryType;
+    private static final Map<String, String> LUCENE2QUERY =
+        new ImmutableMap.Builder<String, String>()
+        .put(LuceneFields.L_CONTACT_DATA, "contact:")
+        .put(LuceneFields.L_CONTENT, "content:")
+        .put(LuceneFields.L_H_MESSAGE_ID, "msgid:")
+        .put(LuceneFields.L_H_X_ENV_FROM, "envfrom:")
+        .put(LuceneFields.L_H_X_ENV_TO, "envto:")
+        .put(LuceneFields.L_H_FROM, "from:")
+        .put(LuceneFields.L_H_TO, "to:")
+        .put(LuceneFields.L_H_CC, "cc:")
+        .put(LuceneFields.L_H_SUBJECT, "subject:")
+        .put(LuceneFields.L_FILENAME, "filename:")
+        .put(LuceneFields.L_MIMETYPE, "type:")
+        .put(LuceneFields.L_ATTACHMENTS, "attachment:")
+        .put(LuceneFields.L_FIELD, "#")
+        .build();
 
-    Query(int type) {
-        mQueryType = type;
-    }
+    private boolean bool = true;
+    private Modifier modifier = Modifier.NONE;
 
     public final boolean getBool() {
-        return mTruth;
+        return bool;
     }
 
     final void setBool(boolean value) {
-        mTruth = value;
+        bool = value;
     }
 
-    final void setQueryType(int queryType) {
-        mQueryType = queryType;
-    }
-
-    final int getQueryType() {
-        return mQueryType;
+    final boolean evalBool(boolean value) {
+        return modifier == Modifier.MINUS ? !value : value;
     }
 
     public final Modifier getModifier() {
@@ -79,21 +90,21 @@ public abstract class Query {
     /**
      * Reconstructs the query string.
      *
-     * @param src parsed token value
+     * @param term parsed token value
      * @return query string which can be used for proxying
      */
-    final String toQueryString(String src) {
-        String img = unquotedTokenImage[mQueryType];
-        if (img.equals("#")) {
-            int delim = src.indexOf(':');
-            if (delim <= 0 || delim >= src.length() - 2) {
-                return img + src;
+    final String toQueryString(String luceneField, String term) {
+        String field = LUCENE2QUERY.get(luceneField);
+        if (LuceneFields.L_FIELD.equals(luceneField)) {
+            int delim = term.indexOf(':');
+            if (delim <= 0 || delim >= term.length() - 2) {
+                return field + term;
             }
-            StringBuilder buf = new StringBuilder(img);
-            buf.append(src.subSequence(0, delim + 1));
+            StringBuilder buf = new StringBuilder(field);
+            buf.append(term.subSequence(0, delim + 1));
             buf.append('"');
-            for (int i = delim + 1; i < src.length(); i++) {
-                char ch = src.charAt(i);
+            for (int i = delim + 1; i < term.length(); i++) {
+                char ch = term.charAt(i);
                 if (ch == '"') {
                     buf.append("\\\"");
                 } else {
@@ -103,20 +114,52 @@ public abstract class Query {
             buf.append('"');
             return buf.toString();
         } else {
-            return img + src;
+            return field + term;
         }
     }
 
     @Override
     public String toString() {
-        return dump(new StringBuilder()).toString();
+        return toString(new StringBuilder()).toString();
     }
 
-    public StringBuilder dump(StringBuilder out) {
+    /**
+     * {@link StringBuilder} version of {@link #toString()} to efficiently
+     * concatenate multiple query objects.
+     * <p>
+     * Sub classes may override if a special handling is required, such as
+     * conjunction.
+     *
+     * @param out output
+     * @return the same {@link StringBuilder} as the parameter
+     */
+    public StringBuilder toString(StringBuilder out) {
         out.append(modifier);
         out.append("Q(");
-        out.append(QueryTypeString(getQueryType()));
-        return out;
+        dump(out);
+        return out.append(')');
+    }
+
+    /**
+     * Sub classes must implement this method to dump the internal information
+     * for debugging purpose.
+     *
+     * @param out output
+     */
+    abstract void dump(StringBuilder out);
+
+    /**
+     * Convenient method to dump a list of query clauses.
+     *
+     * @param clauses query clauses
+     * @return string representation of the query clauses
+     */
+    public static String toString(List<Query> clauses) {
+        StringBuilder out = new StringBuilder();
+        for (Query clause : clauses) {
+            clause.toString(out);
+        }
+        return out.toString();
     }
 
     /**
@@ -124,71 +167,5 @@ public abstract class Query {
      * of the requested type.
      */
     public abstract QueryOperation getQueryOperation(boolean truth);
-
-    final boolean calcTruth(boolean truth) {
-        if (modifier == Modifier.MINUS) {
-            return !truth;
-        } else {
-            return truth;
-        }
-    }
-
-    final String QueryTypeString(int qType) {
-        switch (qType) {
-            case QueryParser.CONTACT: return LuceneFields.L_CONTACT_DATA;
-            case QueryParser.CONTENT: return LuceneFields.L_CONTENT;
-            case QueryParser.MSGID: return LuceneFields.L_H_MESSAGE_ID;
-            case QueryParser.ENVFROM: return LuceneFields.L_H_X_ENV_FROM;
-            case QueryParser.ENVTO: return LuceneFields.L_H_X_ENV_TO;
-            case QueryParser.FROM: return LuceneFields.L_H_FROM;
-            case QueryParser.TO: return LuceneFields.L_H_TO;
-            case QueryParser.CC: return LuceneFields.L_H_CC;
-            case QueryParser.SUBJECT: return LuceneFields.L_H_SUBJECT;
-            case QueryParser.IN: return "IN";
-            case QueryParser.HAS: return "HAS";
-            case QueryParser.FILENAME: return LuceneFields.L_FILENAME;
-            case QueryParser.TYPE: return LuceneFields.L_MIMETYPE;
-            case QueryParser.ATTACHMENT: return LuceneFields.L_ATTACHMENTS;
-            case QueryParser.IS: return "IS";
-            case QueryParser.DATE: return "DATE";
-            case QueryParser.AFTER: return "AFTER";
-            case QueryParser.BEFORE: return "BEFORE";
-            case QueryParser.APPT_START: return "APPT-START";
-            case QueryParser.APPT_END: return "APPT-END";
-            case QueryParser.SIZE: return "SIZE";
-            case QueryParser.BIGGER: return "BIGGER";
-            case QueryParser.SMALLER: return "SMALLER";
-            case QueryParser.TAG: return "TAG";
-            case QueryParser.MY: return "MY";
-            case QueryParser.MESSAGE: return "MESSAGE";
-            case QueryParser.CONV: return "CONV";
-            case QueryParser.CONV_COUNT: return "CONV-COUNT";
-            case QueryParser.CONV_MINM: return "CONV_MINM";
-            case QueryParser.CONV_MAXM: return "CONV_MAXM";
-            case QueryParser.CONV_START: return "CONV-START";
-            case QueryParser.CONV_END: return "CONV-END";
-            case QueryParser.AUTHOR: return "AUTHOR";
-            case QueryParser.TITLE: return "TITLE";
-            case QueryParser.KEYWORDS: return "KEYWORDS";
-            case QueryParser.COMPANY: return "COMPANY";
-            case QueryParser.METADATA: return "METADATA";
-            case QueryParser.ITEM: return "ITEMID";
-            case QueryParser.FIELD: return LuceneFields.L_FIELD;
-        }
-        return "UNKNOWN:(" + qType + ")";
-    }
-
-    private static String[] unquotedTokenImage;
-    static {
-        unquotedTokenImage = new String[QueryParser.tokenImage.length];
-        for (int i = 0; i < QueryParser.tokenImage.length; i++) {
-            String str = QueryParser.tokenImage[i].substring(1, QueryParser.tokenImage[i].length() - 1);
-            if ("FIELD".equals(str)) {
-                unquotedTokenImage[i] = "#"; // bug 22969 -- problem with proxying field queries
-            } else {
-                unquotedTokenImage[i] = str;
-            }
-        }
-    }
 
 }

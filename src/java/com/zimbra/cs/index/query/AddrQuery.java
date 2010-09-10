@@ -21,7 +21,7 @@ import java.util.Set;
 import org.apache.lucene.analysis.Analyzer;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.index.query.parser.QueryParser;
+import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -46,7 +46,7 @@ public final class AddrQuery extends SubQuery {
         boolean atFirst = true;
 
         if (addrs.contains(Address.FROM)) {
-            clauses.add(new TextQuery(mbox, analyzer, QueryParser.FROM, text));
+            clauses.add(new TextQuery(mbox, analyzer, LuceneFields.L_H_FROM, text));
             atFirst = false;
         }
 
@@ -56,7 +56,7 @@ public final class AddrQuery extends SubQuery {
             } else {
                 clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(mbox, analyzer, QueryParser.TO, text));
+            clauses.add(new TextQuery(mbox, analyzer, LuceneFields.L_H_TO, text));
         }
 
         if (addrs.contains(Address.CC)) {
@@ -65,7 +65,7 @@ public final class AddrQuery extends SubQuery {
             } else {
                 clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(mbox, analyzer, QueryParser.CC, text));
+            clauses.add(new TextQuery(mbox, analyzer, LuceneFields.L_H_CC, text));
         }
 
         return new AddrQuery(clauses);

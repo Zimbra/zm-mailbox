@@ -18,6 +18,7 @@ import org.apache.lucene.analysis.Analyzer;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.DBQueryOperation;
+import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -33,23 +34,24 @@ public final class SubjectQuery extends Query {
     private boolean mEq;
 
     @Override
-    public QueryOperation getQueryOperation(boolean truth) {
+    public QueryOperation getQueryOperation(boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
-        truth = calcTruth(truth);
-
         if (mLt) {
-            op.addRelativeSubject(null, false, mStr, mEq, truth);
+            op.addRelativeSubject(null, false, mStr, mEq, evalBool(bool));
         } else {
-            op.addRelativeSubject(mStr, mEq, null, false, truth);
+            op.addRelativeSubject(mStr, mEq, null, false, evalBool(bool));
         }
-
         return op;
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
-        super.dump(out);
-        return out.append("Subject(");
+    public void dump(StringBuilder out) {
+        out.append("SUBJECT");
+        out.append(mLt ? '<' : '>');
+        if (mEq) {
+            out.append('=');
+        }
+        out.append(mStr);
     }
 
     /**
@@ -58,9 +60,7 @@ public final class SubjectQuery extends Query {
      * This is only invoked for subject queries that start with {@code <} or
      * {@code >}, otherwise we just use the normal TextQuery class.
      */
-    private SubjectQuery(int qType, String text) {
-        super(qType);
-
+    private SubjectQuery(String text) {
         mLt = (text.charAt(0) == '<');
         mEq = false;
         mStr = text.substring(1);
@@ -75,13 +75,13 @@ public final class SubjectQuery extends Query {
         //    throw MailServiceException.PARSE_ERROR("Invalid subject string: "+text, null);
     }
 
-    public static Query create(Mailbox mbox, Analyzer analyzer,
-            int qType, String text) throws ServiceException {
+    public static Query create(Mailbox mbox, Analyzer analyzer, String text)
+        throws ServiceException {
         if (text.length() > 1 && (text.startsWith("<") || text.startsWith(">"))) {
             // real subject query!
-            return new SubjectQuery(qType, text);
+            return new SubjectQuery(text);
         } else {
-            return new TextQuery(mbox, analyzer, qType, text);
+            return new TextQuery(mbox, analyzer, LuceneFields.L_H_SUBJECT, text);
         }
     }
 }

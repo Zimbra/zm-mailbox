@@ -24,7 +24,6 @@ import org.junit.Test;
 
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.index.query.parser.QueryParser;
 
 /**
  * Unit test for {@link DateQuery}.
@@ -43,7 +42,7 @@ public class DateQueryTest {
     @Test
     public void parseDate() throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        DateQuery query = new DateQuery(QueryParser.DATE);
+        DateQuery query = new DateQuery(DateQuery.Type.DATE);
         TimeZone tz = TimeZone.getTimeZone("UTC");
         String expected = "Q(DATE,DATE,20100123000000)";
 
@@ -69,7 +68,7 @@ public class DateQueryTest {
     @Test
     public void parseDateFallback() throws Exception {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        DateQuery query = new DateQuery(QueryParser.DATE);
+        DateQuery query = new DateQuery(DateQuery.Type.DATE);
         query.parseDate("1/23/2010", TimeZone.getTimeZone("UTC"), Locale.GERMAN);
         Assert.assertEquals("Q(DATE,DATE,20100123000000)",
                 query.toString());

@@ -31,9 +31,7 @@ public final class ModseqQuery extends Query {
     private int mValue;
     private Operator mOp;
 
-    public ModseqQuery(int target, String changeId) {
-        super(target);
-
+    public ModseqQuery(String changeId) {
         if (changeId.charAt(0) == '<') {
             if (changeId.charAt(1) == '=') {
                 mOp = Operator.LTEQ;
@@ -57,11 +55,10 @@ public final class ModseqQuery extends Query {
     }
 
     @Override
-    public QueryOperation getQueryOperation(boolean truth) {
+    public QueryOperation getQueryOperation(boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
-        truth = calcTruth(truth);
-
-        long highest = -1, lowest = -1;
+        long highest = -1;
+        long lowest = -1;
         boolean lowestEq = false;
         boolean highestEq = false;
 
@@ -88,17 +85,15 @@ public final class ModseqQuery extends Query {
                 break;
         }
 
-        op.addModSeqClause(lowest, lowestEq, highest, highestEq, truth);
+        op.addModSeqClause(lowest, lowestEq, highest, highestEq, evalBool(bool));
         return op;
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
-        super.dump(out);
-        out.append(',');
+    public void dump(StringBuilder out) {
+        out.append("MODSEQ,");
         out.append(mOp);
         out.append(' ');
         out.append(mValue);
-        return out.append(')');
     }
 }

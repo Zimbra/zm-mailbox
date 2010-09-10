@@ -22,7 +22,7 @@ import org.apache.lucene.analysis.Analyzer;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.index.query.parser.QueryParser;
+import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -52,7 +52,7 @@ public final class MeQuery extends SubQuery {
             } else {
                 clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(mbox, analyzer, QueryParser.TO, acct.getName()));
+            clauses.add(new TextQuery(mbox, analyzer, LuceneFields.L_H_TO, acct.getName()));
         }
         if (addrs.contains(AddrQuery.Address.CC)) {
             if (atFirst) {
@@ -60,7 +60,7 @@ public final class MeQuery extends SubQuery {
             } else {
                 clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(mbox, analyzer, QueryParser.CC, acct.getName()));
+            clauses.add(new TextQuery(mbox, analyzer, LuceneFields.L_H_CC, acct.getName()));
         }
 
         for (String alias : acct.getMailAlias()) {
@@ -70,7 +70,7 @@ public final class MeQuery extends SubQuery {
                 } else {
                     clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
                 }
-                clauses.add(new TextQuery(mbox, analyzer, QueryParser.TO, alias));
+                clauses.add(new TextQuery(mbox, analyzer, LuceneFields.L_H_TO, alias));
             }
             if (addrs.contains(AddrQuery.Address.CC)) {
                 if (atFirst) {
@@ -78,7 +78,7 @@ public final class MeQuery extends SubQuery {
                 } else {
                     clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
                 }
-                clauses.add(new TextQuery(mbox, analyzer, QueryParser.CC, alias));
+                clauses.add(new TextQuery(mbox, analyzer, LuceneFields.L_H_CC, alias));
             }
         }
         return new MeQuery(clauses);

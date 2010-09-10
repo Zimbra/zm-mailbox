@@ -32,8 +32,8 @@ public final class SentQuery extends TagQuery {
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
+    public void dump(StringBuilder out) {
         super.dump(out);
-        return out.append(getBool() ? ",SENT)" : ",RECEIVED)");
+        out.append(getBool() ? ",SENT" : ",RECEIVED");
     }
 }

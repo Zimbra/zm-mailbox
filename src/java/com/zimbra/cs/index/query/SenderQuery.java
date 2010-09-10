@@ -18,6 +18,7 @@ import org.apache.lucene.analysis.Analyzer;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.DBQueryOperation;
+import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -33,23 +34,24 @@ public final class SenderQuery extends Query {
     private boolean mEq;
 
     @Override
-    public QueryOperation getQueryOperation(boolean truth) {
+    public QueryOperation getQueryOperation(boolean bool) {
         DBQueryOperation op = new DBQueryOperation();
-        truth = calcTruth(truth);
-
         if (mLt) {
-            op.addRelativeSender(null, false, mStr, mEq, truth);
+            op.addRelativeSender(null, false, mStr, mEq, evalBool(bool));
         } else {
-            op.addRelativeSender(mStr, mEq, null, false, truth);
+            op.addRelativeSender(mStr, mEq, null, false, evalBool(bool));
         }
-
         return op;
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
-        super.dump(out);
-        return out.append("Sender(");
+    public void dump(StringBuilder out) {
+        out.append("SENDER");
+        out.append(mLt ? '<' : '>');
+        if (mEq) {
+            out.append('=');
+        }
+        out.append(mStr);
     }
 
     /**
@@ -58,9 +60,7 @@ public final class SenderQuery extends Query {
      * This is only invoked for subject queries that start with < or > -- otherwise we just
      * use the normal TextQuery class
      */
-    private SenderQuery(int qType, String text) {
-        super(qType);
-
+    private SenderQuery(String text) {
         mLt = (text.charAt(0) == '<');
         mEq = false;
         mStr = text.substring(1);
@@ -75,12 +75,13 @@ public final class SenderQuery extends Query {
         //                throw MailServiceException.PARSE_ERROR("Invalid sender string: "+text, null);
     }
 
-    public static Query create(Mailbox mbox, Analyzer analyzer,
-            int qType, String text) throws ServiceException {
+    public static Query create(Mailbox mbox, Analyzer analyzer, String text)
+        throws ServiceException {
+
         if (text.length() > 1 && (text.startsWith("<") || text.startsWith(">"))) {
-            return new SenderQuery(qType, text);
+            return new SenderQuery(text);
         } else {
-            return new TextQuery(mbox, analyzer, qType, text);
+            return new TextQuery(mbox, analyzer, LuceneFields.L_H_FROM, text);
         }
     }
 }

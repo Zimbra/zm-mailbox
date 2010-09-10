@@ -30,8 +30,8 @@ public final class RepliedQuery extends TagQuery {
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
+    public void dump(StringBuilder out) {
         super.dump(out);
-        return out.append(getBool() ? ",REPLIED)" : ",UNREPLIED)");
+        out.append(getBool() ? ",REPLIED" : ",UNREPLIED");
     }
 }

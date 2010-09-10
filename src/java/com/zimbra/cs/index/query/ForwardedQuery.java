@@ -30,8 +30,8 @@ public final class ForwardedQuery extends TagQuery {
     }
 
     @Override
-    public StringBuilder dump(StringBuilder out) {
+    public void dump(StringBuilder out) {
         super.dump(out);
-        return out.append(getBool() ? ",FORWARDED)" : ",UNFORWARDED)");
+        out.append(getBool() ? ",FORWARDED" : ",UNFORWARDED");
     }
 }

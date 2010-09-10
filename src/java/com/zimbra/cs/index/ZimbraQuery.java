@@ -900,19 +900,11 @@ public final class ZimbraQuery {
         return union;
     }
 
-    public static String toString(List<Query> clauses) {
-        StringBuilder out = new StringBuilder();
-        for (Query clause : clauses) {
-            clause.dump(out);
-        }
-        return out.toString();
-    }
-
     @Override
     public String toString() {
         StringBuilder out = new StringBuilder("ZQ: ");
         for (Query clause : mClauses) {
-            clause.dump(out);
+            clause.toString(out);
         }
         return out.toString();
     }
