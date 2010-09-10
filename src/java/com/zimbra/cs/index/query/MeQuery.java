@@ -32,37 +32,34 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class MeQuery extends SubQuery {
 
-    MeQuery(int mod, List<Query> exp) {
-        super(mod, exp);
+    MeQuery(List<Query> exp) {
+        super(exp);
     }
 
-    public static Query create(Mailbox mbox,
-            Analyzer analyzer, int mod, int operatorBitmask)
-            throws ServiceException {
+    public static Query create(Mailbox mbox, Analyzer analyzer,
+            int operatorBitmask) throws ServiceException {
         ArrayList<Query> clauses = new ArrayList<Query>();
         Account acct = mbox.getAccount();
         boolean atFirst = true;
         if ((operatorBitmask & AddrQuery.ADDR_BITMASK_FROM) != 0) {
-            clauses.add(new SentQuery(mbox, mod, true));
+            clauses.add(new SentQuery(mbox, true));
             atFirst = false;
         }
         if ((operatorBitmask & AddrQuery.ADDR_BITMASK_TO) != 0) {
             if (atFirst) {
                 atFirst = false;
             } else {
-                clauses.add(new ConjQuery(ConjQuery.OR));
+                clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(mbox, analyzer, mod,
-                    QueryParser.TO, acct.getName()));
+            clauses.add(new TextQuery(mbox, analyzer, QueryParser.TO, acct.getName()));
         }
         if ((operatorBitmask & AddrQuery.ADDR_BITMASK_CC) != 0) {
             if (atFirst) {
                 atFirst = false;
             } else {
-                clauses.add(new ConjQuery(ConjQuery.OR));
+                clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(mbox, analyzer, mod,
-                    QueryParser.CC, acct.getName()));
+            clauses.add(new TextQuery(mbox, analyzer, QueryParser.CC, acct.getName()));
         }
 
         String[] aliases = acct.getMailAlias();
@@ -71,21 +68,19 @@ public final class MeQuery extends SubQuery {
                 if (atFirst) {
                     atFirst = false;
                 } else {
-                    clauses.add(new ConjQuery(ConjQuery.OR));
+                    clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
                 }
-                clauses.add(new TextQuery(mbox, analyzer, mod,
-                        QueryParser.TO, alias));
+                clauses.add(new TextQuery(mbox, analyzer, QueryParser.TO, alias));
             }
             if ((operatorBitmask & AddrQuery.ADDR_BITMASK_CC) != 0) {
                 if (atFirst) {
                     atFirst = false;
                 } else {
-                    clauses.add(new ConjQuery(ConjQuery.OR));
+                    clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
                 }
-                clauses.add(new TextQuery(mbox, analyzer, mod,
-                        QueryParser.CC, alias));
+                clauses.add(new TextQuery(mbox, analyzer, QueryParser.CC, alias));
             }
         }
-        return new MeQuery(mod, clauses);
+        return new MeQuery(clauses);
     }
 }

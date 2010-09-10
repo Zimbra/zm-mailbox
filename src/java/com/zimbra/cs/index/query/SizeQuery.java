@@ -30,8 +30,8 @@ public final class SizeQuery extends Query {
     private String mSizeStr;
     private long mSize;
 
-    public SizeQuery(int mod, int target, String size) throws QueryParserException {
-        super(mod, target);
+    public SizeQuery(int target, String size) throws QueryParserException {
+        super(target);
 
         boolean hasEQ = false;
 

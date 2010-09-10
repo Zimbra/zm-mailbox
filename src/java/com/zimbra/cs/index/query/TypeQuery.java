@@ -25,8 +25,8 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class TypeQuery extends AttachmentQuery {
 
-    public TypeQuery(Mailbox mbox,int mod, String what) {
-        super(mbox, mod, LuceneFields.L_MIMETYPE, what);
+    public TypeQuery(Mailbox mbox, String what) {
+        super(mbox, LuceneFields.L_MIMETYPE, what);
     }
 
 }

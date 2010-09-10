@@ -24,10 +24,9 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 public final class InviteQuery extends TagQuery {
-    public InviteQuery(Mailbox mailbox, int mod, boolean truth)
-        throws ServiceException {
 
-        super(mailbox, mod, "\\Invite", truth);
+    public InviteQuery(Mailbox mailbox, boolean truth) throws ServiceException {
+        super(mailbox, "\\Invite", truth);
     }
 
     @Override

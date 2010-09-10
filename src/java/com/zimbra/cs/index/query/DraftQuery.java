@@ -25,10 +25,8 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class DraftQuery extends TagQuery {
 
-    public DraftQuery(Mailbox mailbox, int mod, boolean truth)
-        throws ServiceException {
-
-        super(mailbox, mod, "\\Draft", truth);
+    public DraftQuery(Mailbox mailbox, boolean truth) throws ServiceException {
+        super(mailbox, "\\Draft", truth);
     }
 
     @Override

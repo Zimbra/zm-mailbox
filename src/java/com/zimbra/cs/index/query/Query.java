@@ -14,14 +14,9 @@
  */
 package com.zimbra.cs.index.query;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.QueryOperation;
 import com.zimbra.cs.index.query.parser.QueryParser;
-import com.zimbra.cs.mailbox.MailServiceException;
 
 /**
  * Abstract base class for queries.
@@ -33,12 +28,27 @@ import com.zimbra.cs.mailbox.MailServiceException;
  * @author ysasaki
  */
 public abstract class Query {
+
+    public enum Modifier {
+        NONE(""), PLUS("+"), MINUS("-");
+
+        private final String symbol;
+
+        private Modifier(String symbol) {
+            this.symbol = symbol;
+        }
+
+        @Override
+        public String toString() {
+            return symbol;
+        }
+    }
+
     private boolean mTruth = true;
-    private int mModifierType;
+    private Modifier modifier = Modifier.NONE;
     private int mQueryType;
 
-    Query(int mod, int type) {
-        mModifierType = mod;
+    Query(int type) {
         mQueryType = type;
     }
 
@@ -56,6 +66,14 @@ public abstract class Query {
 
     final int getQueryType() {
         return mQueryType;
+    }
+
+    public final Modifier getModifier() {
+        return modifier;
+    }
+
+    public final void setModifier(Modifier mod) {
+        modifier = mod;
     }
 
     /**
@@ -89,53 +107,26 @@ public abstract class Query {
         }
     }
 
-    /**
-     * Used by the QueryParser when building up the list of Query terms.
-     *
-     * @param mod
-     */
-    public final void setModifier(int mod) {
-        mModifierType = mod;
-    }
-
     @Override
     public String toString() {
         return dump(new StringBuilder()).toString();
     }
 
     public StringBuilder dump(StringBuilder out) {
-        out.append(modToString());
+        out.append(modifier);
         out.append("Q(");
         out.append(QueryTypeString(getQueryType()));
         return out;
     }
 
     /**
-     * Called by the optimizer, this returns an initialized QueryOperation of the requested type.
-     *
-     * @param type
-     * @param truth
-     * @return
+     * Called by the optimizer, returns an initialized {@link QueryOperation}
+     * of the requested type.
      */
     public abstract QueryOperation getQueryOperation(boolean truth);
 
-    public final boolean isNegated() {
-        return mModifierType == QueryParser.MINUS;
-    }
-
-    final String modToString() {
-        switch(mModifierType) {
-            case QueryParser.PLUS:
-                return "+";
-            case QueryParser.MINUS:
-                return "-";
-            default:
-                return "";
-        }
-    }
-
     final boolean calcTruth(boolean truth) {
-        if (isNegated()) {
+        if (modifier == Modifier.MINUS) {
             return !truth;
         } else {
             return truth;
@@ -188,11 +179,7 @@ public abstract class Query {
     }
 
     private static String[] unquotedTokenImage;
-    private static Map<String, Integer> sTokenImageMap;
-
     static {
-        sTokenImageMap = new HashMap<String,Integer>();
-
         unquotedTokenImage = new String[QueryParser.tokenImage.length];
         for (int i = 0; i < QueryParser.tokenImage.length; i++) {
             String str = QueryParser.tokenImage[i].substring(1, QueryParser.tokenImage[i].length() - 1);
@@ -201,15 +188,7 @@ public abstract class Query {
             } else {
                 unquotedTokenImage[i] = str;
             }
-            sTokenImageMap.put(str, i);
         }
-    }
-
-    public static int lookupQueryTypeFromString(String str) throws ServiceException {
-        Integer toRet = sTokenImageMap.get(str);
-        if (toRet == null)
-            throw MailServiceException.QUERY_PARSE_ERROR(str, null, str, -1, "UNKNOWN_QUERY_TYPE");
-        return toRet.intValue();
     }
 
 }

@@ -15,7 +15,6 @@
 package com.zimbra.cs.index.query;
 
 import com.zimbra.cs.index.QueryOperation;
-import com.zimbra.cs.index.query.parser.QueryParser;
 
 /**
  * Special query that combine queries.
@@ -24,28 +23,38 @@ import com.zimbra.cs.index.query.parser.QueryParser;
  * @author ysasaki
  */
 public final class ConjQuery extends Query {
-    static final int AND = QueryParser.AND;
-    static final int OR = QueryParser.OR;
 
-    public ConjQuery(int qType) {
-        super(0, qType);
+    public enum Conjunction {
+        AND("&&"), OR("||");
+
+        private final String symbol;
+
+        private Conjunction(String symbol) {
+            this.symbol = symbol;
+        }
+
+        @Override
+        public String toString() {
+            return symbol;
+        }
     }
 
-    public boolean isOr() {
-        return getQueryType() == OR;
+    private final Conjunction conjunction;
+
+    public ConjQuery(Conjunction conj) {
+        super(0);
+        conjunction = conj;
+    }
+
+    public Conjunction getConjunction() {
+        return conjunction;
     }
 
     @Override
     public StringBuilder dump(StringBuilder out) {
-        switch (getQueryType()) {
-            case AND:
-                return out.append(" && ");
-            case OR:
-                return out.append(" || ");
-            default:
-                assert(false);
-                return out;
-        }
+        out.append(' ');
+        out.append(conjunction);
+        return out.append(' ');
     }
 
     @Override

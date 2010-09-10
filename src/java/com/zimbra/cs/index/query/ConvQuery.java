@@ -34,8 +34,8 @@ public final class ConvQuery extends Query {
     private ItemId mConvId;
     private Mailbox mMailbox;
 
-    private ConvQuery(Mailbox mbox, int mod, ItemId convId) throws ServiceException {
-        super(mod, QueryParser.CONV);
+    private ConvQuery(Mailbox mbox, ItemId convId) throws ServiceException {
+        super(QueryParser.CONV);
         mMailbox = mbox;
         mConvId = convId;
 
@@ -47,7 +47,7 @@ public final class ConvQuery extends Query {
         }
     }
 
-    public static Query create(Mailbox mbox, int mod, String target)
+    public static Query create(Mailbox mbox, String target)
         throws ServiceException {
 
         ItemId convId = new ItemId(target, mbox.getAccountId());
@@ -56,9 +56,9 @@ public final class ConvQuery extends Query {
             convId = new ItemId(convId.getAccountId(), -1 * convId.getId());
             List<ItemId> iidList = new ArrayList<ItemId>(1);
             iidList.add(convId);
-            return new ItemQuery(mbox, mod, false, false, iidList);
+            return new ItemQuery(mbox, false, false, iidList);
         } else {
-            return new ConvQuery(mbox, mod, convId);
+            return new ConvQuery(mbox, convId);
         }
     }
 

@@ -58,8 +58,8 @@ public final class SubjectQuery extends Query {
      * This is only invoked for subject queries that start with {@code <} or
      * {@code >}, otherwise we just use the normal TextQuery class.
      */
-    private SubjectQuery(int mod, int qType, String text) {
-        super(mod, qType);
+    private SubjectQuery(int qType, String text) {
+        super(qType);
 
         mLt = (text.charAt(0) == '<');
         mEq = false;
@@ -76,12 +76,12 @@ public final class SubjectQuery extends Query {
     }
 
     public static Query create(Mailbox mbox, Analyzer analyzer,
-            int mod, int qType, String text) throws ServiceException {
+            int qType, String text) throws ServiceException {
         if (text.length() > 1 && (text.startsWith("<") || text.startsWith(">"))) {
             // real subject query!
-            return new SubjectQuery(mod, qType, text);
+            return new SubjectQuery(qType, text);
         } else {
-            return new TextQuery(mbox, analyzer, mod, qType, text);
+            return new TextQuery(mbox, analyzer, qType, text);
         }
     }
 }

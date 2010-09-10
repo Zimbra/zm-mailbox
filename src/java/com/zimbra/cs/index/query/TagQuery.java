@@ -31,9 +31,10 @@ public class TagQuery extends Query {
 
     private final Tag mTag;
 
-    public TagQuery(Mailbox mailbox, int mod, String name, boolean truth)
+    public TagQuery(Mailbox mailbox, String name, boolean truth)
         throws ServiceException {
-        super(mod, QueryParser.TAG);
+
+        super(QueryParser.TAG);
         mTag = mailbox.getTagByName(name);
         setBool(truth);
     }

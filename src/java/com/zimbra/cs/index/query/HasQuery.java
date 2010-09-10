@@ -38,8 +38,7 @@ public final class HasQuery extends LuceneQuery {
         addMapping(mMap, new String[] {"url"}, "url");
     }
 
-    public HasQuery(Mailbox mbox, int mod, String what) {
-        super(mbox, mod, QueryParser.HAS, LuceneFields.L_OBJECTS,
-                lookup(mMap, what));
+    public HasQuery(Mailbox mbox, String what) {
+        super(mbox, QueryParser.HAS, LuceneFields.L_OBJECTS, lookup(mMap, what));
     }
 }

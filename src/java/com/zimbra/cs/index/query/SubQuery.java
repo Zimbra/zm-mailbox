@@ -29,8 +29,8 @@ public class SubQuery extends Query {
 
     private List<Query> mSubClauses;
 
-    public SubQuery(int mod, List<Query> exp) {
-        super(mod, SUBQUERY_TOKEN);
+    public SubQuery(List<Query> exp) {
+        super(SUBQUERY_TOKEN);
         mSubClauses = exp;
     }
 
@@ -46,7 +46,7 @@ public class SubQuery extends Query {
 
     @Override
     public StringBuilder dump(StringBuilder out) {
-        out.append(modToString());
+        out.append(getModifier());
         out.append('(');
         for (Query sub : mSubClauses) {
             sub.dump(out);

@@ -38,8 +38,7 @@ public final class ItemQuery extends Query {
     private List<ItemId> mItemIds;
     private Mailbox mMailbox;
 
-    public static Query Create(Mailbox mbox, int mod, String str)
-        throws ServiceException {
+    public static Query create(Mailbox mbox, String str) throws ServiceException {
 
         boolean allQuery = false;
         boolean noneQuery = false;
@@ -62,11 +61,11 @@ public final class ItemQuery extends Query {
             }
         }
 
-        return new ItemQuery(mbox, mod, allQuery, noneQuery, itemIds);
+        return new ItemQuery(mbox, allQuery, noneQuery, itemIds);
     }
 
-    ItemQuery(Mailbox mbox, int mod, boolean all, boolean none, List<ItemId> ids) {
-        super(mod, QueryParser.ITEM);
+    ItemQuery(Mailbox mbox, boolean all, boolean none, List<ItemId> ids) {
+        super(QueryParser.ITEM);
         mIsAllQuery = all;
         mIsNoneQuery = none;
         mItemIds = ids;

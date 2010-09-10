@@ -58,8 +58,8 @@ public final class SenderQuery extends Query {
      * This is only invoked for subject queries that start with < or > -- otherwise we just
      * use the normal TextQuery class
      */
-    private SenderQuery(int mod, int qType, String text) {
-        super(mod, qType);
+    private SenderQuery(int qType, String text) {
+        super(qType);
 
         mLt = (text.charAt(0) == '<');
         mEq = false;
@@ -76,11 +76,11 @@ public final class SenderQuery extends Query {
     }
 
     public static Query create(Mailbox mbox, Analyzer analyzer,
-            int mod, int qType, String text) throws ServiceException {
+            int qType, String text) throws ServiceException {
         if (text.length() > 1 && (text.startsWith("<") || text.startsWith(">"))) {
-            return new SenderQuery(mod, qType, text);
+            return new SenderQuery(qType, text);
         } else {
-            return new TextQuery(mbox, analyzer, mod, qType, text);
+            return new TextQuery(mbox, analyzer, qType, text);
         }
     }
 }

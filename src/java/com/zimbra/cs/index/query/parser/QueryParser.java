@@ -41,6 +41,7 @@ import com.zimbra.cs.index.query.InQuery;
 import com.zimbra.cs.index.query.ItemQuery;
 import com.zimbra.cs.index.query.ModseqQuery;
 import com.zimbra.cs.index.query.Query;
+import com.zimbra.cs.index.query.Query.Modifier;
 import com.zimbra.cs.index.query.SenderQuery;
 import com.zimbra.cs.index.query.SizeQuery;
 import com.zimbra.cs.index.query.SubQuery;
@@ -186,7 +187,7 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
                 case JJTCLAUSE:
                     if (!result.isEmpty()) {
                         if (conj == null) {
-                            result.add(new ConjQuery(AND));
+                            result.add(new ConjQuery(ConjQuery.Conjunction.AND));
                         } else {
                             result.add(conj);
                             conj = null;
@@ -209,73 +210,77 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
         int num = node.jjtGetNumChildren();
         assert(num > 0 && num <= 2);
 
-        int mod = node.jjtGetNumChildren() > 1 ?
-                toModifier((SimpleNode) node.jjtGetChild(0)) : 0;
-
+        Query clause = null;
         SimpleNode child = (SimpleNode) node.jjtGetChild(num - 1);
         switch (child.id) {
             case JJTTEXTCLAUSE:
-                return toTextClause(mod, child);
+                clause = toTextClause(child);
+                break;
             case JJTITEMCLAUSE:
-                return toItemClause(mod, child);
+                clause = toItemClause(child);
+                break;
             case JJTDATECLAUSE:
-                return toDateClause(mod, child);
+                clause = toDateClause(child);
+                break;
             case JJTQUERY:
-                return toSubQuery(mod, child);
+                clause = toSubQuery(child);
+                break;
             case JJTDEFAULTCLAUSE:
-                return toDefaultClause(mod, child);
+                clause = toDefaultClause(child);
+                break;
             default:
                 assert(false);
                 return null;
         }
+        if (node.jjtGetNumChildren() > 1) {
+            clause.setModifier(toModifier((SimpleNode) node.jjtGetChild(0)));
+        }
+        return clause;
     }
 
-    private Query toSubQuery(int mod, SimpleNode node)
+    private Query toSubQuery(SimpleNode node)
         throws QueryParserException, ServiceException {
         assert(node.id == JJTQUERY);
-        return new SubQuery(mod, toQuery(node));
+        return new SubQuery(toQuery(node));
     }
 
-    private Query toTextClause(int mod, SimpleNode node)
+    private Query toTextClause(SimpleNode node)
         throws QueryParserException, ServiceException {
 
         assert(node.id == JJTTEXTCLAUSE);
         assert(node.jjtGetNumChildren() == 1);
 
-        return toTerm(mod, node.jjtGetFirstToken(),
-                (SimpleNode) node.jjtGetChild(0));
+        return toTerm(node.jjtGetFirstToken(), (SimpleNode) node.jjtGetChild(0));
     }
 
-    private Query toDefaultClause(int mod, SimpleNode node)
+    private Query toDefaultClause(SimpleNode node)
         throws QueryParserException, ServiceException {
 
         assert(node.id == JJTDEFAULTCLAUSE);
 
-        return createQuery(mod, Token.newToken(defaultField),
+        return createQuery(Token.newToken(defaultField),
                 node.jjtGetFirstToken(), toString(node));
     }
 
-    private Query toItemClause(int mod, SimpleNode node)
+    private Query toItemClause(SimpleNode node)
         throws QueryParserException, ServiceException {
 
         assert(node.id == JJTITEMCLAUSE);
         assert(node.jjtGetNumChildren() == 1);
 
-        return toTerm(mod, node.jjtGetFirstToken(),
-                (SimpleNode) node.jjtGetChild(0));
+        return toTerm(node.jjtGetFirstToken(), (SimpleNode) node.jjtGetChild(0));
     }
 
-    private Query toDateClause(int mod, SimpleNode node)
+    private Query toDateClause(SimpleNode node)
         throws QueryParserException, ServiceException {
 
         assert(node.id == JJTDATECLAUSE);
         assert(node.jjtGetNumChildren() == 1);
 
-        return toTerm(mod, node.jjtGetFirstToken(),
-                (SimpleNode) node.jjtGetChild(0));
+        return toTerm(node.jjtGetFirstToken(), (SimpleNode) node.jjtGetChild(0));
     }
 
-    private Query toTerm(int mod, Token field, SimpleNode node)
+    private Query toTerm(Token field, SimpleNode node)
         throws QueryParserException, ServiceException {
 
         assert(node.id == JJTDATETERM || node.id == JJTTEXTTERM ||
@@ -283,39 +288,43 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
 
         if (node.jjtGetNumChildren() == 0) {
             Token token = node.jjtGetFirstToken();
-            return createQuery(mod, field, token, toString(node));
+            return createQuery(field, token, toString(node));
         } else {
             List<Query> sub = new LinkedList<Query>();
             ConjQuery conj = null;
-            int submod = 0;
+            Modifier mod = null;
             for (int i = 0; i < node.jjtGetNumChildren(); i++) {
                 SimpleNode child = (SimpleNode) node.jjtGetChild(i);
                 switch (child.id) {
                     case JJTMODIFIER:
-                        submod = toModifier(child);
+                        mod = toModifier(child);
+                        break;
+                    case JJTCONJUNCTION:
+                        conj = toConjunction(child);
                         break;
                     case JJTTEXTTERM:
                     case JJTITEMTERM:
                     case JJTDATETERM:
                         if (!sub.isEmpty()) {
                             if (conj == null) {
-                                sub.add(new ConjQuery(AND));
+                                sub.add(new ConjQuery(ConjQuery.Conjunction.AND));
                             } else {
                                 sub.add(conj);
                                 conj = null;
                             }
                         }
-                        sub.add(toTerm(submod, field, child));
-                        submod = 0;
-                        break;
-                    case JJTCONJUNCTION:
-                        conj = toConjunction(child);
+                        Query term = toTerm(field, child);
+                        if (mod != null) {
+                            term.setModifier(mod);
+                            mod = null;
+                        }
+                        sub.add(term);
                         break;
                     default:
                         assert(false);
                 }
             }
-            return new SubQuery(mod, sub);
+            return new SubQuery(sub);
         }
     }
 
@@ -359,21 +368,28 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
 
     private ConjQuery toConjunction(SimpleNode node) {
         assert(node.id == JJTCONJUNCTION);
-        assert(node.jjtGetFirstToken().kind == AND ||
-                node.jjtGetFirstToken().kind == OR);
-        return new ConjQuery(node.jjtGetFirstToken().kind);
+
+        switch (node.jjtGetFirstToken().kind) {
+            case AND:
+                return new ConjQuery(ConjQuery.Conjunction.AND);
+            case OR:
+                return new ConjQuery(ConjQuery.Conjunction.OR);
+            default:
+                assert(false);
+                return null;
+        }
     }
 
-    private int toModifier(SimpleNode node) {
+    private Query.Modifier toModifier(SimpleNode node) {
         assert(node.id == JJTMODIFIER);
         switch (node.jjtGetFirstToken().kind) {
             case PLUS:
-                return PLUS;
+                return Query.Modifier.PLUS;
             case MINUS:
             case NOT:
-                return MINUS;
+                return Query.Modifier.MINUS;
             default:
-                return 0;
+                return Query.Modifier.NONE;
         }
     }
 
@@ -382,22 +398,22 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
         sortBy = node.jjtGetFirstToken().next.image;
     }
 
-    private Query createQuery(int mod, Token field, Token term, String text)
+    private Query createQuery(Token field, Token term, String text)
         throws QueryParserException, ServiceException {
 
         switch (field.kind) {
           case HAS:
             if (text.equalsIgnoreCase("attachment")) {
-                return new AttachmentQuery(mailbox, mod, "any");
+                return new AttachmentQuery(mailbox, "any");
             } else {
-                return new HasQuery(mailbox, mod, text);
+                return new HasQuery(mailbox, text);
             }
           case ATTACHMENT:
-            return new AttachmentQuery(mailbox, mod, text);
+            return new AttachmentQuery(mailbox, text);
           case TYPE:
-            return new TypeQuery(mailbox, mod, text);
+            return new TypeQuery(mailbox, text);
           case ITEM:
-            return ItemQuery.Create(mailbox, mod, text);
+            return ItemQuery.create(mailbox, text);
           case UNDERID:
           case INID: {
               ItemId iid = null;
@@ -412,34 +428,34 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
               }
               iid = new ItemId(iidStr, (String) null);
               try {
-                  return InQuery.Create(mailbox, mod, iid, subfolderPath, (field.kind == UNDERID));
+                  return InQuery.create(mailbox, iid, subfolderPath, (field.kind == UNDERID));
               } catch (ServiceException e) {
                   // bug: 18623 -- dangling mountpoints create problems with 'is:remote'
                   ZimbraLog.index.debug("Ignoring INID/UNDERID clause b/c of ServiceException", e);
-                  return InQuery.Create(mailbox, mod, InQuery.IN_NO_FOLDER, false);
+                  return InQuery.create(mailbox, InQuery.IN_NO_FOLDER, false);
               }
           }
           case UNDER:
           case IN: {
               Integer folderId = folder2id.get(text.toLowerCase());
               if (folderId != null) {
-                  return InQuery.Create(mailbox, mod, folderId, (field.kind == UNDER));
+                  return InQuery.create(mailbox, folderId, (field.kind == UNDER));
               } else {
-                  return InQuery.Create(mailbox, mod, text, (field.kind == UNDER));
+                  return InQuery.create(mailbox, text, (field.kind == UNDER));
               }
           }
           case TAG:
-              return new TagQuery(mailbox, mod, text, true);
+              return new TagQuery(mailbox, text, true);
           case IS:
               try {
-                  return BuiltInQuery.getQuery(text.toLowerCase(), mailbox, analyzer, mod);
+                  return BuiltInQuery.getQuery(text.toLowerCase(), mailbox, analyzer);
               } catch (IllegalArgumentException e) {
                   throw new QueryParserException("UNKNOWN_TEXT_AFTER_IS", term);
               }
           case CONV:
-              return ConvQuery.create(mailbox, mod, text);
+              return ConvQuery.create(mailbox, text);
           case CONV_COUNT:
-              return ConvCountQuery.create(mod, field.kind, text);
+              return ConvCountQuery.create(field.kind, text);
           case DATE:
           case DAY:
           case WEEK:
@@ -462,12 +478,12 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
               if (Strings.isNullOrEmpty(text)) {
                  throw new QueryParserException("MISSING_TEXT_AFTER_TOFROMCC", term);
               }
-              return AddrQuery.createFromTarget(mailbox, analyzer, mod, field.kind, text);
+              return AddrQuery.createFromTarget(mailbox, analyzer, field.kind, text);
           case FROM:
               if (Strings.isNullOrEmpty(text)) {
                   throw new QueryParserException("MISSING_TEXT_AFTER_TOFROMCC", term);
               }
-              return SenderQuery.create(mailbox, analyzer, mod, field.kind, text);
+              return SenderQuery.create(mailbox, analyzer, field.kind, text);
           case TO:
           case ENVTO:
           case ENVFROM:
@@ -476,17 +492,17 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
                   throw new QueryParserException("MISSING_TEXT_AFTER_TOFROMCC", term);
               }
               if (text.startsWith("@")) {
-                  return new DomainQuery(mailbox, mod, field.kind, text);
+                  return new DomainQuery(mailbox, field.kind, text);
               }
-            return new TextQuery(mailbox, analyzer, mod, field.kind, text);
+            return new TextQuery(mailbox, analyzer, field.kind, text);
           case MODSEQ:
-            return new ModseqQuery(mod, field.kind, text);
+            return new ModseqQuery(field.kind, text);
           case SIZE:
           case BIGGER:
           case SMALLER:
-              return new SizeQuery(mod, field.kind, text);
+              return new SizeQuery(field.kind, text);
           case SUBJECT:
-              return SubjectQuery.create(mailbox, analyzer, mod, field.kind, text);
+              return SubjectQuery.create(mailbox, analyzer, field.kind, text);
           case FIELD:
               int open = field.image.indexOf('[');
               if (open >= 0) {
@@ -498,9 +514,9 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
                   text = field.image.substring(1) + text;
               }
 
-              return new TextQuery(mailbox, analyzer, mod, field.kind, text);
+              return new TextQuery(mailbox, analyzer, field.kind, text);
           default:
-              return new TextQuery(mailbox, analyzer, mod, field.kind, text);
+              return new TextQuery(mailbox, analyzer, field.kind, text);
         }
     }
 }

@@ -25,10 +25,8 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class FlaggedQuery extends TagQuery {
 
-    public FlaggedQuery(Mailbox mailbox, int mod, boolean truth)
-        throws ServiceException {
-
-        super(mailbox, mod, "\\Flagged", truth);
+    public FlaggedQuery(Mailbox mailbox, boolean truth) throws ServiceException {
+        super(mailbox, "\\Flagged", truth);
     }
 
     @Override

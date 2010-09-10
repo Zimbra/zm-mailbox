@@ -31,8 +31,8 @@ public final class DomainQuery extends Query {
     private String mTarget;
     private Mailbox mMailbox;
 
-    public DomainQuery(Mailbox mbox, int mod, int qType, String target) {
-        super(mod, qType);
+    public DomainQuery(Mailbox mbox, int qType, String target) {
+        super(qType);
         mTarget = target;
         mMailbox = mbox;
     }

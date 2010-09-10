@@ -49,8 +49,8 @@ abstract class LuceneQuery extends Query {
         }
     }
 
-    LuceneQuery(Mailbox mbox, int mod, int target, String luceneField, String value) {
-        super(mod, target);
+    LuceneQuery(Mailbox mbox, int target, String luceneField, String value) {
+        super(target);
         mMailbox = mbox;
         mLuceneField = luceneField;
         mValue = value;

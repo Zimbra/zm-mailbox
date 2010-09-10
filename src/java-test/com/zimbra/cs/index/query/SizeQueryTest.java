@@ -40,26 +40,26 @@ public class SizeQueryTest {
 
     @Test
     public void parseSize() throws Exception {
-        SizeQuery query = new SizeQuery(0, 0, "1KB");
+        SizeQuery query = new SizeQuery(0, "1KB");
         Assert.assertEquals("Q(UNKNOWN:(0),1024)", query.toString());
 
-        query = new SizeQuery(0, 0, ">1KB");
+        query = new SizeQuery(0, ">1KB");
         Assert.assertEquals("Q(BIGGER,1024)", query.toString());
 
-        query = new SizeQuery(0, 0, "<1KB");
+        query = new SizeQuery(0, "<1KB");
         Assert.assertEquals("Q(SMALLER,1024)", query.toString());
 
-        query = new SizeQuery(0, 0, ">=1KB");
+        query = new SizeQuery(0, ">=1KB");
         Assert.assertEquals("Q(BIGGER,1023)", query.toString());
 
-        query = new SizeQuery(0, 0, "<=1KB");
+        query = new SizeQuery(0, "<=1KB");
         Assert.assertEquals("Q(SMALLER,1025)", query.toString());
 
-        query = new SizeQuery(0, 0, "1 KB");
+        query = new SizeQuery(0, "1 KB");
         Assert.assertEquals("Q(UNKNOWN:(0),1024)", query.toString());
 
         try {
-            query = new SizeQuery(0, 0, "x KB");
+            query = new SizeQuery(0, "x KB");
             Assert.fail();
         } catch (QueryParserException expected) {
         }

@@ -48,11 +48,11 @@ public class AttachmentQuery extends LuceneQuery {
         addMapping(mMap, new String[] {"text", "text/*"}, "text");
     }
 
-    public AttachmentQuery(Mailbox mbox, int mod, String what) {
-        super(mbox, mod, QueryParser.TYPE, LuceneFields.L_ATTACHMENTS, lookup(mMap, what));
+    public AttachmentQuery(Mailbox mbox, String what) {
+        super(mbox, QueryParser.TYPE, LuceneFields.L_ATTACHMENTS, lookup(mMap, what));
     }
 
-    AttachmentQuery(Mailbox mbox, int mod, String luceneField, String what) {
-        super(mbox, mod, QueryParser.TYPE, luceneField, lookup(mMap, what));
+    AttachmentQuery(Mailbox mbox, String luceneField, String what) {
+        super(mbox, QueryParser.TYPE, luceneField, lookup(mMap, what));
     }
 }

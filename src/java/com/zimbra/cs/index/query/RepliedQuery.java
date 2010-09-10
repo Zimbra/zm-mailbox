@@ -25,10 +25,8 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class RepliedQuery extends TagQuery {
 
-    public RepliedQuery(Mailbox mailbox, int mod, boolean truth)
-        throws ServiceException {
-
-        super(mailbox, mod, "\\Answered", truth);
+    public RepliedQuery(Mailbox mailbox, boolean truth) throws ServiceException {
+        super(mailbox, "\\Answered", truth);
     }
 
     @Override

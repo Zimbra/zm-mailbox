@@ -14,11 +14,11 @@
  */
 package com.zimbra.cs.index.query;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.lucene.analysis.Analyzer;
 
+import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.service.ServiceException;
 
 import com.zimbra.cs.index.query.parser.QueryParser;
@@ -37,167 +37,162 @@ public abstract class BuiltInQuery {
     private BuiltInQuery() {
     }
 
-    abstract Query create(Mailbox mailbox, Analyzer analyzer,
-            int mod) throws ServiceException;
+    abstract Query create(Mailbox mailbox, Analyzer analyzer) throws ServiceException;
 
     public static Query getQuery(String name, Mailbox mailbox,
-            Analyzer analyzer, int mod) throws ServiceException {
+            Analyzer analyzer) throws ServiceException {
         BuiltInQuery query = builtInQueries.get(name);
         if (query != null) {
-            return query.create(mailbox, analyzer, mod);
+            return query.create(mailbox, analyzer);
         } else {
             throw new IllegalArgumentException();
         }
     }
 
     private static final Map<String, BuiltInQuery> builtInQueries =
-        new HashMap<String, BuiltInQuery>();
-    static {
-        builtInQueries.put("read", new BuiltInQuery() {
+        new ImmutableMap.Builder<String, BuiltInQuery>()
+        .put("read", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return new ReadQuery(mbox, mod, true);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return new ReadQuery(mbox, true);
             }
-        });
-        builtInQueries.put("unread", new BuiltInQuery() {
+        })
+        .put("unread", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return new ReadQuery(mbox, mod, false);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return new ReadQuery(mbox, false);
             }
-        });
-        builtInQueries.put("flagged", new BuiltInQuery() {
+        })
+        .put("flagged", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return new FlaggedQuery(mbox, mod, true);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return new FlaggedQuery(mbox, true);
             }
-        });
-        builtInQueries.put("unflagged", new BuiltInQuery() {
+        })
+        .put("unflagged", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return new FlaggedQuery(mbox, mod, false);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return new FlaggedQuery(mbox, false);
             }
-        });
-        builtInQueries.put("draft", new BuiltInQuery() {
+        })
+        .put("draft", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return new DraftQuery(mbox, mod, true);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return new DraftQuery(mbox, true);
             }
-        });
-        builtInQueries.put("received", new BuiltInQuery() {
+        })
+        .put("received", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return new SentQuery(mbox, mod, false);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return new SentQuery(mbox, false);
             }
-        });
-        builtInQueries.put("replied", new BuiltInQuery() {
+        })
+        .put("replied", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return new RepliedQuery(mbox, mod, true);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return new RepliedQuery(mbox, true);
             }
-        });
-        builtInQueries.put("unreplied", new BuiltInQuery() {
+        })
+        .put("unreplied", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return new RepliedQuery(mbox, mod, false);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return new RepliedQuery(mbox, false);
             }
-        });
-        builtInQueries.put("forwarded", new BuiltInQuery() {
+        })
+        .put("forwarded", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return new ForwardedQuery(mbox, mod, true);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return new ForwardedQuery(mbox, true);
             }
-        });
-        builtInQueries.put("unforwarded", new BuiltInQuery() {
+        })
+        .put("unforwarded", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return new ForwardedQuery(mbox, mod, false);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return new ForwardedQuery(mbox, false);
             }
-        });
-        builtInQueries.put("invite", new BuiltInQuery() {
+        })
+        .put("invite", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return new InviteQuery(mbox, mod, true);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return new InviteQuery(mbox, true);
             }
-        });
-        builtInQueries.put("anywhere", new BuiltInQuery() {
+        })
+        .put("anywhere", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return InQuery.Create(mbox, mod, InQuery.IN_ANY_FOLDER, false);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return InQuery.create(mbox, InQuery.IN_ANY_FOLDER, false);
             }
-        });
-        builtInQueries.put("local", new BuiltInQuery() {
+        })
+        .put("local", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return InQuery.Create(mbox, mod, InQuery.IN_LOCAL_FOLDER, false);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return InQuery.create(mbox, InQuery.IN_LOCAL_FOLDER, false);
             }
-        });
-        builtInQueries.put("remote", new BuiltInQuery() {
+        })
+        .put("remote", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return InQuery.Create(mbox, mod, InQuery.IN_REMOTE_FOLDER, true);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return InQuery.create(mbox, InQuery.IN_REMOTE_FOLDER, true);
             }
-        });
-        builtInQueries.put("solo", new BuiltInQuery() {
+        })
+        .put("solo", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
                 //TODO: don't refer a constant
-                return ConvCountQuery.create(mod, QueryParser.CONV_COUNT, "1");
+                return ConvCountQuery.create(QueryParser.CONV_COUNT, "1");
             }
-        });
-        // send by me
-        builtInQueries.put("sent", new BuiltInQuery() {
+        })
+        .put("sent", new BuiltInQuery() { // send by me
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return new SentQuery(mbox, mod, true);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return new SentQuery(mbox, true);
             }
-        });
-        builtInQueries.put("tome", new BuiltInQuery() {
+        })
+        .put("tome", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return MeQuery.create(mbox, analyze, mod, AddrQuery.ADDR_BITMASK_TO);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return MeQuery.create(mbox, analyze, AddrQuery.ADDR_BITMASK_TO);
             }
-        });
-        // sent by me
-        builtInQueries.put("fromme", new BuiltInQuery() {
+        })
+        .put("fromme", new BuiltInQuery() { // sent by me
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return new SentQuery(mbox, mod, true);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return new SentQuery(mbox, true);
             }
-        });
-        builtInQueries.put("ccme",  new BuiltInQuery() {
+        })
+        .put("ccme", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return MeQuery.create(mbox, analyze, mod, AddrQuery.ADDR_BITMASK_CC);
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return MeQuery.create(mbox, analyze, AddrQuery.ADDR_BITMASK_CC);
             }
-        });
-        builtInQueries.put("tofromme", new BuiltInQuery() {
+        })
+        .put("tofromme", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return MeQuery.create(mbox, analyze, mod,
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return MeQuery.create(mbox, analyze,
                         AddrQuery.ADDR_BITMASK_TO | AddrQuery.ADDR_BITMASK_FROM);
             }
-        });
-        builtInQueries.put("toccme", new BuiltInQuery() {
+        })
+        .put("toccme", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return MeQuery.create(mbox, analyze, mod,
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return MeQuery.create(mbox, analyze,
                         AddrQuery.ADDR_BITMASK_TO | AddrQuery.ADDR_BITMASK_CC);
             }
-        });
-        builtInQueries.put("fromccme", new BuiltInQuery() {
+        })
+        .put("fromccme", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return MeQuery.create(mbox, analyze, mod,
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return MeQuery.create(mbox, analyze,
                         AddrQuery.ADDR_BITMASK_FROM | AddrQuery.ADDR_BITMASK_CC);
             }
-        });
-        builtInQueries.put("tofromccme", new BuiltInQuery() {
+        })
+        .put("tofromccme", new BuiltInQuery() {
             @Override
-            Query create(Mailbox mbox, Analyzer analyze, int mod) throws ServiceException {
-                return MeQuery.create(mbox, analyze, mod,
+            Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
+                return MeQuery.create(mbox, analyze,
                         AddrQuery.ADDR_BITMASK_TO | AddrQuery.ADDR_BITMASK_FROM | AddrQuery.ADDR_BITMASK_CC);
             }
-        });
-    }
-
+        })
+        .build();
 }

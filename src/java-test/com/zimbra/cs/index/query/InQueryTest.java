@@ -44,17 +44,16 @@ public class InQueryTest {
     public void inAnyFolder() throws Exception {
         Mailbox mbox = new MockMailboxManager().getMailboxByAccountId("0");
 
-        Query query = InQuery.Create(mbox, 0,
-                new ItemId("0", 1), null, true);
+        Query query = InQuery.create(mbox, new ItemId("0", 1), null, true);
         Assert.assertEquals("Q(IN,UNDER:ANY_FOLDER)", query.toString());
 
-        query = InQuery.Create(mbox, 0, new ItemId("0", 1), null, false);
+        query = InQuery.create(mbox, new ItemId("0", 1), null, false);
         Assert.assertEquals("Q(IN,IN:1)", query.toString());
 
-        query = InQuery.Create(mbox, 0, new ItemId("1", 1), null, true);
+        query = InQuery.create(mbox, new ItemId("1", 1), null, true);
         Assert.assertEquals("Q(IN,UNDER:1:1)", query.toString());
 
-        query = InQuery.Create(mbox, 0, new ItemId("1", 1), null, false);
+        query = InQuery.create(mbox, new ItemId("1", 1), null, false);
         Assert.assertEquals("Q(IN,IN:1:1)", query.toString());
     }
 

@@ -29,9 +29,9 @@ public final class ConvCountQuery extends Query {
     private int mHighestCount;
     private boolean mHigherEq;
 
-    private ConvCountQuery(int mod, int qType, int lowestCount,
+    private ConvCountQuery(int qType, int lowestCount,
             boolean lowerEq, int highestCount, boolean higherEq) {
-        super(mod, qType);
+        super(qType);
 
         mLowestCount = lowestCount;
         mLowerEq = lowerEq;
@@ -59,7 +59,7 @@ public final class ConvCountQuery extends Query {
         return op;
     }
 
-    public static Query create(int mod, int qType, String str) {
+    public static Query create(int qType, String str) {
         if (str.charAt(0) == '<') {
             boolean eq = false;
             if (str.charAt(1) == '=') {
@@ -69,7 +69,7 @@ public final class ConvCountQuery extends Query {
                 str = str.substring(1);
             }
             int num = Integer.parseInt(str);
-            return new ConvCountQuery(mod, qType, -1, false, num, eq);
+            return new ConvCountQuery(qType, -1, false, num, eq);
         } else if (str.charAt(0) == '>') {
             boolean eq = false;
             if (str.charAt(1) == '=') {
@@ -79,10 +79,10 @@ public final class ConvCountQuery extends Query {
                 str = str.substring(1);
             }
             int num = Integer.parseInt(str);
-            return new ConvCountQuery(mod, qType, num, eq, -1, false);
+            return new ConvCountQuery(qType, num, eq, -1, false);
         } else {
             int num = Integer.parseInt(str);
-            return new ConvCountQuery(mod, qType, num, true, num, true);
+            return new ConvCountQuery(qType, num, true, num, true);
         }
     }
 }

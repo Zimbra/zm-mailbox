@@ -355,7 +355,7 @@ public final class ZimbraQuery {
 
             for (Query q : clauses) {
                 if (q instanceof ConjQuery) {
-                    if (((ConjQuery) q).isOr()) {
+                    if (((ConjQuery) q).getConjunction() == ConjQuery.Conjunction.OR) {
                         cur = new OperatorNode(STATE_AND);
                         top.add(cur);
                     }
@@ -363,7 +363,7 @@ public final class ZimbraQuery {
                     if (q instanceof SubQuery) {
                         SubQuery sq = (SubQuery) q;
                         Node subTree = build(sq.getSubClauses());
-                        subTree.setTruth(!sq.isNegated());
+                        subTree.setTruth(sq.getModifier() != Query.Modifier.MINUS);
                         cur.add(subTree);
                     } else {
                         cur.add(new ThingNode(q));

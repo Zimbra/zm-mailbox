@@ -69,9 +69,10 @@ public final class TextQuery extends Query {
      * which wildcards the last term.
      * @throws ServiceException
      */
-    public TextQuery(Mailbox mbox, Analyzer analyzer, int mod,
-            int qType, String text) throws ServiceException {
-        super(mod, qType);
+    public TextQuery(Mailbox mbox, Analyzer analyzer, int qType, String text)
+        throws ServiceException {
+
+        super(qType);
 
         if (mbox == null) {
             throw new IllegalArgumentException(

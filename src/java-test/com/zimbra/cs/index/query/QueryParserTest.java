@@ -61,6 +61,21 @@ public class QueryParserTest {
     }
 
     @Test
+    public void modifier() throws Exception {
+        String src = "+content:zimbra";
+        Assert.assertEquals("+Q(l.content,zimbra)",
+                ZimbraQuery.toString(parser.parse(src)));
+
+        src = "-content:zimbra";
+        Assert.assertEquals("-Q(l.content,zimbra)",
+                ZimbraQuery.toString(parser.parse(src)));
+
+        src = "not content:zimbra";
+        Assert.assertEquals("-Q(l.content,zimbra)",
+                ZimbraQuery.toString(parser.parse(src)));
+    }
+
+    @Test
     public void sortBy() throws Exception {
         String src = "foo sort:score and bar";
         Assert.assertEquals("Q(l.content,foo) && Q(l.content,bar)",

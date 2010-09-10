@@ -46,7 +46,7 @@ public final class DateQuery extends Query {
     private boolean mHigherEq;
 
     public DateQuery(int qType) {
-        super(0, qType);
+        super(qType);
     }
 
     public long getLowestTime() {

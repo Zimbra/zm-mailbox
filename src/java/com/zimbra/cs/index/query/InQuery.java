@@ -48,38 +48,35 @@ public final class InQuery extends Query {
     private Integer mSpecialTarget = null;
     private boolean mIncludeSubfolders = false;
 
-    public static Query Create(Mailbox mailbox, int mod, Integer folderId,
+    public static Query create(Mailbox mailbox, Integer folderId,
             boolean includeSubfolders) throws ServiceException {
         if (folderId < 0) {
-            return new InQuery(null, null, null, folderId,
-                    includeSubfolders, mod);
+            return new InQuery(null, null, null, folderId, includeSubfolders);
         } else if (includeSubfolders &&
                 folderId == Mailbox.ID_FOLDER_USER_ROOT) {
-            return new InQuery(null, null, null, IN_ANY_FOLDER,
-                    includeSubfolders, mod);
+            return new InQuery(null, null, null, IN_ANY_FOLDER, includeSubfolders);
         } else {
             Folder folder = mailbox.getFolderById(null, folderId.intValue());
-            return new InQuery(folder, null, null, null,
-                    includeSubfolders, mod);
+            return new InQuery(folder, null, null, null, includeSubfolders);
         }
     }
 
-    public static Query Create(Mailbox mailbox, int mod, String folderName,
+    public static Query create(Mailbox mailbox, String folderName,
             boolean includeSubfolders) throws ServiceException {
         Pair<Folder, String> result = mailbox.getFolderByPathLongestMatch(
                 null, Mailbox.ID_FOLDER_USER_ROOT, folderName);
-        return recursiveResolve(mailbox, mod, result.getFirst(),
-                result.getSecond(), includeSubfolders);
+        return recursiveResolve(mailbox, result.getFirst(), result.getSecond(),
+                includeSubfolders);
     }
 
-    public static Query Create(Mailbox mailbox, int mod, ItemId iid,
+    public static Query create(Mailbox mailbox, ItemId iid,
             String subfolderPath, boolean includeSubfolders) throws ServiceException {
 
         if (iid.belongsTo(mailbox)) { // local
             if (includeSubfolders &&
                     iid.getId() == Mailbox.ID_FOLDER_USER_ROOT) {
                 return new InQuery(null, iid, subfolderPath, IN_ANY_FOLDER,
-                        includeSubfolders, mod);
+                        includeSubfolders);
             }
             // find the base folder
             Pair<Folder, String> result;
@@ -90,11 +87,10 @@ public final class InQuery extends Query {
                 Folder f = mailbox.getFolderById(null, iid.getId());
                 result = new Pair<Folder, String>(f, null);
             }
-            return recursiveResolve(mailbox, mod, result.getFirst(),
+            return recursiveResolve(mailbox, result.getFirst(),
                     result.getSecond(), includeSubfolders);
         } else { // remote
-            return new InQuery(null, iid, subfolderPath, null,
-                    includeSubfolders, mod);
+            return new InQuery(null, iid, subfolderPath, null, includeSubfolders);
         }
     }
 
@@ -102,7 +98,7 @@ public final class InQuery extends Query {
      * Resolve through local mountpoints until we get to the actual folder,
      * or until we get to a remote folder.
      */
-    private static Query recursiveResolve(Mailbox mailbox, int mod,
+    private static Query recursiveResolve(Mailbox mailbox,
             Folder baseFolder, String subfolderPath,
             boolean includeSubfolders) throws ServiceException {
 
@@ -111,31 +107,29 @@ public final class InQuery extends Query {
                 throw MailServiceException.NO_SUCH_FOLDER(
                         baseFolder.getPath() + "/" + subfolderPath);
             }
-            return new InQuery(baseFolder, null, null, null,
-                    includeSubfolders, mod);
+            return new InQuery(baseFolder, null, null, null, includeSubfolders);
         } else {
             Mountpoint mpt = (Mountpoint) baseFolder;
             if (mpt.isLocal()) { // local
                 if (subfolderPath == null || subfolderPath.length() == 0) {
                     return new InQuery(baseFolder, null, null, null,
-                            includeSubfolders, mod);
+                            includeSubfolders);
                 } else {
                     Folder newBase = mailbox.getFolderById(null,
                             mpt.getRemoteId());
-                    return recursiveResolve(mailbox, mod,
-                            newBase, subfolderPath, includeSubfolders);
+                    return recursiveResolve(mailbox, newBase, subfolderPath,
+                            includeSubfolders);
                 }
             } else { // remote
                 return new InQuery(null, mpt.getTarget(), subfolderPath,
-                        null, includeSubfolders, mod);
+                        null, includeSubfolders);
             }
         }
     }
 
-    private InQuery(Folder folder, ItemId remoteId,
-            String subfolderPath, Integer specialTarget,
-            boolean includeSubfolders, int mod) {
-        super(mod, QueryParser.IN);
+    private InQuery(Folder folder, ItemId remoteId, String subfolderPath,
+            Integer specialTarget,  boolean includeSubfolders) {
+        super(QueryParser.IN);
         mFolder = folder;
         mRemoteId = remoteId;
         mSubfolderPath = subfolderPath;

@@ -24,10 +24,9 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 public final class ReadQuery extends TagQuery {
-    public ReadQuery(Mailbox mailbox, int mod, boolean truth)
-        throws ServiceException {
 
-        super(mailbox, mod, "\\Unread", !truth);
+    public ReadQuery(Mailbox mailbox, boolean truth) throws ServiceException {
+        super(mailbox, "\\Unread", !truth);
     }
 
     @Override

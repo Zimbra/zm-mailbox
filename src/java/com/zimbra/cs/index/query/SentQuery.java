@@ -24,10 +24,11 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 public final class SentQuery extends TagQuery {
-    public SentQuery(Mailbox mailbox, int mod, boolean truth)
+
+    public SentQuery(Mailbox mailbox, boolean truth)
         throws ServiceException {
 
-        super(mailbox, mod, "\\Sent", truth);
+        super(mailbox, "\\Sent", truth);
     }
 
     @Override

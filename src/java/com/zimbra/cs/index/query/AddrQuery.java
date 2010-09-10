@@ -36,12 +36,12 @@ public final class AddrQuery extends SubQuery {
     public static final int ADDR_BITMASK_TO =   0x2;
     public static final int ADDR_BITMASK_CC =   0x4;
 
-    private AddrQuery(int mod, List<Query> exp) {
-        super(mod, exp);
+    private AddrQuery(List<Query> exp) {
+        super(exp);
     }
 
-    public static Query createFromTarget(Mailbox mbox,
-            Analyzer analyzer, int mod, int target, String text)
+    public static Query createFromTarget(Mailbox mbox, Analyzer analyzer,
+            int target, String text)
             throws ServiceException {
         int bitmask = 0;
         switch (target) {
@@ -58,35 +58,34 @@ public final class AddrQuery extends SubQuery {
                 bitmask = ADDR_BITMASK_TO | ADDR_BITMASK_FROM | ADDR_BITMASK_CC;
                 break;
         }
-        return createFromBitmask(mbox, analyzer, mod, text, bitmask);
+        return createFromBitmask(mbox, analyzer, text, bitmask);
     }
 
-    public static Query createFromBitmask(Mailbox mbox,
-            Analyzer analyzer, int mod, String text,
-            int operatorBitmask) throws ServiceException {
+    public static Query createFromBitmask(Mailbox mbox, Analyzer analyzer,
+            String text, int operatorBitmask) throws ServiceException {
         ArrayList<Query> clauses = new ArrayList<Query>();
         boolean atFirst = true;
 
         if ((operatorBitmask & ADDR_BITMASK_FROM) !=0) {
-            clauses.add(new TextQuery(mbox, analyzer, mod, QueryParser.FROM, text));
+            clauses.add(new TextQuery(mbox, analyzer, QueryParser.FROM, text));
             atFirst = false;
         }
         if ((operatorBitmask & ADDR_BITMASK_TO) != 0) {
             if (atFirst) {
                 atFirst = false;
             } else {
-                clauses.add(new ConjQuery(ConjQuery.OR));
+                clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(mbox, analyzer, mod, QueryParser.TO, text));
+            clauses.add(new TextQuery(mbox, analyzer, QueryParser.TO, text));
         }
         if ((operatorBitmask & ADDR_BITMASK_CC) != 0) {
             if (atFirst) {
                 atFirst = false;
             } else {
-                clauses.add(new ConjQuery(ConjQuery.OR));
+                clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
             }
-            clauses.add(new TextQuery(mbox, analyzer, mod, QueryParser.CC, text));
+            clauses.add(new TextQuery(mbox, analyzer, QueryParser.CC, text));
         }
-        return new AddrQuery(mod, clauses);
+        return new AddrQuery(clauses);
     }
 }

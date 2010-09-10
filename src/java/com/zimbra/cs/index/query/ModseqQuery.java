@@ -31,8 +31,8 @@ public final class ModseqQuery extends Query {
     private int mValue;
     private Operator mOp;
 
-    public ModseqQuery(int mod, int target, String changeId) {
-        super(mod, target);
+    public ModseqQuery(int target, String changeId) {
+        super(target);
 
         if (changeId.charAt(0) == '<') {
             if (changeId.charAt(1) == '=') {

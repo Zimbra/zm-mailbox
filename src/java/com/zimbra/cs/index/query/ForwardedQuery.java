@@ -25,10 +25,8 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class ForwardedQuery extends TagQuery {
 
-    public ForwardedQuery(Mailbox mailbox, int mod, boolean truth)
-        throws ServiceException {
-
-        super(mailbox, mod, "\\Forwarded", truth);
+    public ForwardedQuery(Mailbox mailbox, boolean truth) throws ServiceException {
+        super(mailbox, "\\Forwarded", truth);
     }
 
     @Override
