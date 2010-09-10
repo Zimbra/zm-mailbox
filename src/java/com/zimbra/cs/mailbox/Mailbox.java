@@ -6463,35 +6463,36 @@ public class Mailbox {
     private synchronized boolean purgeMessages(OperationContext octxt, Account acct, Integer maxItemsPerFolder) throws ServiceException {
         if (ZimbraLog.purge.isDebugEnabled()) {
             ZimbraLog.purge.debug("System retention policy: Trash=%s, Junk=%s, All messages=%s",
-                acct.getAttr(Provisioning.A_zimbraMailTrashLifetime),
-                acct.getAttr(Provisioning.A_zimbraMailSpamLifetime),
-                acct.getAttr(Provisioning.A_zimbraMailMessageLifetime));
+                acct.getMailTrashLifetimeAsString(),
+                acct.getMailSpamLifetimeAsString(),
+                acct.getMailMessageLifetimeAsString());
             ZimbraLog.purge.debug("User-specified retention policy: Inbox read=%s, Inbox unread=%s, Sent=%s, Junk=%s, Trash=%s",
-                acct.getAttr(Provisioning.A_zimbraPrefInboxReadLifetime),
-                acct.getAttr(Provisioning.A_zimbraPrefInboxUnreadLifetime),
-                acct.getAttr(Provisioning.A_zimbraPrefSentLifetime),
-                acct.getAttr(Provisioning.A_zimbraPrefJunkLifetime),
-                acct.getAttr(Provisioning.A_zimbraPrefTrashLifetime));
+                acct.getPrefInboxReadLifetimeAsString(),
+                acct.getPrefInboxUnreadLifetimeAsString(),
+                acct.getPrefSentLifetimeAsString(),
+                acct.getPrefJunkLifetimeAsString(),
+                acct.getPrefTrashLifetimeAsString());
         }
 
-        int globalTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / 1000);
-        int systemTrashTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailTrashLifetime, 0) / 1000);
-        int systemJunkTimeout  = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailSpamLifetime, 0) / 1000);
+        int globalTimeout = (int) (acct.getMailMessageLifetime() / 1000);
+        int systemTrashTimeout = (int) (acct.getMailTrashLifetime() / 1000);
+        int systemJunkTimeout = (int) (acct.getMailSpamLifetime() / 1000);
 
-        int userInboxReadTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraPrefInboxReadLifetime, 0) / 1000);
-        int userInboxUnreadTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraPrefInboxUnreadLifetime, 0) / 1000);
-        int userTrashTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraPrefTrashLifetime, 0) / 1000);
-        int userJunkTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraPrefJunkLifetime, 0) / 1000);
-        int userSentTimeout = (int) (acct.getTimeInterval(Provisioning.A_zimbraPrefSentLifetime, 0) / 1000);
+        int userInboxReadTimeout = (int) (acct.getPrefInboxReadLifetime() / 1000);
+        int userInboxUnreadTimeout = (int) (acct.getPrefInboxUnreadLifetime() / 1000);
+        int userTrashTimeout = (int) (acct.getPrefTrashLifetime() / 1000);
+        int userJunkTimeout = (int) (acct.getPrefJunkLifetime() / 1000);
+        int userSentTimeout = (int) (acct.getPrefSentLifetime() / 1000);
 
         int trashTimeout = pickTimeout(systemTrashTimeout, userTrashTimeout);
-        int junkTimeout = pickTimeout(systemJunkTimeout, userJunkTimeout);
+        int spamTimeout = pickTimeout(systemJunkTimeout, userJunkTimeout);
 
-        if (globalTimeout <= 0 && trashTimeout <= 0 && junkTimeout <= 0 &&
+        if (globalTimeout <= 0 && trashTimeout <= 0 && spamTimeout <= 0 &&
             userInboxReadTimeout <= 0 && userInboxReadTimeout <= 0 &&
-            userInboxUnreadTimeout <= 0 && userSentTimeout <= 0)
-            // Nothing to do
+            userInboxUnreadTimeout <= 0 && userSentTimeout <= 0) {
+            ZimbraLog.purge.debug("Retention policy does not require purge.");
             return true;
+        }
 
         ZimbraLog.purge.info("Purging messages.");
 
@@ -6510,7 +6511,7 @@ public class Mailbox {
 
             // get the folders we're going to be purging
             Folder trash = getFolderById(ID_FOLDER_TRASH);
-            Folder junk  = getFolderById(ID_FOLDER_SPAM);
+            Folder spam  = getFolderById(ID_FOLDER_SPAM);
             Folder sent = getFolderById(ID_FOLDER_SENT);
             Folder inbox = getFolderById(ID_FOLDER_INBOX);
 
@@ -6527,10 +6528,11 @@ public class Mailbox {
                 ZimbraLog.purge.debug("Purged %d messages from Trash", numPurged);
                 purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
             }
-            if (junkTimeout > 0) {
-                int numPurged = Folder.purgeMessages(this, junk, getOperationTimestamp() - junkTimeout, null, false, false, maxItemsPerFolder);
+            if (spamTimeout > 0) {
+                boolean useChangeDate = acct.isMailPurgeUseChangeDateForSpam();
+                int numPurged = Folder.purgeMessages(this, spam, getOperationTimestamp() - spamTimeout, null, useChangeDate, false, maxItemsPerFolder);
                 purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
-                ZimbraLog.purge.debug("Purged %d messages from Junk", numPurged);
+                ZimbraLog.purge.debug("Purged %d messages from Spam", numPurged);
             }
             if (userInboxReadTimeout > 0) {
                 int numPurged = Folder.purgeMessages(this, inbox, getOperationTimestamp() - userInboxReadTimeout, false, false, false, maxItemsPerFolder);

@@ -52,6 +52,7 @@ public class TestPurge extends TestCase {
     private String mOriginalUserJunkLifetime;
     
     private String mOriginalUseChangeDateForTrash;
+    private String mOriginalUseChangeDateForSpam;
     private String mOriginalPurgeBatchSize;
     
     private long mOriginalTombstoneAge;
@@ -79,6 +80,8 @@ public class TestPurge extends TestCase {
         
         mOriginalUseChangeDateForTrash =
             account.getAttr(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash);
+        mOriginalUseChangeDateForSpam =
+            account.getAttr(Provisioning.A_zimbraMailPurgeUseChangeDateForSpam);
         
         mOriginalTombstoneAge = LC.tombstone_max_age_ms.longValue();
         mOriginalPurgeBatchSize = TestUtil.getServerAttr(Provisioning.A_zimbraMailPurgeBatchSize);
@@ -213,6 +216,8 @@ public class TestPurge extends TestCase {
      */
     public void testJunkUser()
     throws Exception {
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForSpam, LdapUtil.LDAP_FALSE);
+        
         // Set retention policy
         Account account = TestUtil.getAccount(USER_NAME);
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -240,6 +245,8 @@ public class TestPurge extends TestCase {
      */
     public void testJunkSystem()
     throws Exception {
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForSpam, LdapUtil.LDAP_FALSE);
+
         // Set retention policy
         Account account = TestUtil.getAccount(USER_NAME);
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -315,6 +322,35 @@ public class TestPurge extends TestCase {
     
     /**
      * Confirms that messages are purged from trash based on the value of
+     * <tt>zimbraMailPurgeUseChangeDateForSpam<tt>.  See bug 19702 for more details.
+     */
+    public void testSpamChangeDate()
+    throws Exception {
+        // Set retention policy
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraPrefJunkLifetime, "24h");
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForSpam, LdapUtil.LDAP_TRUE);
+        
+        // Insert message
+        String subject = NAME_PREFIX + " testSpamChangeDate";
+        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
+        Message kept = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, subject,
+            System.currentTimeMillis() - (36 * Constants.MILLIS_PER_HOUR));
+        mbox.move(null, kept.getId(), MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_SPAM);
+        
+        // Validate dates
+        long cutoff = System.currentTimeMillis() - Constants.MILLIS_PER_DAY;
+        assertTrue("Unexpected message date: " + kept.getDate(),
+            kept.getDate() < cutoff);
+        assertTrue("Unexpected change date: " + kept.getChangeDate(),
+            kept.getChangeDate() > cutoff);
+        
+        // Run purge and verify results
+        mbox.purgeMessages(null);
+        assertTrue("kept was purged", messageExists(kept.getId()));
+    }
+    
+    /**
+     * Confirms that messages are purged from trash based on the value of
      * <tt>zimbraMailPurgeUseChangeDateForTrash<tt>.  See bug 19702 for more details.
      */
     public void testTrashChangeDate()
@@ -324,7 +360,7 @@ public class TestPurge extends TestCase {
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, LdapUtil.LDAP_TRUE);
         
         // Insert message
-        String subject = NAME_PREFIX + " testChangeDate";
+        String subject = NAME_PREFIX + " testTrashChangeDate";
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         Message kept = TestUtil.addMessage(mbox, Mailbox.ID_FOLDER_INBOX, subject,
             System.currentTimeMillis() - (36 * Constants.MILLIS_PER_HOUR));
@@ -516,6 +552,7 @@ public class TestPurge extends TestCase {
         attrs.put(Provisioning.A_zimbraPrefTrashLifetime, mOriginalUserTrashLifetime);
         attrs.put(Provisioning.A_zimbraPrefJunkLifetime, mOriginalUserJunkLifetime);
         attrs.put(Provisioning.A_zimbraMailPurgeUseChangeDateForTrash, mOriginalUseChangeDateForTrash);
+        attrs.put(Provisioning.A_zimbraMailPurgeUseChangeDateForSpam, mOriginalUseChangeDateForSpam);
         Provisioning.getInstance().modifyAttrs(account, attrs);
 
         TestUtil.setServerAttr(Provisioning.A_zimbraMailPurgeBatchSize, mOriginalPurgeBatchSize);
