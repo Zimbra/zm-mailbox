@@ -15,6 +15,7 @@
 package com.zimbra.cs.index.query.parser;
 
 import java.io.StringReader;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,6 +42,7 @@ import com.zimbra.cs.index.query.InQuery;
 import com.zimbra.cs.index.query.ItemQuery;
 import com.zimbra.cs.index.query.ModseqQuery;
 import com.zimbra.cs.index.query.Query;
+import com.zimbra.cs.index.query.AddrQuery.Address;
 import com.zimbra.cs.index.query.Query.Modifier;
 import com.zimbra.cs.index.query.SenderQuery;
 import com.zimbra.cs.index.query.SizeQuery;
@@ -472,13 +474,29 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
               return query;
           }
           case TOFROM:
+              if (Strings.isNullOrEmpty(text)) {
+                  throw new QueryParserException("MISSING_TEXT_AFTER_TOFROM", term);
+               }
+              return AddrQuery.create(mailbox, analyzer,
+                      EnumSet.of(Address.TO, Address.FROM), text);
           case TOCC:
+              if (Strings.isNullOrEmpty(text)) {
+                  throw new QueryParserException("MISSING_TEXT_AFTER_TOCC", term);
+               }
+              return AddrQuery.create(mailbox, analyzer,
+                      EnumSet.of(Address.TO, Address.CC), text);
           case FROMCC:
+              if (Strings.isNullOrEmpty(text)) {
+                  throw new QueryParserException("MISSING_TEXT_AFTER_FROMCC", term);
+               }
+              return AddrQuery.create(mailbox, analyzer,
+                      EnumSet.of(Address.FROM, Address.CC), text);
           case TOFROMCC:
               if (Strings.isNullOrEmpty(text)) {
-                 throw new QueryParserException("MISSING_TEXT_AFTER_TOFROMCC", term);
-              }
-              return AddrQuery.createFromTarget(mailbox, analyzer, field.kind, text);
+                  throw new QueryParserException("MISSING_TEXT_AFTER_TOFROMCC", term);
+               }
+              return AddrQuery.create(mailbox, analyzer,
+                      EnumSet.of(Address.TO, Address.FROM, Address.CC), text);
           case FROM:
               if (Strings.isNullOrEmpty(text)) {
                   throw new QueryParserException("MISSING_TEXT_AFTER_TOFROMCC", term);
@@ -494,9 +512,9 @@ public final class QueryParser implements ParserConstants, ParserTreeConstants {
               if (text.startsWith("@")) {
                   return new DomainQuery(mailbox, field.kind, text);
               }
-            return new TextQuery(mailbox, analyzer, field.kind, text);
+              return new TextQuery(mailbox, analyzer, field.kind, text);
           case MODSEQ:
-            return new ModseqQuery(field.kind, text);
+              return new ModseqQuery(field.kind, text);
           case SIZE:
           case BIGGER:
           case SMALLER:

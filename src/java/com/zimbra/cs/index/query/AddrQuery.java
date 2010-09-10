@@ -16,6 +16,7 @@ package com.zimbra.cs.index.query;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.lucene.analysis.Analyzer;
 
@@ -31,46 +32,25 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class AddrQuery extends SubQuery {
 
-    // bitmask for choosing "FROM/TO/CC" of messages...used for AddrQuery and MeQuery
-    public static final int ADDR_BITMASK_FROM = 0x1;
-    public static final int ADDR_BITMASK_TO =   0x2;
-    public static final int ADDR_BITMASK_CC =   0x4;
-
-    private AddrQuery(List<Query> exp) {
-        super(exp);
+    public enum Address {
+        FROM, TO, CC
     }
 
-    public static Query createFromTarget(Mailbox mbox, Analyzer analyzer,
-            int target, String text)
-            throws ServiceException {
-        int bitmask = 0;
-        switch (target) {
-            case QueryParser.TOFROM:
-                bitmask = ADDR_BITMASK_TO | ADDR_BITMASK_FROM;
-                break;
-            case QueryParser.TOCC:
-                bitmask = ADDR_BITMASK_TO | ADDR_BITMASK_CC;
-                break;
-            case QueryParser.FROMCC:
-                bitmask = ADDR_BITMASK_FROM | ADDR_BITMASK_CC;
-                break;
-            case QueryParser.TOFROMCC:
-                bitmask = ADDR_BITMASK_TO | ADDR_BITMASK_FROM | ADDR_BITMASK_CC;
-                break;
-        }
-        return createFromBitmask(mbox, analyzer, text, bitmask);
+    private AddrQuery(List<Query> clauses) {
+        super(clauses);
     }
 
-    public static Query createFromBitmask(Mailbox mbox, Analyzer analyzer,
-            String text, int operatorBitmask) throws ServiceException {
-        ArrayList<Query> clauses = new ArrayList<Query>();
+    public static AddrQuery create(Mailbox mbox, Analyzer analyzer,
+            Set<Address> addrs, String text) throws ServiceException {
+        List<Query> clauses = new ArrayList<Query>();
         boolean atFirst = true;
 
-        if ((operatorBitmask & ADDR_BITMASK_FROM) !=0) {
+        if (addrs.contains(Address.FROM)) {
             clauses.add(new TextQuery(mbox, analyzer, QueryParser.FROM, text));
             atFirst = false;
         }
-        if ((operatorBitmask & ADDR_BITMASK_TO) != 0) {
+
+        if (addrs.contains(Address.TO)) {
             if (atFirst) {
                 atFirst = false;
             } else {
@@ -78,7 +58,8 @@ public final class AddrQuery extends SubQuery {
             }
             clauses.add(new TextQuery(mbox, analyzer, QueryParser.TO, text));
         }
-        if ((operatorBitmask & ADDR_BITMASK_CC) != 0) {
+
+        if (addrs.contains(Address.CC)) {
             if (atFirst) {
                 atFirst = false;
             } else {
@@ -86,6 +67,7 @@ public final class AddrQuery extends SubQuery {
             }
             clauses.add(new TextQuery(mbox, analyzer, QueryParser.CC, text));
         }
+
         return new AddrQuery(clauses);
     }
 }

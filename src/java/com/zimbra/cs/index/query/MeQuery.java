@@ -16,6 +16,7 @@ package com.zimbra.cs.index.query;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.lucene.analysis.Analyzer;
 
@@ -32,20 +33,20 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class MeQuery extends SubQuery {
 
-    MeQuery(List<Query> exp) {
-        super(exp);
+    private MeQuery(List<Query> clauses) {
+        super(clauses);
     }
 
     public static Query create(Mailbox mbox, Analyzer analyzer,
-            int operatorBitmask) throws ServiceException {
-        ArrayList<Query> clauses = new ArrayList<Query>();
+            Set<AddrQuery.Address> addrs) throws ServiceException {
+        List<Query> clauses = new ArrayList<Query>();
         Account acct = mbox.getAccount();
         boolean atFirst = true;
-        if ((operatorBitmask & AddrQuery.ADDR_BITMASK_FROM) != 0) {
+        if (addrs.contains(AddrQuery.Address.FROM)) {
             clauses.add(new SentQuery(mbox, true));
             atFirst = false;
         }
-        if ((operatorBitmask & AddrQuery.ADDR_BITMASK_TO) != 0) {
+        if (addrs.contains(AddrQuery.Address.TO)) {
             if (atFirst) {
                 atFirst = false;
             } else {
@@ -53,7 +54,7 @@ public final class MeQuery extends SubQuery {
             }
             clauses.add(new TextQuery(mbox, analyzer, QueryParser.TO, acct.getName()));
         }
-        if ((operatorBitmask & AddrQuery.ADDR_BITMASK_CC) != 0) {
+        if (addrs.contains(AddrQuery.Address.CC)) {
             if (atFirst) {
                 atFirst = false;
             } else {
@@ -62,9 +63,8 @@ public final class MeQuery extends SubQuery {
             clauses.add(new TextQuery(mbox, analyzer, QueryParser.CC, acct.getName()));
         }
 
-        String[] aliases = acct.getMailAlias();
-        for (String alias : aliases) {
-            if ((operatorBitmask & AddrQuery.ADDR_BITMASK_TO) != 0) {
+        for (String alias : acct.getMailAlias()) {
+            if (addrs.contains(AddrQuery.Address.TO)) {
                 if (atFirst) {
                     atFirst = false;
                 } else {
@@ -72,7 +72,7 @@ public final class MeQuery extends SubQuery {
                 }
                 clauses.add(new TextQuery(mbox, analyzer, QueryParser.TO, alias));
             }
-            if ((operatorBitmask & AddrQuery.ADDR_BITMASK_CC) != 0) {
+            if (addrs.contains(AddrQuery.Address.CC)) {
                 if (atFirst) {
                     atFirst = false;
                 } else {

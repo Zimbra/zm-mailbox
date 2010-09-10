@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.index.query;
 
+import java.util.EnumSet;
 import java.util.Map;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -151,7 +152,8 @@ public abstract class BuiltInQuery {
         .put("tome", new BuiltInQuery() {
             @Override
             Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
-                return MeQuery.create(mbox, analyze, AddrQuery.ADDR_BITMASK_TO);
+                return MeQuery.create(mbox, analyze,
+                        EnumSet.of(AddrQuery.Address.TO));
             }
         })
         .put("fromme", new BuiltInQuery() { // sent by me
@@ -163,35 +165,37 @@ public abstract class BuiltInQuery {
         .put("ccme", new BuiltInQuery() {
             @Override
             Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
-                return MeQuery.create(mbox, analyze, AddrQuery.ADDR_BITMASK_CC);
+                return MeQuery.create(mbox, analyze,
+                        EnumSet.of(AddrQuery.Address.CC));
             }
         })
         .put("tofromme", new BuiltInQuery() {
             @Override
             Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
                 return MeQuery.create(mbox, analyze,
-                        AddrQuery.ADDR_BITMASK_TO | AddrQuery.ADDR_BITMASK_FROM);
+                        EnumSet.of(AddrQuery.Address.TO, AddrQuery.Address.FROM));
             }
         })
         .put("toccme", new BuiltInQuery() {
             @Override
             Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
                 return MeQuery.create(mbox, analyze,
-                        AddrQuery.ADDR_BITMASK_TO | AddrQuery.ADDR_BITMASK_CC);
+                        EnumSet.of(AddrQuery.Address.TO, AddrQuery.Address.CC));
             }
         })
         .put("fromccme", new BuiltInQuery() {
             @Override
             Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
                 return MeQuery.create(mbox, analyze,
-                        AddrQuery.ADDR_BITMASK_FROM | AddrQuery.ADDR_BITMASK_CC);
+                        EnumSet.of(AddrQuery.Address.FROM, AddrQuery.Address.CC));
             }
         })
         .put("tofromccme", new BuiltInQuery() {
             @Override
             Query create(Mailbox mbox, Analyzer analyze) throws ServiceException {
                 return MeQuery.create(mbox, analyze,
-                        AddrQuery.ADDR_BITMASK_TO | AddrQuery.ADDR_BITMASK_FROM | AddrQuery.ADDR_BITMASK_CC);
+                        EnumSet.of(AddrQuery.Address.TO, AddrQuery.Address.FROM,
+                                AddrQuery.Address.CC));
             }
         })
         .build();

@@ -15,7 +15,6 @@
 
 package com.zimbra.cs.index;
 
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -44,86 +43,27 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.SoapProtocol;
 
 /**
- * Represents a search query.
+ * Executes a search query.
  * <p>
  * Flow is simple:
- * <ul>
- *  <li>Constructor() -
- *   1) Parse the query string, turn it into a list of BaseQuery's. This is done
- *      by the JavaCC-generated QueryParser in the index.queryparser package.
- *   2) Push "not's" down to the leaves, so that we never have to invert result
- *      sets. See the internal ParseTree class.
- *   3) Generate a QueryOperation (which is usually a tree of QueryOperation
- *      objects) from the ParseTree, then optimize them QueryOperations in
- *      preparation to run the query.
- *  <li>execute() - Begin the search, get the ZimbraQueryResults iterator.
- * <p>
- * long-standing TODO is to move BaseQuery classes and ParseTree classes out of
- * this class.
- * <p>
- * The absolute-date (e.g. mm/dd/yyyy) pattern is locale sensitive. This
- * implementation delegates it to JDK's {@link DateFormat} class whose behavior
- * is as follows:
- * <table>
- *  <tr><td>ar</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>be</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>bg</td><td>yyyy-mm-dd</td></tr>
- *  <tr><td>ca</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>cs</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>da</td><td>dd-mm-yyyy</td></tr>
- *  <tr><td>de</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>el</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>en</td><td>mm/dd/yyyy (default)</td></tr>
- *  <tr><td>en_AU</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>en_CA</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>en_GB</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>en_IE</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>en_IN</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>en_NZ</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>en_ZA</td><td>yyyy/mm/dd</td></tr>
- *  <tr><td>es</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>es_DO</td><td>mm/dd/yyyy</td></tr>
- *  <tr><td>es_HN</td><td>mm-dd-yyyy</td></tr>
- *  <tr><td>es_PR</td><td>mm-dd-yyyy</td></tr>
- *  <tr><td>es_SV</td><td>mm-dd-yyyy</td></tr>
- *  <tr><td>et</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>fi</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>fr</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>fr_CA</td><td>yyyy-mm-dd</td></tr>
- *  <tr><td>fr_CH</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>hr</td><td>yyyy.MM.dd</td></tr>
- *  <tr><td>hr_HR</td><td>dd.MM.yyyy.</td></tr>
- *  <tr><td>hu</td><td>yyyy.MM.dd.</td></tr>
- *  <tr><td>is</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>it</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>it_CH</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>iw</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>ja</td><td>yyyy/mm/dd</td></tr>
- *  <tr><td>ko</td><td>yyyy. mm. dd</td></tr>
- *  <tr><td>lt</td><td>yyyy.mm.dd</td></tr>
- *  <tr><td>lv</td><td>yyyy.dd.mm</td></tr>
- *  <tr><td>mk</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>nl</td><td>dd-mm-yyyy</td></tr>
- *  <tr><td>nl_BE</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>no</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>pl</td><td>yyyy-mm-dd</td></tr>
- *  <tr><td>pl_PL</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>pt</td><td>dd-mm-yyyy</td></tr>
- *  <tr><td>pt_BR</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>ro</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>ru</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>sk</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>sl</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>sq</td><td>yyyy-mm-dd</td></tr>
- *  <tr><td>sv</td><td>yyyy-mm-dd</td></tr>
- *  <tr><td>th</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>tr</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>uk</td><td>dd.mm.yyyy</td></tr>
- *  <tr><td>vi</td><td>dd/mm/yyyy</td></tr>
- *  <tr><td>zh</td><td>yyyy-mm-dd</td></tr>
- *  <tr><td>zh_TW</td><td>yyyy/mm/dd</td></tr>
- * </table>
- * In case of format error, it falls back to <tt>mm/dd/yyyy</tt>.
+ * <ol>
+ *  <li>Constructor
+ *  <ol>
+ *   <li>Parse the query string, turn it into a list of {@link Query}'s. This is
+ *   done by the JavaCC-generated {@link QueryParser}.
+ *   <li>Push "not's" down to the leaves, so that we never have to invert result
+ *   sets. See the internal {@link ParseTree} class.
+ *   <li>Generate a {@link QueryOperation} (which is usually a tree of
+ *   {@link QueryOperation} objects) from the {@link ParseTree}, then optimize
+ *   them {@link QueryOperation}s in preparation to run the query.
+ *  </ol>
+ *  <li>{@link #execute()} - Begin the search, get the {@link ZimbraQueryResults}
+ *  iterator.
+ * </ol>
+ * long-standing TODO is to move ParseTree classes out of this class.
+ *
+ * @author tim
+ * @author ysasaki
  */
 public final class ZimbraQuery {
 

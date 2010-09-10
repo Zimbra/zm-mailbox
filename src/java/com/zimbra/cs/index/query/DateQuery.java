@@ -33,6 +33,70 @@ import com.zimbra.cs.index.query.parser.QueryParserException;
 
 /**
  * Query by absolute date or relative date.
+ * <p>
+ * The absolute-date (e.g. mm/dd/yyyy) pattern is locale sensitive. This
+ * implementation delegates it to JDK's {@link DateFormat} class whose behavior
+ * is as follows:
+ * <table>
+ *  <tr><td>ar</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>be</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>bg</td><td>yyyy-mm-dd</td></tr>
+ *  <tr><td>ca</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>cs</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>da</td><td>dd-mm-yyyy</td></tr>
+ *  <tr><td>de</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>el</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>en</td><td>mm/dd/yyyy (default)</td></tr>
+ *  <tr><td>en_AU</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>en_CA</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>en_GB</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>en_IE</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>en_IN</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>en_NZ</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>en_ZA</td><td>yyyy/mm/dd</td></tr>
+ *  <tr><td>es</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>es_DO</td><td>mm/dd/yyyy</td></tr>
+ *  <tr><td>es_HN</td><td>mm-dd-yyyy</td></tr>
+ *  <tr><td>es_PR</td><td>mm-dd-yyyy</td></tr>
+ *  <tr><td>es_SV</td><td>mm-dd-yyyy</td></tr>
+ *  <tr><td>et</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>fi</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>fr</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>fr_CA</td><td>yyyy-mm-dd</td></tr>
+ *  <tr><td>fr_CH</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>hr</td><td>yyyy.MM.dd</td></tr>
+ *  <tr><td>hr_HR</td><td>dd.MM.yyyy.</td></tr>
+ *  <tr><td>hu</td><td>yyyy.MM.dd.</td></tr>
+ *  <tr><td>is</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>it</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>it_CH</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>iw</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>ja</td><td>yyyy/mm/dd</td></tr>
+ *  <tr><td>ko</td><td>yyyy. mm. dd</td></tr>
+ *  <tr><td>lt</td><td>yyyy.mm.dd</td></tr>
+ *  <tr><td>lv</td><td>yyyy.dd.mm</td></tr>
+ *  <tr><td>mk</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>nl</td><td>dd-mm-yyyy</td></tr>
+ *  <tr><td>nl_BE</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>no</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>pl</td><td>yyyy-mm-dd</td></tr>
+ *  <tr><td>pl_PL</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>pt</td><td>dd-mm-yyyy</td></tr>
+ *  <tr><td>pt_BR</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>ro</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>ru</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>sk</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>sl</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>sq</td><td>yyyy-mm-dd</td></tr>
+ *  <tr><td>sv</td><td>yyyy-mm-dd</td></tr>
+ *  <tr><td>th</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>tr</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>uk</td><td>dd.mm.yyyy</td></tr>
+ *  <tr><td>vi</td><td>dd/mm/yyyy</td></tr>
+ *  <tr><td>zh</td><td>yyyy-mm-dd</td></tr>
+ *  <tr><td>zh_TW</td><td>yyyy/mm/dd</td></tr>
+ * </table>
+ * In case of format error, it falls back to <tt>mm/dd/yyyy</tt>.
  *
  * @author tim
  * @author ysasaki
