@@ -157,7 +157,7 @@ public class ServerManager {
         return lmtpServer;
     }
 
-    private static ExecutorService newNioHandlerPool(ServerConfig config) {
+    public static ExecutorService newNioHandlerPool(ServerConfig config) {
         return new ThreadPoolExecutor(
             Math.min(config.getNumThreads(), config.getNioMinThreads()),
             config.getNumThreads(),

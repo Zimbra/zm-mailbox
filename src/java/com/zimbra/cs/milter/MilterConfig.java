@@ -31,11 +31,13 @@ public class MilterConfig extends ServerConfig {
     }
     
     @Override public int getBindPort() {
-        return getIntAttr(A_zimbraMilterBindPort, Config.D_MILTER_BIND_PORT);
+        int port = LC.milter_bind_port.intValue();
+        return port != 0 ? port : getIntAttr(A_zimbraMilterBindPort, Config.D_MILTER_BIND_PORT);
     }
 
     @Override public String getBindAddress() {
-        return getAttr(A_zimbraMilterBindAddress, "127.0.0.1");
+        String addr = LC.milter_bind_address.value();
+        return addr != null ? addr : getAttr(A_zimbraMilterBindAddress, "127.0.0.1");
     }
     
     @Override public Log getLog() {
