@@ -63,7 +63,7 @@
     <filter-class>com.zimbra.cs.zimlet.ZimletFilter</filter-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443, 7071</param-value>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
     </init-param>
   </filter>
 
@@ -84,7 +84,7 @@
     <load-on-startup>2</load-on-startup>
 	<init-param>
 	<param-name>allowed.ports</param-name>
-	<param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7071, 7072, 7443</param-value>
+	<param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7071, 7072, 7443</param-value>
 	</init-param>
 
   </servlet>
@@ -117,7 +117,7 @@
     <servlet-class>com.zimbra.soap.SoapServlet</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>7071</param-value>
+      <param-value>%%zimbraAdminPort%%, 7071</param-value>
     </init-param>
     <!-- Admin servlet allows both admin and user commands -->
     <init-param>
@@ -144,7 +144,7 @@
     <servlet-class>com.zimbra.cs.service.ContentServlet</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443, 7071</param-value>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
     </init-param>
     <init-param>
       <param-name>errorpage.attachment.blocked</param-name>
@@ -158,7 +158,7 @@
     <servlet-class>com.zimbra.cs.service.UserServlet</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443, 7071</param-value>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
     </init-param>
     <init-param>
       <param-name>errorpage.attachment.blocked</param-name>
@@ -172,7 +172,7 @@
     <servlet-class>com.zimbra.cs.service.PreAuthServlet</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443, 7071</param-value>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
     </init-param>
     <load-on-startup>5</load-on-startup>
   </servlet>
@@ -182,7 +182,7 @@
     <servlet-class>com.zimbra.cs.service.PublicICalServlet</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443, 7071</param-value>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
     </init-param>
     <load-on-startup>5</load-on-startup>
   </servlet>
@@ -192,7 +192,7 @@
     <servlet-class>com.zimbra.cs.service.FileUploadServlet</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443, 7071</param-value>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
     </init-param>
     <load-on-startup>6</load-on-startup>
   </servlet>
@@ -202,7 +202,7 @@
     <servlet-class>com.zimbra.cs.service.admin.StatsImageServlet</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>7071</param-value>
+      <param-value>%%zimbraAdminPort%%, 7071</param-value>
     </init-param>
     <load-on-startup>7</load-on-startup>
   </servlet>
@@ -232,7 +232,7 @@
     <servlet-class>com.zimbra.cs.service.admin.CollectLDAPConfigZimbra</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>7071</param-value>
+      <param-value>%%zimbraAdminPort%%, 7071</param-value>
     </init-param>
   </servlet>
 
@@ -241,7 +241,7 @@
     <servlet-class>com.zimbra.cs.service.admin.AdminFileDownload</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>7071</param-value>
+      <param-value>%%zimbraAdminPort%%, 7071</param-value>
     </init-param>
   </servlet>
 
@@ -250,7 +250,7 @@
     <servlet-class>com.zimbra.cs.service.admin.CollectConfigFiles</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>7071</param-value>
+      <param-value>%%zimbraAdminPort%%, 7071</param-value>
     </init-param>
   </servlet>
     
@@ -259,7 +259,7 @@
     <servlet-class>com.zimbra.cs.zimlet.ZimletResources</servlet-class>
     <init-param>
       <param-name>allowed.ports</param-name>
-      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, 7070, 7443, 7071</param-value>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
     </init-param>
 	<!--
 	<init-param>
