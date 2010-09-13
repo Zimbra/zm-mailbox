@@ -414,6 +414,10 @@ public class LC {
     public static final KnownKey data_source_imap_reuse_connections =
         new KnownKey("data_source_imap_reuse_connections", "false");
 
+    public static final KnownKey milter_bind_port =
+        new KnownKey("milter_bind_port").setDefault(0);
+    public static final KnownKey milter_bind_address =
+        new KnownKey("milter_bind_address");
     public static final KnownKey milter_max_idle_seconds = 
         new KnownKey("milter_max_idle_seconds").setDefault(120);
     public static final KnownKey milter_max_sessions =
