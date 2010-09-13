@@ -351,13 +351,15 @@ public class Appointment extends CalendarItem {
         // an interrupted transaction.  But we don't send emails during redo reply phase of restore.
         // Also don't send emails for cancel invites.  (Organizer doesn't expect reply for cancels.)
         // And don't send emails for task requests.
+        // Don't send reply emails from a system account. (e.g. archiving, galsync, ham/spam)
         boolean needReplyEmail =
             rsvpRequested &&
             redoProvider.isMaster() &&
             (player == null || redoProvider.getRedoLogManager().getInCrashRecovery()) &&
             invite.hasOrganizer() &&
             !invite.isCancel() &&
-            !invite.isTodo();
+            !invite.isTodo() &&
+            !account.isIsSystemResource();
 
         if (invite.isOrganizer()) {
             // Organizer always accepts.

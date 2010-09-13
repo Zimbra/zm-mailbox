@@ -549,10 +549,11 @@ public class Message extends MailItem {
                     if (acct.isPrefCalendarSendInviteDeniedAutoReply() && senderEmail != null && sameDomain && directAttendee) {
                         RedoableOp redoPlayer = octxt != null ? octxt.getPlayer() : null;
                         RedoLogProvider redoProvider = RedoLogProvider.getInstance();
-                        // Don't generate auto-reply email during redo playback.
+                        // Don't generate auto-reply email during redo playback or if delivering to a system account. (e.g. archiving, galsync, ham/spam)
                         boolean needAutoReply =
                             redoProvider.isMaster() &&
-                            (redoPlayer == null || redoProvider.getRedoLogManager().getInCrashRecovery());
+                            (redoPlayer == null || redoProvider.getRedoLogManager().getInCrashRecovery()) &&
+                            !acct.isIsSystemResource();
                         if (needAutoReply) {
                             ItemId origMsgId = new ItemId(getMailbox(), getId());
                             CalendarMailSender.sendInviteDeniedMessage(
@@ -829,7 +830,8 @@ public class Message extends MailItem {
 
         // Don't forward a forwarded invite.  Prevent infinite loop.
         // Don't forward the message being added to Sent folder.
-        if (!isForwardedInvite && intendedForMe && folderId != Mailbox.ID_FOLDER_SENT && !invites.isEmpty()) {
+        // Don't forward from a system account. (e.g. archiving, galsync, ham/spam)
+        if (!isForwardedInvite && intendedForMe && folderId != Mailbox.ID_FOLDER_SENT && !invites.isEmpty() && !acct.isIsSystemResource()) {
             // Don't do the forwarding during redo playback.
             RedoableOp redoPlayer = octxt != null ? octxt.getPlayer() : null;
             RedoLogProvider redoProvider = RedoLogProvider.getInstance();
