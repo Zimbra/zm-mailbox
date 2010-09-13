@@ -41,11 +41,14 @@
 // then use the upload-id from the FileUploadResponse.
 // When <m> is used, the document is retrieved from an existing message in the mailbox,
 // identified by the msg-id and part-id.
+// The content of the document can be inlined in <content/> element.
+// The content can come from another document / revision specified in <doc/> sub element.
 <SaveDocumentRequest>
   <doc [id="{item-id}" ver="{last-known-version}"] [name="{file-name}"] [ct="{content-type}"] [l="{folder-id}"] [desc="{description}"]>
     [<upload id="{upload-id}"/>]
     [<m id="{msg-id}" part="{part-id}"/>]
     [<content>{inlined-document-content-string}</content>]
+    [<doc id="{item-id}" ver="{version-to-restore-to}"/>]
   </doc>
 </SaveDocumentRequest>
 

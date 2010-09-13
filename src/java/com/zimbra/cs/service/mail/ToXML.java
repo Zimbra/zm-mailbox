@@ -2027,17 +2027,18 @@ public class ToXML {
             m.addAttribute(MailConstants.A_REVISION, doc.getSavedSequence());
         }
         recordItemTags(m, doc, fields);
-        if (needToOutput(fields, Change.MODIFIED_METADATA))
+        if (needToOutput(fields, Change.MODIFIED_METADATA)) {
             encodeAllCustomMetadata(m, doc, fields);
+            String description = doc.getDescription();
+            if (description != null && !description.equals(""))
+                m.addAttribute(MailConstants.A_DESC, description);
+        }
 
         if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
             try {
                 m.addAttribute(MailConstants.A_VERSION, doc.getVersion());
                 m.addAttribute(MailConstants.A_LAST_EDITED_BY, doc.getCreator());
                 m.addAttribute(MailConstants.A_MODIFIED_DATE, doc.getDate());
-                String description = doc.getDescription();
-                if (description != null && !description.equals(""))
-                    m.addAttribute(MailConstants.A_DESC, description);
                 String fragment = doc.getFragment();
                 if (fragment != null && !fragment.equals(""))
                     m.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);

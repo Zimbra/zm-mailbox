@@ -53,6 +53,7 @@ import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.service.ServiceException.InternalArgument;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -91,25 +92,6 @@ public class SaveDocument extends WikiDocumentHandler {
                 }
             }
 
-            Element attElem = docElem.getOptionalElement(MailConstants.E_UPLOAD);
-            Element msgElem = docElem.getOptionalElement(MailConstants.E_MSG);
-            if (attElem != null) {
-                String aid = attElem.getAttribute(MailConstants.A_ID, null);
-                Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), aid, zsc.getAuthToken());
-                doc = new Doc(up, explicitName, explicitCtype);
-            } else if (msgElem != null) {
-                String part = msgElem.getAttribute(MailConstants.A_PART);
-                ItemId iid = new ItemId(msgElem.getAttribute(MailConstants.A_ID), zsc);
-                doc = fetchMimePart(octxt, iid, part, explicitName, explicitCtype, zsc.getAuthToken());
-            } else {
-                String inlineContent = docElem.getAttribute(MailConstants.E_CONTENT);
-                doc = new Doc(inlineContent, explicitName, explicitCtype);
-            }
-            if (doc.name == null || doc.name.trim().equals(""))
-                throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_NAME, null);
-            if (doc.contentType == null || doc.contentType.trim().equals(""))
-                throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_CONTENT_TYPE, null);
-
             String description = docElem.getAttribute(MailConstants.A_DESC, null);
             ItemId fid = new ItemId(docElem.getAttribute(MailConstants.A_FOLDER, DEFAULT_DOCUMENT_FOLDER), zsc);
 
@@ -118,6 +100,41 @@ public class SaveDocument extends WikiDocumentHandler {
             int ver = (int) docElem.getAttributeLong(MailConstants.A_VERSION, 0);
 
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(zsc.getRequestedAccountId());
+            
+            Element attElem = docElem.getOptionalElement(MailConstants.E_UPLOAD);
+            Element msgElem = docElem.getOptionalElement(MailConstants.E_MSG);
+            Element docRevElem = docElem.getOptionalElement(MailConstants.E_DOC);
+            if (attElem != null) {
+                String aid = attElem.getAttribute(MailConstants.A_ID, null);
+                Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), aid, zsc.getAuthToken());
+                doc = new Doc(up, explicitName, explicitCtype);
+            } else if (msgElem != null) {
+                String part = msgElem.getAttribute(MailConstants.A_PART);
+                ItemId iid = new ItemId(msgElem.getAttribute(MailConstants.A_ID), zsc);
+                doc = fetchMimePart(octxt, iid, part, explicitName, explicitCtype, zsc.getAuthToken());
+            } else if (docRevElem != null) {
+                ItemId iid = new ItemId(docRevElem.getAttribute(MailConstants.A_ID), zsc);
+                int revSource = (int) docRevElem.getAttributeLong(MailConstants.A_VERSION, 0);
+                Account sourceAccount = Provisioning.getInstance().getAccountById(iid.getAccountId());
+                if (sourceAccount.getId().equals(zsc.getRequestedAccountId())) {
+                    Document docRev;
+                    if (revSource == 0)
+                        docRev = mbox.getDocumentById(octxt, iid.getId());
+                    else
+                        docRev = (Document)mbox.getItemRevision(octxt, iid.getId(), MailItem.TYPE_DOCUMENT, revSource);
+                    doc = new Doc(docRev.getContentStream(), null, docRev.getName(), docRev.getContentType());
+                } else {
+                    doc = new Doc(zsc.getAuthToken(), sourceAccount, iid.getId(), revSource);
+                }
+                // preserve the old name when adding a new revision with
+                // the content from another document
+                if (ver != 0)
+                    doc.name = null;
+            } else {
+                String inlineContent = docElem.getAttribute(MailConstants.E_CONTENT);
+                doc = new Doc(inlineContent, explicitName, explicitCtype);
+            }
+
             Document docItem = null;
             WikiPage.WikiContext ctxt = new WikiPage.WikiContext(octxt, zsc.getAuthToken());
             InputStream is = null;
@@ -128,6 +145,10 @@ public class SaveDocument extends WikiDocumentHandler {
             }
             if (itemId == 0) {
                 // create a new page
+                if (doc.name == null || doc.name.trim().equals(""))
+                    throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_NAME, null);
+                if (doc.contentType == null || doc.contentType.trim().equals(""))
+                    throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_CONTENT_TYPE, null);
                 try {
                     docItem = mbox.createDocument(octxt, fid.getId(), doc.name, doc.contentType, getAuthor(zsc), description, is, MailItem.TYPE_DOCUMENT);
                 } catch (ServiceException e) {
@@ -152,7 +173,10 @@ public class SaveDocument extends WikiDocumentHandler {
                             new Argument(MailConstants.A_ID, oldPage.getId(), Argument.Type.IID),
                             new Argument(MailConstants.A_VERSION, oldPage.getLastVersion(), Argument.Type.NUM));
                 }
-                docItem = mbox.addDocumentRevision(octxt, itemId, getAuthor(zsc), doc.name, description, is);
+                String name = oldPage.getWikiWord();
+                if (doc.name != null)
+                    name = doc.name;
+                docItem = mbox.addDocumentRevision(octxt, itemId, getAuthor(zsc), name, description, is);
             }
 
             response = zsc.createElement(MailConstants.SAVE_DOCUMENT_RESPONSE);
@@ -236,15 +260,35 @@ public class SaveDocument extends WikiDocumentHandler {
 
         Doc(InputStream in, ContentType ct, String filename, String ctype) {
             this.in = in;
-            name = ct.getParameter("name");
+            name = ct == null ? null : ct.getParameter("name");
             if (name == null)
                 name = "New Document";
-            contentType = ct.getValue();
+            contentType = ct == null ? null : ct.getValue();
             if (contentType == null)
                 contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
             overrideProperties(filename, ctype);
         }
 
+        Doc(AuthToken auth, Account acct, int id, int ver) throws ServiceException {
+            String url = UserServlet.getRestUrl(acct) + 
+                "?fmt=native&disp=attachment&id=" + id;
+            if (ver > 0) 
+                url += "&ver=" + ver;
+            Pair<Header[], byte[]> resource = UserServlet.getRemoteResource(auth.toZAuthToken(), url);
+            int status = 0;
+            for (Header h : resource.getFirst()) {
+                if (h.getName().equalsIgnoreCase("X-Zimbra-Http-Status"))
+                    status = Integer.parseInt(h.getValue());
+                else if (h.getName().equalsIgnoreCase("X-Zimbra-ItemName"))
+                    name = h.getValue();
+                else if (h.getName().equalsIgnoreCase("Content-Type"))
+                    contentType = h.getValue();
+            }
+            if (status != 200)
+                throw ServiceException.RESOURCE_UNREACHABLE("http error "+status, null);
+            in = new ByteArrayInputStream(resource.getSecond());
+        }
+        
         private void overrideProperties(String filename, String ctype) {
             if (filename != null && !filename.trim().equals(""))
                 name = filename;
@@ -268,6 +312,7 @@ public class SaveDocument extends WikiDocumentHandler {
                 throw new IOException(e.getMessage());
             }
         }
+        
         public void cleanup() {
             if (up != null)
                 FileUploadServlet.deleteUpload(up);

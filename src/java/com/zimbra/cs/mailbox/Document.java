@@ -133,6 +133,7 @@ public class Document extends MailItem {
         mData.date    = (int) (pd.getCreatedDate() / 1000L);
         mData.name    = pd.getFilename();
         mData.subject = pd.getFilename();
+        mDescription  = pd.getDescription();
         pd.setVersion(getVersion());
 
         if (mData.size != pd.getSize()) {

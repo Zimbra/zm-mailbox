@@ -303,6 +303,10 @@ public class NativeFormatter extends Formatter {
         ParsedDocument pd = null;
 
         try {
+            if (contentType == null)
+                contentType = MimeDetect.getMimeDetect().detect(filename);
+            if (contentType == null)
+                contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
             pd = new ParsedDocument(is, filename, contentType, System.currentTimeMillis(), creator, context.req.getHeader("X-Zimbra-Description"));
             item = mbox.getItemByPath(context.opContext, filename, folder.getId());
             // XXX: should we just overwrite here instead?
