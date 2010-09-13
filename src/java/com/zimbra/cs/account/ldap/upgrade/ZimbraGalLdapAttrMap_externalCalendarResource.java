@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 
@@ -50,17 +51,16 @@ public class ZimbraGalLdapAttrMap_externalCalendarResource extends LdapUpgrade {
     
     private void replaceIfNeeded(Map<String, Object> attrs, String curValue, String oldValue, String newValue) {
         if (curValue.equalsIgnoreCase(oldValue)) {
-            
-            attrs.put("-" + Provisioning.A_zimbraGalLdapAttrMap, oldValue);
-            attrs.put("+" + Provisioning.A_zimbraGalLdapAttrMap, newValue);
-            
             System.out.println("    removing value: " + oldValue);
             System.out.println("    adding value: " + newValue);
+            
+            StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraGalLdapAttrMap, oldValue);
+            StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraGalLdapAttrMap, newValue);
         }
     }
     
     private void addValue(Map<String, Object> attrs, String value) {
-        attrs.put("+" + Provisioning.A_zimbraGalLdapAttrMap, value);
         System.out.println("    adding value: " + value);
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraGalLdapAttrMap, value);
     }
 }
