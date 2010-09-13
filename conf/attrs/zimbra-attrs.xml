@@ -49,10 +49,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
       [min="..."]
       [callback="..." ]
       [id="{oid-integer}"
-       cadinality="single|multi"
-       requiredIn="{class-names-comma-seperated}"
-       optionalIn="{class-names-comma-seperated}"
-       [flags="{flag-names-comma-seperated}"]
+       cardinality="single|multi"
+       requiredIn="{class-names-comma-separated}"
+       optionalIn="{class-names-comma-separated}"
+       [flags="{flag-names-comma-separated}"]
        [requiresRestart="{comma-separated-server-types}"]
        [deprecatedSince="{version}"]
        [since="{version}"]]>
@@ -69,7 +69,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
   immutable: 1 means attribute can never be changed directly by
              end-user actions. i.e., it is an attribute that is
-             maintined by the server and shouldn't be changed by
+             maintained by the server and shouldn't be changed by
              SOAP/command-line/APIs. The Entry.modifyAttrs(attrs,
              checkImmutable) call should be used with checkImmutable
              set to true for all data obtained outside the server.
@@ -114,7 +114,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
   requiredIn:
   optionalIn: whether this is a required attribute or not.  A
-              comma-seperated list containing some combination of:
+              comma-separated list containing some combination of:
               mailRecipient, account, alias, distributionList, cos,
               globalConfig, domain, securityGroup, server, mimeEntry,
               objectEntry, zimletEntry, calendarResource;
@@ -156,7 +156,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   deprecatedSince:
   	version since which the attribute had been deprecated.  Deprecated
   	attributes are still generated into the schema.  This flag is only for
-  	documentation purpose so when somone (Zimbra employee or customer)
+  	documentation purpose so when someone (Zimbra employee or customer)
     looks at zimbra-attrs.xml or zimbra.schema they know those attributes
     are no longer used.
     
@@ -168,7 +168,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
   Element deprecateDesc:
     Documentation for how the attribute was deprecated. e.g. attributes and
-    mechenisms that are replacing the deprecated attribute.  Required if
+    mechanisms that are replacing the deprecated attribute.  Required if
     deprecatedSince is present.  Cannot be present if deprecatedSince is not
     present.
     
@@ -615,7 +615,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>timeout value in seconds</desc>
 </attr>
 
-<attr id="100" name="zimbraAuthTokenKey" type="ostring" max="128" immutable="1" cardinality="multi" optionalIn="globalConfig">
+<attr id="100" name="zimbraAuthTokenKey" type="ostring" max="128" immutable="1" cardinality="multi" optionalIn="globalConfig" requiresRestart="mailbox">
   <desc>auth token secret key</desc>
 </attr>
 
