@@ -182,7 +182,6 @@ public class MailConstants {
     public static final QName SEND_INVITE_REPLY_REQUEST = QName.get("SendInviteReplyRequest", NAMESPACE);
     public static final QName ICAL_REPLY_REQUEST = QName.get("ICalReplyRequest", NAMESPACE);
     public static final QName GET_FREE_BUSY_REQUEST = QName.get("GetFreeBusyRequest", NAMESPACE);
-    public static final QName GET_WORKING_HOURS_REQUEST = QName.get("GetWorkingHoursRequest", NAMESPACE);
     public static final QName GET_ICAL_REQUEST = QName.get("GetICalRequest", NAMESPACE);
     public static final QName ANNOUNCE_ORGANIZER_CHANGE_REQUEST = QName.get("AnnounceOrganizerChangeRequest", NAMESPACE);
     public static final QName DISMISS_CALITEM_ALARM_REQUEST = QName.get("DismissCalendarItemAlarmRequest", NAMESPACE);
@@ -448,7 +447,6 @@ public class MailConstants {
     public static final String A_NO_SAVE_TO_SENT = "noSave";
     public static final String A_SEND_UID = "suid";
     public static final String A_FOR_ACCOUNT = "forAcct";
-    public static final String A_AUTO_SEND_TIME = "autoSendTime";
 
     // mountpoints
     public static final String A_REMOTE_ID = "rid";
@@ -600,7 +598,6 @@ public class MailConstants {
     public static final String A_CAL_DURATION = "d";
     public static final String A_CAL_NEW_DURATION = "dur";
     public static final String A_CAL_DATETIME = "d";
-    public static final String A_CAL_DATETIME_UTC = "u";
     public static final String A_CAL_TZ_OFFSET = "tzo";
     public static final String A_CAL_SUB_ID = "subId";
     public static final String A_CAL_INV_ID = "invId";
@@ -693,7 +690,6 @@ public class MailConstants {
     public static final String E_CAL_MINICAL_DATE = "date";
 
     public static final String A_CAL_INTENDED_FOR = "cif";
-    public static final String A_CAL_CHANGES = "changes";
 
     // spell checking
     public static final String A_AVAILABLE = "available";
@@ -716,7 +712,6 @@ public class MailConstants {
     public static final String E_DS_UNKNOWN = "unknown";
     public static final String E_DS_LAST_ERROR = "lastError"; 
     public static final String A_DS_IS_ENABLED = "isEnabled";
-    public static final String A_DS_IS_IMPORTONLY = "importOnly";
     public static final String A_DS_HOST = "host";
     public static final String A_DS_PORT = "port";
     public static final String A_DS_CONNECTION_TYPE = "connectionType";
@@ -758,10 +753,6 @@ public class MailConstants {
     public static final String A_V2 = "v2";
     public static final String E_CHUNK = "chunk";
     public static final String A_DISP = "disp";
-    public static final String A_DESC = "desc";
-    public static final String A_LOCKOWNER_ID = "loid";
-    public static final String A_LOCKOWNER_EMAIL = "loe";
-    public static final String A_LOCKTIMESTAMP = "lt";
     
     // WaitSet
     public static final String E_WAITSET_ADD = "add";
@@ -788,5 +779,4 @@ public class MailConstants {
     public static final String A_CANBECACHED = "canBeCached";
     public static final String A_DISPLAYNAME = "display";
     public static final String A_MATCH_TYPE = "type";
-    public static final String A_IS_GROUP = "isGroup";
 }

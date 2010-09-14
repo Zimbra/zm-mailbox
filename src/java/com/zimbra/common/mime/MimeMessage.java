@@ -32,13 +32,6 @@ public class MimeMessage extends MimePart {
     private Properties mProperties;
     private MimePart mBody;
 
-    MimeMessage(MimePart body, Properties props) {
-        super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
-        mProperties = props;
-
-        setBodyPart(body);
-    }
-
     /** Parses a MIME message from a file.  Only the structure of the message
      *  is stored in memory, but a pointer to the original <code>File</code> is
      *  retained so that the content is accessible on demand. */
@@ -52,7 +45,6 @@ public class MimeMessage extends MimePart {
     public MimeMessage(File file, Properties props) throws IOException {
         super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
         mProperties = props;
-
         setContent(file, false);
         InputStream is = new BufferedInputStream(new FileInputStream(file), 8192);
         try {
@@ -75,7 +67,6 @@ public class MimeMessage extends MimePart {
     public MimeMessage(byte[] body, Properties props) {
         super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
         mProperties = props;
-
         setContent(body, false);
         try {
             readContent(new ParseState(new PeekAheadInputStream(new ByteArrayInputStream(body))));
@@ -112,7 +103,6 @@ public class MimeMessage extends MimePart {
     public static MimeMessage readStructure(InputStream is, Properties props) throws IOException {
         MimeMessage mm = new MimeMessage(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
         mm.mProperties = props;
-
         if (!is.markSupported())
             is = new BufferedInputStream(is, 8192);
         mm.readContent(new ParseState(new PeekAheadInputStream(is)));
@@ -134,11 +124,8 @@ public class MimeMessage extends MimePart {
      *  headers) are transferred to the new one.
      * @see #getBodyPart() */
     public void setBodyPart(MimePart body) {
-        if (mBody != null) {
-            transferMessageHeaders(body);
-            mBody.detach();
-        }
-        body.setParent(this);
+        transferMessageHeaders(body);
+        mBody.detach();
         mBody = body;
     }
 
@@ -365,24 +352,16 @@ public class MimeMessage extends MimePart {
 //        }
     }
 
-    static void dumpParts(MimeMessage mm) {
+    private static void dumpParts(MimeMessage mm) {
         for (Map.Entry<String, MimePart> mpi : mm.listMimeParts().entrySet()) {
             MimePart part = mpi.getValue();
-            String filename = part.getFilename() == null ? "" : " [" + part.getFilename() + "]";
-            String desc = part.getMimeHeader("Content-Description") == null ? "" : " {" + part.getMimeHeader("Content-Description") + "}";
-            String lines = part.getLineCount() < 0 ? "" : ", " + part.getLineCount() + " lines";
-            System.out.println('"' + mpi.getKey() + "\": " + part.getContentType().getValue() + " (" + part.getSize() + " bytes" + lines + ")" + filename + desc);
+            System.out.println('"' + mpi.getKey() + "\": " + part.getContentType().getValue() + (part.getFilename() == null ? "" : " [" + part.getFilename() + "]"));
+            if (part.getMimeHeader("Content-Description") != null)
+                System.out.println("   {" + part.getMimeHeader("Content-Description") + "}");
             if (mm.getSubpart(mpi.getKey()) != mpi.getValue())
                 System.out.println("  MISMATCH!");
-            if (part instanceof MimeMultipart) {
-                MimeBodyPart extra;
-                if ((extra = ((MimeMultipart) part).getPreamble()) != null)
-                    System.out.println("  preamble: " + extra.getLineCount() + " line(s)");
-                if ((extra = ((MimeMultipart) part).getEpilogue()) != null)
-                    System.out.println("  epilogue: " + extra.getLineCount() + " line(s)");
-            }
 //            if (mpi.getValue().getContentType().getValue().equals("text/plain"))
-//                try { System.out.println(new String(part.getRawContent())); } catch (IOException ioe) {}
+//            System.out.println(new String(mpi.getValue().getRawContent()));
         }
     }
 }

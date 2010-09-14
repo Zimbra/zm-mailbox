@@ -25,8 +25,8 @@ import java.util.UUID;
 public class MimeMultipart extends MimePart implements Iterable<MimePart> {
     static final String UNSET_BOUNDARY = "";
 
-    private String mBoundary = UNSET_BOUNDARY;
-    private MimeBodyPart mPreamble, mEpilogue;
+    private String mBoundary;
+    private MimePart mPreamble, mEpilogue;
     private List<MimePart> mChildren = new ArrayList<MimePart>(3);
 
     public MimeMultipart(String subtype) {
@@ -36,7 +36,15 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
 
     MimeMultipart(ContentType ctype, MimePart parent, long start, long body, MimeHeaderBlock headers) {
         super(ctype, parent, start, body, headers);
-        setEffectiveBoundary(ctype.getParameter("boundary"));
+        mBoundary = ctype.getParameter("boundary");
+        if (mBoundary == null || mBoundary.trim().equals(""))
+            mBoundary = UNSET_BOUNDARY;
+        // RFC 2046 5.1.1: "The only mandatory global parameter for the "multipart" media type is
+        //                  the boundary parameter, which consists of 1 to 70 characters from a
+        //                  set of characters known to be very robust through mail gateways, and
+        //                  NOT ending with white space."
+        while (mBoundary.length() > 0 && Character.isWhitespace(mBoundary.charAt(mBoundary.length() - 1)))
+            mBoundary = mBoundary.substring(0, mBoundary.length() - 1);
     }
 
     private static String generateBoundary() {
@@ -50,25 +58,10 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
         return mChildren.size();
     }
 
-    public MimeBodyPart getPreamble() {
-        return mPreamble;
-    }
+    public MimePart getPreamble()  { return mPreamble; }
+    public MimePart getEpilogue()  { return mEpilogue; }
 
-    MimeMultipart setPreamble(MimeBodyPart preamble) {
-        mPreamble = preamble;
-        return this;
-    }
-
-    public MimeBodyPart getEpilogue() {
-        return mEpilogue;
-    }
-
-    MimeMultipart setEpilogue(MimeBodyPart epilogue) {
-        mEpilogue = epilogue;
-        return this;
-    }
-
-    /** Returns the (1-based) <code>index</code>th child of this multipart. */
+    /** Returns the (1-based) <tt>index</tt>th child of this multipart. */
     public MimePart getSubpart(int index) {
         return (index < 1 || index > mChildren.size() ? null : mChildren.get(index - 1));
     }
@@ -108,7 +101,7 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
     /** Returns an iterator over the child parts of this multipart.  Note that
      *  changes made via the iterator (e.g. {@link Iterator#remove()}) will not
      *  affect the contents of the multipart. */
-    @Override public Iterator<MimePart> iterator() {
+    public Iterator<MimePart> iterator() {
         return new ArrayList<MimePart>(mChildren).iterator();
     }
 
@@ -154,7 +147,6 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
             return super.getRawContentStream();
 
         byte[] startBoundary = ("\r\n--" + mBoundary + "\r\n").getBytes();
-
         List<Object> sources = new ArrayList<Object>(mChildren.size() * 2 + 3);
         if (mPreamble != null)
             sources.add(mPreamble);
@@ -176,26 +168,9 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
         return inherited;
     }
 
-    String getBoundary() {
-        return mBoundary;
-    }
-
-    void setEffectiveBoundary(String boundary) {
-        // can't change a real boundary
-        if (mBoundary == UNSET_BOUNDARY && boundary != null && !boundary.trim().isEmpty()) {
-            mBoundary = boundary;
-            // RFC 2046 5.1.1: "The only mandatory global parameter for the "multipart" media type is
-            //                  the boundary parameter, which consists of 1 to 70 characters from a
-            //                  set of characters known to be very robust through mail gateways, and
-            //                  NOT ending with white space."
-            while (mBoundary.length() > 0 && Character.isWhitespace(mBoundary.charAt(mBoundary.length() - 1)))
-                mBoundary = mBoundary.substring(0, mBoundary.length() - 1);
-        }
-    }
-
     @Override MimePart readContent(ParseState pstate) throws IOException {
         // first read the MIME preamble
-        MimeBodyPart preamble = new MimeBodyPart(new ContentType(ContentType.TEXT_PLAIN), this, getBodyOffset(), pstate.getPosition(), null).readContent(pstate);
+        MimePart preamble = new MimeBodyPart(new ContentType(ContentType.TEXT_PLAIN), this, getBodyOffset(), pstate.getPosition(), null).readContent(pstate);
         ParseState.BoundaryTerminator bterm = pstate.getBoundaryTerminator();
 
         // if the Content-Type didn't define the multipart boundary, pick it up from the preamble terminator
@@ -219,7 +194,7 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
 
             // skip the epilogue if appropriate
             if (bterm != null && bterm.mWasEndBoundary && mBoundary.equals(bterm.mBoundary)) {
-                MimeBodyPart epilogue = new MimeBodyPart(new ContentType("text/plain"), this, pstate.getPosition(), pstate.getPosition(), null).readContent(pstate);
+                MimePart epilogue = new MimeBodyPart(new ContentType("text/plain"), this, pstate.getPosition(), pstate.getPosition(), null).readContent(pstate);
                 bterm = pstate.getBoundaryTerminator();
                 if (epilogue.getSize() > 0)
                     mEpilogue = epilogue;

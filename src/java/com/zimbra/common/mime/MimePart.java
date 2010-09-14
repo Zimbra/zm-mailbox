@@ -38,7 +38,6 @@ public abstract class MimePart {
     private MimeHeaderBlock mMimeHeaders;
     private ContentType mContentType;
     private long mStartOffset = -1L, mBodyOffset = -1L, mEndOffset = -1L;
-    private int mLineCount = -1;
     private PartSource mPartSource;
     private boolean mDirty;
 
@@ -86,10 +85,8 @@ public abstract class MimePart {
     }
 
     void setParent(MimePart mp) {
-        if (mParent != mp) {
-            detach();
-            mParent = mp;
-        }
+        detach();
+        mParent = mp;
     }
 
     public MimePart detach() {
@@ -131,10 +128,6 @@ public abstract class MimePart {
 
     long getSize() {
         return mEndOffset - mBodyOffset;
-    }
-
-    int getLineCount() {
-        return mLineCount;
     }
 
     Properties getProperties() {
@@ -326,11 +319,6 @@ public abstract class MimePart {
 
     protected void recordEndpoint(long position) {
         mEndOffset = position;
-    }
-
-    protected void recordEndpoint(long position, int lineCount) {
-        mEndOffset = position;
-        mLineCount = lineCount;
     }
 
 

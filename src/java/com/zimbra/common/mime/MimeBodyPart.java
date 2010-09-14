@@ -196,7 +196,7 @@ public class MimeBodyPart extends MimePart {
     }
 
 
-    @Override MimeBodyPart readContent(ParseState pstate) throws IOException {
+    @Override MimePart readContent(ParseState pstate) throws IOException {
         PeekAheadInputStream pais = pstate.getInputStream();
         List<String> boundaries = getActiveBoundaries();
         pstate.clearBoundary();
