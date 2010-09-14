@@ -226,6 +226,7 @@ public class ProvUtil implements HttpDebugListener {
         MISC("help on misc commands"),
         MAILBOX("help on mailbox-related commands"),
         NOTEBOOK("help on notebook-related commands"), 
+        REVERSEPROXY("help on reverse proxy related commands"),
         RIGHT("help on right-related commands"),
         SEARCH("help on search-related commands"), 
         SERVER("help on server-related commands"),
@@ -523,8 +524,9 @@ public class ProvUtil implements HttpDebugListener {
         SET_ACCOUNT_COS("setAccountCos", "sac", "{name@domain|id} {cos-name|cos-id}", Category.ACCOUNT, 2, 2),
         SET_PASSWORD("setPassword", "sp", "{name@domain|id} {password}", Category.ACCOUNT, 2, 2),
         GET_ALL_MTA_AUTH_URLS("getAllMtaAuthURLs", "gamau", "", Category.SERVER, 0, 0),
-        GET_ALL_REVERSE_PROXY_URLS("getAllReverseProxyURLs", "garpu", "", Category.SERVER, 0, 0),
-        GET_ALL_REVERSE_PROXY_BACKENDS("getAllReverseProxyBackends", "garpb", "", Category.SERVER, 0, 0),
+        GET_ALL_REVERSE_PROXY_URLS("getAllReverseProxyURLs", "garpu", "", Category.REVERSEPROXY, 0, 0),
+        GET_ALL_REVERSE_PROXY_BACKENDS("getAllReverseProxyBackends", "garpb", "", Category.REVERSEPROXY, 0, 0),
+        GET_ALL_REVERSE_PROXY_DOMAINS("getAllReverseProxyDomains", "garpd", "", Category.REVERSEPROXY, 0, 0),
         GET_ALL_MEMCACHED_SERVERS("getAllMemcachedServers", "gamcs", "", Category.SERVER, 0, 0),
         RELOAD_MEMCACHED_CLIENT_CONFIG("reloadMemcachedClientConfig", "rmcc", "all | mailbox-server [...]", Category.MISC, 1, Integer.MAX_VALUE, Via.soap),
         GET_MEMCACHED_CLIENT_CONFIG("getMemcachedClientConfig", "gmcc", "all | mailbox-server [...]", Category.MISC, 1, Integer.MAX_VALUE, Via.soap),
@@ -1160,6 +1162,9 @@ public class ProvUtil implements HttpDebugListener {
             break;
         case GET_ALL_REVERSE_PROXY_BACKENDS:
             doGetAllReverseProxyBackends(args);
+            break;
+        case GET_ALL_REVERSE_PROXY_DOMAINS:
+            doGetAllReverseProxyDomains(args);
             break;
         case GET_ALL_MEMCACHED_SERVERS:
             doGetAllMemcachedServers(args);
@@ -2319,6 +2324,7 @@ public class ProvUtil implements HttpDebugListener {
                         throw ServiceException.INVALID_REQUEST("missing value for " + specificAttr, null);
                 }
                 
+                attrName = attrName.toLowerCase();
                 Set<String> values = specificAttrValues.get(attrName);
                 if (values == null) // haven't seen the attr yet
                     values = new HashSet<String>();
@@ -3583,6 +3589,26 @@ public class ProvUtil implements HttpDebugListener {
     	}
     }
 
+    private void doGetAllReverseProxyDomains(String[] args) throws ServiceException {
+        
+        if (!(mProv instanceof LdapProvisioning))
+            throwLdapOnly();
+        
+        final Set<String> attrsNeeded = new HashSet<String>();
+        attrsNeeded.add(Provisioning.A_zimbraVirtualHostname);
+        attrsNeeded.add(Provisioning.A_zimbraSSLPrivateKey);
+        attrsNeeded.add(Provisioning.A_zimbraSSLCertificate);
+        
+        NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
+            public void visit(NamedEntry entry) throws ServiceException {
+                if (entry.getAttr(Provisioning.A_zimbraVirtualHostname) != null)
+                    dumpDomain((Domain)entry, attrsNeeded);
+            }
+        };
+        
+        mProv.getAllDomains(visitor, attrsNeeded.toArray(new String[attrsNeeded.size()]));
+    }
+    
     private void doGetAllMemcachedServers(String[] args) throws ServiceException {
         List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MEMCACHED);
         for (Server server : servers ) {
