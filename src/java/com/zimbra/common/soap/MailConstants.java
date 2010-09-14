@@ -214,6 +214,8 @@ public class MailConstants {
     public static final QName DIFF_DOCUMENT_RESPONSE = QName.get("DiffDocumentResponse", NAMESPACE);
     public static final QName LIST_DOCUMENT_REVISIONS_REQUEST = QName.get("ListDocumentRevisionsRequest", NAMESPACE);
     public static final QName LIST_DOCUMENT_REVISIONS_RESPONSE = QName.get("ListDocumentRevisionsResponse", NAMESPACE);
+    public static final QName PURGE_REVISION_REQUEST = QName.get("PurgeRevisionRequest", NAMESPACE);
+    public static final QName PURGE_REVISION_RESPONSE = QName.get("PurgeRevisionResponse", NAMESPACE);
 
     // data sources
     public static final QName CREATE_DATA_SOURCE_REQUEST = QName.get("CreateDataSourceRequest", NAMESPACE);
@@ -762,6 +764,8 @@ public class MailConstants {
     public static final String A_LOCKOWNER_ID = "loid";
     public static final String A_LOCKOWNER_EMAIL = "loe";
     public static final String A_LOCKTIMESTAMP = "lt";
+    public static final String E_REVISION = "revision";
+    public static final String A_INCLUDE_OLDER_REVISIONS = "includeOlderRevisions";
     
     // WaitSet
     public static final String E_WAITSET_ADD = "add";
