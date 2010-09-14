@@ -43,11 +43,13 @@ public class InternetAddress {
     }
 
     public InternetAddress(byte[] content, int start, int length, String charset) {
-        if (charset != null && !charset.trim().equals(""))
+        if (charset != null && !charset.trim().equals("")) {
             mCharset = charset;
+        }
         parse(content, start, length);
-        if (mCharset == null)
+        if (mCharset == null) {
             mCharset = "utf-8";
+        }
     }
 
 
@@ -78,16 +80,14 @@ public class InternetAddress {
         return this;
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         if (mDisplay != null) {
-            return MimeHeader.escape(mDisplay, mCharset, true) +
-                (mEmail != null ? (" <" + mEmail + '>') : "");
-        }
-        if (mEmail != null) {
+            return MimeHeader.escape(mDisplay, mCharset, true) + (mEmail != null ? (" <" + mEmail + '>') : "");
+        } else if (mEmail != null) {
             return mEmail;
+        } else {
+            return "";
         }
-        return "";
     }
 
     /**
@@ -98,13 +98,12 @@ public class InternetAddress {
      */
     public String toUnicodeString() {
         if (mDisplay != null) {
-            return MimeHeader.quote(mDisplay) +
-                (mEmail != null ? (" <" + mEmail + '>') : "");
-        }
-        if (mEmail != null){
+            return MimeHeader.quote(mDisplay) + (mEmail != null ? (" <" + mEmail + '>') : "");
+        } else if (mEmail != null) {
             return mEmail;
+        } else {
+            return "";
         }
-        return "";
     }
 
     /**
@@ -114,15 +113,13 @@ public class InternetAddress {
      * @param raw comma separated address strings
      * @return list of {@link InternetAddress}
      */
-    public static List<InternetAddress> parse(String raw) {
+    public static List<InternetAddress> parseHeader(String raw) {
         byte[] array = raw.getBytes();
         return parseHeader(array, 0, array.length);
     }
 
-    static List<InternetAddress> parseHeader(final byte[] content,
-            final int start, final int length) {
-        // FIXME: will split the header incorrectly if there's a ',' in the
-        // middle of a domain literal ("@[...]")
+    static List<InternetAddress> parseHeader(final byte[] content, final int start, final int length) {
+        // FIXME: will split the header incorrectly if there's a ',' in the middle of a domain literal ("@[...]")
         boolean quoted = false, escaped = false, group = false, empty = true;
         int pos = start, astart = pos, end = start + length, clevel = 0;
         List<InternetAddress> iaddrs = new ArrayList<InternetAddress>();
@@ -136,8 +133,7 @@ public class InternetAddress {
                 quoted = !escaped && c == '"';
                 escaped = !escaped && c == '\\';
             } else if (c == '(' || clevel > 0) {
-                // handle comments outside of quoted strings, even where they're
-                // not actually permitted
+                // handle comments outside of quoted strings, even where they're not actually permitted
                 if (!escaped && (c == '(' || c == ')')) {
                     clevel += c == '(' ? 1 : -1;
                 }
@@ -148,8 +144,7 @@ public class InternetAddress {
             } else if (c == ',' || (c == ';' && group)) {
                 // this concludes the address portion of our program
                 if (!empty) {
-                    iaddrs.add(new InternetAddress(content,
-                            astart, pos - astart - 1, null));
+                    iaddrs.add(new InternetAddress(content, astart, pos - astart - 1, null));
                 }
                 group = c == ';';
                 empty = true;
@@ -168,6 +163,7 @@ public class InternetAddress {
         }
         return iaddrs;
     }
+
 
     private void parse(byte[] content, int start, int length) {
         parse(content, start, length, false);
@@ -190,20 +186,23 @@ public class InternetAddress {
                     escaped = true;
                 } else if (quoted && !escaped && c == '"') {
                     // make sure to check we didn't have encoded-words inside the quoted string
-                    if (angle)
+                    if (angle) {
                         address = builder.appendTo(address);
-                    else if (builder.indexOf((byte) '=') != -1)
+                    } else if (builder.indexOf((byte) '=') != -1) {
                         base = (base == null ? "" : base) +  MimeHeader.decode(builder.toByteArray(), mCharset);
-                    else
+                    } else {
                         base = builder.appendTo(base);
+                    }
                     quoted = false;  builder.reset();
                 } else {
                     // continuation of a quoted string; note that quoted strings aren't recognized in comments
-                    if (!dliteral || (c != ' ' && c != '\t'))
+                    if (!dliteral || (c != ' ' && c != '\t')) {
                         builder.write(c);
+                    }
                     escaped = false;
-                    if (dliteral && c == ']')
+                    if (dliteral && c == ']') {
                         dliteral = false;
+                    }
                 }
             } else if (c == '=' && (!angle || clevel > 0) && pos < end - 2 && content[pos + 1] == '?' && (!encoded || content[pos + 2] != '=')) {
                 // "=?" marks the beginning of an encoded-word
@@ -218,10 +217,11 @@ public class InternetAddress {
                 builder.write('?');  builder.write('=');
                 String decoded = HeaderUtils.decodeWord(builder.toByteArray());
                 boolean valid = decoded != null;
-                if (valid)
+                if (valid) {
                     pos++;
-                else
+                } else {
                     decoded = builder.pop().toString();
+                }
                 if (clevel > 0) {
                     comment = (comment == null ? "" : (valid && cencwspenc == Boolean.TRUE ? comment.substring(0, comment.length() - 1) : comment)) + decoded;
                     cwsp = false;  cencwspenc = valid ? null : Boolean.FALSE;
@@ -243,18 +243,22 @@ public class InternetAddress {
                     comment = null;  cwsp = true;  builder.reset();
                 } else if (escaped || c != ')' || --clevel != 0) {
                     // comment body character (may be nested '(' or ')')
-                    if (c == '(' && !cwsp)
+                    if (c == '(' && !cwsp) {
                         builder.write(' ');
-                    else if (c == ')' && cwsp)
+                    } else if (c == ')' && cwsp) {
                         builder.pop();
+                    }
                     boolean isWhitespace = c == ' ' || c == '\t';
-                    if (!cwsp || !isWhitespace)
+                    if (!cwsp || !isWhitespace) {
                         builder.write(isWhitespace ? ' ' : c);
-                    if (c == ')')
+                    }
+                    if (c == ')') {
                         builder.write(' ');
+                    }
                     cwsp = isWhitespace || c == ')' || c == '(';  escaped = false;
-                    if (!encoded && cencwspenc != Boolean.FALSE)
+                    if (!encoded && cencwspenc != Boolean.FALSE) {
                         cencwspenc = isWhitespace;
+                    }
                 } else {
                     // end of top-level comment
                     comment = (comment == null ? "" : comment) + (cwsp ? builder.pop() : builder).toString();
@@ -273,8 +277,9 @@ public class InternetAddress {
                 dliteral = true;
             } else if (c == '<' && !angle) {
                 // we've just read the leading '<' of an angle-addr, so we now read the addr-spec and the closing '>'
-                if (!builder.isEmpty())
+                if (!builder.isEmpty()) {
                     base = (base == null ? "" : base) + (wsp ? builder.pop() : builder).toString();
+                }
                 angle = true;  wsp = true;  atsign = false;  builder.reset();
             } else if (c == '>' && angle) {
                 address = builder.appendTo(address);
@@ -283,18 +288,21 @@ public class InternetAddress {
                 if (angle && !atsign && c == '@') {
                     address = builder.appendTo(address);
                     // quote the mailbox part of the address if necessary
-                    if (!isValidDotAtom(address))
+                    if (!isValidDotAtom(address)) {
                         address = MimeHeader.quote(address);
+                    }
                     builder.reset();
                 }
                 // compress multiple whitespace chars to a single space
                 boolean isWhitespace = c == ' ' || c == '\t';
-                if (!wsp || !isWhitespace)
+                if (!wsp || !isWhitespace) {
                     builder.write(isWhitespace ? ' ' : c);
+                }
                 wsp = angle || isWhitespace;
                 // note if this may be whitespace between two encoded-words, which we have to ignore
-                if (!encoded && encwspenc != Boolean.FALSE)
+                if (!encoded && encwspenc != Boolean.FALSE) {
                     encwspenc = isWhitespace;
+                }
                 atsign |= c == '@';
             }
         }
@@ -306,8 +314,9 @@ public class InternetAddress {
             else              base = builder.appendTo(base);
         }
 
-        if (!angle && wsp && base != null && base.length() > 0)
+        if (!angle && wsp && base != null && base.length() > 0) {
             base = base.substring(0, base.length() - 1);
+        }
 
         if (!angle && atsign) {
             // there are some tricky little bits to parsing addresses that weren't followed, so re-parse as an address
@@ -322,13 +331,13 @@ public class InternetAddress {
         boolean dot = true;
         for (int i = 0, len = content.length(); i < len; i++) {
             char c = content.charAt(i);
-            if (c == '.' && dot)
+            if (c == '.' && dot) {
                 return false;
-            else if (c != '.' && (c < 0x00 || c > 0xFF || !MimeHeader.ATEXT_VALID[c]))
+            } else if (c != '.' && (c < 0x00 || c > 0xFF || !MimeHeader.ATEXT_VALID[c])) {
                 return false;
+            }
             dot = c == '.';
         }
         return !dot;
     }
-
 }

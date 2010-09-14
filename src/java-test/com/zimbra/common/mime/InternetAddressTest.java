@@ -231,7 +231,7 @@ public class InternetAddressTest {
     @Test
     public void parseHeader() {
         String src = "mine:=?us-ascii?Q?Bob_?=\t=?us-ascii?Q?the_Builder_1?= <bob@example.com>;,=?us-ascii?Q?Bob the Builder 2?= <bob@example.com>";
-        List<InternetAddress> iaddrs = InternetAddress.parse(src);
+        List<InternetAddress> iaddrs = InternetAddress.parseHeader(src);
         Assert.assertEquals(2, iaddrs.size());
         Assert.assertEquals("Bob the Builder 1", iaddrs.get(0).getPersonal());
         Assert.assertEquals("bob@example.com", iaddrs.get(0).getAddress());
@@ -245,13 +245,13 @@ public class InternetAddressTest {
     @Test
     public void rfc2822a12() {
         String raw = "\"Joe Q. Public\" <john.q.public@example.com>";
-        List<InternetAddress> iaddrs = InternetAddress.parse(raw);
+        List<InternetAddress> iaddrs = InternetAddress.parseHeader(raw);
         Assert.assertEquals(1, iaddrs.size());
         Assert.assertEquals("Joe Q. Public", iaddrs.get(0).getPersonal());
         Assert.assertEquals("john.q.public@example.com", iaddrs.get(0).getAddress());
 
         raw = "Mary Smith <mary@x.test>, jdoe@example.org, Who? <one@y.test>";
-        iaddrs = InternetAddress.parse(raw);
+        iaddrs = InternetAddress.parseHeader(raw);
         Assert.assertEquals(3, iaddrs.size());
         Assert.assertEquals("Mary Smith", iaddrs.get(0).getPersonal());
         Assert.assertEquals("mary@x.test", iaddrs.get(0).getAddress());
@@ -261,7 +261,7 @@ public class InternetAddressTest {
         Assert.assertEquals("one@y.test", iaddrs.get(2).getAddress());
 
         raw = "<boss@nil.test>, \"Giant; \\\"Big\\\" Box\" <sysservices@example.net>";
-        iaddrs = InternetAddress.parse(raw);
+        iaddrs = InternetAddress.parseHeader(raw);
 
     }
 
@@ -271,7 +271,7 @@ public class InternetAddressTest {
     @Test
     public void rfc2822a13() {
         String raw = "A Group:Chris Jones <c@a.test>,joe@where.test,John <jdoe@one.test>";
-        List<InternetAddress> iaddrs = InternetAddress.parse(raw);
+        List<InternetAddress> iaddrs = InternetAddress.parseHeader(raw);
         Assert.assertEquals(3, iaddrs.size());
         Assert.assertEquals("Chris Jones", iaddrs.get(0).getPersonal());
         Assert.assertEquals("c@a.test", iaddrs.get(0).getAddress());
@@ -281,7 +281,7 @@ public class InternetAddressTest {
         Assert.assertEquals("jdoe@one.test", iaddrs.get(2).getAddress());
 
         raw = "Undisclosed recipients:;";
-        iaddrs = InternetAddress.parse(raw);
+        iaddrs = InternetAddress.parseHeader(raw);
         Assert.assertEquals(0, iaddrs.size());
     }
     /**
@@ -290,7 +290,7 @@ public class InternetAddressTest {
     @Test
     public void rfc2822a5() {
         String raw = "Pete(A wonderful \\) chap) <pete(his account)@silly.test(his host)>";
-        List<InternetAddress> iaddrs = InternetAddress.parse(raw);
+        List<InternetAddress> iaddrs = InternetAddress.parseHeader(raw);
         Assert.assertEquals(1, iaddrs.size());
         Assert.assertEquals("Pete", iaddrs.get(0).getPersonal());
         Assert.assertEquals("pete@silly.test", iaddrs.get(0).getAddress());
@@ -299,7 +299,7 @@ public class InternetAddressTest {
             "    :Chris Jones <c@(Chris's host.)public.example>,\n" +
             "        joe@example.org,\n" +
             " John <jdoe@one.test> (my dear friend); (the end of the group)";
-        iaddrs = InternetAddress.parse(raw);
+        iaddrs = InternetAddress.parseHeader(raw);
         Assert.assertEquals(3, iaddrs.size());
         Assert.assertEquals("Chris Jones", iaddrs.get(0).getPersonal());
         Assert.assertEquals("c@public.example", iaddrs.get(0).getAddress());
@@ -309,7 +309,7 @@ public class InternetAddressTest {
         Assert.assertEquals("jdoe@one.test", iaddrs.get(2).getAddress());
 
         raw = "(Empty list)(start)Undisclosed recipients  :(nobody(that I know))  ;";
-        iaddrs = InternetAddress.parse(raw);
+        iaddrs = InternetAddress.parseHeader(raw);
         Assert.assertEquals(0, iaddrs.size());
     }
 
@@ -320,13 +320,13 @@ public class InternetAddressTest {
     @Test
     public void rfc2822a61() {
         String raw = "Joe Q. Public <john.q.public@example.com>";
-        List<InternetAddress> iaddrs = InternetAddress.parse(raw);
+        List<InternetAddress> iaddrs = InternetAddress.parseHeader(raw);
         Assert.assertEquals(1, iaddrs.size());
         Assert.assertEquals("Joe Q. Public", iaddrs.get(0).getPersonal());
         Assert.assertEquals("john.q.public@example.com", iaddrs.get(0).getAddress());
 
         raw = "Mary Smith <@machine.tld:mary@example.net>, , jdoe@test   . example";
-        iaddrs = InternetAddress.parse(raw);
+        iaddrs = InternetAddress.parseHeader(raw);
         Assert.assertEquals(2, iaddrs.size());
         System.out.println(iaddrs.get(0).toString());
         Assert.assertEquals("Mary Smith", iaddrs.get(0).getPersonal()); //FIXME
@@ -341,13 +341,13 @@ public class InternetAddressTest {
     @Test
     public void rfc2822a63() {
         String raw = "John Doe <jdoe@machine(comment).  example>";
-        List<InternetAddress> iaddrs = InternetAddress.parse(raw);
+        List<InternetAddress> iaddrs = InternetAddress.parseHeader(raw);
         Assert.assertEquals(1, iaddrs.size());
         Assert.assertEquals("John Doe", iaddrs.get(0).getPersonal());
         Assert.assertEquals("jdoe@machine.example", iaddrs.get(0).getAddress());
 
         raw = "Mary Smith\n     \n     <mary@example.net>";
-        iaddrs = InternetAddress.parse(raw);
+        iaddrs = InternetAddress.parseHeader(raw);
         Assert.assertEquals(1, iaddrs.size());
         Assert.assertEquals("Mary Smith", iaddrs.get(0).getPersonal());
         Assert.assertEquals("mary@example.net", iaddrs.get(0).getAddress());
