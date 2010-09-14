@@ -99,8 +99,7 @@ public class SaveDocument extends WikiDocumentHandler {
             int itemId = (id == null ? 0 : new ItemId(id, zsc).getId());
             int ver = (int) docElem.getAttributeLong(MailConstants.A_VERSION, 0);
 
-            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(zsc.getRequestedAccountId());
-            
+            Mailbox mbox =  getRequestedMailbox(zsc);
             Element attElem = docElem.getOptionalElement(MailConstants.E_UPLOAD);
             Element msgElem = docElem.getOptionalElement(MailConstants.E_MSG);
             Element docRevElem = docElem.getOptionalElement(MailConstants.E_DOC);
