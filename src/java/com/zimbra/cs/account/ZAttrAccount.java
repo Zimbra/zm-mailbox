@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20100909-1649 */
+    /* build: 7.0.0_BETA1_1111 pshao 20100913-1725 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -24334,6 +24334,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefForwardReplyPrefixChar(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefForwardReplyPrefixChar, "");
+        return attrs;
+    }
+
+    /**
+     * forword/reply signature id for account/identity/dataSource
+     *
+     * @return zimbraPrefForwardReplySignatureId, or null if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1123)
+    public String getPrefForwardReplySignatureId() {
+        return getAttr(Provisioning.A_zimbraPrefForwardReplySignatureId, null);
+    }
+
+    /**
+     * forword/reply signature id for account/identity/dataSource
+     *
+     * @param zimbraPrefForwardReplySignatureId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1123)
+    public void setPrefForwardReplySignatureId(String zimbraPrefForwardReplySignatureId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefForwardReplySignatureId, zimbraPrefForwardReplySignatureId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * forword/reply signature id for account/identity/dataSource
+     *
+     * @param zimbraPrefForwardReplySignatureId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1123)
+    public Map<String,Object> setPrefForwardReplySignatureId(String zimbraPrefForwardReplySignatureId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefForwardReplySignatureId, zimbraPrefForwardReplySignatureId);
+        return attrs;
+    }
+
+    /**
+     * forword/reply signature id for account/identity/dataSource
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1123)
+    public void unsetPrefForwardReplySignatureId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefForwardReplySignatureId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * forword/reply signature id for account/identity/dataSource
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1123)
+    public Map<String,Object> unsetPrefForwardReplySignatureId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefForwardReplySignatureId, "");
         return attrs;
     }
 

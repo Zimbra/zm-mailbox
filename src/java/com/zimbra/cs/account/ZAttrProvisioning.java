@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20100909-1649 */
+    /* build: 7.0.0_BETA1_1111 pshao 20100913-1725 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5835,6 +5835,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=130)
     public static final String A_zimbraPrefForwardReplyPrefixChar = "zimbraPrefForwardReplyPrefixChar";
+
+    /**
+     * forword/reply signature id for account/identity/dataSource
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1123)
+    public static final String A_zimbraPrefForwardReplySignatureId = "zimbraPrefForwardReplySignatureId";
 
     /**
      * email address to put in from header

@@ -5056,4 +5056,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>spnego auth principal</desc>
 </attr>
 
+<attr id="1123" name="zimbraPrefForwardReplySignatureId" type="id" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="7.0.0">
+  <desc>forword/reply signature id for account/identity/dataSource</desc>
+</attr>
+
 </attrs>
