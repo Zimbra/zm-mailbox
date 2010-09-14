@@ -328,7 +328,8 @@ public class ImapSession extends Session {
             // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
             //                mailbox, but disconnect all other clients who have the
             //                mailbox accessed by sending a untagged BYE response."
-            mHandler.dropConnection(true);
+            if (mHandler != null)
+                mHandler.dropConnection(true);
         } else {
             // XXX: would be helpful to have the item type here
             mFolder.handleItemDelete(changeId, id);
@@ -355,7 +356,8 @@ public class ImapSession extends Session {
                 // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
                 //                mailbox, but disconnect all other clients who have the
                 //                mailbox accessed by sending a untagged BYE response."
-                mHandler.dropConnection(true);
+                if (mHandler != null)
+                    mHandler.dropConnection(true);
             } else if ((chg.why & (Change.MODIFIED_FOLDER | Change.MODIFIED_NAME)) != 0) {
                 mFolder.handleFolderRename(changeId, folder, chg);
             }
