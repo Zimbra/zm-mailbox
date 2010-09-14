@@ -51,8 +51,9 @@ public class TestZimbraHttpConnectionManager extends TestCase {
         testReaper(false),
         testHttpState(false),
         testSoTimeoutViaHttpMethod(false),
-        testHttpClientConnectionManagerTimeout(true),
-        testSoapProv(false);
+        testHttpClientConnectionManagerTimeout(false),
+        testSoapProv(false),
+        testAuthenticationPreemptive(true);
         
         private boolean mRunIt;
         Test(boolean runIt) {
@@ -576,6 +577,57 @@ public class TestZimbraHttpConnectionManager extends TestCase {
         runSoapProvParallel(3);
         
     }
+    
+    private void runTest(HttpClient httpClient, String id, boolean authPreemp) {
+        
+        GetMethod method = new GetMethod("http://localhost:7070/");
+        
+        long startTime = System.currentTimeMillis();
+        long endTime;
+        
+        try {
+            System.out.println(id + " - about to get something from " + method.getURI());
+            // execute the method
+            
+            if (authPreemp)
+                httpClient.getParams().setAuthenticationPreemptive(true);
+            
+            int respCode = HttpClientUtil.executeMethod(httpClient, method);
+            
+            System.out.println(id + " - get executed");
+            // get the response body as an array of bytes
+            // byte[] bytes = method.getResponseBody();
+            // dumpResponse(respCode, mMethod, Integer.valueOf(mId).toString());
+            
+        } catch (Exception e) {
+            System.out.println(id + " - error: " + e);
+            e.printStackTrace();
+        } finally {
+            
+            endTime = System.currentTimeMillis();
+            long elapsedTime = endTime - startTime;
+            // System.out.println(id + " - Finished, elapsedTime=" + elapsedTime + " milli seconds");
+            
+            // always release the connection after we're done 
+            method.releaseConnection();
+            System.out.println(id + " - connection released");
+        }
+    }
+    
+    public void testAuthenticationPreemptive() throws Exception {
+        if (!runIt())
+            return;
+        
+        ZimbraHttpConnectionManager.startReaperThread();
+        
+        
+        for (int i = 0; i < 10; i++) {
+            // runTest(new HttpClient(), "PLAIN"+i, true);
+            runTest(ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient(), "EXT"+i, true);
+            runTest(ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient(), "INT"+i, false);
+        }
+    }
+    
     
     public static void main(String[] args) throws Exception {
         // TestUtil.cliSetup();  uncomment will default to SoapProvisioning
