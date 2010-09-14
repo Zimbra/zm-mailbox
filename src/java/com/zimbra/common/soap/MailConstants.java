@@ -448,7 +448,7 @@ public class MailConstants {
     public static final String A_NO_SAVE_TO_SENT = "noSave";
     public static final String A_SEND_UID = "suid";
     public static final String A_FOR_ACCOUNT = "forAcct";
-    public static final String E_AUTO_SEND_TIME = "autoSendTime";
+    public static final String A_AUTO_SEND_TIME = "autoSendTime";
 
     // mountpoints
     public static final String A_REMOTE_ID = "rid";
