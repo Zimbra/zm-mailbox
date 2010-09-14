@@ -58,10 +58,11 @@ public class ListDocumentRevisions extends WikiDocumentHandler {
 
         if (version < 0)
         	version = item.getVersion();
-        
+        byte type = item.getType();
         while (version > 0 && count > 0) {
-        	item = (Document) mbox.getItemRevision(octxt, item.getId(), item.getType(), version);
-        	ToXML.encodeDocument(response, ifmt, octxt, item);
+        	item = (Document) mbox.getItemRevision(octxt, iid.getId(), type, version);
+        	if (item != null)
+        	    ToXML.encodeDocument(response, ifmt, octxt, item);
         	version--; count--;
         }
 

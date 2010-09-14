@@ -6737,6 +6737,19 @@ public class Mailbox {
         }
     }
 
+    public void purgeRevision(OperationContext octxt, int itemId, int rev, boolean includeOlderRevisions) throws ServiceException {
+        PurgeRevision redoRecorder = new PurgeRevision(mId, itemId, rev, includeOlderRevisions);
+        boolean success = false;
+        try {
+            beginTransaction("purgeRevision", octxt, redoRecorder);
+            MailItem item = getItemById(itemId, MailItem.TYPE_DOCUMENT);
+            item.purgeRevision(rev, includeOlderRevisions);
+            success = true;
+        } finally {
+            endTransaction(success);
+        }
+    }
+    
     public Message updateOrCreateChat(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
         // make sure the message has been analzyed before taking the Mailbox lock
         if (indexImmediately())

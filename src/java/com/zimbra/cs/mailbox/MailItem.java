@@ -1681,7 +1681,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 }
                 // Purge revisions from db.
                 int highestPurgedVer = toPurge.get(toPurge.size() - 1).getVersion();
-                DbMailItem.purgeRevisions(this, highestPurgedVer);
+                DbMailItem.purgeRevisions(this, highestPurgedVer, true);
             }
             if (revisions.isEmpty())
                 tagChanged(mMailbox.getFlagById(Flag.ID_FLAG_VERSIONED), false);
@@ -1704,6 +1704,11 @@ public abstract class MailItem implements Comparable<MailItem> {
                 return revision;
         }
         return null;
+    }
+    
+    void purgeRevision(int version, boolean includeOlderRevisions) throws ServiceException {
+        DbMailItem.purgeRevisions(this, version, includeOlderRevisions);
+        mRevisions = null;
     }
 
     /** Recalculates the size, metadata, etc. for an existing MailItem and

@@ -3337,3 +3337,16 @@ Notes:
     more-flag = true if more members left to return
     total = total number of distribution lists (not affected by limit/offset)
     isDL = whether this member itself is a distribution list, default is 0
+
+-----------------------------
+
+<PurgeRevisionRequest>
+  <revision id="{item-id}" ver="{revision}" [includeOlderRevisions="true|false"]/>
+</PurgeRevisionRequest>
+
+<PurgeRevisionResponse/>
+
+When includeOlderRevisions is set to true, the server will purge all the
+
+
+-----------------------------

@@ -396,8 +396,8 @@ public class DbMailItem {
         }
     }
 
-    public static void purgeRevisions(MailItem item, int highestPurged) throws ServiceException {
-        if (highestPurged <= 0)
+    public static void purgeRevisions(MailItem item, int revision, boolean includeOlderRevisions) throws ServiceException {
+        if (revision <= 0)
             return;
         Mailbox mbox = item.getMailbox();
 
@@ -407,11 +407,12 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("DELETE FROM " + getRevisionTableName(mbox) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "item_id = ? AND version <= ?");
+                        " WHERE " + IN_THIS_MAILBOX_AND + "item_id = ? AND version " + 
+                        (includeOlderRevisions ? "<= ?" : "= ?"));
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
-            stmt.setInt(pos++, highestPurged);
+            stmt.setInt(pos++, revision);
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("purging revisions for " + MailItem.getNameForType(item) + ": " + item.getId(), e);
@@ -419,7 +420,7 @@ public class DbMailItem {
             DbPool.closeStatement(stmt);
         }
     }
-
+    
     public static void changeType(MailItem item, byte type) throws ServiceException {
         Mailbox mbox = item.getMailbox();
 
