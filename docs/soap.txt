@@ -2093,10 +2093,9 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
 +  drafts default to the Drafts folder
 +  setting folder/tags/flags/color occurs *after* the draft is created/updated, and if it fails the content *WILL STILL BE SAVED*
 +  can optionally set autoSendTime to specify the time at which the draft should be automatically sent by the server
-   refer soap-calendar.txt for details of the DATETIME format
 
 <SaveDraftRequest>
-  <m [id="{existing-draft-id}"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [l="{folder}"] [f="{flags}"] [t="{tag-id-list}"] [color="{color}"]>
+  <m [id="{existing-draft-id}"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [l="{folder}"] [f="{flags}"] [t="{tag-id-list}"] [color="{color}"] [autoSendTime="{millis-since-epoch}"]>
     <e t="{type}" a="{email-address}" p="{personal-name}"/>+
     <su>{subject}</su>*
     [<irt>{Message-ID header for message being replied to}</irt>]
@@ -2110,7 +2109,6 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
       [<doc (id="{document-id}" | path="{document-path}") [optional="0|1"]/>]*
     </attach>
   </m>
-  [<autoSendTime DATETIME/>]
 </SaveDraftRequest>
 
    or, if you want to compose the message remotely, upload it via

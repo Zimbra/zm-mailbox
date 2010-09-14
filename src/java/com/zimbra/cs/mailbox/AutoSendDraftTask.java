@@ -1,9 +1,12 @@
 package com.zimbra.cs.mailbox;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.util.ItemId;
+
+import java.util.Date;
 
 /**
  * Auto-send-draft scheduled task.
@@ -58,5 +61,36 @@ public class AutoSendDraftTask extends ScheduledTask {
         // now delete the draft
         mbox.delete(null, draftId, MailItem.TYPE_MESSAGE);
         return null;
+    }
+
+    /**
+     * Cancels any existing scheduled auto-send task for the given draft.
+     *
+     * @param draftId
+     * @param mailboxId
+     * @throws ServiceException
+     */
+    public static void cancelTask(int draftId, long mailboxId) throws ServiceException {
+        ScheduledTaskManager.cancel(AutoSendDraftTask.class.getName(),
+                                    "autoSendDraftTask" + Integer.toString(draftId),
+                                    mailboxId,
+                                    true);
+
+    }
+
+    /**
+     * Schedules an auto-send task for the given draft at the specified time.
+     *
+     * @param draftId
+     * @param mailboxId
+     * @param autoSendTime
+     * @throws ServiceException
+     */
+    public static void scheduleTask(int draftId, long mailboxId, long autoSendTime) throws ServiceException {
+        AutoSendDraftTask autoSendDraftTask = new AutoSendDraftTask();
+        autoSendDraftTask.setMailboxId(mailboxId);
+        autoSendDraftTask.setExecTime(new Date(autoSendTime));
+        autoSendDraftTask.setProperty("draftId", Integer.toString(draftId));
+        ScheduledTaskManager.schedule(autoSendDraftTask);
     }
 }
