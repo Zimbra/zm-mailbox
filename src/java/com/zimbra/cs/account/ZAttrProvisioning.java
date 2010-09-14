@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 dnault 20100910-1107 */
+    /* build: 7.0.0_BETA1_1111 pshao 20100909-1649 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -7574,6 +7574,46 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=267)
     public static final String A_zimbraSpellCheckURL = "zimbraSpellCheckURL";
+
+    /**
+     * ip or hostname for spnego auth admin server
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1121)
+    public static final String A_zimbraSpnegoAuthAdminServer = "zimbraSpnegoAuthAdminServer";
+
+    /**
+     * whether spnego SSO is enabled
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1118)
+    public static final String A_zimbraSpnegoAuthEnabled = "zimbraSpnegoAuthEnabled";
+
+    /**
+     * ip or hostname for spnego auth KDC
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1120)
+    public static final String A_zimbraSpnegoAuthKDC = "zimbraSpnegoAuthKDC";
+
+    /**
+     * spnego auth principal
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1122)
+    public static final String A_zimbraSpnegoAuthPrincipal = "zimbraSpnegoAuthPrincipal";
+
+    /**
+     * spnego auth realm
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1119)
+    public static final String A_zimbraSpnegoAuthRealm = "zimbraSpnegoAuthRealm";
 
     /**
      * Public key of this server, used by other hosts to authorize this

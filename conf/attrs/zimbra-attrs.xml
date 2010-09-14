@@ -5035,4 +5035,25 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="1118" name="zimbraSpnegoAuthEnabled" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="7.0.0">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>whether spnego SSO is enabled</desc>
+</attr>
+
+<attr id="1119" name="zimbraSpnegoAuthRealm" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="7.0.0">
+  <desc>spnego auth realm</desc>
+</attr>
+
+<attr id="1120" name="zimbraSpnegoAuthKDC" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="7.0.0">
+  <desc>ip or hostname for spnego auth KDC</desc>
+</attr>
+
+<attr id="1121" name="zimbraSpnegoAuthAdminServer" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="7.0.0">
+  <desc>ip or hostname for spnego auth admin server</desc>
+</attr>
+
+<attr id="1122" name="zimbraSpnegoAuthPrincipal" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="7.0.0">
+  <desc>spnego auth principal</desc>
+</attr>
+
 </attrs>
