@@ -42,8 +42,6 @@ public class ZimbraHttpConnectionManager {
     // one instance of connection manager params for all our connection managers for now
     private static HttpConnectionManagerParams sConnMgrParams; 
     
-    private static HttpClientParams sClientParams;
-    
     // the idle reaper thread instance
     private static IdleConnectionTimeoutThread sReaperThread;
     
@@ -148,16 +146,7 @@ public class ZimbraHttpConnectionManager {
          * HttpClientParams
          * ------------------------------------------------------------------------
          */ 
-        
-        sClientParams = new HttpClientParams();
-        
-        //
-        // Sets the timeout in milliseconds used when retrieving an HTTP connection from the HTTP connection manager. 
-        //
-        // HttpClientParams.CONNECTION_MANAGER_TIMEOUT
-        //
-        sClientParams.setConnectionManagerTimeout(LC.httpclient_client_connection_timeout.longValue());
-        
+        // see createHttpClientParams()
         
         /* ================================
          * Our connection manager instances
@@ -165,8 +154,6 @@ public class ZimbraHttpConnectionManager {
          */
         sInternalConnMgr = new ZimbraHttpConnectionManager();
         sExternalConnMgr = new ZimbraHttpConnectionManager();
-        
-        // sLog.info("initailized with parameters:\n" + dumpParams(sConnParams, sClientParams));
     }
     
     public static ZimbraHttpConnectionManager getInternalHttpConnMgr() {
@@ -187,8 +174,21 @@ public class ZimbraHttpConnectionManager {
         mDefaultHttpClient = createHttpClient();
     }
     
+    private HttpClientParams createHttpClientParams() {
+        HttpClientParams clientParams = new HttpClientParams();
+        
+        //
+        // Sets the timeout in milliseconds used when retrieving an HTTP connection from the HTTP connection manager. 
+        //
+        // HttpClientParams.CONNECTION_MANAGER_TIMEOUT
+        //
+        clientParams.setConnectionManagerTimeout(LC.httpclient_client_connection_timeout.longValue());
+        
+        return clientParams;
+    }
+    
     private HttpClient createHttpClient() {
-        return new HttpClient(sClientParams, mHttpConnMgr);
+        return new HttpClient(createHttpClientParams(), mHttpConnMgr);
     }
     
     private HttpConnectionManager getConnMgr() {
@@ -417,7 +417,8 @@ public class ZimbraHttpConnectionManager {
     public static void main(String[] args) {
         // dump httpclient package defaults
         System.out.println(dumpParams(new HttpConnectionManagerParams(), new HttpClientParams()));
-        System.out.println(dumpParams(sConnMgrParams, sClientParams));
+        System.out.println(dumpParams(sConnMgrParams, 
+                ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient().getParams()));
         
         HttpClient httpClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient();
         String connMgrName = httpClient.getHttpConnectionManager().getClass().getSimpleName();
