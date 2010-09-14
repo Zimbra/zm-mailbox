@@ -92,7 +92,7 @@ public final class RFC822AddressTokenStream extends TokenStream {
 
         // formally parse RFC822 addresses, then add them unless duplicate.
         // comments of RFC822 addr-spec are stripped out.
-        for (InternetAddress iaddr : InternetAddress.parse(raw)) {
+        for (InternetAddress iaddr : InternetAddress.parseHeader(raw)) {
             tokenize(iaddr, emails);
         }
 
