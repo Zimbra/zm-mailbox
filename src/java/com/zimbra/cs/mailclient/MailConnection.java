@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,7 +29,6 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.net.Socket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
@@ -58,7 +57,7 @@ public abstract class MailConnection {
     protected enum State {
         CLOSED, NOT_AUTHENTICATED, AUTHENTICATED, SELECTED, LOGOUT
     }
-    
+
     /**
      * Creates a new <tt>MailConnection<tt> for the specified configuration.
      *
@@ -110,8 +109,7 @@ public abstract class MailConnection {
         initStreams(sock.getInputStream(), sock.getOutputStream());
     }
 
-    private void initStreams(InputStream is, OutputStream os)
-        throws IOException {
+    private void initStreams(InputStream is, OutputStream os) {
         if (config.isTrace()) {
             is = traceIn = new TraceInputStream(is, config.getTraceOut());
             os = traceOut = new TraceOutputStream(os, config.getTraceOut());
@@ -265,7 +263,7 @@ public abstract class MailConnection {
      * Processes an authentication continuation request from the server.
      * In response, this may write another continuation response to the
      * server.
-     * 
+     *
      * @param s the continuation request to be processed
      * @throws IOException if an I/O error occurs
      */
@@ -322,7 +320,7 @@ public abstract class MailConnection {
 
     /**
      * Returns the output stream for writing mail data.
-     * 
+     *
      * @return the connection output stream
      */
     public MailOutputStream getOutputStream() {
@@ -457,7 +455,7 @@ public abstract class MailConnection {
         SocketFactory sf = config.getSocketFactory();
         return sf != null ? sf : SocketFactory.getDefault();
     }
-    
+
     private SSLSocketFactory getSSLSocketFactory() {
         SSLSocketFactory ssf = config.getSSLSocketFactory();
         return ssf != null ? ssf : (SSLSocketFactory) SSLSocketFactory.getDefault();

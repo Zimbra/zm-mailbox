@@ -69,6 +69,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestSendAndReceive.class);
         sClasses.add(TestConnectionPool.class);
         sClasses.add(TestLmtp.class);
+        sClasses.add(TestSmtpClient.class);
         sClasses.add(TestScheduledTaskManager.class);
         sClasses.add(TestDataSource.class);
         sClasses.add(TestPurge.class);

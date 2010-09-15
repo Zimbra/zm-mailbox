@@ -39,6 +39,8 @@ public class MockProvisioning extends Provisioning {
     private Map<String, List<MimeTypeInfo>> mimeConfig =
         new HashMap<String, List<MimeTypeInfo>>();
     private Config config = new Config(new HashMap<String, Object>(), this);
+    private Server localhost = new Server("localhost", "localhost",
+            new HashMap<String, Object>(), new HashMap<String, Object>(), this);
 
     @Override
     public Account createAccount(String email, String password,
@@ -103,6 +105,11 @@ public class MockProvisioning extends Provisioning {
     public void modifyAttrs(Entry entry, Map<String, ? extends Object> attrs,
             boolean checkImmutable) {
         entry.setAttrs(new HashMap<String, Object>(attrs));
+    }
+
+    @Override
+    public Server getLocalServer() {
+        return localhost;
     }
 
     @Override
@@ -276,11 +283,6 @@ public class MockProvisioning extends Provisioning {
 
     @Override
     public void deleteCos(String zimbraId) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Server getLocalServer() {
         throw new UnsupportedOperationException();
     }
 

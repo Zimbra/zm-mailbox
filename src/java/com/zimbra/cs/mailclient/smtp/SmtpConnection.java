@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -34,8 +34,10 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
 import com.sun.mail.smtp.SMTPMessage;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailConnection;
 import com.zimbra.cs.mailclient.MailException;
@@ -44,7 +46,7 @@ import com.zimbra.cs.mailclient.MailOutputStream;
 import com.zimbra.cs.mailclient.util.Ascii;
 
 public class SmtpConnection extends MailConnection {
-    
+
     public static final String EHLO = "EHLO";
     public static final String HELO = "HELO";
     public static final String MAIL = "MAIL";
@@ -56,38 +58,38 @@ public class SmtpConnection extends MailConnection {
 
     // Same headers that SMTPTransport passes to MimeMessage.writeTo().
     private static final String[] IGNORE_HEADERS = new String[] { "Bcc", "Content-Length" };
-    
+
     private static final Logger LOGGER = Logger.getLogger(SmtpConnection.class);
-    
+
     private Set<String> invalidRecipients = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
     private Set<String> validRecipients = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
     private Set<String> serverAuthMechanisms = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-    private Set<String> serverExtensions = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER); 
-    
+    private Set<String> serverExtensions = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+
     public SmtpConnection(SmtpConfig config) {
         super(config);
+        Preconditions.checkNotNull(config.getHost());
+        Preconditions.checkArgument(config.getPort() >= 0);
     }
-    
+
     public Set<String> getValidRecipients() {
         return Collections.unmodifiableSet(validRecipients);
     }
-    
+
     public Set<String> getInvalidRecipients() {
         return Collections.unmodifiableSet(invalidRecipients);
     }
 
-    private class SmtpDataOutputStream
-    extends FilterOutputStream {
-        
+    private class SmtpDataOutputStream extends FilterOutputStream {
+
         private byte[] lastTwoBytes = new byte[2];
 
         private SmtpDataOutputStream(OutputStream out) {
             super(out);
         }
-        
+
         @Override
-        public void write(int b)
-        throws IOException {
+        public void write(int b) throws IOException {
             if (b == '.' && lastTwoBytes[0] == '\r' && lastTwoBytes[1] == '\n') {
                 // SMTP transparency per RFC 2821 4.5.2.  Add a dot prefix to
                 // lines that start with a dot.
@@ -98,7 +100,7 @@ public class SmtpConnection extends MailConnection {
             lastTwoBytes[1] = (byte) (b & 0xFF);
         }
     }
-    
+
     @Override
     protected MailInputStream newMailInputStream(InputStream is) {
         return new MailInputStream(is);
@@ -124,12 +126,12 @@ public class SmtpConnection extends MailConnection {
         if (getReplyCode(reply) != 220) {
             throw new IOException("Expected greeting, but got: " + reply);
         }
-        
+
         // Send hello, read extensions and auth mechanisms.
         if (ehlo() != 250) {
             helo();
         }
-        
+
         /*
          // Negotiate auth mechanism.  May not be needed with SASL?
         SmtpConfig config = getSmtpConfig();
@@ -158,7 +160,8 @@ public class SmtpConnection extends MailConnection {
     }
 
     /**
-     * Sends the <tt>EHLO</tt> command and processes the reply.
+     * Sends the {@code EHLO} command and processes the reply.
+     *
      * @return the server reply code
      * @throws IOException if the server response was invalid
      */
@@ -166,11 +169,12 @@ public class SmtpConnection extends MailConnection {
         String reply = sendCommand(EHLO, getSmtpConfig().getDomain());
         return readHelloReplies(EHLO, reply);
     }
-    
+
     /**
-     * Sends the <tt>HELO</tt> command and processes the reply.
-     * @throws IOException if the server did not respond with reply
-     * code <tt>250</tt>
+     * Sends the {@code HELO} command and processes the reply.
+     *
+     * @throws IOException if the server did not respond with reply code
+     * {@code 250}
      */
     private void helo() throws IOException {
         String reply = sendCommand(HELO, getSmtpConfig().getDomain());
@@ -182,25 +186,29 @@ public class SmtpConnection extends MailConnection {
 
     private static final Pattern PAT_EXTENSION = Pattern.compile("250[ -]([^\\s]+)(.*)");
     private static final Pattern PAT_WHITESPACE = Pattern.compile("\\s*");
-    
+
     /**
-     * Reads replies to <tt>EHLO</tt> or <tt>HELO</tt>.  Returns
-     * the reply code.  Handles multiple <tt>250</tt> responses.
+     * Reads replies to {@code EHLO} or {@code HELO}.
+     * <p>
+     * Returns the reply code.  Handles multiple {@code 250} responses.
+     *
      * @param command the command name
      * @param firstReply the first reply line returned from sending
-     * <tt>EHLO</tt> or <tt>HELO</tt> 
+     * {@code EHLO} or {@code HELO}
      */
     private int readHelloReplies(String command, String firstReply)
-    throws IOException {
+        throws IOException {
+
         String reply = firstReply;
         int replyCode;
         int line = 1;
         serverExtensions.clear();
         serverAuthMechanisms.clear();
-        
+
         while (true) {
             if (reply.length() < 4) {
-                throw new CommandFailedException(command, "Invalid server response at line " + line + ": " + reply);
+                throw new CommandFailedException(command,
+                        "Invalid server response at line " + line + ": " + reply);
             }
             replyCode = getReplyCode(reply);
             if (replyCode != 250) {
@@ -221,30 +229,30 @@ public class SmtpConnection extends MailConnection {
                     }
                 }
             }
-            
+
             char fourthChar = reply.charAt(3);
             if (fourthChar == '-') {
                 // Multiple response lines.
-                reply = mailIn.readLine(); 
+                reply = mailIn.readLine();
             } else if (fourthChar == ' ') {
                 // Last 250 response.
                 return 250;
             } else {
-                throw new CommandFailedException(command, "Invalid server response at line " + line + ": " + reply);
+                throw new CommandFailedException(command,
+                        "Invalid server response at line " + line + ": " + reply);
             }
             line++;
         }
     }
 
     @Override
-    protected void sendLogin(String user, String pass)
-    throws IOException {
+    protected void sendLogin(String user, String pass) throws IOException {
         // Send AUTH LOGIN command.
         String reply = sendCommand(AUTH, "LOGIN");
         if (getReplyCode(reply) != 334) {
             throw new CommandFailedException(AUTH, reply);
         }
-        
+
         // Send username.
         reply = sendCommand(Base64.encodeBase64(user.getBytes()), null);
         if (getReplyCode(reply) != 334) {
@@ -261,10 +269,9 @@ public class SmtpConnection extends MailConnection {
             throw new CommandFailedException(AUTH, "LOGIN failed: " + reply);
         }
     }
-    
+
     @Override
-    protected void sendAuthenticate(boolean ir)
-    throws IOException {
+    protected void sendAuthenticate(boolean ir) throws IOException {
         StringBuffer sb = new StringBuffer(authenticator.getMechanism());
         if (ir) {
             byte[] response = authenticator.getInitialResponse();
@@ -276,15 +283,15 @@ public class SmtpConnection extends MailConnection {
             throw new CommandFailedException(AUTH, reply);
         }
     }
-    
+
     @Override
     public void logout() {
     }
 
-    
+
     /**
-     * Overrides the superclass implementation, in order to send
-     * <tt>EHLO</tt> and reread the server extension list.
+     * Overrides the superclass implementation, in order to send {@code EHLO}
+     * and reread the server extension list.
      */
     @Override
     protected void startTls() throws IOException {
@@ -295,22 +302,16 @@ public class SmtpConnection extends MailConnection {
     }
 
     @Override
-    protected void sendStartTls()
-    throws IOException {
+    protected void sendStartTls() throws IOException {
         sendCommand(STARTTLS, null);
     }
 
-    /**
-     * Sends the given message.  Implicitly connects to the MTA, if necessary, and disconnects.
-     * Gets the sender and recipients from the headers in the <tt>MimeMessage</tt>.
-     */
-    public void sendMessage(MimeMessage msg)
-    throws IOException, MessagingException {
-        // Determine sender.
+    private String getSender(MimeMessage msg) throws MessagingException {
         String sender = null;
         if (msg instanceof SMTPMessage) {
             sender = ((SMTPMessage) msg).getEnvelopeFrom();
-            if (sender != null && sender.length() >= 2 && sender.startsWith("<") && sender.endsWith(">")) {
+            if (sender != null && sender.length() >= 2 &&
+                    sender.startsWith("<") && sender.endsWith(">")) {
                 // Strip brackets.
                 sender = sender.substring(1, sender.length() - 1);
             }
@@ -321,22 +322,20 @@ public class SmtpConnection extends MailConnection {
                 sender = getAddress(fromAddrs[0]);
             }
         }
-        
-        // Determine recipients.
-        Address[] recipAddrs = msg.getAllRecipients();
-        List<String> recipList = new ArrayList<String>();
-        for (Address address : recipAddrs) {
-            String addrString = getAddress(address);
-            if (!StringUtil.isNullOrEmpty(addrString)) {
-                recipList.add(addrString);
+        return sender;
+    }
+
+    private String[] toString(Address[] addrs) {
+        List<String> result = new ArrayList<String>();
+        for (Address addr : addrs) {
+            String str = getAddress(addr);
+            if (!Strings.isNullOrEmpty(str)) {
+                result.add(str);
             }
         }
-        String[] recipients = new String[recipList.size()];
-        recipList.toArray(recipients);
-        
-        sendMessage(sender, recipients, msg);
+        return Iterables.toArray(result, String.class);
     }
-    
+
     private String getAddress(Address address) {
         if (address instanceof InternetAddress) {
             return ((InternetAddress) address).getAddress();
@@ -345,39 +344,82 @@ public class SmtpConnection extends MailConnection {
         }
     }
 
+    /**
+     * Sends the message.
+     * <p>
+     * Uses the sender and recipients from the headers in the {@link MimeMessage}.
+     *
+     * @see #sendMessage(String, String[], MimeMessage)
+     */
+    public void sendMessage(MimeMessage msg)
+        throws IOException, MessagingException {
+
+        sendMessage(getSender(msg), toString(msg.getAllRecipients()), msg);
+    }
 
     /**
-     * Sends the given message.  Implicitly connects to the MTA, if necessary, and disconnects.
-     * @param sender the envelope sender
+     * Sends the message.
+     * <p>
+     * Uses the sender from the headers in the {@link MimeMessage}.
+     *
+     * @see #sendMessage(String, String[], MimeMessage)
      */
-    public void sendMessage(String sender, String[] recipients, MimeMessage msg)
-    throws IOException, MessagingException {
-        connect();
-        try {
-            sendInternal(sender, recipients, msg, null);
-        } finally {
-            close();
-        }
+    void sendMessage(MimeMessage msg, Address[] rcpts)
+        throws IOException, MessagingException {
+
+        sendMessage(getSender(msg), toString(rcpts), msg);
     }
-    
+
     /**
-     * Sends the given message.  Implicitly connects to the MTA, if necessary, and disconnects.
-     * @param sender the envelope sender
+     * Sends the message.
+     * <p>
+     * Implicitly connects to the MTA, if necessary, and disconnects.
+     *
+     * @param sender envelope from
+     * @param rcpts envelope recipients
+     * @param msg message to send
+     * @throws IOException SMTP error
+     * @throws MessagingException MIME serialization error
      */
-    public void sendMessage(String sender, String[] recipients, String msg)
-    throws IOException, MessagingException {
+    public void sendMessage(String sender, String[] rcpts, MimeMessage msg)
+        throws IOException, MessagingException {
+
         connect();
         try {
-            sendInternal(sender, recipients, null, msg);
+            sendInternal(sender, rcpts, msg, null);
         } finally {
             close();
         }
     }
-    
-    private void sendInternal(String sender, String[] recipients, MimeMessage javaMailMessage, String messageString)
-    throws IOException, MessagingException {
+
+    /**
+     * Sends the message.
+     * <p>
+     * Implicitly connects to the MTA, if necessary, and disconnects.
+     *
+     * @param sender envelope from
+     * @param rcpts envelope recipients
+     * @param msg message to send
+     * @throws IOException SMTP error
+     * @throws MessagingException MIME serialization error
+     */
+    public void sendMessage(String sender, String[] rcpts, String msg)
+        throws IOException, MessagingException {
+
+        connect();
+        try {
+            sendInternal(sender, rcpts, null, msg);
+        } finally {
+            close();
+        }
+    }
+
+    private void sendInternal(String sender, String[] recipients,
+            MimeMessage javaMailMessage, String messageString)
+        throws IOException, MessagingException {
+
         invalidRecipients.clear();
-        
+
         mail(sender);
         rcpt(recipients);
         String reply = sendCommand(DATA, null);
@@ -408,24 +450,24 @@ public class SmtpConnection extends MailConnection {
         }
         close();
     }
-    
+
     /**
      * Sends the given command and returns the first line from the server reply.
-     * @throws CommandFailedException if the server did not respond 
+     *
+     * @throws CommandFailedException if the server did not respond
      */
-    private String sendCommand(String command, String args)
-    throws IOException {
+    private String sendCommand(String command, String args) throws IOException {
         return sendCommand(command.getBytes(), args);
     }
-    
+
     /**
      * Sends the given command and returns the first line from the server reply.
-     * @throws CommandFailedException if the server did not respond 
+     *
+     * @throws CommandFailedException if the server did not respond
      */
-    private String sendCommand(byte[] command, String args)
-    throws IOException {
+    private String sendCommand(byte[] command, String args) throws IOException {
         mailOut.write(command);
-        if (!StringUtil.isNullOrEmpty(args)) {
+        if (!Strings.isNullOrEmpty(args)) {
             mailOut.write(' ');
             mailOut.write(args);
         }
@@ -433,13 +475,13 @@ public class SmtpConnection extends MailConnection {
         mailOut.flush();
         String reply = mailIn.readLine();
         if (reply == null) {
-            throw new CommandFailedException(new String(command), "No response from server");
+            throw new CommandFailedException(new String(command),
+                    "No response from server");
         }
         return reply;
     }
-    
-    private void mail(String from) 
-    throws IOException {
+
+    private void mail(String from) throws IOException {
         if (from == null) {
             from = "";
         }
@@ -448,9 +490,8 @@ public class SmtpConnection extends MailConnection {
             throw new CommandFailedException(MAIL, reply);
         }
     }
-    
-    private void rcpt(String[] recipients)
-    throws IOException {
+
+    private void rcpt(String[] recipients) throws IOException {
         for (String recipient : recipients) {
             if (recipient == null) {
                 recipient = "";
@@ -472,40 +513,37 @@ public class SmtpConnection extends MailConnection {
     }
 
     /**
-     * Returns <tt>true</tt> if the code from the given reply
-     * is between 200 and 299.
+     * Returns {@code true} if the code from the given reply is between
+     * {@code 200} and {@code 299}.
      */
-    private boolean isPositive(String reply)
-    throws IOException {
+    private boolean isPositive(String reply) throws IOException {
         int replyCode = getReplyCode(reply);
         if (200 <= replyCode && replyCode <= 299) {
             return true;
         }
         return false;
     }
-    
-    private boolean isNegative(String reply)
-    throws IOException {
+
+    private boolean isNegative(String reply) throws IOException {
         return (getReplyCode(reply) >= 400);
     }
-    
+
     private void quit() throws IOException {
         sendCommand(QUIT, null);
     }
-    
-    private static int getReplyCode(String line)
-    throws IOException {
+
+    private static int getReplyCode(String line) throws IOException {
         if (line == null || line.length() < 3) {
             throw new IOException("Invalid server response: '" + line + "'");
         }
         String replyCodeString = line.substring(0, 3);
         try {
-            return Integer.parseInt(replyCodeString); 
+            return Integer.parseInt(replyCodeString);
         } catch (NumberFormatException e) {
             throw new IOException("Could not parse reply code: " + line);
         }
     }
-    
+
     private SmtpConfig getSmtpConfig() {
         return (SmtpConfig) config;
     }
