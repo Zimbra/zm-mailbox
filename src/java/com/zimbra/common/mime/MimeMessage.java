@@ -143,12 +143,13 @@ public class MimeMessage extends MimePart {
     }
 
     @Override void removeChild(MimePart mp) {
-        if (mp == mBody)
+        if (mp == mBody) {
             mBody = transferMessageHeaders(new MimeBodyPart(null));
+        }
     }
 
     private MimePart transferMessageHeaders(MimePart newBody) {
-        for (Iterator<MimeHeader> it = mBody.mimeHeaderIterator(); it.hasNext(); ) {
+        for (Iterator<MimeHeader> it = mBody.getMimeHeaderBlock().iterator(); it.hasNext(); ) {
             MimeHeader header = it.next();
             if (!header.getName().toLowerCase().startsWith("content-")) {
                 // FIXME: want to have the new body's old headers at the *end* of the resulting list, not at the beginning
@@ -165,22 +166,25 @@ public class MimeMessage extends MimePart {
 
 
     @Override public MimePart getSubpart(String part) {
-        if (part == null || part.equals(""))
+        if (part == null || part.equals("")) {
             return this;
-        else if (mBody == null)
+        } else if (mBody == null) {
             return null;
+        }
 
         boolean isMultipart = mBody instanceof MimeMultipart;
-        if (part.equalsIgnoreCase("TEXT"))
+        if (part.equalsIgnoreCase("TEXT")) {
             return isMultipart ? mBody : null;
-        else if (isMultipart)
+        } else if (isMultipart) {
             return mBody.getSubpart(part);
+        }
 
         int dot = part.indexOf('.');
-        if (dot == part.length() - 1 || !"1".equals(dot == -1 ? part : part.substring(0, dot)))
+        if (dot == part.length() - 1 || !"1".equals(dot == -1 ? part : part.substring(0, dot))) {
             return null;
-        else
+        } else {
             return mBody.getSubpart(dot == -1 ? "" : part.substring(dot + 1));
+        }
     }
 
     /** Does a recursive descent of the message's structure and returns a
@@ -220,16 +224,18 @@ public class MimeMessage extends MimePart {
 //    }
 
     @Override public void setContentType(ContentType ctype) {
-        if (ctype == null)
+        if (ctype == null) {
             ctype = new ContentType(ContentType.MESSAGE_RFC822);
-        else if (!ctype.getValue().equals(ContentType.MESSAGE_RFC822))
+        } else if (!ctype.getValue().equals(ContentType.MESSAGE_RFC822)) {
             throw new UnsupportedOperationException("cannot change a message to another type");
+        }
         super.setContentType(ctype);
     }
 
     @Override void checkContentType(ContentType ctype) {
-        if (ctype == null || !ctype.getValue().equals(ContentType.MESSAGE_RFC822))
+        if (ctype == null || !ctype.getValue().equals(ContentType.MESSAGE_RFC822)) {
             throw new UnsupportedOperationException("cannot change a message to text");
+        }
     }
 
 
@@ -372,17 +378,21 @@ public class MimeMessage extends MimePart {
             String desc = part.getMimeHeader("Content-Description") == null ? "" : " {" + part.getMimeHeader("Content-Description") + "}";
             String lines = part.getLineCount() < 0 ? "" : ", " + part.getLineCount() + " lines";
             System.out.println('"' + mpi.getKey() + "\": " + part.getContentType().getValue() + " (" + part.getSize() + " bytes" + lines + ")" + filename + desc);
-            if (mm.getSubpart(mpi.getKey()) != mpi.getValue())
+            if (mm.getSubpart(mpi.getKey()) != mpi.getValue()) {
                 System.out.println("  MISMATCH!");
+            }
             if (part instanceof MimeMultipart) {
                 MimeBodyPart extra;
-                if ((extra = ((MimeMultipart) part).getPreamble()) != null)
+                if ((extra = ((MimeMultipart) part).getPreamble()) != null) {
                     System.out.println("  preamble: " + extra.getLineCount() + " line(s)");
-                if ((extra = ((MimeMultipart) part).getEpilogue()) != null)
+                }
+                if ((extra = ((MimeMultipart) part).getEpilogue()) != null) {
                     System.out.println("  epilogue: " + extra.getLineCount() + " line(s)");
+                }
             }
-//            if (mpi.getValue().getContentType().getValue().equals("text/plain"))
+//            if (mpi.getValue().getContentType().getValue().equals("text/plain")) {
 //                try { System.out.println(new String(part.getRawContent())); } catch (IOException ioe) {}
+//            }
         }
     }
 }

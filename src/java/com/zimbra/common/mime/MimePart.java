@@ -94,8 +94,9 @@ public abstract class MimePart {
 
     public MimePart detach() {
         mPartSource = getPartSource();
-        if (mParent != null)
+        if (mParent != null) {
             mParent.removeChild(this);
+        }
         return this;
     }
 
@@ -164,35 +165,35 @@ public abstract class MimePart {
     }
 
     public MimePart setMimeHeader(String name, String value) {
-        if (name.equalsIgnoreCase("Content-Type"))
+        if (name.equalsIgnoreCase("Content-Type")) {
             setContentType(new ContentType(value));
-        else
+        } else {
             setMimeHeader(name, value == null ? null : new MimeHeader(name, value));
+        }
         return this;
     }
 
     void setMimeHeader(String name, MimeHeader header) {
-        if (mMimeHeaders == null)
-            mMimeHeaders = new MimeHeaderBlock(false);
-        mMimeHeaders.setHeader(name, header);
-        if (mParent != null)
+        getMimeHeaderBlock().setHeader(name, header);
+        if (mParent != null) {
             mParent.markDirty(true);
+        }
         mStartOffset = -1;
     }
 
     void addMimeHeader(String name, MimeHeader header) {
-        if (mMimeHeaders == null)
-            mMimeHeaders = new MimeHeaderBlock(false);
-        mMimeHeaders.addHeader(name, header);
-        if (mParent != null)
+        getMimeHeaderBlock().addHeader(name, header);
+        if (mParent != null) {
             mParent.markDirty(true);
+        }
         mStartOffset = -1;
     }
 
-    Iterator<MimeHeader> mimeHeaderIterator() {
-        if (mMimeHeaders == null)
+    public MimeHeaderBlock getMimeHeaderBlock() {
+        if (mMimeHeaders == null) {
             mMimeHeaders = new MimeHeaderBlock(false);
-        return mMimeHeaders.iterator();
+        }
+        return mMimeHeaders;
     }
 
     /** Returns the effective Content-Type for this part.  Note that this should
@@ -216,8 +217,9 @@ public abstract class MimePart {
 
     public String getFilename() {
         String filename = mContentType.getParameter("name");
-        if (filename == null || filename.equals(""))
+        if (filename == null || filename.equals("")) {
             filename = getContentDisposition().getParameter("filename");
+        }
         return filename;
     }
 
@@ -226,14 +228,16 @@ public abstract class MimePart {
      *  part, MIME headers and all.  If you only want the part body, try
      *  {@see #getContentStream()}. */
     public InputStream getInputStream() throws IOException {
-        if (!isDirty() && mStartOffset >= 0)
+        if (!isDirty() && mStartOffset >= 0) {
             return getRawContentStream(mStartOffset, mEndOffset);
+        }
 
         List<Object> sources = new ArrayList<Object>(2);
-        if (mStartOffset != -1 && getPartSource() != null)
+        if (mStartOffset != -1 && getPartSource() != null) {
             sources.add(getRawContentStream(mStartOffset, mBodyOffset));
-        else if (mMimeHeaders != null)
+        } else if (mMimeHeaders != null) {
             sources.add(mMimeHeaders.toByteArray());
+        }
         sources.add(getRawContentStream());
         return new VectorInputStream(sources);
     }
@@ -254,8 +258,9 @@ public abstract class MimePart {
      *  body of the part.  If you want the body with the content transfer
      *  encoding removed, try {@see #getContent()}. */
     public byte[] getRawContent() throws IOException {
-        if (!isDirty())
+        if (!isDirty()) {
             return getPartSource().getContent(mBodyOffset, mEndOffset);
+        }
 
         InputStream is = getRawContentStream();
         return is == null ? null : ByteUtil.getContent(is, (int) (mEndOffset - mBodyOffset));
@@ -280,8 +285,9 @@ public abstract class MimePart {
     }
 
     MimePart setContent(byte[] content, boolean markDirty) {
-        if (markDirty && mParent != null)
+        if (markDirty && mParent != null) {
             mParent.markDirty(true);
+        }
 
         mPartSource  = new PartSource(content);
         mStartOffset = -1;
@@ -295,10 +301,12 @@ public abstract class MimePart {
     }
 
     MimePart setContent(File file, boolean markDirty) {
-        if (markDirty && mParent != null)
+        if (markDirty && mParent != null) {
             mParent.markDirty(true);
-        if (!file.exists())
+        }
+        if (!file.exists()) {
             file = null;
+        }
 
         mPartSource  = new PartSource(file);
         mStartOffset = -1;
@@ -347,8 +355,9 @@ public abstract class MimePart {
                 end = end < 0 ? mBodyContent.length : Math.max(start, Math.min(end, mBodyContent.length));
                 return new ByteArrayInputStream(mBodyContent, (int) start, (int) (end - start));
             } else if (mBodyFile != null) {
-                if (!mBodyFile.exists())
+                if (!mBodyFile.exists()) {
                     return null;
+                }
                 // FIXME: check for GZIPped content
                 int fileLength = (int) mBodyFile.length();
                 start = Math.max(0, Math.min(start, fileLength));
@@ -370,8 +379,9 @@ public abstract class MimePart {
                 start = Math.max(0, Math.min(start, mBodyContent.length));
                 end = end < 0 ? mBodyContent.length : Math.max(start, Math.min(end, mBodyContent.length));
                 int size = (int) (end - start);
-                if (size == mBodyContent.length)
+                if (size == mBodyContent.length) {
                     return mBodyContent;
+                }
                 byte[] content = new byte[size];
                 System.arraycopy(mBodyContent, (int) start, content, 0, size);
                 return content;
@@ -411,22 +421,25 @@ public abstract class MimePart {
 
         @Override public int read() throws IOException {
             int c = mCurrentStream == null ? -1 : mCurrentStream.read();
-            while (c == -1 && mCurrentStream != null)
+            while (c == -1 && mCurrentStream != null) {
                 c = getNextStream() == null ? -1 : mCurrentStream.read();
+            }
             return c;
         }
 
         @Override public int read(byte[] b, int off, int len) throws IOException {
             int num = mCurrentStream == null ? -1 : mCurrentStream.read(b, off, len);
-            while (num == -1 && mCurrentStream != null)
+            while (num == -1 && mCurrentStream != null) {
                 num = getNextStream() == null ? -1 : mCurrentStream.read(b, off, len);
+            }
             return num;
         }
 
         @Override public long skip(long n) throws IOException {
             long remaining = n - (mCurrentStream == null ? 0 : mCurrentStream.skip(n));
-            while (remaining > 0 && mCurrentStream != null)
+            while (remaining > 0 && mCurrentStream != null) {
                 remaining -= getNextStream() == null ? 0 : mCurrentStream.skip(remaining);
+            }
             return n - remaining;
         }
 
@@ -437,24 +450,26 @@ public abstract class MimePart {
 
             while (mNextIndex < mItems.size()) {
                 Object next = mItems.get(mNextIndex++);
-                if (next instanceof InputStream)
+                if (next instanceof InputStream) {
                     ByteUtil.closeStream((InputStream) next);
+                }
             }
         }
 
         private InputStream getNextStream() throws IOException {
             ByteUtil.closeStream(mCurrentStream);
             Object next = mNextIndex >= mItems.size() ? null : mItems.get(mNextIndex);
-            if (next == null)
+            if (next == null) {
                 mCurrentStream = null;
-            else if (next instanceof byte[])
+            } else if (next instanceof byte[]) {
                 mCurrentStream = new ByteArrayInputStream((byte[]) next);
-            else if (next instanceof InputStream)
+            } else if (next instanceof InputStream) {
                 mCurrentStream = (InputStream) next;
-            else if (next instanceof MimePart)
+            } else if (next instanceof MimePart) {
                 mCurrentStream = ((MimePart) next).getInputStream();
-            else
+            } else {
                 mCurrentStream = new ByteArrayInputStream(next.toString().getBytes());
+            }
             mNextIndex++;
             return mCurrentStream;
         }
