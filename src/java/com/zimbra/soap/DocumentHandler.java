@@ -335,10 +335,7 @@ public abstract class DocumentHandler {
         if (s == null) {
             try {
                 if (stype == Session.Type.SOAP) {
-                    if (isLocal)
-                        s = new SoapSession(authAccountId).register();
-                    else
-                        s = new RemoteSoapSession(authAccountId).register();
+                    s = SoapSessionFactory.getInstance().getSoapSession(authAccountId, isLocal).register();
                 } else if (stype == Session.Type.ADMIN) {
                     s = new AdminSession(authAccountId).register();
                 }

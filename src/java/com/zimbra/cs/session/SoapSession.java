@@ -249,7 +249,7 @@ public class SoapSession extends Session {
         }
     }
 
-    private static class RemoteNotifications {
+    static class RemoteNotifications {
         int count = -1;
         String deleted;
         List<Element> created;
@@ -377,7 +377,7 @@ public class SoapSession extends Session {
     private long mLastWrite      = -1;
 
     // read/write access to all these members requires synchronizing on "mSentChanges"
-    private   int mForceRefresh;
+    protected   int mForceRefresh;
     protected LinkedList<QueuedNotifications> mSentChanges = new LinkedList<QueuedNotifications>();
     protected QueuedNotifications mChanges = new QueuedNotifications(1);
 
@@ -531,7 +531,7 @@ public class SoapSession extends Session {
         }
     }
 
-    private boolean registerRemoteSessionId(Server server, String sessionId) {
+    protected boolean registerRemoteSessionId(Server server, String sessionId) {
         if (mMailbox == null || server == null || sessionId == null)
             return true;
 
@@ -557,7 +557,7 @@ public class SoapSession extends Session {
         handleRemoteNotifications(server, context, false, false);
     }
 
-    private void handleRemoteNotifications(Server server, Element context, boolean ignoreRefresh, boolean isPing) {
+    protected void handleRemoteNotifications(Server server, Element context, boolean ignoreRefresh, boolean isPing) {
         if (context == null)
             return;
 
@@ -830,7 +830,7 @@ public class SoapSession extends Session {
         }
     }
 
-    private boolean skipNotifications(int notificationCount, boolean fromThisSession) {
+    protected boolean skipNotifications(int notificationCount, boolean fromThisSession) {
         // if we're going to be sending a <refresh> anyway, there's no need to record these changes
         int currentSequence = getCurrentNotificationSequence();
         if (mForceRefresh == currentSequence && !fromThisSession)
@@ -1250,7 +1250,7 @@ public class SoapSession extends Session {
      *  skip the notification. */
     private static final int DELEGATED_CONVERSATION_SIZE_LIMIT = 50;
 
-    private static final String A_ID = "id";
+    protected static final String A_ID = "id";
 
     /** Write a single instance of the PendingModifications structure into the 
      *  passed-in <ctxt> block. */
