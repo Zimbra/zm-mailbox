@@ -3347,6 +3347,6 @@ Notes:
 <PurgeRevisionResponse/>
 
 When includeOlderRevisions is set to true, the server will purge all the
-
+old revisions inclusive of the revision specified in the request.
 
 -----------------------------

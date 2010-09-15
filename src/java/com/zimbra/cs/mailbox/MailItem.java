@@ -1707,6 +1707,8 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
     
     void purgeRevision(int version, boolean includeOlderRevisions) throws ServiceException {
+        if (!canAccess(ACL.RIGHT_WRITE))
+            throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
         DbMailItem.purgeRevisions(this, version, includeOlderRevisions);
         mRevisions = null;
     }
