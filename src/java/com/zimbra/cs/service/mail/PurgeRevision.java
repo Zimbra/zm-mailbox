@@ -32,7 +32,7 @@ public class PurgeRevision extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Element revisionElem = request.getElement(MailConstants.E_REVISION);
         ItemId iid = new ItemId(revisionElem.getAttribute(MailConstants.A_ID), zsc);
-        int rev = (int)revisionElem.getAttributeLong(MailConstants.A_REVISION);
+        int rev = (int)revisionElem.getAttributeLong(MailConstants.A_VERSION);
         boolean includeOlderRevisions = revisionElem.getAttributeBool(MailConstants.A_INCLUDE_OLDER_REVISIONS, false);
         Mailbox mbox = getRequestedMailbox(zsc);
         mbox.purgeRevision(getOperationContext(zsc, context), iid.getId(), rev, includeOlderRevisions);
