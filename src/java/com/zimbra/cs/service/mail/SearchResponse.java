@@ -206,6 +206,8 @@ public class SearchResponse {
                     mel.addAttribute(MailConstants.A_SIZE, msg.getSize()).addAttribute(
                             MailConstants.A_FOLDER, msg.getFolderId());
                 }
+                if (msg.isDraft() && msg.getDraftAutoSendTime() != 0)
+                    mel.addAttribute(MailConstants.A_AUTO_SEND_TIME, msg.getDraftAutoSendTime());
             }
             return el;
         }

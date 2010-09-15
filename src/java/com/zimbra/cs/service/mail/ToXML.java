@@ -848,6 +848,8 @@ public class ToXML {
                 String inReplyTo = mm.getHeader("In-Reply-To", null);
                 if (inReplyTo != null && !inReplyTo.equals(""))
                     m.addAttribute(MailConstants.E_IN_REPLY_TO, StringUtil.stripControlCharacters(inReplyTo), Element.Disposition.CONTENT);
+                if (msg.getDraftAutoSendTime() != 0)
+                    m.addAttribute(MailConstants.A_AUTO_SEND_TIME, msg.getDraftAutoSendTime());
             }
 
             if (!wholeMessage)
@@ -1276,6 +1278,9 @@ public class ToXML {
                 mLog.debug("Caught exception while encoding Invites for msg " + msg.getId(), ex);
             }
         }
+
+        if (msg.isDraft() && msg.getDraftAutoSendTime() != 0)
+            elem.addAttribute(MailConstants.A_AUTO_SEND_TIME, msg.getDraftAutoSendTime());
 
         return elem;
     }

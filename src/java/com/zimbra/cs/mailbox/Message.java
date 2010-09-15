@@ -293,6 +293,15 @@ public class Message extends MailItem {
         return (mDraftInfo == null || mDraftInfo.identityId == null ? "" : mDraftInfo.identityId);
     }
 
+    /** Returns the time (millis since epoch) at which the draft message is
+     *  intended to be auto-sent by the server. Return value of zero implies
+     *  that the draft message is not intended to be auto-sent by the server.
+     *
+     * @return Draft auto send time */
+    public long getDraftAutoSendTime() {
+        return mDraftInfo == null ? 0 : mDraftInfo.autoSendTime;
+    }
+
     /** Returns whether the Message has a vCal attachment. */
     public boolean isInvite() {
         return (mData.flags & Flag.BITMASK_INVITE) != 0;
