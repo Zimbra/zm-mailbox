@@ -35,7 +35,7 @@ public enum UpgradeTask {
     BUG_46297(ZimbraContactHiddenAttributes.class),
     BUG_46883(ZimbraContactRankingTableSize.class),
     BUG_46961(ZimbraGalLdapAttrMap_fullName.class),
-    BUG_42828(ZimbraGalLdapAttrMap_externalCalendarResource.class),
+    BUG_42828(ZimbraGalLdapAttrMap_ZimbraContactHiddenAttributes_externalCalendarResource.class),
     BUG_43779(ZimbraGalLdapFilterDef_zimbraGroup.class),
     BUG_50258(ZimbraMtaSaslAuthEnable.class),
     BUG_50465(DisableBriefcase.class);

@@ -5341,13 +5341,13 @@ public class ZAttrConfig extends Entry {
      * Comma separated list of Contact attributes that should be hidden from
      * clients and export of contacts.
      *
-     * @return zimbraContactHiddenAttributes, or "dn,zimbraAccountCalendarUserType,zimbraCalResType,zimbraCalResLocationDisplayName,vcardUID,vcardURL,vcardXProps" if unset
+     * @return zimbraContactHiddenAttributes, or "dn,zimbraAccountCalendarUserType,zimbraCalResType,vcardUID,vcardURL,vcardXProps" if unset
      *
      * @since ZCS 6.0.6
      */
     @ZAttr(id=1086)
     public String getContactHiddenAttributes() {
-        return getAttr(Provisioning.A_zimbraContactHiddenAttributes, "dn,zimbraAccountCalendarUserType,zimbraCalResType,zimbraCalResLocationDisplayName,vcardUID,vcardURL,vcardXProps");
+        return getAttr(Provisioning.A_zimbraContactHiddenAttributes, "dn,zimbraAccountCalendarUserType,zimbraCalResType,vcardUID,vcardURL,vcardXProps");
     }
 
     /**
