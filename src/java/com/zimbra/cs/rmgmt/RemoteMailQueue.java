@@ -46,7 +46,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.index.LuceneIndex;
-import com.zimbra.cs.index.ZimbraFSDirectory;
+import com.zimbra.cs.index.LuceneDirectory;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.service.admin.GetMailQueue;
 import com.zimbra.common.service.ServiceException;
@@ -106,6 +106,7 @@ public class RemoteMailQueue {
             mId = mVisitorIdCounter.incrementAndGet();
         }
 
+        @Override
         public void handle(int lineNo, Map<String, String> map) throws IOException {
             if (map == null) {
                 return;
@@ -141,14 +142,14 @@ public class RemoteMailQueue {
 
             String from = map.get(QueueAttr.from.toString());
             if (from != null && from.length() > 0) {
-                addEmailAddress(doc, id, from, QueueAttr.from, QueueAttr.fromdomain);
+                addEmailAddress(doc, from, QueueAttr.from, QueueAttr.fromdomain);
             }
 
             String toWithCommas = map.get(QueueAttr.to.toString());
             if (toWithCommas != null && toWithCommas.length() > 0) {
                 String[] toArray = toWithCommas.split(",");
                 for (String to : toArray) {
-                    addEmailAddress(doc, id, to, QueueAttr.to, QueueAttr.todomain);
+                    addEmailAddress(doc, to, QueueAttr.to, QueueAttr.todomain);
                 }
             }
 
@@ -165,7 +166,7 @@ public class RemoteMailQueue {
         }
     }
 
-    void addEmailAddress(Document doc, String id, String address, QueueAttr addressAttr, QueueAttr domainAttr) {
+    void addEmailAddress(Document doc, String address, QueueAttr addressAttr, QueueAttr domainAttr) {
         address = address.toLowerCase();
         doc.add(new Field(addressAttr.toString(), address,
                 Field.Store.YES, Field.Index.NOT_ANALYZED, Field.TermVector.NO));
@@ -177,7 +178,7 @@ public class RemoteMailQueue {
     }
 
     private class QueueHandler implements RemoteBackgroundHandler {
-
+        @Override
         public void read(InputStream stdout, InputStream stderr) {
             try {
                 mScanStartTime = System.currentTimeMillis();
@@ -205,6 +206,7 @@ public class RemoteMailQueue {
             }
         }
 
+        @Override
         public void error(Throwable t) {
             ZimbraLog.rmgmt.error("error when scanning mail queue " + mQueueName + " on host " + mServerName, t);
         }
@@ -231,7 +233,7 @@ public class RemoteMailQueue {
             if (ZimbraLog.rmgmt.isDebugEnabled()) {
                 ZimbraLog.rmgmt.debug("clearing index (" + mIndexPath + ") for " + this);
             }
-            writer = new IndexWriter(new ZimbraFSDirectory(mIndexPath),
+            writer = new IndexWriter(LuceneDirectory.open(mIndexPath),
                     new StandardAnalyzer(LuceneIndex.VERSION), true,
                     IndexWriter.MaxFieldLength.LIMITED);
             mNumMessages.set(0);
@@ -328,7 +330,7 @@ public class RemoteMailQueue {
         if (ZimbraLog.rmgmt.isDebugEnabled()) {
             ZimbraLog.rmgmt.debug("opening indexwriter " + this);
         }
-        mIndexWriter = new IndexWriter(new ZimbraFSDirectory(mIndexPath),
+        mIndexWriter = new IndexWriter(LuceneDirectory.open(mIndexPath),
                 new StandardAnalyzer(LuceneIndex.VERSION), true,
                 IndexWriter.MaxFieldLength.LIMITED);
     }
@@ -345,7 +347,7 @@ public class RemoteMailQueue {
             ZimbraLog.rmgmt.debug("reopening indexwriter " + this);
         }
         mIndexWriter.close();
-        mIndexWriter = new IndexWriter(new ZimbraFSDirectory(mIndexPath),
+        mIndexWriter = new IndexWriter(LuceneDirectory.open(mIndexPath),
                 new StandardAnalyzer(LuceneIndex.VERSION), false,
                 IndexWriter.MaxFieldLength.LIMITED);
     }
@@ -367,6 +369,7 @@ public class RemoteMailQueue {
             return mCount;
         }
 
+        @Override
         public int compareTo(SummaryItem other) {
             return other.mCount - mCount;
         }
@@ -518,7 +521,7 @@ public class RemoteMailQueue {
             if (!mIndexPath.exists()) {
                 return result;
             }
-            indexReader = IndexReader.open(new ZimbraFSDirectory(mIndexPath));
+            indexReader = IndexReader.open(LuceneDirectory.open(mIndexPath));
             summarize(result, indexReader);
             if (query == null) {
                 list0(result, indexReader, offset, limit);
@@ -555,7 +558,7 @@ public class RemoteMailQueue {
                 clearIndex();
                 all = true;
             } else {
-                indexReader = IndexReader.open(new ZimbraFSDirectory(mIndexPath));
+                indexReader = IndexReader.open(LuceneDirectory.open(mIndexPath));
             }
 
             int done = 0;

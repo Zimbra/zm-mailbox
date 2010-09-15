@@ -22,19 +22,16 @@ import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.SingleInstanceLockFactory;
 
 public class RawIndexEditor {
 
-    private FSDirectory mIdxDirectory = null;
+    private final Directory luceneDirectory;
 
     RawIndexEditor(String idxPath) throws IOException {
-        mIdxDirectory = new ZimbraFSDirectory(new File(idxPath));
-        if (mIdxDirectory.getLockFactory() == null ||
-                !(mIdxDirectory.getLockFactory() instanceof SingleInstanceLockFactory)) {
-            mIdxDirectory.setLockFactory(new SingleInstanceLockFactory());
-        }
+        luceneDirectory = LuceneDirectory.open(new File(idxPath),
+                new SingleInstanceLockFactory());
     }
 
     public static String Format(String s, int len) {
@@ -101,7 +98,7 @@ public class RawIndexEditor {
 
 
     void dumpAll() throws IOException {
-        IndexReader reader = IndexReader.open(mIdxDirectory);
+        IndexReader reader = IndexReader.open(luceneDirectory);
         try {
             int maxDoc = reader.maxDoc();
             System.out.println("There are "+maxDoc+" documents in this index.");

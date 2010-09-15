@@ -23,7 +23,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LogByteSizeMergePolicy;
@@ -78,7 +77,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
      * everytime editDistance is called.
      */
     private int e[][] = new int[1][1];
-    private ZimbraFSDirectory mIdxDirectory = null;
+    private final LuceneDirectory luceneDirectory;
 
     private IndexWriter mIndexWriter;
 
@@ -142,12 +141,12 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
 
     @Override
     public long getBytesWritten() {
-        return mIdxDirectory.getBytesWritten();
+        return luceneDirectory.getBytesWritten();
     }
 
     @Override
     public long getBytesRead() {
-        return mIdxDirectory.getBytesRead();
+        return luceneDirectory.getBytesRead();
     }
 
     @Override
@@ -197,10 +196,11 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
             }
 
             try {
-                mIdxDirectory = new ZimbraFSDirectory(new File(idxPath),
+                luceneDirectory = LuceneDirectory.open(new File(idxPath),
                         new SingleInstanceLockFactory());
             } catch (IOException e) {
-                throw ServiceException.FAILURE("Cannot create FSDirectory at path: " + idxPath, e);
+                throw ServiceException.FAILURE(
+                        "Cannot create LuceneDirectory: " + idxPath, e);
             }
         }
     }
@@ -319,23 +319,23 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         synchronized (getLock()) {
             flush();
             if (ZimbraLog.index_add.isDebugEnabled()) {
-                ZimbraLog.index_add.debug("****Deleting index " + mIdxDirectory.toString());
+                ZimbraLog.index_add.debug("Deleting index " + luceneDirectory);
             }
 
-            String[] files = mIdxDirectory.listAll();
+            String[] files = luceneDirectory.listAll();
             // list method may return null (for FSDirectory if the underlying
             // directory doesn't exist in the filesystem or there are
             // permissions problems).
             if (files == null) {
                 if (ZimbraLog.index_add.isDebugEnabled()) {
-                    ZimbraLog.index_add.debug("****Deleting index unable to list directory " +
-                            mIdxDirectory.toString());
+                    ZimbraLog.index_add.debug("Deleting index unable to list directory " +
+                            luceneDirectory);
                 }
                 return;
             }
 
             for (String file : files) {
-                mIdxDirectory.deleteFile(file);
+                luceneDirectory.deleteFile(file);
             }
         }
     }
@@ -516,7 +516,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
 
     @Override
     public String toString() {
-        return "LuceneIndex at " + mIdxDirectory.toString();
+        return "LuceneIndex at " + luceneDirectory;
     }
 
     @Override
@@ -620,18 +620,6 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         return toRet;
     }
 
-
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (mIdxDirectory != null)
-                mIdxDirectory.close();
-            mIdxDirectory = null;
-        } finally {
-            super.finalize();
-        }
-    }
-
     /**
      * Levenshtein distance also known as edit distance is a measure of
      * similiarity between two strings where the distance is measured as the
@@ -705,18 +693,18 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
 
             IndexReader reader = null;
             try {
-                reader = IndexReader.open(mIdxDirectory);
+                reader = IndexReader.open(luceneDirectory);
             } catch (IOException e) {
                 // Handle the special case of trying to open a not-yet-created
                 // index, by opening for write and immediately closing.  Index
                 // directory should get initialized as a result.
-                File indexDir = mIdxDirectory.getFile();
+                File indexDir = luceneDirectory.getFile();
                 if (indexDirIsEmpty(indexDir)) {
                     beginWriteOperation();
                     endWriteOperation();
                     flush();
                     try {
-                        reader = IndexReader.open(mIdxDirectory);
+                        reader = IndexReader.open(luceneDirectory);
                     } catch (IOException e1) {
                         if (reader != null) {
                             reader.close();
@@ -851,7 +839,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         try {
             // From 3.0, IndexWriter will no longer support autoCommit=true.
             // We need to call commit() when needed.
-            mIndexWriter = new IndexWriter(mIdxDirectory, mMbidx.getAnalyzer(),
+            mIndexWriter = new IndexWriter(luceneDirectory, mMbidx.getAnalyzer(),
                     false, IndexWriter.MaxFieldLength.LIMITED);
             if (ZimbraLog.index_lucene.isDebugEnabled()) {
                 mIndexWriter.setInfoStream(new PrintStream(
@@ -873,9 +861,9 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
             // Log it as at DEBUG level instead of ERROR here.
             //
             ZimbraLog.index_add.debug("Caught exception trying to open index: " + e, e);
-            File indexDir  = mIdxDirectory.getFile();
+            File indexDir  = luceneDirectory.getFile();
             if (indexDirIsEmpty(indexDir)) {
-                mIndexWriter = new IndexWriter(mIdxDirectory, mMbidx.getAnalyzer(),
+                mIndexWriter = new IndexWriter(luceneDirectory, mMbidx.getAnalyzer(),
                         true, IndexWriter.MaxFieldLength.LIMITED);
                 if (ZimbraLog.index_lucene.isDebugEnabled()) {
                     mIndexWriter.setInfoStream(new PrintStream(
@@ -888,7 +876,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
             } else {
                 mIndexWriter = null;
                 IOException ioe = new IOException("Could not create index " +
-                        mIdxDirectory.toString() + " (directory already exists)");
+                        luceneDirectory + " (directory already exists)");
                 ioe.initCause(e);
                 throw ioe;
             }
@@ -899,7 +887,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         }
 
         mIndexWriter.setMaxBufferedDocs(config.maxBufferedDocs);
-        mIndexWriter.setRAMBufferSizeMB(((double) config.ramBufferSizeKB) / 1024.0);
+        mIndexWriter.setRAMBufferSizeMB(config.ramBufferSizeKB / 1024.0);
         mIndexWriter.setMergeFactor(config.mergeFactor);
 
         if (config.useDocScheduler) {
@@ -918,9 +906,9 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
             policy.setUseCompoundDocStore(config.useCompoundFile);
             policy.setUseCompoundFile(config.useCompoundFile);
             policy.setMergeFactor(config.mergeFactor);
-            policy.setMinMergeMB(((double) config.minMerge) / 1024.0);
+            policy.setMinMergeMB(config.minMerge / 1024.0);
             if (config.maxMerge != Integer.MAX_VALUE) {
-                policy.setMaxMergeMB(((double) config.maxMerge) / 1024.0);
+                policy.setMaxMergeMB(config.maxMerge / 1024.0);
             }
         }
     }
@@ -958,12 +946,6 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
 
     private void updateLastWriteTime() {
         mLastWriteTime = System.currentTimeMillis();
-    }
-
-    static abstract class DocEnumInterface {
-        void maxDocNo(int num) {
-        };
-        abstract boolean onDocument(Document doc, boolean isDeleted);
     }
 
     static class DomainEnumCallback implements TermEnumInterface {

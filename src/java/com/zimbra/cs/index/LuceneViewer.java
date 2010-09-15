@@ -94,8 +94,7 @@ public class LuceneViewer {
         mTermFilters = termFilters;
         mConsole = console;
 
-        mIndexReader = IndexReader.open(
-                new ZimbraFSDirectory(new File(mIndexDir)));
+        mIndexReader = IndexReader.open(LuceneDirectory.open(new File(mIndexDir)));
         mWriter = new FileWriter(mOutputFile);
 
         if (hasFilters()) {
@@ -495,7 +494,7 @@ public class LuceneViewer {
             }
         }
 
-        protected CommandLine getCommandLine(String[] args) throws ParseException {
+        protected CommandLine getCommandLine(String[] args) {
             CommandLineParser clParser = new GnuParser();
             CommandLine cl = null;
 
@@ -560,7 +559,7 @@ public class LuceneViewer {
 
         Directory dir = null;
         try {
-            dir = new ZimbraFSDirectory(new File(indexDir));
+            dir = LuceneDirectory.open(new File(indexDir));
         } catch (Throwable t) {
             console.info("ERROR: could not open directory \"" +
                     indexDir + "\"; exiting");

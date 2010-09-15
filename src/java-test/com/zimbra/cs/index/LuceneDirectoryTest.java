@@ -28,17 +28,17 @@ import org.junit.Test;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 /**
- * Unit test for {@link ZimbraFSDirectory}.
+ * Unit test for {@link LuceneDirectory}.
  *
  * @author ysasaki
  */
-public class ZimbraFSDirectoryTest {
+public class LuceneDirectoryTest {
     private static File tmpDir;
 
     @BeforeClass
     public static void init() throws Exception {
         tmpDir = new File("build/test/" +
-                ZimbraFSDirectoryTest.class.getSimpleName());
+                LuceneDirectoryTest.class.getSimpleName());
         if (!tmpDir.isDirectory()) {
             tmpDir.mkdirs();
         }
@@ -52,7 +52,7 @@ public class ZimbraFSDirectoryTest {
 
         long count = ZimbraPerf.COUNTER_IDX_BYTES_READ.getCount();
         long total = ZimbraPerf.COUNTER_IDX_BYTES_READ.getTotal();
-        ZimbraFSDirectory dir = new ZimbraFSDirectory(tmpDir);
+        LuceneDirectory dir = LuceneDirectory.open(tmpDir);
         IndexInput in = dir.openInput("read");
         in.readBytes(new byte[5], 0, 5);
         in.close();
@@ -67,7 +67,7 @@ public class ZimbraFSDirectoryTest {
     public void write() throws IOException {
         long count = ZimbraPerf.COUNTER_IDX_BYTES_WRITTEN.getCount();
         long total = ZimbraPerf.COUNTER_IDX_BYTES_WRITTEN.getTotal();
-        ZimbraFSDirectory dir = new ZimbraFSDirectory(new File("/tmp"));
+        LuceneDirectory dir = LuceneDirectory.open(new File("/tmp"));
         IndexOutput out = dir.createOutput("write");
         out.writeBytes(new byte[] { 0, 1, 2 }, 3);
         out.close();
