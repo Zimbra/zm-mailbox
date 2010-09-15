@@ -5060,4 +5060,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>forword/reply signature id for account/identity/dataSource</desc>
 </attr>
 
+<attr id="1124" name="zimbraDataSourceIsInternal" type="boolean" cardinality="single" optionalIn="dataSource" since="7.0.0">
+  <desc>If TRUE, the data source is hidden from the UI.</desc>
+</attr>
+
 </attrs>

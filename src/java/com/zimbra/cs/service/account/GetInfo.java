@@ -265,7 +265,8 @@ public class GetInfo extends AccountDocumentHandler  {
         try {
             List<DataSource> dataSources = Provisioning.getInstance().getAllDataSources(acct);
             for (DataSource ds : dataSources)
-                com.zimbra.cs.service.mail.ToXML.encodeDataSource(response, ds);
+                if (!ds.isInternal())
+                    com.zimbra.cs.service.mail.ToXML.encodeDataSource(response, ds);
         } catch (ServiceException se) {
             ZimbraLog.mailbox.error("Unable to get data sources", se);
         }

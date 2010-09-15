@@ -37,9 +37,10 @@ public class GetDataSources extends MailDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access account");
 
         List<DataSource> dataSources = prov.getAllDataSources(account);
-    	Element response = zsc.createElement(MailConstants.GET_DATA_SOURCES_RESPONSE);
-    	for (DataSource dsrc : dataSources)
-    		ToXML.encodeDataSource(response, dsrc);
-    	return response;
+        Element response = zsc.createElement(MailConstants.GET_DATA_SOURCES_RESPONSE);
+        for (DataSource dsrc : dataSources)
+            if (!dsrc.isInternal())
+                ToXML.encodeDataSource(response, dsrc);
+        return response;
     }
 }

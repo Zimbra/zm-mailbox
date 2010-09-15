@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20100913-1725 */
+    /* build: 7.0.0_BETA1_1111 dnault 20100915-1106 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2327,6 +2327,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1106)
     public static final String A_zimbraDataSourceImportOnly = "zimbraDataSourceImportOnly";
+
+    /**
+     * If TRUE, the data source is hidden from the UI.
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1124)
+    public static final String A_zimbraDataSourceIsInternal = "zimbraDataSourceIsInternal";
 
     /**
      * If the last data source sync failed, contains the error message. If
