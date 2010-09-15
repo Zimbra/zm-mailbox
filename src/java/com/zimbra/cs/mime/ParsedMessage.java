@@ -980,13 +980,6 @@ public class ParsedMessage {
             doc.addField(fieldText.toString());
         }
 
-        //TODO this only modifies the local variable, hence no effect.
-        String sortFrom = getParsedSender().getSortString();
-        if (sortFrom == null) {
-            sortFrom = "";
-        } else if (sortFrom.length() > DbMailItem.MAX_SENDER_LENGTH) {
-            sortFrom = sortFrom.substring(0, DbMailItem.MAX_SENDER_LENGTH);
-        }
         String subject = getSubject();
         doc.addSubject(subject);
 
@@ -1043,11 +1036,6 @@ public class ParsedMessage {
      * @param doc sub-document of top level
      */
     private IndexDocument setLuceneHeadersFromContainer(IndexDocument doc) {
-        //TODO this only modifies the local variable, hence no effect.
-        String sortFrom = getParsedSender().getSortString();
-        if (sortFrom != null && sortFrom.length() > DbMailItem.MAX_SENDER_LENGTH)
-            sortFrom = sortFrom.substring(0, DbMailItem.MAX_SENDER_LENGTH);
-
         doc.addFrom(getFromTokenStream());
         doc.addTo(getToTokenStream());
         doc.addCc(getCcTokenStream());
