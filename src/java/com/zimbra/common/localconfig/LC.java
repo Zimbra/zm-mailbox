@@ -418,11 +418,11 @@ public class LC {
         new KnownKey("milter_bind_port").setDefault(0);
     public static final KnownKey milter_bind_address =
         new KnownKey("milter_bind_address");
-    public static final KnownKey milter_max_idle_seconds = 
+    public static final KnownKey milter_max_idle_seconds =
         new KnownKey("milter_max_idle_seconds").setDefault(120);
     public static final KnownKey milter_max_sessions =
         new KnownKey("milter_max_sessions").setDefault(20000);
-    
+
     public static final KnownKey krb5_keytab;
     public static final KnownKey krb5_service_principal_from_interface_address;
     public static final KnownKey krb5_debug_enabled;
@@ -494,6 +494,15 @@ public class LC {
     public static final KnownKey debug_xmpp_disable_client_tls;
 
     public static final KnownKey im_dnsutil_dnsoverride;
+
+    /**
+     * {@code true} to use Zimbra's SMTP client implementation
+     * ({@code com.zimbra.cs.mailclient.smtp.SmtpTransport}),
+     * otherwise use JavaMail's default implementation
+     * ({@code com.sun.mail.smtp.SMTPTransport}).
+     */
+    public static final KnownKey javamail_zsmtp =
+        new KnownKey("javamail_zsmtp", "true");
 
     public static final KnownKey javamail_pop3_debug;
     public static final KnownKey javamail_imap_debug;
