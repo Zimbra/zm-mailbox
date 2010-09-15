@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -56,29 +55,6 @@ public abstract class MimePart {
         mMimeHeaders = headers;
         mStartOffset = start;
         mBodyOffset = body;
-    }
-
-    static MimePart parse(ParseState pstate, MimePart parent, String defaultContentType) throws IOException {
-        long start = pstate.getPosition();
-
-        MimeHeaderBlock headers = new MimeHeaderBlock(parent instanceof MimeMessage).parse(pstate, parent == null ? null : parent.getActiveBoundaries());
-        String defaultCharset = parent == null ? null : parent.getDefaultCharset();
-        ContentType ctype = new ContentType(headers.getHeader("Content-Type", defaultCharset), defaultContentType);
-
-        MimePart mp;
-        if (ctype.getValue().equals(ContentType.MESSAGE_RFC822))
-            mp = new MimeMessage(ctype, parent, start, pstate.getPosition(), headers);
-        else if (ctype.getPrimaryType().equals("multipart"))
-            mp = new MimeMultipart(ctype, parent, start, pstate.getPosition(), headers);
-        else
-            mp = new MimeBodyPart(ctype, parent, start, pstate.getPosition(), headers);
-
-        ParseState.BoundaryTerminator bterm = pstate.getBoundaryTerminator();
-        if (bterm == null)
-            mp.readContent(pstate);
-        else
-            mp.recordEndpoint(bterm.mBoundaryStart);
-        return mp;
     }
 
     MimePart getParent() {
@@ -147,10 +123,6 @@ public abstract class MimePart {
         return props == null ? null : props.getProperty(PROP_CHARSET_DEFAULT);
     }
 
-    List<String> getActiveBoundaries() {
-        return mParent == null ? null : mParent.getActiveBoundaries();
-    }
-
 
     /** Returns the value of the first header matching the given
      *  <code>name</code>. */
@@ -173,8 +145,9 @@ public abstract class MimePart {
         return this;
     }
 
-    void setMimeHeader(String name, MimeHeader header) {
+    public void setMimeHeader(String name, MimeHeader header) {
         getMimeHeaderBlock().setHeader(name, header);
+
         if (mParent != null) {
             mParent.markDirty(true);
         }
@@ -183,6 +156,7 @@ public abstract class MimePart {
 
     void addMimeHeader(String name, MimeHeader header) {
         getMimeHeaderBlock().addHeader(name, header);
+
         if (mParent != null) {
             mParent.markDirty(true);
         }
@@ -318,22 +292,17 @@ public abstract class MimePart {
     /** Marks the item as "dirty" so that we regenerate the part when
      *  serializing. */
     void markDirty(boolean dirtyBody) {
-        if (isDirty())
-            return;
-        mDirty |= dirtyBody;
-        // changing anything in the part effectively changes the body of the parent
-        if (mParent != null)
-            mParent.markDirty(true);
+        if (!isDirty()) {
+            mDirty |= dirtyBody;
+            // changing anything in the part effectively changes the body of the parent
+            if (mParent != null) {
+                mParent.markDirty(true);
+            }
+        }
     }
 
     boolean isDirty() {
         return mDirty || getPartSource() == null;
-    }
-
-    abstract MimePart readContent(ParseState pstate) throws IOException;
-
-    protected void recordEndpoint(long position) {
-        mEndOffset = position;
     }
 
     protected void recordEndpoint(long position, int lineCount) {
@@ -472,56 +441,6 @@ public abstract class MimePart {
             }
             mNextIndex++;
             return mCurrentStream;
-        }
-    }
-
-    static class ParseState {
-        static class BoundaryTerminator {
-            String mBoundary;
-            boolean mWasEndBoundary;
-            long mBoundaryStart = -1;
-        }
-
-        private final PeekAheadInputStream mInputStream;
-        private BoundaryTerminator mLastBoundary;
-
-        ParseState(PeekAheadInputStream pais) {
-            mInputStream = pais;
-        }
-
-        PeekAheadInputStream getInputStream() {
-            return mInputStream;
-        }
-
-        long getPosition() {
-            return mInputStream.getPosition();
-        }
-
-        void recordBoundary(String boundary, boolean isEndBoundary, long linestart) {
-            mLastBoundary = new BoundaryTerminator();
-            mLastBoundary.mBoundary = boundary;
-            mLastBoundary.mWasEndBoundary = isEndBoundary;
-            mLastBoundary.mBoundaryStart = linestart;
-        }
-
-        void clearBoundary() {
-            mLastBoundary = null;
-        }
-
-        BoundaryTerminator getBoundaryTerminator() {
-            return mLastBoundary;
-        }
-    }
-
-    static class PeekAheadInputStream extends ByteUtil.PositionInputStream {
-        PeekAheadInputStream(InputStream is)  { super(is); }
-
-        int peek() throws IOException {
-            super.mark(1);
-            int peekChar = super.read();
-            if (peekChar != -1)
-                super.reset();
-            return peekChar;
         }
     }
 }

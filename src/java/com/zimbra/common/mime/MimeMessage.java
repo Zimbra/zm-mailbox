@@ -55,10 +55,11 @@ public class MimeMessage extends MimePart {
 
         setContent(file, false);
         InputStream is = new BufferedInputStream(new FileInputStream(file), 8192);
+        MimeParserInputStream mpis = new MimeParserInputStream(is, this);
         try {
-            readContent(new ParseState(new PeekAheadInputStream(is)));
+            ByteUtil.drain(mpis);
         } finally {
-            ByteUtil.closeStream(is);
+            ByteUtil.closeStream(mpis);
         }
     }
 
@@ -77,10 +78,14 @@ public class MimeMessage extends MimePart {
         mProperties = props;
 
         setContent(body, false);
+        InputStream is = new ByteArrayInputStream(body);
+        MimeParserInputStream mpis = new MimeParserInputStream(is, this);
         try {
-            readContent(new ParseState(new PeekAheadInputStream(new ByteArrayInputStream(body))));
+            ByteUtil.drain(mpis);
         } catch (IOException ioe) {
             throw new RuntimeException("completely unexpected IOException while reading from byte array", ioe);
+        } finally {
+            ByteUtil.closeStream(mpis);
         }
     }
 
@@ -110,13 +115,7 @@ public class MimeMessage extends MimePart {
      *  content accessible after the parse, please use one of the standard
      *  <code>MimeMessage</code> constructors. */
     public static MimeMessage readStructure(InputStream is, Properties props) throws IOException {
-        MimeMessage mm = new MimeMessage(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
-        mm.mProperties = props;
-
-        if (!is.markSupported())
-            is = new BufferedInputStream(is, 8192);
-        mm.readContent(new ParseState(new PeekAheadInputStream(is)));
-        return mm;
+        return ByteUtil.drain(new MimeParserInputStream(is, props)).getMessage();
     }
 
     /** Returns the {@link MimePart} that forms the "body" of this message.  For
@@ -245,13 +244,6 @@ public class MimeMessage extends MimePart {
 
     @Override public InputStream getRawContentStream() throws IOException {
         return getParent() != null || isDirty() ? mBody.getInputStream() : super.getRawContentStream();
-    }
-
-
-    @Override MimePart readContent(ParseState pstate) throws IOException {
-        mBody = MimePart.parse(pstate, this, ContentType.TEXT_PLAIN);
-        recordEndpoint(mBody.getEndOffset());
-        return this;
     }
 
 

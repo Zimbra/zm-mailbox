@@ -106,9 +106,10 @@ public class ByteUtil {
     }
 
     /** Read the stream to its end, discarding all read data. */
-    public static void drain(InputStream is) throws IOException {
+    public static <T extends InputStream> T drain(T is) throws IOException {
         // side effect of our implementation of counting bytes is draining the stream
         countBytes(is);
+        return is;
     }
 
     /** Reads all data from the <code>InputStream</code> into a <tt>byte[]</tt>
@@ -163,9 +164,9 @@ public class ByteUtil {
             return new byte[0];
 
         try {
-            BufferStream bs = sizeLimit == -1 ?  new BufferStream(sizeHint,
-                    Integer.MAX_VALUE, Integer.MAX_VALUE) : new BufferStream(sizeHint,
-                            (int)sizeLimit, sizeLimit);
+            BufferStream bs = sizeLimit == -1 ?
+                    new BufferStream(sizeHint, Integer.MAX_VALUE, Integer.MAX_VALUE) :
+                    new BufferStream(sizeHint, (int) sizeLimit, sizeLimit);
 
             bs.readFrom(is, length == -1 ? Long.MAX_VALUE : length);
             if (sizeLimit > 0 && bs.size() > sizeLimit)

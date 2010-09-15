@@ -23,12 +23,17 @@ public class MimeParserInputStream extends FilterInputStream {
     private MimeParser parser;
 
     public MimeParserInputStream(InputStream in) {
-        this(in, null);
+        this(in, (Properties) null);
     }
 
     public MimeParserInputStream(InputStream in, Properties props) {
         super(in);
         parser = new MimeParser(props);
+    }
+
+    MimeParserInputStream(InputStream in, MimeMessage mm) {
+        super(in);
+        parser = new MimeParser(mm);
     }
 
     @Override public int read() throws IOException {
@@ -78,8 +83,6 @@ public class MimeParserInputStream extends FilterInputStream {
             mm.setContent(file);
             System.out.println("*** message structure ***");
             MimeMessage.dumpParts(mm);
-
-            MimeParser.checkMessage(mm, file);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

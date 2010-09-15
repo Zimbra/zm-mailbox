@@ -27,6 +27,11 @@ class MimeParser {
         parts.add(new PartInfo(0, true));
     }
 
+    MimeParser(MimeMessage target) {
+        this(target.getProperties());
+        parts.add(0, new PartInfo(target, 0, 0, PartInfo.Location.CONTENT));
+    }
+
     private enum ParserState {
         HEADER_LINESTART, HEADER_NAME, HEADER_VALUE, HEADER_CR,
         BODY_LINESTART, BODY, BODY_CR
@@ -178,7 +183,7 @@ class MimeParser {
     /** The current state of the parser.  Generally, a combination of which
      *  type of parsing is going on (HEADER vs. BODY) and where in the line
      *  we are (LINESTART, after CR, etc.). */
-    private ParserState state = ParserState.HEADER_LINESTART;
+    protected ParserState state = ParserState.HEADER_LINESTART;
     /** The <code>MimeMessage</code> resulting from a full message parse.
      *  It is populated by either a call to {@link #getMessage()} or a call to
      *  {@link #endParse()}. */
@@ -202,7 +207,7 @@ class MimeParser {
     private int lineNumber;
     /** The set of characters (CR, LF, or CRLF) that terminated the previous
      *  line. */
-    private LineEnding lastEnding;
+    protected LineEnding lastEnding;
 
     /** The set of active MIME boundaries.  Any line consisting of two
      *  '<tt>-</tt>' characters, a member of this list, and a newline is
@@ -242,14 +247,14 @@ class MimeParser {
 
     /** Returns the structure representing the "currently active" part being
      *  handled by the parser. */
-    private final PartInfo currentPart() {
+    protected PartInfo currentPart() {
         return parts.get(parts.size() - 1);
     }
 
 
     /** Hands the appropriate range of bytes to the parser, one at a time.
      * @see #handleByte(byte) */
-    final void handleBytes(byte[] b, int off, int len) {
+    void handleBytes(byte[] b, int off, int len) {
         if (len > 0) {
             for (int pos = off, max = Math.min(b.length, off + len); pos < max; pos++) {
                 handleByte(b[pos]);
@@ -263,7 +268,7 @@ class MimeParser {
      *  
      *  Recursive calls to this function will get you in trouble.  Yes, I know,
      *  we call it recursively.  <i>sigh</i> */
-    final void handleByte(byte b) {
+    boolean handleByte(byte b) {
         switch (state) {
             // after a CR character at the end of a header line, expecting an LF
             case HEADER_CR:
@@ -281,8 +286,7 @@ class MimeParser {
             case HEADER_LINESTART:
                 if (processBoundary()) {
                     // found a part boundary, which may transition us to body parsing
-                    handleByte(b);
-                    return;
+                    return handleByte(b);
                 }
                 newline();
                 if (colon != -1 && (b == ' ' || b == '\t')) {
@@ -354,8 +358,7 @@ class MimeParser {
             case BODY_LINESTART:
                 if (processBoundary()) {
                     // found a part boundary, which may transition us to header parsing
-                    handleByte(b);
-                    return;
+                    return handleByte(b);
                 }
                 newline();
                 state = ParserState.BODY;
@@ -363,8 +366,7 @@ class MimeParser {
                     // first line of the body part; we're now far enough along that we can create and store the MimePart
                     if (bodyStart(position)) {
                         // in one case (message/rfc822 attachments), starting the "body" transitions us back to header parsing...
-                        handleByte(b);
-                        return;
+                        return handleByte(b);
                     }
                 }
                 //$FALL-THROUGH$
@@ -387,10 +389,12 @@ class MimeParser {
         }
 
         position++;
+
+        return true;
     }
 
     /** Registers a newline by updating the parser's line-oriented counters. */
-    private final void newline() {
+    private void newline() {
         if (lineStart != position) {
             lineNumber++;  lineStart = position;  dashes = 0;  boundaryChecker = null;
         }
@@ -401,7 +405,7 @@ class MimeParser {
      *  ("<tt>--</tt>"), followed by the "boundary" parameter to an enclosing
      *  "multipart/*" part, optionally followed by two more dashes, optionally
      *  followed by whitespace, followed by a newline. */
-    private final void checkBoundary(byte b) {
+    private void checkBoundary(byte b) {
         if (boundaries != null && b == '-' && dashes == position - lineStart && dashes < 2) {
             // 2 leading dashes may mean a MIME boundary
             if (++dashes == 2) {
@@ -419,7 +423,7 @@ class MimeParser {
     /** Checks whether a boundary was matched and, if so, handles it.  As a
      *  side effect, resets the boundary checking state for a new line.
      * @return Whether a boundary was matched. */
-    private final boolean processBoundary() {
+    private boolean processBoundary() {
         String bnd = null;
         boolean isEnd = false;
         long partEnd = -1;
@@ -450,7 +454,7 @@ class MimeParser {
      * @param isEnd    Whether it was an end boundary.
      * @param partEnd  The byte position of the end of the part(s) being closed
      *                 as a result of this boundary. */
-    private final void boundary(String bnd, boolean isEnd, long partEnd) {
+    private void boundary(String bnd, boolean isEnd, long partEnd) {
         clearHeader();
 
         // close the current part
@@ -462,8 +466,9 @@ class MimeParser {
         while (!bnd.equals(pcurrent.boundary) && parts.size() > 1) {
             if ("".equals(pcurrent.boundary) && (boundaries == null || !boundaries.contains(bnd))) {
                 // "" meant that the multipart Content-Type didn't specify a boundary
-                //   so pick the next new boundary we see and *that* is the boundary 
-                pcurrent.boundary = bnd;
+                //   so pick the next new boundary we see and *that* is the boundary
+                ((MimeMultipart) pcurrent.part).setEffectiveBoundary(bnd);
+                pcurrent.boundary = ((MimeMultipart) pcurrent.part).getBoundary();
                 break;
             }
             endPart(pcurrent, partEnd);
@@ -492,7 +497,7 @@ class MimeParser {
     /** Regenerates the list of valid MIME boundaries from the set of active
      *  enclosing parts.  Sets {@link #boundaries} appropriately, or to
      *  <tt>null</tt> if there are no valid boundaries. */
-    private final void recalculateBoundaries() {
+    private void recalculateBoundaries() {
         boundaries = new ArrayList<String>(parts.size());
         for (PartInfo pinfo : parts) {
             if (pinfo.boundary != null) {
@@ -508,7 +513,7 @@ class MimeParser {
      *  the end of the part as well as the line count of the part body.  If
      *  the part being ended was a multipart preamble or epilogue and was of
      *  nonzero length, associates the part with its parent appropriately. */
-    private final void endPart(PartInfo pinfo, long end) {
+    private void endPart(PartInfo pinfo, long end) {
         MimePart mp = pinfo.part;
         long partEnd = Math.max(mp.getBodyOffset(), end);
         mp.recordEndpoint(partEnd, lineNumber - pinfo.firstLine);
@@ -523,14 +528,14 @@ class MimeParser {
     }
 
     /** Resets all header-related members after processing a header line. */
-    private final void clearHeader() {
+    private void clearHeader() {
         name.setLength(0);  content.reset();  colon = -1;
     }
 
     /** Adds the current header to the active part's header block.  If the
      *  header is "<tt>Content-Type</tt>" and it's a <tt>multipart/*</tt>,
      *  updates the set of active MIME boundaries. */
-    private final void saveHeader() {
+    protected void saveHeader() {
         String key = name.toString().trim();
         if (colon != -1 && !key.equals("")) {
             // the actual content of the header starts after an optional space and/or CRLF
@@ -565,7 +570,7 @@ class MimeParser {
      * @param pos  The byte offset of the beginning of the part body.
      * @return Whether the part was a <tt>message/rfc822</tt>, which requires
      *         a parser state transition back to header reading. */
-    private final boolean bodyStart(long pos) {
+    private boolean bodyStart(long pos) {
         MimePart parent = parts.size() <= 1 ? null : parts.get(parts.size() - 2).part;
         PartInfo pcurrent = currentPart();
 
@@ -622,9 +627,10 @@ class MimeParser {
     /** Ends parsing of the message and marks all currently-active MIME parts
      *  as ended.  Do <u>not</u> call this method until all message bytes have
      *  been passed through {@link #handleByte(byte)}. */
-    final void endParse() {
-        if (mm != null)
+    void endParse() {
+        if (mm != null) {
             return;
+        }
 
         // catch the case of a final MIME boundary without a newline
         processBoundary();
@@ -655,41 +661,45 @@ class MimeParser {
     }
 
 
+    static class HeaderParser extends MimeParser {
+        private MimeHeaderBlock headers;
+
+        HeaderParser() {
+            super((Properties) null);
+        }
+
+        MimeHeaderBlock getHeaders() {
+            endParse();
+            return headers;
+        }
+
+        @Override boolean handleByte(byte b) {
+            super.handleByte(b);
+            if (state == ParserState.BODY || state == ParserState.BODY_LINESTART) {
+                return false;
+            } else if (state != ParserState.BODY_CR) {
+                return true;
+            } else {
+                return headers == null && lastEnding != LineEnding.CR;
+            }
+        }
+
+        @Override void endParse() {
+            if (headers == null) {
+                // catch any in-flight message headers without a newline
+                saveHeader();
+
+                headers = currentPart().headers;
+            }
+        }
+    }
+
+
     public static void main(String... args) throws java.io.IOException {
         java.io.File msgdir = new java.io.File("/Users/dkarp/Documents/messages/unused");
         for (java.io.File file : msgdir.listFiles()) {
             System.out.println("+++ processing message: " + file);
-
-            MimeParserInputStream mpis = new MimeParserInputStream(new java.io.FileInputStream(file));
-            com.zimbra.common.util.ByteUtil.drain(mpis);
-            MimeMessage mm1 = mpis.getMessage();
-
-            MimeMessage.dumpParts(mm1);
-            checkMessage(mm1, file);
-        }
-    }
-
-    static void checkMessage(MimeMessage mm1, java.io.File file) throws java.io.IOException {
-        MimeMessage mm2 = new MimeMessage(file);
-
-        Map<String, MimePart> parts1 = mm1.listMimeParts(), parts2 = mm2.listMimeParts();
-        if (parts1.size() != parts2.size()) {
-            System.out.println(" ** " + file + ": inconistent part counts");
-            MimeMessage.dumpParts(mm2);
-        }
-
-        for (Map.Entry<String, MimePart> mpi : parts1.entrySet()) {
-            MimePart mp1 = mpi.getValue(), mp2 = parts2.get(mpi.getKey());
-            if (mp2 == null) {
-                System.out.println(" ** \"" + mpi.getKey() + "\": not present in old parser");
-                continue;
-            }
-
-            boolean oldOffByOneError = parts2.size() == 2 && mp1.getSize() == mp2.getSize() + 1;
-            boolean oldEarlyTerminatorError = mp1.getSize() == 0 && mp2.getSize() < 0;
-            if (mp1.getSize() != mp2.getSize() && !oldOffByOneError && !oldEarlyTerminatorError) {
-                System.out.println(" ** \"" + mpi.getKey() + "\": sizes differ [old " + mp2.getSize() + ", new " + mp1.getSize() + "]");
-            }
+            MimeMessage.dumpParts(new MimeMessage(file));
         }
     }
 }
