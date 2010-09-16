@@ -17,6 +17,7 @@ package com.zimbra.cs.mailclient.smtp;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.mail.Address;
@@ -31,6 +32,8 @@ import javax.mail.URLName;
 import javax.mail.event.TransportEvent;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -44,21 +47,51 @@ import com.zimbra.cs.util.BuildInfo;
  * <table border="1">
  *  <caption><b>Supported {@link Session} properties</b><caption>
  *  <tr><th>Name</th><th>Type</th><th>Description</th></tr>
- *  <tr><td>mail.smtp(s).auth</td><td>boolean</td>
- *      <td>If true, attempt to authenticate the user using the AUTH command.
- *      Defaults to false.</td></tr>
- *  <tr><td>mail.smtp(s).port</td><td>int</td>
- *      <td>The SMTP server port to connect to, if the connect() method doesn't
- *      explicitly specify one. Defaults to {@link SmtpConfig#DEFAULT_PORT} for
- *      SMTP, {@link SmtpConfig#DEFAULT_SSL_PORT} for SMTPS.</td></tr>
- *  <tr><td>mail.smtp(s).localhost</td><td>String</td>
- *      <td>Local host name used in the SMTP HELO or EHLO command.</td></tr>
- *  <tr><td>mail.smtp(s).sendpartial</td><td>boolean</td>
- *      <td>If set to true, and a message has some valid and some invalid
- *      addresses, send the message anyway, reporting the partial failure with
- *      a {@link SendFailedException}. If set to false (the default),
- *      the message is not sent to any of the recipients if there is an invalid
- *      recipient address.</td></tr>
+ *  <tr>
+ *   <td>mail.smtp[s].auth</td><td>boolean</td>
+ *   <td>If true, attempt to authenticate the user using the AUTH command.
+ *   Defaults to false.</td>
+ *  </tr>
+ *  <tr>
+ *   <td>mail.smtp[s].port</td><td>int</td>
+ *   <td>The SMTP server port to connect to, if the connect() method doesn't
+ *   explicitly specify one. Defaults to {@link SmtpConfig#DEFAULT_PORT} for
+ *   SMTP, {@link SmtpConfig#DEFAULT_SSL_PORT} for SMTPS.</td>
+ *  </tr>
+ *  <tr>
+ *   <td>mail.smtp[s].localhost</td><td>String</td>
+ *   <td>Local host name used in the SMTP HELO or EHLO command.</td>
+ *  </tr>
+ *  <tr>
+ *   <td>mail.smtp[s].sendpartial</td><td>boolean</td>
+ *   <td>If set to true, and a message has some valid and some invalid addresses,
+ *   send the message anyway, reporting the partial failure with a
+ *   {@link SendFailedException}. If set to false (the default), the message is
+ *   not sent to any of the recipients if there is an invalid recipient address.</td>
+ *  </tr>
+ *  <tr>
+ *   <td>mail.smtp[s].socketFactory</td><td>SocketFactory</td>
+ *   <td>If set to a class that implements {@link SocketFactory}, this class
+ *   will be used to create SMTP sockets. Note that this is an instance of a
+ *   class, not a name, and must be set using {@link Properties#put(Object, Object)},
+ *   not {@link Properties#setProperty(String, String)}.</td></tr>
+ *  <tr>
+ *   <td>mail.smtp[s].ssl.socketFactory</td><td>SSLSocketFactory</td>
+ *   <td>If set to a class that extends the {@link SSLSocketFactory}, this class
+ *   will be used to create SMTP SSL sockets. Note that this is an instance of a
+ *   class, not a name, and must be set using {@link Properties#put(Object, Object)},
+ *   not {@link Properties#setProperty(String, String)}.</td>
+ *  </tr>
+ *  <tr>
+ *   <td>mail.smtp[s].connectiontimeout</td><td>int</td>
+ *   <td>Socket connection timeout value in milliseconds.
+ *   Default is infinite timeout.</td>
+ *  </tr>
+ *  <tr>
+ *   <td>mail.smtp[s].timeout</td><td>int</td>
+ *   <td>Socket I/O timeout value in milliseconds.
+ *   Default is infinite timeout.</td>
+ *  </tr>
  * </table>
  *
  * @author ysasaki
@@ -126,6 +159,21 @@ public class SmtpTransport extends Transport {
         config.setSecurity(ssl ? SmtpConfig.Security.SSL : SmtpConfig.Security.NONE);
         config.setAllowPartialSend(PropUtil.getBooleanSessionProperty(session,
                 "mail." + protocol + ".sendpartial", false));
+        config.setConnectTimeout(PropUtil.getIntSessionProperty(session,
+                "mail." + protocol + ".connectiontimeout", 0));
+        config.setReadTimeout(PropUtil.getIntSessionProperty(session,
+                "mail." + protocol + ".timeout", 0));
+
+        Properties props = session.getProperties();
+        Object socketFactory = props.get("mail." + protocol + ".socketFactory");
+        if (socketFactory instanceof SocketFactory) {
+            config.setSocketFactory((SocketFactory) socketFactory);
+        }
+        Object sslSocketFactory = props.get("mail." + protocol + ".ssl.socketFactory");
+        if (sslSocketFactory instanceof SSLSocketFactory) {
+            config.setSSLSocketFactory((SSLSocketFactory) sslSocketFactory);
+        }
+
         if (user != null && passwd != null) {
             config.setAuthenticationId(user);
         }
