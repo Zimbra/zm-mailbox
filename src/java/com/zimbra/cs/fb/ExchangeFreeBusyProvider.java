@@ -53,6 +53,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.httpclient.HttpProxyUtil;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 
@@ -312,7 +313,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	private int sendRequest(HttpMethod method, ServerInfo info) throws IOException {
 		method.setDoAuthentication(true);
 		method.setRequestHeader(HEADER_USER_AGENT, USER_AGENT);
-		HttpClient client = new HttpClient();
+		HttpClient client = DebugConfig.disableFreeBusyUsingZimbraHttpConnectionManager? new HttpClient() : ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
 		HttpProxyUtil.configureProxy(client);
 		switch (info.scheme) {
 		case basic:
@@ -322,7 +323,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			formAuth(client, info);
 			break;
 		}
-		return client.executeMethod(method);
+		return DebugConfig.disableFreeBusyUsingHttpClientUtil ? client.executeMethod(method) : HttpClientUtil.executeMethod(client, method);
 	}
 	
 	private boolean basicAuth(HttpClient client, ServerInfo info) {
@@ -354,7 +355,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		HttpState state = new HttpState();
 		client.setState(state);
 		try {
-			int status = client.executeMethod(method);
+			int status = DebugConfig.disableFreeBusyUsingHttpClientUtil ? client.executeMethod(method) : HttpClientUtil.executeMethod(client, method);
 			if (status >= 400) {
 				ZimbraLog.fb.error("form auth to Exchange returned an error: "+status);
 				return false;

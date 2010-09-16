@@ -166,6 +166,9 @@ public class DebugConfig {
     public static int imapNoninteractiveSessionLimit;
     public static boolean imapTerminateSessionOnClose;
     public static boolean imapSerializeSessionOnClose;
+    
+    public static boolean disableFreeBusyUsingZimbraHttpConnectionManager; // delete me in 609 if bug 48785 is indeed fixed
+    public static boolean disableFreeBusyUsingHttpClientUtil;              // delete me in 609 if bug 48785 is indeed fixed
 
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
@@ -232,6 +235,9 @@ public class DebugConfig {
         imapNoninteractiveSessionLimit = intValue("debug_imap_noninteractive_session_limit", Integer.MAX_VALUE);
         imapTerminateSessionOnClose = booleanValue("imap_terminate_session_on_close", false);
         imapSerializeSessionOnClose = booleanValue("imap_serialize_session_on_close", true);
+        
+        disableFreeBusyUsingZimbraHttpConnectionManager = booleanValue("disable_freebusy_using_ZimbraHttpConnectionManager", false);
+        disableFreeBusyUsingHttpClientUtil = booleanValue("disable_freebusy_using_HttpClientUtil", false);
     }
 
     protected static boolean booleanValue(String key, boolean defaultValue) {
