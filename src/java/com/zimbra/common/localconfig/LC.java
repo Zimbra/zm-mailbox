@@ -118,7 +118,6 @@ public class LC {
     public static final KnownKey zimbra_mailbox_inactive_cache;
     public static final KnownKey zimbra_mailbox_change_checkpoint_frequency;
 
-    public static final KnownKey zimbra_index_factory_classname;
     public static final KnownKey zimbra_index_max_uncommitted_operations;
     public static final KnownKey zimbra_index_lru_size;
     public static final KnownKey zimbra_index_idle_flush_time;
@@ -773,7 +772,6 @@ public class LC {
 
         zimbra_mailbox_change_checkpoint_frequency = new KnownKey("zimbra_mailbox_change_checkpoint_frequency", "100");
 
-        zimbra_index_factory_classname = new KnownKey("zimbra_index_factory_classname", "", "if set, use the specified classname for the IndexFactory");
         zimbra_index_max_uncommitted_operations = new KnownKey("zimbra_index_max_uncommitted_operations");
         zimbra_index_max_uncommitted_operations.setDefault("200");
 
