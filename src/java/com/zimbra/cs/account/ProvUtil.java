@@ -3593,20 +3593,22 @@ public class ProvUtil implements HttpDebugListener {
         
         if (!(mProv instanceof LdapProvisioning))
             throwLdapOnly();
-        
-        final Set<String> attrsNeeded = new HashSet<String>();
-        attrsNeeded.add(Provisioning.A_zimbraVirtualHostname);
-        attrsNeeded.add(Provisioning.A_zimbraSSLPrivateKey);
-        attrsNeeded.add(Provisioning.A_zimbraSSLCertificate);
+
+        final Set<String> attrsToOutput = new HashSet<String>();
+        attrsToOutput.add(Provisioning.A_zimbraVirtualHostname);
         
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             public void visit(NamedEntry entry) throws ServiceException {
-                if (entry.getAttr(Provisioning.A_zimbraVirtualHostname) != null)
-                    dumpDomain((Domain)entry, attrsNeeded);
+                if (entry.getAttr(Provisioning.A_zimbraVirtualHostname) != null && 
+                    entry.getAttr(Provisioning.A_zimbraSSLPrivateKey) != null &&
+                    entry.getAttr(Provisioning.A_zimbraSSLCertificate) != null)
+                    dumpDomain((Domain)entry, attrsToOutput);
             }
         };
         
-        mProv.getAllDomains(visitor, attrsNeeded.toArray(new String[attrsNeeded.size()]));
+        mProv.getAllDomains(visitor, new String[]{Provisioning.A_zimbraVirtualHostname, 
+                                                  Provisioning.A_zimbraSSLPrivateKey,
+                                                  Provisioning.A_zimbraSSLCertificate});
     }
     
     private void doGetAllMemcachedServers(String[] args) throws ServiceException {
