@@ -579,9 +579,13 @@ public class SoapSession extends Session {
             RemoteNotifications rns = new RemoteNotifications(eNotify);
             synchronized (mSentChanges) {
                 if (!skipNotifications(rns.getScaledNotificationCount(), !isPing))
-                    mChanges.addNotification(rns);
+                    addRemoteNotifications(rns);
             }
         }
+    }
+    
+    protected void addRemoteNotifications(RemoteNotifications rns) {
+        mChanges.addNotification(rns);
     }
 
     private void pingRemoteSessions(ZimbraSoapContext zsc) {
