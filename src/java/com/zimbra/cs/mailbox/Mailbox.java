@@ -6304,7 +6304,7 @@ public class Mailbox {
         if (itemCount <= batchSize) {
             emptySmallFolder(octxt, folderId, removeSubfolders);
         } else {
-            emptyLargeFolder(octxt, folderId, removeSubfolders, 2);
+            emptyLargeFolder(octxt, folderId, removeSubfolders, batchSize);
         }
     }
 
