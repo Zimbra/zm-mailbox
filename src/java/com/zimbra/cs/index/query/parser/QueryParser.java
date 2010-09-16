@@ -460,14 +460,14 @@ public final class QueryParser {
         switch (field.kind) {
           case HAS:
             if (text.equalsIgnoreCase("attachment")) {
-                return new AttachmentQuery(mailbox, "any");
+                return new AttachmentQuery("any");
             } else {
-                return new HasQuery(mailbox, text);
+                return new HasQuery(text);
             }
           case ATTACHMENT:
-            return new AttachmentQuery(mailbox, text);
+            return new AttachmentQuery(text);
           case TYPE:
-            return new TypeQuery(mailbox, text);
+            return new TypeQuery(text);
           case ITEM:
             return ItemQuery.create(mailbox, text);
           case UNDERID:
@@ -634,7 +634,7 @@ public final class QueryParser {
         throws ServiceException {
 
         if (term.startsWith("@")) {
-            return new DomainQuery(mailbox, field, term);
+            return new DomainQuery(field, term);
         } else {
             return new TextQuery(mailbox, analyzer, field, term);
         }

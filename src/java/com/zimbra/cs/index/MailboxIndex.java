@@ -19,18 +19,17 @@ import java.util.Collection;
 import java.util.List;
 import com.zimbra.common.util.ZimbraLog;
 import org.apache.lucene.analysis.Analyzer;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.IndexHelper;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.store.file.Volume;
-import com.zimbra.cs.util.Zimbra;
 
 /**
  * Encapsulates the Index for one particular mailbox.
@@ -38,6 +37,30 @@ import com.zimbra.cs.util.Zimbra;
  * @since Jul 26, 2004
  */
 public final class MailboxIndex {
+
+    private final LuceneIndex luceneIndex;
+    private final long mMailboxId;
+    private final Mailbox mMailbox;
+    private Analyzer mAnalyzer = null;
+
+    public MailboxIndex(Mailbox mbox) throws ServiceException {
+        mMailboxId = mbox.getId();
+        mMailbox = mbox;
+        Volume indexVol = Volume.getById(mbox.getIndexVolume());
+        String idxParentDir = indexVol.getMailboxDir(mMailboxId, Volume.TYPE_INDEX);
+        luceneIndex = new LuceneIndex(this, idxParentDir, mMailboxId);
+        String analyzerName = mbox.getAccount().getAttr(Provisioning.A_zimbraTextAnalyzer, null);
+
+        if (analyzerName != null) {
+            mAnalyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
+        } else {
+            mAnalyzer = ZimbraAnalyzer.getDefaultAnalyzer();
+        }
+
+        ZimbraLog.index.info("Initialized Index for mailbox " + mMailboxId +
+                " directory: " + luceneIndex + " Analyzer=" + mAnalyzer);
+    }
+
     /**
      * Primary search API.
      *
@@ -151,33 +174,22 @@ public final class MailboxIndex {
     }
 
     /**
-     * For logging - return the total index disk written for this index
-     *
-     * @return
+     * @see LuceneIndex#getBytesWritten()
      */
     public long getBytesWritten() {
-        if (mLucene != null) {
-            return mLucene.getBytesWritten();
-        } else {
-            return 0;
-        }
+        return luceneIndex.getBytesWritten();
     }
 
     /**
-     * For logging - return the total index read for this index
-     *
-     * @return
+     * @see LuceneIndex#getBytesRead()
      */
     public long getBytesRead() {
-        if (mLucene != null) {
-            return mLucene.getBytesRead();
-        } else {
-            return 0;
-        }
+        return luceneIndex.getBytesRead();
     }
 
     /**
-     * This API should **ONLY** be used by the IndexHelper API.  Don't call this API directly
+     * This API should **ONLY** be used by the {@link IndexHelper} API. Don't
+     * call this API directly.
      */
     public int getBatchedIndexingCount() {
         try {
@@ -192,180 +204,128 @@ public final class MailboxIndex {
         return mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 0) > 0;
     }
 
+    /**
+     * @see LuceneIndex#generateIndexId(int)
+     */
     public String generateIndexId(int itemId) {
-        return mTextIndex.generateIndexId(itemId);
+        return luceneIndex.generateIndexId(itemId);
     }
 
     /**
-     * @param fieldName a lucene field (e.g. LuceneFields.L_H_CC)
-     * @param collection Strings which correspond to all of the domain terms stored in a given field.
-     * @throws IOException
+     * @see LuceneIndex#getDomainsForField(String, String, Collection)
      */
     public void getDomainsForField(String fieldName, String regex,
             Collection<BrowseTerm> collection) throws IOException {
-        mTextIndex.getDomainsForField(fieldName, regex, collection);
+        luceneIndex.getDomainsForField(fieldName, regex, collection);
     }
 
     /**
-     * @param collection - Strings which correspond to all of the attachment types in the index
-     * @throws IOException
+     * @see LuceneIndex#getAttachments(String, Collection)
      */
     public void getAttachments(String regex, Collection<BrowseTerm> collection) throws IOException {
-        mTextIndex.getAttachments(regex, collection);
-    }
-
-    public void getObjects(String regex, Collection<BrowseTerm> collection) throws IOException {
-        mTextIndex.getObjects(regex, collection);
+        luceneIndex.getAttachments(regex, collection);
     }
 
     /**
-     * A hint to the indexing system that we're doing a 'bulk' write to the index -- writing
-     * multiple items to the index.
+     * @see LuceneIndex#getObjects(String, Collection)
+     */
+    public void getObjects(String regex, Collection<BrowseTerm> collection) throws IOException {
+        luceneIndex.getObjects(regex, collection);
+    }
+
+    /**
+     * A hint to the indexing system that we're doing a 'bulk' write to the index
+     * -- writing multiple items to the index.
+     * <ul>
+     *  <li>Caller MUST hold call endWriteOperation() at the end.
+     *  <li>Caller MUST the mailbox lock for the duration of the begin/end pair
+     * </ul>
      *
-     *   Caller MUST hold call endWriteOperation() at the end.
-     *   Caller MUST the mailbox lock for the duration of the begin/end pair
-     *
-     * @throws IOException
+     * @see LuceneIndex#beginWriteOperation()
      */
     public void beginWriteOperation() throws IOException {
-        mTextIndex.beginWriteOperation();
+        luceneIndex.beginWriteOperation();
     }
 
-    public void endWriteOperation() throws IOException {
-        mTextIndex.endWriteOperation();
+    /**
+     * @see LuceneIndex#endWriteOperation()
+     */
+    public void endWriteOperation() {
+        luceneIndex.endWriteOperation();
     }
-
 
     /**
      * Force all outstanding index writes to go through.
+     * <p>
      * This API should be called when the system detects that it has free time.
+     *
+     * @see LuceneIndex#flush()
      */
     public void flush() {
-        mTextIndex.flush();
+        luceneIndex.flush();
     }
 
     /**
+     * @see LuceneIndex#deleteDocuments(List)
      * @param itemIds array of itemIds to be deleted
-     *
-     * @return an array of itemIds which HAVE BEEN PROCESSED.  If returned.length ==
-     * itemIds.length then you can assume the operation was completely successful
-     *
+     * @return an array of itemIds which HAVE BEEN PROCESSED.
+     *  If {@code returned.length == itemIds.length} then you can assume the
+     *  operation was completely successful.
      * @throws IOException on index open failure, nothing processed.
      */
     public List<String> deleteDocuments(List<String> itemIds) throws IOException {
-        return mTextIndex.deleteDocuments(itemIds);
+        return luceneIndex.deleteDocuments(itemIds);
     }
 
     @Override
     public String toString() {
-        StringBuffer ret = new StringBuffer("MailboxIndex(");
-        ret.append(mMailboxId);
-        ret.append(")");
-        return ret.toString();
-    }
-
-    public MailboxIndex(Mailbox mbox) throws ServiceException {
-        long mailboxId = mbox.getId();
-
-        mMailboxId = mailboxId;
-        mMailbox = mbox;
-
-        Volume indexVol = Volume.getById(mbox.getIndexVolume());
-        String idxParentDir = indexVol.getMailboxDir(mailboxId, Volume.TYPE_INDEX);
-
-        mTextIndex = sIndexFactory.create(this, idxParentDir, mMailboxId);
-        if (mTextIndex instanceof ILuceneIndex) {
-            mLucene = (ILuceneIndex) mTextIndex;
-        }
-
-        String analyzerName = mbox.getAccount().getAttr(Provisioning.A_zimbraTextAnalyzer, null);
-
-        if (analyzerName != null) {
-            mAnalyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
-        } else {
-            mAnalyzer = ZimbraAnalyzer.getDefaultAnalyzer();
-        }
-
-        ZimbraLog.index.info("Initialized Index for mailbox " + mailboxId +
-                " directory: " + mTextIndex + " Analyzer=" + mAnalyzer);
-    }
-
-    public TextQueryOperation createTextQueryOperation() {
-        return sIndexFactory.createTextQueryOperation();
+        return "MailboxIndex(" + mMailboxId + ")";
     }
 
     IndexSearcherRef getIndexSearcherRef(SortBy sort) throws IOException {
-        IndexSearcherRef toRet = mLucene.getIndexSearcherRef();
-        toRet.setSort(mLucene.getSort(sort));
+        IndexSearcherRef toRet = luceneIndex.getIndexSearcherRef();
+        toRet.setSort(luceneIndex.getSort(sort));
         return toRet;
     }
 
-    ILuceneIndex getLuceneIndex() {
-        return mLucene;
+    LuceneIndex getLuceneIndex() {
+        return luceneIndex;
     }
 
-    ITextIndex getTextIndex() {
-        return mTextIndex;
-    }
-
-    private static IIndexFactory sIndexFactory = null;
-
-    static {
-        ZimbraLog.index.info("Using Lucene Jar version 2.3 or higher");
-        String factClassname = LC.zimbra_index_factory_classname.value();
-        if (factClassname != null && factClassname.length() > 0) {
-            try {
-                sIndexFactory = (IIndexFactory)(Class.forName(factClassname).newInstance());
-            } catch (Exception e) {
-                ZimbraLog.index.fatal("Unable to instantiate Index Factory " +
-                        factClassname + " specified in LC.zimbra_index_factory_classname", e);
-                Zimbra.halt("Unable to instantiate Index Factory " +
-                        factClassname + " specified in LC.zimbra_index_factory_classname");
-            }
-        } else {
-            sIndexFactory = new LuceneFactory();
-        }
-    }
-
-    private ILuceneIndex mLucene;
-    private ITextIndex mTextIndex;
-
-    private long mMailboxId;
-    private Mailbox mMailbox;
-
+    /**
+     * @see LuceneIndex#startup()
+     */
     public static void startup() {
         if (DebugConfig.disableIndexing) {
             return;
         }
-        sIndexFactory.startup();
+        LuceneIndex.startup();
     }
 
+    /**
+     * @see LuceneIndex#shutdown()
+     */
     public static void shutdown() {
         if (DebugConfig.disableIndexing) {
             return;
         }
-        sIndexFactory.shutdown();
+        LuceneIndex.shutdown();
     }
 
+    /**
+     * @see LuceneIndex#flushAllWriters()
+     */
     public static void flushAllWriters() {
         if (DebugConfig.disableIndexing) {
             return;
         }
-        sIndexFactory.flushAllWriters();
-    }
-
-    private Analyzer mAnalyzer = null;
-
-    boolean curThreadHoldsLock() {
-        return Thread.holdsLock(getLock());
+        LuceneIndex.flushAllWriters();
     }
 
     /**
-     * Load the Analyzer for this index, using the default Zimbra analyzer or a custom user-provided
-     * analyzer specified by the key Provisioning.A_zimbraTextAnalyzer
-     *
-     * @param mbox
-     * @throws ServiceException
+     * Load the {@link Analyzer} for this index, using the default Zimbra
+     * analyzer or a custom user-provided analyzer specified by
+     * {@link Provisioning#A_zimbraTextAnalyzer}.
      */
     public void initAnalyzer(Mailbox mbox) throws ServiceException {
         // per bug 11052, must always lock the Mailbox before the MailboxIndex, and since
@@ -389,12 +349,7 @@ public final class MailboxIndex {
         }
     }
 
-    /******************************************************************************
-     *
-     *  Index Search Results
-     *
-     ********************************************************************************/
-
+    // Index Search Results
     public static final String GROUP_BY_CONVERSATION = "conversation";
     public static final String GROUP_BY_MESSAGE      = "message";
     public static final String GROUP_BY_NONE         = "none";
@@ -455,21 +410,20 @@ public final class MailboxIndex {
         return types;
     }
 
+    /**
+     * @see LuceneIndex#deleteIndex()
+     */
     public void deleteIndex() throws IOException {
-        mTextIndex.deleteIndex();
+        luceneIndex.deleteIndex();
     }
 
     /**
-     * @param mbox
-     * @param deleteFirst
-     * @param docList
-     * @param mi
-     * @param modContent passed-in, can't use the one from the MailItem because it could potentially change underneath us
-     *                   and we need to guarantee that we're submitting to the index in strict mod-content-order
-     *                   Note that a modContent of -1 means that this is an out-of-sequence index
-     *                   add (IE a reindex of specific items or types).  Out-of-index adds
-     *                   SHOULD NOT BE TRACKED -- do not call indexingCompleted for them
-     * @throws ServiceException
+     * @param modContent passed-in, can't use the one from the MailItem because
+     *  it could potentially change underneath us and we need to guarantee that
+     *  we're submitting to the index in strict mod-content-order. Note that a
+     *  modContent of -1 means that this is an out-of-sequence index add (IE a
+     *  reindex of specific items or types).  Out-of-index adds SHOULD NOT BE
+     *  TRACKED -- do not call indexingCompleted for them.
      */
     public void indexMailItem(Mailbox mbox, boolean deleteFirst,
             List<IndexDocument> docList, MailItem mi, int modContent)
@@ -482,7 +436,7 @@ public final class MailboxIndex {
                 if (docList != null) {
                     IndexDocument[] docs = new IndexDocument[docList.size()];
                     docs = docList.toArray(docs);
-                    mTextIndex.addDocument(docs, mi, mi.getId(), indexId,
+                    luceneIndex.addDocument(docs, mi.getId(), indexId,
                             modContent, mi.getDate(), mi.getSize(),
                             mi.getSortSubject(), mi.getSortSender(), deleteFirst);
                 }
@@ -504,16 +458,19 @@ public final class MailboxIndex {
     }
 
     /**
-     * @return TRUE if all tokens were expanded or FALSE if no more tokens could be expanded
+     * @see LuceneIndex#expandWildcardToken(Collection, String, String, int)
      */
     public boolean expandWildcardToken(Collection<String> toRet, String field,
             String token, int maxToReturn) throws ServiceException {
-        return mTextIndex.expandWildcardToken(toRet, field, token, maxToReturn);
+        return luceneIndex.expandWildcardToken(toRet, field, token, maxToReturn);
     }
 
+    /**
+     * @see LuceneIndex#suggestSpelling(String, String)
+     */
     List<SpellSuggestQueryInfo.Suggestion> suggestSpelling(String field,
             String token) throws ServiceException {
-        return mTextIndex.suggestSpelling(field, token);
+        return luceneIndex.suggestSpelling(field, token);
     }
 
     final Object getLock() {

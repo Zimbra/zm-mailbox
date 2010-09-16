@@ -337,7 +337,7 @@ public final class ZimbraQuery {
 
         @Override
         public void recurseCallback(QueryOperation op) {
-            if (op instanceof TextQueryOperation) {
+            if (op instanceof LuceneQueryOperation) {
                 num++;
             }
         }
@@ -834,8 +834,8 @@ public final class ZimbraQuery {
 
         @Override
         public void recurseCallback(QueryOperation op) {
-            if (op instanceof TextQueryOperation) {
-                ((TextQueryOperation)op).addAndedClause(new TermQuery(new Term(
+            if (op instanceof LuceneQueryOperation) {
+                ((LuceneQueryOperation) op).addAndedClause(new TermQuery(new Term(
                         LuceneFields.L_FIELD, CalendarItem.INDEX_FIELD_ITEM_CLASS_PRIVATE)), false);
             }
         }

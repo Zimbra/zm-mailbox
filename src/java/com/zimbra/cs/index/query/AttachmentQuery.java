@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * Query by attachment type.
@@ -47,11 +46,11 @@ public class AttachmentQuery extends LuceneQuery {
         addMapping(mMap, new String[] {"text", "text/*"}, "text");
     }
 
-    public AttachmentQuery(Mailbox mbox, String what) {
-        super(mbox, "type:", LuceneFields.L_ATTACHMENTS, lookup(mMap, what));
+    public AttachmentQuery(String what) {
+        super("type:", LuceneFields.L_ATTACHMENTS, lookup(mMap, what));
     }
 
-    AttachmentQuery(Mailbox mbox, String luceneField, String what) {
-        super(mbox, "type:", luceneField, lookup(mMap, what));
+    AttachmentQuery(String luceneField, String what) {
+        super("type:", luceneField, lookup(mMap, what));
     }
 }

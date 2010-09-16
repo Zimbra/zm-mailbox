@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * Query by special objects.
@@ -37,7 +36,7 @@ public final class HasQuery extends LuceneQuery {
         addMapping(mMap, new String[] {"url"}, "url");
     }
 
-    public HasQuery(Mailbox mbox, String what) {
-        super(mbox, "has:", LuceneFields.L_OBJECTS, lookup(mMap, what));
+    public HasQuery(String what) {
+        super("has:", LuceneFields.L_OBJECTS, lookup(mMap, what));
     }
 }

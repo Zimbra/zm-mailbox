@@ -30,11 +30,11 @@ import com.zimbra.common.util.ZimbraLog;
 /**
  * Self-sweeping (with it's own sweeper thread) LRU cache of open index readers
  */
-class IndexReadersCache extends Thread {
+final class IndexReadersCache extends Thread {
     private static Log sLog = LogFactory.getLog(IndexReadersCache.class);
 
     private final int mMaxOpenReaders;
-    private Map<ILuceneIndex, IndexReaderRef> mOpenIndexReaders;
+    private Map<LuceneIndex, IndexReaderRef> mOpenIndexReaders;
     private boolean mShutdown;
     private long mSweepIntervalMS;
     private long mMaxReaderOpenTimeMS;
@@ -51,7 +51,7 @@ class IndexReadersCache extends Thread {
         }
         mMaxReaderOpenTimeMS = maxReaderOpenTime;
         mMaxOpenReaders = maxOpenReaders;
-        mOpenIndexReaders = new LinkedHashMap<ILuceneIndex, IndexReaderRef>(mMaxOpenReaders);
+        mOpenIndexReaders = new LinkedHashMap<LuceneIndex, IndexReaderRef>(mMaxOpenReaders);
         mShutdown = false;
         mSweepIntervalMS = sweepIntervalMS;
     }
@@ -68,11 +68,8 @@ class IndexReadersCache extends Thread {
      * Put the passed-in {@link IndexReader} into the cache, if applicable. This
      * function will automatically {@link IndexReaderRef#inc()} the
      * {@link IndexReader} if it stores it in it's cache
-     *
-     * @param idx
-     * @param reader
      */
-    synchronized void putIndexReader(ILuceneIndex idx, IndexReaderRef reader) {
+    synchronized void putIndexReader(LuceneIndex idx, IndexReaderRef reader) {
         // special case disabled index reader cache:
         if (mMaxOpenReaders <= 0) {
             return;
@@ -81,10 +78,10 @@ class IndexReadersCache extends Thread {
         int toRemove = mOpenIndexReaders.size() + 1 - mMaxOpenReaders;
         if (toRemove > 0) {
             // remove extra (above our limit) readers
-            for (Iterator<Entry<ILuceneIndex, IndexReaderRef>> iter =
+            for (Iterator<Entry<LuceneIndex, IndexReaderRef>> iter =
                 mOpenIndexReaders.entrySet().iterator(); toRemove > 0; toRemove--) {
 
-                Entry<ILuceneIndex, IndexReaderRef> entry = iter.next();
+                Entry<LuceneIndex, IndexReaderRef> entry = iter.next();
                 entry.getValue().dec();
                 if (sLog.isDebugEnabled()) {
                     sLog.debug("Releasing index reader for index: " +
@@ -101,10 +98,8 @@ class IndexReadersCache extends Thread {
     /**
      * Called by the {@link LuceneIndex} when it closes the reader itself
      * (e.g. when there is write activity to the index)
-     *
-     * @param idx
      */
-    synchronized void removeIndexReader(ILuceneIndex idx) {
+    synchronized void removeIndexReader(LuceneIndex idx) {
         if (mMaxOpenReaders <= 0) {
             return;
         }
@@ -129,10 +124,9 @@ class IndexReadersCache extends Thread {
     }
 
     /**
-     * @param idx
-     * @return an ALREADY ADDREFED IndexReader, or NULL if there is not one cached
+     * Returns ALREADY ADDREFED IndexReader, or NULL if there is not one cached.
      */
-    synchronized IndexReaderRef getIndexReader(ILuceneIndex idx) {
+    synchronized IndexReaderRef getIndexReader(LuceneIndex idx) {
         IndexReaderRef toRet = mOpenIndexReaders.get(idx);
         if (toRet != null) {
             if (toRet.requiresReopen()) {
@@ -163,11 +157,7 @@ class IndexReadersCache extends Thread {
         return toRet;
     }
 
-    /**
-     * @param idx
-     * @return
-     */
-    synchronized boolean containsKey(ILuceneIndex idx) {
+    synchronized boolean containsKey(LuceneIndex idx) {
         return mOpenIndexReaders.containsKey(idx);
     }
 
@@ -204,10 +194,10 @@ class IndexReadersCache extends Thread {
                         long now = System.currentTimeMillis();
                         long cutoff = now - mMaxReaderOpenTimeMS;
 
-                        for (Iterator<Entry<ILuceneIndex,IndexReaderRef>> iter =
+                        for (Iterator<Entry<LuceneIndex,IndexReaderRef>> iter =
                             mOpenIndexReaders.entrySet().iterator(); iter.hasNext();) {
 
-                            Entry<ILuceneIndex,IndexReaderRef> entry = iter.next();
+                            Entry<LuceneIndex,IndexReaderRef> entry = iter.next();
                             if (entry.getValue().getAccessTime() < cutoff) {
                                 if (sLog.isDebugEnabled()) {
                                     sLog.debug("Releasing cached index reader for index: " +

@@ -19,9 +19,8 @@ import java.util.Map;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 
+import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
-import com.zimbra.cs.index.TextQueryOperation;
-import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * Query by Lucene field.
@@ -30,7 +29,6 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 abstract class LuceneQuery extends Query {
-    private final Mailbox mailbox;
     private final String luceneField;
     private final String queryField;
     private final String term;
@@ -50,8 +48,7 @@ abstract class LuceneQuery extends Query {
         }
     }
 
-    LuceneQuery(Mailbox mbox, String queryField, String luceneField, String term) {
-        this.mailbox = mbox;
+    LuceneQuery(String queryField, String luceneField, String term) {
         this.queryField = queryField;
         this.luceneField = luceneField;
         this.term = term;
@@ -59,7 +56,7 @@ abstract class LuceneQuery extends Query {
 
     @Override
     public QueryOperation getQueryOperation(boolean bool) {
-        TextQueryOperation op = mailbox.getMailboxIndex().createTextQueryOperation();
+        LuceneQueryOperation op = new LuceneQueryOperation();
         op.addClause(queryField + term,
                 new TermQuery(new Term(luceneField, term)), evalBool(bool));
         return op;

@@ -17,9 +17,8 @@ package com.zimbra.cs.index.query;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 
+import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
-import com.zimbra.cs.index.TextQueryOperation;
-import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * Query by email domain.
@@ -30,17 +29,15 @@ import com.zimbra.cs.mailbox.Mailbox;
 public final class DomainQuery extends Query {
     private final String field;
     private final String term;
-    private final Mailbox mailbox;
 
-    public DomainQuery(Mailbox mbox, String field, String term) {
+    public DomainQuery(String field, String term) {
         this.field = field;
         this.term = term;
-        this.mailbox = mbox;
     }
 
     @Override
     public QueryOperation getQueryOperation(boolean bool) {
-        TextQueryOperation op = mailbox.getMailboxIndex().createTextQueryOperation();
+        LuceneQueryOperation op = new LuceneQueryOperation();
         op.addClause(toQueryString(field, term),
                 new TermQuery(new Term(field, term)), evalBool(bool));
         return op;

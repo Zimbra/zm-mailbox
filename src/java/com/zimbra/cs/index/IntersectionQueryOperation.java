@@ -513,36 +513,33 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
 
 
     /**
-     * If this is set, then we always transform the query into DNF:
+     * We always transform the query into DNF:
      *       a AND (b OR c)
      * into
      *       (a AND b) OR (a AND c)
      *
-     * If b or c have different targets (servers they execute on) then we *must* distribute
-     * but otherwise we have a choice.
+     * If b or c have different targets (servers they execute on) then we *must*
+     * distribute but otherwise we have a choice.
+     * <p>
+     * Tim: setting this to ALWAYS for now.  I think in most cases it will be a
+     * win, even though it appears to create 4 executable terms instead of 3. It
+     * will be a win because (from the example above) in the 2nd case, it is
+     * almost certain that one both terms will combine thereby reducing the
+     * number of operations to 3 with no ANDs, which is always faster.
      *
-     * Tim: setting this to ALWAYS for now.  I think in most cases it will be a win, even
-     * though it appears to create 4 executable terms instead of 3.  It will be a win
-     * because (from the example above) in the 2nd case, it is almost certain that one both
-     * terms will combine thereby reducing the number of operations to 3 with no ANDs,
-     * which is always faster.
-     *
-     * The ideal solution would be to try both ways and compare the final # of executable
-     * ops.  TODO, maybe.
-     *
-     * tim 1/2008: SortBy="none" requires this setting, and so if you want to disable it you will
-     *      need to pass down and check the requested Sort.
-     *
-     * tim:1/2009 convinced this is always the best choice.  The # ops is less important than
-     * the number of rows evaluated.  Pushing the AND down lowers the total # rows.
+     * The ideal solution would be to try both ways and compare the final # of
+     * executable ops.
+     * <p>
+     * tim 1/2008: SortBy="none" requires this setting, and so if you want to
+     * disable it you will need to pass down and check the requested Sort.
+     * <p>
+     * tim:1/2009 convinced this is always the best choice. The # ops is less
+     * important than the number of rows evaluated. Pushing the AND down lowers
+     * the total # rows.
      */
-    private static final boolean ALWAYS_DISTRIBUTE_AND_OVER_OR = true;
-
     @Override
     QueryOperation optimize(Mailbox mbox) throws ServiceException {
-        //
         // Step 1: optimize each individual sub-operation we have
-        //
         restartSubOpt: do {
             for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext();) {
                 QueryOperation q = iter.next();
@@ -606,8 +603,6 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
 
         pruneIncompatibleTargets(targets);
 
-
-        //
         // Step 2.6
         //
         // incompat targets are pruned, now distribute as necessary
@@ -616,43 +611,37 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
         //
         // We only have to distribute if there is more than one explicit target,
         // otherwise we know we can be executed on one server so we're golden.
-        //
-        if (ALWAYS_DISTRIBUTE_AND_OVER_OR || targets.size() > 1) {
-            int distributeLhs = -1;
-
-            for (int i = 0; i < mQueryOperations.size(); i++) {
-                QueryOperation lhs = mQueryOperations.get(i);
-
-                if ((ALWAYS_DISTRIBUTE_AND_OVER_OR  && lhs instanceof UnionQueryOperation)
-                            || (lhs.getQueryTargets().size() > 1)) {
-                    // need to distribute!
-                    distributeLhs = i;
-                    break;
-                }
-            }
-
-            if (distributeLhs >= 0) {
-                // if lhs has >1 explicit target at this point, it MUST be a union...
-                UnionQueryOperation lhs = (UnionQueryOperation)(mQueryOperations.remove(distributeLhs));
-                UnionQueryOperation topOp = new UnionQueryOperation();
-
-                for (QueryOperation lhsCur : lhs.mQueryOperations)
-                {
-                    IntersectionQueryOperation newAnd = new IntersectionQueryOperation();
-                    topOp.add(newAnd);
-
-                    newAnd.addQueryOp(lhsCur);
-
-                    for (QueryOperation rhsCur : mQueryOperations) {
-                        newAnd.addQueryOp((QueryOperation)(rhsCur.clone()));
-                    }
-                }
-
-                // recurse!
-                return topOp.optimize(mbox);
+        int distributeLhs = -1;
+        for (int i = 0; i < mQueryOperations.size(); i++) {
+            QueryOperation lhs = mQueryOperations.get(i);
+            if (lhs instanceof UnionQueryOperation ||
+                    lhs.getQueryTargets().size() > 1) {
+                // need to distribute!
+                distributeLhs = i;
+                break;
             }
         }
 
+        if (distributeLhs >= 0) {
+            // if lhs has >1 explicit target at this point, it MUST be a union...
+            UnionQueryOperation lhs = (UnionQueryOperation)(mQueryOperations.remove(distributeLhs));
+            UnionQueryOperation topOp = new UnionQueryOperation();
+
+            for (QueryOperation lhsCur : lhs.mQueryOperations)
+            {
+                IntersectionQueryOperation newAnd = new IntersectionQueryOperation();
+                topOp.add(newAnd);
+
+                newAnd.addQueryOp(lhsCur);
+
+                for (QueryOperation rhsCur : mQueryOperations) {
+                    newAnd.addQueryOp((QueryOperation)(rhsCur.clone()));
+                }
+            }
+
+            // recurse!
+            return topOp.optimize(mbox);
+        }
 
         // at this point, we know that the entire query has one and only one QueryTarget.
         assert(getQueryTargets().countExplicitTargets() <= 1);
@@ -664,28 +653,26 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
         // we wait until here to combine those terms.  Weird, but functional.
         //
         // WARNING: Lucene ops ALWAYS combine, so we assume there is only one!
-        {
-            TextQueryOperation lop = null;
-            for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext();) {
-                QueryOperation op = iter.next();
-                if (op instanceof TextQueryOperation) {
-                    lop = (TextQueryOperation) op;
-                    iter.remove();
-                    break;
+        LuceneQueryOperation lop = null;
+        for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext();) {
+            QueryOperation op = iter.next();
+            if (op instanceof LuceneQueryOperation) {
+                lop = (LuceneQueryOperation) op;
+                iter.remove();
+                break;
+            }
+        }
+        if (lop != null) {
+            boolean foundIt = false;
+            for (QueryOperation op : mQueryOperations) {
+                if (op instanceof DBQueryOperation) {
+                    ((DBQueryOperation) op).setLuceneQueryOperation(lop);
+                    foundIt = true;
                 }
             }
-            if (lop != null) {
-                boolean foundIt = false;
-                for (QueryOperation op : mQueryOperations) {
-                    if (op instanceof DBQueryOperation) {
-                        ((DBQueryOperation) op).setTextQueryOperation(lop);
-                        foundIt = true;
-                    }
-                }
-                if (!foundIt) {
-                    // add the lucene op back in!
-                    addQueryOp(lop);
-                }
+            if (!foundIt) {
+                // add the lucene op back in!
+                addQueryOp(lop);
             }
         }
 

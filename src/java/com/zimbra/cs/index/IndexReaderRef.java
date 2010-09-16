@@ -33,7 +33,7 @@ import com.zimbra.common.util.ZimbraLog;
  * Reference to {@link IndexReader} that supports reference count.
  */
 final class IndexReaderRef {
-    private ILuceneIndex mIdx;
+    private LuceneIndex mIdx;
     private IndexReader mReader;
     private int mCount = 1;
     private long mAccessTime;
@@ -68,10 +68,12 @@ final class IndexReaderRef {
     }
 
     private static final class IndexReaderRefStats implements StatsDumperDataSource {
+        @Override
         public String getFilename() {
             return IndexReaderRef.class.getSimpleName() + ".csv";
         }
 
+        @Override
         public String getHeader() {
             List<String> columns = new ArrayList<String>();
             columns.add("ThreadName");
@@ -84,12 +86,14 @@ final class IndexReaderRef {
             return StringUtil.join(",", columns);
         }
 
+        @Override
         synchronized public Collection<String> getDataLines() {
             Collection<String> curDataLines = mDataLines;
             mDataLines = new ArrayList<String>(); // "empty it out" after we've logged
             return curDataLines;
         }
 
+        @Override
         public boolean hasTimestampColumn() {
             return true;
         }
@@ -125,10 +129,7 @@ final class IndexReaderRef {
 
         // MailboxId
         long mailboxId = -1;
-        if (mIdx instanceof LuceneIndex) {
-            LuceneIndex li = (LuceneIndex) mIdx;
-            mailboxId = li.getMailboxId();
-        }
+        mailboxId = mIdx.getMailboxId();
         if (mailboxId == -1) {
             line.append("unknown" + DEBUG_DELIM);
         } else {
@@ -178,7 +179,7 @@ final class IndexReaderRef {
         IndexReaderRefStats.addStats(line.toString() + "\n");
     }
 
-    IndexReaderRef(ILuceneIndex idx, IndexReader reader) {
+    IndexReaderRef(LuceneIndex idx, IndexReader reader) {
         mIdx = idx;
         mReader= reader;
         mAccessTime = System.currentTimeMillis();

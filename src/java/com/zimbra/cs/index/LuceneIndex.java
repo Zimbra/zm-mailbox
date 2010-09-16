@@ -43,15 +43,12 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.SortBy.SortDirection;
 import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.util.SyncToken;
 
 /**
- * A custom Lucene provider that uses the {@link IndexWritersCache} to manage
- * the index LRU.
+ * Lucene provider that uses {@link IndexWritersCache} to manage the index LRU.
  */
-public class LuceneIndex extends IndexWritersCache.CacheEntry
-    implements ILuceneIndex, ITextIndex {
+public final class LuceneIndex extends IndexWritersCache.CacheEntry {
 
     /**
      * We don't want to enable StopFilter preserving position increments,
@@ -89,7 +86,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
     private int mNumUncommittedItems = 0;
     private SyncToken mHighestUncomittedModContent = new SyncToken(0);
     private int beginWritingNestLevel = 0;
-
+    private List<IndexReaderRef> mOpenReaders = new ArrayList<IndexReaderRef>();
 
     static void flushAllWriters() {
         if (DebugConfig.disableIndexing)
@@ -139,17 +136,26 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         return (t < c) ? t : c;
     }
 
-    @Override
+    /**
+     * Returns total bytes written to the filesystem by Lucene - for stats.
+     * logging.
+     *
+     * @return bytes count
+     */
     public long getBytesWritten() {
         return luceneDirectory.getBytesWritten();
     }
 
-    @Override
+    /**
+     * Returns total bytes read from the filesystem by Lucene - for stats
+     * logging.
+     *
+     * @return bytes count
+     */
     public long getBytesRead() {
         return luceneDirectory.getBytesRead();
     }
 
-    @Override
     public String generateIndexId(int itemId) {
         return Integer.toString(itemId);
     }
@@ -205,8 +211,13 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         }
     }
 
-    @Override
-    public void addDocument(IndexDocument[] docs, MailItem item, int itemId,
+    /**
+     * Adds the list of documents to the index.
+     * <p>
+     * If {@code deleteFirst} is false, then we are sure that this item is not
+     * already in the index, and so we can skip the check-update step.
+     */
+    public void addDocument(IndexDocument[] docs, int itemId,
             String indexId, int modContent, long receivedDate, long size,
             String sortSubject, String sortSender, boolean deleteFirst)
         throws IOException {
@@ -279,7 +290,10 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         }
     }
 
-    @Override
+    /**
+     * Deletes all the documents from the index that have {@code indexIds} as
+     * specified.
+     */
     public List<String> deleteDocuments(List<String> itemIds) throws IOException {
         synchronized (getLock()) {
             beginWriteOperation();
@@ -314,7 +328,9 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         }
     }
 
-    @Override
+    /**
+     * Deletes this index completely.
+     */
     public void deleteIndex() throws IOException {
         synchronized (getLock()) {
             flush();
@@ -397,10 +413,9 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
     }
 
     /**
-     * @return TRUE if all tokens were expanded
-     *  or FALSE if no more tokens could be expanded
+     * Returns {@code true} if all tokens were expanded or {@code false} if more
+     * tokens were available but we hit the specified maximum.
      */
-    @Override
     public boolean expandWildcardToken(Collection<String> toRet, String field,
             String token, int maxToReturn) throws ServiceException {
         // all lucene text should be in lowercase...
@@ -448,9 +463,9 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
     }
 
     /**
-     * Force all outstanding index writes to go through. Do not return until complete
+     * Forces all outstanding index writes to go through, won't return until it
+     * completes.
      */
-    @Override
     public void flush() {
         synchronized (getLock()) {
             sIndexWritersCache.flush(this);
@@ -459,11 +474,11 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
     }
 
     /**
-     * @param fieldName - a lucene field (e.g. LuceneFields.L_H_CC)
-     * @param collection - Strings which correspond to all of the domain terms stored in a given field.
+     * @param fieldName Lucene field (e.g. LuceneFields.L_H_CC)
+     * @param collection Strings which correspond to all of the domain terms
+     * stored in a given field
      * @throws IOException
      */
-    @Override
     public void getDomainsForField(String fieldName, String regex,
             Collection<BrowseTerm> collection) throws IOException {
         if (regex == null) {
@@ -474,10 +489,10 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
     }
 
     /**
-     * @param collection - Strings which correspond to all of the attachment types in the index
+     * @param collection Strings which correspond to all of the attachment types
+     * in the index
      * @throws IOException
      */
-    @Override
     public void getAttachments(String regex, Collection<BrowseTerm> collection)
         throws IOException {
 
@@ -488,7 +503,10 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
                 new TermEnumCallback(collection));
     }
 
-    @Override
+    /**
+     * Return the list of objects (e.g. PO, etc) from the index, for
+     * SearchBuilder browsing.
+     */
     public void getObjects(String regex, Collection<BrowseTerm> collection)
         throws IOException {
 
@@ -499,15 +517,13 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
                 new TermEnumCallback(collection));
     }
 
-
     /**
-     * @return A refcounted RefCountedIndexSearcher for this index.  Caller is responsible for
-     *            calling RefCountedIndexReader.release() on the index before allowing it to go
-     *            out of scope (otherwise a RuntimeException will occur)
+     * Caller is responsible for calling {@link IndexSearcherRef#dec()} before
+     * allowing it to go out of scope (otherwise a RuntimeException will occur).
      *
-     * @throws IOException
+     * @return A {@link IndexSearcherRef} for this index.
+     * @throws IOException if opening an {@link IndexReader} failed
      */
-    @Override
     public IndexSearcherRef getIndexSearcherRef() throws IOException {
         synchronized (getLock()) {
             return new IndexSearcherRef(getIndexReaderRef());
@@ -528,7 +544,6 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         return mMbidx.getLock();
     }
 
-    @Override
     public Sort getSort(SortBy searchOrder) {
         if (searchOrder == null || searchOrder == SortBy.NONE) {
             return null;
@@ -577,7 +592,9 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         }
     }
 
-    @Override
+    /**
+     * Suggests alternate spellings for the given token.
+     */
     public List<SpellSuggestQueryInfo.Suggestion> suggestSpelling(String field,
             String token) throws ServiceException {
         LinkedList<SpellSuggestQueryInfo.Suggestion> toRet = null;
@@ -768,7 +785,6 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         return (numFiles <= 0);
     }
 
-    @Override
     public void beginWriteOperation() throws IOException {
         assert(Thread.holdsLock(getLock()));
         if (beginWritingNestLevel == 0) {
@@ -779,8 +795,7 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         beginWritingNestLevel++;
     }
 
-    @Override
-    public void endWriteOperation() throws IOException {
+    public void endWriteOperation() {
         assert(Thread.holdsLock(getLock()));
         assert(beginWritingNestLevel > 0);
 
@@ -984,16 +999,17 @@ public class LuceneIndex extends IndexWritersCache.CacheEntry
         abstract void onTerm(Term term, int docFreq);
     }
 
-    @Override
+    /**
+     * Called when the reader is closed by the {@link IndexReadersCache}.
+     *
+     * @param ref reference to {@link IndexReader}
+     */
     public void onReaderClose(IndexReaderRef ref) {
         synchronized (mOpenReaders) {
             mOpenReaders.remove(ref);
         }
     }
 
-    private List<IndexReaderRef> mOpenReaders = new ArrayList<IndexReaderRef>();
-
-    @Override
     public IndexReader reopenReader(IndexReader reader) throws IOException {
         return reader.reopen();
     }

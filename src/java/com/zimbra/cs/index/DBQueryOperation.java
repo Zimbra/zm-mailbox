@@ -38,8 +38,6 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.db.DbSearch.SearchResult;
-import com.zimbra.cs.index.TextQueryOperation.TextResultsChunk;
-import com.zimbra.cs.index.TextQueryOperation.TextResultsChunk.ScoredLuceneHit;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -86,15 +84,15 @@ public class DBQueryOperation extends QueryOperation {
     private Set<Byte> mExcludeTypes = new HashSet<Byte>();
 
     /**
-     * An attached Lucene constraint
+     * An attached Lucene constraint.
      */
-    private TextQueryOperation mLuceneOp = null;
+    private LuceneQueryOperation mLuceneOp = null;
 
     /**
      * The current "chunk" of lucene results we are working through -- we need to keep it around
      * so that we can look up the scores of hits that match the DB
      */
-    private TextResultsChunk mLuceneChunk = null;
+    private LuceneQueryOperation.LuceneResultsChunk mLuceneChunk = null;
 
     /**
      * If set, then this is the AccountId of the owner of a folder
@@ -265,7 +263,7 @@ public class DBQueryOperation extends QueryOperation {
      *
      * @param op Lucene query operation
      */
-    void setTextQueryOperation(TextQueryOperation op) {
+    void setLuceneQueryOperation(LuceneQueryOperation op) {
         assert(mLuceneOp == null);
         mAllResultsQuery = false;
         mLuceneOp = op;
@@ -557,10 +555,10 @@ public class DBQueryOperation extends QueryOperation {
                     List <Document> docs = null;
                     float score = 1.0f;
                     if (mLuceneChunk != null) {
-                        TextResultsChunk.ScoredLuceneHit sh = mLuceneChunk.getScoredHit(sr.indexId);
+                        LuceneQueryOperation.ScoredLuceneHit sh = mLuceneChunk.getScoredHit(sr.indexId);
                         if (sh != null) {
-                            docs = sh.mDocs;
-                            score = sh.mScore;
+                            docs = sh.getDocuments();
+                            score = sh.getScore();
                         } else {
                             // This could conceivably happen if we're doing a db-first query and we got multiple LuceneChunks
                             // from a single MAX_DBFIRST_RESULTS set of db-IDs....In practice, this should never happen
@@ -965,7 +963,7 @@ public class DBQueryOperation extends QueryOperation {
 
                 if (ZimbraLog.index_search.isDebugEnabled()) {
                     long dbTime = System.currentTimeMillis() - dbStart;
-                    ZimbraLog.index_search.debug("Fetched DB-second chunk in "+dbTime+"ms");
+                    ZimbraLog.index_search.debug("Fetched DB-second chunk in " + dbTime + "ms");
                 }
 
                 if (getSortBy() == SortBy.SCORE_DESCENDING) {
@@ -974,9 +972,9 @@ public class DBQueryOperation extends QueryOperation {
                     ScoredDBHit[] scHits = new ScoredDBHit[mDBHits.size()];
                     int offset = 0;
                     for (SearchResult sr : mDBHits) {
-                        ScoredLuceneHit lucScore = mLuceneChunk.getScoredHit(sr.indexId);
-
-                        scHits[offset++] = new ScoredDBHit(sr, lucScore.mScore);
+                        LuceneQueryOperation.ScoredLuceneHit lucScore =
+                            mLuceneChunk.getScoredHit(sr.indexId);
+                        scHits[offset++] = new ScoredDBHit(sr, lucScore.getScore());
                     }
 
                     Arrays.sort(scHits);
@@ -995,24 +993,26 @@ public class DBQueryOperation extends QueryOperation {
         }
     }
 
-
     /**
-     * Use all the search parameters (including the embedded TextQueryOperation) to
-     * get a chunk of search results and put them into mDBHits
-     *
+     * Use all the search parameters (including the embedded
+     * {@link LuceneQueryOperation}) to get a chunk of search results and put
+     * them into mDBHits
+     * <p>
      * On Exit:
-     *    If there are more results to be had
-     *         mDBHits has entries
-     *         mDBHitsIter is initialized
-     *         mCurHitsOffset is the absolute offset (into the result set) of the last entry in mDBHits +1
-     *                               that is, it is the offset of the next hit, when we go to get it.
-     *
-     *    If there are NOT any more results
-     *        mDBHits is empty
-     *        mDBHitsIter is null
-     *        mEndOfHits is set
-     *
-     * @throws ServiceException
+     * If there are more results to be had
+     * <ul>
+     *  <li>mDBHits has entries
+     *  <li>mDBHitsIter is initialized
+     *  <li>mCurHitsOffset is the absolute offset (into the result set) of the
+     *  last entry in mDBHits +1 that is, it is the offset of the next hit, when
+     *  we go to get it.
+     * </ul>
+     * If there are NOT any more results
+     * <ul>
+     *  <li>mDBHits is empty
+     *  <li>mDBHitsIter is null
+     *  <li>mEndOfHits is set
+     * </ul>
      */
     private void getNextChunk() throws ServiceException {
         assert(!mEndOfHits);
@@ -1155,8 +1155,9 @@ public class DBQueryOperation extends QueryOperation {
     public Object clone() {
         try {
             DBQueryOperation toRet = cloneInternal();
-            if (mLuceneOp != null)
-                toRet.mLuceneOp = (TextQueryOperation)mLuceneOp.clone(this);
+            if (mLuceneOp != null) {
+                toRet.mLuceneOp = (LuceneQueryOperation) mLuceneOp.clone(this);
+            }
             return toRet;
         } catch (CloneNotSupportedException e) {
             assert(false);
@@ -1165,19 +1166,15 @@ public class DBQueryOperation extends QueryOperation {
     }
 
     /**
-     * Called from TextQueryOperation.clone()
+     * Called from {@link LuceneQueryOperation#clone()}.
      *
-     * @param caller - our TextQueryOperation which has ALREADY BEEN CLONED
-     * @return
-     * @throws CloneNotSupportedException
+     * @param caller our LuceneQueryOperation which has ALREADY BEEN CLONED
      */
-    protected Object clone(TextQueryOperation caller) {
+    protected Object clone(LuceneQueryOperation caller) {
         DBQueryOperation toRet = cloneInternal();
         toRet.mLuceneOp = caller;
         return toRet;
     }
-
-
 
     @Override
     protected QueryOperation combineOps(QueryOperation other, boolean union) {

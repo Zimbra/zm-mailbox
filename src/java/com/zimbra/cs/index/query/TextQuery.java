@@ -33,11 +33,11 @@ import com.google.common.base.Preconditions;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.NoTermQueryOperation;
 import com.zimbra.cs.index.QueryInfo;
 import com.zimbra.cs.index.QueryOperation;
-import com.zimbra.cs.index.TextQueryOperation;
 import com.zimbra.cs.index.WildcardExpansionQueryInfo;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -48,7 +48,7 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 public final class TextQuery extends Query {
-    private ArrayList<String> mTokens;
+    private List<String> mTokens;
     private int mSlop;  // sloppiness for PhraseQuery
     private final String field;
     private final String term;
@@ -173,24 +173,24 @@ public final class TextQuery extends Query {
             if (mMailbox.getMailboxIndex() == null)
                 return new NoTermQueryOperation();
 
-            TextQueryOperation textOp = mMailbox.getMailboxIndex().createTextQueryOperation();
+            LuceneQueryOperation op = new LuceneQueryOperation();
 
             for (QueryInfo inf : mQueryInfo) {
-                textOp.addQueryInfo(inf);
+                op.addQueryInfo(inf);
             }
 
             if (mTokens.size() == 0) {
-                textOp.setQueryString(toQueryString(field, term));
+                op.setQueryString(toQueryString(field, term));
             } else if (mTokens.size() == 1) {
                 TermQuery query = new TermQuery(new Term(field, mTokens.get(0)));
-                textOp.addClause(toQueryString(field, term), query, evalBool(bool));
+                op.addClause(toQueryString(field, term), query, evalBool(bool));
             } else if (mTokens.size() > 1) {
                 PhraseQuery phrase = new PhraseQuery();
                 phrase.setSlop(mSlop); // TODO configurable?
                 for (String token : mTokens) {
                     phrase.add(new Term(field, token));
                 }
-                textOp.addClause(toQueryString(field, term), phrase, evalBool(bool));
+                op.addClause(toQueryString(field, term), phrase, evalBool(bool));
             }
 
             if (mOredTokens.size() > 0) {
@@ -199,10 +199,10 @@ public final class TextQuery extends Query {
                 for (String token : mOredTokens) {
                     orQuery.add(new TermQuery(new Term(field, token)), Occur.SHOULD);
                 }
-                textOp.addClause("", orQuery, evalBool(bool));
+                op.addClause("", orQuery, evalBool(bool));
             }
 
-            return textOp;
+            return op;
         }
     }
 

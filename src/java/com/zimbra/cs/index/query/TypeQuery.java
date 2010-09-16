@@ -15,7 +15,6 @@
 package com.zimbra.cs.index.query;
 
 import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * Query by MIME type.
@@ -25,8 +24,8 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 public final class TypeQuery extends AttachmentQuery {
 
-    public TypeQuery(Mailbox mbox, String what) {
-        super(mbox, LuceneFields.L_MIMETYPE, what);
+    public TypeQuery(String what) {
+        super(LuceneFields.L_MIMETYPE, what);
     }
 
 }
