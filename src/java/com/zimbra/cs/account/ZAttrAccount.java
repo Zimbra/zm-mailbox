@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20100913-1725 */
+    /* build: 7.0.0_BETA1_1111 ysasaki 20100916-1413 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -9134,6 +9134,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureInstantNotify(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureInstantNotify, "");
+        return attrs;
+    }
+
+    /**
+     * enable/disable MAPI (Microsoft Outlook) Connector
+     *
+     * @return zimbraFeatureMAPIConnectorEnabled, or true if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1125)
+    public boolean isFeatureMAPIConnectorEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureMAPIConnectorEnabled, true);
+    }
+
+    /**
+     * enable/disable MAPI (Microsoft Outlook) Connector
+     *
+     * @param zimbraFeatureMAPIConnectorEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1125)
+    public void setFeatureMAPIConnectorEnabled(boolean zimbraFeatureMAPIConnectorEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMAPIConnectorEnabled, zimbraFeatureMAPIConnectorEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable/disable MAPI (Microsoft Outlook) Connector
+     *
+     * @param zimbraFeatureMAPIConnectorEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1125)
+    public Map<String,Object> setFeatureMAPIConnectorEnabled(boolean zimbraFeatureMAPIConnectorEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMAPIConnectorEnabled, zimbraFeatureMAPIConnectorEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * enable/disable MAPI (Microsoft Outlook) Connector
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1125)
+    public void unsetFeatureMAPIConnectorEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMAPIConnectorEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * enable/disable MAPI (Microsoft Outlook) Connector
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1125)
+    public Map<String,Object> unsetFeatureMAPIConnectorEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMAPIConnectorEnabled, "");
         return attrs;
     }
 

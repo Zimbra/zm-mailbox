@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 dnault 20100915-1106 */
+    /* build: 7.0.0_BETA1_1111 ysasaki 20100916-1413 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3015,6 +3015,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1051)
     public static final String A_zimbraFeatureManageZimlets = "zimbraFeatureManageZimlets";
+
+    /**
+     * enable/disable MAPI (Microsoft Outlook) Connector
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1125)
+    public static final String A_zimbraFeatureMAPIConnectorEnabled = "zimbraFeatureMAPIConnectorEnabled";
 
     /**
      * whether to enforce mobile policy
