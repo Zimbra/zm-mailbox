@@ -156,6 +156,9 @@ public class DebugConfig {
     public static boolean disableGroupTargetForAdminRight;
     
     public static boolean disableComputeGroupMembershipOptimization;
+	
+	public static boolean disableFreeBusyUsingZimbraHttpConnectionManager; // delete me in 609 if bug 48785 is indeed fixed
+    public static boolean disableFreeBusyUsingHttpClientUtil;              // delete me in 609 if bug 48785 is indeed fixed
     
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
@@ -212,6 +215,9 @@ public class DebugConfig {
         disableGroupTargetForAdminRight = booleanValue("disable_group_target_for_admin_right", false);
         
         disableComputeGroupMembershipOptimization = booleanValue("disable_compute_group_membership_optimization", false);
+		
+		disableFreeBusyUsingZimbraHttpConnectionManager = booleanValue("disable_freebusy_using_ZimbraHttpConnectionManager", false);
+        disableFreeBusyUsingHttpClientUtil = booleanValue("disable_freebusy_using_HttpClientUtil", false);
     }
 
     protected static boolean booleanValue(String key, boolean defaultValue) {
