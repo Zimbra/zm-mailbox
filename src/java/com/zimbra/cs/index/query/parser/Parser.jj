@@ -14,7 +14,7 @@
  * ***** END LICENSE BLOCK *****
  */
 options {    JDK_VERSION = "1.6";    STATIC = false;
-    JAVA_UNICODE_ESCAPE = true;
+    UNICODE_INPUT = true;
     IGNORE_CASE = true;
     ERROR_REPORTING = true;
                         
