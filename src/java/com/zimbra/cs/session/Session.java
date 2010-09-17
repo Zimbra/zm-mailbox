@@ -18,14 +18,15 @@ package com.zimbra.cs.session;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.zimbra.cs.im.IMNotification;
-import com.zimbra.cs.im.IMPersona;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.im.IMNotification;
+import com.zimbra.cs.im.IMPersona;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 
 /**
  *  A {@link Session} is identified by an (accountId, sessionID) pair.  A single
@@ -46,9 +47,9 @@ public abstract class Session {
     private   IMPersona mPersona;
     private   long      mLastAccessed;
     private   long      mCreationTime;
-    private   boolean   mCleanedUp = false;
-    private   boolean   mIsRegistered = false;
-    private   boolean   mAddedToCache = false;
+    private   boolean   mCleanedUp;
+    private   boolean   mIsRegistered;
+    private   boolean   mAddedToCache;
 
 
     /**
@@ -71,26 +72,32 @@ public abstract class Session {
 
         private final int mIndex;
         private final int mMaxPerAccount;
-        public final int getIndex() { return mIndex; }
-        public final int getMaxPerAccount() { return mMaxPerAccount; }
+
+        public final int getIndex() {
+            return mIndex;
+        }
+
+        public final int getMaxPerAccount() {
+            return mMaxPerAccount;
+        }
     }
 
-    /** Creates a <tt>Session</tt> of the given <tt>Type</tt> whose target
+    /** Creates a {@code Session} of the given <tt>Type</tt> whose target
      *  {@link Account} is the same as its authenticated <tt>Account</tt>.
-     * @param accountId  The account ID of the <tt>Session</tt>'s owner
-     * @param type       The type of <tt>Session</tt> being created */
+     * @param accountId  The account ID of the {@code Session}'s owner
+     * @param type       The type of {@code Session} being created */
     public Session(String accountId, Type type) {
         this(accountId, accountId, type);
     }
 
-    /** Creates a <tt>Session</tt> of the given <tt>Type</tt> with its owner
-     *  and target specified separately.  In general, a <tt>Session</tt>
+    /** Creates a {@code Session} of the given <tt>Type</tt> with its owner
+     *  and target specified separately.  In general, a {@code Session}
      *  should only be created on the server where the target mailbox lives.
      *
-     * @param authId    The account ID of the <tt>Session</tt>'s owner
+     * @param authId    The account ID of the {@code Session}'s owner
      * @param targetId  The account ID of the {@link Mailbox} the
-     *                  <tt>Session</tt> is attached to
-     * @param type      The type of <tt>Session</tt> being created */
+     *                  {@code Session} is attached to
+     * @param type      The type of {@code Session} being created */
     public Session(String authId, String targetId, Type type) {
         mAuthenticatedAccountId = authId;
         mTargetAccountId = targetId == null ? authId : targetId;
@@ -109,6 +116,7 @@ public abstract class Session {
     public synchronized void registerWithIM(IMPersona persona) throws ServiceException {
         assert(Thread.holdsLock(persona.getLock()));
         assert(mPersona == null || mPersona == persona);
+
         if (mPersona == null && isIMListener() && !isDelegatedSession()) {
             mPersona = persona;
             mPersona.addListener(this);
@@ -122,21 +130,22 @@ public abstract class Session {
      * @see #isMailboxListener()
      * @see #isRegisteredInCache() */
     public Session register() throws ServiceException {
-        if (mIsRegistered)
+        if (mIsRegistered) {
             return this;
+        }
 
         if (isMailboxListener()) {
             Mailbox mbox = mMailbox = MailboxManager.getInstance().getMailboxByAccountId(mTargetAccountId);
 
             // once addListener is called, you may NOT lock the mailbox (b/c of deadlock possibilities)
-            if (mbox != null)
+            if (mbox != null) {
                 mbox.addListener(this);
+            }
         }
 
         // registering the session automatically sets mSessionId
         if (isRegisteredInCache()) {
-            SessionCache.registerSession(this);
-            mAddedToCache = true;
+            addToSessionCache();
         }
 
         mIsRegistered = true;
@@ -162,18 +171,17 @@ public abstract class Session {
             persona = mPersona;
             mPersona = null;
         }
-        if (persona != null)
+        if (persona != null) {
             persona.removeListener(this);
+        }
 
         if (mbox != null && isMailboxListener()) {
             mbox.removeListener(this);
             mMailbox = null;
         }
 
-        if (mIsRegistered && isRegisteredInCache()) {
-            SessionCache.unregisterSession(this);
-            mAddedToCache = false;
-        }
+        removeFromSessionCache();
+
         mIsRegistered = false;
 
         return this;
@@ -204,11 +212,21 @@ public abstract class Session {
         doEncodeState(parent);
     }
 
-    protected void doEncodeState(Element parent)  { }
+    protected void doEncodeState(Element parent) {}
 
-    /**
-     * @return TRUE if this session has been added to the cache
-     */
+    protected void addToSessionCache() {
+        SessionCache.registerSession(this);
+        mAddedToCache = true;
+    }
+
+    protected void removeFromSessionCache() {
+        if (mAddedToCache) {
+            SessionCache.unregisterSession(this);
+            mAddedToCache = false;
+        }
+    }
+
+    /** Returns whether this session has been added to the cache. */
     public boolean isAddedToSessionCache() {
         return mAddedToCache;
     }
@@ -253,9 +271,10 @@ public abstract class Session {
      *  on the Mailbox.
      *  <p>
      *  *All* changes are currently cached, regardless of the client's state/views.
-     * @param changeId The sync-token change Id of the change
-     * @param source TODO
-     * @param pms   A set of new change notifications from our Mailbox  */
+     * @param pns       A set of new change notifications from our Mailbox.
+     * @param changeId  The change ID of the change.
+     * @param source    The {@code Session} originating these changes, or
+     *                  <tt>null</tt> if none was specified. */
     public abstract void notifyPendingChanges(PendingModifications pns, int changeId, Session source);
 
     /** Notify this session that an IM event has occured. */
@@ -263,10 +282,12 @@ public abstract class Session {
         // do nothing by default.
     }
 
-    /** Disconnects from any resources and deregisters as a {@link Mailbox} listener. */
+    /** Disconnects from any resources and deregisters as a {@link Mailbox}
+     *  listener. */
     final void doCleanup() {
-        if (mCleanedUp)
+        if (mCleanedUp) {
             return;
+        }
 
         try {
             cleanup();
@@ -304,16 +325,16 @@ public abstract class Session {
     }
 
     public boolean accessedAfter(long otherTime) {
-        return (mLastAccessed > otherTime);
+        return mLastAccessed > otherTime;
     }
 
-    /** Returns the account ID of the <tt>Session</tt>'s owner.
+    /** Returns the account ID of the {@code Session}'s owner.
      * @see #getTargetAccountId() */
     public String getAuthenticatedAccountId() {
         return mAuthenticatedAccountId;
     }
 
-    /** Returns the account ID of the {@link Mailbox} that the <tt>Session</tt>
+    /** Returns the account ID of the {@link Mailbox} that the {@code Session}
      *  is attached to.
      * @see #getAuthenticatedAccountId() */
     public String getTargetAccountId() {
@@ -326,7 +347,6 @@ public abstract class Session {
 
     @Override public String toString() {
         String dateString = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS").format(new Date(mLastAccessed));
-        return StringUtil.getSimpleClassName(this) + ": {sessionId: " + mSessionId +
-            ", accountId: " + mAuthenticatedAccountId + ", lastAccessed: " + dateString + "}";
+        return StringUtil.getSimpleClassName(this) + ": {sessionId: " + mSessionId + ", accountId: " + mAuthenticatedAccountId + ", lastAccessed: " + dateString + "}";
     }
 }
