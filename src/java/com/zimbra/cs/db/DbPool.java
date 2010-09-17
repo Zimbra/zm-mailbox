@@ -226,7 +226,7 @@ public class DbPool {
         }
     }
     
-    private static class ZimbraConnectionFactory
+    static class ZimbraConnectionFactory
     extends DriverManagerConnectionFactory {
         ZimbraConnectionFactory(String connectUri, Properties props) {
             super(connectUri, props);
