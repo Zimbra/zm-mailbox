@@ -3593,16 +3593,17 @@ public class ProvUtil implements HttpDebugListener {
         
         if (!(mProv instanceof LdapProvisioning))
             throwLdapOnly();
-
-        final Set<String> attrsToOutput = new HashSet<String>();
-        attrsToOutput.add(Provisioning.A_zimbraVirtualHostname);
         
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             public void visit(NamedEntry entry) throws ServiceException {
                 if (entry.getAttr(Provisioning.A_zimbraVirtualHostname) != null && 
                     entry.getAttr(Provisioning.A_zimbraSSLPrivateKey) != null &&
-                    entry.getAttr(Provisioning.A_zimbraSSLCertificate) != null)
-                    dumpDomain((Domain)entry, attrsToOutput);
+                    entry.getAttr(Provisioning.A_zimbraSSLCertificate) != null) {
+                    StringBuilder virtualHosts = new StringBuilder();
+                    for (String vh : entry.getMultiAttr(Provisioning.A_zimbraVirtualHostname))
+                        virtualHosts.append(vh + " ");
+                    System.out.println(entry.getName() + " " + virtualHosts);
+                }
             }
         };
         
