@@ -144,6 +144,7 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.wiki.MigrateToDocuments;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.Options;
 
@@ -479,6 +480,12 @@ public class Mailbox {
                 updateVersion(new MailboxVersion((short) 1, (short) 9));
             }
 
+            // bug 39647: wiki to document migration
+            if (!getVersion().atLeast(1, 10)) {
+                migrateWikiFolders();
+                updateVersion(new MailboxVersion((short) 1, (short) 10));
+            }
+            
             // done!
             mInitializationComplete = true;
             return true;
@@ -7513,6 +7520,31 @@ public class Mailbox {
         }
     }
 
+    private void migrateWikiFolders() throws ServiceException {
+        MigrateToDocuments migrate = new MigrateToDocuments();
+        try {
+            migrate.handleMailbox(this);
+            OperationContext octxt = new OperationContext(this);
+            boolean success = false;
+            try {
+                beginTransaction("migrateWikiFolders", octxt, null);
+                for (Folder f : mFolderCache.values()) {
+                    if (f.getDefaultView() == MailItem.TYPE_WIKI) {
+                        f.migrateDefaultView(MailItem.TYPE_DOCUMENT);
+                        success = true;
+                    }
+                }
+            } catch (Exception e) {
+                ZimbraLog.mailbox.warn("can't migrate defaultView", e);
+            } finally {
+                endTransaction(success);
+            }
+            ZimbraLog.mailbox.info("wiki folder migration finished");
+        } catch (Exception e) {
+            ZimbraLog.mailbox.warn("wiki folder migration failed for "+getAccount().getName(), e);
+        }
+    }
+    
     private static final String CN_ID         = "id";
     private static final String CN_ACCOUNT_ID = "account_id";
     private static final String CN_NEXT_ID    = "next_item_id";
