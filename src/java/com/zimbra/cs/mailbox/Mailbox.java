@@ -7522,26 +7522,22 @@ public class Mailbox {
 
     private void migrateWikiFolders() throws ServiceException {
         MigrateToDocuments migrate = new MigrateToDocuments();
+        boolean success = false;
         try {
             migrate.handleMailbox(this);
             OperationContext octxt = new OperationContext(this);
-            boolean success = false;
-            try {
-                beginTransaction("migrateWikiFolders", octxt, null);
-                for (Folder f : mFolderCache.values()) {
-                    if (f.getDefaultView() == MailItem.TYPE_WIKI) {
-                        f.migrateDefaultView(MailItem.TYPE_DOCUMENT);
-                        success = true;
-                    }
+            beginTransaction("migrateWikiFolders", octxt, null);
+            for (Folder f : mFolderCache.values()) {
+                if (f.getDefaultView() == MailItem.TYPE_WIKI) {
+                    f.migrateDefaultView(MailItem.TYPE_DOCUMENT);
                 }
-            } catch (Exception e) {
-                ZimbraLog.mailbox.warn("can't migrate defaultView", e);
-            } finally {
-                endTransaction(success);
             }
+            success = true;
             ZimbraLog.mailbox.info("wiki folder migration finished");
         } catch (Exception e) {
             ZimbraLog.mailbox.warn("wiki folder migration failed for "+getAccount().getName(), e);
+        } finally {
+            endTransaction(success);
         }
     }
     
