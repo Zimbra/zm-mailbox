@@ -29,6 +29,7 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.query.parser.QueryParser;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MockMailboxManager;
@@ -421,6 +422,26 @@ public class QueryParserTest {
         src = "is:(forwarded unforwarded)";
         Assert.assertEquals("(Q(TAG,\\Forwarded,FORWARDED) && Q(TAG,\\Forwarded,UNFORWARDED))",
                 Query.toString(parser.parse(src)));
+    }
+
+    @Test
+    public void priority() throws Exception {
+        String src = "priority:high";
+        Assert.assertEquals("Q(Priority,HIGH)",
+                Query.toString(parser.parse(src)));
+
+        src = "priority:low";
+        Assert.assertEquals("Q(Priority,LOW)",
+                Query.toString(parser.parse(src)));
+
+        src = "priority:medium";
+        try {
+            parser.parse(src);
+            Assert.fail();
+        } catch (ServiceException e) {
+            Assert.assertSame(MailServiceException.QUERY_PARSE_ERROR,
+                    e.getCode());
+        }
     }
 
     @Test

@@ -76,6 +76,7 @@ TOKEN : {
 |   <BIGGER: "bigger:" | "larger:">
 |   <SMALLER: "smaller:">
 |   <TAG: "tag:">
+|   <PRIORITY: "priority:">
 |   <MESSAGE: "message:">
 |   <MY: "my:">
 |   <MODSEQ: "modseq:">
@@ -140,13 +141,13 @@ private void DateClause() : {}
 
 private void TextField() #void : {
 }
-{    <FIELD> | <MSGID> | <MODSEQ> | <TYPE> | <MY> | <IS> | <TAG> | <CONTACT>
+{    <FIELD> | <MSGID> | <MODSEQ> | <TYPE> | <MY> | <IS> | <TAG> | <PRIORITY>
 |   <FROM> | <TO> | <CC> | <ENVFROM> | <ENVTO>
 |   <TOFROM> | <TOCC> | <FROMCC> | <TOFROMCC>
 |   <SUBJECT> | <MESSAGE> | <CONTENT>
 |   <IN> | <INID> | <UNDER> | <UNDERID>
 |   <ATTACHMENT> | <HAS> | <FILENAME>
-|   <AUTHOR> | <TITLE> | <KEYWORDS> | <COMPANY> | <METADATA>
+|   <CONTACT> | <AUTHOR> | <TITLE> | <KEYWORDS> | <COMPANY> | <METADATA>
 |   <CONV> | <CONV_COUNT> | <CONV_MINM> | <CONV_MAXM>
 |   <SIZE> | <BIGGER> | <SMALLER>
 }

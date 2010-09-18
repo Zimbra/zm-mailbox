@@ -41,6 +41,7 @@ import com.zimbra.cs.index.query.HasQuery;
 import com.zimbra.cs.index.query.InQuery;
 import com.zimbra.cs.index.query.ItemQuery;
 import com.zimbra.cs.index.query.ModseqQuery;
+import com.zimbra.cs.index.query.PriorityQuery;
 import com.zimbra.cs.index.query.Query;
 import com.zimbra.cs.index.query.AddrQuery.Address;
 import com.zimbra.cs.index.query.Query.Modifier;
@@ -502,6 +503,13 @@ public final class QueryParser {
           }
           case TAG:
               return new TagQuery(mailbox, text, true);
+          case PRIORITY:
+              try {
+                  return new PriorityQuery(mailbox,
+                          PriorityQuery.Priority.valueOf(text.toUpperCase()));
+              } catch (IllegalArgumentException e) {
+                  throw exception("INVALID_PRIORITY", term);
+              }
           case IS:
               try {
                   return BuiltInQuery.getQuery(text.toLowerCase(), mailbox, analyzer);

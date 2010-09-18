@@ -40,6 +40,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.google.common.base.Strings;
 import com.zimbra.cs.upgrade.MailboxUpgrade;
 import com.zimbra.common.util.MapUtil;
 
@@ -2731,18 +2732,26 @@ public class Mailbox {
 
     /**
      * Returns the tag with the given name.
-     * @throws ServiceException {@link MailServiceException#NO_SUCH_TAG} if the tag does not exist
+     *
+     * @throws ServiceException
+     *  <ul>
+     *   <li>{@link ServiceException#INVALID_REQUEST} if the name is null or empty
+     *   <li>{@link MailServiceException#NO_SUCH_TAG} if the tag does not exist
+     *  </ul>
      */
     public synchronized Tag getTagByName(String name) throws ServiceException {
+        if (Strings.isNullOrEmpty(name)) {
+            throw ServiceException.INVALID_REQUEST("tag name may not be null", null);
+        }
+
         boolean success = false;
         try {
             beginTransaction("getTagByName", null);
-
-            if (name == null || name.equals(""))
-                throw ServiceException.INVALID_REQUEST("tag name may not be null", null);
-            Tag tag = name.charAt(0) == '\\' ? Flag.getFlag(this, name) : mTagCache.get(name.toLowerCase());
-            if (tag == null)
+            Tag tag = name.charAt(0) == '\\' ?
+                    Flag.getFlag(this, name) : mTagCache.get(name.toLowerCase());
+            if (tag == null) {
                 throw MailServiceException.NO_SUCH_TAG(name);
+            }
             checkAccess(tag);
             success = true;
             return tag;
@@ -6749,7 +6758,7 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
+
     public Message updateOrCreateChat(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
         // make sure the message has been analzyed before taking the Mailbox lock
         if (indexImmediately())

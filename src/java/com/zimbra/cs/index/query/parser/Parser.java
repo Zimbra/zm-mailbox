@@ -14,10 +14,10 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
       Query();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case 0:
-      case 71:
+      case 72:
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 71:
-          jj_consume_token(71);
+        case 72:
+          jj_consume_token(72);
           break;
         case 0:
           jj_consume_token(0);
@@ -129,6 +129,7 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
         case BIGGER:
         case SMALLER:
         case TAG:
+        case PRIORITY:
         case MESSAGE:
         case MY:
         case MODSEQ:
@@ -244,6 +245,7 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
       case BIGGER:
       case SMALLER:
       case TAG:
+      case PRIORITY:
       case MESSAGE:
       case MY:
       case MODSEQ:
@@ -449,8 +451,8 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
     case TAG:
       jj_consume_token(TAG);
       break;
-    case CONTACT:
-      jj_consume_token(CONTACT);
+    case PRIORITY:
+      jj_consume_token(PRIORITY);
       break;
     case FROM:
       jj_consume_token(FROM);
@@ -508,6 +510,9 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
       break;
     case FILENAME:
       jj_consume_token(FILENAME);
+      break;
+    case CONTACT:
+      jj_consume_token(CONTACT);
       break;
     case AUTHOR:
       jj_consume_token(AUTHOR);
@@ -1030,10 +1035,10 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
       jj_la1_0 = new int[] {0x1,0x1,0x0,0x0,0xffff2778,0x18,0x0,0x320,0xffff2440,0x2400,0xffff0000,0x0,0x18,0x320,0x0,0x320,0x2778,0x18,0x320,0x2440,0x320,0xa778,0x18,0x320,0xa440,0x20,0x2778,0x18,0x20,0x300,0x300,0x2400,0x2740,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x0,0x0,0x0,0x0,0xffffffff,0x0,0x0,0x0,0xffffffff,0x0,0xf0ffe03f,0xf001fc0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
+      jj_la1_1 = new int[] {0x0,0x0,0x0,0x0,0xffffffff,0x0,0x0,0x0,0xffffffff,0x0,0xe1ffe03f,0x1e001fc0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x80,0x80,0xc,0xc,0x13,0x0,0xc,0x0,0x13,0x0,0x11,0x0,0x0,0x0,0xc,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
+      jj_la1_2 = new int[] {0x100,0x100,0x18,0x18,0x27,0x0,0x18,0x0,0x27,0x0,0x23,0x0,0x0,0x0,0x18,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
    }
 
   /** Constructor with InputStream. */
@@ -1153,7 +1158,7 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[72];
+    boolean[] la1tokens = new boolean[73];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
@@ -1173,7 +1178,7 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
         }
       }
     }
-    for (int i = 0; i < 72; i++) {
+    for (int i = 0; i < 73; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

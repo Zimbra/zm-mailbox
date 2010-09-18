@@ -103,49 +103,51 @@ interface ParserConstants {
   /** RegularExpression Id. */
   int TAG = 48;
   /** RegularExpression Id. */
-  int MESSAGE = 49;
+  int PRIORITY = 49;
   /** RegularExpression Id. */
-  int MY = 50;
+  int MESSAGE = 50;
   /** RegularExpression Id. */
-  int MODSEQ = 51;
+  int MY = 51;
   /** RegularExpression Id. */
-  int CONV = 52;
+  int MODSEQ = 52;
   /** RegularExpression Id. */
-  int CONV_COUNT = 53;
+  int CONV = 53;
   /** RegularExpression Id. */
-  int CONV_MINM = 54;
+  int CONV_COUNT = 54;
   /** RegularExpression Id. */
-  int CONV_MAXM = 55;
+  int CONV_MINM = 55;
   /** RegularExpression Id. */
-  int CONV_START = 56;
+  int CONV_MAXM = 56;
   /** RegularExpression Id. */
-  int CONV_END = 57;
+  int CONV_START = 57;
   /** RegularExpression Id. */
-  int APPT_START = 58;
+  int CONV_END = 58;
   /** RegularExpression Id. */
-  int APPT_END = 59;
+  int APPT_START = 59;
   /** RegularExpression Id. */
-  int AUTHOR = 60;
+  int APPT_END = 60;
   /** RegularExpression Id. */
-  int TITLE = 61;
+  int AUTHOR = 61;
   /** RegularExpression Id. */
-  int KEYWORDS = 62;
+  int TITLE = 62;
   /** RegularExpression Id. */
-  int COMPANY = 63;
+  int KEYWORDS = 63;
   /** RegularExpression Id. */
-  int METADATA = 64;
+  int COMPANY = 64;
   /** RegularExpression Id. */
-  int ITEM = 65;
+  int METADATA = 65;
   /** RegularExpression Id. */
-  int SORTBY = 66;
+  int ITEM = 66;
   /** RegularExpression Id. */
-  int SORT = 67;
+  int SORTBY = 67;
   /** RegularExpression Id. */
-  int FIELD = 68;
+  int SORT = 68;
   /** RegularExpression Id. */
-  int _FIELD1 = 69;
+  int FIELD = 69;
   /** RegularExpression Id. */
-  int _FIELD2 = 70;
+  int _FIELD1 = 70;
+  /** RegularExpression Id. */
+  int _FIELD2 = 71;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -201,6 +203,7 @@ interface ParserConstants {
     "<BIGGER>",
     "\"smaller:\"",
     "\"tag:\"",
+    "\"priority:\"",
     "\"message:\"",
     "\"my:\"",
     "\"modseq:\"",
