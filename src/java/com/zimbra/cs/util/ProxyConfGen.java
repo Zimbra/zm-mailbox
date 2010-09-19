@@ -550,9 +550,9 @@ public class ProxyConfGen
     private static String mConfDir = mWorkingDir + "/conf";
     private static String mIncDir = "nginx/includes";
     private static String mDomainSSLDir = mConfDir + File.separator + "domaincerts";
-    private static String mSSLCertExt = ".crt";
+    private static String mSSLCrtExt = ".crt";
     private static String mSSLKeyExt = ".key";
-    private static String mDefaultSSLCert = mConfDir + File.separator + "nginx.crt";
+    private static String mDefaultSSLCrt = mConfDir + File.separator + "nginx.crt";
     private static String mDefaultSSLKey = mConfDir + File.separator + "nginx.key";
     private static String mConfIncludesDir = mConfDir + File.separator + mIncDir;
     private static String mConfPrefix = "nginx.conf";
@@ -872,17 +872,16 @@ public class ProxyConfGen
             DnVhnMap item = it.next();
             mVars.put("vhn", item.virtualHostname);
             mVars.put("ssl.crt", mDomainSSLDir + File.separator +
-                item.domainName + mSSLCertExt);
+                item.domainName + mSSLCrtExt);
             mVars.put("ssl.key", mDomainSSLDir + File.separator +
                 item.domainName + mSSLKeyExt);
             cache = expandTemplateAndCache(temp, conf);
             conf.newLine();
             while (it.hasNext()) {
-
                 item = it.next();
                 mVars.put("vhn", item.virtualHostname);
                 mVars.put("ssl.crt", mDomainSSLDir + File.separator +
-                    item.domainName + mSSLCertExt);
+                    item.domainName + mSSLCrtExt);
                 mVars.put("ssl.key", mDomainSSLDir + File.separator +
                     item.domainName + mSSLKeyExt);
                 expandTempateFromCache(cache, conf);
@@ -893,7 +892,7 @@ public class ProxyConfGen
         mVars.put("server_name.enabled", "#"); // comment out "server_name"
                                                // command
         mVars.put("vhn", "default");
-        mVars.put("ssl.crt", mDefaultSSLCert);
+        mVars.put("ssl.crt", mDefaultSSLCrt);
         mVars.put("ssl.key", mDefaultSSLKey);
         if (cache == null) {
             expandTemplateSimple(temp, conf);
@@ -921,8 +920,7 @@ public class ProxyConfGen
     }
 
     /**
-     * Read from template file and translate the contents to conf; meanwhile,
-     * cache those no-comment lines
+     * Read from template file and translate the contents to conf
      */
     private static void expandTemplateSimple(BufferedReader temp,
         BufferedWriter conf) throws IOException {
@@ -985,7 +983,7 @@ public class ProxyConfGen
         mConfVars.put("core.includes", new ProxyConfVar("core.includes", null, mIncDir, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Include directory (relative to ${core.workdir}/conf)"));
         mConfVars.put("core.cprefix", new ProxyConfVar("core.cprefix", null, mConfPrefix, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Common config file prefix"));
         mConfVars.put("core.tprefix", new ProxyConfVar("core.tprefix", null, mTemplatePrefix, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Common template file prefix"));
-        mConfVars.put("ssl.crt.default", new ProxyConfVar("ssl.crt.default", null, mDefaultSSLCert, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "default nginx certificate file path"));
+        mConfVars.put("ssl.crt.default", new ProxyConfVar("ssl.crt.default", null, mDefaultSSLCrt, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "default nginx certificate file path"));
         mConfVars.put("ssl.key.default", new ProxyConfVar("ssl.key.default", null, mDefaultSSLKey, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "default nginx private key file path"));
         mConfVars.put("main.user", new ProxyConfVar("main.user", null, "zimbra", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "The user as which the worker processes will run"));
         mConfVars.put("main.group", new ProxyConfVar("main.group", null, "zimbra", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "The group as which the worker processes will run"));
@@ -1118,8 +1116,8 @@ public class ProxyConfGen
         return validConf;
     }
 
-	public static int createConf (String[] args) throws ServiceException, ProxyConfException
-	{
+    public static int createConf(String[] args) throws ServiceException,
+        ProxyConfException {
         int exitCode = 0;
         CommandLine cl = parseArgs(args);
 
@@ -1270,12 +1268,12 @@ public class ProxyConfGen
             mLog.error("Error while expanding templates: " + se.getMessage());
             exitCode = 1;
         }
-		return(exitCode);
-	}
+        return (exitCode);
+    }
 
-    public static void main (String[] args) throws ServiceException, ProxyConfException
-    {
-		int exitCode = createConf(args);
+    public static void main(String[] args) throws ServiceException,
+        ProxyConfException {
+        int exitCode = createConf(args);
         System.exit(exitCode);
     }
 }
