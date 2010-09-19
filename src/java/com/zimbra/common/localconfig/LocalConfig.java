@@ -76,48 +76,54 @@ public class LocalConfig {
 
         return null;
     }
-
-    private boolean expandOnce(StringBuffer value, Set<String> seenKeys) throws ConfigException {
+         
+    String findKey(String value) {
         int begin = value.indexOf("${");
         if (begin == -1) {
-            return false;
+            return null;
         }
 
         int end = value.indexOf("}", begin);
         if (end == -1) {
-            return false;
+            return null;
         }
 
-        String key = value.substring(begin + 2, end);
-
+        return value.substring(begin + 2, end);
+    }
+    
+    private String expandDeep(String key, Set<String> seenKeys) throws ConfigException {
         if (seenKeys.contains(key)) {
-            StringBuffer sb = new StringBuffer(128);
+            StringBuilder sb = new StringBuilder();
             sb.append("recursive expansion of key '" + key + "':");
             for (String seen : seenKeys)
                 sb.append(" ").append(seen);
             throw new ConfigException(sb.toString());
         }
-
+        
         seenKeys.add(key);
-
+        
         String replacement = getRaw(key);
         if (replacement == null)
             throw new ConfigException("null valued key '" + key + "' referenced");
-        value.replace(begin, end+1, replacement);
 
-        return true;
+        String nestedKey = null;
+        while ((nestedKey = findKey(replacement)) != null) {
+            String expanded = expandDeep(nestedKey, seenKeys);
+            String target = "${" + nestedKey +  "}";
+            replacement = replacement.replace(target, expanded);
+        }
+        
+        seenKeys.remove(key);
+        return replacement;
     }
-
+    
     String expand(String key, String rawValue) throws ConfigException {
         if (rawValue == null)
             return null;
-
-        Set<String> seenKeys = new HashSet<String>();
-        seenKeys.add(key);
-        StringBuffer result = new StringBuffer(rawValue);
-        while (expandOnce(result, seenKeys));
-        return result.toString();
+        
+        return expandDeep(key, new HashSet<String>());
     }
+
 
     String get(String key) throws ConfigException {
         if (mExpanded.containsKey(key)) {
