@@ -123,7 +123,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     /** the time IN MSEC UTC that this appointment/task "ends" */
     private long mEndTime;
 
-    private AlarmData mAlarmData;  // next/last alarm info
+    private AlarmData mAlarmData;  // next/last DISPLAY alarm info
 
     private Recurrence.IRecurrence mRecurrence;
     private TimeZoneMap mTzMap;
@@ -3200,7 +3200,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     }
 
     /**
-     * Recompute the next alarm trigger time that is at or later than "nextAlarm".
+     * Recompute the next DISPLAY alarm trigger time that is at or later than "nextAlarm".
      * @param nextAlarm next alarm should go off at or after this time
      *                  special values:
      *                  CalendarItem.NEXT_ALARM_KEEP_CURRENT - keep current value
@@ -3210,17 +3210,21 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
      */
     private void recomputeNextAlarm(long nextAlarm, boolean skipAlarmDefChangeCheck)
     throws ServiceException {
+        mAlarmData = getNextAlarm(nextAlarm, skipAlarmDefChangeCheck, Alarm.Action.DISPLAY, mAlarmData);
+    }
+
+    public AlarmData getNextAlarm(long nextAlarm, boolean skipAlarmDefChangeCheck, Alarm.Action alarmAction, AlarmData currentNextAlarmData)
+    throws ServiceException {
         if (nextAlarm == NEXT_ALARM_ALL_DISMISSED || !hasAlarm()) {
-            mAlarmData = null;
-            return;
+            return null;
         }
 
         long now = getMailbox().getOperationTimestampMillis();
         long atOrAfter;  // Chosen alarm must be at or after this time.
         if (nextAlarm == NEXT_ALARM_KEEP_CURRENT) {
             // special case to preserve current next alarm trigger time
-            if (mAlarmData != null) {
-                atOrAfter = mAlarmData.getNextAt();
+            if (currentNextAlarmData != null) {
+                atOrAfter = currentNextAlarmData.getNextAt();
             } else {
                 atOrAfter = now;  // no existing alarm; pick the first alarm in the future
             }
@@ -3251,7 +3255,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             // Let's see if alarm definition has changed.  It changed if there is no alarm to go off at
             // previously saved nextAlarm time.
             boolean alarmDefChanged = true;
-            long savedNextInstStart = mAlarmData != null ? mAlarmData.getNextInstanceStart() : 0;
+            long savedNextInstStart = currentNextAlarmData != null ? currentNextAlarmData.getNextInstanceStart() : 0;
             for (Instance inst : instances) {
                 long instStart = inst.getStart();
                 if (inst.isTimeless())
@@ -3296,7 +3300,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             InviteInfo invId = inst.getInviteInfo();
             Invite inv = getInvite(invId.getMsgId(), invId.getComponentId());
             Pair<Long, Alarm> curr =
-                getAlarmTriggerTime(atOrAfter, inv.alarmsIterator(), instStart, inst.getEnd());
+                getAlarmTriggerTime(atOrAfter, inv.alarmsIterator(), instStart, inst.getEnd(), alarmAction);
             if (curr != null) {
                 long currAt = curr.getFirst();
                 if (atOrAfter <= currAt && currAt < triggerAt) {
@@ -3309,24 +3313,25 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         if (alarmInstance != null) {
             InviteInfo invInfo = alarmInstance.getInviteInfo();
             if (invInfo != null)
-                mAlarmData = new AlarmData(triggerAt, alarmInstance.getStart(),
-                                           invInfo.getMsgId(), invInfo.getComponentId(), theAlarm);
-        } else {
-            mAlarmData = null;
+                return new AlarmData(triggerAt, alarmInstance.getStart(),
+                                     invInfo.getMsgId(), invInfo.getComponentId(), theAlarm);
         }
+        return null;
     }
 
-    // Find the earliest alarm whose trigger time is at or after nextAlarm.
+    // Find the earliest alarm with action alarmAction whose trigger time is at or after nextAlarm.
     private static Pair<Long, Alarm> getAlarmTriggerTime(
-            long nextAlarm, Iterator<Alarm> alarms, long instStart, long instEnd) {
+            long nextAlarm, Iterator<Alarm> alarms, long instStart, long instEnd, Alarm.Action alarmAction) {
         long triggerAt = Long.MAX_VALUE;
         Alarm theAlarm = null;
         for (; alarms.hasNext(); ) {
             Alarm alarm = alarms.next();
-            long currTrigger = alarm.getTriggerTime(instStart, instEnd);
-            if (nextAlarm <= currTrigger && currTrigger < triggerAt) {
-                triggerAt = currTrigger;
-                theAlarm = alarm;
+            if (alarm.getAction() == alarmAction) {
+                long currTrigger = alarm.getTriggerTime(instStart, instEnd);
+                if (nextAlarm <= currTrigger && currTrigger < triggerAt) {
+                    triggerAt = currTrigger;
+                    theAlarm = alarm;
+                }
             }
         }
         if (theAlarm != null)

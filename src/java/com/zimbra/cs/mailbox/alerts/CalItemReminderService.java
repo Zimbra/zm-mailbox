@@ -4,7 +4,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -12,6 +11,7 @@ import com.zimbra.cs.mailbox.MailboxListener;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
+import com.zimbra.cs.mailbox.calendar.Alarm;
 import com.zimbra.cs.session.PendingModifications;
 
 import java.util.Date;
@@ -31,10 +31,6 @@ public class CalItemReminderService extends MailboxListener {
         }
         if (account == null) {
             ZimbraLog.scheduler.error("Account not found for id " + accountId);
-            return;
-        }
-        if (!account.getBooleanAttr(Provisioning.A_zimbraPrefCalendarReminderSendEmail, false)) {
-            // calendar reminders not enabled for this account
             return;
         }
         if (mods.created != null) {
@@ -124,45 +120,30 @@ public class CalItemReminderService extends MailboxListener {
     }
 
     /**
-     * Schedules reminder task using calendar item's current alarm data.
+     * Schedules email reminder task for a calendar item.
      *
      * @param calItem
      */
     static void scheduleNextReminder(CalendarItem calItem) {
-        scheduleNextReminder(calItem, false);
-    }
-
-    /**
-     * Schedules reminder task for a calendar item.
-     *
-     * @param calItem
-     * @param updateNextAlarm whether to update the next alarm before scheduling
-     */
-    static void scheduleNextReminder(CalendarItem calItem, boolean updateNextAlarm) {
-        if (updateNextAlarm) {
-            try {
-                // The following operation results in the calendar item getting modified, hence this case would
-                // be handled when we handle pending notifications for modified items
-                calItem.getMailbox().dismissCalendarItemAlarm(null, calItem.getId(), System.currentTimeMillis());
-            } catch (ServiceException e) {
-                ZimbraLog.scheduler.error("Error in updating calendar item's next alarm", e);
-            }
-        } else {
-            CalendarItem.AlarmData alarmData = calItem.getAlarmData();
-            if (alarmData == null)
-                return;
-            CalItemReminderTask reminderTask = new CalItemReminderTask();
-            reminderTask.setMailboxId(calItem.getMailboxId());
-            reminderTask.setExecTime(new Date(alarmData.getNextAt()));
-            reminderTask.setProperty("calItemId", Integer.toString(calItem.getId()));
-            reminderTask.setProperty("invId", Integer.toString(alarmData.getInvId()));
-            reminderTask.setProperty("compNum", Integer.toString(alarmData.getCompNum()));
-            reminderTask.setProperty("nextInstStart", Long.toString(alarmData.getNextInstanceStart()));
-            try {
-                ScheduledTaskManager.schedule(reminderTask);
-            } catch (ServiceException e) {
-                ZimbraLog.scheduler.error("Error in scheduling reminder task " + reminderTask, e);
-            }
+        CalendarItem.AlarmData alarmData = null;
+        try {
+            alarmData = calItem.getNextAlarm(System.currentTimeMillis(), true, Alarm.Action.EMAIL, null);
+        } catch (ServiceException e) {
+            ZimbraLog.scheduler.error("Error in getting next EMAIL alarm data", e);
+        }
+        if (alarmData == null)
+            return;
+        CalItemReminderTask reminderTask = new CalItemReminderTask();
+        reminderTask.setMailboxId(calItem.getMailboxId());
+        reminderTask.setExecTime(new Date(alarmData.getNextAt()));
+        reminderTask.setProperty("calItemId", Integer.toString(calItem.getId()));
+        reminderTask.setProperty("invId", Integer.toString(alarmData.getInvId()));
+        reminderTask.setProperty("compNum", Integer.toString(alarmData.getCompNum()));
+        reminderTask.setProperty("nextInstStart", Long.toString(alarmData.getNextInstanceStart()));
+        try {
+            ScheduledTaskManager.schedule(reminderTask);
+        } catch (ServiceException e) {
+            ZimbraLog.scheduler.error("Error in scheduling reminder task", e);
         }
     }
 
