@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20100916-1413 */
+    /* build: 7.0.0_BETA1_1111 pshao 20100919-0008 */
 
     /**
      * RFC2256: descriptive information
@@ -29175,6 +29175,78 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
+     * spnego auth error URL
+     *
+     * @return zimbraSpnegoAuthErrorURL, or null if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1124)
+    public String getSpnegoAuthErrorURL() {
+        return getAttr(Provisioning.A_zimbraSpnegoAuthErrorURL, null);
+    }
+
+    /**
+     * spnego auth error URL
+     *
+     * @param zimbraSpnegoAuthErrorURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1124)
+    public void setSpnegoAuthErrorURL(String zimbraSpnegoAuthErrorURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpnegoAuthErrorURL, zimbraSpnegoAuthErrorURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * spnego auth error URL
+     *
+     * @param zimbraSpnegoAuthErrorURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1124)
+    public Map<String,Object> setSpnegoAuthErrorURL(String zimbraSpnegoAuthErrorURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpnegoAuthErrorURL, zimbraSpnegoAuthErrorURL);
+        return attrs;
+    }
+
+    /**
+     * spnego auth error URL
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1124)
+    public void unsetSpnegoAuthErrorURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpnegoAuthErrorURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * spnego auth error URL
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1124)
+    public Map<String,Object> unsetSpnegoAuthErrorURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpnegoAuthErrorURL, "");
+        return attrs;
+    }
+
+    /**
      * ip or hostname for spnego auth KDC
      *
      * @return zimbraSpnegoAuthKDC, or null if unset
@@ -29387,6 +29459,78 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetSpnegoAuthRealm(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSpnegoAuthRealm, "");
+        return attrs;
+    }
+
+    /**
+     * spnego auth target name
+     *
+     * @return zimbraSpnegoAuthTargetName, or null if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1123)
+    public String getSpnegoAuthTargetName() {
+        return getAttr(Provisioning.A_zimbraSpnegoAuthTargetName, null);
+    }
+
+    /**
+     * spnego auth target name
+     *
+     * @param zimbraSpnegoAuthTargetName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1123)
+    public void setSpnegoAuthTargetName(String zimbraSpnegoAuthTargetName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpnegoAuthTargetName, zimbraSpnegoAuthTargetName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * spnego auth target name
+     *
+     * @param zimbraSpnegoAuthTargetName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1123)
+    public Map<String,Object> setSpnegoAuthTargetName(String zimbraSpnegoAuthTargetName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpnegoAuthTargetName, zimbraSpnegoAuthTargetName);
+        return attrs;
+    }
+
+    /**
+     * spnego auth target name
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1123)
+    public void unsetSpnegoAuthTargetName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpnegoAuthTargetName, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * spnego auth target name
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1123)
+    public Map<String,Object> unsetSpnegoAuthTargetName(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpnegoAuthTargetName, "");
         return attrs;
     }
 

@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20100916-1413 */
+    /* build: 7.0.0_BETA1_1111 pshao 20100919-0008 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2333,7 +2333,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 7.0.0
      */
-    @ZAttr(id=1124)
+    @ZAttr(id=1126)
     public static final String A_zimbraDataSourceIsInternal = "zimbraDataSourceIsInternal";
 
     /**
@@ -3021,7 +3021,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 7.0.0
      */
-    @ZAttr(id=1125)
+    @ZAttr(id=1127)
     public static final String A_zimbraFeatureMAPIConnectorEnabled = "zimbraFeatureMAPIConnectorEnabled";
 
     /**
@@ -5857,7 +5857,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 7.0.0
      */
-    @ZAttr(id=1123)
+    @ZAttr(id=1125)
     public static final String A_zimbraPrefForwardReplySignatureId = "zimbraPrefForwardReplySignatureId";
 
     /**
@@ -7616,6 +7616,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSpnegoAuthEnabled = "zimbraSpnegoAuthEnabled";
 
     /**
+     * spnego auth error URL
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1124)
+    public static final String A_zimbraSpnegoAuthErrorURL = "zimbraSpnegoAuthErrorURL";
+
+    /**
      * ip or hostname for spnego auth KDC
      *
      * @since ZCS 7.0.0
@@ -7638,6 +7646,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1119)
     public static final String A_zimbraSpnegoAuthRealm = "zimbraSpnegoAuthRealm";
+
+    /**
+     * spnego auth target name
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1123)
+    public static final String A_zimbraSpnegoAuthTargetName = "zimbraSpnegoAuthTargetName";
 
     /**
      * Public key of this server, used by other hosts to authorize this

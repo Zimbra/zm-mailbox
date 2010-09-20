@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20100916-1413 */
+    /* build: 7.0.0_BETA1_1111 pshao 20100919-0008 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -9144,7 +9144,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 7.0.0
      */
-    @ZAttr(id=1125)
+    @ZAttr(id=1127)
     public boolean isFeatureMAPIConnectorEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraFeatureMAPIConnectorEnabled, true);
     }
@@ -9157,7 +9157,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 7.0.0
      */
-    @ZAttr(id=1125)
+    @ZAttr(id=1127)
     public void setFeatureMAPIConnectorEnabled(boolean zimbraFeatureMAPIConnectorEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMAPIConnectorEnabled, zimbraFeatureMAPIConnectorEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -9173,7 +9173,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 7.0.0
      */
-    @ZAttr(id=1125)
+    @ZAttr(id=1127)
     public Map<String,Object> setFeatureMAPIConnectorEnabled(boolean zimbraFeatureMAPIConnectorEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMAPIConnectorEnabled, zimbraFeatureMAPIConnectorEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -9187,7 +9187,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 7.0.0
      */
-    @ZAttr(id=1125)
+    @ZAttr(id=1127)
     public void unsetFeatureMAPIConnectorEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMAPIConnectorEnabled, "");
@@ -9202,7 +9202,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 7.0.0
      */
-    @ZAttr(id=1125)
+    @ZAttr(id=1127)
     public Map<String,Object> unsetFeatureMAPIConnectorEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMAPIConnectorEnabled, "");
@@ -24416,7 +24416,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 7.0.0
      */
-    @ZAttr(id=1123)
+    @ZAttr(id=1125)
     public String getPrefForwardReplySignatureId() {
         return getAttr(Provisioning.A_zimbraPrefForwardReplySignatureId, null);
     }
@@ -24429,7 +24429,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 7.0.0
      */
-    @ZAttr(id=1123)
+    @ZAttr(id=1125)
     public void setPrefForwardReplySignatureId(String zimbraPrefForwardReplySignatureId) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefForwardReplySignatureId, zimbraPrefForwardReplySignatureId);
@@ -24445,7 +24445,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 7.0.0
      */
-    @ZAttr(id=1123)
+    @ZAttr(id=1125)
     public Map<String,Object> setPrefForwardReplySignatureId(String zimbraPrefForwardReplySignatureId, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefForwardReplySignatureId, zimbraPrefForwardReplySignatureId);
@@ -24459,7 +24459,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 7.0.0
      */
-    @ZAttr(id=1123)
+    @ZAttr(id=1125)
     public void unsetPrefForwardReplySignatureId() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefForwardReplySignatureId, "");
@@ -24474,7 +24474,7 @@ public class ZAttrAccount  extends MailTarget {
      *
      * @since ZCS 7.0.0
      */
-    @ZAttr(id=1123)
+    @ZAttr(id=1125)
     public Map<String,Object> unsetPrefForwardReplySignatureId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefForwardReplySignatureId, "");
