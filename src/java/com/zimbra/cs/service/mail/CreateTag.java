@@ -43,9 +43,17 @@ public class CreateTag extends MailDocumentHandler  {
 
         Element t = request.getElement(MailConstants.E_TAG);
         String name = t.getAttribute(MailConstants.A_NAME);
-        byte color = (byte) t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR);
-        
-        Tag tag = mbox.createTag(octxt, name, color);
+        String rgb = t.getAttribute(MailConstants.A_RGB, null);
+
+        Tag tag;
+        if (rgb != null) {
+            MailItem.Color color = new MailItem.Color(rgb);
+            tag = mbox.createTag(octxt, name, color);
+        }
+        else {
+            byte color = (byte) t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR);
+            tag = mbox.createTag(octxt, name, color);
+        }
         
         Element response = zsc.createElement(MailConstants.CREATE_TAG_RESPONSE);
         if (tag != null)
