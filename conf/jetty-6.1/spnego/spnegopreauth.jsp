@@ -11,7 +11,7 @@
 
 
  public static final String DOMAIN_KEY =
-        "ee0e096155314d474c8a8ba0c941e9382bb107cc035c7a24838b79271e32d7b0";
+        "REPLACE-ME-WITH-THE-PREAUTH-KEY";
 
 
  public static String generateRedirect(HttpServletRequest request, String name) {
