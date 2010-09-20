@@ -1,64 +1,64 @@
-Tim's short-short summary of the query grammar as of now (updated)
---------------------------------------------------------
-   content:{TEXT}
-   to:{TEXT|EMAIL_ADDR|DOMAIN}
-   from:[>,<,>=,<=]{TEXT} OR {EMAIL_ADDR} OR {DOMAIN}
-   cc:{TEXT|EMAIL|DOMAIN}
-   tofrom,tocc,fromcc,tofromcc -> equivalent to combinations like (to:X or from:X), etc
-   envto:{TEXT|EMAIL_ADDR|DOMAIN} // x-envelope-to mime header
-   envfrom:{TEXT|EMAIL|DOMAIN}    // x-envelope-from mime-header
-   subject:[>,<,>=,<=]{TEXT}
-   in:{FOLDER_LABEL}   // search in a specific folder
-   under:{FOLDER_LABEL} // in specified folder AND ALL SUBFOLERS
-   inid:{FOLDER_ID} // search in a specific folder
-   underid:{FOLDER_ID} // in specified folder AND ALL SUBFOLDERS
-   has:{"attachment"|OBJECT_TYPE}
-   filename:{FILENAME}
-   type:{RAW_MIME_TYPE|FRIENDLY_MIME_TYPE}
-   attachment:{RAW_MIME_TYPE|FRIENDLY_MIME_TYPE}
-   item:{"all"|"none" -- all items, or no-item
-         | [0-9]+  --> item ID
-         |"{[0-9]+(,\s?[0-9]+)*}" -- ie {1,2,3} or {1} --> set of item_id's
-   is:{"anywhere"|"unread"|"read"|"flagged"|"unflagged"|"sent"|"received"|"replied"|
-       "unreplied"|"forwarded"|"unforwarded"|"invite"|
-       "solo"|  // no other messages in conversation
-       "tome"|"fromme"|"ccme"|"tofromme"|"fromccme"|"tofromccme"  // to, from cc me, including my aliases
-       "local" - matches all folders in the local mailbox (that the user has READ access to)
-       "remote" - matches all remotely mounted folders (that the user has READ access to)
-       }
-   date:[>,<,>=,<={DATE}
-   appt-start:[>,<,>=,<={DATE}
-   appt-end:[>,<,>=,<={DATE}
-   after:{DATE}
-   before:{DATE}
-   size:{SIZE}
-   larger:{SIZE}
-   smaller:{SIZE}
-   tag:{TAG}
-   modseq:[>,<,>=,<={CHANGE_ID}
-   my:{MY_SAVED_SEARCH_NAME}   (UNIMPLEMENTED)
-   message:{DB_MSG_ID}
-   conv:{DB_CONV_ID}
-*   conv-count:{NUM}
-*   conv-minm:{NUM}
-*   conv-maxm:{NUM}
-*   conv-start:{DATE}
-*   conv-end:{DATE}
-   author:{TEXT}
-   title:{TEXT}
-   keywords:{TEXT}
-   company:{TEXT}
-   metadata:{TEXT}
-   contact:{TEXT}  // special-case searching for contact picker (matches type=contact documents only)
-   msgid:{TEXT}   // Message-Id: field from mime header
+Query Syntax
+--------------------------------------------------------------------------------
+  content:(TEXT)
+  subject:[>,<,>=,<=](TEXT)
+  msgid:(TEXT) // Message-Id: field from mime header
+  envto:(TEXT|EMAIL_ADDR|DOMAIN) // x-envelope-to mime header
+  envfrom:(TEXT|EMAIL|DOMAIN) // x-envelope-from mime-header
+  contact:(TEXT) // special-case searching for contact picker (matches type=contact documents only)
+  to:(TEXT|EMAIL_ADDR|DOMAIN)
+  from:[>,<,>=,<=]({TEXT}|{EMAIL_ADDR}|{DOMAIN})
+  cc:(TEXT|EMAIL|DOMAIN)
+  tofrom:(TEXT|EMAIL|DOMAIN) // TO or FROM
+  tocc:(TEXT|EMAIL|DOMAIN) // TO or CC
+  fromcc:(TEXT|EMAIL|DOMAIN) // TO or FROM or CC
+  tofromcc:(TEXT|EMAIL|DOMAIN) // TO or FROM or CC
+  in:(FOLDER_LABEL) // in the specified folder
+  under:(FOLDER_LABEL) // in the specified folder and all descendants
+  inid:(FOLDER_ID) // in the specified folder
+  underid:{FOLDER_ID} // in the specified folder and all descendants
+  has:(attachment|OBJECT_TYPE)
+  filename:(TEXT)
+  type:(RAW_MIME_TYPE|FRIENDLY_MIME_TYPE)
+  attachment:(RAW_MIME_TYPE|FRIENDLY_MIME_TYPE)
+  is:(anywhere|unread|read|flagged|unflagged|sent|received|replied|unreplied|
+      forwarded|unforwarded|invite|solo|tome|fromme|ccme|tofromme|fromccme|
+      tofromccme|local|remote)
+  date:[>,<,>=,<=](DATE)
+  day:[>,<,>=,<=](DATE)
+  week:[>,<,>=,<=](DATE)
+  month:[>,<,>=,<=](DATE)
+  year:[>,<,>=,<=](DATE)
+  after:(DATE)
+  before:(DATE)
+  size:(SIZE)
+  bigger:(SIZE)
+  larger:(SIZE)
+  smaller:(SIZE)
+  tag:(TAG)
+  priority:(high|low)
+  message:(DB_MSG_ID)
+  my:(MY_SAVED_SEARCH_NAME) // not supported yet
+  modseq:[>,<,>=,<=](CHANGE_ID)
+  conv:(DB_CONV_ID)
+  conv-count:(NUM)
+  conv-minm:(NUM)
+  conv-maxm:(NUM)
+  conv-start:(DATE)
+  conv-end:(DATE)
+  appt-start:[>,<,>=,<=](DATE)
+  appt-end:[>,<,>=,<=](DATE)
+  author:(TEXT)
+  title:(TEXT)
+  keywords:(TEXT)
+  company:(TEXT)
+  metadata:(TEXT)
+  item:(all|none|[0-9]+|{[0-9]+(,[0-9]+)*})
+  field[FIELDNAME]:(TEXT)
+  #FIELDNAME:(TEXT)
 
-   // Structured-Data search operator (see below):
-   field[FIELDNAME]:{TEXT} or #FIELDNAME:{TEXT}
-
-   sort:(score|dateasc|datedesc|subjasc|subjdesc|nameasc|namedesc)
-      -- overrides the sort field specified in the <SearchRequest>
-
-* : not currently supported
+  sort:(score|dateasc|datedesc|subjasc|subjdesc|nameasc|namedesc)
+  // overrides the sort field specified in the <SearchRequest>
 
 FRIENDLY_MIME_TYPE:"text"|"application"|"word"|"msword"|"excel"|"xls"|"ppt"|"pdf"|"ms-tnef"|"image"|"jpeg"|"gif"|"bmp"|"none"|"any"
 TEXT: text string, must be in "'s if has spaces in it
@@ -354,6 +354,3 @@ For example, to find a contact with the last name "Davis" you would use a search
      #lastname:davis
 OR
      FIELD[lastname]:davis
-
-
-
