@@ -447,7 +447,8 @@ public class GalSearchControl {
 			Element req = mParams.getRequest();
 			if (req == null) {
 				req = Element.create(SoapProtocol.Soap12, AccountConstants.SEARCH_GAL_REQUEST);
-				req.addAttribute(AccountConstants.A_TYPE, "account");
+				req.addAttribute(AccountConstants.A_TYPE, mParams.getType().toString());
+				req.addAttribute(AccountConstants.A_LIMIT, mParams.getLimit());
 				req.addAttribute(AccountConstants.A_NAME, mParams.getQuery());
 			}
 			req.addAttribute(AccountConstants.A_ID, targetAcct.getId());
@@ -466,8 +467,8 @@ public class GalSearchControl {
 	            callback.setNewToken(newToken);
 			}
 			boolean hasMore =  resp.getAttributeBool(MailConstants.A_QUERY_MORE, false);
+			callback.setHasMoreResult(hasMore);
 			if (hasMore) {
-			    callback.setHasMoreResult(true);
 			    callback.setSortBy(resp.getAttribute(MailConstants.A_SORTBY));
 			    callback.setQueryOffset((int)resp.getAttributeLong(MailConstants.A_QUERY_OFFSET));
 			}

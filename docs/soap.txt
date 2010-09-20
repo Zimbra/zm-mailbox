@@ -741,9 +741,10 @@ import and export of addressbook.
 
 ----------------------------
 
- <SearchCalendarResourcesRequest
+ <SearchCalendarResourcesRequest>
      [attrs="a1,a2,a3"] [sortBy="{sortBy}"] [sortAscending="{sortAscending}"] >
 
+   [<name>...</name>]
    <searchFilter>
      <conds [not="1|0"] [or="1|0"] >
        [<cond> or <conds>]+
@@ -767,6 +768,9 @@ import and export of addressbook.
    attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraCalResType")
    sortBy - name of attribute to sort on. default is the calendar resource name.
    sortAscending - whether to sort in ascending order (0/1), 1 is default
+   
+   name: if specified, pass through to the GAL search as the search key
+   
    must have exactly one <conds> child or exactly one <cond> child and no other child element
 
    conds: denotes a compound condition

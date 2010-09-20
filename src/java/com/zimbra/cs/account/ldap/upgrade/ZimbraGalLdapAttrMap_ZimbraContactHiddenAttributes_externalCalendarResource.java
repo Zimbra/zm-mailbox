@@ -10,7 +10,6 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 
 public class ZimbraGalLdapAttrMap_ZimbraContactHiddenAttributes_externalCalendarResource extends LdapUpgrade {
 
@@ -73,16 +72,34 @@ public class ZimbraGalLdapAttrMap_ZimbraContactHiddenAttributes_externalCalendar
         System.out.println();
         System.out.println("Checking " + entryName + " for " + attrName);
         
-        String oldValue = "dn,zimbraAccountCalendarUserType,zimbraCalResType,zimbraCalResLocationDisplayName,zimbraCalResCapacity,zimbraCalResContactEmail,vcardUID,vcardURL,vcardXProps";
-        String newValue = "dn,zimbraAccountCalendarUserType,zimbraCalResType,vcardUID,vcardURL,vcardXProps";
-
         String curValue = entry.getAttr(attrName);
         
+        // remove zimbraCalResType,zimbraCalResLocationDisplayName,zimbraCalResCapacity,zimbraCalResContactEmail 
+        String newHiddenAttrs = "";
+        if (curValue != null) {
+            String[] curHiddenAttrs = curValue.split(",");
+            boolean first = true;
+            for (String hiddenAttr : curHiddenAttrs) {
+                if (!Provisioning.A_zimbraCalResType.equalsIgnoreCase(hiddenAttr) &&
+                    !Provisioning.A_zimbraCalResLocationDisplayName.equalsIgnoreCase(hiddenAttr) &&
+                    !Provisioning.A_zimbraCalResCapacity.equalsIgnoreCase(hiddenAttr) &&
+                    !Provisioning.A_zimbraCalResContactEmail.equalsIgnoreCase(hiddenAttr)) {
+                    if (!first)
+                        newHiddenAttrs += ",";
+                    else
+                        first = false;
+                    newHiddenAttrs += hiddenAttr;
+                }
+            }
+        }
+        if (newHiddenAttrs.length() == 0)
+            newHiddenAttrs = "dn,zimbraAccountCalendarUserType,vcardUID,vcardURL,vcardXProps";
+        
         Map<String, Object> attrs = new HashMap<String, Object>();
-        replaceIfNeeded(attrs, attrName, curValue, oldValue, newValue);
+        attrs.put(Provisioning.A_zimbraContactHiddenAttributes, newHiddenAttrs);
         
         if (attrs.size() > 0) {
-            System.out.println("Modifying " + attrName + " on " + entryName);
+            System.out.println("Modifying " + attrName + " on " + entryName + " from " + curValue + " to " + newHiddenAttrs);
             mProv.modifyAttrs(entry, attrs);
         }
     }

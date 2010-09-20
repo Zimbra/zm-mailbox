@@ -1467,7 +1467,7 @@ public class SoapProvisioning extends Provisioning {
         Element resp = invoke(req);
 
         SearchGalResult result = SearchGalResult.newSearchGalResult(null);
-        result.setHadMore(resp.getAttributeBool(AdminConstants.A_MORE));
+        result.setHadMore(resp.getAttributeBool(AdminConstants.A_MORE, false));
         result.setTokenizeKey(resp.getAttribute(AccountConstants.A_TOKENIZE_KEY, null));
         for (Element e: resp.listElements(AdminConstants.E_CN)) {
             result.addMatch(new GalContact(AdminConstants.A_ID, getAttrs(e)));
@@ -1578,7 +1578,7 @@ public class SoapProvisioning extends Provisioning {
 
         SearchGalResult result = SearchGalResult.newSearchGalResult(null);
         result.setToken(resp.getAttribute(AdminConstants.A_TOKEN, null));
-        result.setHadMore(resp.getAttributeBool(AdminConstants.A_MORE));
+        result.setHadMore(resp.getAttributeBool(AdminConstants.A_MORE, false));
         result.setTokenizeKey(resp.getAttribute(AccountConstants.A_TOKENIZE_KEY, null));
         for (Element e: resp.listElements(AdminConstants.E_CN)) {
             result.addMatch(new GalContact(AdminConstants.A_ID, getAttrs(e)));

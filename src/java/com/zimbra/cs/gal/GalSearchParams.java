@@ -34,7 +34,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class GalSearchParams {
 	private GalSearchConfig mConfig;
-	private Provisioning.GalSearchType mType;
+	private Provisioning.GalSearchType mType = Provisioning.GalSearchType.account;
 	private int mLimit;
 	private int mPageSize;
 	private String mQuery;

@@ -18,17 +18,13 @@ package com.zimbra.cs.service.account;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.EntrySearchFilter.AndOr;
@@ -121,13 +117,16 @@ public class SearchCalendarResources extends AccountDocumentHandler {
     }
     
     private static Element searchGal(ZimbraSoapContext zsc, Account account, Element request) throws ServiceException {
-        GalSearchParams params = new GalSearchParams(account, zsc);
-        params.setQuery(".");
-        params.setType(Provisioning.GalSearchType.resource);
-        params.setLimit(1000);
-        params.setResponseName(AdminConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
+        
+        Element eName = request.getOptionalElement(AccountConstants.E_NAME);
+        String name = eName == null? "." : eName.getText();
         
         EntrySearchFilter filter = parseSearchFilter(request);
+        GalSearchParams params = new GalSearchParams(account, zsc);
+        params.setQuery(name);
+        params.setType(Provisioning.GalSearchType.resource);
+        params.setLimit(1000);
+        params.setResponseName(AccountConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         
         String attrsStr = request.getAttribute(AccountConstants.A_ATTRS, null);
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
@@ -139,4 +138,5 @@ public class SearchCalendarResources extends AccountDocumentHandler {
         gal.search();  
         return params.getResultCallback().getResponse();
     }
+
 }
