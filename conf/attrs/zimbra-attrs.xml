@@ -5077,4 +5077,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>enable/disable MAPI (Microsoft Outlook) Connector</desc>
 </attr>
 
+<attr id="1128" name="zimbraDumpsterEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>enable/disable dumpster</desc>
+</attr>
+
 </attrs>

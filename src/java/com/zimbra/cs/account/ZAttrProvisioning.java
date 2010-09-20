@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20100919-0008 */
+    /* build: unknown unknown unknown unknown */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2674,6 +2674,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=212)
     public static final String A_zimbraDomainType = "zimbraDomainType";
+
+    /**
+     * enable/disable dumpster
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1128)
+    public static final String A_zimbraDumpsterEnabled = "zimbraDumpsterEnabled";
 
     /**
      * URL for posting error report popped up in WEB client
