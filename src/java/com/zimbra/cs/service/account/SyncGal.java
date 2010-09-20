@@ -24,7 +24,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
@@ -40,9 +39,6 @@ public class SyncGal extends AccountDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(getZimbraSoapContext(context));
 
-        if (!canAccessAccount(zsc, account))
-            throw ServiceException.PERM_DENIED("can not access account");
-        
         String tokenAttr = request.getAttribute(MailConstants.A_TOKEN, "");
         String galAcctId = request.getAttribute(AccountConstants.A_ID, null);
         boolean idOnly   = request.getAttributeBool(AccountConstants.A_ID_ONLY, false);

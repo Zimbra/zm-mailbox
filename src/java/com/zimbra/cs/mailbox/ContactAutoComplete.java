@@ -28,17 +28,13 @@ import java.util.TreeSet;
 
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GalSearchType;
-import com.zimbra.cs.gal.FilteredGalSearchResultCallback;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchResultCallback;
@@ -48,6 +44,7 @@ import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class ContactAutoComplete {
     public static class AutoCompleteResult {
@@ -222,6 +219,7 @@ public class ContactAutoComplete {
     private Collection<String> mEmailKeys;
 
     private GalSearchType mSearchType;
+    private ZimbraSoapContext mZsc;
 
     private static final String[] DEFAULT_EMAIL_KEYS = {
         ContactConstants.A_email, ContactConstants.A_email2, ContactConstants.A_email3
@@ -229,6 +227,11 @@ public class ContactAutoComplete {
 
 
     public ContactAutoComplete(String accountId) {
+        this (accountId, null);
+    }
+    
+    public ContactAutoComplete(String accountId, ZimbraSoapContext zsc) {
+        mZsc = zsc;
         Provisioning prov = Provisioning.getInstance();
         try {
             Account acct = prov.get(Provisioning.AccountBy.id, accountId);
@@ -315,7 +318,7 @@ public class ContactAutoComplete {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(Provisioning.AccountBy.id, mAccountId);
         ZimbraLog.gal.debug("querying gal");
-        GalSearchParams params = new GalSearchParams(account);
+        GalSearchParams params = new GalSearchParams(account, mZsc);
         params.setQuery(str);
         params.setType(mSearchType);
         params.setLimit(200);
@@ -341,7 +344,7 @@ public class ContactAutoComplete {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(Provisioning.AccountBy.id, mAccountId);
         ZimbraLog.gal.debug("querying gal for groups");
-        GalSearchParams params = new GalSearchParams(account);
+        GalSearchParams params = new GalSearchParams(account, mZsc);
         params.setQuery(str);
         params.setType(Provisioning.GalSearchType.group);
         params.setLimit(200);
@@ -518,7 +521,9 @@ public class ContactAutoComplete {
         ZimbraQueryResults qres = null;
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
-            OperationContext octxt = new OperationContext(mbox);
+            OperationContext octxt = (mZsc == null) ?
+                    new OperationContext(mbox) : 
+                    new OperationContext(mZsc.getAuthtokenAccountId());
             List<Folder> folders = new ArrayList<Folder>();
             Map<ItemId, Mountpoint> mountpoints = new HashMap<ItemId, Mountpoint>();
             if (folderIDs == null) {

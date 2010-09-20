@@ -68,7 +68,7 @@ public class AutoComplete extends MailDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access account");
        
        ArrayList<Integer> folders = csvToArray(request.getAttribute(MailConstants.A_FOLDERS, null));
-       ContactAutoComplete autoComplete = new ContactAutoComplete(account.getId());
+       ContactAutoComplete autoComplete = new ContactAutoComplete(account.getId(), zsc);
        autoComplete.setSearchType(type);
        boolean includeGal = !excludeGal && request.getAttributeBool(MailConstants.A_INCLUDE_GAL, autoComplete.includeGal());
        autoComplete.setIncludeGal(includeGal);
