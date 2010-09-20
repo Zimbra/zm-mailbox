@@ -318,13 +318,13 @@
       <url-pattern>/</url-pattern>
     </web-resource-collection>
     <auth-constraint>
-      <role-name>SPNEGO.LOCAL</role-name>
+      <role-name>%%zimbraSpnegoAuthRealm%%</role-name>
     </auth-constraint>
   </security-constraint>
 
   <login-config>
     <auth-method>SPNEGO</auth-method>
-    <realm-name>Test Realm</realm-name>
+    <realm-name>Spnego Authentication Realm</realm-name>
   </login-config>
 
 
