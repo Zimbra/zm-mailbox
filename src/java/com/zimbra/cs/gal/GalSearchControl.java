@@ -436,47 +436,47 @@ public class GalSearchControl {
     }
     
     private boolean proxyGalAccountSearch(Account targetAcct) {
-		try {
-			Provisioning prov = Provisioning.getInstance();
-    		String serverUrl = URLUtil.getAdminURL(prov.getServerByName(targetAcct.getMailHost()));
-			SoapHttpTransport transport = new SoapHttpTransport(serverUrl);
-			transport.setAuthToken(AuthProvider.getAdminAuthToken().toZAuthToken());
-			transport.setTargetAcctId(targetAcct.getId());
-			if (mParams.getSoapContext() != null)
-				transport.setResponseProtocol(mParams.getSoapContext().getResponseProtocol());
-			Element req = mParams.getRequest();
-			if (req == null) {
-				req = Element.create(SoapProtocol.Soap12, AccountConstants.SEARCH_GAL_REQUEST);
-				req.addAttribute(AccountConstants.A_TYPE, mParams.getType().toString());
-				req.addAttribute(AccountConstants.A_LIMIT, mParams.getLimit());
-				req.addAttribute(AccountConstants.A_NAME, mParams.getQuery());
-			}
-			req.addAttribute(AccountConstants.A_ID, targetAcct.getId());
-			Element resp = transport.invokeWithoutSession(req.detach());
-			GalSearchResultCallback callback = mParams.getResultCallback();
-			Iterator<Element> iter = resp.elementIterator(MailConstants.E_CONTACT);
-			while (iter.hasNext())
-				callback.handleElement(iter.next());
-			iter = resp.elementIterator(MailConstants.E_DELETED);
-			while (iter.hasNext())
-				callback.handleElement(iter.next());
-			String newTokenStr = resp.getAttribute(MailConstants.A_TOKEN, null);
-			if (newTokenStr != null) {
-				GalSyncToken newToken = new GalSyncToken(newTokenStr);
-				ZimbraLog.gal.debug("computing new sync token for proxied account "+targetAcct.getId()+": "+newToken);
-	            callback.setNewToken(newToken);
-			}
-			boolean hasMore =  resp.getAttributeBool(MailConstants.A_QUERY_MORE, false);
-			callback.setHasMoreResult(hasMore);
-			if (hasMore) {
-			    callback.setSortBy(resp.getAttribute(MailConstants.A_SORTBY));
-			    callback.setQueryOffset((int)resp.getAttributeLong(MailConstants.A_QUERY_OFFSET));
-			}
-		} catch (Exception e) {
-			ZimbraLog.gal.warn("remote search on GalSync account failed for"+targetAcct.getName(), e);
-			return false;
-		}
-		return true;
+        try {
+            Provisioning prov = Provisioning.getInstance();
+            String serverUrl = URLUtil.getAdminURL(prov.getServerByName(targetAcct.getMailHost()));
+            SoapHttpTransport transport = new SoapHttpTransport(serverUrl);
+            transport.setAuthToken(AuthProvider.getAdminAuthToken().toZAuthToken());
+            transport.setTargetAcctId(targetAcct.getId());
+            if (mParams.getSoapContext() != null)
+                transport.setResponseProtocol(mParams.getSoapContext().getResponseProtocol());
+            Element req = mParams.getRequest();
+            if (req == null) {
+                req = Element.create(SoapProtocol.Soap12, AccountConstants.SEARCH_GAL_REQUEST);
+                req.addAttribute(AccountConstants.A_TYPE, mParams.getType().toString());
+                req.addAttribute(AccountConstants.A_LIMIT, mParams.getLimit());
+                req.addAttribute(AccountConstants.A_NAME, mParams.getQuery());
+            }
+            req.addAttribute(AccountConstants.A_ID, targetAcct.getId());
+            Element resp = transport.invokeWithoutSession(req.detach());
+            GalSearchResultCallback callback = mParams.getResultCallback();
+            Iterator<Element> iter = resp.elementIterator(MailConstants.E_CONTACT);
+            while (iter.hasNext())
+                callback.handleElement(iter.next());
+            iter = resp.elementIterator(MailConstants.E_DELETED);
+            while (iter.hasNext())
+                callback.handleElement(iter.next());
+            String newTokenStr = resp.getAttribute(MailConstants.A_TOKEN, null);
+            if (newTokenStr != null) {
+                GalSyncToken newToken = new GalSyncToken(newTokenStr);
+                ZimbraLog.gal.debug("computing new sync token for proxied account "+targetAcct.getId()+": "+newToken);
+                callback.setNewToken(newToken);
+            }
+            boolean hasMore =  resp.getAttributeBool(MailConstants.A_QUERY_MORE, false);
+            callback.setHasMoreResult(hasMore);
+            if (hasMore) {
+                callback.setSortBy(resp.getAttribute(MailConstants.A_SORTBY));
+                callback.setQueryOffset((int)resp.getAttributeLong(MailConstants.A_QUERY_OFFSET));
+            }
+        } catch (Exception e) {
+            ZimbraLog.gal.warn("remote search on GalSync account failed for"+targetAcct.getName(), e);
+            return false;
+        }
+        return true;
     }
     
     private void ldapSearch() throws ServiceException {
