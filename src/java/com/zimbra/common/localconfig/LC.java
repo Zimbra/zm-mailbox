@@ -380,7 +380,9 @@ public class LC {
     public static final KnownKey calendar_cache_range_month_from;
     public static final KnownKey calendar_cache_range_months;
     public static final KnownKey calendar_cache_max_stale_items;
-
+    
+    public static final KnownKey spnego_java_options;
+    
     public static final KnownKey text_attachments_base64;
 
     public static final KnownKey nio_imap_enabled =
@@ -1739,7 +1741,14 @@ public class LC {
         out_of_disk_error_windows = new KnownKey("out_of_disk_error_windows");
         out_of_disk_error_windows.setDefault("There is not enough space on the disk");
         out_of_disk_error_windows.setDoc("IOException message string for out of disk error on Windows");
-
+        
+        spnego_java_options = new KnownKey("spnego_java_options");
+        
+        spnego_java_options.setDefault(
+                "-Djava.security.krb5.conf=" + "${mailboxd_directory}" + FS + "etc" + FS + "krb5.ini " + 
+                "-Djava.security.auth.login.config=" + "${mailboxd_directory}" + FS + "etc" + FS + "spnego.conf " +
+                "-Djavax.security.auth.useSubjectCredsOnly=false");
+        
         // NOTE: When adding a new KnownKey, you do not need to call
         //       setDoc. The documentation string will come from the
         //       ZsMsg properties file, using the same key as the
