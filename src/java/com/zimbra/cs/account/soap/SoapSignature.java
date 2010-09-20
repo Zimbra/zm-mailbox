@@ -56,7 +56,7 @@ class SoapSignature extends Signature implements SoapEntry {
             else {
                 String mimeType = Signature.attrNameToMimeType(attr);
                 if (mimeType == null)
-                    throw ZClientException.CLIENT_ERROR("invalid attr: "+attr, null);
+                    throw ZClientException.CLIENT_ERROR("unable to determine mime type from attr " + attr, null);
                 
                 signature.addElement(AccountConstants.E_CONTENT).addAttribute(AccountConstants.A_TYPE, mimeType).addText(value);
             }

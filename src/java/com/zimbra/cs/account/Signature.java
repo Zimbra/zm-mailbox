@@ -77,7 +77,7 @@ public class Signature extends AccountProperty implements Comparable {
     }
     
     public static String attrNameToMimeType(String attrName) {
-        return sAttrTypeMap.inverse().get(attrName);
+        return sAttrTypeMap.get(attrName);
     }
 
 }
