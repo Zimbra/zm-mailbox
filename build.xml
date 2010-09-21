@@ -714,10 +714,14 @@
                     <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
                     <arg line="-e mailboxd_keystore=/opt/zimbra/jetty/etc/keystore"/>
                 </java>
-              <!-- Enable SMTP to LMTP bridge for development. -->
+                <!-- Enable SMTP to LMTP bridge for development. -->
                 <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
                     <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
                     <arg line="-e smtp_to_lmtp_enabled=true"/>
+                </java>
+                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+                    <arg line="-e ldap_read_timeout=0"/>
                 </java>
             </then>
         </if>
