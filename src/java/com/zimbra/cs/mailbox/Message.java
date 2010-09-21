@@ -97,6 +97,18 @@ public class Message extends MailItem {
             origId = meta.get(Metadata.FN_REPLY_ORIG, null);
             autoSendTime = meta.getLong(Metadata.FN_AUTO_SEND_TIME, 0);
         }
+
+        @Override public boolean equals(Object obj) {
+            if (obj != null && obj instanceof DraftInfo) {
+                DraftInfo dInfo = (DraftInfo) obj;
+                return StringUtil.equal(accountId, dInfo.accountId) &&
+                        StringUtil.equal(identityId, dInfo.identityId) &&
+                        StringUtil.equal(replyType, dInfo.replyType) &&
+                        StringUtil.equal(origId, dInfo.origId) &&
+                        autoSendTime == dInfo.autoSendTime;
+            }
+            return false;
+        }
     }
 
     public static class CalendarItemInfo {
@@ -1234,7 +1246,14 @@ public class Message extends MailItem {
         Account account = getMailbox().getAccount();
         return !account.isMailAllowReceiveButNotSendWhenOverQuota();
     }
-    
+
+    void setDraftInfo(DraftInfo draftInfo) throws ServiceException {
+        if ((mDraftInfo == null && draftInfo != null) || (mDraftInfo != null && !mDraftInfo.equals(draftInfo))) {
+            mDraftInfo = draftInfo;
+            saveMetadata();
+        }
+    }
+
     private static final String CN_SENDER     = "sender";
     private static final String CN_RECIPIENTS = "to";
     private static final String CN_FRAGMENT   = "fragment";

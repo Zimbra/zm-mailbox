@@ -4849,13 +4849,12 @@ public class Mailbox {
     public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id,
                              String origId, String replyType, String identityId, String accountId, long autoSendTime)
     throws IOException, ServiceException {
+        Message.DraftInfo dinfo = null;
+        if ((replyType != null && origId != null) || !StringUtil.isNullOrEmpty(identityId) ||
+            !StringUtil.isNullOrEmpty(accountId) || autoSendTime != 0)
+            dinfo = new Message.DraftInfo(replyType, origId, identityId, accountId, autoSendTime);
         if (id == ID_AUTO_INCREMENT) {
             // special-case saving a new draft
-            Message.DraftInfo dinfo = null;
-            if ((replyType != null && origId != null) || (identityId != null && !identityId.equals("")) ||
-                (accountId != null && !accountId.equals("")))
-                dinfo = new Message.DraftInfo(replyType, origId, identityId, accountId, autoSendTime);
-
             return addMessage(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME,
                               null, ID_AUTO_INCREMENT, ":API:", dinfo, null, null);
         }
@@ -4900,6 +4899,8 @@ public class Mailbox {
                 int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
                 redoRecorder.setImapId(imapID);
                 redoRecorder.setMessageBodyInfo(new ParsedMessageDataSource(pm), size);
+
+                msg.setDraftInfo(dinfo);
 
                 // update the content and increment the revision number
                 msg.setContent(staged, pm);

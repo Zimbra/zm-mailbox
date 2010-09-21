@@ -2119,8 +2119,7 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
    FileUploadServlet, and submit it through our server:
 
 <SaveDraftRequest>
-  <m aid="{uploaded-MIME-body-ID}" [id="{existing-draft-id}"] [origid="..." rt="r|w"] [l="{folder}"] [f="{flags}"] [t="{tag-id-list}"] [color="{color}"]/>
-  [<autoSendTime DATETIME/>]
+  <m aid="{uploaded-MIME-body-ID}" [id="{existing-draft-id}"] [origid="..." rt="r|w"] [l="{folder}"] [f="{flags}"] [t="{tag-id-list}"] [color="{color}"] [autoSendTime="{millis-since-epoch}"]/>
 </SaveDraftRequest>
 
 
