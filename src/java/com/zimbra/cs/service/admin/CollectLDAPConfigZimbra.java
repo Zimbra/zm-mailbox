@@ -60,7 +60,7 @@ public class CollectLDAPConfigZimbra extends ZimbraServlet {
 			RemoteResult rr = rmgr.execute(RemoteCommands.COLLECT_LDAP_ZIMBRA);
 			//stream the data
 			resp.setContentType(DOWNLOAD_CONTENT_TYPE);
-            ContentDisposition cd = new ContentDisposition(Part.INLINE).setParameter("filename", ldapHost+".ldiff.gz");
+            ContentDisposition cd = new ContentDisposition(Part.INLINE).setParameter("filename", ldapHost+".ldif.gz");
             resp.addHeader("Content-Disposition", cd.toString());			
 			ByteUtil.copy(new ByteArrayInputStream(rr.getMStdout()), true, resp.getOutputStream(), false);
 		} catch (ServiceException e) {
