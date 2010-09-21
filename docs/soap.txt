@@ -2619,7 +2619,7 @@ Tests:
 
 Each test has the following optional attributes:
     * "negative": specifies a "not" condition for that test
-    * "index": specifies a guaranteed order for the test elements
+    * "index": specifies a guaranteed order for the test and action elements
 
 Actions:
 
