@@ -15,6 +15,7 @@
 package com.zimbra.cs.mailclient.smtp;
 
 import java.io.ByteArrayInputStream;
+import java.util.Properties;
 
 import javax.mail.SendFailedException;
 import javax.mail.Session;
@@ -41,6 +42,10 @@ public class SmtpTransportTest {
 
     @After
     public void tearDown() {
+        Properties props = JMSession.getSession().getProperties();
+        props.remove("mail.smtp.sendpartial");
+        props.remove("mail.smtp.from");
+        JMSession.getSession().getProperties().remove("mail.smtp.sendpartial");
         if (server != null) {
             server.destroy();
         }
@@ -170,6 +175,44 @@ public class SmtpTransportTest {
     }
 
     @Test(timeout = 3000)
+    public void mailSmtpFrom() throws Exception {
+        server = MockTcpServer.scenario()
+        .sendLine("220 test ready")
+        .recvLine() // EHLO
+        .sendLine("250 OK")
+        .recvLine() // MAIL FROM
+        .sendLine("250 OK")
+        .recvLine() // RCPT TO
+        .sendLine("250 OK")
+        .recvLine() // DATA
+        .sendLine("354 OK")
+        .swallowUntil("\r\n.\r\n")
+        .sendLine("250 OK")
+        .recvLine() // QUIT
+        .sendLine("221 bye")
+        .build().start(PORT);
+
+        Session session = JMSession.getSession();
+        session.getProperties().setProperty("mail.smtp.from", "from@zimbra.com");
+        Transport transport = session.getTransport("smtp");
+        transport.connect("localhost", PORT, null, null);
+        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
+            "Subject: test\n\ntest";
+        MimeMessage msg = new MimeMessage(session,
+                new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        transport.sendMessage(msg, msg.getAllRecipients());
+        transport.close();
+
+        server.shutdown(1000);
+        Assert.assertEquals("EHLO localhost\r\n", server.replay());
+        Assert.assertEquals("MAIL FROM:<from@zimbra.com>\r\n", server.replay());
+        Assert.assertEquals("RCPT TO:<rcpt@zimbra.com>\r\n", server.replay());
+        Assert.assertEquals("DATA\r\n", server.replay());
+        Assert.assertEquals("QUIT\r\n", server.replay());
+        Assert.assertNull(server.replay());
+    }
+
+    @Test(timeout = 3000)
     public void auth() throws Exception {
         server = MockTcpServer.scenario()
         .sendLine("220 test ready")
@@ -233,6 +276,7 @@ public class SmtpTransportTest {
         .build().start(PORT);
 
         Session session = JMSession.getSession();
+        session.getProperties().setProperty("mail.smtp.sendpartial", "true");
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +

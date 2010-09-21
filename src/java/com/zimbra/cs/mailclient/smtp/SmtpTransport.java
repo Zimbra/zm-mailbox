@@ -53,10 +53,10 @@ import com.zimbra.cs.util.BuildInfo;
  *   Defaults to false.</td>
  *  </tr>
  *  <tr>
- *   <td>mail.smtp[s].port</td><td>int</td>
- *   <td>The SMTP server port to connect to, if the connect() method doesn't
- *   explicitly specify one. Defaults to {@link SmtpConfig#DEFAULT_PORT} for
- *   SMTP, {@link SmtpConfig#DEFAULT_SSL_PORT} for SMTPS.</td>
+ *   <td>mail.smtp[s].from</td><td>String</td>
+ *   <td>Email address to use for SMTP MAIL command. This sets the envelope
+ *   return address. Defaults to {@link MimeMessage#getFrom()}.
+ *   </td>
  *  </tr>
  *  <tr>
  *   <td>mail.smtp[s].localhost</td><td>String</td>
@@ -207,8 +207,13 @@ public class SmtpTransport extends Transport {
         Preconditions.checkArgument(msg instanceof MimeMessage);
         Preconditions.checkState(connection != null);
 
+        String sender = session.getProperty("mail." + protocol + ".from");
         try {
-            connection.sendMessage((MimeMessage) msg, rcpts);
+            if (sender != null) {
+                connection.sendMessage(sender, rcpts, (MimeMessage) msg);
+            } else {
+                connection.sendMessage(rcpts, (MimeMessage) msg);
+            }
         } catch (MessagingException e) {
             notify(e, msg, rcpts);
         } catch (IOException e) {

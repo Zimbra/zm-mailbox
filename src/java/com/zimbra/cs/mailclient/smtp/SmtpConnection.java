@@ -364,10 +364,21 @@ public class SmtpConnection extends MailConnection {
      *
      * @see #sendMessage(String, String[], MimeMessage)
      */
-    void sendMessage(MimeMessage msg, Address[] rcpts)
+    void sendMessage(Address[] rcpts, MimeMessage msg)
         throws IOException, MessagingException {
 
         sendMessage(getSender(msg), toString(rcpts), msg);
+    }
+
+    /**
+     * Sends the message.
+     *
+     * @see #sendMessage(String, String[], MimeMessage)
+     */
+    void sendMessage(String sender, Address[] rcpts, MimeMessage msg)
+        throws IOException, MessagingException {
+
+        sendMessage(sender, toString(rcpts), msg);
     }
 
     /**
