@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,7 +29,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.db.Versions;
 
 public class BuildInfo {
-    
+
     public static final String VERSION;
     public static final String TYPE;
     public static final String RELEASE;
@@ -38,7 +38,7 @@ public class BuildInfo {
     public static final String PLATFORM;
     public static final String MAJORVERSION;
     public static final String MINORVERSION;
-    public static final String MICROVERSION;    
+    public static final String MICROVERSION;
     public static final String BUILDNUM;
 
     public static final String FULL_VERSION;
@@ -69,8 +69,8 @@ public class BuildInfo {
             System.err.println("Exception occurred during introspecting; version information incomplete");
             e.printStackTrace(System.err);
         }
-        
-        
+
+
         VERSION = version;
         TYPE = type;
         RELEASE = release;
@@ -83,12 +83,12 @@ public class BuildInfo {
         BUILDNUM = buildnum;
         if (TYPE != null && TYPE.length() > 0) {
             // e.g. 6.0.0_BETA2_1542.RHEL4_64 20090529191053 20090529-1912 NETWORK
-        	FULL_VERSION = VERSION + " " + RELEASE + " " + DATE + " " + TYPE;
+            FULL_VERSION = VERSION + " " + RELEASE + " " + DATE + " " + TYPE;
         } else {
-        	FULL_VERSION = VERSION + " " + RELEASE + " " + DATE;
+            FULL_VERSION = VERSION + " " + RELEASE + " " + DATE;
         }
     }
-    
+
     /**
      * Returns the first line in {@code /opt/zimbra/.platform}, or {@code unknown}
      * if the platform cannot be determined.
@@ -118,16 +118,16 @@ public class BuildInfo {
         }
         return platform;
     }
-    
+
     public static class Version {
-        
+
         public static final String FUTURE = "future";
-        
+
         private static Pattern mPattern = Pattern.compile("([a-zA-Z]+)(\\d*)");
-        
+
         enum Release {
             BETA, M, RC,GA;
-            
+
             public static Release fromString(String rel) throws ServiceException {
                 try {
                     return Release.valueOf(rel);
@@ -136,7 +136,7 @@ public class BuildInfo {
                 }
             }
         }
-        
+
         private boolean mFuture;
         private int mMajor;
         private int mMinor;
@@ -144,11 +144,11 @@ public class BuildInfo {
         private Release mRel;
         private int mRelNum;
         private String mVersion;
-        
+
         /**
-         * 
+         *
          * @param version String in the format of {major number}.{minor number}.{patch number}_{release}{release number}_{buildnumber}
-         * 
+         *
          * e.g.
          *     6
          *     6.0
@@ -163,13 +163,13 @@ public class BuildInfo {
                 mFuture = true;
                 return;
             }
-                
+
             String ver = version;
             int underscoreAt = version.indexOf('_');
             int lastUnderscoreAt = version.lastIndexOf('_');
             if(lastUnderscoreAt == -1 || lastUnderscoreAt == underscoreAt)
-            	lastUnderscoreAt = version.length()-1;
-            
+                lastUnderscoreAt = version.length()-1;
+
             if (underscoreAt != -1) {
                 ver = version.substring(0, underscoreAt);
                 Matcher matcher = mPattern.matcher(version);
@@ -180,9 +180,9 @@ public class BuildInfo {
                         mRelNum = Integer.parseInt(relNum);
                 }
             }
-            
+
             String[] parts = ver.split("\\.");
-            
+
             try {
                 if (parts.length == 1)
                     mMajor = Integer.parseInt(parts[0]);
@@ -194,37 +194,38 @@ public class BuildInfo {
                     mMinor = Integer.parseInt(parts[1]);
                     mPatch = Integer.parseInt(parts[2]);
                 } else
-                    throw ServiceException.FAILURE("invalid version format:" + version, null); 
+                    throw ServiceException.FAILURE("invalid version format:" + version, null);
             } catch (NumberFormatException e) {
-                throw ServiceException.FAILURE("invalid version format:" + version, e); 
+                throw ServiceException.FAILURE("invalid version format:" + version, e);
             }
-            
+
         }
-        
+
         /**
-         * Compares the two versions
-         * 
-         * e.g. 
-         *     Version.compare("5.0.10", "5.0.9")  returns > 0
-         *     Version.compare("5.0.10", "5.0.10") returns == 0
-         *     Version.compare("5.0", "5.0.9")     returns < 0
-         *     Version.compare("5.0.10_RC1", "5.0.10_BETA3") returns > 0
-         *     Version.compare("5.0.10_GA", "5.0.10_RC2") returns > 0
-         * 
-         * @param versionX
-         * @param versionY
-         * 
-         * @return a negative integer, zero, or a positive integer as versionX is older than, equal to, or newer than the versionY.
+         * Compares the two versions.
+         *
+         * e.g.
+         * <ul>
+         *  <li>{@code compare("5.0.10", "5.0.9") > 0}
+         *  <li>{@code compare("5.0.10", "5.0.10") == 0}
+         *  <li>{@code compare("5.0", "5.0.9") < 0}
+         *  <li>{@code compare("5.0.10_RC1", "5.0.10_BETA3") > 0}
+         *  <li>{@code compare("5.0.10_GA", "5.0.10_RC2") > 0}
+         *  <li>{@code compare("5.0.10", "5.0.10_RC2") > 0}
+         * </ul>
+         *
+         * @return a negative integer, zero, or a positive integer as
+         * versionX is older than, equal to, or newer than the versionY.
          */
         public static int compare(String versionX, String versionY) throws ServiceException {
             Version x = new Version(versionX);
             Version y = new Version(versionY);
             return x.compare(y);
         }
-        
+
         /**
          * Compares this object with the specified version.
-         * 
+         *
          * @param version
          * @return a negative integer, zero, or a positive integer as this object is older than, equal to, or newer than the specified version.
          */
@@ -232,10 +233,10 @@ public class BuildInfo {
             Version other = new Version(version);
             return compare(other);
         }
-        
+
         /**
          * Compares this object with the specified version.
-         * 
+         *
          * @param version
          * @return a negative integer, zero, or a positive integer as this object is older than, equal to, or newer than the specified version.
          */
@@ -247,38 +248,43 @@ public class BuildInfo {
                     return 1;
             } else if (version.mFuture)
                 return -1;
-            
+
             int r = mMajor - version.mMajor;
             if (r != 0)
                 return r;
-            
+
             r = mMinor - version.mMinor;
             if (r != 0)
                 return r;
-            
+
             r = mPatch - version.mPatch;
             if (r != 0)
                 return r;
-            
+
             if (mRel != null) {
                 if (version.mRel != null) {
                     r = mRel.ordinal() - version.mRel.ordinal();
-                    if (r != 0)
+                    if (r != 0) {
                         return r;
-                    
+                    }
                     return mRelNum - version.mRelNum;
-                } else
-                    return 1;
-            } else if (version.mRel != null) {
-                return -1;
-            } else
-                return 0;
+                } else { // no Release means GA
+                    return mRel.ordinal() - Release.GA.ordinal();
+                }
+            } else { // no Release means GA
+                if (version.mRel != null) {
+                    return Release.GA.ordinal() - version.mRel.ordinal();
+                } else {
+                    return 0;
+                }
+            }
         }
-        
+
         public boolean isFuture() {
             return mFuture;
         }
 
+        @Override
         public String toString() {
             return mVersion;
         }
