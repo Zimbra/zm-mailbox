@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.datasource;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,6 +33,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.DataSourceConfig;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.DataSource.DataImport;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -61,6 +64,8 @@ public class DataSourceManager {
     
     private static final ConcurrentMap<Object, Boolean> sManagedDataSources =
         new ConcurrentHashMap<Object, Boolean>();
+
+    private static DataSourceConfig config;
 
     private static Object key(String accountId, String dataSourceId) {
         return new Pair<String, String>(accountId, dataSourceId);
@@ -388,5 +393,21 @@ public class DataSourceManager {
                 DbPool.quietClose(conn);
             }
         }
+    }
+
+    public static void init() throws IOException {
+        File file = new File(LC.data_source_config.value());
+
+        config = DataSourceConfig.read(file);
+        for (DataSourceConfig.Service service : getConfig().getServices()) {
+            ZimbraLog.datasource.debug(
+                "Loaded %d folder mappings for service '%s'",
+                service.getFolders().size(), service.getName());
+        }
+        ZimbraLog.datasource.info("Loaded datasource configuration from '%s'", file);
+    }
+
+    public static DataSourceConfig getConfig() {
+        return config;
     }
 }
