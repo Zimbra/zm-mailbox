@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 7.0.0_BETA1_1111 pshao 20100921-2216 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6239,6 +6239,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=17)
     public static final String A_zimbraPrefMailSignature = "zimbraPrefMailSignature";
+
+    /**
+     * contact id associated with the signature
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1129)
+    public static final String A_zimbraPrefMailSignatureContactId = "zimbraPrefMailSignatureContactId";
 
     /**
      * mail signature enabled (deprecatedSince 5.0 in identity)

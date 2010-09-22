@@ -66,6 +66,11 @@ public class ModifySignature extends DocumentHandler {
         String name = eSignature.getAttribute(AccountConstants.A_NAME, null);
         if (name != null)
             attrs.put(Provisioning.A_zimbraSignatureName, name);
+        
+        Element eContactId = eSignature.getOptionalElement(AccountConstants.E_CONTACT_ID);
+        if (eContactId != null)
+            attrs.put(Provisioning.A_zimbraPrefMailSignatureContactId, eContactId.getText());
+        
         prov.modifySignature(account, signature.getId(), attrs);
         
         Element response = zsc.createElement(AccountConstants.MODIFY_SIGNATURE_RESPONSE);

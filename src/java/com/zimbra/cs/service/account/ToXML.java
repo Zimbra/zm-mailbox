@@ -206,6 +206,11 @@ public class ToXML {
         for (SignatureContent c : contents) {
             e.addElement(AccountConstants.E_CONTENT).addAttribute(AccountConstants.A_TYPE, c.getMimeType()).addText(c.getContent());
         }
+        
+        String contactId = signature.getAttr(Provisioning.A_zimbraPrefMailSignatureContactId);
+        if (contactId != null)
+            e.addElement(AccountConstants.E_CONTACT_ID).setText(contactId);
+        
         return e;
     }
 

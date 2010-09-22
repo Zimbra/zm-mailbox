@@ -60,6 +60,10 @@ public class CreateSignature extends DocumentHandler {
         if (id != null)
             attrs.put(Provisioning.A_zimbraSignatureId, id);
         
+        Element eContactId = eReqSignature.getOptionalElement(AccountConstants.E_CONTACT_ID);
+        if (eContactId != null)
+            attrs.put(Provisioning.A_zimbraPrefMailSignatureContactId, eContactId.getText());
+        
         Signature signature = Provisioning.getInstance().createSignature(account, name, attrs);
         
         Element response = zsc.createElement(AccountConstants.CREATE_SIGNATURE_RESPONSE);

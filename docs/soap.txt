@@ -904,6 +904,7 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 <CreateSignatureRequest>
   <signature name="{signature-name}" [id="{id}"]/>
     <content type="{text/plain | text/html}">{signature-value}</content>+
+    [<cid>{contact-id}</cid>]
   </signature>
 </CreateSignatureRequest>
 
@@ -918,6 +919,7 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 
 - There can be at most one text/plain signatue and one text/html signature.
 
+- {contact-id} contact id associated with this signature
 
 ---------
 
@@ -926,6 +928,7 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 <GetSignaturesResponse>
   <signature name="{signature-name}" id="{identity-id}"
     <content type="{text/plain | text/html}">{signature-value}</content>+
+    [<cid>{contact-id}</cid>]
   </signature>+
 </GetSignaturesResponse>
 
@@ -934,6 +937,7 @@ Allowed attributes (see objectclass zimbraIdentity in zimbra.schema)
 <ModifySignatureRequest>
   <signature id="{signature-id}" [name="{signature-name}"]>
     <content type="{text/plain | text/html}">{signature-value}</content>+
+    [<cid>{contact-id}</cid>]
   </signature>
 </ModifySignatureRequest>
 

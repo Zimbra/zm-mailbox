@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 7.0.0_BETA1_1111 pshao 20100921-2216 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -28399,6 +28399,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefMailSignature(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMailSignature, "");
+        return attrs;
+    }
+
+    /**
+     * contact id associated with the signature
+     *
+     * @return zimbraPrefMailSignatureContactId, or null if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1129)
+    public String getPrefMailSignatureContactId() {
+        return getAttr(Provisioning.A_zimbraPrefMailSignatureContactId, null);
+    }
+
+    /**
+     * contact id associated with the signature
+     *
+     * @param zimbraPrefMailSignatureContactId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1129)
+    public void setPrefMailSignatureContactId(String zimbraPrefMailSignatureContactId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSignatureContactId, zimbraPrefMailSignatureContactId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * contact id associated with the signature
+     *
+     * @param zimbraPrefMailSignatureContactId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1129)
+    public Map<String,Object> setPrefMailSignatureContactId(String zimbraPrefMailSignatureContactId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSignatureContactId, zimbraPrefMailSignatureContactId);
+        return attrs;
+    }
+
+    /**
+     * contact id associated with the signature
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1129)
+    public void unsetPrefMailSignatureContactId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSignatureContactId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * contact id associated with the signature
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1129)
+    public Map<String,Object> unsetPrefMailSignatureContactId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailSignatureContactId, "");
         return attrs;
     }
 

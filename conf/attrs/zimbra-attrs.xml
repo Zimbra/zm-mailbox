@@ -5082,4 +5082,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>enable/disable dumpster</desc>
 </attr>
 
+<attr id="1129" name="zimbraPrefMailSignatureContactId" type="string" cardinality="single" optionalIn="account,signature" flags="domainAdminModifiable" since="7.0.0">
+  <desc>contact id associated with the signature</desc>
+</attr>
+
 </attrs>
