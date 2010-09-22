@@ -41,6 +41,9 @@ public class InitNotebook extends AdminDocumentHandler {
 
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    
+	    if (true)
+	        throw WikiServiceException.ERROR("Deprecated");
+        
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
 	    

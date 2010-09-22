@@ -1,4 +1,8 @@
 //
+// Notebook feature and WikiItem are deprecated as of 7.0.0.  Briefcase
+// feature and Document items are still supported and they can be used 
+// instead of Notebook.
+//
 // This set of API can be used to access private Notes, or public Wiki pages.
 //
 // Private Notes get stored in the mailbox of the requestor.  The access to

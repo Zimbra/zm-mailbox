@@ -43,6 +43,8 @@ public class SaveWiki extends WikiDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        if (true)
+            throw WikiServiceException.ERROR("Deprecated");
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         OperationContext octxt = getOperationContext(zsc, context);
 

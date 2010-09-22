@@ -36,6 +36,8 @@ public class GetWiki extends WikiDocumentHandler {
 
 	@Override
 	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        if (true)
+            throw WikiServiceException.ERROR("Deprecated");
 		ZimbraSoapContext zsc = getZimbraSoapContext(context);
 		checkNotebookEnabled(zsc);
 		Mailbox mbox = getRequestedMailbox(zsc);

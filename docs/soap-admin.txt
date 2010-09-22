@@ -1892,6 +1892,8 @@ all the queues in a given server.
 
 -----------------------------
 
+[Deprecated since 7.0]
+
 Initializes the Notebook account used for public folder and templates.
 
 {template-dir} is a directory on the server that contains the Wiki
