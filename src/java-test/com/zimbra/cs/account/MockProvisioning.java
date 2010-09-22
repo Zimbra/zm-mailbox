@@ -32,14 +32,14 @@ import com.zimbra.cs.mime.MimeTypeInfo;
  *
  * @author ysasaki
  */
-public class MockProvisioning extends Provisioning {
+public final class MockProvisioning extends Provisioning {
 
-    private Map<String, Account> id2account = new HashMap<String, Account>();
-    private Map<String, Account> name2account = new HashMap<String, Account>();
-    private Map<String, List<MimeTypeInfo>> mimeConfig =
+    private final Map<String, Account> id2account = new HashMap<String, Account>();
+    private final Map<String, Account> name2account = new HashMap<String, Account>();
+    private final Map<String, List<MimeTypeInfo>> mimeConfig =
         new HashMap<String, List<MimeTypeInfo>>();
-    private Config config = new Config(new HashMap<String, Object>(), this);
-    private Server localhost = new Server("localhost", "localhost",
+    private final Config config = new Config(new HashMap<String, Object>(), this);
+    private final Server localhost = new Server("localhost", "localhost",
             new HashMap<String, Object>(), new HashMap<String, Object>(), this);
 
     @Override
@@ -104,7 +104,15 @@ public class MockProvisioning extends Provisioning {
     @Override
     public void modifyAttrs(Entry entry, Map<String, ? extends Object> attrs,
             boolean checkImmutable) {
-        entry.setAttrs(new HashMap<String, Object>(attrs));
+
+        Map<String, Object> map = entry.getAttrs(false);
+        for (Map.Entry<String, ? extends Object> attr : attrs.entrySet()) {
+            if (attr.getValue() != null) {
+                map.put(attr.getKey(), attr.getValue());
+            } else {
+                map.remove(attr.getKey());
+            }
+        }
     }
 
     @Override
