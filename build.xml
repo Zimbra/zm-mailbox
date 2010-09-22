@@ -701,6 +701,7 @@
         <copy todir="${dist.dir}/conf" file="${config.dir}/globs2.zimbra" overwrite="true"/>
         <copy tofile="${dist.dir}/conf/localconfig.xml" file="${config.dir}/localconfig.xml${production.suffix}"
               overwrite="true"/>
+        <copy todir="${dist.dir}/conf" file="${config.dir}/datasource.xml" overwrite="true"/>
         <copy tofile="${dist.dir}/conf/zimbra-contact-fields.xml"
               file="${config.dir}/contacts/zimbra-contact-fields.xml" overwrite="true"/>
         <if>
