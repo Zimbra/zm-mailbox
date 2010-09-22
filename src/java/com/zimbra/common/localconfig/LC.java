@@ -456,6 +456,7 @@ public class LC {
     public static final KnownKey data_source_new_sync_enabled;
     public static final KnownKey data_source_xsync_class;
     public static final KnownKey data_source_xsync_factory_class;
+    public static final KnownKey data_source_config;
 
     public static final KnownKey timezone_file;
 
@@ -1447,6 +1448,10 @@ public class LC {
         data_source_new_sync_enabled = new KnownKey("data_source_new_sync_enabled", "false");
         data_source_xsync_class = new KnownKey("data_source_xsync_class", "");
         data_source_xsync_factory_class = new KnownKey("data_source_xsync_factory_class", "");
+
+        data_source_config = new KnownKey("zimbra desktop datasource configuration");
+        data_source_config.setDefault("${zimbra_home}" + File.separator + "conf" + File.separator + "datasource.xml");
+        data_source_config.setDoc("Path to datasource configuration file.");
 
         timezone_file = new KnownKey("timezone_file");
         timezone_file.setDefault("${zimbra_home}" + FS + "conf" + FS + "timezones.ics");
