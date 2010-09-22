@@ -193,7 +193,7 @@ public class VCard {
 
         VCardProperty vcprop = new VCardProperty();
         int depth = 0;
-        int cardstart = 0, emails = 0;
+        int cardstart = 0; 
         String uid = null;
         for (int start = 0, pos = 0, lines = 0, limit = vcard.length(); pos < limit; lines++) {
             // unfold the next line in the vcard
@@ -251,7 +251,6 @@ public class VCard {
                     xprops = new HashMap<String,Object>();
                     attachments = new ArrayList<Attachment>();
                     cardstart = linestart;
-                    emails = 0;
                     uid = null;
                 }
                 continue;
@@ -311,50 +310,59 @@ public class VCard {
             value = vcprop.getValue();
 
             // decode the property's value and assign to the appropriate contact field(s)
-            if (name.equals("FN"))             fields.put(ContactConstants.A_fullName, vcfDecode(value));
+            if (name.equals("FN"))             addField(ContactConstants.A_fullName, vcfDecode(value), "altFullName", 2, fields);
             else if (name.equals("N"))         decodeStructured(value, NAME_FIELDS, fields);
-            else if (name.equals("NICKNAME"))  fields.put(ContactConstants.A_nickname, vcfDecode(value));
-            else if (name.equals("PHOTO"))     fields.put(ContactConstants.A_image, vcfDecode(value));
-            else if (name.equals("BDAY"))      fields.put(ContactConstants.A_birthday, vcfDecode(value));
+            else if (name.equals("NICKNAME"))  addField(ContactConstants.A_nickname, vcfDecode(value), "altNickName", 2, fields);
+            else if (name.equals("PHOTO"))     fields.put(ContactConstants.A_image, vcfDecode(value)); // Assumption: Do not want multiple photos.
+            else if (name.equals("BDAY"))      addField(ContactConstants.A_birthday, vcfDecode(value), null, 2, fields);
             else if (name.equals("ADR"))       decodeAddress(value, vcprop, fields);
             else if (name.equals("TEL"))       decodeTelephone(value, vcprop, fields);
             else if (name.equals("URL"))       decodeURL(value, vcprop, fields);
             else if (name.equals("ORG"))       decodeStructured(value, ORG_FIELDS, fields);
-            else if (name.equals("TITLE"))     fields.put(ContactConstants.A_jobTitle, vcfDecode(value));
-            else if (name.equals("NOTE"))      fields.put(ContactConstants.A_notes, vcfDecode(value));
-            else if (name.equals("EMAIL") && emails < EMAIL_FIELDS.length)
-                fields.put(EMAIL_FIELDS[emails++], vcfDecode(value));
+            else if (name.equals("TITLE"))     addField(ContactConstants.A_jobTitle, vcfDecode(value), "altJobTitle", 2, fields);
+            else if (name.equals("NOTE"))      addField(ContactConstants.A_notes, vcfDecode(value), null, 2, fields);
+            else if (name.equals("EMAIL"))     addField(ContactConstants.A_email, vcfDecode(value), null, 2, fields);
             else if (name.equals("UID")) uid = value;
         }
 
         return cards;
     }
 
+    private static void addField(String firstKey, String value, String customPrefix,
+            int firstSuffix, Map<String, String> fields) {
+        if (!fields.containsKey(firstKey)) {
+            fields.put(firstKey, value);
+        } else {
+            if (customPrefix == null) customPrefix = firstKey;
+            for (int suffix = firstSuffix;suffix < 20 ;suffix++) {
+                String trialKey = new StringBuffer(customPrefix).append(String.valueOf(suffix)).toString();
+                if (!fields.containsKey(trialKey)) {
+                    fields.put(trialKey, value);
+                    break;
+                }
+            }
+        }
+    }
+
     private static void decodeTelephone(String value, VCardProperty vcprop, Map<String, String> fields) {
         value = vcfDecode(value);
-        if (vcprop.containsParam("TYPE=CAR"))         { fields.put(ContactConstants.A_carPhone, value);  return; }
-        else if (vcprop.containsParam("TYPE=CELL"))   { fields.put(ContactConstants.A_mobilePhone, value);  return; }
-        else if (vcprop.containsParam("TYPE=PAGER"))  { fields.put(ContactConstants.A_pager, value);  return; }
+        if (vcprop.containsParam("TYPE=CAR"))         { addField(ContactConstants.A_carPhone, value, null, 2, fields); return; }
+        else if (vcprop.containsParam("TYPE=CELL"))   { addField(ContactConstants.A_mobilePhone, value, null, 2, fields); return; }
+        else if (vcprop.containsParam("TYPE=PAGER"))  { addField(ContactConstants.A_pager, value, null, 2, fields); return; }
 
         boolean home = vcprop.containsParam("TYPE=HOME"), work = vcprop.containsParam("TYPE=WORK");
         boolean fax = vcprop.containsParam("TYPE=FAX"), voice = vcprop.containsParam("TYPE=VOICE");
         if (home) {
-            if (fax)  fields.put(ContactConstants.A_homeFax, value);
-            if (voice || !fax) {
-                if (!fields.containsKey(ContactConstants.A_homePhone))        fields.put(ContactConstants.A_homePhone, value);
-                else if (!fields.containsKey(ContactConstants.A_homePhone2))  fields.put(ContactConstants.A_homePhone2, value);
-            }
+            if (fax)  addField(ContactConstants.A_homeFax, value, null, 2, fields);
+            if (voice || !fax) addField(ContactConstants.A_homePhone, value, null, 2, fields);
         }
         if (work) {
-            if (fax)  fields.put(ContactConstants.A_workFax, value);
-            if (voice || !fax) {
-                if (!fields.containsKey(ContactConstants.A_workPhone))        fields.put(ContactConstants.A_workPhone, value);
-                else if (!fields.containsKey(ContactConstants.A_workPhone2))  fields.put(ContactConstants.A_workPhone2, value);
-            }
+            if (fax)  addField(ContactConstants.A_workFax, value, null, 2, fields);
+            if (voice || !fax) addField(ContactConstants.A_workPhone, value, null, 2, fields);
         }
         if (!home && !work) {
-            if (fax)  fields.put(ContactConstants.A_otherFax, value);
-            if ((voice || !fax) && !fields.containsKey(ContactConstants.A_otherPhone))  fields.put(ContactConstants.A_otherPhone, value);
+            if (fax)  addField(ContactConstants.A_otherFax, value, null, 2, fields);
+            if (voice || !fax) addField(ContactConstants.A_otherPhone, value, null, 2, fields);
         }
     }
 
@@ -367,9 +375,9 @@ public class VCard {
 
     private static void decodeURL(String value, VCardProperty vcprop, Map<String, String> fields) {
         boolean home = vcprop.containsParam("TYPE=HOME"), work = vcprop.containsParam("TYPE=WORK");
-        if (home)            fields.put(ContactConstants.A_homeURL, vcfDecode(value));
-        if (work)            fields.put(ContactConstants.A_workURL, vcfDecode(value));
-        if (!home && !work)  fields.put(ContactConstants.A_otherURL, vcfDecode(value));
+        if (home)            addField(ContactConstants.A_homeURL, value, null, 2, fields);
+        if (work)            addField(ContactConstants.A_workURL, value, null, 2, fields);
+        if (!home && !work)  addField(ContactConstants.A_otherURL, value, null, 2, fields);
     }
 
     private static final String[] NAME_FIELDS = new String[] {
@@ -390,17 +398,37 @@ public class VCard {
     private static final String[] ORG_FIELDS = new String[] {
         ContactConstants.A_company, ContactConstants.A_department
     };
-    private static final String[] EMAIL_FIELDS = new String[] {
-        ContactConstants.A_email, ContactConstants.A_email2, ContactConstants.A_email3
-    };
 
     private static void decodeStructured(String value, String[] keys, Map<String, String> fields) {
+        // Support user defined extra fields.  If, for instance, a home address has previously
+        // been defined, can add a second one where all the constituent properties have the
+        // suffix "2" and so on.
+        String suffix = "";
+        int suffixInt = 1;
+        boolean keyAvailable = false;
+        do {
+            keyAvailable = true;
+            for (String key : keys) {
+                String trialKey = new StringBuffer(key).append(suffix).toString();
+                if (fields.containsKey(trialKey)) {
+                    keyAvailable = false;
+                    break;
+                }
+            }
+            if (!keyAvailable) {
+                suffixInt++;
+                suffix = String.valueOf(suffixInt);
+            }
+        } while (!keyAvailable && (suffixInt < 20));
+
         for (int i = 0, start = 0, f = 0, len = value.length(); i < len && f < keys.length; start = ++i, f++) {
             char c;
             for (boolean escaped = false; i < len && ((c = value.charAt(i)) != ';' || escaped); i++)
                 escaped = !escaped && c == '\\';
-            if (i > start && keys[f] != null)
-                fields.put(keys[f], vcfDecode(value.substring(start, i)));
+            if (i > start && keys[f] != null) {
+                String keyToUse = new StringBuffer(keys[f]).append(suffix).toString();
+                fields.put(keyToUse, vcfDecode(value.substring(start, i)));
+            }
         }
     }
 
