@@ -653,6 +653,20 @@ public class LC {
 
     public static final KnownKey out_of_disk_error_unix;
     public static final KnownKey out_of_disk_error_windows;
+    
+    // antispam
+    public static final KnownKey antispam_mysql_bind_address;
+    public static final KnownKey antispam_mysql_directory;
+    public static final KnownKey antispam_mysql_data_directory;
+    public static final KnownKey antispam_mysql_errlogfile;
+    public static final KnownKey antispam_mysql_mycnf;
+    public static final KnownKey antispam_mysql_pidfile;
+    public static final KnownKey antispam_mysql_port;
+    public static final KnownKey antispam_mysql_socket;
+    public static final KnownKey antispam_mysql_user;
+    public static final KnownKey antispam_mysql_root_password;
+    public static final KnownKey antispam_mysql_password;
+    
 
     static {
         @SuppressWarnings("unused")
@@ -1753,6 +1767,41 @@ public class LC {
                 "-Djava.security.krb5.conf=" + "${mailboxd_directory}" + FS + "etc" + FS + "krb5.ini " + 
                 "-Djava.security.auth.login.config=" + "${mailboxd_directory}" + FS + "etc" + FS + "spnego.conf " +
                 "-Djavax.security.auth.useSubjectCredsOnly=false");
+        
+        
+        antispam_mysql_bind_address = new KnownKey("antispam_mysql_bind_address");
+        antispam_mysql_bind_address.setDefault("localhost");
+        
+        antispam_mysql_directory = new KnownKey("antispam_mysql_directory");
+        antispam_mysql_directory.setDefault("${zimbra_home}/mta/mysql");
+        
+        antispam_mysql_data_directory = new KnownKey("antispam_mysql_data_directory");
+        antispam_mysql_data_directory.setDefault("${zimbra_home}/data/amavisd/mysql/data");
+        
+        antispam_mysql_errlogfile = new KnownKey("antispam_mysql_errlogfile");
+        antispam_mysql_errlogfile.setDefault("${zimbra_home}/log/antispam-mysqld.log");
+        
+        antispam_mysql_mycnf = new KnownKey("antispam_mysql_mycnf");
+        antispam_mysql_mycnf.setDefault("${zimbra_home}/conf/antispam-my.cnf");
+        
+        antispam_mysql_pidfile = new KnownKey("antispam_mysql_pidfile");
+        antispam_mysql_pidfile.setDefault("${zimbra_home}/data/amavisd/db/mysql/mysql.pid");
+        
+        antispam_mysql_port = new KnownKey("antispam_mysql_port");
+        antispam_mysql_port.setDefault("7308");
+        
+        antispam_mysql_socket = new KnownKey("antispam_mysql_socket");
+        antispam_mysql_socket.setDefault("${zimbra_home}/data/amavisd/db/mysql/mysql.sock");
+        
+        antispam_mysql_user = new KnownKey("antispam_mysql_user");
+        antispam_mysql_user.setDefault("zimbra");
+        
+        antispam_mysql_root_password = new KnownKey("antispam_mysql_root_password");
+        antispam_mysql_root_password.setDefault("");
+        
+        antispam_mysql_password = new KnownKey("antispam_mysql_password");
+        antispam_mysql_password.setDefault("");
+
         
         // NOTE: When adding a new KnownKey, you do not need to call
         //       setDoc. The documentation string will come from the
