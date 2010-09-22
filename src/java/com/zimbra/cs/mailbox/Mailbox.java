@@ -170,7 +170,7 @@ public class Mailbox {
     public static final int ID_FOLDER_CONVERSATIONS = 9;
     public static final int ID_FOLDER_CALENDAR  = 10;
     public static final int ID_FOLDER_ROOT      = 11;
-    public static final int ID_FOLDER_NOTEBOOK  = 12;
+    public static final int ID_FOLDER_NOTEBOOK  = 12;      // no longer created in new mailboxes since Helix (bug 39647).  old mailboxes may still contain a system folder with id 12
     public static final int ID_FOLDER_AUTO_CONTACTS = 13;
     public static final int ID_FOLDER_IM_LOGS   = 14;
     public static final int ID_FOLDER_TASKS     = 15;
@@ -1474,7 +1474,6 @@ public class Mailbox {
         Folder.create(ID_FOLDER_SENT,     this, userRoot, "Sent",     system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
         Folder.create(ID_FOLDER_DRAFTS,   this, userRoot, "Drafts",   system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
         Folder.create(ID_FOLDER_CONTACTS, this, userRoot, "Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
-        Folder.create(ID_FOLDER_NOTEBOOK, this, userRoot, "Notebook", system, MailItem.TYPE_WIKI,    0, MailItem.DEFAULT_COLOR_RGB, null, null);
         Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT, Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR_RGB, null, null);
         Folder.create(ID_FOLDER_TASKS,    this, userRoot, "Tasks",    system, MailItem.TYPE_TASK,        Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR_RGB, null, null);
         Folder.create(ID_FOLDER_AUTO_CONTACTS, this, userRoot, "Emailed Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
