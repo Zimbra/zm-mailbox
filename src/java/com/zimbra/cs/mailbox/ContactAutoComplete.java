@@ -288,8 +288,10 @@ public class ContactAutoComplete {
             queryGalGroups(str, galGroups);
             
             for (ContactEntry entry : rankingTableMatches) {
-                if (galGroups.contains(entry.getKey()))
+                if (galGroups.contains(entry.getKey())) {
                     entry.mIsGroup = true;
+                    entry.mFolderId = FOLDER_ID_GAL;
+                }
                 result.addEntry(entry);
             }
         }
