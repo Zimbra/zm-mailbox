@@ -73,6 +73,7 @@ public final class ContactConstants {
     public static final String A_isMyCard = "isMyCard";
     public static final String A_jobTitle = Attr.jobTitle.name();
     public static final String A_lastName = Attr.lastName.name();
+    public static final String A_member = Attr.member.name();
     public static final String A_middleName = Attr.middleName.name();
     public static final String A_mobilePhone = Attr.mobilePhone.name();
     public static final String A_namePrefix = Attr.namePrefix.name();
@@ -174,6 +175,7 @@ public final class ContactConstants {
         initials,
         jobTitle,
         lastName,
+        member,
         middleName,
         mobilePhone,
         namePrefix,
