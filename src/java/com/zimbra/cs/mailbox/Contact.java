@@ -785,4 +785,15 @@ public class Contact extends MailItem {
     		mv[i] = array.getString(i);
     	return mv;
     }
+    public static JSONArray getMultiValueAttrArray(String attr) throws JSONException {
+        if (!isMultiValueAttr(attr)) {
+            JSONObject jsonobj = new JSONObject();
+            jsonobj.append(ZMVAL, attr);
+            return jsonobj.getJSONArray(ZMVAL);
+        } else {
+            JSONObject jsonobj = new JSONObject(attr);
+            JSONArray array = jsonobj.getJSONArray(ZMVAL);
+            return array;
+        }
+    }
 }

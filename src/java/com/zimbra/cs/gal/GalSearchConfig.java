@@ -96,7 +96,7 @@ public class GalSearchConfig {
 			String[] attrs = ds.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
 			String[] valueMap = ds.getMultiAttr(Provisioning.A_zimbraGalLdapValueMap);
 			String groupHandlerClass = ds.getAttr(Provisioning.A_zimbraGalLdapGroupHandlerClass);
-			if (attrs.length > 0 || valueMap.length > 0) {
+			if (attrs.length > 0 || valueMap.length > 0 || groupHandlerClass != null) {
 			    if (attrs.length == 0)
 			        attrs = domain.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap);
 			    if (valueMap.length == 0)

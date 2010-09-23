@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.naming.directory.Attributes;
+import javax.naming.directory.SearchResult;
 
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.util.ZimbraLog;
@@ -97,14 +98,18 @@ public class LdapGalMapRules {
         return mLdapAttrs.toArray(new String[mLdapAttrs.size()]);
     }
     
-    public Map<String, Object> apply(Attributes ldapAttrs) {
+    public Map<String, Object> apply(ZimbraLdapContext zlc, SearchResult sr) {
+        String dn = sr.getNameInNamespace();
+        Attributes ldapAttrs = sr.getAttributes();
+        
         HashMap<String,Object> contactAttrs = new HashMap<String, Object>();        
         for (LdapGalMapRule rule: mRules) {
             rule.apply(ldapAttrs, contactAttrs);
         }
         
-        if (mGroupHandler.isGroup(ldapAttrs)) {
+        if (mGroupHandler.isGroup(sr)) {
             contactAttrs.put(ContactConstants.A_type, ContactConstants.TYPE_GROUP);
+            contactAttrs.put(ContactConstants.A_member, mGroupHandler.getMembers(zlc, sr));
         }
         
         return contactAttrs;

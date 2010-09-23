@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Config;
@@ -75,6 +76,7 @@ public class ZimbraGalLdapAttrMap_ZimbraContactHiddenAttributes_externalCalendar
         String curValue = entry.getAttr(attrName);
         
         // remove zimbraCalResType,zimbraCalResLocationDisplayName,zimbraCalResCapacity,zimbraCalResContactEmail 
+        // add member
         String newHiddenAttrs = "";
         if (curValue != null) {
             String[] curHiddenAttrs = curValue.split(",");
@@ -91,9 +93,14 @@ public class ZimbraGalLdapAttrMap_ZimbraContactHiddenAttributes_externalCalendar
                     newHiddenAttrs += hiddenAttr;
                 }
             }
+            
+            // add member
+            if (!first)
+                newHiddenAttrs += ",";
+            newHiddenAttrs += ContactConstants.A_member;
         }
         if (newHiddenAttrs.length() == 0)
-            newHiddenAttrs = "dn,zimbraAccountCalendarUserType,vcardUID,vcardURL,vcardXProps";
+            newHiddenAttrs = "dn,zimbraAccountCalendarUserType,member,vcardUID,vcardURL,vcardXProps";
         
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraContactHiddenAttributes, newHiddenAttrs);

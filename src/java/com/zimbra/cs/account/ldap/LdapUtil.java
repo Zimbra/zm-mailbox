@@ -30,30 +30,16 @@ import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
 
 import javax.naming.AuthenticationException;
-import javax.naming.CompositeName;
-import javax.naming.Context;
-import javax.naming.InvalidNameException;
-import javax.naming.Name;
-import javax.naming.NameAlreadyBoundException;
-import javax.naming.NameNotFoundException;
-import javax.naming.NameParser;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.SizeLimitExceededException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttribute;
-import javax.naming.directory.BasicAttributes;
 import javax.naming.directory.DirContext;
-import javax.naming.directory.InvalidAttributeIdentifierException;
-import javax.naming.directory.InvalidAttributeValueException;
-import javax.naming.directory.InvalidAttributesException;
 import javax.naming.directory.ModificationItem;
-import javax.naming.directory.SchemaViolationException;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
-import javax.naming.ldap.InitialLdapContext;
-import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.Rdn;
 import javax.security.auth.login.LoginException;
 
@@ -715,7 +701,7 @@ public class LdapUtil {
                         SearchResult sr = (SearchResult) ne.next();
                         String dn = sr.getNameInNamespace();
                         
-                        GalContact lgc = new GalContact(dn, rules.apply(sr.getAttributes()));
+                        GalContact lgc = new GalContact(dn, rules.apply(zlc, sr));
                         String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
                         result.setToken(getLaterTimestamp(result.getToken(), mts));
                         String cts = (String) lgc.getAttrs().get("createTimeStamp");

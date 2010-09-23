@@ -1,18 +1,33 @@
 package com.zimbra.cs.service.account;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
+import com.zimbra.cs.gal.FilteredGalSearchResultCallback;
+import com.zimbra.cs.gal.GalSearchControl;
+import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.cs.gal.GalSearchResultCallback;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetDistributionListMembers extends AccountDocumentHandler {
@@ -31,54 +46,182 @@ public class GetDistributionListMembers extends AccountDocumentHandler {
         }
         
         Element d = request.getElement(AdminConstants.E_DL);
-        String value = d.getText();
+        String dlName = d.getText();
         
-        // TODO: use GAL for bug 11017 (for external groups)
-        DistributionList distributionList = prov.get(DistributionListBy.name, value);
+        Account account = getAuthenticatedAccount(getZimbraSoapContext(context));
         
-        if (!AccessManager.getInstance().canDo(zsc.getAuthToken(), distributionList, User.R_viewDistList, false))
-            throw ServiceException.PERM_DENIED("can not access dl");
+        DLMembers dlMembers = searchGal(zsc, account, dlName);
         
-        if (distributionList == null)
-            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
+        if (dlMembers == null)
+            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(dlName);
+        
+        // check permission if is is a Zimbra DL
+        if (prov.isDistributionList(dlName)) {  
+            // TODO: THIS IS NOT THE CORRECT CHECK, external DLs can be of the same name, 
+            //       We need to get DL by zimbraId
+            DistributionList dl = Provisioning.getInstance().getAclGroup(DistributionListBy.name, dlName);
             
+            // the DL might have been deleted since the last GAL sync account sync, throw.
+            // or should we just let the request through?
+            if (dl == null) 
+                throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(dlName);
+            
+            if (!AccessManager.getInstance().canDo(zsc.getAuthToken(), dl, User.R_viewDistList, false))
+                throw ServiceException.PERM_DENIED("can not access dl");
+        }
+       
+        
         Element response = zsc.createElement(AccountConstants.GET_DISTRIBUTION_LIST_MEMBERS_RESPONSE);
-        encodeMembers(response, distributionList, offset, limit);
-
+        if (dlMembers != null) {
+            int numMembers = dlMembers.getTotal();
+            
+            if (offset > 0 && offset >= numMembers) {
+                throw ServiceException.INVALID_REQUEST("offset " + offset + " greater than size " + numMembers, null);
+            }
+            
+            int endIndex = offset + limit;
+            if (limit == 0) {
+                endIndex = numMembers;
+            }
+            if (endIndex > numMembers) {
+                endIndex = numMembers;
+            }
+            
+            dlMembers.encodeMembers(offset, endIndex, response);
+            
+            response.addAttribute(AccountConstants.A_MORE, endIndex < numMembers);
+            response.addAttribute(AccountConstants.A_TOTAL, numMembers);
+        }
+        
         return response;
     }
     
-    public static Element encodeDistributionList(Element e, DistributionList d) throws ServiceException {
-        Element distributionList = e.addElement(AccountConstants.E_DL);
-        distributionList.addAttribute(AccountConstants.A_NAME, d.getUnicodeName());
-        distributionList.addAttribute(AccountConstants.A_ID,d.getId());
-        return distributionList;
+    private interface DLMembers {
+
+        int getTotal();
+        
+        /**
+         * 
+         * @param beginIndex the beginning index, inclusive.
+         * @param endIndex   the ending index, exclusive. 
+         * @param resp
+         */
+        void encodeMembers(int beginIndex, int endIndex, Element resp);
     }
     
-    private void encodeMembers(Element response, DistributionList distributionList, 
-            int offset, int limit) throws ServiceException {
-        String[] members = distributionList.getAllMembers();
-        if (offset > 0 && offset >= members.length) {
-            throw ServiceException.INVALID_REQUEST("offset " + offset + " greater than size " + members.length, null);
-        }
-        int stop = offset + limit;
-        if (limit == 0) {
-            stop = members.length;
-        }
-        if (stop > members.length) {
-            stop = members.length;
+    private static class ContactDLMembers implements DLMembers {
+        private Contact mContact;
+        private JSONArray mMembers;
+        
+        private ContactDLMembers(Contact contact) {
+            mContact = contact;
+            
+            String members = mContact.get(ContactConstants.A_member);
+            
+            if (members != null) {
+                try {
+                    mMembers = Contact.getMultiValueAttrArray(members);
+                } catch (JSONException e) {
+                    ZimbraLog.account.warn("unable to get members from Contact " + mContact.getId(), e);
+                }
+            }
         }
         
-        Arrays.sort(members);
-        
-        Provisioning prov = Provisioning.getInstance();
-        for (int i = offset; i < stop; i++) {
-            Element eMember = response.addElement(AccountConstants.E_DLM).setText(members[i]);
-            if (prov.isDistributionList(members[i]))
-                eMember.addAttribute(AccountConstants.A_isDL, true);
+        public int getTotal() {
+            if (mMembers == null)
+                return 0;
+            else
+                return mMembers.length();
         }
         
-        response.addAttribute(AccountConstants.A_MORE, stop < members.length);
-        response.addAttribute(AccountConstants.A_TOTAL, members.length);
+        public void encodeMembers(int beginIndex, int endIndex, Element resp) {
+            if (mMembers == null)
+                return;
+            
+            if (endIndex <= getTotal()) {
+                try {
+                    for (int i = beginIndex; i < endIndex; i++) {
+                        Element eMember = resp.addElement(AccountConstants.E_DLM).setText(mMembers.getString(i));
+                    }
+                } catch (JSONException e) {
+                    ZimbraLog.account.warn("unable to get members from Contact " + mContact.getId(), e);
+                }
+            }
+        }
     }
+    
+    private static class GalContactDLMembers implements DLMembers {
+        private GalContact mGalContact;
+        String[] mMembers;
+        
+        private GalContactDLMembers(GalContact galContact) {
+            mGalContact = galContact;
+            
+            Object members = mGalContact.getAttrs().get(ContactConstants.A_member);
+            if (members instanceof String)
+                mMembers = new String[]{(String)members};
+            else if (members instanceof String[])
+                mMembers = (String[])members;
+        }
+        
+        public int getTotal() {
+            if (mMembers == null)
+                return 0;
+            else
+                return mMembers.length;
+        }
+        
+        public void encodeMembers(int beginIndex, int endIndex, Element resp) {
+            if (mMembers == null)
+                return;
+            
+            if (endIndex <= getTotal()) {
+                for (int i = beginIndex; i < endIndex; i++) {
+                    Element eMember = resp.addElement(AccountConstants.E_DLM).setText(mMembers[i]);
+                }
+            }        
+        }
+    }
+
+    
+    private static class GalGroupMembersCallback extends GalSearchResultCallback {
+        private DLMembers mDLMembers;
+        
+        GalGroupMembersCallback(GalSearchParams params) {
+            super(params);
+        }
+        
+        DLMembers getDLMembers() {
+            return mDLMembers;
+        }
+        
+        public Element handleContact(Contact contact) throws ServiceException {
+            mDLMembers = new ContactDLMembers(contact);
+            return null; 
+        }
+        
+        public void handleContact(GalContact galContact) throws ServiceException {
+            mDLMembers = new GalContactDLMembers(galContact);
+        }
+        
+        public void handleElement(Element e) throws ServiceException {
+            // TODO: for perf reason proxy this request to the GAL sync account host 
+            //       if GAL sync account is configured but not on this host
+            
+        }
+    }
+    
+    private static DLMembers searchGal(ZimbraSoapContext zsc, Account account, String groupName) throws ServiceException {
+        GalSearchParams params = new GalSearchParams(account, zsc);
+        params.setQuery(groupName);
+        params.setType(Provisioning.GalSearchType.group);
+        params.setLimit(1);
+        GalGroupMembersCallback callback = new GalGroupMembersCallback(params);
+        params.setResultCallback(callback);
+        
+        GalSearchControl gal = new GalSearchControl(params);
+        gal.search();  
+        return callback.getDLMembers();
+    }
+
 }
