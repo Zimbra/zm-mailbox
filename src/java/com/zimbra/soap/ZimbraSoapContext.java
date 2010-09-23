@@ -27,6 +27,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.account.Account;
@@ -181,7 +182,7 @@ public final class ZimbraSoapContext {
     }
 
     /** Creates a <code>ZimbraSoapContext</code> from another existing
-     *  <code>ZimbraSoapContext</code> for use in proxying. 
+     *  <code>ZimbraSoapContext</code> for use in proxying.
      *  If session is non-null, it will be used for proxy notifications*/
     public ZimbraSoapContext(ZimbraSoapContext zsc, String targetAccountId, Session session) throws ServiceException {
         mUserAgent = zsc.mUserAgent;
@@ -559,7 +560,7 @@ public final class ZimbraSoapContext {
             ctxt.addUniqueElement(HeaderConstants.E_NO_QUALIFY);
         }
         Element ua = ctxt.addUniqueElement(HeaderConstants.E_USER_AGENT);
-        ua.addAttribute(HeaderConstants.A_NAME, "ZSC");
+        ua.addAttribute(HeaderConstants.A_NAME, SoapTransport.DEFAULT_USER_AGENT_NAME);
         ua.addAttribute(HeaderConstants.A_VERSION, BuildInfo.VERSION);
         ctxt.addUniqueElement(HeaderConstants.E_VIA).setText(getNextVia());
         return ctxt;
