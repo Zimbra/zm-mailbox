@@ -5086,4 +5086,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>contact id associated with the signature</desc>
 </attr>
 
+<attr id="1130" name="zimbraMailOutgoingSieveScript" type="string" cardinality="single" optionalIn="account" callback="MailSieveScript" since="7.0.0">
+  <desc>sieve script generated from user outgoing filter rules</desc>
+</attr>
+
+
 </attrs>

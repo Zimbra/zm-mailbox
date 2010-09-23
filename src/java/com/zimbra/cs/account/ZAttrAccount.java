@@ -15333,6 +15333,78 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * sieve script generated from user outgoing filter rules
+     *
+     * @return zimbraMailOutgoingSieveScript, or null if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1130)
+    public String getMailOutgoingSieveScript() {
+        return getAttr(Provisioning.A_zimbraMailOutgoingSieveScript, null);
+    }
+
+    /**
+     * sieve script generated from user outgoing filter rules
+     *
+     * @param zimbraMailOutgoingSieveScript new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1130)
+    public void setMailOutgoingSieveScript(String zimbraMailOutgoingSieveScript) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailOutgoingSieveScript, zimbraMailOutgoingSieveScript);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * sieve script generated from user outgoing filter rules
+     *
+     * @param zimbraMailOutgoingSieveScript new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1130)
+    public Map<String,Object> setMailOutgoingSieveScript(String zimbraMailOutgoingSieveScript, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailOutgoingSieveScript, zimbraMailOutgoingSieveScript);
+        return attrs;
+    }
+
+    /**
+     * sieve script generated from user outgoing filter rules
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1130)
+    public void unsetMailOutgoingSieveScript() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailOutgoingSieveScript, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * sieve script generated from user outgoing filter rules
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1130)
+    public Map<String,Object> unsetMailOutgoingSieveScript(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailOutgoingSieveScript, "");
+        return attrs;
+    }
+
+    /**
      * If TRUE, a message is purged from Spam based on the date that it was
      * moved to the Spam folder. If FALSE, a message is purged from Spam
      * based on the date that it was added to the mailbox.

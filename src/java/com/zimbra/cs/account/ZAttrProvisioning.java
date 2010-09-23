@@ -4336,6 +4336,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailMode = "zimbraMailMode";
 
     /**
+     * sieve script generated from user outgoing filter rules
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1130)
+    public static final String A_zimbraMailOutgoingSieveScript = "zimbraMailOutgoingSieveScript";
+
+    /**
      * HTTP port for end-user UI
      */
     @ZAttr(id=154)
