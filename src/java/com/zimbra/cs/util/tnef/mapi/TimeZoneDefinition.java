@@ -184,6 +184,28 @@ public class TimeZoneDefinition {
         currRule.setDaylightDate(new SYSTEMTIME(ris));
         setEffectiveRule(currRule);
     }
+    
+    /**
+     * Initialize TimeZoneDefinition object from input parameters
+     * @param bias UTC offset in minutes
+     * @param standardBias offset in minutes from bias during standard time.; has a value of 0 in most cases
+     * @param daylightBias offset in minutes from bias during daylight saving time.
+     * @param standardDate the date when the time zone will transition to standard time 
+     * @param daylightDate the time zone will transition to daylight time
+     * @throws IOException 
+     */
+    public TimeZoneDefinition(String tzName, int bias, int standardBias, int daylightBias, SYSTEMTIME standardDate, SYSTEMTIME daylightDate) throws IOException {
+        theZone = null;
+        setTimezoneName(tzName);
+        
+        TZRule currRule = new TZRule();
+        currRule.setBias(bias);
+        currRule.setStandardBias(standardBias);
+        currRule.setDaylightBias(daylightBias);
+        currRule.setStandardDate(standardDate);
+        currRule.setDaylightDate(daylightDate);
+        setEffectiveRule(currRule);
+    }
 
     /**
      * @param timezoneName the timezoneName to set
@@ -231,6 +253,7 @@ public class TimeZoneDefinition {
                     effectiveRule.getStandardUtcOffsetMillis(), getTimezoneName());
             return theZone;
         }
+        
         UtcOffset stdOffset = effectiveRule.getStandardUtcOffset();
         UtcOffset dlOffset = effectiveRule.getDaylightUtcOffset();
         PropertyList vtzProps = new PropertyList();

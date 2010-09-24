@@ -58,5 +58,26 @@ public enum DayOfWeek {
     public WeekDay iCal4JWeekDay() {
         return iCal4JWeekDay;
     }
+    
+    public static final DayOfWeek getDayOfWeek(int dayOfWeek) {
+        switch (dayOfWeek) {
+        case 0:
+            return SU;
+        case 1:
+            return MO;
+        case 2:
+            return TU;
+        case 3:
+            return WE;
+        case 4:
+            return TH;
+        case 5:
+            return FR;
+        case 6:
+            return SA;
+            default:
+                return null;
+        }
+    }
 
 }

@@ -51,7 +51,17 @@ public class SYSTEMTIME {
         Seconds = ris.readU16();
         Milliseconds = ris.readU16();
     }
-
+    
+    public SYSTEMTIME(int month, int dayofweek, int day, int hour) {
+        Year = 0;
+        Month = month;
+        dayOfWeek = DayOfWeek.getDayOfWeek(dayofweek);
+        Day = day;
+        Hour = hour;
+        Minute = 0;
+        Seconds = 0;
+        Milliseconds = 0;
+    }
 
     /**
      *
@@ -168,7 +178,7 @@ public class SYSTEMTIME {
             }
         }
     }
-
+    
     /**
      *
      * @param other

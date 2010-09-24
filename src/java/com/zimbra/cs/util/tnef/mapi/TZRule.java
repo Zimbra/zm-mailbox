@@ -258,6 +258,13 @@ public class TZRule {
     public void setBias(Long bias) {
         Bias = bias.intValue();
     }
+    
+    /**
+     * @param bias the time zone's offset in minutes from UTC.
+     */
+    public void setBias(int bias) {
+        Bias = bias;
+    }
 
     /**
      * @return the time zone's offset in minutes from UTC.
@@ -272,6 +279,14 @@ public class TZRule {
     public void setStandardBias(Long standardBias) {
         StandardBias = standardBias.intValue();
     }
+    
+    /**
+     * 
+     * @param standardBias the offset in minutes from Bias during standard time.
+     */
+    public void setStandardBias(int standardBias) {
+        StandardBias = standardBias;
+    }
 
     /**
      * @return the offset in minutes from Bias during standard time.
@@ -285,6 +300,13 @@ public class TZRule {
      */
     public void setDaylightBias(Long daylightBias) {
         DaylightBias = daylightBias.intValue();
+    }
+    
+    /**
+     * @param the offset in minutes from Bias during daylight saving time.
+     */
+    public void setDaylightBias(int daylightBias) {
+        DaylightBias = daylightBias;
     }
 
     /**
