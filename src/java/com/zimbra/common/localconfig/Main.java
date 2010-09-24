@@ -157,11 +157,7 @@ public class Main {
                 if (!lc.isSet(key)) {
                     error("key " + key + " is not set", null);
                 }
-                if (KnownKey.isKnown(key)) {
-                    lc.set(key, "");
-                } else {
-                    lc.remove(key);
-                }
+                lc.remove(key);
             }
             try {
                 lc.save();
