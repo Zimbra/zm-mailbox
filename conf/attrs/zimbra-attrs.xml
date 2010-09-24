@@ -4867,7 +4867,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="1086" name="zimbraContactHiddenAttributes" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="6.0.6">
-  <globalConfigValue>dn,zimbraAccountCalendarUserType,member,vcardUID,vcardURL,vcardXProps</globalConfigValue>
+  <globalConfigValue>dn,zimbraAccountCalendarUserType,vcardUID,vcardURL,vcardXProps,member</globalConfigValue>
   <desc>Comma separated list of Contact attributes that should be hidden from clients and export of contacts.</desc>
 </attr>
 

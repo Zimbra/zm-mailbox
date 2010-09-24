@@ -1,5 +1,9 @@
 package com.zimbra.cs.account.ldap.upgrade;
 
+
+// FIXME FOR THE MEMBER CHANGE IN FILTER DEF
+
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,9 +16,9 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 
-public class ZimbraGalLdapAttrMap_ZimbraContactHiddenAttributes_externalCalendarResource extends LdapUpgrade {
+public class ZimbraGalLdapAttrMap_ZimbraContactHiddenAttributes_externalCRandGroup extends LdapUpgrade {
 
-    ZimbraGalLdapAttrMap_ZimbraContactHiddenAttributes_externalCalendarResource() throws ServiceException {
+    ZimbraGalLdapAttrMap_ZimbraContactHiddenAttributes_externalCRandGroup() throws ServiceException {
     }
 
     @Override
@@ -38,6 +42,9 @@ public class ZimbraGalLdapAttrMap_ZimbraContactHiddenAttributes_externalCalendar
         String oldCalResLocationDisplayName = "zimbraCalResLocationDisplayName=zimbraCalResLocationDisplayName";
         String newCalResLocationDisplayName = "zimbraCalResLocationDisplayName,displayName=zimbraCalResLocationDisplayName";
         
+        String oldMailForwardingAddress = "zimbraMailForwardingAddress=zimbraMailForwardingAddress";
+        String newMailForwardingAddress = "zimbraMailForwardingAddress=member";
+        
         String zimbraCalResBuilding = "zimbraCalResBuilding=zimbraCalResBuilding";
         String zimbraCalResCapacity = "zimbraCalResCapacity,msExchResourceCapacity=zimbraCalResCapacity";
         String zimbraCalResFloor = "zimbraCalResFloor=zimbraCalResFloor";
@@ -51,6 +58,7 @@ public class ZimbraGalLdapAttrMap_ZimbraContactHiddenAttributes_externalCalendar
         for (String curValue : curValues) {
             replaceIfNeeded(attrs, attrName, curValue, oldCalResType, newCalResType);
             replaceIfNeeded(attrs, attrName, curValue, oldCalResLocationDisplayName, newCalResLocationDisplayName);
+            replaceIfNeeded(attrs, attrName, curValue, oldMailForwardingAddress, newMailForwardingAddress);
         }
 
         addValue(attrs, attrName, zimbraCalResBuilding);
@@ -80,6 +88,7 @@ public class ZimbraGalLdapAttrMap_ZimbraContactHiddenAttributes_externalCalendar
         String newHiddenAttrs = "";
         if (curValue != null) {
             String[] curHiddenAttrs = curValue.split(",");
+            boolean seenMember = false;
             boolean first = true;
             for (String hiddenAttr : curHiddenAttrs) {
                 if (!Provisioning.A_zimbraCalResType.equalsIgnoreCase(hiddenAttr) &&
@@ -92,15 +101,21 @@ public class ZimbraGalLdapAttrMap_ZimbraContactHiddenAttributes_externalCalendar
                         first = false;
                     newHiddenAttrs += hiddenAttr;
                 }
+                
+                if (ContactConstants.A_member.equalsIgnoreCase(hiddenAttr))
+                    seenMember = true;
+                        
             }
             
-            // add member
-            if (!first)
-                newHiddenAttrs += ",";
-            newHiddenAttrs += ContactConstants.A_member;
+            // add member if not seen
+            if (!seenMember) {
+                if (!first)
+                    newHiddenAttrs += ",";
+                newHiddenAttrs += ContactConstants.A_member;
+            }
         }
         if (newHiddenAttrs.length() == 0)
-            newHiddenAttrs = "dn,zimbraAccountCalendarUserType,member,vcardUID,vcardURL,vcardXProps";
+            newHiddenAttrs = "dn,zimbraAccountCalendarUserType,vcardUID,vcardURL,vcardXProps" + ContactConstants.A_member;
         
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraContactHiddenAttributes, newHiddenAttrs);
