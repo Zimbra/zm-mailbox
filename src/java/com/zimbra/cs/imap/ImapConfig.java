@@ -21,6 +21,7 @@ import static com.zimbra.cs.account.Provisioning.*;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Config;
@@ -30,8 +31,8 @@ import java.util.Arrays;
 public class ImapConfig extends ServerConfig {
     private static final String PROTOCOL = "IMAP4rev1";
     private static final int UNAUTHENTICATED_MAX_IDLE_SECONDS = 60;
-    private static final int MAX_MESSAGE_SIZE = 100 * 1024 * 1024;
-    
+    private static final int DEFAULT_MAX_MESSAGE_SIZE = 100 * 1024 * 1024;
+
     public ImapConfig(boolean ssl) {
         super(PROTOCOL, ssl);
     }
@@ -132,8 +133,9 @@ public class ImapConfig extends ServerConfig {
         return getIntAttr(A_zimbraImapMaxRequestSize, LC.imap_max_request_size.intValue());
     }
 
-    public int getMaxMessageSize() {
-        return getIntAttr(A_zimbraMtaMaxMessageSize, MAX_MESSAGE_SIZE);
+    public long getMaxMessageSize() throws ServiceException {
+        return Provisioning.getInstance().getConfig()
+                .getLongAttr(A_zimbraMtaMaxMessageSize, DEFAULT_MAX_MESSAGE_SIZE);
     }
 
 }
