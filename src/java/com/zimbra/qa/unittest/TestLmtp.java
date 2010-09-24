@@ -151,38 +151,38 @@ extends TestCase {
         validateNumWarnings(0);
         
         // Make sure we haven't already hit the quota warning level
-        TestUtil.addMessageLmtp(NAME_PREFIX + " 1", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 1", address, address);
         validateNumWarnings(0);
         
         // Make sure setting quota warning to 0 is a no-op
         setQuotaWarnPercent(0);
-        TestUtil.addMessageLmtp(NAME_PREFIX + " 2", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 2", address, address);
         validateNumWarnings(0);
         
         // Make sure setting quota warning to 99 doesn't trigger the warning
         setQuotaWarnPercent(0);
-        TestUtil.addMessageLmtp(NAME_PREFIX + " 3", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 3", address, address);
         validateNumWarnings(0);
         
         // Make sure setting quota warning to 1 triggers the warning
         setQuotaWarnPercent(1);
-        TestUtil.addMessageLmtp(NAME_PREFIX + " 4", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 4", address, address);
         validateNumWarnings(1);
         
         // Make sure a second warning doesn't get sent (interval not exceeded)
-        TestUtil.addMessageLmtp(NAME_PREFIX + " 5", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 5", address, address);
         validateNumWarnings(1);
         
         // Make sure that a warning is triggered when the interval is exceeded
         setQuotaWarnInterval("1s");
         Thread.sleep(1000);
-        TestUtil.addMessageLmtp(NAME_PREFIX + " 6", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 6", address, address);
         validateNumWarnings(2);
         
         // Make sure that a second warning is not triggered when the interval is not set
         // (default: 1 day)
         setQuotaWarnInterval("");
-        TestUtil.addMessageLmtp(NAME_PREFIX + " 7", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 7", address, address);
         validateNumWarnings(2);
     }
     
@@ -361,27 +361,16 @@ extends TestCase {
         lmtp.sendMessage(new ByteArrayInputStream(data), recipients, address, "TestLmtp", (long) Integer.MAX_VALUE);
         lmtp.close();
         
-        // Wait until all messages have arrived
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        List<ZMessage> messages = null;
-        for (int i = 1; i < 20; i++) {
-            messages = TestUtil.search(mbox, subject);
-            if (messages.size() == 5) {
-                break;
-            }
-            Thread.sleep(500);
-        }
+        List<ZMessage> messages = TestUtil.search(mbox, subject);
         assertEquals(5, messages.size());
         
         // Check message bodies
         ZGetMessageParams params = new ZGetMessageParams();
         params.setRawContent(true);
         for (ZMessage msg : messages) {
-            // Download raw content
-            params.setId(msg.getId());
-            msg = mbox.getMessage(params);
-            // Check contains instead of equality, since we prepend Received and Return-Path during LMTP.
-            TestUtil.assertMessageContains(msg.getContent(), messageString);
+            String content = TestUtil.getContent(mbox, msg.getId());
+            TestUtil.assertMessageContains(content, messageString);
         }
     }
     
