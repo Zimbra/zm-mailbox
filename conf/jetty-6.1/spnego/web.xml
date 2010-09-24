@@ -325,6 +325,9 @@
   <login-config>
     <auth-method>SPNEGO</auth-method>
     <realm-name>Spnego Authentication Realm</realm-name>
+    <spnego-login-config>
+       <spnego-error-page>/error/spnego_error.jsp</spnego-error-page>
+    </spnego-login-config>
   </login-config>
 
 

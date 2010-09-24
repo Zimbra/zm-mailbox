@@ -125,6 +125,7 @@
         <Call name="addRewriteRule"><Arg>%%zimbraMailURL%%/user/*</Arg><Arg>/service/user</Arg></Call>
         <!-- stop if we've hit the proper webapps -->
         <Call name="addRewriteRule"><Arg>/service/*</Arg><Arg></Arg></Call>
+        <Call name="addRewriteRule"><Arg>/spnego/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>/zimlet/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>%%zimbraAdminURL%%/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>%%zimbraMailURL%%/*</Arg><Arg></Arg></Call>
