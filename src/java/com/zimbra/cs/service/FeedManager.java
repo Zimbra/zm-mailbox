@@ -241,7 +241,7 @@ public class FeedManager {
         String getLocation()     { return mUrl; }
         String getDescription()  { return mTitle; }
         String getContentType() {
-            ContentType ctype = new ContentType(mCtype == null ? "text/plain" : mCtype);
+            ContentType ctype = new ContentType(mCtype == null ? "text/plain" : mCtype).cleanup();
             try {
                 ctype.setParameter("name", FileUtil.trimFilename(URLDecoder.decode(mUrl, "utf-8")));
             } catch (UnsupportedEncodingException e) {

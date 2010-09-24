@@ -505,7 +505,7 @@ public class FileUploadServlet extends ZimbraServlet {
     private void handlePlainUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId, boolean limitByFileUploadMaxSize) throws IOException, ServiceException {
         // metadata is encoded in the response's HTTP headers
         ContentType ctype = new ContentType(req.getContentType());
-        String contentType = ctype.getValue(), filename = ctype.getParameter("name");
+        String contentType = ctype.getContentType(), filename = ctype.getParameter("name");
         if (filename == null)
             filename = new ContentDisposition(req.getHeader("Content-Disposition")).getParameter("filename");
 

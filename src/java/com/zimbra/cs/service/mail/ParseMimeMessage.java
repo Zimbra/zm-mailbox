@@ -495,7 +495,7 @@ public class ParseMimeMessage {
     private static void setContent(MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives, ParseMessageContext ctxt)
     throws MessagingException, ServiceException, IOException {
         String type = elem.getAttribute(MailConstants.A_CONTENT_TYPE, MimeConstants.CT_DEFAULT).trim();
-        ContentType ctype = new ContentType(type, ctxt.use2231);
+        ContentType ctype = new ContentType(type, ctxt.use2231).cleanup();
 
         // is the client passing us a multipart?
         if (ctype.getPrimaryType().equals("multipart")) {
@@ -633,7 +633,8 @@ public class ParseMimeMessage {
         ContentType ctype = ctypeOverride;
         ContentDisposition cdisp = new ContentDisposition(Part.ATTACHMENT, ctxt.use2231);
         if (ctype == null) {
-            ctype = new ContentType(up.getContentType() == null ? MimeConstants.CT_APPLICATION_OCTET_STREAM : up.getContentType()).setParameter("name", filename);
+            ctype = new ContentType(up.getContentType() == null ? MimeConstants.CT_APPLICATION_OCTET_STREAM : up.getContentType());
+            ctype.cleanup().setParameter("name", filename);
             cdisp.setParameter("filename", filename);
         }
         mbp.setHeader("Content-Type", ctype.setCharset(ctxt.defaultCharset).toString());
@@ -750,7 +751,7 @@ public class ParseMimeMessage {
 
         MimeBodyPart mbp = new MimeBodyPart();
         mbp.setDataHandler(new DataHandler(new MailboxBlobDataSource(doc.getBlob(), ct)));
-        mbp.setHeader("Content-Type", new ContentType(ct).setParameter("name", doc.getName()).setCharset(ctxt.defaultCharset).toString());
+        mbp.setHeader("Content-Type", new ContentType(ct).cleanup().setParameter("name", doc.getName()).setCharset(ctxt.defaultCharset).toString());
         mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT).setParameter("filename", doc.getName()).toString());
         mbp.setContentID(contentID);
         mmp.addBodyPart(mbp);
@@ -782,17 +783,17 @@ public class ParseMimeMessage {
 
         MimeBodyPart mbp = new Base64TextMimeBodyPart();
 
-        String ctype = mp.getContentType();
-        if (ctype != null) {
+        String type = mp.getContentType();
+        if (type != null) {
             // Clean up the content type and pass it to the new MimeBodyPart via DataSourceWrapper.
             // If we don't do this, JavaMail ignores the Content-Type header.  See bug 42452,
             // JavaMail bug 1650154.
-            String contentType = new ContentType(ctype, ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("name", filename).toString();
+            String ctype = new ContentType(type, ctxt.use2231).cleanup().setCharset(ctxt.defaultCharset).setParameter("name", filename).toString();
             DataHandler originalHandler = mp.getDataHandler();
             DataSourceWrapper wrapper = new DataSourceWrapper(originalHandler.getDataSource());
-            wrapper.setContentType(contentType);
+            wrapper.setContentType(ctype);
             mbp.setDataHandler(new DataHandler(wrapper));
-            mbp.setHeader("Content-Type", contentType);
+            mbp.setHeader("Content-Type", ctype);
         } else {
             mbp.setDataHandler(mp.getDataHandler());
         }

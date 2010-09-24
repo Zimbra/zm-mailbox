@@ -253,7 +253,7 @@ public class CreateContact extends MailDocumentHandler  {
                     mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
                 Message msg = mbox.getMessageById(octxt, iid.getId());
                 MimePart mp = Mime.getMimePart(msg.getMimeMessage(), part);
-                String ctype = new ContentType(mp.getContentType()).getValue();
+                String ctype = new ContentType(mp.getContentType()).getContentType();
                 boolean typeAcceptable;
                 if (acceptableMimeTypes != null) {
                     typeAcceptable = false;

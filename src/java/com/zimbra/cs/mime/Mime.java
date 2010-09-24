@@ -58,8 +58,8 @@ import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.QCodec;
 
 import com.google.common.collect.Sets;
+import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
-import com.zimbra.common.mime.MimeCompoundHeader;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeHeader;
 import com.zimbra.common.util.ByteUtil;
@@ -236,8 +236,9 @@ public class Mime {
     private static MimeMultipart validateMultipart(MimeMultipart multi, MimePart mp) throws MessagingException, IOException {
         ContentType ctype = new ContentType(mp.getContentType());
         try {
-            if (!ctype.containsParameter("generated") && !findStartBoundary(mp, ctype.getParameter("boundary")))
+            if (!ctype.containsParameter("generated") && !findStartBoundary(mp, ctype.getParameter("boundary"))) {
                 return new MimeMultipart(new RawContentMultipartDataSource(mp, ctype));
+            }
             multi.getCount();
         } catch (ParseException pe) {
             multi = new MimeMultipart(new FixedMultipartDataSource(mp, ctype));
@@ -301,30 +302,29 @@ public class Mime {
     private static class FixedMultipartDataSource implements DataSource {
         private final MimePart mMimePart;
         private final ContentType mContentType;
+
         FixedMultipartDataSource(MimePart mp, ContentType ctype) {
             mMimePart = mp;
-            mContentType = ctype;
+            mContentType = new ContentType(ctype).cleanup();
         }
 
-        public ContentType getParsedContentType()  { return mContentType; }
+        public ContentType getParsedContentType() {
+            return mContentType;
+        }
 
-        @Override
-        public String getContentType() {
+        @Override public String getContentType() {
             return mContentType.toString();
         }
 
-        @Override
-        public String getName() {
+        @Override public String getName() {
             return null;
         }
 
-        @Override
-        public OutputStream getOutputStream() {
+        @Override public OutputStream getOutputStream() {
             throw new UnsupportedOperationException();
         }
 
-        @Override
-        public InputStream getInputStream() throws IOException {
+        @Override public InputStream getInputStream() throws IOException {
             try {
                 return getRawInputStream(mMimePart);
             } catch (MessagingException e) {
@@ -340,8 +340,7 @@ public class Mime {
             super(mp, ctype);
         }
 
-        @Override
-        public InputStream getInputStream() throws IOException {
+        @Override public InputStream getInputStream() throws IOException {
             return new RawContentInputStream(super.getInputStream());
         }
 
@@ -373,13 +372,11 @@ public class Mime {
                 mEpilogue[boundary.length + 4] = mEpilogue[boundary.length + 5] = '-';
             }
 
-            @Override
-            public int available() throws IOException {
+            @Override public int available() throws IOException {
                 return mPrologue.length - mPrologueIndex + super.available() + mEpilogue.length - mEpilogueIndex;
             }
 
-            @Override
-            public int read() throws IOException {
+            @Override public int read() throws IOException {
                 int c;
                 if (mInPrologue) {
                     c = mPrologue[mPrologueIndex++];
@@ -403,16 +400,16 @@ public class Mime {
                 return c;
             }
 
-            @Override
-            public int read(byte[] b, int off, int len) throws IOException {
-                if (b == null)
+            @Override public int read(byte[] b, int off, int len) throws IOException {
+                if (b == null) {
                     throw new NullPointerException();
-                else if ((off < 0) || (off > b.length) || (len < 0) || ((off + len) > b.length) || ((off + len) < 0))
+                } else if (off < 0 || off > b.length || len < 0 || off + len > b.length || off + len < 0) {
                     throw new IndexOutOfBoundsException();
-                else if (len == 0)
+                } else if (len == 0) {
                     return 0;
-                else if (!mInPrologue && !mInContent && !mInEpilogue)
+                } else if (!mInPrologue && !mInContent && !mInEpilogue) {
                     return -1;
+                }
 
                 int remaining = len;
                 if (mInPrologue) {
@@ -424,8 +421,10 @@ public class Mime {
                     }
                     remaining -= prologue;  off += prologue;
                 }
-                if (remaining == 0)
+                if (remaining == 0) {
                     return len;
+                }
+
                 if (mInContent) {
                     int content = super.read(b, off, remaining);
                     if (content == -1) {
@@ -434,8 +433,10 @@ public class Mime {
                         remaining -= content;  off += content;
                     }
                 }
-                if (remaining == 0)
+                if (remaining == 0) {
                     return len;
+                }
+
                 if (mInEpilogue) {
                     int epilogue = Math.min(remaining, mEpilogue.length - mEpilogueIndex);
                     System.arraycopy(mEpilogue, mEpilogueIndex, b, off, epilogue);
@@ -563,7 +564,7 @@ public class Mime {
     public static MimePart getMimePart(MimePart mp, String part) throws IOException, MessagingException {
         if (mp == null)
             return null;
-        if (part == null || part.trim().equals(""))
+        if (part == null || part.trim().isEmpty())
             return mp;
         part = part.trim();
 
@@ -719,7 +720,7 @@ public class Mime {
     }
 
     public static InternetAddress[] parseAddressHeader(String header, boolean expandGroups) {
-        if (header == null || header.trim().equals(""))
+        if (header == null || header.trim().isEmpty())
             return NO_ADDRESSES;
         header = header.trim();
 
@@ -821,7 +822,7 @@ public class Mime {
     public static final String getContentType(MimePart mp, String ctdefault) {
         try {
             String cthdr = mp.getHeader("Content-Type", null);
-            if (cthdr == null || cthdr.trim().equals(""))
+            if (cthdr == null || cthdr.trim().isEmpty())
                 return ctdefault;
             return getContentType(cthdr);
         } catch (MessagingException e) {
@@ -834,7 +835,7 @@ public class Mime {
      *  string.  Uses a permissive, RFC2231-capable parser, and defaults
      *  when appropriate. */
     public static final String getContentType(String cthdr) {
-        return new ContentType(cthdr).getValue().trim();
+        return new ContentType(cthdr).getContentType().trim();
     }
 
     /** Reads the specified <code>InputStream</code> into a <code>String</code>.
@@ -893,7 +894,7 @@ public class Mime {
         }
 
         // if either there was no explicit charset on the part or it was invalid, try the user's personal default charset
-        if (reader == null && defaultCharset != null && !defaultCharset.trim().equals("")) {
+        if (reader == null && defaultCharset != null && !defaultCharset.trim().isEmpty()) {
             defaultCharset = defaultCharset.toLowerCase();
             // windows-1252 is a superset of iso-8859-1 and they're often confused, so use cp1252 in its place
             if (SUPPORTS_CP1252 && defaultCharset.equals(MimeConstants.P_CHARSET_LATIN1))
@@ -928,16 +929,18 @@ public class Mime {
 
     public static String getCharset(String contentType) {
         String charset = new ContentType(contentType).getParameter(MimeConstants.P_CHARSET);
-        if (charset == null || charset.trim().equals(""))
+        if (charset == null || charset.trim().isEmpty()) {
             charset = null;
+        }
         return charset;
     }
 
     public static String encodeFilename(String filename) {
         try {
             // JavaMail doesn't use RFC 2231 encoding, and we're not going to, either...
-            if (!StringUtil.isAsciiString(filename))
+            if (!StringUtil.isAsciiString(filename)) {
                 return new QCodec().encode(filename, MimeConstants.P_CHARSET_UTF8);
+            }
         } catch (EncoderException ee) { }
         return filename;
     }
@@ -951,9 +954,7 @@ public class Mime {
             if (cdisp != null) {
                 // will also catch (legal, but uncommon) RFC 2231 encoded filenames
                 //   (things like filename*=UTF-8''%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3.rtf)
-                MimeCompoundHeader mhdr = new MimeCompoundHeader(cdisp);
-                if (mhdr.containsParameter("filename"))
-                    name = mhdr.getParameter("filename");
+                name = new ContentDisposition(cdisp).getParameter("filename");
             }
         } catch (MessagingException me) { }
 
@@ -964,26 +965,27 @@ public class Mime {
                 if (ctype != null) {
                     // will also catch (legal, but uncommon) RFC 2231 encoded filenames
                     //   (things like name*=UTF-8''%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3.rtf)
-                    MimeCompoundHeader mhdr = new MimeCompoundHeader(ctype);
-                    if (mhdr.containsParameter("name"))
-                        name = mhdr.getParameter("name");
+                    name = new ContentType(ctype).getParameter("name");
                 }
             } catch (MessagingException me) { }
         }
 
-        if (name == null)
+        if (name == null) {
             return null;
+        }
 
         // catch (illegal, but less common) character entities
-        if (name.indexOf("&#") != -1 && name.indexOf(';') != -1)
+        if (name.indexOf("&#") != -1 && name.indexOf(';') != -1) {
             return expandNumericCharacterReferences(name);
+        }
 
         return name;
     }
 
     public static String expandNumericCharacterReferences(String raw) {
-        if (raw == null)
+        if (raw == null) {
             return null;
+        }
 
         int start = -1;
         boolean hex = false;
@@ -1000,9 +1002,11 @@ public class Mime {
                 } else if (hex && c >= 'A' && c <= 'F') {
                     calc = calc * 16 + 10 + c - 'A';
                 } else if (c == ';' && i > start + (hex ? 4 : 3)) {
-                    sb.append((char) calc);  start = -1;
+                    sb.append((char) calc);
+                    start = -1;
                 } else {
-                    sb.append(raw.substring(start, i--));  start = -1;
+                    sb.append(raw.substring(start, i--));
+                    start = -1;
                 }
             } else if (c == '&' && i < len - 3 && raw.charAt(i + 1) == '#') {
                 hex = raw.charAt(i + 2) == 'x' || raw.charAt(i + 2) == 'X';
@@ -1013,8 +1017,9 @@ public class Mime {
                 sb.append(c);
             }
         }
-        if (start != -1)
+        if (start != -1) {
             sb.append(raw.substring(start));
+        }
 
         return sb.toString();
     }
@@ -1022,29 +1027,33 @@ public class Mime {
 
     public static MPartInfo getTextBody(List<MPartInfo> parts, boolean preferHtml) {
         for (MPartInfo mpi : getBody(parts, preferHtml)) {
-            if (mpi.getContentType().startsWith(MimeConstants.CT_TEXT_PREFIX))
+            if (mpi.getContentType().startsWith(MimeConstants.CT_TEXT_PREFIX)) {
                 return mpi;
+            }
         }
         return null;
     }
 
     public static Set<MPartInfo> getBody(List<MPartInfo> parts, boolean preferHtml) {
-         if (parts.isEmpty())
+         if (parts.isEmpty()) {
              return Collections.emptySet();
+         }
 
         Set<MPartInfo> bodies = null;
 
          // if top-level has no children, then it is the body
          MPartInfo top = parts.get(0);
          if (!top.getContentType().startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
-            if (!top.getDisposition().equals(Part.ATTACHMENT))
+            if (!top.getDisposition().equals(Part.ATTACHMENT)) {
                 (bodies = new HashSet<MPartInfo>(1)).add(top);
+            }
         } else {
             bodies = getBodySubparts(top, preferHtml);
         }
 
-        if (bodies == null)
+        if (bodies == null) {
             bodies = Collections.emptySet();
+        }
         return bodies;
     }
 
@@ -1056,12 +1065,13 @@ public class Mime {
     public static String getHeader(MimePart part, String headerName) {
         try {
             String value = part.getHeader(headerName, null);
-            if (value == null || value.length() == 0)
+            if (value == null || value.isEmpty()) {
                 return null;
+            }
+
             try {
                 value = MimeUtility.decodeText(value);
             } catch (UnsupportedEncodingException e) { }
-
             value = MimeUtility.unfold(value);
             return value;
         } catch (MessagingException e) {

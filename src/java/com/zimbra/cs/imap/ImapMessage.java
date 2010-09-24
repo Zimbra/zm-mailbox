@@ -417,7 +417,7 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
 
     private static void nparams(PrintStream ps, MimeCompoundHeader header) {
         boolean first = true;
-        for (Iterator<Map.Entry<String, String>> it = header.getParameterIterator(); it.hasNext(); first = false) {
+        for (Iterator<Map.Entry<String, String>> it = header.parameterIterator(); it.hasNext(); first = false) {
             Map.Entry<String, String> param = it.next();
             ps.print(first ? '(' : ' ');  aSTRING(ps, param.getKey());  ps.write(' ');  nstring2047(ps, param.getValue());
         }
@@ -429,7 +429,7 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
             ps.print("NIL");
         } else {
             ContentDisposition cdisp = new ContentDisposition(disposition);
-            ps.write('(');  astring(ps, cdisp.getValue());
+            ps.write('(');  astring(ps, cdisp.getDisposition());
             ps.write(' ');  nparams(ps, cdisp);
             ps.write(')');
         }
@@ -470,12 +470,12 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
                 queue.removeLast();  pop = true;  continue;
             }
 
-            MPartInfo mpart = level.getFirst();
-            MimePart mp = mpart.getMimePart();
-            boolean hasChildren = mpart.getChildren() != null && !mpart.getChildren().isEmpty();
+            MPartInfo mpi = level.getFirst();
+            MimePart mp = mpi.getMimePart();
+            boolean hasChildren = mpi.getChildren() != null && !mpi.getChildren().isEmpty();
 
             // we used to force unset charsets on text/plain parts to US-ASCII, but that always seemed unwise...
-            ContentType ctype = new ContentType(mp.getHeader("Content-Type", null)).setValue(mpart.getContentType());
+            ContentType ctype = new ContentType(mp.getHeader("Content-Type", null)).setContentType(mpi.getContentType());
             String primary = nATOM(ctype.getPrimaryType()), subtype = nATOM(ctype.getSubType());
 
             if (!pop)
@@ -489,7 +489,7 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
                     if (!hasChildren) {
                         ps.print("NIL");
                     } else {
-                        queue.addLast(new LinkedList<MPartInfo>(mpart.getChildren()));
+                        queue.addLast(new LinkedList<MPartInfo>(mpi.getChildren()));
                         continue;
                     }
                 }
@@ -529,9 +529,9 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
                         if (!hasChildren) {
                             ps.print(" NIL NIL");
                         } else {
-                            MimeMessage mm = (MimeMessage) mpart.getChildren().get(0).getMimePart();
+                            MimeMessage mm = (MimeMessage) mpi.getChildren().get(0).getMimePart();
                             ps.write(' ');  serializeEnvelope(ps, mm);  ps.write(' ');
-                            queue.addLast(new LinkedList<MPartInfo>(mpart.getChildren()));
+                            queue.addLast(new LinkedList<MPartInfo>(mpi.getChildren()));
                             continue;
                         }
                     }

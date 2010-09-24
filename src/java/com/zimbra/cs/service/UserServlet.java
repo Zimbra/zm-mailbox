@@ -597,7 +597,7 @@ public class UserServlet extends ZimbraServlet {
 
             // if no format explicitly specified, try to guess it from the Content-Type header
             if (context.format == null && ctype != null) {
-                String normalizedType = new ContentType(ctype).getValue();
+                String normalizedType = new ContentType(ctype).getContentType();
                 Formatter fmt = mDefaultFormatters.get(normalizedType);
                 if (fmt != null)
                     context.format = fmt.getType();
@@ -1197,7 +1197,7 @@ public class UserServlet extends ZimbraServlet {
                 ContentType ctype = new ContentType(req.getContentType());
                 String contentEncoding = req.getHeader("Content-Encoding");
                 
-                contentType = ctype.getValue();
+                contentType = ctype.getContentType();
                 filename = ctype.getParameter("name");
                 if (filename == null || filename.trim().equals(""))
                     filename = new ContentDisposition(req.getHeader("Content-Disposition")).getParameter("filename");

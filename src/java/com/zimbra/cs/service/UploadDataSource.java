@@ -35,34 +35,31 @@ public class UploadDataSource implements DataSource {
     private Upload mUpload;
     private ContentType mContentType;
 
-	/**
-	 * 
-	 */
-	public UploadDataSource(Upload up) {
-		mUpload = up;
-	}
+    public UploadDataSource(Upload up) {
+        mUpload = up;
+    }
 
     public void setContentType(ContentType ctype) {
         mContentType = ctype;
     }
 
-	public String getContentType() {
-        if (mContentType == null)
-            return new ContentType(mUpload.getContentType()).toString();
-        else
-            return mContentType.toString();
-	}
+    @Override public String getContentType() {
+        if (mContentType == null) {
+            return new ContentType(mUpload.getContentType()).cleanup().toString();
+        } else {
+            return mContentType.cleanup().toString();
+        }
+    }
 
-	public InputStream getInputStream() throws IOException {
-		return mUpload.getInputStream(); 
-	}
+    @Override public InputStream getInputStream() throws IOException {
+        return mUpload.getInputStream();
+    }
 
-	public String getName() {
-		return mUpload.getName();
-	}
+    @Override public String getName() {
+        return mUpload.getName();
+    }
 
-	public OutputStream getOutputStream() {
-		return null;
-	}
-
+    @Override public OutputStream getOutputStream() {
+        return null;
+    }
 }
