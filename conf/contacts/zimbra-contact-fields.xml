@@ -172,9 +172,11 @@ translate the value of into Zimbra tag.
     <format name="thunderbird-csv" type="csv">
         <column name="First Name" field="firstName"/>
         <column name="Last Name" field="lastName"/>
+        <column name="Display Name" field="fullName"/>
         <column name="Nickname" field="nickname"/>
         <column name="Primary Email" field="email"/>
         <column name="Secondary Email" field="email2"/>
+        <column name="Screen Name" field="aimId" /> <!-- custom -->
         <column name="Work Phone" field="workPhone"/>
         <column name="Home Phone" field="homePhone"/>
         <column name="Fax Number" field="workFax"/>
@@ -193,8 +195,8 @@ translate the value of into Zimbra tag.
         <column name="Job Title" field="jobTitle"/>
         <column name="Department" field="department"/>
         <column name="Organization" field="company"/>
-        <column name="Web Page 1" field="homeURL"/>
-        <column name="Web Page 2" field="workURL"/>
+        <column name="Web Page 1" field="workURL"/>
+        <column name="Web Page 2" field="homeURL"/>
         <column name="Birth Month,Birth Day,Birth Year" field="birthday" type="multivalue"/>
         <column name="Custom 1" field="custom1"/>
         <column name="Custom 2" field="custom2"/>
@@ -203,8 +205,584 @@ translate the value of into Zimbra tag.
         <column name="Notes" field="notes"/>
     </format>
 
+    <format name="thunderbird-csv" type="csv" locale="da"> <!-- From da Messenger -->
+        <column name="Fornavn" field="firstName"/>
+        <column name="Efternavn" field="lastName"/>
+        <column name="Vis navn" field="fullName"/>
+        <column name="Alias" field="nickname"/>
+        <column name="Primær mail" field="email"/>
+        <column name="Sekundær mail" field="email2"/>
+        <column name="Skærmnavn" field="aimId"/>
+        <column name="Arbejdstelefon" field="workPhone"/>
+        <column name="Hjemmetelefon" field="homePhone"/>
+        <column name="Faxnummer" field="workFax"/>
+        <column name="Personsøgernummer" field="pager"/>
+        <column name="Mobilnummer" field="mobilePhone"/>
+        <column name="Hjemmeadresse,Hjemmeadresse 2" field="homeStreet" type="multivalue"/>
+        <column name="Hjemmeby" field="homeCity"/>
+        <column name="Hjemmestat" field="homeState"/>
+        <column name="Hjemmepostnummer" field="homePostalCode"/>
+        <column name="Hjemmeland" field="homeCountry"/>
+        <column name="Arbejdsadresse,Arbejdsadresse 2" field="workStreet" type="multivalue"/>
+        <column name="Arbejdsby" field="workCity"/>
+        <column name="Arbejdsstat" field="workState"/>
+        <column name="Arbejdspostnummer" field="workPostalCode"/>
+        <column name="Arbejdsland" field="workCountry"/>
+        <column name="Job titel" field="jobTitle"/>
+        <column name="Afdeling" field="department"/>
+        <column name="Organisation" field="company"/>
+        <column name="Hjemmeside 1" field="workURL"/>
+        <column name="Hjemmeside 2" field="homeURL"/>
+        <column name="Fødselsmåned,Fødselsdag,Fødselsår" field="birthday" type="multivalue"/>
+        <column name="Brugerdef. 1" field="custom1"/>
+        <column name="Brugerdef. 2" field="custom2"/>
+        <column name="Brugerdef. 3" field="custom3"/>
+        <column name="Brugerdef. 4" field="custom4"/>
+        <column name="Notater" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="de">
+        <column name="Vorname" field="firstName"/>
+        <column name="Nachname" field="lastName"/>
+        <column name="Anzeigename" field="fullName"/>
+        <column name="Spitzname" field="nickname"/>
+        <column name="Primäre E-Mail" field="email"/>
+        <column name="Sekundäre E-Mail" field="email2"/>
+        <column name="Anzeigename" field="aimId"/>
+        <column name="Tel. dienstlich" field="workPhone"/>
+        <column name="Tel. privat" field="homePhone"/>
+        <column name="Fax-Nummer" field="workFax"/>
+        <column name="Pager-Nummer" field="pager"/>
+        <column name="Mobil-Tel.-Nr." field="mobilePhone"/>
+        <column name="Privat: Adresse,Privat: Adresse 2" field="homeStreet" type="multivalue"/>
+        <column name="Privat: Ort" field="homeCity"/>
+        <column name="Privat: Bundesland" field="homeState"/>
+        <column name="Privat: PLZ" field="homePostalCode"/>
+        <column name="Privat: Land" field="homeCountry"/>
+        <column name="Dienstlich: Adresse,Dienstlich: Adresse 2" field="workStreet" type="multivalue"/>
+        <column name="Dienstlich: Ort" field="workCity"/>
+        <column name="Dienstlich: Bundesland" field="workState"/>
+        <column name="Dienstlich: PLZ" field="workPostalCode"/>
+        <column name="Dienstlich: Land" field="workCountry"/>
+        <column name="Arbeitstitel" field="jobTitle"/>
+        <column name="Abteilung" field="department"/>
+        <column name="Organisation" field="company"/>
+        <column name="Web-Seite 1" field="workURL"/>
+        <column name="Web-Seite 2" field="homeURL"/>
+        <column name="Geburtsmonat,Geburtstag,Geburtsjahr" field="birthday" type="multivalue"/>
+        <column name="Benutzerdef. 1" field="custom1"/>
+        <column name="Benutzerdef. 2" field="custom2"/>
+        <column name="Benutzerdef. 3" field="custom3"/>
+        <column name="Benutzerdef. 4" field="custom4"/>
+        <column name="Notizen" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="en_GB">
+        <column name="First Name" field="firstName"/>
+        <column name="Last Name" field="lastName"/>
+        <column name="Display Name" field="fullName"/>
+        <column name="Nickname" field="nickname"/>
+        <column name="Primary Email" field="email"/>
+        <column name="Secondary Email" field="email2"/>
+        <column name="Screen Name" field="aimId"/>
+        <column name="Work Phone" field="workPhone"/>
+        <column name="Home Phone" field="homePhone"/>
+        <column name="Fax Number" field="workFax"/>
+        <column name="Pager Number" field="pager"/>
+        <column name="Mobile Number" field="mobilePhone"/>
+        <column name="Home Address,Home Address 2" field="homeStreet" type="multivalue"/>
+        <column name="Home City" field="homeCity"/>
+        <column name="Home County" field="homeState"/>
+        <column name="Home Post Code" field="homePostalCode"/>
+        <column name="Home Country" field="homeCountry"/>
+        <column name="Work Address,Work Address 2" field="workStreet" type="multivalue"/>
+        <column name="Work City" field="workCity"/>
+        <column name="Work County" field="workState"/>
+        <column name="Work Post Code" field="workPostalCode"/>
+        <column name="Work Country" field="workCountry"/>
+        <column name="Job Title" field="jobTitle"/>
+        <column name="Department" field="department"/>
+        <column name="Organisation" field="company"/>
+        <column name="Web Page 1" field="workURL"/>
+        <column name="Web Page 2" field="homeURL"/>
+        <column name="Birth Month,Birth Day,Birth Year" field="birthday" type="multivalue"/>
+        <column name="Custom 1" field="custom1"/>
+        <column name="Custom 2" field="custom2"/>
+        <column name="Custom 3" field="custom3"/>
+        <column name="Custom 4" field="custom4"/>
+        <column name="Notes" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="es_ES">
+        <column name="Nombre" field="firstName"/>
+        <column name="Apellidos" field="lastName"/>
+        <column name="Nombre mostrado" field="fullName"/>
+        <column name="Apodo" field="nickname"/>
+        <column name="Dirección de correo electrónico principal" field="email"/>
+        <column name="Dirección de correo electrónico secundaria" field="email2"/>
+        <column name="Nombre en pantalla" field="aimId"/>
+        <column name="Teléfono (Trabajo)" field="workPhone"/>
+        <column name="Teléfono particular" field="homePhone"/>
+        <column name="Fax" field="workFax"/>
+        <column name="Buscapersonas" field="pager"/>
+        <column name="Teléfono móvil" field="mobilePhone"/>
+        <column name="Dirección personal,Dirección personal 2" field="homeStreet" type="multivalue"/>
+        <column name="Ciudad donde vive" field="homeCity"/>
+        <column name="Provincia" field="homeState"/>
+        <column name="Código postal" field="homePostalCode"/>
+        <column name="País de residencia" field="homeCountry"/>
+        <column name="Dirección de trabajo,Dirección de trabajo 2" field="workStreet" type="multivalue"/>
+        <column name="Ciudad (Trabajo)" field="workCity"/>
+        <column name="Provincia (Trabajo)" field="workState"/>
+        <column name="Código postal (Trabajo)" field="workPostalCode"/>
+        <column name="País (Trabajo)" field="workCountry"/>
+        <column name="Puesto" field="jobTitle"/>
+        <column name="Departamento" field="department"/>
+        <column name="Organización" field="company"/>
+        <column name="Página web 1" field="workURL"/>
+        <column name="Página web 2" field="homeURL"/>
+        <column name="Mes de nacimiento,Día de nacimiento,Año de nacimiento" field="birthday" type="multivalue"/>
+        <column name="Personalizado 1" field="custom1"/>
+        <column name="Personalizado 2" field="custom2"/>
+        <column name="Personalizado 3" field="custom3"/>
+        <column name="Personalizado 4" field="custom4"/>
+        <column name="Notas" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="fr">
+        <column name="Prénom" field="firstName"/>
+        <column name="Nom de famille" field="lastName"/>
+        <column name="Nom à afficher" field="fullName"/>
+        <column name="Surnom" field="nickname"/>
+        <column name="Adresse électronique principale" field="email"/>
+        <column name="Adresse électronique secondaire" field="email2"/>
+        <column name="Nom de l'écran" field="aimId"/>
+        <column name="Tél. professionnel" field="workPhone"/>
+        <column name="Tél. personnel" field="homePhone"/>
+        <column name="Fax" field="workFax"/>
+        <column name="Pager" field="pager"/>
+        <column name="Portable" field="mobilePhone"/>
+        <column name="Adresse privée,Adresse privée 2" field="homeStreet" type="multivalue"/>
+        <column name="Ville" field="homeCity"/>
+        <column name="Pays/État" field="homeState"/>
+        <column name="Code postal" field="homePostalCode"/>
+        <column name="Région" field="homeCountry"/>
+        <column name="Adresse professionnelle,Adresse professionnelle 2" field="workStreet" type="multivalue"/>
+        <column name="Ville" field="workCity"/>
+        <column name="Pays/État" field="workState"/>
+        <column name="Code postal" field="workPostalCode"/>
+        <column name="Région" field="workCountry"/>
+        <column name="Profession" field="jobTitle"/>
+        <column name="Service" field="department"/>
+        <column name="Société" field="company"/>
+        <column name="Site Web 1" field="workURL"/>
+        <column name="Site Web 2" field="homeURL"/>
+        <column name="Mois,Jour,Année de naissance" field="birthday" type="multivalue"/>
+        <column name="Divers 1" field="custom1"/>
+        <column name="Divers 2" field="custom2"/>
+        <column name="Divers 3" field="custom3"/>
+        <column name="Divers 4" field="custom4"/>
+        <column name="Notes" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="hi"> <!-- From hi Messenger -->
+        <column name="पहला नाम" field="firstName"/>
+        <column name="अंतिम नाम" field="lastName"/>
+        <column name="प्रदर्शन नाम" field="fullName"/>
+        <column name="उपनाम" field="nickname"/>
+        <column name="प्राथमिक मेल" field="email"/>
+        <column name="द्वितीयक मेल" field="email2"/>
+        <column name="Screen Name" field="aimId"/>
+        <column name="फोन कार्यालय" field="workPhone"/>
+        <column name="फोन आवास" field="homePhone"/>
+        <column name="फैक्स" field="workFax"/>
+        <column name="पेजर संख्या" field="pager"/>
+        <column name="मोबाइल नंबर" field="mobilePhone"/>
+        <column name="पता आवास,पता आवास 2" field="homeStreet" type="multivalue"/>
+        <column name="गृह नगर" field="homeCity"/>
+        <column name="गृह राज्य" field="homeState"/>
+        <column name="गृह जिपकोड" field="homePostalCode"/>
+        <column name="गृह देश" field="homeCountry"/>
+        <column name="पता कार्यालय,पता कार्यालय 2" field="workStreet" type="multivalue"/>
+        <column name="कार्यालय शहर" field="workCity"/>
+        <column name="कार्यालय राज्य" field="workState"/>
+        <column name="कार्यालय जिपकोड" field="workPostalCode"/>
+        <column name="कार्यालय देश" field="workCountry"/>
+        <column name="पदनाम" field="jobTitle"/>
+        <column name="विभाग" field="department"/>
+        <column name="संगठन" field="company"/>
+        <column name="वेबपेज 1" field="workURL"/>
+        <column name="वेबपेज 2" field="homeURL"/>
+        <column name="जन्म माह,जन्म दिन,जन्म साल" field="birthday" type="multivalue"/>
+        <column name="मनपसंद 1" field="custom1"/>
+        <column name="मनपसंद 2" field="custom2"/>
+        <column name="मनपसंद 3" field="custom3"/>
+        <column name="मनपसंद 4" field="custom4"/>
+        <column name="टिप्पणी" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="it">
+        <column name="Nome" field="firstName"/>
+        <column name="Cognome" field="lastName"/>
+        <column name="Nome visualizzato" field="fullName"/>
+        <column name="Soprannome" field="nickname"/>
+        <column name="E-mail primaria" field="email"/>
+        <column name="E-mail secondaria" field="email2"/>
+        <column name="Nome Instant Messenger" field="aimId"/>
+        <column name="Telefono ufficio" field="workPhone"/>
+        <column name="Telefono casa" field="homePhone"/>
+        <column name="Numero fax" field="workFax"/>
+        <column name="Numero cercapersone" field="pager"/>
+        <column name="Numero cellulare" field="mobilePhone"/>
+        <column name="Indirizzo di casa,Indirizzo di casa 2" field="homeStreet" type="multivalue"/>
+        <column name="Città di residenza" field="homeCity"/>
+        <column name="Provincia di residenza" field="homeState"/>
+        <column name="CAP di residenza" field="homePostalCode"/>
+        <column name="Nazione di residenza" field="homeCountry"/>
+        <column name="Indirizzo di lavoro,Indirizzo di lavoro 2" field="workStreet" type="multivalue"/>
+        <column name="Città di lavoro" field="workCity"/>
+        <column name="Provincia di lavoro" field="workState"/>
+        <column name="CAP di lavoro" field="workPostalCode"/>
+        <column name="Nazione di lavoro" field="workCountry"/>
+        <column name="Qualifica" field="jobTitle"/>
+        <column name="Reparto" field="department"/>
+        <column name="Organizzazione" field="company"/>
+        <column name="Pagina web 1" field="workURL"/>
+        <column name="Pagina web 2" field="homeURL"/>
+        <column name="Mese di nascita,Giorno di nascita,Anno di nascita" field="birthday" type="multivalue"/>
+        <column name="Personalizzato 1" field="custom1"/>
+        <column name="Personalizzato 2" field="custom2"/>
+        <column name="Personalizzato 3" field="custom3"/>
+        <column name="Personalizzato 4" field="custom4"/>
+        <column name="Note" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="ja">
+        <column name="名" field="firstName"/>
+        <column name="姓" field="lastName"/>
+        <column name="表示名" field="fullName"/>
+        <column name="ニックネーム" field="nickname"/>
+        <column name="メールアドレス" field="email"/>
+        <column name="別のメールアドレス" field="email2"/>
+        <column name="スクリーンネーム" field="aimId"/>
+        <column name="勤務先の電話番号" field="workPhone"/>
+        <column name="自宅の電話番号" field="homePhone"/>
+        <column name="FAX 番号" field="workFax"/>
+        <column name="ポケットベル番号" field="pager"/>
+        <column name="携帯電話番号" field="mobilePhone"/>
+        <column name="番地 (自宅),番地 (自宅) 2" field="homeStreet" type="multivalue"/>
+        <column name="市区町村 (自宅)" field="homeCity"/>
+        <column name="郵便番号 (自宅)" field="homeState"/>
+        <column name="郵便番号 (自宅)" field="homePostalCode"/>
+        <column name="国 (自宅)" field="homeCountry"/>
+        <column name="番地 (勤務先),番地 (勤務先) 2" field="workStreet" type="multivalue"/>
+        <column name="市区町村 (勤務先)" field="workCity"/>
+        <column name="都道府県 (勤務先)" field="workState"/>
+        <column name="郵便番号 (勤務先)" field="workPostalCode"/>
+        <column name="国 (勤務先)" field="workCountry"/>
+        <column name="役職" field="jobTitle"/>
+        <column name="部門" field="department"/>
+        <column name="組織" field="company"/>
+        <column name="Web ページ 1" field="workURL"/>
+        <column name="Web ページ 2" field="homeURL"/>
+        <column name="誕生月,誕生日,誕生年" field="birthday" type="multivalue"/>
+        <column name="追加情報 1" field="custom1"/>
+        <column name="追加情報 2" field="custom2"/>
+        <column name="追加情報 3" field="custom3"/>
+        <column name="追加情報 4" field="custom4"/>
+        <column name="メモ" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="ko"> <!-- From zh-TW Messenger -->
+        <column name="이름" field="firstName"/>
+        <column name="성" field="lastName"/>
+        <column name="표시명" field="fullName"/>
+        <column name="애칭" field="nickname"/>
+        <column name="기본 메일" field="email"/>
+        <column name="추가 메일" field="email2"/>
+        <column name="Screen 아이디" field="aimId"/>
+        <column name="직장 전화" field="workPhone"/>
+        <column name="자택 전화" field="homePhone"/>
+        <column name="팩스" field="workFax"/>
+        <column name="호출기" field="pager"/>
+        <column name="휴대폰" field="mobilePhone"/>
+        <column name="자택 주소1,자택 주소2" field="homeStreet" type="multivalue"/>
+        <column name="구/군" field="homeCity"/>
+        <column name="시/도" field="homeState"/>
+        <column name="우편번호" field="homePostalCode"/>
+        <column name="국가" field="homeCountry"/>
+        <column name="직장 주소1,직장 주소2" field="workStreet" type="multivalue"/>
+        <column name="구/군" field="workCity"/>
+        <column name="시/도" field="workState"/>
+        <column name="우편번호" field="workPostalCode"/>
+        <column name="국가" field="workCountry"/>
+        <column name="직위" field="jobTitle"/>
+        <column name="부서" field="department"/>
+        <column name="회사명" field="company"/>
+        <column name="웹 페이지1" field="workURL"/>
+        <column name="웹 페이지2" field="homeURL"/>
+        <column name="태어난 달,생일,태어난 해" field="birthday" type="multivalue"/>
+        <column name="사용자 정의1" field="custom1"/>
+        <column name="사용자 정의2" field="custom2"/>
+        <column name="사용자 정의3" field="custom3"/>
+        <column name="사용자 정의4" field="custom4"/>
+        <column name="메모" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="nl">
+        <column name="Voornaam" field="firstName"/>
+        <column name="Achternaam" field="lastName"/>
+        <column name="Weergavenaam" field="fullName"/>
+        <column name="Bijnaam" field="nickname"/>
+        <column name="Eerste e-mail" field="email"/>
+        <column name="Tweede e-mail" field="email2"/>
+        <column name="Schermnaam" field="aimId"/>
+        <column name="Telefoon werk" field="workPhone"/>
+        <column name="Telefoon thuis" field="homePhone"/>
+        <column name="Faxnummer" field="workFax"/>
+        <column name="Piepernummer" field="pager"/>
+        <column name="Mobiel nummer" field="mobilePhone"/>
+        <column name="Adres,Adres 2" field="homeStreet" type="multivalue"/>
+        <column name="Woonplaats" field="homeCity"/>
+        <column name="Provincie" field="homeState"/>
+        <column name="Postcode" field="homePostalCode"/>
+        <column name="Land" field="homeCountry"/>
+        <column name="Werkadres,Werkadres 2" field="workStreet" type="multivalue"/>
+        <column name="Werklocatie" field="workCity"/>
+        <column name="Werkprovincie" field="workState"/>
+        <column name="Werkpostcode" field="workPostalCode"/>
+        <column name="Werkland" field="workCountry"/>
+        <column name="Werkfunctie" field="jobTitle"/>
+        <column name="Afdeling" field="department"/>
+        <column name="Organisatie" field="company"/>
+        <column name="Webpagina 1" field="workURL"/>
+        <column name="Webpagina 2" field="homeURL"/>
+        <column name="Geboortemaand,Geboortedag,Geboortejaar" field="birthday" type="multivalue"/>
+        <column name="Overig 1" field="custom1"/>
+        <column name="Overig 2" field="custom2"/>
+        <column name="Overig 3" field="custom3"/>
+        <column name="Overig 4" field="custom4"/>
+        <column name="Aantekeningen" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="pl">
+        <column name="Imię" field="firstName"/>
+        <column name="Nazwisko" field="lastName"/>
+        <column name="Wyświetlana nazwa" field="fullName"/>
+        <column name="Pseudonim" field="nickname"/>
+        <column name="Podstawowy e-mail" field="email"/>
+        <column name="Dodatkowy e-mail" field="email2"/>
+        <column name="Komunikator AIM" field="aimId"/>
+        <column name="Telefonu służbowy" field="workPhone"/>
+        <column name="Telefon domowy" field="homePhone"/>
+        <column name="Numer faksu" field="workFax"/>
+        <column name="Pager" field="pager"/>
+        <column name="Numer telefonu komórkowego" field="mobilePhone"/>
+        <column name="Adres domowy,Adres domowy 2" field="homeStreet" type="multivalue"/>
+        <column name="Miasto (dom)" field="homeCity"/>
+        <column name="Województwo (dom)" field="homeState"/>
+        <column name="Kod pocztowy (dom)" field="homePostalCode"/>
+        <column name="Państwo (dom)" field="homeCountry"/>
+        <column name="Adres służbowy,Adres służbowy 2" field="workStreet" type="multivalue"/>
+        <column name="Miasto (praca)" field="workCity"/>
+        <column name="Województwo (praca)" field="workState"/>
+        <column name="Kod pocztowy (praca)" field="workPostalCode"/>
+        <column name="Państwo (praca)" field="workCountry"/>
+        <column name="Stanowisko" field="jobTitle"/>
+        <column name="Departament" field="department"/>
+        <column name="Firma/Organizacja" field="company"/>
+        <column name="Strona WWW 1" field="workURL"/>
+        <column name="Strona WWW 2" field="homeURL"/>
+        <column name="Urodziny - Miesiąc,Urodziny - Dzień,Urodziny - Rok" field="birthday" type="multivalue"/>
+        <column name="Informacja 1" field="custom1"/>
+        <column name="Informacja 2" field="custom2"/>
+        <column name="Informacja 3" field="custom3"/>
+        <column name="Informacja 4" field="custom4"/>
+        <column name="Notatki" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="pt_BR">
+        <column name="Primeiro nome" field="firstName"/>
+        <column name="Sobrenome" field="lastName"/>
+        <column name="Apresentar como" field="fullName"/>
+        <column name="Apelido" field="nickname"/>
+        <column name="Email primário" field="email"/>
+        <column name="Email secundário" field="email2"/>
+        <column name="Nome de tela" field="aimId"/>
+        <column name="Telefone comercial" field="workPhone"/>
+        <column name="Telefone residencial" field="homePhone"/>
+        <column name="Número do fax" field="workFax"/>
+        <column name="Número do pager" field="pager"/>
+        <column name="Número celular" field="mobilePhone"/>
+        <column name="Endereço,Endereço 2" field="homeStreet" type="multivalue"/>
+        <column name="Cidade" field="homeCity"/>
+        <column name="Estado" field="homeState"/>
+        <column name="CEP" field="homePostalCode"/>
+        <column name="País" field="homeCountry"/>
+        <column name="Endereço de trabalho,Endereço de trabalho 2" field="workStreet" type="multivalue"/>
+        <column name="Cidade de trabalho" field="workCity"/>
+        <column name="Estado de trabalho" field="workState"/>
+        <column name="CEP de trabalho" field="workPostalCode"/>
+        <column name="País de trabalho" field="workCountry"/>
+        <column name="Cargo" field="jobTitle"/>
+        <column name="Setor" field="department"/>
+        <column name="Empresa" field="company"/>
+        <column name="Página da web 1" field="workURL"/>
+        <column name="Página da web 2" field="homeURL"/>
+        <column name="Mês de nascimento,Nascimento,Ano de nascimento" field="birthday" type="multivalue"/>
+        <column name="Personalizado 1" field="custom1"/>
+        <column name="Personalizado 2" field="custom2"/>
+        <column name="Personalizado 3" field="custom3"/>
+        <column name="Personalizado 4" field="custom4"/>
+        <column name="Observações" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="ru">
+        <column name="Имя" field="firstName"/>
+        <column name="Фамилия" field="lastName"/>
+        <column name="Отображаемое имя" field="fullName"/>
+        <column name="Псевдоним" field="nickname"/>
+        <column name="Адрес электронной почты" field="email"/>
+        <column name="Альтернативный адрес электронной почты" field="email2"/>
+        <column name="Интернет-пейджер" field="aimId"/>
+        <column name="Рабочий телефон" field="workPhone"/>
+        <column name="Домашний телефон" field="homePhone"/>
+        <column name="Номер факса" field="workFax"/>
+        <column name="Номер пейджера" field="pager"/>
+        <column name="Номер сотового телефона" field="mobilePhone"/>
+        <column name="Адрес,Адрес 2" field="homeStreet" type="multivalue"/>
+        <column name="Город" field="homeCity"/>
+        <column name="Штат" field="homeState"/>
+        <column name="Почтовый индекс" field="homePostalCode"/>
+        <column name="Страна" field="homeCountry"/>
+        <column name="Адрес (раб.),Адрес 2 (раб.)" field="workStreet" type="multivalue"/>
+        <column name="Город (раб.)" field="workCity"/>
+        <column name="Штат (раб.)" field="workState"/>
+        <column name="Почтовый индекс (раб.)" field="workPostalCode"/>
+        <column name="Страна (раб.)" field="workCountry"/>
+        <column name="Должность" field="jobTitle"/>
+        <column name="Отдел" field="department"/>
+        <column name="Организация" field="company"/>
+        <column name="Веб-страница 1" field="workURL"/>
+        <column name="Веб-страница 2" field="homeURL"/>
+        <column name="Месяц рождения,День рождения,Год рождения" field="birthday" type="multivalue"/>
+        <column name="Прочее 1" field="custom1"/>
+        <column name="Прочее 2" field="custom2"/>
+        <column name="Прочее 3" field="custom3"/>
+        <column name="Прочее 4" field="custom4"/>
+        <column name="Заметки" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="sv">   <!-- From sv-SE -->
+        <column name="Förnamn" field="firstName"/>
+        <column name="Efternamn" field="lastName"/>
+        <column name="Kortnamn" field="fullName"/>
+        <column name="Smeknamn" field="nickname"/>
+        <column name="E-postadress" field="email"/>
+        <column name="Annan e-post" field="email2"/>
+        <column name="Skärmnamn" field="aimId"/>
+        <column name="Telefon arbete" field="workPhone"/>
+        <column name="Telefon hem" field="homePhone"/>
+        <column name="Faxnummer" field="workFax"/>
+        <column name="Personsökare" field="pager"/>
+        <column name="Mobiltelefon" field="mobilePhone"/>
+        <column name="Hemadress (rad 1),Hemadress (rad 2)" field="homeStreet" type="multivalue"/>
+        <column name="Hemort" field="homeCity"/>
+        <column name="(Delstat)" field="homeState"/>
+        <column name="Postnummer" field="homePostalCode"/>
+        <column name="Land" field="homeCountry"/>
+        <column name="Adress arbete (rad 1),Adress arbete (rad 2)" field="workStreet" type="multivalue"/>
+        <column name="Ort arbete" field="workCity"/>
+        <column name="(Delstat) arbete" field="workState"/>
+        <column name="Postnummer arbete" field="workPostalCode"/>
+        <column name="Land arbete" field="workCountry"/>
+        <column name="Titel" field="jobTitle"/>
+        <column name="Avdelning" field="department"/>
+        <column name="Företag" field="company"/>
+        <column name="Hemsida 1" field="workURL"/>
+        <column name="Hemsida 2" field="homeURL"/>
+        <column name="Födelsemånad,Födelsedatum,Födelseår" field="birthday" type="multivalue"/>
+        <column name="Annan uppgift 1" field="custom1"/>
+        <column name="Annan uppgift 2" field="custom2"/>
+        <column name="Annan uppgift 3" field="custom3"/>
+        <column name="Annan uppgift 4" field="custom4"/>
+        <column name="Anteckningar" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="zh_CN">
+        <column name="名字" field="firstName"/>
+        <column name="姓氏" field="lastName"/>
+        <column name="显示名称" field="fullName"/>
+        <column name="呢称" field="nickname"/>
+        <column name="主要电子邮件" field="email"/>
+        <column name="备用电子邮件" field="email2"/>
+        <column name="显示名" field="aimId"/>
+        <column name="工作电话" field="workPhone"/>
+        <column name="家庭电话" field="homePhone"/>
+        <column name="传真号码" field="workFax"/>
+        <column name="寻呼机号码" field="pager"/>
+        <column name="移动电话号码" field="mobilePhone"/>
+        <column name="家庭地址,家庭地址 2" field="homeStreet" type="multivalue"/>
+        <column name="城市" field="homeCity"/>
+        <column name="省/自治区/直辖市" field="homeState"/>
+        <column name="邮政编码" field="homePostalCode"/>
+        <column name="国家" field="homeCountry"/>
+        <column name="工作地址,工作地址 2" field="workStreet" type="multivalue"/>
+        <column name="城市" field="workCity"/>
+        <column name="省/自治区/直辖市" field="workState"/>
+        <column name="邮政编码" field="workPostalCode"/>
+        <column name="国家" field="workCountry"/>
+        <column name="职务" field="jobTitle"/>
+        <column name="部门" field="department"/>
+        <column name="组织" field="company"/>
+        <column name="网页 1" field="workURL"/>
+        <column name="网页 2" field="homeURL"/>
+        <column name="出生月份,出生日,出生年份" field="birthday" type="multivalue"/>
+        <column name="定制 1" field="custom1"/>
+        <column name="定制 2" field="custom2"/>
+        <column name="定制 3" field="custom3"/>
+        <column name="定制 4" field="custom4"/>
+        <column name="注释" field="notes"/>
+    </format>
+
+    <format name="thunderbird-csv" type="csv" locale="zh_HK"> <!-- From zh-TW Messenger -->
+        <column name="名" field="firstName"/>
+        <column name="姓" field="lastName"/>
+        <column name="顯示名稱" field="fullName"/>
+        <column name="暱稱" field="nickname"/>
+        <column name="主要 Email" field="email"/>
+        <column name="次要 Email" field="email2"/>
+        <column name="網路代號" field="aimId"/>
+        <column name="商務電話" field="workPhone"/>
+        <column name="住家電話" field="homePhone"/>
+        <column name="傳真號碼" field="workFax"/>
+        <column name="呼叫器號碼" field="pager"/>
+        <column name="手機號碼" field="mobilePhone"/>
+        <column name="住家住址,住家住址 2" field="homeStreet" type="multivalue"/>
+        <column name="居住縣市" field="homeCity"/>
+        <column name="居住市鎮" field="homeState"/>
+        <column name="住址郵遞區號" field="homePostalCode"/>
+        <column name="居住國家" field="homeCountry"/>
+        <column name="商務地址,商務地址 2" field="workStreet" type="multivalue"/>
+        <column name="商務縣市" field="workCity"/>
+        <column name="商務省市" field="workState"/>
+        <column name="商務郵遞區號" field="workPostalCode"/>
+        <column name="商務國家" field="workCountry"/>
+        <column name="職稱" field="jobTitle"/>
+        <column name="部門" field="department"/>
+        <column name="公司" field="company"/>
+        <column name="網頁 1" field="workURL"/>
+        <column name="網頁 2" field="homeURL"/>
+        <column name="生日 (月),生日 (日),生日 (年)" field="birthday" type="multivalue"/>
+        <column name="自訂 1" field="custom1"/>
+        <column name="自訂 2" field="custom2"/>
+        <column name="自訂 3" field="custom3"/>
+        <column name="自訂 4" field="custom4"/>
+        <column name="註解" field="notes"/>
+    </format>
+
     <format name="outlook-2000-csv" type="csv">
-        <column name="Title" field="jobTitle"/>
+        <column name="Title" field="namePrefix"/>
         <column name="First Name" field="firstName"/>
         <column name="Middle Name" field="middleName"/>
         <column name="Last Name" field="lastName"/>
@@ -290,7 +868,7 @@ translate the value of into Zimbra tag.
     </format>
 
     <format name="outlook-2003-csv" type="csv">
-        <column name="Title" field="jobTitle"/>
+        <column name="Title" field="namePrefix"/>
         <column name="First Name" field="firstName"/>
         <column name="Middle Name" field="middleName"/>
         <column name="Last Name" field="lastName"/>
@@ -382,7 +960,7 @@ translate the value of into Zimbra tag.
     </format>
 
     <format name="outlook-unknown-csv" type="csv">
-        <column name="Title" field="jobTitle"/>
+        <column name="Title" field="namePrefix"/>
         <column name="FirstName" field="firstName"/>
         <column name="MiddleName" field="middleName"/>
         <column name="LastName" field="lastName"/>
