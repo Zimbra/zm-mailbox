@@ -111,7 +111,7 @@ public class TestDocument extends TestCase {
             true, 1);
         String content = "<wiklet class='TOC' format=\"template\" bodyTemplate=\"_TocBodyTemplate\" itemTemplate=\"_TocItemTemplate\">abc</wiklet>";
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        WikiItem wiki = mbox.createWiki(null, Mailbox.ID_FOLDER_NOTEBOOK, NAME_PREFIX + "-testCompressedVolume",
+        WikiItem wiki = mbox.createWiki(null, Mailbox.ID_FOLDER_BRIEFCASE, NAME_PREFIX + "-testCompressedVolume",
             "Unit Test", null, new ByteArrayInputStream(content.getBytes()));
         assertEquals("abc", wiki.getFragment());
     }
