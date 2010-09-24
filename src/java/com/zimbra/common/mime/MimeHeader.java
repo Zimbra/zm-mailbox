@@ -19,9 +19,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
 
+import com.zimbra.common.mime.HeaderUtils.ByteBuilder;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -39,38 +38,65 @@ public class MimeHeader {
      *                encoding intact.
      * @param start   The position within <code>content</code> where the header
      *                field value begins (after the ":"/": "). */
-    MimeHeader(String name, byte[] content, int start) {
-        mName = name;  mContent = content;  mValueStart = start;
+    MimeHeader(final String name, final byte[] content, final int start) {
+        mName = name;
+        mContent = content;
+        mValueStart = start;
     }
 
-    /** Constructor for new header lines.  Header will be serialized as
-     *  <tt>{name}: {value}CRLF</tt>.  <i>Note: No folding is done at
+    /** Creates a {@code MimeHeader} from another {@code MimeHeader}. */
+    MimeHeader(final MimeHeader header) {
+        mName = header.mName;
+        mContent = header.getRawHeader();
+        mValueStart = header.mValueStart;
+        mCharset = header.mCharset;
+    }
+
+    /** Creates a new {@code MimeHeader} with {@code value} as the field value.
+     *  Header will be serialized as <tt>{name}: {encoded-value}CRLF</tt> after
+     *  appropriate RFC 2047 encoded-word encoding and RFC 5322 line folding
+     *  has been performed.  When generating encoded-words, <tt>utf-8</tt> will
+     *  be used as the encoding charset.  <i>Note: No line folding is done at
      *  present.</i> */
-    MimeHeader(String name, String value) {
+    MimeHeader(final String name, final String value) {
         this(name, value, null);
     }
 
-    MimeHeader(String name, String value, String charset) {
+    /** Creates a new {@code MimeHeader} with {@code value} as the field value.
+     *  Header will be serialized as <tt>{name}: {encoded-value}CRLF</tt> after
+     *  appropriate RFC 2047 encoded-word encoding and RFC 5322 line folding
+     *  has been performed.  When generating encoded-words, {@code encodingCharset}
+     *  will be used as the encoding charset if possible, defaulting back to
+     *  <tt>utf-8</tt>.  <i>Note: No line folding is done at present.</i> */
+    MimeHeader(final String name, final String value, final String encodingCharset) {
         mName = name;
-        if (charset != null && !charset.equals("")) {
-            mCharset = charset;
+        if (encodingCharset != null && !encodingCharset.equals("")) {
+            mCharset = encodingCharset;
         }
         updateContent(escape(value, mCharset, false).getBytes());
     }
 
-    MimeHeader(String name, byte[] bvalue) {
+    /** Creates a new {@code MimeHeader} serialized as "<tt>{name}:
+     *  {bvalue}CRLF</tt>".  {@code bvalue} is copied verbatim; no charset
+     *  transforms, encoded-word handling, or folding is performed. */
+    MimeHeader(final String name, final byte[] bvalue) {
         mName = name;
         updateContent(bvalue);
     }
 
-    MimeHeader updateContent(byte[] bvalue) {
+
+    /** Reserializes the {@code MimeHeader}, using {@code bvalue} as the
+     *  field value (the bit after the '<tt>:</tt>').  {@code bvalue} is
+     *  copied verbatim; no charset transforms, encoded-word handling, or
+     *  folding is performed.*/ 
+    MimeHeader updateContent(final byte[] bvalue) {
         byte[] bname = mName.getBytes();
         int nlen = bname.length, vlen = bvalue == null ? 0 : bvalue.length;
         int csize = nlen + vlen + 4;
 
         byte[] content = new byte[csize];
         System.arraycopy(bname, 0, content, 0, nlen);
-        content[nlen] = ':';  content[nlen + 1]= ' ';
+        content[nlen] = ':';  content[nlen + 1] = ' ';
         if (bvalue != null) {
             System.arraycopy(bvalue, 0, content, nlen + 2, vlen);
         }
@@ -80,22 +106,22 @@ public class MimeHeader {
         return this;
     }
 
-    MimeHeader(String name, MimeCompoundHeader mch) {
-        mName = name;
-        mContent = (mch.toString(name) + "\r\n").getBytes();
-        mValueStart = mName.length() + 2;
-    }
-
+    /** Returns this header's field name (the bit before the '<tt>:</tt>' in
+     *  the header line). */
     public String getName() {
         return mName;
     }
 
+    /** Returns the entire header line (including the field name and the
+     *  '<tt>:</tt>') as a raw byte array. */
     public byte[] getRawHeader() {
         reserialize();
         return mContent;
     }
 
-    public String getValue(String charset) {
+    /** Returns the header's value (the bit after the '<tt>:</tt>') after all
+     *  unfolding and decoding of RFC 2047 encoded-words has been performed. */
+    public String getValue(final String charset) {
         reserialize();
         int end = mContent.length, c;
         while (end > mValueStart && ((c = mContent[end-1]) == '\n' || c == '\r')) {
@@ -104,28 +130,67 @@ public class MimeHeader {
         return decode(mContent, mValueStart, end - mValueStart, charset);
     }
 
+    /** Returns the header's value (the bit after the '<tt>:</tt>') as a
+     *  {@code String} with no line folding.  No decoding is performed other
+     *  than removing said line folding. */
     public String getEncoded() {
         reserialize();
+        try {
+            if (mCharset != null && !mCharset.isEmpty()) {
+                return unfold(new String(mContent, mValueStart, mContent.length - mValueStart, mCharset));
+            }
+        } catch (UnsupportedEncodingException e) {
+        }
         return unfold(new String(mContent, mValueStart, mContent.length - mValueStart));
     }
 
-    public String getEncoded(String charset) {
-        if (charset == null || charset.equals("")) {
-            return getEncoded();
-        }
+    /** Returns the header's value (the bit after the '<tt>:</tt>') as a
+     *  {@code String}.  No decoding is performed other than removing the
+     *  trailing CRLF. */
+    @Override public String toString() {
         reserialize();
-        try {
-            return unfold(new String(mContent, mValueStart, mContent.length - mValueStart, charset));
-        } catch (UnsupportedEncodingException e) {
-            return getEncoded();
+        int end = mContent.length, c;
+        while (end > mValueStart && ((c = mContent[end-1]) == '\n' || c == '\r')) {
+            end--;
         }
+        try {
+            if (mCharset != null && !mCharset.isEmpty()) {
+                return new String(mContent, mValueStart, end - mValueStart, mCharset);
+            }
+        } catch (UnsupportedEncodingException e) {
+        }
+        return new String(mContent, mValueStart, end - mValueStart);
     }
 
+    /** Marks the header as "dirty" and requiring reserialization.  To enforce
+     *  this reserialization requirement, unsets {@link #mContent}. */
+    protected void markDirty() {
+        mContent = null;
+        mValueStart = -1;
+        // FIXME: if header is in a header block, should mark that block as dirty
+    }
+
+    /** Returns whether the header has been marked as needing reserialization.
+     * @see #markDirty() */
+    protected boolean isDirty() {
+        return mContent == null;
+    }
+
+    /** Permits a subclass to regenerate the {@code byte[]} content of the
+     *  header as a result of changes.  Implementations of this method should
+     *  first call {@link #isDirty()} and perform a no-op if it returns
+     *  {@code false}. */
+    protected void reserialize() {
+    }
 
     private static final String DEFAULT_CHARSET = Charset.defaultCharset().name();
 
     public static String decode(final String content) {
-        return decode(content.getBytes(), DEFAULT_CHARSET);
+        try {
+            return decode(content.getBytes("utf-8"), "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            return decode(content.getBytes(), DEFAULT_CHARSET);
+        }
     }
 
     static String decode(final byte[] content, final String charset) {
@@ -152,7 +217,7 @@ public class MimeHeader {
             return unfold(new String(content, start, length));
         }
 
-        HeaderUtils.ByteBuilder builder = new HeaderUtils.ByteBuilder(length, charset);
+        ByteBuilder builder = new ByteBuilder(length, charset);
         String value = null;
         boolean encoded = false;
         Boolean encwspenc = Boolean.FALSE;
@@ -228,13 +293,12 @@ public class MimeHeader {
         return unfolded.toString();
     }
 
-
     static class EncodedWord {
-        static String encode(String value, String charset) {
+        static String encode(final String value, final String requestedCharset) {
             StringBuilder sb = new StringBuilder();
 
             // FIXME: need to limit encoded-words to 75 bytes
-            charset = StringUtil.checkCharset(value, charset);
+            String charset = StringUtil.checkCharset(value, requestedCharset);
             byte[] content = null;
             try {
                 content = value.getBytes(charset);
@@ -251,8 +315,8 @@ public class MimeHeader {
             sb.append("=?").append(charset);
 
             int invalidQ = 0;
-            for (int i = 0; i < content.length; i++) {
-                if (content[i] < 0 || Q2047Encoder.FORCE_ENCODE[content[i]]) {
+            for (byte b : content) {
+                if (b < 0 || Q2047Encoder.FORCE_ENCODE[b]) {
                     invalidQ++;
                 }
             }
@@ -280,17 +344,19 @@ public class MimeHeader {
                     FORCE_ENCODE[i] = true;
                 }
                 for (int c : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!*+-/ ".getBytes()) {
-                        FORCE_ENCODE[c] = false;
+                    FORCE_ENCODE[c] = false;
                 }
             }
 
-            Q2047Encoder(byte[] content) {
-                super(new ByteArrayInputStream(content), null);  disableFolding();  setForceEncode(FORCE_ENCODE);
+            Q2047Encoder(final byte[] content) {
+                super(new ByteArrayInputStream(content), null);
+                disableFolding();
+                setForceEncode(FORCE_ENCODE);
             }
 
-            @Override
-            public int read() throws IOException {
-                int c = super.read();  return c == ' ' ? '_' : c;
+            @Override public int read() throws IOException {
+                int c = super.read();
+                return c == ' ' ? '_' : c;
             }
         }
 
@@ -309,7 +375,7 @@ public class MimeHeader {
         }
     }
 
-    static String escape(String value, String charset, boolean phrase) {
+    static String escape(final String value, final String charset, final boolean phrase) {
         boolean needsQuote = false, wsp = true;
         int needs2047 = 0, needsEscape = 0, cleanTo = 0, cleanFrom = value.length();
         for (int i = 0, len = value.length(); i < len; i++) {
@@ -351,11 +417,11 @@ public class MimeHeader {
         }
     }
 
-    static String quote(String value) {
+    static String quote(final String value) {
         return quote(value, 0);
     }
 
-    private static String quote(String value, int escapeHint) {
+    private static String quote(final String value, final int escapeHint) {
         StringBuilder sb = new StringBuilder(value.length() + escapeHint + 2).append('"');
         for (int i = 0, len = value.length(); i < len; i++) {
             char c = value.charAt(i);
@@ -365,63 +431,5 @@ public class MimeHeader {
             sb.append(c);
         }
         return sb.append('"').toString();
-    }
-
-    protected void reserialize() {
-    }
-
-    @Override
-    public String toString() {
-        String header = new String(mContent);
-        return header.endsWith("\r\n") ? header.substring(0, header.length() - 2) : header;
-    }
-
-
-    public static class MimeAddressHeader extends MimeHeader {
-        private List<InternetAddress> mAddresses;
-
-        public MimeAddressHeader(final String name, final List<InternetAddress> iaddrs) {
-            super(name, null, -1);
-            mAddresses = new ArrayList<InternetAddress>(iaddrs);
-        }
-
-        public MimeAddressHeader(final String name, final String value) {
-            super(name, value);
-            if (mValueStart > 0) {
-                mAddresses = InternetAddress.parseHeader(mContent,
-                        mValueStart, mContent.length - mValueStart);
-            } else {
-                mAddresses = new ArrayList<InternetAddress>();
-            }
-        }
-
-        public MimeAddressHeader(final String name, final byte[] bvalue) {
-            super(name, bvalue);
-            if (mValueStart > 0) {
-                mAddresses = InternetAddress.parseHeader(mContent,
-                        mValueStart, mContent.length - mValueStart);
-            } else {
-                mAddresses = new ArrayList<InternetAddress>();
-            }
-        }
-
-        public List<InternetAddress> getAddresses() {
-            return new ArrayList<InternetAddress>(mAddresses);
-        }
-
-        public MimeAddressHeader addAddress(InternetAddress iaddr) {
-            mAddresses.add(iaddr);  mContent = null;  mValueStart = -1;  return this;
-        }
-
-        @Override
-        protected void reserialize() {
-            if (mContent == null) {
-                StringBuilder value = new StringBuilder();
-                for (int i = 0; i < mAddresses.size(); i++)
-                    value.append(i == 0 ? "" : ", ").append(mAddresses.get(i));
-                // FIXME: need to fold every 75 bytes
-                updateContent(value.toString().getBytes());
-            }
-        }
     }
 }

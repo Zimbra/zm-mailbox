@@ -176,7 +176,7 @@ class MimeParser {
         }
 
         @Override public String toString() {
-            return ctype == null ? null : ctype.getValue();
+            return ctype == null ? null : ctype.getContentType();
         }
     }
 
@@ -547,11 +547,12 @@ class MimeParser {
             }
 
             PartInfo pcurrent = currentPart();
-            pcurrent.headers.addHeader(key, new MimeHeader(key, content.toByteArray(), valueStart));
+            MimeHeader header = new MimeHeader(key, content.toByteArray(), valueStart);
+            pcurrent.headers.addHeader(key, header);
 
             // FIXME: should be feeding byte[] to ContentType constructor
             if (key.equalsIgnoreCase("Content-Type")) {
-                pcurrent.ctype = new ContentType(new String(content.toByteArray(), valueStart, content.size() - valueStart));
+                pcurrent.ctype = new ContentType(header, defaultContentType());
                 if (pcurrent.ctype.getPrimaryType().equals("multipart")) {
                     String bnd = pcurrent.ctype.getParameter("boundary");
                     pcurrent.boundary = bnd == null || bnd.trim().isEmpty() ? "" : bnd;
@@ -561,6 +562,12 @@ class MimeParser {
         }
 
         clearHeader();
+    }
+
+    private String defaultContentType() {
+        MimePart parent = parts.size() <= 1 ? null : parts.get(parts.size() - 2).part;
+        boolean inDigest = parent != null && parent.getContentType().getContentType().equals("multipart/digest");
+        return inDigest ? ContentType.MESSAGE_RFC822 : ContentType.TEXT_PLAIN;
     }
 
     /** Marks the transition from parsing MIME/message headers to skimming the
@@ -578,14 +585,13 @@ class MimeParser {
         if (ctype == null) {
             // if there was no Content-Type header, use the default
             //   (e.g. text/plain unless we're in a multipart/digest)
-            boolean inDigest = parent != null && parent.getContentType().getValue().equals("multipart/digest");
-            pcurrent.ctype = ctype = new ContentType(inDigest ? ContentType.MESSAGE_RFC822 : ContentType.TEXT_PLAIN);
+            pcurrent.ctype = ctype = new ContentType(defaultContentType());
         }
 
         // we're now far enough along to call the MimePart constructor and
         //   to transition from header mode to body mode
         MimePart mp;
-        if (ctype.getValue().equals(ContentType.MESSAGE_RFC822)) {
+        if (ctype.getContentType().equals(ContentType.MESSAGE_RFC822)) {
             mp = new MimeMessage(ctype, parent, pcurrent.partStart, pos, pcurrent.headers);
         } else if (ctype.getPrimaryType().equals("multipart")) {
             mp = new MimeMultipart(ctype, parent, pcurrent.partStart, pos, pcurrent.headers);

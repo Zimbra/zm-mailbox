@@ -45,7 +45,7 @@ public abstract class MimePart {
         mContentType = new ContentType(ctype);
         checkContentType(mContentType);
         mMimeHeaders = new MimeHeaderBlock(this instanceof MimeMessage);
-        setMimeHeader("Content-Type", new MimeHeader("Content-Type", mContentType));
+        setMimeHeader("Content-Type", mContentType);
         mDirty = true;
     }
 
@@ -180,7 +180,7 @@ public abstract class MimePart {
 
     public void setContentType(ContentType ctype) {
         mContentType = new ContentType(ctype);
-        setMimeHeader("Content-Type", ctype == null ? null : new MimeHeader("Content-Type", ctype));
+        setMimeHeader("Content-Type", ctype);
     }
 
     abstract void checkContentType(ContentType ctype);

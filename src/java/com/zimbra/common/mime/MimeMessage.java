@@ -225,14 +225,14 @@ public class MimeMessage extends MimePart {
     @Override public void setContentType(ContentType ctype) {
         if (ctype == null) {
             ctype = new ContentType(ContentType.MESSAGE_RFC822);
-        } else if (!ctype.getValue().equals(ContentType.MESSAGE_RFC822)) {
+        } else if (!ctype.getContentType().equals(ContentType.MESSAGE_RFC822)) {
             throw new UnsupportedOperationException("cannot change a message to another type");
         }
         super.setContentType(ctype);
     }
 
     @Override void checkContentType(ContentType ctype) {
-        if (ctype == null || !ctype.getValue().equals(ContentType.MESSAGE_RFC822)) {
+        if (ctype == null || !ctype.getContentType().equals(ContentType.MESSAGE_RFC822)) {
             throw new UnsupportedOperationException("cannot change a message to text");
         }
     }
@@ -369,7 +369,7 @@ public class MimeMessage extends MimePart {
             String filename = part.getFilename() == null ? "" : " [" + part.getFilename() + "]";
             String desc = part.getMimeHeader("Content-Description") == null ? "" : " {" + part.getMimeHeader("Content-Description") + "}";
             String lines = part.getLineCount() < 0 ? "" : ", " + part.getLineCount() + " lines";
-            System.out.println('"' + mpi.getKey() + "\": " + part.getContentType().getValue() + " (" + part.getSize() + " bytes" + lines + ")" + filename + desc);
+            System.out.println('"' + mpi.getKey() + "\": " + part.getContentType().getContentType() + " (" + part.getSize() + " bytes" + lines + ")" + filename + desc);
             if (mm.getSubpart(mpi.getKey()) != mpi.getValue()) {
                 System.out.println("  MISMATCH!");
             }

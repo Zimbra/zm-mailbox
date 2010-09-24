@@ -27,7 +27,7 @@ public class MimeBodyPart extends MimePart {
     private ContentTransferEncoding mEncoding, mTargetEncoding;
 
     public MimeBodyPart(ContentType ctype) {
-        super(ctype != null ? ctype : new ContentType("text/plain"));
+        super(ctype != null ? ctype : new ContentType(ContentType.TEXT_PLAIN));
         mEncoding = mTargetEncoding = ContentTransferEncoding.BINARY;
     }
 
@@ -41,7 +41,7 @@ public class MimeBodyPart extends MimePart {
 
 
     @Override void checkContentType(ContentType ctype) {
-        if (ctype != null && (ctype.getPrimaryType().equals("multipart") || ctype.getValue().equals(ContentType.MESSAGE_RFC822))) {
+        if (ctype != null && (ctype.getPrimaryType().equals("multipart") || ctype.getContentType().equals(ContentType.MESSAGE_RFC822))) {
             throw new UnsupportedOperationException("cannot change a message to text");
         }
     }
@@ -162,6 +162,7 @@ public class MimeBodyPart extends MimePart {
         if (subtype == null || subtype.trim().equals("")) {
             subtype = ctype.getSubType();
         }
+
         if (charset == null || charset.trim().equals("")) {
             charset = ctype.getParameter("charset");
         }
@@ -175,7 +176,7 @@ public class MimeBodyPart extends MimePart {
         if (getParent() != null) {
             getParent().markDirty(true);
         }
-        setContentType(ctype.setValue("text/" + subtype).setParameter("charset", charset));
+        setContentType(ctype.setContentType("text/" + subtype).setParameter("charset", charset));
 
         byte[] content = (text == null ? "" : text).getBytes(charset);
         if (cte == null) {

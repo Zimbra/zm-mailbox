@@ -41,107 +41,128 @@ import java.util.regex.Pattern;
  */
 public class StringUtil {
 
-    /** A user-friendly version of <tt>String.equals()</tt> that handles one or both nulls easily. */
+    /** A user-friendly version of {@link String#equals(Object)} that handles
+     *  one or both nulls easily. */
     public static boolean equal(String s1, String s2) {
-        if (s1 == null || s2 == null)
+        if (s1 == null || s2 == null) {
             return s1 == s2;
+        }
         return s1.equals(s2);
     }
     
-    /** A user-friendly version of <tt>String.equalsIgnoreCase()</tt> that handles one or both nulls easily. */
+    /** A user-friendly version of {@link String#equalsIgnoreCase(String)}
+     *  that handles one or both nulls easily. */
     public static boolean equalIgnoreCase(String s1, String s2) {
-        if (s1 == null || s2 == null)
+        if (s1 == null || s2 == null) {
             return s1 == s2;
+        }
         return s1.equalsIgnoreCase(s2);
     }
 
-    /**
-     * A user-friendly compareTo that handles one or both nulls easily.
-     * @param s1
-     * @param s2
+    /** A user-friendly compareTo that handles one or both nulls easily.
      * @return 0 if s1 and s2 are equal, value less than 0 if s1 is before s2,
      *         or value greater than 0 if s1 is after s2; null is considered
-     *         to come before any non-null value
-     */
+     *         to come before any non-null value */
     public static int compareTo(String s1, String s2) {
         if (s1 != null) {
-            if (s2 != null)
+            if (s2 != null) {
                 return s1.compareTo(s2);
-            else
+            } else {
                 return 1;
+            }
         } else {  // s1 == null
-            if (s2 != null)
+            if (s2 != null) {
                 return -1;
-            else
+            } else {
                 return 0;
+            }
         }
     }
 
     public static int countOccurrences(String str, char c) {
-        if (str == null)
+        if (str == null) {
             return 0;
+        }
+
         int count = 0;
-        for (int i = 0, len = str.length(); i < len; i++)
-            if (str.charAt(i) == c)
+        for (int i = 0, len = str.length(); i < len; i++) {
+            if (str.charAt(i) == c) {
                 count++;
+            }
+        }
         return count;
     }
 
     public static String stripControlCharacters(String raw) {
-        if (raw == null)
+        if (raw == null) {
             return null;
+        }
+
         int i;
         for (i = 0; i < raw.length(); i++) {
             char c = raw.charAt(i);
             // invalid control characters
-            if (c < 0x20 && c != 0x09 && c != 0x0A && c != 0x0D)
+            if (c < 0x20 && c != 0x09 && c != 0x0A && c != 0x0D) {
                 break;
+            }
             // byte-order markers and high/low surrogates
-            if (c == 0xFFFE || c == 0xFFFF || (c > 0xD7FF && c < 0xE000))
+            if (c == 0xFFFE || c == 0xFFFF || (c > 0xD7FF && c < 0xE000)) {
                 break;
+            }
         }
-        if (i >= raw.length())
+        if (i >= raw.length()) {
             return raw;
+        }
+
         StringBuilder sb = new StringBuilder(raw.substring(0, i));
         for ( ; i < raw.length(); i++) {
             char c = raw.charAt(i);
-            if (c >= 0x20 || c == 0x09 || c == 0x0A || c == 0x0D)
-                if (c != 0xFFFE && c != 0xFFFF && (c <= 0xD7FF || c >= 0xE000))
+            if (c >= 0x20 || c == 0x09 || c == 0x0A || c == 0x0D) {
+                if (c != 0xFFFE && c != 0xFFFF && (c <= 0xD7FF || c >= 0xE000)) {
                     sb.append(c);
+                }
+            }
         }
         return sb.toString();
     }
 
-    /** Returns whether the passed-in <code>String</code> is comprised only of
+    /** Returns whether the passed-in {@code String} is comprised only of
      *  printable ASCII characters.  The "printable ASCII characters" are CR,
      *  LF, TAB, and all characters from 0x20 to 0x7E. */
     public static boolean isAsciiString(String str) {
-        if (str == null)
+        if (str == null) {
             return false;
+        }
+
         for (int i = 0, len = str.length(); i < len; i++) {
             char c = str.charAt(i);
-            if ((c < 0x20 || c >= 0x7F) && c != '\r' && c != '\n' && c != '\t')
+            if ((c < 0x20 || c >= 0x7F) && c != '\r' && c != '\n' && c != '\t') {
                 return false;
+            }
         }
         return true;
     }
 
     /** Removes all spaces (and any character below 0x20) from the end of the
-     *  passed-in <code>String</code>.  If nothing was trimmed, the original
-     *  <code>String</code> is returned. */
+     *  passed-in {@code String}.  If nothing was trimmed, the original
+     *  {@code String} is returned. */
     public static String trimTrailingSpaces(String raw) {
-        if (raw == null)
+        if (raw == null) {
             return null;
+        }
+
         int length = raw.length();
-        while (length > 0 && raw.charAt(length - 1) <= ' ')
+        while (length > 0 && raw.charAt(length - 1) <= ' ') {
             length--;
+        }
         return length == raw.length() ? raw : raw.substring(0, length);
     }
 
-    /**
-     * add the name/value mapping to the map. If an entry doesn't exist, value remains
-     * a String. If an entry already exists as a String, convert to String[] and add new
-     * value. If entry already exists as a String[], grow array and add new value.
+    /** Add the name/value mapping to the map. If an entry doesn't exist,
+     *  value remains a {@code String}.  If an entry already exists as a
+     *  {@code String}, convert to {@code String[]} and add new value.
+     *  If entry already exists as a {@code String[]}, grow array and add
+     *  new value.
      * @param result result map
      * @param name
      * @param value
@@ -173,11 +194,12 @@ public class StringUtil {
      */
     public static Map<String, Object> keyValueArrayToMultiMap(String[] args, int offset) {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        for (int i = offset; i < args.length; i+=2) {
+        for (int i = offset; i < args.length; i += 2) {
             String n = args[i];
-            if (i+1 >= args.length)
+            if (i + 1 >= args.length) {
                 throw new IllegalArgumentException("not enough arguments");
-            String v = args[i+1];
+            }
+            String v = args[i + 1];
             addToMultiMap(attrs, n, v);
         }
         return attrs;
@@ -220,7 +242,9 @@ public class StringUtil {
             if (line.length() == 0) {
                 break;
             } else if (line.charAt(line.length()-1) == '\\') {
-                if (sb == null) sb = new StringBuilder();
+                if (sb == null) {
+                    sb = new StringBuilder();
+                }
                 sb.append(line.substring(0, line.length()-1));
             } else {
                 break;
@@ -245,11 +269,13 @@ public class StringUtil {
     
     public static List<String> parseSieveStringList(String value) throws ServiceException {
         List<String> result = new ArrayList<String>();
-        if (value == null)
+        if (value == null) {
             return result;
+        }
         value = value.trim();
-        if (value.length() == 0)
+        if (value.isEmpty()) {
             return result;
+        }
 
         int i = 0;
         boolean inStr = false;
@@ -295,7 +321,7 @@ public class StringUtil {
     public static String[] parseLine(String line) {
         ArrayList<String> result = new ArrayList<String>();
         
-        int i=0;
+        int i = 0;
         
         StringBuilder sb = new StringBuilder(32);
         int term = TERM_WHITESPACE;
@@ -351,20 +377,21 @@ public class StringUtil {
             } else {
                 if (!escapedTerm) {
                     switch (ch) {
-                    case '\'':
-                        term = TERM_SINGLEQUOTE;
-                        inStr = true;
-                        continue scan;
-                    case '"':
-                        term = TERM_DBLQUOTE;
-                        inStr = true;
-                        continue scan;
-                    default:
-                        if (Character.isWhitespace(ch))
+                        case '\'':
+                            term = TERM_SINGLEQUOTE;
+                            inStr = true;
                             continue scan;
-                        inStr = true;
-                        sb.append(ch);
-                        break;
+                        case '"':
+                            term = TERM_DBLQUOTE;
+                            inStr = true;
+                            continue scan;
+                        default:
+                            if (Character.isWhitespace(ch)) {
+                                continue scan;
+                            }
+                            inStr = true;
+                            sb.append(ch);
+                            break;
                     }
                 } else {
                     // we had an escaped terminator, start a new string
@@ -374,8 +401,9 @@ public class StringUtil {
             }
         }
 
-        if (sb.length() > 0)
+        if (sb.length() > 0) {
             result.add(sb.toString());
+        }
         
         return result.toArray(new String[result.size()]);
     }
@@ -383,8 +411,9 @@ public class StringUtil {
     private static void dump(String line) {
         String[] result = parseLine(line);
         System.out.println("line: "+line);
-        for (int i=0; i < result.length; i++)
-            System.out.println(i+": ("+result[i]+")");
+        for (int i=0; i < result.length; i++) {
+            System.out.println(i + ": (" + result[i] + ")");
+        }
         System.out.println();
     }
     
@@ -480,21 +509,24 @@ public class StringUtil {
     }
 
     public static String join(String delimiter, Object[] array, final int start, final int count) {
-        if (array == null)
+        if (array == null) {
             return null;
+        }
 
         StringBuilder buf = new StringBuilder();
         for (int i = start, end = start + count; i < end; i++) {
             buf.append(array[i]);
-            if (i + 1 < end)
+            if (i + 1 < end) {
                 buf.append(delimiter);
+            }
         }
         return buf.toString();
     }
 
     public static String join(String delimiter, Iterable<? extends Object> array) {
-        if (array == null)
+        if (array == null) {
             return null;
+        }
 
         boolean firstTime = true;
         StringBuilder buf = new StringBuilder();
@@ -534,10 +566,7 @@ public class StringUtil {
      * length is <code>0</code>.
      */
     public static boolean isNullOrEmpty(String s) {
-        if (s == null || s.length() == 0) {
-            return true;
-        }
-        return false;
+        return s == null || s.isEmpty();
     }
 
     private static final String[] JS_CHAR_ENCODINGS = {
@@ -548,8 +577,10 @@ public class StringUtil {
     };
 
     public static String jsEncode(Object obj) {
-        if (obj == null)
+        if (obj == null) {
             return "";
+        }
+
         String replacement, str = obj.toString();
         StringBuilder sb = null;
         int i, last, length = str.length();
@@ -565,10 +596,11 @@ public class StringUtil {
                 default:        if (c >= ' ')                        continue;
                                 replacement = JS_CHAR_ENCODINGS[c];  break;
             }
-            if (sb == null)
+            if (sb == null) {
                 sb = new StringBuilder(str.substring(0, i));
-            else
+            } else {
                 sb.append(str.substring(last, i));
+            }
             sb.append(replacement);
             last = i + 1;
         }
@@ -587,7 +619,10 @@ public class StringUtil {
      * Escapes special characters with their HTML equivalents.
      */
     public static String escapeHtml(String text) {
-        if (text == null || text.length() == 0) return "";
+        if (text == null || text.length() == 0) {
+            return "";
+        }
+
         StringBuilder result = new StringBuilder(text.length());
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
@@ -605,25 +640,28 @@ public class StringUtil {
         return result.toString();
     }
 
-    /**
-     * Determines whether data can be encoded using <tt>requestedCharset</tt>.
-     *  
-     * @param data the data to be encoded
-     * @param requestedCharset the character set
-     * @return <tt>requestedCharset</tt> if encoding is supported, <tt>&quot;utf-8&quot;</tt>
-     * if not, or <tt>&quot;us-ascii&quot;</tt> if data is <tt>null</tt>.
+    /** Determines whether {@code data} can be encoded using
+     *  {@code requestedCharset}.
+     * @param data              the data to be encoded
+     * @param requestedCharset  the character set
+     * @return {@code requestedCharset} if encoding is supported,
+     *         "<tt>utf-8</tt>" if not, or
+     *         "<tt>us-ascii</tt>" if data is {@code null}.
      */
     public static String checkCharset(String data, String requestedCharset) {
-        if (data == null)
+        if (data == null) {
             return "us-ascii";
+        }
 
-        if (requestedCharset != null && !requestedCharset.equalsIgnoreCase("utf-8")) {
+        if (requestedCharset != null && !requestedCharset.isEmpty() && !requestedCharset.equalsIgnoreCase("utf-8")) {
             try {
                 Charset cset = Charset.forName(requestedCharset);
-                if (cset.canEncode() && cset.newEncoder().canEncode(data))
+                if (cset.canEncode() && cset.newEncoder().canEncode(data)) {
                     return requestedCharset;
+                }
             } catch (Exception e) {}
         }
+
         return "utf-8";
     }
 
@@ -695,16 +733,20 @@ public class StringUtil {
      * @return escaped (if needed) identifier
      */
     public static String escapeJavaIdentifier(String s) {
-        if (isNullOrEmpty(s))
+        if (isNullOrEmpty(s)) {
             return s;
-        else if (isJavaReservedWord(s))
+        } else if (isJavaReservedWord(s)) {
             return s + "_";
+        }
 
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < s.length(); i++) {
             char ch = s.charAt(i);
-            if (i == 0) result.append(Character.isJavaIdentifierStart(ch) ? ch : "_");
-            else result.append(Character.isJavaIdentifierPart(ch) ? ch : "_");
+            if (i == 0) {
+                result.append(Character.isJavaIdentifierStart(ch) ? ch : "_");
+            } else {
+                result.append(Character.isJavaIdentifierPart(ch) ? ch : "_");
+            }
          }
          return result.toString();
     }
