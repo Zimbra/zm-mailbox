@@ -661,6 +661,7 @@ public class LC {
     public static final KnownKey antispam_mysql_errlogfile;
     public static final KnownKey antispam_mysql_mycnf;
     public static final KnownKey antispam_mysql_pidfile;
+    public static final KnownKey antispam_mysql_host;
     public static final KnownKey antispam_mysql_port;
     public static final KnownKey antispam_mysql_socket;
     public static final KnownKey antispam_mysql_user;
@@ -1777,7 +1778,7 @@ public class LC {
         
         antispam_mysql_data_directory = new KnownKey("antispam_mysql_data_directory");
         antispam_mysql_data_directory.setDefault("${zimbra_home}/data/amavisd/mysql/data");
-        
+
         antispam_mysql_errlogfile = new KnownKey("antispam_mysql_errlogfile");
         antispam_mysql_errlogfile.setDefault("${zimbra_home}/log/antispam-mysqld.log");
         
@@ -1786,6 +1787,9 @@ public class LC {
         
         antispam_mysql_pidfile = new KnownKey("antispam_mysql_pidfile");
         antispam_mysql_pidfile.setDefault("${zimbra_home}/data/amavisd/db/mysql/mysql.pid");
+        
+        antispam_mysql_host = new KnownKey("antispam_mysql_host");
+        antispam_mysql_host.setDefault("localhost");
         
         antispam_mysql_port = new KnownKey("antispam_mysql_port");
         antispam_mysql_port.setDefault("7308");
