@@ -191,6 +191,8 @@ public class UserServlet extends ZimbraServlet {
     
     public static final String QP_CSVFORMAT = "csvfmt"; // csv type (outlook-2003-csv, yahoo-csv, ...)
 
+    public static final String QP_CSVLOCALE = "csvlocale"; // refining locale for csvfmt - e.g. zh-CN
+
     public static final String QP_VERSION = "ver";  // version for WikiItem and Document
 
     public static final String QP_HISTORY = "history";  // history for WikiItem

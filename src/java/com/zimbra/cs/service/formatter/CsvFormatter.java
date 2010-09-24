@@ -58,8 +58,11 @@ public class CsvFormatter extends Formatter {
         try {
             iterator = getMailItems(context, -1, -1, Integer.MAX_VALUE);
             String format = context.req.getParameter(UserServlet.QP_CSVFORMAT);
+            String locale = context.req.getParameter(UserServlet.QP_CSVLOCALE);
+            if (locale == null)
+                locale = context.locale.toString();
             ContactCSV contactCSV = new ContactCSV();
-            contactCSV.toCSV(format, iterator, sb);
+            contactCSV.toCSV(format, locale, iterator, sb);
         } catch (ContactCSV.ParseException e) {
             throw MailServiceException.UNABLE_TO_IMPORT_CONTACTS("could not generate CSV", e);
         } finally {
@@ -93,7 +96,10 @@ public class CsvFormatter extends Formatter {
         
         try {
             String format = context.params.get(UserServlet.QP_CSVFORMAT);
-            List<Map<String, String>> contacts = ContactCSV.getContacts(reader, format);
+            String locale = context.req.getParameter(UserServlet.QP_CSVLOCALE);
+            if (locale == null)
+                locale = context.locale.toString();
+            List<Map<String, String>> contacts = ContactCSV.getContacts(reader, format, locale);
             ItemId iidFolder = new ItemId(folder);
             
             ImportContacts.ImportCsvContacts(context.opContext, context.targetMailbox, iidFolder, contacts);

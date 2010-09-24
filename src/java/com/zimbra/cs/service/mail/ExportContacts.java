@@ -52,6 +52,7 @@ public class ExportContacts extends MailDocumentHandler  {
             throw ServiceException.INVALID_REQUEST("unsupported content type: " + ct, null);
         
         String format = request.getAttribute(MailConstants.A_CSVFORMAT, null);
+        String locale = request.getAttribute(MailConstants.A_CSVLOCALE, null);
         
         List<Contact> contacts = mbox.getContactList(octxt, iidFolder != null ? iidFolder.getId() : -1);
         
@@ -61,7 +62,7 @@ public class ExportContacts extends MailDocumentHandler  {
         
         try {
             ContactCSV contactCSV = new ContactCSV();
-            contactCSV.toCSV(format, contacts.iterator(), sb);
+            contactCSV.toCSV(format, locale, contacts.iterator(), sb);
         } catch (ContactCSV.ParseException e) {
             throw MailServiceException.UNABLE_TO_EXPORT_CONTACTS(e.getMessage(), e);
         }
