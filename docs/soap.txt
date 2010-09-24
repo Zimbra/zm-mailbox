@@ -2129,7 +2129,7 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
 
 # The id of the saved draft is returned
 <SaveDraftResponse>
-  <m id="{message-id}" f="{flags}" t="{tags}" s="{size}" [d="{received-date}"] sd="{date-header}" l="{folder}" (cid="{conv}")>
+  <m id="{message-id}" f="{flags}" t="{tags}" s="{size}" [d="{received-date}"] sd="{date-header}" l="{folder}" (cid="{conv}") [autoSendTime="{millis-since-epoch}"]>
     <e .../>*
     <su>{subject}</su>
     <irt>{Message-ID header for message being replied to}</irt>
