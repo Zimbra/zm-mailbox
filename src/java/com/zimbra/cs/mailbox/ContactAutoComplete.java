@@ -70,13 +70,13 @@ public class ContactAutoComplete {
                 canBeCached = false;
                 return;
             }
-            int ranking = rankings.query(key);
-            // if the match comes from gal or folder search
-            // check the ranking table for matching email
-            // address
-            if (ranking > 0 && entry.mRanking == 0) {
-                entry.mRanking = ranking;
-                entry.mFolderId = ContactAutoComplete.FOLDER_ID_UNKNOWN;
+            if (entry.mRanking == 0) {
+                // if the match comes from gal or folder search
+                // check the ranking table for matching email
+                // address
+                int ranking = rankings.query(key);
+                if (ranking > 0)
+                    entry.mRanking = ranking;
             }
             entries.add(entry);
             keys.add(key);
@@ -433,7 +433,11 @@ public class ContactAutoComplete {
         if (query == null || text == null) {
             return false;
         }
-        return text.toLowerCase().startsWith(query);
+        int space = query.indexOf(' ');
+        if (space > 0)
+            return matches(query.substring(0, space).trim(), text) || matches(query.substring(space + 1).trim(), text);
+        else
+            return text.toLowerCase().startsWith(query.toLowerCase());
     }
 
     public void addMatchedContacts(String query, Map<String,? extends Object> attrs, int folderId, ItemId id, AutoCompleteResult result) {

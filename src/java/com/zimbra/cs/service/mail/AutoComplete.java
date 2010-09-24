@@ -37,6 +37,9 @@ public class AutoComplete extends MailDocumentHandler {
     	String n = request.getAttribute(MailConstants.A_NAME);
     	while (n.endsWith("*"))
     	    n = n.substring(0, n.length() - 1);
+
+        // remove commas (bug 46540)
+    	n = n.replace(",", " ").trim();
         
     	Provisioning.GalSearchType type = Provisioning.GalSearchType.fromString(request.getAttribute(MailConstants.A_TYPE, "account"));
         int limit = account.getContactAutoCompleteMaxResults();
