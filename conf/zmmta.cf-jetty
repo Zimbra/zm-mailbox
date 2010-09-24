@@ -52,6 +52,9 @@ SECTION mta DEPENDS amavis
 	VAR zimbraMtaMyNetworks
 	VAR zimbraMtaMyOrigin
 	VAR zimbraMtaMyHostname
+	VAR zimbraMilterServerEnabled
+	VAR zimbraMilterServerBindAddress
+	VAR zimbraMilterServerBindPort
 	VAR zimbraMtaSmtpdMilters
 	VAR zimbraMtaNonSmtpdMilters
 	if VAR zimbraMtaMyNetworks
@@ -63,9 +66,11 @@ SECTION mta DEPENDS amavis
 	if VAR zimbraMtaMyDestination
 		POSTCONF mydestination VAR zimbraMtaMyDestination
 	fi
+	POSTCONF smtpd_milters
 	if VAR zimbraMtaSmtpdMilters
 		POSTCONF smtpd_milters VAR zimbraMtaSmtpdMilters
 	fi
+	POSTCONF non_smtpd_milters
 	if VAR zimbraMtaNonSmtpdMilters
 		POSTCONF non_smtpd_milters VAR zimbraMtaNonSmtpdMilters
 	fi
