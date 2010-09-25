@@ -63,7 +63,6 @@ import com.zimbra.cs.service.formatter.SyncFormatter;
 import com.zimbra.cs.service.formatter.TarFormatter;
 import com.zimbra.cs.service.formatter.TgzFormatter;
 import com.zimbra.cs.service.formatter.VcfFormatter;
-import com.zimbra.cs.service.formatter.WikiFormatter;
 import com.zimbra.cs.service.formatter.XmlFormatter;
 import com.zimbra.cs.service.formatter.ZipFormatter;
 import com.zimbra.cs.service.util.ItemId;
@@ -254,7 +253,6 @@ public class UserServlet extends ZimbraServlet {
         addFormatter(new FreeBusyFormatter());
         addFormatter(new IfbFormatter());
         addFormatter(new SyncFormatter());
-        addFormatter(new WikiFormatter());
         addFormatter(new XmlFormatter());
         addFormatter(new JsonFormatter());
         addFormatter(new HtmlFormatter());

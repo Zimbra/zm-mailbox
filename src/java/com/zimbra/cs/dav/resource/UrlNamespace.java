@@ -491,7 +491,6 @@ public class UrlNamespace {
 				else
 					resource = new Collection(ctxt, f);
 				break;
-			case MailItem.TYPE_WIKI :
 			case MailItem.TYPE_DOCUMENT :
 				resource = new Notebook(ctxt, (Document)item);
 				break;

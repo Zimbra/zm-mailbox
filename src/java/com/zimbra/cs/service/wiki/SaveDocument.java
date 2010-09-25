@@ -57,7 +57,6 @@ import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.wiki.WikiPage;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class SaveDocument extends WikiDocumentHandler {
@@ -140,7 +139,6 @@ public class SaveDocument extends WikiDocumentHandler {
             }
 
             Document docItem = null;
-            WikiPage.WikiContext ctxt = new WikiPage.WikiContext(octxt, zsc.getAuthToken());
             InputStream is = null;
             try {
                 is = doc.getInputStream();
@@ -169,14 +167,12 @@ public class SaveDocument extends WikiDocumentHandler {
                 }
             } else {
                 // add a new revision
-                WikiPage oldPage = WikiPage.findPage(ctxt, zsc.getRequestedAccountId(), itemId);
-                if (oldPage == null) {
-                    throw new WikiServiceException.NoSuchWikiException("page id=" + id + " not found");
-                } else if (oldPage.getLastVersion() != ver) {
-                    throw MailServiceException.MODIFY_CONFLICT(new Argument(MailConstants.A_NAME, doc.name, Argument.Type.STR), new Argument(MailConstants.A_ID, oldPage.getId(),
-                            Argument.Type.IID), new Argument(MailConstants.A_VERSION, oldPage.getLastVersion(), Argument.Type.NUM));
+                docItem = mbox.getDocumentById(octxt, itemId);
+                if (docItem.getVersion() != ver) {
+                    throw MailServiceException.MODIFY_CONFLICT(new Argument(MailConstants.A_NAME, doc.name, Argument.Type.STR), new Argument(MailConstants.A_ID, itemId,
+                            Argument.Type.IID), new Argument(MailConstants.A_VERSION, docItem.getVersion(), Argument.Type.NUM));
                 }
-                String name = oldPage.getWikiWord();
+                String name = docItem.getName();
                 if (doc.name != null) {
                     name = doc.name;
                 }

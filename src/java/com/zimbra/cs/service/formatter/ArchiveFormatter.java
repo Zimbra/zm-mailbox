@@ -1488,8 +1488,6 @@ public abstract class ArchiveFormatter extends Formatter {
                 if (newItem != null) {
                     if (timestamp)
                         mbox.setDate(oc, newItem.getId(), type, aie.getModTime());
-                    if (type == MailItem.TYPE_WIKI)
-                        WikiFormatter.expireCacheItem(fldr);
                 }
                 break;
             case MailItem.TYPE_MESSAGE:

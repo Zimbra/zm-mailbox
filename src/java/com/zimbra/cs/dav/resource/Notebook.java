@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.dav.resource;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -25,8 +24,6 @@ import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.mailbox.Document;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.wiki.WikiPage;
 
 /**
  * Represents Notebook / Wiki item.
@@ -37,12 +34,10 @@ import com.zimbra.cs.wiki.WikiPage;
 public class Notebook extends MailItemResource {
 
 	private Document mDoc;
-	private WikiPage.WikiContext mWctxt;
 
 	public Notebook(DavContext ctxt, Document doc) throws ServiceException {
 		super(ctxt, doc);
 		mDoc = doc;
-		mWctxt = new WikiPage.WikiContext(ctxt.getOperationContext(), null);
 		setCreationDate(doc.getDate());
 		setLastModifiedDate(doc.getChangeDate());
 		setProperty(DavElements.P_DISPLAYNAME, doc.getName());
@@ -55,16 +50,7 @@ public class Notebook extends MailItemResource {
 	@Override
 	public InputStream getContent(DavContext ctxt) throws IOException, DavException {
 		try {
-			if (mDoc.getType() == MailItem.TYPE_DOCUMENT)
-				return mDoc.getContentStream();
-			WikiPage page = WikiPage.create(mDoc);
-			String val = page.getTemplate(mWctxt).getComposedPage(mWctxt, mDoc, "_Template");
-			StringBuilder buf = new StringBuilder();
-			buf.append("<html><head>");
-			buf.append("<title>").append(mDoc.getName()).append("</title>");
-			buf.append("<link rel='stylesheet' type='text/css' href='/zimbra/css/wiki.css'>");
-			buf.append("</head><body style='margin:0px'>").append(val).append("</body></html>");
-			return new ByteArrayInputStream(buf.toString().getBytes("UTF-8"));
+            return mDoc.getContentStream();
 		} catch (ServiceException se) {
 			throw new DavException("cannot get contents", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
 		}
