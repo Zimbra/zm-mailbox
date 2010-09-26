@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20100921-2216 */
+    /* build: 7.0.0_BETA1_1111 pshao 20100925-1112 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5137,6 +5137,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=319)
     public static final String A_zimbraNotifySSLServerEnabled = "zimbraNotifySSLServerEnabled";
+
+    /**
+     * OAuth consumer ids and password. It is in the format of {consumer
+     * id]:{password}
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1131)
+    public static final String A_zimbraOAuthConsumerCredentails = "zimbraOAuthConsumerCredentails";
 
     /**
      * the handler class for the object type
