@@ -274,12 +274,13 @@ class MimeParser {
             case HEADER_CR:
                 state = ParserState.HEADER_LINESTART;
                 if (b == '\n') {
-                    content.write(b);
+                    content.append(b);
                     lastEnding = LineEnding.CRLF;
                     break;
                 }
                 // \r without \n -- treat this as the first character of the next line
                 lastEnding = LineEnding.CR;
+                content.append('\n');
                 //$FALL-THROUGH$
 
             // at the beginning of a header line, after a CR/LF/CRLF
@@ -291,7 +292,7 @@ class MimeParser {
                 newline();
                 if (colon != -1 && (b == ' ' || b == '\t')) {
                     // folded line; header value continues
-                    content.write(b);
+                    content.append(b);
                     state = ParserState.HEADER_VALUE;
                     break;
                 }
@@ -313,7 +314,7 @@ class MimeParser {
 
             // in a header line, before reaching the colon
             case HEADER_NAME:
-                content.write(b);
+                content.append(b);
                 if (b == ':') {
                     // found the colon; that concludes the header name
                     colon = (int) (position - lineStart);
@@ -334,9 +335,10 @@ class MimeParser {
 
             // in a header line, after reaching the colon
             case HEADER_VALUE:
-                content.write(b);
+                content.append(b);
                 if (b == '\n') {
                     lastEnding = LineEnding.LF;
+                    content.pop().append('\r').append('\n');
                     state = ParserState.HEADER_LINESTART;
                 } else if (b == '\r') {
                     state = ParserState.HEADER_CR;
@@ -550,7 +552,6 @@ class MimeParser {
             MimeHeader header = new MimeHeader(key, content.toByteArray(), valueStart);
             pcurrent.headers.addHeader(key, header);
 
-            // FIXME: should be feeding byte[] to ContentType constructor
             if (key.equalsIgnoreCase("Content-Type")) {
                 pcurrent.ctype = new ContentType(header, defaultContentType());
                 if (pcurrent.ctype.getPrimaryType().equals("multipart")) {
@@ -648,6 +649,7 @@ class MimeParser {
 
         // catch any in-flight message headers without a newline
         if (colon > 0) {
+            content.append('\r').append('\n');
             saveHeader();
         }
         clearHeader();
