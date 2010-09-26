@@ -38,9 +38,6 @@ public class AutoCompleteGal extends AccountDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(getZimbraSoapContext(context));
-
-        if (!canAccessAccount(zsc, account))
-            throw ServiceException.PERM_DENIED("can not access account");
         
         String n = request.getAttribute(AccountConstants.E_NAME);
         while (n.endsWith("*"))
