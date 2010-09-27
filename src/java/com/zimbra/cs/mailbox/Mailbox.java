@@ -4899,7 +4899,7 @@ public class Mailbox {
                 redoRecorder.setImapId(imapID);
                 redoRecorder.setMessageBodyInfo(new ParsedMessageDataSource(pm), size);
 
-                msg.setDraftInfo(dinfo);
+                msg.setDraftAutoSendTime(autoSendTime);
 
                 // update the content and increment the revision number
                 msg.setContent(staged, pm);

@@ -53,7 +53,6 @@ public class AutoSendDraftTask extends ScheduledTask {
         }
         // send draft
         MailSender mailSender = mbox.getMailSender();
-        mailSender.setSaveToSent(mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true));
         mailSender.setOriginalMessageId(StringUtil.isNullOrEmpty(msg.getDraftOrigId()) ? null : new ItemId(msg.getDraftOrigId(), mbox.getAccountId()));
         mailSender.setReplyType(StringUtil.isNullOrEmpty(msg.getDraftReplyType()) ? null : msg.getDraftReplyType());
         mailSender.setIdentity(StringUtil.isNullOrEmpty(msg.getDraftIdentityId()) ? null : mbox.getAccount().getIdentityById(msg.getDraftIdentityId()));

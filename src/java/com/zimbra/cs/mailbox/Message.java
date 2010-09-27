@@ -314,6 +314,16 @@ public class Message extends MailItem {
         return mDraftInfo == null ? 0 : mDraftInfo.autoSendTime;
     }
 
+    public void setDraftAutoSendTime(long autoSendTime) throws ServiceException {
+        if (mDraftInfo == null && autoSendTime != 0) {
+            mDraftInfo = new DraftInfo(null, null, null, null, autoSendTime);
+            saveMetadata();
+        } else if (mDraftInfo != null && mDraftInfo.autoSendTime != autoSendTime) {
+            mDraftInfo.autoSendTime = autoSendTime;
+            saveMetadata();
+        }
+    }
+
     /** Returns whether the Message has a vCal attachment. */
     public boolean isInvite() {
         return (mData.flags & Flag.BITMASK_INVITE) != 0;
@@ -1245,13 +1255,6 @@ public class Message extends MailItem {
     protected boolean isQuotaCheckRequired() throws ServiceException {
         Account account = getMailbox().getAccount();
         return !account.isMailAllowReceiveButNotSendWhenOverQuota();
-    }
-
-    void setDraftInfo(DraftInfo draftInfo) throws ServiceException {
-        if ((mDraftInfo == null && draftInfo != null) || (mDraftInfo != null && !mDraftInfo.equals(draftInfo))) {
-            mDraftInfo = draftInfo;
-            saveMetadata();
-        }
     }
 
     private static final String CN_SENDER     = "sender";

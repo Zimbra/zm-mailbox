@@ -137,18 +137,24 @@ public class SaveDraft extends MailDocumentHandler {
             }
         }
 
-        if (id != Mailbox.ID_AUTO_INCREMENT) {
-            // Cancel any existing auto-send task for this draft
-            AutoSendDraftTask.cancelTask(id, mbox.getId());
-        }
-        if (autoSendTime != 0) {
-            // schedule a new auto-send-draft task
-            AutoSendDraftTask.scheduleTask(msg.getId(), mbox.getId(), autoSendTime);
+        if (scheduleAutoSendTask()) {
+            if (id != Mailbox.ID_AUTO_INCREMENT) {
+                // Cancel any existing auto-send task for this draft
+                AutoSendDraftTask.cancelTask(id, mbox.getId());
+            }
+            if (autoSendTime != 0) {
+                // schedule a new auto-send-draft task
+                AutoSendDraftTask.scheduleTask(msg.getId(), mbox.getId(), autoSendTime);
+            }
         }
 
         Element response = zsc.createElement(MailConstants.SAVE_DRAFT_RESPONSE);
         // FIXME: inefficient -- this recalculates the MimeMessage (but SaveDraft is called rarely)
         ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, null, -1, true, true, null, true);
         return response;
+    }
+
+    protected boolean scheduleAutoSendTask() {
+        return true;
     }
 }
