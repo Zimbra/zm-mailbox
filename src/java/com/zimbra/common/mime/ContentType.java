@@ -118,6 +118,13 @@ public class ContentType extends MimeCompoundHeader {
         }
     }
 
+    @Override protected void reserialize() {
+        if (mContent == null) {
+            super.setPrimaryValue(getContentType());
+            super.reserialize();
+        }
+    }
+
     @Override public ContentType cleanup() {
         super.setPrimaryValue(getContentType());
         super.cleanup();

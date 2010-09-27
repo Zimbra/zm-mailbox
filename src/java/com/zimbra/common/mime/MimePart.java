@@ -197,6 +197,15 @@ public abstract class MimePart {
         return filename;
     }
 
+    public MimePart setFilename(String name) {
+        String filename = getFilename();
+        if (filename != name && (filename == null || !filename.equals(name))) {
+            setContentType(getContentType().setParameter("name", name));
+            setMimeHeader("Content-Disposition", getContentDisposition().setParameter("filename", name));
+        }
+        return this;
+    }
+
 
     /** Returns an <code>InputStream</code> whose content is the <u>entire</u>
      *  part, MIME headers and all.  If you only want the part body, try

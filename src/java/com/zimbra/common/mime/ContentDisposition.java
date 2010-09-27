@@ -65,6 +65,13 @@ public class ContentDisposition extends MimeCompoundHeader {
         mDisposition = value.equals(ATTACHMENT) || value.equals(INLINE) ? value : ATTACHMENT;
     }
 
+    @Override protected void reserialize() {
+        if (mContent == null) {
+            super.setPrimaryValue(getDisposition());
+            super.reserialize();
+        }
+    }
+
     @Override public ContentDisposition cleanup() {
         super.setPrimaryValue(getDisposition());
         super.cleanup();
