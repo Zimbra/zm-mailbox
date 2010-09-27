@@ -3963,7 +3963,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Time interval (ms) given to mail route lookup handler to cache a failed response to route a previous lookup request (after this time elapses, Proxy retries this host)</desc>
 </attr>
 
-<attr id="779" name="zimbraReverseProxyUseExternalRoute" type="boolean" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="5.0.12">
+<attr id="779" name="zimbraReverseProxyUseExternalRoute" type="boolean" cardinality="single" optionalIn="account,domain" flags="domainAdminModifiable" since="5.0.12">
   <desc>
       There is a deployment scenario for migrations where all of the customers users are pointed at the zimbra POP IMAP reverse proxy.  
       We then want their connections proxied back to the legacy system for for not-yet-non-migrated users.
@@ -5092,6 +5092,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="1131" name="zimbraOAuthConsumerCredentails" type="string" max="1024" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.0">
   <desc>OAuth consumer ids and password.  It is in the format of {consumer id]:{password}</desc>
+</attr>
+
+<attr id="1132" name="zimbraReverseProxyUseExternalRouteIfAccountNotExist" type="boolean" cardinality="single" optionalIn="domain" flags="domainAdminModifiable" since="7.0.0">
+  <desc>
+      Use external route configured on doamin if account cannot be found.
+      Also see zimbraReverseProxyUseExternalRoute.
+  </desc>
 </attr>
 
 

@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20100925-1112 */
+    /* build: 7.0.0_BETA1_1111 pshao 20100925-2255 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4972,7 +4972,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMtaRecipientDelimiter = "zimbraMtaRecipientDelimiter";
 
     /**
-     * Value for postconf relayhost
+     * Value for postconf relayhost. Note: there can be only one value on
+     * this attribute, see bug 50697.
      */
     @ZAttr(id=199)
     public static final String A_zimbraMtaRelayHost = "zimbraMtaRelayHost";
@@ -7226,6 +7227,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=779)
     public static final String A_zimbraReverseProxyUseExternalRoute = "zimbraReverseProxyUseExternalRoute";
+
+    /**
+     * Use external route configured on doamin if account cannot be found.
+     * Also see zimbraReverseProxyUseExternalRoute.
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1132)
+    public static final String A_zimbraReverseProxyUseExternalRouteIfAccountNotExist = "zimbraReverseProxyUseExternalRouteIfAccountNotExist";
 
     /**
      * Limit how many times a user can login via the proxy. Setting limit to

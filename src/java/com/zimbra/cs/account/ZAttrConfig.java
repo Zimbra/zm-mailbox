@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20100925-1112 */
+    /* build: 7.0.0_BETA1_1111 pshao 20100925-2255 */
 
     /**
      * RFC2256: descriptive information
@@ -17440,7 +17440,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf relayhost
+     * Value for postconf relayhost. Note: there can be only one value on
+     * this attribute, see bug 50697.
      *
      * @return zimbraMtaRelayHost, or empty array if unset
      */
@@ -17450,7 +17451,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf relayhost
+     * Value for postconf relayhost. Note: there can be only one value on
+     * this attribute, see bug 50697.
      *
      * @param zimbraMtaRelayHost new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -17463,7 +17465,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf relayhost
+     * Value for postconf relayhost. Note: there can be only one value on
+     * this attribute, see bug 50697.
      *
      * @param zimbraMtaRelayHost new value
      * @param attrs existing map to populate, or null to create a new map
@@ -17477,7 +17480,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf relayhost
+     * Value for postconf relayhost. Note: there can be only one value on
+     * this attribute, see bug 50697.
      *
      * @param zimbraMtaRelayHost new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -17490,7 +17494,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf relayhost
+     * Value for postconf relayhost. Note: there can be only one value on
+     * this attribute, see bug 50697.
      *
      * @param zimbraMtaRelayHost new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -17504,7 +17509,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf relayhost
+     * Value for postconf relayhost. Note: there can be only one value on
+     * this attribute, see bug 50697.
      *
      * @param zimbraMtaRelayHost existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -17517,7 +17523,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf relayhost
+     * Value for postconf relayhost. Note: there can be only one value on
+     * this attribute, see bug 50697.
      *
      * @param zimbraMtaRelayHost existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -17531,7 +17538,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf relayhost
+     * Value for postconf relayhost. Note: there can be only one value on
+     * this attribute, see bug 50697.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -17543,7 +17551,8 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
-     * Value for postconf relayhost
+     * Value for postconf relayhost. Note: there can be only one value on
+     * this attribute, see bug 50697.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

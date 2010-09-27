@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20100925-1112 */
+    /* build: 7.0.0_BETA1_1111 pshao 20100925-2255 */
 
     /**
      * RFC2256: descriptive information
@@ -9383,6 +9383,180 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetResponseHeader(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraResponseHeader, "");
+        return attrs;
+    }
+
+    /**
+     * There is a deployment scenario for migrations where all of the
+     * customers users are pointed at the zimbra POP IMAP reverse proxy. We
+     * then want their connections proxied back to the legacy system for for
+     * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
+     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * domain. If so it is used. If not, lookup proceeds as usual.
+     *
+     * @return zimbraReverseProxyUseExternalRoute, or false if unset
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=779)
+    public boolean isReverseProxyUseExternalRoute() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyUseExternalRoute, false);
+    }
+
+    /**
+     * There is a deployment scenario for migrations where all of the
+     * customers users are pointed at the zimbra POP IMAP reverse proxy. We
+     * then want their connections proxied back to the legacy system for for
+     * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
+     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * domain. If so it is used. If not, lookup proceeds as usual.
+     *
+     * @param zimbraReverseProxyUseExternalRoute new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=779)
+    public void setReverseProxyUseExternalRoute(boolean zimbraReverseProxyUseExternalRoute) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUseExternalRoute, zimbraReverseProxyUseExternalRoute ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * There is a deployment scenario for migrations where all of the
+     * customers users are pointed at the zimbra POP IMAP reverse proxy. We
+     * then want their connections proxied back to the legacy system for for
+     * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
+     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * domain. If so it is used. If not, lookup proceeds as usual.
+     *
+     * @param zimbraReverseProxyUseExternalRoute new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=779)
+    public Map<String,Object> setReverseProxyUseExternalRoute(boolean zimbraReverseProxyUseExternalRoute, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUseExternalRoute, zimbraReverseProxyUseExternalRoute ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * There is a deployment scenario for migrations where all of the
+     * customers users are pointed at the zimbra POP IMAP reverse proxy. We
+     * then want their connections proxied back to the legacy system for for
+     * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
+     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * domain. If so it is used. If not, lookup proceeds as usual.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=779)
+    public void unsetReverseProxyUseExternalRoute() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUseExternalRoute, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * There is a deployment scenario for migrations where all of the
+     * customers users are pointed at the zimbra POP IMAP reverse proxy. We
+     * then want their connections proxied back to the legacy system for for
+     * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
+     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * domain. If so it is used. If not, lookup proceeds as usual.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 5.0.12
+     */
+    @ZAttr(id=779)
+    public Map<String,Object> unsetReverseProxyUseExternalRoute(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUseExternalRoute, "");
+        return attrs;
+    }
+
+    /**
+     * Use external route configured on doamin if account cannot be found.
+     * Also see zimbraReverseProxyUseExternalRoute.
+     *
+     * @return zimbraReverseProxyUseExternalRouteIfAccountNotExist, or false if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1132)
+    public boolean isReverseProxyUseExternalRouteIfAccountNotExist() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyUseExternalRouteIfAccountNotExist, false);
+    }
+
+    /**
+     * Use external route configured on doamin if account cannot be found.
+     * Also see zimbraReverseProxyUseExternalRoute.
+     *
+     * @param zimbraReverseProxyUseExternalRouteIfAccountNotExist new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1132)
+    public void setReverseProxyUseExternalRouteIfAccountNotExist(boolean zimbraReverseProxyUseExternalRouteIfAccountNotExist) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUseExternalRouteIfAccountNotExist, zimbraReverseProxyUseExternalRouteIfAccountNotExist ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Use external route configured on doamin if account cannot be found.
+     * Also see zimbraReverseProxyUseExternalRoute.
+     *
+     * @param zimbraReverseProxyUseExternalRouteIfAccountNotExist new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1132)
+    public Map<String,Object> setReverseProxyUseExternalRouteIfAccountNotExist(boolean zimbraReverseProxyUseExternalRouteIfAccountNotExist, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUseExternalRouteIfAccountNotExist, zimbraReverseProxyUseExternalRouteIfAccountNotExist ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Use external route configured on doamin if account cannot be found.
+     * Also see zimbraReverseProxyUseExternalRoute.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1132)
+    public void unsetReverseProxyUseExternalRouteIfAccountNotExist() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUseExternalRouteIfAccountNotExist, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Use external route configured on doamin if account cannot be found.
+     * Also see zimbraReverseProxyUseExternalRoute.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1132)
+    public Map<String,Object> unsetReverseProxyUseExternalRouteIfAccountNotExist(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUseExternalRouteIfAccountNotExist, "");
         return attrs;
     }
 
