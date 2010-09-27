@@ -5140,13 +5140,13 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNotifySSLServerEnabled = "zimbraNotifySSLServerEnabled";
 
     /**
-     * OAuth consumer ids and password. It is in the format of {consumer
-     * id]:{password}
+     * OAuth consumer ids and secrets. It is in the format of
+     * {consumer-id]:{secrets}
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1131)
-    public static final String A_zimbraOAuthConsumerCredentails = "zimbraOAuthConsumerCredentails";
+    public static final String A_zimbraOAuthConsumerCredentials = "zimbraOAuthConsumerCredentials";
 
     /**
      * the handler class for the object type

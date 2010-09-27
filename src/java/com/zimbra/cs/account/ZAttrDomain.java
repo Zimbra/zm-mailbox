@@ -8384,135 +8384,135 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * OAuth consumer ids and password. It is in the format of {consumer
-     * id]:{password}
+     * OAuth consumer ids and secrets. It is in the format of
+     * {consumer-id]:{secrets}
      *
-     * @return zimbraOAuthConsumerCredentails, or empty array if unset
+     * @return zimbraOAuthConsumerCredentials, or empty array if unset
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1131)
-    public String[] getOAuthConsumerCredentails() {
-        return getMultiAttr(Provisioning.A_zimbraOAuthConsumerCredentails);
+    public String[] getOAuthConsumerCredentials() {
+        return getMultiAttr(Provisioning.A_zimbraOAuthConsumerCredentials);
     }
 
     /**
-     * OAuth consumer ids and password. It is in the format of {consumer
-     * id]:{password}
+     * OAuth consumer ids and secrets. It is in the format of
+     * {consumer-id]:{secrets}
      *
-     * @param zimbraOAuthConsumerCredentails new value
+     * @param zimbraOAuthConsumerCredentials new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1131)
-    public void setOAuthConsumerCredentails(String[] zimbraOAuthConsumerCredentails) throws com.zimbra.common.service.ServiceException {
+    public void setOAuthConsumerCredentials(String[] zimbraOAuthConsumerCredentials) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraOAuthConsumerCredentails, zimbraOAuthConsumerCredentails);
+        attrs.put(Provisioning.A_zimbraOAuthConsumerCredentials, zimbraOAuthConsumerCredentials);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * OAuth consumer ids and password. It is in the format of {consumer
-     * id]:{password}
+     * OAuth consumer ids and secrets. It is in the format of
+     * {consumer-id]:{secrets}
      *
-     * @param zimbraOAuthConsumerCredentails new value
+     * @param zimbraOAuthConsumerCredentials new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1131)
-    public Map<String,Object> setOAuthConsumerCredentails(String[] zimbraOAuthConsumerCredentails, Map<String,Object> attrs) {
+    public Map<String,Object> setOAuthConsumerCredentials(String[] zimbraOAuthConsumerCredentials, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraOAuthConsumerCredentails, zimbraOAuthConsumerCredentails);
+        attrs.put(Provisioning.A_zimbraOAuthConsumerCredentials, zimbraOAuthConsumerCredentials);
         return attrs;
     }
 
     /**
-     * OAuth consumer ids and password. It is in the format of {consumer
-     * id]:{password}
+     * OAuth consumer ids and secrets. It is in the format of
+     * {consumer-id]:{secrets}
      *
-     * @param zimbraOAuthConsumerCredentails new to add to existing values
+     * @param zimbraOAuthConsumerCredentials new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1131)
-    public void addOAuthConsumerCredentails(String zimbraOAuthConsumerCredentails) throws com.zimbra.common.service.ServiceException {
+    public void addOAuthConsumerCredentials(String zimbraOAuthConsumerCredentials) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOAuthConsumerCredentails, zimbraOAuthConsumerCredentails);
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOAuthConsumerCredentials, zimbraOAuthConsumerCredentials);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * OAuth consumer ids and password. It is in the format of {consumer
-     * id]:{password}
+     * OAuth consumer ids and secrets. It is in the format of
+     * {consumer-id]:{secrets}
      *
-     * @param zimbraOAuthConsumerCredentails new to add to existing values
+     * @param zimbraOAuthConsumerCredentials new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1131)
-    public Map<String,Object> addOAuthConsumerCredentails(String zimbraOAuthConsumerCredentails, Map<String,Object> attrs) {
+    public Map<String,Object> addOAuthConsumerCredentials(String zimbraOAuthConsumerCredentials, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOAuthConsumerCredentails, zimbraOAuthConsumerCredentails);
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOAuthConsumerCredentials, zimbraOAuthConsumerCredentials);
         return attrs;
     }
 
     /**
-     * OAuth consumer ids and password. It is in the format of {consumer
-     * id]:{password}
+     * OAuth consumer ids and secrets. It is in the format of
+     * {consumer-id]:{secrets}
      *
-     * @param zimbraOAuthConsumerCredentails existing value to remove
+     * @param zimbraOAuthConsumerCredentials existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1131)
-    public void removeOAuthConsumerCredentails(String zimbraOAuthConsumerCredentails) throws com.zimbra.common.service.ServiceException {
+    public void removeOAuthConsumerCredentials(String zimbraOAuthConsumerCredentials) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOAuthConsumerCredentails, zimbraOAuthConsumerCredentails);
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOAuthConsumerCredentials, zimbraOAuthConsumerCredentials);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * OAuth consumer ids and password. It is in the format of {consumer
-     * id]:{password}
+     * OAuth consumer ids and secrets. It is in the format of
+     * {consumer-id]:{secrets}
      *
-     * @param zimbraOAuthConsumerCredentails existing value to remove
+     * @param zimbraOAuthConsumerCredentials existing value to remove
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1131)
-    public Map<String,Object> removeOAuthConsumerCredentails(String zimbraOAuthConsumerCredentails, Map<String,Object> attrs) {
+    public Map<String,Object> removeOAuthConsumerCredentials(String zimbraOAuthConsumerCredentials, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOAuthConsumerCredentails, zimbraOAuthConsumerCredentails);
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOAuthConsumerCredentials, zimbraOAuthConsumerCredentials);
         return attrs;
     }
 
     /**
-     * OAuth consumer ids and password. It is in the format of {consumer
-     * id]:{password}
+     * OAuth consumer ids and secrets. It is in the format of
+     * {consumer-id]:{secrets}
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1131)
-    public void unsetOAuthConsumerCredentails() throws com.zimbra.common.service.ServiceException {
+    public void unsetOAuthConsumerCredentials() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraOAuthConsumerCredentails, "");
+        attrs.put(Provisioning.A_zimbraOAuthConsumerCredentials, "");
         getProvisioning().modifyAttrs(this, attrs);
     }
 
     /**
-     * OAuth consumer ids and password. It is in the format of {consumer
-     * id]:{password}
+     * OAuth consumer ids and secrets. It is in the format of
+     * {consumer-id]:{secrets}
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -8520,9 +8520,9 @@ public class ZAttrDomain extends NamedEntry {
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1131)
-    public Map<String,Object> unsetOAuthConsumerCredentails(Map<String,Object> attrs) {
+    public Map<String,Object> unsetOAuthConsumerCredentials(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraOAuthConsumerCredentails, "");
+        attrs.put(Provisioning.A_zimbraOAuthConsumerCredentials, "");
         return attrs;
     }
 

@@ -5090,8 +5090,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>sieve script generated from user outgoing filter rules</desc>
 </attr>
 
-<attr id="1131" name="zimbraOAuthConsumerCredentails" type="string" max="1024" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.0">
-  <desc>OAuth consumer ids and password.  It is in the format of {consumer id]:{password}</desc>
+<attr id="1131" name="zimbraOAuthConsumerCredentials" type="string" max="1024" cardinality="multi" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.0">
+  <desc>OAuth consumer ids and secrets.  It is in the format of {consumer-id]:{secrets}</desc>
 </attr>
 
 <attr id="1132" name="zimbraReverseProxyUseExternalRouteIfAccountNotExist" type="boolean" cardinality="single" optionalIn="domain" flags="domainAdminModifiable" since="7.0.0">
