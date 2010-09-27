@@ -53,6 +53,7 @@ public class GalSearchParams {
     private DataSource mDataSource;
     private boolean mIdOnly;
     private boolean mNeedCanExpand;
+    private boolean mFetchGroupMembers;
     private GalOp mOp;
 	
 	public GalSearchParams(Account account) {
@@ -237,6 +238,7 @@ public class GalSearchParams {
 	
 	public void createSearchConfig(GalSearchConfig.GalType type) throws ServiceException {
 		mConfig = GalSearchConfig.create(getDomain(), mOp, type, mType);
+		mConfig.getRules().setFetchGroupMembers(mFetchGroupMembers);
 	}
 	
 	public String generateLdapQuery() throws ServiceException {
@@ -255,6 +257,10 @@ public class GalSearchParams {
 	
     public void setNeedCanExpand(boolean needCanExpand) {
         mNeedCanExpand = needCanExpand;
+    }
+    
+    public void setFetchGroupMembers(boolean fetchGroupMembers) {
+        mFetchGroupMembers = fetchGroupMembers;
     }
 	
 	public void setOp(GalOp op) {

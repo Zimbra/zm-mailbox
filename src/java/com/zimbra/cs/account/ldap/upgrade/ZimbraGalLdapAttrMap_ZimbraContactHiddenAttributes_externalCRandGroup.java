@@ -94,7 +94,8 @@ public class ZimbraGalLdapAttrMap_ZimbraContactHiddenAttributes_externalCRandGro
                 if (!Provisioning.A_zimbraCalResType.equalsIgnoreCase(hiddenAttr) &&
                     !Provisioning.A_zimbraCalResLocationDisplayName.equalsIgnoreCase(hiddenAttr) &&
                     !Provisioning.A_zimbraCalResCapacity.equalsIgnoreCase(hiddenAttr) &&
-                    !Provisioning.A_zimbraCalResContactEmail.equalsIgnoreCase(hiddenAttr)) {
+                    !Provisioning.A_zimbraCalResContactEmail.equalsIgnoreCase(hiddenAttr) &&
+                    !Provisioning.A_zimbraAccountCalendarUserType.equalsIgnoreCase(hiddenAttr)) {
                     if (!first)
                         newHiddenAttrs += ",";
                     else

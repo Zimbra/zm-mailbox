@@ -78,7 +78,7 @@ public class GalSearchResultCallback implements GalContact.Visitor {
         Element eContact;
     	if (mIdOnly)
     	    eContact = mResponse.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, mFormatter.formatItemId(c));
-    	else if (mOp == GalOp.autocomplete)
+    	else if (mOp == GalOp.sync)
     	    eContact = ToXML.encodeContact(mResponse, mFormatter, c, true, c.getAllFields().keySet());
     	else
     	    eContact = ToXML.encodeContact(mResponse, mFormatter, c, true, null);

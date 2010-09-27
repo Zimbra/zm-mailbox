@@ -162,6 +162,7 @@ public class GalSearchControl {
 	    
 		mParams.setQuery("");
 		mParams.setOp(GalOp.sync);
+		mParams.setFetchGroupMembers(true);
 		Account galAcct = mParams.getGalSyncAccount();
 		try {
 			if (galAcct != null) {

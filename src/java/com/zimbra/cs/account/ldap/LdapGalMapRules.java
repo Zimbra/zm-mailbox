@@ -41,6 +41,7 @@ public class LdapGalMapRules {
     private List<String> mLdapAttrs;
     private Map<String, LdapGalValueMap> mValueMaps;
     private GalGroupHandler mGroupHandler;
+    private boolean mFetchGroupMembers;
 
     public LdapGalMapRules(String[] rules, String[] valueMaps, String groupHandlerClass) {
         init(rules, valueMaps, groupHandlerClass);
@@ -94,6 +95,10 @@ public class LdapGalMapRules {
             mGroupHandler = new ZimbraGalGroupHandler();
     }
     
+    public void setFetchGroupMembers(boolean fetchGroupMembers) {
+        mFetchGroupMembers = fetchGroupMembers;
+    }
+    
     public String[] getLdapAttrs() {
         return mLdapAttrs.toArray(new String[mLdapAttrs.size()]);
     }
@@ -109,7 +114,14 @@ public class LdapGalMapRules {
         
         if (mGroupHandler.isGroup(sr)) {
             contactAttrs.put(ContactConstants.A_type, ContactConstants.TYPE_GROUP);
-            contactAttrs.put(ContactConstants.A_member, mGroupHandler.getMembers(zlc, sr));
+            
+            if (mFetchGroupMembers)
+                contactAttrs.put(ContactConstants.A_member, mGroupHandler.getMembers(zlc, sr));
+            else {
+                // for internal LDAP, all members are on the DL entry and have been fetched/mapped
+                // delete it.
+                contactAttrs.remove(ContactConstants.A_member);
+            }
         }
         
         return contactAttrs;

@@ -59,7 +59,7 @@ public class GalImport extends MailItemImport {
 
 	public void test() throws ServiceException {
 		try {
-			searchGal(null, SearchGalResult.newSearchGalResult(null));
+			searchGal(null, SearchGalResult.newSearchGalResult(null), false);
 		} catch (NamingException e) {
 			throw ServiceException.FAILURE("Error executing gal search", e);
 		} catch (IOException e) {
@@ -101,7 +101,7 @@ public class GalImport extends MailItemImport {
     	OperationContext octxt = new OperationContext(mbox);
     	SearchGalResult result = SearchGalResult.newSearchGalResult(new GalSearchVisitor(mbox, allMappings, fid, force));
     	try {
-    		searchGal(syncToken, result);
+    		searchGal(syncToken, result, true);
     	} catch (Exception e) {
     		setStatus(false);
     		ZimbraLog.gal.error("Error executing gal search", e);
@@ -131,15 +131,16 @@ public class GalImport extends MailItemImport {
 		setStatus(true);
 	}
 	
-	private void searchGal(String syncToken, SearchGalResult result) throws ServiceException, NamingException, IOException {
+	private void searchGal(String syncToken, SearchGalResult result, boolean fetchGroupMembers) throws ServiceException, NamingException, IOException {
 		ZimbraLog.gal.debug("searchGal: "+syncToken);
 		DataSource ds = getDataSource();
 		GalSearchParams params = new GalSearchParams(ds);
 		params.setGalResult(result);
 		params.setToken(syncToken);
 		params.setQuery("*");
-        for (String attr : ZIMBRA_ATTRS)
+		for (String attr : ZIMBRA_ATTRS)
         	params.getConfig().getRules().add(attr+"="+attr);
+        params.getConfig().getRules().setFetchGroupMembers(fetchGroupMembers);
         LdapUtil.galSearch(params);
 	}
 	private static String[] ZIMBRA_ATTRS = {

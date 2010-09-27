@@ -214,6 +214,7 @@ public class GetDistributionListMembers extends AccountDocumentHandler {
         params.setQuery(groupName);
         params.setType(Provisioning.GalSearchType.group);
         params.setLimit(1);
+        params.setFetchGroupMembers(true);
         GalGroupMembersCallback callback = new GalGroupMembersCallback(params);
         params.setResultCallback(callback);
         
