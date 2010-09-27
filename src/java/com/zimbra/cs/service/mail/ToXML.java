@@ -2047,7 +2047,11 @@ public class ToXML {
                 if (fragment != null && !fragment.equals(""))
                     m.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
 
-                Document revision = (Document) doc.getMailbox().getItemRevision(octxt, doc.getId(), doc.getType(), 1);
+                Document revision = null;
+                int v = 1;
+                while (revision == null && v < doc.getVersion()) {
+                    revision = (Document) doc.getMailbox().getItemRevision(octxt, doc.getId(), doc.getType(), v++);
+                }
                 if (revision != null) {
                     m.addAttribute(MailConstants.A_CREATOR, revision.getCreator());
                     m.addAttribute(MailConstants.A_CREATED_DATE, revision.getDate());
