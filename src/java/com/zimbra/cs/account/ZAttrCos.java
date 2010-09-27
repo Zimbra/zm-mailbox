@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20100925-2255 */
+    /* build: 7.0.0_BETA1_1111 jhahm 20100927-1217 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -3679,13 +3679,13 @@ public class ZAttrCos extends NamedEntry {
     /**
      * enable/disable dumpster
      *
-     * @return zimbraDumpsterEnabled, or true if unset
+     * @return zimbraDumpsterEnabled, or false if unset
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1128)
     public boolean isDumpsterEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraDumpsterEnabled, true);
+        return getBooleanAttr(Provisioning.A_zimbraDumpsterEnabled, false);
     }
 
     /**
@@ -9992,6 +9992,100 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetMailBlacklistMaxNumEntries(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailBlacklistMaxNumEntries, "");
+        return attrs;
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained.
+     *
+     * <p>Use getMailDumpsterLifetimeAsString to access value as a string.
+     *
+     * @see #getMailDumpsterLifetimeAsString()
+     *
+     * @return zimbraMailDumpsterLifetime in millseconds, or 2592000000 (30d)  if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public long getMailDumpsterLifetime() {
+        return getTimeInterval(Provisioning.A_zimbraMailDumpsterLifetime, 2592000000L);
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained.
+     *
+     * @return zimbraMailDumpsterLifetime, or "30d" if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public String getMailDumpsterLifetimeAsString() {
+        return getAttr(Provisioning.A_zimbraMailDumpsterLifetime, "30d");
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained.
+     *
+     * @param zimbraMailDumpsterLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public void setMailDumpsterLifetime(String zimbraMailDumpsterLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDumpsterLifetime, zimbraMailDumpsterLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained.
+     *
+     * @param zimbraMailDumpsterLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public Map<String,Object> setMailDumpsterLifetime(String zimbraMailDumpsterLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDumpsterLifetime, zimbraMailDumpsterLifetime);
+        return attrs;
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public void unsetMailDumpsterLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDumpsterLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public Map<String,Object> unsetMailDumpsterLifetime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDumpsterLifetime, "");
         return attrs;
     }
 

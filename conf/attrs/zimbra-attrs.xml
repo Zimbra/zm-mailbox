@@ -5078,7 +5078,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="1128" name="zimbraDumpsterEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.0.0">
-  <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>enable/disable dumpster</desc>
 </attr>
 
@@ -5101,5 +5101,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="1133" name="zimbraMailDumpsterLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable,accountInfo" since="7.0.0">
+  <defaultCOSValue>30d</defaultCOSValue>
+  <desc>
+    Retention period of messages in the dumpster.  0 means that all messages will be retained.
+  </desc>
+</attr>
 
 </attrs>

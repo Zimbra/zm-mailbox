@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20100925-2255 */
+    /* build: 7.0.0_BETA1_1111 jhahm 20100927-1217 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4236,6 +4236,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=565)
     public static final String A_zimbraMailDiskStreamingThreshold = "zimbraMailDiskStreamingThreshold";
+
+    /**
+     * Retention period of messages in the dumpster. 0 means that all
+     * messages will be retained.
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1133)
+    public static final String A_zimbraMailDumpsterLifetime = "zimbraMailDumpsterLifetime";
 
     /**
      * Maximum number of messages to delete during a single transaction when
