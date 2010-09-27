@@ -476,8 +476,7 @@ public class ToXML {
 
                 String type = contact.get(ContactConstants.A_type);
                 String dlist = contact.get(ContactConstants.A_dlist);
-                if (type == null && dlist != null)
-                    type = ContactConstants.TYPE_GROUP;
+                
                 elem.addAttribute(ContactConstants.A_type, type);
                 if (dlist != null)
                     elem.addAttribute(ContactConstants.A_dlist, dlist);
@@ -2310,7 +2309,7 @@ public class ToXML {
             }
         }
     }
-    public static void encodeGalContact(Element response, GalContact contact) {
+    public static Element encodeGalContact(Element response, GalContact contact) {
         Element cn = response.addElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, contact.getId());
         Map<String, Object> attrs = contact.getAttrs();
@@ -2324,5 +2323,6 @@ public class ToXML {
                 cn.addKeyValuePair(entry.getKey(), (String) value, MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
             }
         }
+        return cn;
     }
 }

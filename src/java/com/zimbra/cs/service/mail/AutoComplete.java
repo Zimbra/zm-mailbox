@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
@@ -43,8 +44,9 @@ public class AutoComplete extends MailDocumentHandler {
         
     	Provisioning.GalSearchType type = Provisioning.GalSearchType.fromString(request.getAttribute(MailConstants.A_TYPE, "account"));
         int limit = account.getContactAutoCompleteMaxResults();
+        boolean needCanExpand = request.getAttributeBool(AccountConstants.A_NEED_EXP, false);
         
-		AutoCompleteResult result = query(request, zsc, account, false, n, limit, type);		
+		AutoCompleteResult result = query(request, zsc, account, false, n, limit, type, needCanExpand);		
 		Element response = zsc.createElement(MailConstants.AUTO_COMPLETE_RESPONSE);
 		toXML(response, result, zsc.getAuthtokenAccountId());
 		
@@ -65,13 +67,20 @@ public class AutoComplete extends MailDocumentHandler {
 		}
 		return array;
 	}
+	
+	protected AutoCompleteResult query(Element request, ZimbraSoapContext zsc, Account account, 
+            boolean excludeGal, String name, int limit, Provisioning.GalSearchType type) throws ServiceException {
+	    return query(request, zsc, account, excludeGal, name, limit, type, false);
+	}
 		
-	protected AutoCompleteResult query(Element request, ZimbraSoapContext zsc, Account account, boolean excludeGal, String name, int limit, Provisioning.GalSearchType type) throws ServiceException {
+	protected AutoCompleteResult query(Element request, ZimbraSoapContext zsc, Account account, 
+	        boolean excludeGal, String name, int limit, Provisioning.GalSearchType type, boolean needCanExpand) throws ServiceException {
        if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
        
        ArrayList<Integer> folders = csvToArray(request.getAttribute(MailConstants.A_FOLDERS, null));
        ContactAutoComplete autoComplete = new ContactAutoComplete(account.getId(), zsc);
+       autoComplete.setNeedCanExpand(needCanExpand);
        autoComplete.setSearchType(type);
        boolean includeGal = !excludeGal && request.getAttributeBool(MailConstants.A_INCLUDE_GAL, autoComplete.includeGal());
        autoComplete.setIncludeGal(includeGal);
@@ -85,7 +94,10 @@ public class AutoComplete extends MailDocumentHandler {
 	        cn.addAttribute(MailConstants.A_EMAIL, entry.getEmail());
 	        cn.addAttribute(MailConstants.A_MATCH_TYPE, getType(entry));
             cn.addAttribute(MailConstants.A_RANKING, Integer.toString(entry.getRanking()));
-            cn.addAttribute(MailConstants.A_IS_GROUP, entry.isGroup());
+            cn.addAttribute(AccountConstants.A_IS_GROUP, entry.isGroup());
+            if (entry.isGroup() && entry.canExpandGroupMembers())
+                cn.addAttribute(AccountConstants.A_EXP, true);
+            
             ItemId id = entry.getId();
             if (id != null)
             	cn.addAttribute(MailConstants.A_ID, id.toString(authAccountId));

@@ -651,13 +651,15 @@ import and export of addressbook.
 ----------------------------
 
 
- <SearchGalRequest [type="{type}"] [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"]>
+ <SearchGalRequest [type="{type}"] [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"]  [needExp="1|0"]>
   [<cursor id="{prevId}" sortVal="{prevSortValue}" endSortVal="{endSortValue}"/> ]
    <name>...</name>
  </SearchGalRequest>
 
  <SearchGalResponse more="{more}" sortBy="sort-by" offset="..." [tokenizeKey="{tokenize-key-op}"]>
-   <cn>...</cn>*
+   <cn [exp="1|0"]>
+     <a n="...">...</a>+
+   </cn>*
  </SearchGalResponse>
 
   {more-flag} = 1 if the results were truncated.
@@ -676,16 +678,24 @@ import and export of addressbook.
            "all" for combination of both types
            if omitted, defaults to "all"
 
+  needExp: if the "exp" flag is needed in the response for group entries.
+           default is 0
+
+  exp: if the user can (has right to) expand group members
+       returned only if needExp is 1 in the request and only on group entries (type=group in attrs on a <cn>).
+    
   see SearchRequest for use of cursor.
 
 ----------------------------
 
- <AutoCompleteGalRequest [type="{type}"]>
+ <AutoCompleteGalRequest [type="{type}"] [needExp="1|0"]>
    <name>...</name>
  </AutoCompleteGalRequest>
 
  <AutoCompleteGalResponse more="{more}"  [tokenizeKey="{tokenize-key-op}"]>
-   <cn>...</cn>*
+   <cn [exp="1|0"]>
+     <a n="...">...</a>+
+   </cn>*
  </AutoCompleteGalResponse>
 
   - the number of entries in the response is limited by Account/COS attribute
@@ -707,14 +717,20 @@ import and export of addressbook.
            If search key was tokenized and expanded with AND or OR, this cannot
            be assumed.
 
+  needExp: if the "exp" flag is needed in the response for group entries.
+           default is 0
+  
+  exp: if the user can (has right to) expand group members
+       returned only if needExp is 1 in the request and only on group entries (type=group in attrs on a <cn>).
+               
 ----------------------------
 
-<AutoCompleteRequest [folders="{folders}"] [includeGal="0|1"]>
+<AutoCompleteRequest [folders="{folders}"] [includeGal="0|1"] [needExp="1|0"]>
   <name>...</name>
 </AutoCompleteRequest>
 
 <AutoCompleteResponse canBeCached="0|1">
-  <match ranking="..." type="gal|contact|rankingTable" isGroup="1|0" email="..." [display="..."] [id="..."] [l="..."]/>*
+  <match ranking="..." email="..." type="gal|contact|rankingTable" isGroup="1|0" [exp="1|0"] [display="..."] [id="..."] [l="..."] />*
 </AutoCompleteResponse>
 
   {folders} - comma separates list of folder IDs.
@@ -723,7 +739,11 @@ import and export of addressbook.
     zimbraContactAutoCompleteMaxResults with default value of 20.
   - email field contains comma separated email addresses in case of group
   - display field contains string that should be displayed by the client
-  - isGroup field contais if the entry is a group
+  - isGroup: if the entry is a group
+  - needExp: if the "exp" flag is needed in the response for group entries.
+             default is 0
+  - exp: if the user can (has right to) expand group members
+         returned only if needExp is 1 in the request and only on group entries (isGroup=1). 
 
 ----------------------------
 
@@ -3334,7 +3354,7 @@ Ajax client can use this request to ask the server for help in generating a prop
 </GetDistributionListMembersRequest>
 
 <GetDistributionListMembersResponse more="{more-flag}" [total="{total}"]>
-    <dlm isDL="1|0">{member email}</dlm>+
+    <dlm>{member email}</dlm>+
 </GetDistributionListMembersResponse>
 
 Notes:
@@ -3343,7 +3363,6 @@ Notes:
 
     more-flag = true if more members left to return
     total = total number of distribution lists (not affected by limit/offset)
-    isDL = whether this member itself is a distribution list, default is 0
 
 -----------------------------
 

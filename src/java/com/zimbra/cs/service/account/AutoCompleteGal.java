@@ -24,7 +24,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
@@ -45,12 +44,15 @@ public class AutoCompleteGal extends AccountDocumentHandler {
 
         String typeStr = request.getAttribute(AccountConstants.A_TYPE, "account");
         Provisioning.GalSearchType type = Provisioning.GalSearchType.fromString(typeStr);
-
+        
+        boolean needCanExpand = request.getAttributeBool(AccountConstants.A_NEED_EXP, false);
+        
         GalSearchParams params = new GalSearchParams(account, zsc);
         params.setType(type);
         params.setRequest(request);
         params.setQuery(n);
         params.setLimit(account.getContactAutoCompleteMaxResults());
+        params.setNeedCanExpand(needCanExpand);
         params.setResponseName(AccountConstants.AUTO_COMPLETE_GAL_RESPONSE);
         GalSearchControl gal = new GalSearchControl(params);
         gal.autocomplete();

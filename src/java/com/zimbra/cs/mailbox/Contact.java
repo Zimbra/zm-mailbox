@@ -731,6 +731,14 @@ public class Contact extends MailItem {
         return decodeXProps(mFields.get(ContactConstants.A_vCardXProps));
     }
     
+    public boolean isGroup() {
+        return ContactConstants.TYPE_GROUP.equals(get(ContactConstants.A_type));
+    }
+    
+    public static boolean isGroup(Map<String,? extends Object> attrs) {
+        return ContactConstants.TYPE_GROUP.equals((String) attrs.get(ContactConstants.A_type));
+    }
+    
     public static Map<String,String> decodeXProps(String xpropStr) {
         HashMap<String,String> xprops = new HashMap<String,String>();
         if (xpropStr == null || xpropStr.length() == 0)

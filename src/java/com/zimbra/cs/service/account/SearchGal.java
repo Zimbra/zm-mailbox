@@ -45,6 +45,8 @@ public class SearchGal extends AccountDocumentHandler {
         String typeStr = request.getAttribute(AccountConstants.A_TYPE, "all");
         Provisioning.GalSearchType type = Provisioning.GalSearchType.fromString(typeStr);
         
+        boolean needCanExpand = request.getAttributeBool(AccountConstants.A_NEED_EXP, false);
+        
         String galAcctId = request.getAttribute(AccountConstants.A_ID, null);
 
         String query = null;
@@ -54,6 +56,7 @@ public class SearchGal extends AccountDocumentHandler {
         params.setType(type);
         params.setRequest(request);
         params.setQuery(query);
+        params.setNeedCanExpand(needCanExpand);
         params.setResponseName(AccountConstants.SEARCH_GAL_RESPONSE);
         if (galAcctId != null)
         	params.setGalSyncAccount(Provisioning.getInstance().getAccountById(galAcctId));

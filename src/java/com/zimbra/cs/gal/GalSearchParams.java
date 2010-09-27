@@ -24,6 +24,7 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalUtil;
@@ -51,6 +52,7 @@ public class GalSearchParams {
     private QName mResponse;
     private DataSource mDataSource;
     private boolean mIdOnly;
+    private boolean mNeedCanExpand;
     private GalOp mOp;
 	
 	public GalSearchParams(Account account) {
@@ -61,7 +63,7 @@ public class GalSearchParams {
 	
 	public GalSearchParams(Account account, ZimbraSoapContext ctxt) {
 		this(account);
-        mSoapContext = ctxt;
+		mSoapContext = ctxt;
 	}
 	
     public GalSearchParams(Domain domain, ZimbraSoapContext ctxt) {
@@ -133,6 +135,13 @@ public class GalSearchParams {
 	        return mSoapContext.getAuthToken();
 	}
 	
+    public Account getAuthAccount() throws ServiceException {
+	    if (mSoapContext == null)
+            return getAccount();
+        else
+            return Provisioning.getInstance().get(AccountBy.id, mSoapContext.getAuthtokenAccountId());
+    }
+    
 	public SearchParams getSearchParams() {
 		return mSearchParams;
 	}
@@ -159,6 +168,10 @@ public class GalSearchParams {
 		return mIdOnly;
 	}
 	
+    public boolean getNeedCanExpand() {
+        return mNeedCanExpand;
+    }
+    
 	public void setSearchConfig(GalSearchConfig config) {
 		mConfig = config;
 	}
@@ -239,6 +252,10 @@ public class GalSearchParams {
 	public void setIdOnly(boolean idOnly) {
 		mIdOnly = idOnly;
 	}
+	
+    public void setNeedCanExpand(boolean needCanExpand) {
+        mNeedCanExpand = needCanExpand;
+    }
 	
 	public void setOp(GalOp op) {
 	    mOp = op;

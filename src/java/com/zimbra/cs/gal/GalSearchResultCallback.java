@@ -19,9 +19,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalOp;
@@ -35,6 +39,8 @@ public class GalSearchResultCallback implements GalContact.Visitor {
 	protected ItemIdFormatter mFormatter;
 	private boolean mIdOnly;
 	private GalOp mOp;
+	private Account mAuthAcct;
+	private boolean mNeedsCanExpandInfo;
     
     public GalSearchResultCallback(GalSearchParams params) {
     	reset(params);
@@ -51,6 +57,13 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     	}
     	params.setGalResult(SearchGalResult.newSearchGalResult(this));
     	mIdOnly = params.isIdOnly();
+    	
+    	try {
+    	    mAuthAcct = params.getAuthAccount();
+        } catch (ServiceException e) {
+            ZimbraLog.gal.warn("unable to get authed account", e);
+        }
+        mNeedsCanExpandInfo = params.getNeedCanExpand();
     }
     
     public void visit(GalContact c) throws ServiceException {
@@ -62,16 +75,29 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     }
     
     public Element handleContact(Contact c) throws ServiceException {
+        Element eContact;
     	if (mIdOnly)
-            return mResponse.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, mFormatter.formatItemId(c));
+    	    eContact = mResponse.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, mFormatter.formatItemId(c));
     	else if (mOp == GalOp.autocomplete)
-    		return ToXML.encodeContact(mResponse, mFormatter, c, true, c.getAllFields().keySet());
+    	    eContact = ToXML.encodeContact(mResponse, mFormatter, c, true, c.getAllFields().keySet());
     	else
-            return ToXML.encodeContact(mResponse, mFormatter, c, true, null);
+    	    eContact = ToXML.encodeContact(mResponse, mFormatter, c, true, null);
+    	
+    	if (mNeedsCanExpandInfo && c.isGroup()) {
+    	    boolean canExpand = GalSearchControl.canExpandGalGroup(c.get(ContactConstants.A_email), 
+                    c.get(ContactConstants.A_zimbraId), mAuthAcct);
+            eContact.addAttribute(AccountConstants.A_EXP, canExpand);
+    	}
+    	return eContact;
     }
     
     public void handleContact(GalContact c) throws ServiceException {
-		ToXML.encodeGalContact(mResponse, c);
+		Element eGalContact = ToXML.encodeGalContact(mResponse, c);
+		if (mNeedsCanExpandInfo && c.isGroup()) {
+		    boolean canExpand = GalSearchControl.canExpandGalGroup(c.getSingleAttr(ContactConstants.A_email), 
+		            c.getSingleAttr(ContactConstants.A_zimbraId), mAuthAcct);
+		    eGalContact.addAttribute(AccountConstants.A_EXP, canExpand);
+		}
     }
     
     public void handleElement(Element e) throws ServiceException {

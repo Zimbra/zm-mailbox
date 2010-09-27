@@ -67,6 +67,10 @@ public class GalContact implements Comparable {
         else return null;
     }
     
+    public boolean isGroup() {
+        return ContactConstants.TYPE_GROUP.equals(getSingleAttr(ContactConstants.A_type));
+    }
+    
     private String getSortField() {
         if (mSortField != null) return mSortField;
         

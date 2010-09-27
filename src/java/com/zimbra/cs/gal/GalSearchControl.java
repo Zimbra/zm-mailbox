@@ -27,16 +27,20 @@ import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.db.DbDataSource;
 import com.zimbra.cs.db.DbDataSource.DataSourceItem;
 import com.zimbra.cs.gal.GalSearchConfig.GalType;
@@ -546,5 +550,43 @@ public class GalSearchControl {
 
 		public GalAccountNotConfiguredException() {
 		}
+	}
+	
+	public static boolean canExpandGalGroup(String groupName, String groupId, Account authedAcct) {
+	    boolean canExpand = false;
+	    
+	    if (groupName == null || groupId == null || authedAcct == null)
+	        return false;
+	    
+	    // check feature enabled
+	    // if (!authedAcct.)
+	    //     return false;
+	    
+        // check permission if is is a Zimbra DL
+	    Provisioning prov = Provisioning.getInstance();
+	    
+        if (prov.isDistributionList(groupName)) {  // quick check to see if this is a zimbra group
+            
+            try {
+                // get the dl object for ACL checking
+                DistributionList dl = prov.getAclGroup(DistributionListBy.id, groupId);
+                
+                // the DL might have been deleted since the last GAL sync account sync, throw.
+                // or should we just let the request through?
+                if (dl == null) {
+                    ZimbraLog.gal.warn("unable to find distribution list " + groupName + "(" + groupId + ") for permission checking");
+                    return false;
+                }
+                
+                if (!AccessManager.getInstance().canDo(authedAcct, dl, User.R_viewDistList, false))
+                    return false;
+                
+            } catch (ServiceException e) {
+                ZimbraLog.gal.warn("unable to check permission for gal group expansion: " + groupName);
+                return false;
+            }
+        }
+	    
+	    return true;
 	}
 }

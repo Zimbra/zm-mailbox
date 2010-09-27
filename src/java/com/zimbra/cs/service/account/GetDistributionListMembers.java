@@ -55,20 +55,8 @@ public class GetDistributionListMembers extends AccountDocumentHandler {
         if (dlMembers == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(dlName);
         
-        // check permission if is is a Zimbra DL
-        if (prov.isDistributionList(dlName)) {  
-            // TODO: THIS IS NOT THE CORRECT CHECK, external DLs can be of the same name, 
-            //       We need to get DL by zimbraId
-            DistributionList dl = Provisioning.getInstance().getAclGroup(DistributionListBy.name, dlName);
-            
-            // the DL might have been deleted since the last GAL sync account sync, throw.
-            // or should we just let the request through?
-            if (dl == null) 
-                throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(dlName);
-            
-            if (!AccessManager.getInstance().canDo(zsc.getAuthToken(), dl, User.R_viewDistList, false))
-                throw ServiceException.PERM_DENIED("can not access dl");
-        }
+        if (!GalSearchControl.canExpandGalGroup(dlName, dlMembers.getDLZimbraId(), account))
+            throw ServiceException.PERM_DENIED("can not access dl members: " + dlName);
        
         
         Element response = zsc.createElement(AccountConstants.GET_DISTRIBUTION_LIST_MEMBERS_RESPONSE);
@@ -99,6 +87,8 @@ public class GetDistributionListMembers extends AccountDocumentHandler {
     private interface DLMembers {
 
         int getTotal();
+        
+        String getDLZimbraId();
         
         /**
          * 
@@ -132,6 +122,10 @@ public class GetDistributionListMembers extends AccountDocumentHandler {
                 return 0;
             else
                 return mMembers.length();
+        }
+        
+        public String getDLZimbraId() {
+            return mContact.get(ContactConstants.A_zimbraId);
         }
         
         public void encodeMembers(int beginIndex, int endIndex, Element resp) {
@@ -169,6 +163,10 @@ public class GetDistributionListMembers extends AccountDocumentHandler {
                 return 0;
             else
                 return mMembers.length;
+        }
+        
+        public String getDLZimbraId() {
+            return mGalContact.getSingleAttr(ContactConstants.A_zimbraId);
         }
         
         public void encodeMembers(int beginIndex, int endIndex, Element resp) {
