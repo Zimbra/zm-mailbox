@@ -183,7 +183,7 @@ public class StoreIncomingBlob extends RedoableOp {
         boolean success = false;
         try {
             boolean compressed = mData.getLength() != mMsgSize;
-            Blob blob = StoreManager.getInstance().storeIncoming(mData.getInputStream(), mMsgSize, null, compressed);
+            Blob blob = StoreManager.getInstance().storeIncoming(mData.getInputStream(), null, compressed);
             if (compressed)
                 blob.setDigest(mDigest).setRawSize(mMsgSize).setCompressed(compressed);
             registerBlob(mPath, blob);

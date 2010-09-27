@@ -119,7 +119,7 @@ public class Document extends MailItem {
         }
     }
 
-    @Override public void reanalyze(Object obj) throws ServiceException {
+    @Override public void reanalyze(Object obj, long newSize) throws ServiceException {
         if (!(obj instanceof ParsedDocument))
             throw ServiceException.FAILURE("cannot reanalyze non-ParsedDocument object", null);
         if ((mData.flags & Flag.BITMASK_UNCACHED) != 0)

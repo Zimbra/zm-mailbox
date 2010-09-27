@@ -245,11 +245,11 @@ public class Pop3Sync extends MailItemImport {
             }
             DeliveryContext dc = mc.getDeliveryContext();
             if (isOffline()) {
-                msg = addMessage(null, pm, dataSource.getFolderId(), Flag.BITMASK_UNREAD, dc);
+                msg = addMessage(null, pm, size, dataSource.getFolderId(), Flag.BITMASK_UNREAD, dc);
             } else {
                 Integer localId = getFirstLocalId(
                     RuleManager.applyRulesToIncomingMessage(
-                        mbox, pm, dataSource.getEmailAddress(), dc, dataSource.getFolderId(), allowFilterToMountpoint));
+                        mbox, pm, size, dataSource.getEmailAddress(), dc, dataSource.getFolderId(), allowFilterToMountpoint));
                 if (localId != null) {
                     msg = mbox.getMessageById(null, localId);
                 }

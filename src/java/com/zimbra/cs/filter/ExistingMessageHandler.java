@@ -50,10 +50,12 @@ extends FilterHandler {
     private boolean mKept = false;
     private boolean mFiled = false;
     private boolean mFiltered = false;
+    private int mSize;
     
-    public ExistingMessageHandler(Mailbox mbox, int messageId) {
+    public ExistingMessageHandler(Mailbox mbox, int messageId, int size) {
         mMailbox = mbox;
         mMessageId = messageId;
+        mSize = size;
     }
     
     public String getDefaultFolderPath() throws ServiceException {
@@ -218,5 +220,9 @@ extends FilterHandler {
             ZimbraLog.filter.info("Deleting original message %d after filing to another folder.", mMessageId);
             mMailbox.delete(null, mMessageId, MailItem.TYPE_MESSAGE);
         }
+    }
+
+    public int getMessageSize() {
+        return mSize;
     }
 }

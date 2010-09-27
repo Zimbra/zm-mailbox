@@ -81,40 +81,50 @@ public abstract class StoreManager {
      * @throws IOException
      * @throws ServiceException
      */
-    public Blob storeIncoming(InputStream data, long sizeHint, StorageCallback callback)
+    public Blob storeIncoming(InputStream data, StorageCallback callback)
     throws IOException, ServiceException {
-        return storeIncoming(data, sizeHint, callback, false);
+        return storeIncoming(data, callback, false);
     }
 
     /**
-     * Store a blob in incoming directory.  Blob will be compressed if volume supports compression
-     * and blob size is over the compression threshold and storeAsIs is false.
+     * Store a blob in incoming directory.
      * @param data
-     * @param sizeHint used for determining whether data should be compressed
      * @param callback
      * @param storeAsIs if true, store the blob as is even if volume supports compression
      * @return
      * @throws IOException
      * @throws ServiceException
      */
-    public abstract Blob storeIncoming(InputStream data, long sizeHint, StorageCallback callback, boolean storeAsIs)
+    public abstract Blob storeIncoming(InputStream data, StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException;
 
     /**
      * Stage an incoming <code>InputStream</code> to an
      * appropriate place for subsequent storage in a <code>Mailbox</code> via
      * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.
-     * @param data
-     * @param actualSize
-     * @param callback
-     * @param mbox
-     * @return
-     * @throws IOException
-     * @throws ServiceException
+     * 
+     * @param data the data stream
+     * @param actualSize the content size, or {@code -1} if the content size is not available
+     * @param callback callback, or {@code null}
+     * @param mbox the mailbox
      */
     public abstract StagedBlob stage(InputStream data, long actualSize, StorageCallback callback, Mailbox mbox)
     throws IOException, ServiceException;
 
+    /**
+     * Stage an incoming <code>InputStream</code> to an
+     * appropriate place for subsequent storage in a <code>Mailbox</code> via
+     * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.
+     * 
+     * @param data the data stream
+     * @param callback callback, or {@code null}
+     * @param mbox the mailbox
+     */
+    public StagedBlob stage(InputStream data, StorageCallback callback, Mailbox mbox)
+    throws IOException, ServiceException {
+        return stage(data, -1, callback, mbox);
+    }
+    
     /**
      * Stage an incoming <code>Blob</code> (see {@link #storeIncoming}) to an
      * appropriate place for subsequent storage in a <code>Mailbox</code> via

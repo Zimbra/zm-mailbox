@@ -17,7 +17,6 @@ package com.zimbra.cs.filter;
 import java.io.IOException;
 import java.util.Collection;
 
-import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.jsieve.mail.Action;
@@ -25,12 +24,12 @@ import org.apache.jsieve.mail.Action;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
+import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
@@ -48,13 +47,16 @@ extends FilterHandler {
     private Mailbox mMailbox;
     private int mDefaultFolderId;
     private String mRecipientAddress;
+    private int mSize;
     
     public IncomingMessageHandler(DeliveryContext context, Mailbox mbox,
-                                  String recipientAddress, ParsedMessage pm, int defaultFolderId) {
+                                  String recipientAddress, ParsedMessage pm, int size,
+                                  int defaultFolderId) {
         mContext = context;
         mMailbox = mbox;
         mRecipientAddress = recipientAddress;
         mParsedMessage = pm;
+        mSize = size;
         mDefaultFolderId = defaultFolderId;
     }
     
@@ -141,5 +143,9 @@ extends FilterHandler {
         }
         return flagBits;
     }
-    
+
+    @Override
+    public int getMessageSize() {
+        return mSize;
+    }
 }

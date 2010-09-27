@@ -17,12 +17,10 @@ package com.zimbra.cs.mime;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,6 +29,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
 
 import javax.mail.Address;
 import javax.mail.Header;
@@ -43,16 +42,14 @@ import javax.mail.internet.MimeUtility;
 import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import com.google.common.base.Strings;
-import com.zimbra.cs.store.Blob;
 import org.apache.lucene.document.Document;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.CalculatorStream;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.L10nUtil;
@@ -64,8 +61,8 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.Fragment;
-import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.localconfig.DebugConfig;
@@ -74,6 +71,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.object.ObjectHandlerException;
+import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.util.JMSession;
 
@@ -125,9 +123,7 @@ public class ParsedMessage {
     private List<IndexDocument> mZDocuments = new ArrayList<IndexDocument>();
     private CalendarPartInfo mCalendarPartInfo;
 
-    private String mRawDigest;
     private boolean mWasMutated;
-    private Integer mRawSize;
     private InputStream mSharedStream;
 
     public static final long DATE_HEADER = -2;
@@ -140,7 +136,7 @@ public class ParsedMessage {
 
     public ParsedMessage(MimeMessage msg, long receivedDate, boolean indexAttachments)
     throws ServiceException {
-        initialize(msg, receivedDate, indexAttachments, null, null);
+        initialize(msg, receivedDate, indexAttachments);
     }
 
     public ParsedMessage(byte[] rawData, boolean indexAttachments)
@@ -150,7 +146,7 @@ public class ParsedMessage {
 
     public ParsedMessage(byte[] rawData, Long receivedDate, boolean indexAttachments)
     throws ServiceException {
-        initialize(rawData, receivedDate, indexAttachments, null);
+        initialize(rawData, receivedDate, indexAttachments);
     }
 
     /**
@@ -159,12 +155,12 @@ public class ParsedMessage {
      */
     public ParsedMessage(File file, Long receivedDate, boolean indexAttachments)
     throws ServiceException, IOException {
-        initialize(file, receivedDate, indexAttachments, null, null);
+        initialize(file, receivedDate, indexAttachments);
     }
 
     public ParsedMessage(Blob blob, Long receivedDate, boolean indexAttachments)
         throws ServiceException, IOException {
-        initialize(blob.getFile(), receivedDate, indexAttachments, (int) blob.getRawSize(), blob.getDigest());
+        initialize(blob.getFile(), receivedDate, indexAttachments);
     }
 
     public ParsedMessage(ParsedMessageOptions opt)
@@ -173,12 +169,12 @@ public class ParsedMessage {
             throw ServiceException.FAILURE("Options do not specify attachment indexing state.", null);
         }
         if (opt.getMimeMessage() != null) {
-            initialize(opt.getMimeMessage(), opt.getReceivedDate(), opt.getAttachmentIndexing(), opt.getSize(), opt.getDigest());
+            initialize(opt.getMimeMessage(), opt.getReceivedDate(), opt.getAttachmentIndexing());
         } else if (opt.getRawData() != null) {
-            initialize(opt.getRawData(), opt.getReceivedDate(), opt.getAttachmentIndexing(), opt.getDigest());
+            initialize(opt.getRawData(), opt.getReceivedDate(), opt.getAttachmentIndexing());
         } else if (opt.getFile() != null) {
             try {
-                initialize(opt.getFile(), opt.getReceivedDate(), opt.getAttachmentIndexing(), opt.getSize(), opt.getDigest());
+                initialize(opt.getFile(), opt.getReceivedDate(), opt.getAttachmentIndexing());
             } catch (IOException e) {
                 throw ServiceException.FAILURE("Unable to initialize ParsedMessage", e);
             }
@@ -187,27 +183,23 @@ public class ParsedMessage {
         }
     }
 
-    private void initialize(MimeMessage msg, Long receivedDate, boolean indexAttachments, Integer rawSize, String rawDigest)
+    private void initialize(MimeMessage msg, Long receivedDate, boolean indexAttachments)
     throws ServiceException {
         mMimeMessage = msg;
         mExpandedMessage = msg;
-        mRawSize = rawSize;
-        mRawDigest = rawDigest;
         initialize(receivedDate, indexAttachments);
     }
 
-    private void initialize(byte[] rawData, Long receivedDate, boolean indexAttachments, String rawDigest)
+    private void initialize(byte[] rawData, Long receivedDate, boolean indexAttachments)
     throws ServiceException {
         if (rawData == null || rawData.length == 0) {
             throw ServiceException.FAILURE("Message data cannot be null or empty.", null);
         }
         mSharedStream = new SharedByteArrayInputStream(rawData);
-        mRawSize = rawData.length;
-        mRawDigest = rawDigest;
         initialize(receivedDate, indexAttachments);
     }
 
-    private void initialize(File file, Long receivedDate, boolean indexAttachments, Integer rawSize, String rawDigest)
+    private void initialize(File file, Long receivedDate, boolean indexAttachments)
     throws IOException, ServiceException {
         if (file == null) {
             throw new IOException("File cannot be null.");
@@ -216,13 +208,13 @@ public class ParsedMessage {
             throw new IOException("File " + file.getPath() + " is empty.");
         }
 
-        if (rawSize != null) {
-            mRawSize = rawSize;
-        } else if (!FileUtil.isGzipped(file)) {
-            mRawSize = (int) file.length();
+        long size;
+        if (FileUtil.isGzipped(file)) {
+            size = ByteUtil.getDataLength(new GZIPInputStream(new FileInputStream(file)));
+        } else {
+            size = file.length();
         }
-        mSharedStream = new BlobInputStream(file, mRawSize);
-        mRawDigest = rawDigest;
+        mSharedStream = new BlobInputStream(file, size);
         initialize(receivedDate, indexAttachments);
     }
 
@@ -252,11 +244,8 @@ public class ParsedMessage {
             if (!(mSharedStream instanceof SharedInputStream)) {
                 InputStream in = mSharedStream;
                 mSharedStream = null;
-                CalculatorStream calc = new CalculatorStream(in);
-                byte[] content = ByteUtil.getContent(calc, 0);
+                byte[] content = ByteUtil.getContent(in, 0);
                 mSharedStream = new SharedByteArrayInputStream(content);
-                mRawSize = (int) calc.getSize();
-                mRawDigest = calc.getDigest();
             }
 
             mMimeMessage = mExpandedMessage = new Mime.FixedMimeMessage(JMSession.getSession(), mSharedStream);
@@ -273,8 +262,6 @@ public class ParsedMessage {
 
         if (wasMutated()) {
             // Original data is now invalid.
-            mRawDigest = null;
-            mRawSize = null;
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             mMimeMessage.writeTo(buffer);
             byte[] content = buffer.toByteArray();
@@ -303,25 +290,6 @@ public class ParsedMessage {
 
     public boolean wasMutated() {
         return mWasMutated;
-    }
-
-    /**
-     * Allows the caller to set the digest of the raw message.  This avoids
-     * rereading the file in the case where the caller has already read it
-     * once and calculated the digest.
-     */
-    public void setRawDigest(String digest) {
-        mRawDigest = digest;
-    }
-
-    /**
-     * Allows the caller to set the size of the raw message.  This avoids
-     * rereading the possibly compressed file in the case where the caller has
-     * already determined it
-     *
-     */
-    public void setRawSize(Integer size) {
-        mRawSize = size;
     }
 
     /** Applies all registered on-the-fly MIME converters to a copy of the
@@ -486,64 +454,11 @@ public class ParsedMessage {
     }
 
     /**
-     * Returns the size of the raw MIME message.  Affected by mutation but
-     * not conversion.
-     */
-    public int getRawSize() throws IOException, ServiceException {
-        if (mRawSize == null) {
-            initializeDigestAndSize();
-        }
-        return mRawSize;
-    }
-
-    /**
      * Returns the raw MIME data.  Affected by mutation but
      * not conversion.
      */
     public byte[] getRawData() throws IOException {
-        int sizeHint = (mRawSize == null ? 0 : mRawSize);
-        return ByteUtil.getContent(getRawInputStream(), sizeHint);
-    }
-
-    /**
-     * Returns the SHA1 digest of the raw MIME message data, encoded as base64.  Affected by mutation but
-     * not conversion.
-     */
-    public String getRawDigest() throws IOException, ServiceException {
-        if (mRawDigest == null) {
-            initializeDigestAndSize();
-        }
-        return mRawDigest;
-    }
-
-    private void initializeDigestAndSize() throws IOException, ServiceException {
-        if (mRawDigest != null && mRawSize != null) {
-            return;
-        }
-        int size = 0;
-        InputStream in = null;
-        MessageDigest digest;
-
-        // Initialize streams and digest calculator.
-        try {
-            digest = MessageDigest.getInstance("SHA1");
-        } catch (NoSuchAlgorithmException e) {
-            throw ServiceException.FAILURE("Unable to calculate digest", e);
-        }
-
-        try {
-            in = getRawInputStream();
-            DigestInputStream digestStream = new DigestInputStream(in, digest);
-            int numRead = -1;
-            byte[] buf = new byte[1024];
-            while ((numRead = digestStream.read(buf)) >= 0) {
-                size += numRead;
-            }
-            mRawSize = size;
-            mRawDigest = ByteUtil.encodeFSSafeBase64(digest.digest());
-        } finally {
-            ByteUtil.closeStream(in);
-        }
+        return ByteUtil.getContent(getRawInputStream(), 1024);
     }
 
     /**

@@ -20,12 +20,12 @@ import java.io.InputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
@@ -37,7 +37,17 @@ import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.store.*;
+import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.BlobBuilder;
+import com.zimbra.cs.store.BlobInputStream;
+import com.zimbra.cs.store.FileDescriptorCache;
+import com.zimbra.cs.store.IncomingDirectory;
+import com.zimbra.cs.store.LocalBlobCache;
+import com.zimbra.cs.store.MailboxBlob;
+import com.zimbra.cs.store.StagedBlob;
+import com.zimbra.cs.store.StorageCallback;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.UncompressedFileCache;
 
 public abstract class HttpStoreManager extends StoreManager {
     private final IncomingDirectory mIncoming = new IncomingDirectory(LC.zimbra_store_directory.value() + File.separator + "incoming");
@@ -121,7 +131,7 @@ public abstract class HttpStoreManager extends StoreManager {
 
         InputStream is = getContent(mbox, locator);
         try {
-            blob = storeIncoming(is, sizeHint, null);
+            blob = storeIncoming(is, null);
             return mLocalCache.cache(locator, blob);
         } catch (ServiceException e) {
             throw new IOException("fetching local blob: " + e);
@@ -134,9 +144,9 @@ public abstract class HttpStoreManager extends StoreManager {
         return new HttpMailboxBlob(mbox, msgId, revision, locator);
     }
 
-    @Override public Blob storeIncoming(InputStream data, long sizeHint, StorageCallback callback, boolean storeAsIs)
+    @Override public Blob storeIncoming(InputStream data, StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException {
-        BlobBuilder builder = getBlobBuilder().setSizeHint(sizeHint).setStorageCallback(callback);
+        BlobBuilder builder = getBlobBuilder().setStorageCallback(callback);
         // if the blob is already compressed, *don't* calculate a digest/size from what we write
         builder.disableCompression(storeAsIs).disableDigest(storeAsIs);
 
@@ -150,7 +160,7 @@ public abstract class HttpStoreManager extends StoreManager {
             return stage(in, actualSize, mbox);
 
         // for some reason, we need to route through the local filesystem
-        Blob blob = storeIncoming(in, actualSize, callback);
+        Blob blob = storeIncoming(in, callback);
         try {
             return stage(blob, mbox);
         } finally {
@@ -220,8 +230,8 @@ public abstract class HttpStoreManager extends StoreManager {
         HttpStagedBlob hsb = (HttpStagedBlob) staged;
         hsb.markInserted();
 
-        MailboxBlob mblob = new HttpMailboxBlob(destMbox, destMsgId, destRevision, hsb.getStagedLocator());
-        return mblob.setSize(hsb.getStagedSize()).setDigest(hsb.getStagedDigest());
+        MailboxBlob mblob = new HttpMailboxBlob(destMbox, destMsgId, destRevision, hsb.getLocator());
+        return mblob.setSize(hsb.getSize()).setDigest(hsb.getDigest());
     }
 
     @Override public boolean delete(MailboxBlob mblob) throws IOException {
@@ -235,7 +245,7 @@ public abstract class HttpStoreManager extends StoreManager {
         // we only delete a staged blob if it hasn't already been added to the mailbox 
         if (hsb == null || hsb.isInserted())
             return true;
-        return delete(hsb.getMailbox(), hsb.getStagedLocator());
+        return delete(hsb.getMailbox(), hsb.getLocator());
     }
 
     private boolean delete(Mailbox mbox, String locator) throws IOException {
@@ -262,4 +272,5 @@ public abstract class HttpStoreManager extends StoreManager {
         // TODO Auto-generated method stub
         return false;
     }
+
 }

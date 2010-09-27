@@ -1797,12 +1797,12 @@ public class Mailbox {
      * @param type  The item's type (e.g. {@link MailItem#TYPE_MESSAGE}).
      * @param data  The (optional) extra item data for indexing (e.g.
      *              a Message's {@link ParsedMessage}. */
-    synchronized void reanalyze(int id, byte type, Object data) throws ServiceException {
+    synchronized void reanalyze(int id, byte type, Object data, long size) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("reanalyze", null);
             MailItem item = getItemById(null, id, type);
-            item.reanalyze(data);
+            item.reanalyze(data, size);
             success = true;
         } finally {
             endTransaction(success);
@@ -4387,7 +4387,7 @@ public class Mailbox {
                 in = validator;
             }
 
-            blob = StoreManager.getInstance().storeIncoming(in, sizeHint, null);
+            blob = StoreManager.getInstance().storeIncoming(in, null);
 
             if (validator != null && !validator.isValid()) {
                 StoreManager.getInstance().delete(blob);
@@ -4464,9 +4464,8 @@ public class Mailbox {
         if (blob == null) {
             InputStream in = null;
             try {
-                int size = pm.getRawSize();
                 in = pm.getRawInputStream();
-                blob = sm.storeIncoming(in, size, null);
+                blob = sm.storeIncoming(in, null);
             } finally {
                 ByteUtil.closeStream(in);
             }
@@ -4555,8 +4554,8 @@ public class Mailbox {
         String digest;
         int msgSize;
         try {
-            digest = pm.getRawDigest();
-            msgSize = pm.getRawSize();
+            digest = blob.getDigest();
+            msgSize = (int) blob.getRawSize();
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to get message properties.", e);
         }
@@ -4606,7 +4605,7 @@ public class Mailbox {
 
             // step 0: preemptively check for quota issues (actual update is done in Message.create)
             if (!getAccount().isMailAllowReceiveButNotSendWhenOverQuota())
-                checkSizeChange(getSize() + staged.getStagedSize());
+                checkSizeChange(getSize() + staged.getSize());
 
             // step 1: get an ID assigned for the new message
             int messageId = getNextItemId(!isRedo ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
@@ -4864,9 +4863,6 @@ public class Mailbox {
         if (indexImmediately())
             pm.analyzeFully();
 
-        String digest = pm.getRawDigest();
-        int size = pm.getRawSize();
-
         boolean deferIndexing = !indexImmediately() || pm.hasTemporaryAnalysisFailure();
 
         // write the draft content directly to the mailbox's blob staging area
@@ -4874,10 +4870,13 @@ public class Mailbox {
         StagedBlob staged;
         InputStream is = pm.getRawInputStream();
         try {
-            staged = sm.stage(is, size, null, this);
+            staged = sm.stage(is, null, this);
         } finally {
             ByteUtil.closeStream(is);
         }
+        
+        String digest = staged.getDigest();
+        int size = (int) staged.getSize();
 
         synchronized (this) {
             SaveDraft redoRecorder = new SaveDraft(mId, id, digest, size);
@@ -5881,7 +5880,7 @@ public class Mailbox {
             // write the contact content directly to the mailbox's blob staging area
             InputStream is = null;
             try {
-                staged = sm.stage(is = pc.getContentStream(), (int) pc.getSize(), null, this);
+                staged = sm.stage(is = pc.getContentStream(), pc.getSize(), null, this);
             } catch (IOException ioe) {
                 throw ServiceException.FAILURE("could not save contact blob", ioe);
             } finally {
@@ -6782,15 +6781,6 @@ public class Mailbox {
         if (pm == null)
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding chat to mailbox " + mId, null);
 
-        String digest;
-        int size;
-        try {
-            digest = pm.getRawDigest();
-            size = pm.getRawSize();
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("unable to get chat message properties", e);
-        }
-
         mIndexHelper.maybeIndexDeferredItems();
         boolean deferIndexing = !indexImmediately();
         List<IndexDocument> docList = null;
@@ -6804,10 +6794,12 @@ public class Mailbox {
         StagedBlob staged;
         InputStream is = pm.getRawInputStream();
         try {
-            staged = sm.stage(is, size, null, this);
+            staged = sm.stage(is, null, this);
         } finally {
             ByteUtil.closeStream(is);
         }
+        String digest = staged.getDigest();
+        int size = (int) staged.getSize();
 
         synchronized (this) {
             CreateChat redoRecorder = new CreateChat(mId, digest, size, folderId, flags, tagsStr);
@@ -6845,15 +6837,6 @@ public class Mailbox {
         if (pm == null)
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when updating chat " + id + " in mailbox " + mId, null);
 
-        String digest;
-        int size;
-        try {
-            digest = pm.getRawDigest();
-            size = pm.getRawSize();
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("unable to get chat message properties", e);
-        }
-
         boolean deferIndexing = !indexImmediately() || pm.hasTemporaryAnalysisFailure();
         List<IndexDocument> docList = null;
         if (!deferIndexing)
@@ -6864,11 +6847,14 @@ public class Mailbox {
         StagedBlob staged;
         InputStream is = pm.getRawInputStream();
         try {
-            staged = sm.stage(is, size, null, this);
+            staged = sm.stage(is, null, this);
         } finally {
             ByteUtil.closeStream(is);
         }
 
+        String digest = staged.getDigest();
+        int size = (int) staged.getSize();
+        
         synchronized (this) {
             SaveChat redoRecorder = new SaveChat(mId, id, digest, size, -1, 0, null);
 

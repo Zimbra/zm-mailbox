@@ -75,9 +75,9 @@ public class FileBlobStore extends StoreManager {
         return new VolumeBlobBuilder(blob);
     }
 
-    @Override public Blob storeIncoming(InputStream in, long sizeHint, StorageCallback callback, boolean storeAsIs)
+    @Override public Blob storeIncoming(InputStream in, StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException {
-        BlobBuilder builder = getBlobBuilder().setSizeHint(sizeHint).setStorageCallback(callback);
+        BlobBuilder builder = getBlobBuilder().setStorageCallback(callback);
         // if the blob is already compressed, *don't* calculate a digest/size from what we write
         builder.disableCompression(storeAsIs).disableDigest(storeAsIs);
 
@@ -87,7 +87,7 @@ public class FileBlobStore extends StoreManager {
     @Override public VolumeStagedBlob stage(InputStream in, long actualSize, StorageCallback callback, Mailbox mbox)
     throws IOException, ServiceException {
         // mailbox store is on the same volume as incoming directory, so just storeIncoming() and wrap it
-        Blob blob = storeIncoming(in, actualSize, callback);
+        Blob blob = storeIncoming(in, callback);
         return new VolumeStagedBlob(mbox, (VolumeBlob) blob).markStagedDirectly();
     }
 

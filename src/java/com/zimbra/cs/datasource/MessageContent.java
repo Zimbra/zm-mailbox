@@ -19,6 +19,7 @@ import java.io.InputStream;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BufferStream;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.store.Blob;
@@ -47,7 +48,7 @@ public class MessageContent {
             data = bs.toByteArray();
             bs.close();
         } else {
-            blob = StoreManager.getInstance().storeIncoming(is, sizeHint, null);
+            blob = StoreManager.getInstance().storeIncoming(is, null);
         }
     }
 
@@ -58,6 +59,18 @@ public class MessageContent {
         } else {
             return new ParsedMessage(blob, receivedDate, indexAttachments);
         }
+    }
+    
+    public int getSize() {
+        if (data != null) {
+            return data.length;
+        }
+        try {
+            return (int) blob.getRawSize();
+        } catch (IOException e) {
+            ZimbraLog.datasource.error("Unable to determine size of %s.", blob.getPath(), e);
+        }
+        return 0;
     }
 
     public DeliveryContext getDeliveryContext() {

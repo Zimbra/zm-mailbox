@@ -26,7 +26,7 @@ public class HttpStagedBlob extends StagedBlob {
         mLocator = locator;
     }
 
-    @Override public String getStagedLocator() {
+    @Override public String getLocator() {
         return mLocator;
     }
 

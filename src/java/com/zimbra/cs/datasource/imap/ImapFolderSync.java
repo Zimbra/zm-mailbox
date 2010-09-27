@@ -864,7 +864,7 @@ class ImapFolderSync {
         Message msg;
         try {
             ParsedMessage pm = mc.getParsedMessage(receivedDate, mailbox.attachmentsIndexingEnabled());
-            msg = imapSync.addMessage(null, pm, folderId, zflags, mc.getDeliveryContext());
+            msg = imapSync.addMessage(null, pm, mc.getSize(), folderId, zflags, mc.getDeliveryContext());
         } finally {
             mc.cleanup();
         }

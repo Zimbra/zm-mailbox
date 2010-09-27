@@ -306,10 +306,10 @@ public class RuleManager {
     }
     
     public static List<ItemId> applyRulesToIncomingMessage(
-        Mailbox mailbox, ParsedMessage pm, String recipient,
+        Mailbox mailbox, ParsedMessage pm, int size, String recipient,
         DeliveryContext sharedDeliveryCtxt, int incomingFolderId)
     throws ServiceException {
-        return applyRulesToIncomingMessage(mailbox, pm, recipient, sharedDeliveryCtxt, incomingFolderId, true);
+        return applyRulesToIncomingMessage(mailbox, pm, size, recipient, sharedDeliveryCtxt, incomingFolderId, true);
     }
     
     /**
@@ -320,13 +320,13 @@ public class RuleManager {
      * @return the list of message id's that were added, or an empty list.
      */
     public static List<ItemId> applyRulesToIncomingMessage(
-        Mailbox mailbox, ParsedMessage pm, String recipient,
+        Mailbox mailbox, ParsedMessage pm, int size, String recipient,
         DeliveryContext sharedDeliveryCtxt, int incomingFolderId,
         boolean allowFilterToMountpoint)
     throws ServiceException {
         List<ItemId> addedMessageIds = null;
         IncomingMessageHandler handler = new IncomingMessageHandler(
-            sharedDeliveryCtxt, mailbox, recipient, pm, incomingFolderId);
+            sharedDeliveryCtxt, mailbox, recipient, pm, size, incomingFolderId);
         ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mailbox, handler);
         mailAdapter.setAllowFilterToMountpoint(allowFilterToMountpoint);
         
@@ -370,7 +370,8 @@ public class RuleManager {
     
     public static boolean applyRulesToExistingMessage(Mailbox mbox, int messageId, Node node)
     throws ServiceException {
-        ExistingMessageHandler handler = new ExistingMessageHandler(mbox, messageId);
+        Message msg = mbox.getMessageById(null, messageId);
+        ExistingMessageHandler handler = new ExistingMessageHandler(mbox, messageId, (int) msg.getSize());
         ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mbox, handler);
         
         try {

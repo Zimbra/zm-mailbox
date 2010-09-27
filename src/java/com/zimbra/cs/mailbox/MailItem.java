@@ -1556,14 +1556,14 @@ public abstract class MailItem implements Comparable<MailItem> {
         MessageCache.purge(this);
 
         // update the object to reflect its new contents
-        long size = staged == null ? 0 : staged.getStagedSize();
+        long size = staged == null ? 0 : staged.getSize();
         if (mData.size != size) {
             mMailbox.updateSize(size - mData.size);
             mData.size = size;
         }
         getFolder().updateSize(0, 0, size - mData.size);
 
-        mData.setBlobDigest(staged == null ? null : staged.getStagedDigest());
+        mData.setBlobDigest(staged == null ? null : staged.getDigest());
         mData.date   = mMailbox.getOperationTimestamp();
         mData.imapId = mMailbox.isTrackingImap() ? 0 : mData.id;
         mData.contentChanged(mMailbox);
@@ -1583,7 +1583,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         mData.locator = mblob == null ? null : mblob.getLocator();
 
         // rewrite the DB row to reflect our new view (MUST call saveData)
-        reanalyze(content);
+        reanalyze(content, size);
 
         return mblob;
     }
@@ -1719,7 +1719,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      *
      * @param data  The (optional) extra item data for indexing (e.g.
      *              a Message's {@link com.zimbra.cs.index.ParsedMessage}. */
-    void reanalyze(Object data) throws ServiceException {
+    void reanalyze(Object data, long newSize) throws ServiceException {
         throw ServiceException.FAILURE("reanalysis of " + getNameForType(this) + "s not supported", null);
     }
 

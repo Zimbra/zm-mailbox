@@ -478,7 +478,6 @@ public class ZimbraMailAdapter implements MailAdapter
 
     public List<String> getMatchingHeader(String name)
     throws SieveMailException {
-        @SuppressWarnings("unchecked")
         List<String> result = MailUtils.getMatchingHeader(this, name);
         return result;
     }
@@ -507,12 +506,8 @@ public class ZimbraMailAdapter implements MailAdapter
         return values;
     }
     
-    public int getSize() throws SieveMailException {
-        try {
-            return mHandler.getParsedMessage().getRawSize();
-        } catch (Exception e) {
-            throw new SieveMailException(e);
-        }
+    public int getSize() {
+        return mHandler.getMessageSize();
     }
     
     /**

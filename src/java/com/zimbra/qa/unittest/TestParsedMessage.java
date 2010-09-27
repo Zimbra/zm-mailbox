@@ -44,7 +44,6 @@ extends TestCase {
     private class ExpectedResults {
         String convertedSubject;
         String rawContent;
-        String rawDigest;
         boolean wasMutated;
     }
     
@@ -59,7 +58,6 @@ extends TestCase {
         String subject = NAME_PREFIX + " testParsedMessage";
         expected.convertedSubject = subject;
         expected.rawContent = TestUtil.getTestMessage(subject, RECIPIENT_NAME, SENDER_NAME, null);
-        expected.rawDigest = ByteUtil.getDigest(expected.rawContent.getBytes());
         expected.wasMutated = false;
         
         // Test ParsedMessage created from byte[]
@@ -94,7 +92,6 @@ extends TestCase {
         String subject = NAME_PREFIX + " testMimeConverter oldsubject";
         expected.convertedSubject = NAME_PREFIX + " testMimeConverter newsubject";
         expected.rawContent = TestUtil.getTestMessage(subject, RECIPIENT_NAME, SENDER_NAME, null);
-        expected.rawDigest = ByteUtil.getDigest(expected.rawContent.getBytes());
         expected.wasMutated = false;
         
         // Test ParsedMessage created from byte[]
@@ -131,10 +128,8 @@ extends TestCase {
     throws Exception {
         // Run tests multiple times to make sure the API's don't alter the state of the ParsedMessage
         for (int i = 1; i < 3; i++) {
-            // Test data, digest and size accessors
+            // Test accessors.
             assertEquals(expected.rawContent, new String(pm.getRawData()));
-            assertEquals(expected.rawDigest, pm.getRawDigest());
-            assertEquals(expected.rawContent.length(), pm.getRawSize());
             assertEquals(expected.convertedSubject, pm.getSubject());
             
             // Test sender and recipient
@@ -255,14 +250,6 @@ extends TestCase {
         // Test byte[] accessor
         msg = new String(pm.getRawData());
         assertEquals("expected: " + originalMsg + "\ngot: " + msg, originalMsg, msg);
-        
-        // Test digest
-        String originalDigest = ByteUtil.getSHA1Digest(originalMsg.getBytes(), true);
-        String digest = pm.getRawDigest();
-        assertEquals("expected: " + digest + ", got: " + digest, originalDigest, digest);
-        
-        // Test size
-        assertEquals(size, pm.getRawSize());
     }
 
     /**

@@ -32,6 +32,7 @@ public abstract class FilterHandler {
 
     public abstract ParsedMessage getParsedMessage() throws ServiceException;
     public abstract MimeMessage getMimeMessage() throws ServiceException;
+    public abstract int getMessageSize();
     
     /**
      * Returns the path to the default folder (usually <tt>Inbox</tt>).

@@ -79,7 +79,7 @@ public class SaveDraft extends CreateMessage {
             if (mData.getLength() != mMsgSize)
                 in = new GZIPInputStream(in);
 
-            blob = sm.storeIncoming(in, mMsgSize, null);
+            blob = sm.storeIncoming(in, null);
             ParsedMessage pm = new ParsedMessage(blob.getFile(), getTimestamp(), mbox.attachmentsIndexingEnabled());
 
             mbox.saveDraft(getOperationContext(), pm, getMessageId());

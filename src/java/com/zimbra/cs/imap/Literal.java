@@ -101,7 +101,7 @@ abstract class Literal {
         }
         
         @Override public Blob getBlob() throws IOException, ServiceException {
-            return StoreManager.getInstance().storeIncoming(getInputStream(), size(), null);
+            return StoreManager.getInstance().storeIncoming(getInputStream(), null);
         }
 
         @Override public void cleanup() {
@@ -115,18 +115,20 @@ abstract class Literal {
 
     private static class BlobLiteral extends Literal {
         private BlobBuilder builder;
+        int size;
 
         BlobLiteral(int size) throws IOException {
             try {
+                this.size = size;
                 builder = StoreManager.getInstance().getBlobBuilder();
-                builder.setSizeHint(size).init();
+                builder.init();
             } catch (ServiceException e) {
                 throw error("Unable to initialize BlobBuilder", e);
             }
         }
 
         @Override public int size() {
-            return (int) builder.getSizeHint();
+            return size;
         }
 
         @Override public int remaining() {

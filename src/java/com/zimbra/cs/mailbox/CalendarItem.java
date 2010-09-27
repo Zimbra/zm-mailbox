@@ -198,7 +198,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     @Override
     public void saveMetadata() throws ServiceException {
 //        super.saveMetadata();
-        reanalyze(null);
+        reanalyze(null, getSize());
     }
 
     @Override
@@ -2108,7 +2108,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         try {
             is = pm.getRawInputStream();
             if (is != null) {
-                StagedBlob sblob = sm.stage(is, -1, null, mMailbox);
+                StagedBlob sblob = sm.stage(is, null, mMailbox);
                 return setContent(sblob, pm);
             } else {
                 ZimbraLog.calendar.warn(
@@ -2122,7 +2122,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     }
 
     @Override
-    void reanalyze(Object data) throws ServiceException {
+    void reanalyze(Object data, long newSize) throws ServiceException {
         String subject = null;
         Invite firstInvite = getDefaultInviteOrNull();
         if (firstInvite != null)

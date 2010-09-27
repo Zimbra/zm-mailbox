@@ -61,20 +61,14 @@ public abstract class MailItemImport implements DataSource.DataImport {
     }
 
 
-    public Message addMessage(OperationContext octxt, ParsedMessage pm,
-                                 int folderId, int flags)
-        throws ServiceException, IOException {
-        return addMessage(octxt, pm, folderId, flags, new DeliveryContext());
-    }
-    
-    public Message addMessage(OperationContext octxt, ParsedMessage pm,
+    public Message addMessage(OperationContext octxt, ParsedMessage pm, int size,
                                  int folderId, int flags, DeliveryContext dc)
         throws ServiceException, IOException {
         Message msg = null;
         switch (folderId) {
         case Mailbox.ID_FOLDER_INBOX:
             try {
-                List<ItemId> addedMessageIds = RuleManager.applyRulesToIncomingMessage(mbox, pm, 
+                List<ItemId> addedMessageIds = RuleManager.applyRulesToIncomingMessage(mbox, pm, size,
                     dataSource.getEmailAddress(), dc, Mailbox.ID_FOLDER_INBOX);
                 Integer newMessageId = getFirstLocalId(addedMessageIds);
                 if (newMessageId == null) {

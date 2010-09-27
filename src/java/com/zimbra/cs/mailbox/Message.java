@@ -470,11 +470,11 @@ public class Message extends MailItem {
         data.folderId    = folder.getId();
         if (!folder.inSpam() || acct.getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
             data.indexId = mbox.generateIndexId(id);
-        data.locator     = staged.getStagedLocator();
+        data.locator     = staged.getLocator();
         data.imapId      = id;
         data.date        = (int) (date / 1000);
-        data.size        = staged.getStagedSize();
-        data.setBlobDigest(staged.getStagedDigest());
+        data.size        = staged.getSize();
+        data.setBlobDigest(staged.getDigest());
         data.flags       = flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC);
         data.tags        = tags;
         data.subject     = pm.getNormalizedSubject();
@@ -1042,7 +1042,7 @@ public class Message extends MailItem {
                 boolean subjectChanged = !getNormalizedSubject().equals(subject == null ? "" : subject);
 
                 if (fragmentChanged || subjectChanged)
-                    getMailbox().reanalyze(getId(), getType(), pm);
+                    getMailbox().reanalyze(getId(), getType(), pm, getSize());
             }
             
             // don't hold the lock while extracting text!
@@ -1059,28 +1059,11 @@ public class Message extends MailItem {
     }
 
 
-    public void reanalyze() throws ServiceException {
-        ParsedMessageOptions opt = new ParsedMessageOptions()
-            .setContent(getMimeMessage(false))
-            .setReceivedDate(getDate())
-            .setAttachmentIndexing(getMailbox().attachmentsIndexingEnabled())
-            .setSize(getSize())
-            .setDigest(getDigest());
-        ParsedMessage pm = new ParsedMessage(opt);
-        reanalyze(pm);
-    }
-
-    @Override void reanalyze(Object data) throws ServiceException {
+    @Override void reanalyze(Object data, long newSize) throws ServiceException {
         if (!(data instanceof ParsedMessage))
             throw ServiceException.FAILURE("cannot reanalyze non-ParsedMessage object", null);
 
         ParsedMessage pm = (ParsedMessage) data;
-        int size;
-        try {
-            size = pm.getRawSize();
-        } catch (Exception e) {
-            throw MailServiceException.MESSAGE_PARSE_ERROR(e);
-        }
 
         MailItem parent = getParent();
 
@@ -1118,11 +1101,11 @@ public class Message extends MailItem {
         }
 
         // update the SIZE and METADATA
-        if (mData.size != size) {
+        if (mData.size != newSize) {
             markItemModified(Change.MODIFIED_SIZE);
-            mMailbox.updateSize(size - mData.size, false);
-            getFolder().updateSize(0, 0, size - mData.size);
-            mData.size = size;
+            mMailbox.updateSize(newSize - mData.size, false);
+            getFolder().updateSize(0, 0, newSize - mData.size);
+            mData.size = newSize;
         }
 
         String metadata = encodeMetadata(mRGBColor, mVersion, mExtendedData, pm, mData.flags, mDraftInfo, mCalendarItemInfos, mCalendarIntendedFor);

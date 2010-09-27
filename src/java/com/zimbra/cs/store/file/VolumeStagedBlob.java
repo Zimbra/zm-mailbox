@@ -32,7 +32,7 @@ public class VolumeStagedBlob extends StagedBlob {
         return mLocalBlob;
     }
 
-    @Override public String getStagedLocator() {
+    @Override public String getLocator() {
         return Short.toString(mLocalBlob.getVolumeId());
     }
 

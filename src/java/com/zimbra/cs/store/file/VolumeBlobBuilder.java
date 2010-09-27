@@ -14,16 +14,10 @@
  */
 package com.zimbra.cs.store.file;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.zip.GZIPInputStream;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobBuilder;
 
@@ -37,13 +31,28 @@ public class VolumeBlobBuilder extends BlobBuilder {
         return ((VolumeBlob) blob).getVolumeId();
     }
 
-    @Override protected boolean useCompression(long size) throws ServiceException {
+    @Override protected boolean useCompression() throws IOException {
         if (disableCompression)
             return false;
 
-        Volume volume = Volume.getById(getVolumeId());
-        return volume.getCompressBlobs() &&
-               (size <= 0 || size > volume.getCompressionThreshold());
+        try {
+            Volume volume = Volume.getById(getVolumeId());
+            return volume.getCompressBlobs();
+        } catch (ServiceException e) {
+            throw new IOException("Unable to determine volume compression flag", e);
+        }
+    }
+
+    
+    @Override
+    protected int getCompressionThreshold() {
+        try {
+            Volume volume = Volume.getById(getVolumeId());
+            return (int) volume.getCompressionThreshold();
+        } catch (ServiceException e) {
+            ZimbraLog.store.error("Unable to determine volume compression threshold", e);
+        }
+        return 0;
     }
 
     @Override public Blob finish() throws IOException, ServiceException {
@@ -51,46 +60,7 @@ public class VolumeBlobBuilder extends BlobBuilder {
             return blob;
 
         super.finish();
-
-        // If sizeHint wasn't given we may have compressed a blob that was under
-        // the compression threshold. Let's uncompress it. This isn't really
-        // necessary, but uncompressing results in behavior consistent with
-        // earlier ZCS releases.
-        Volume volume = Volume.getById(getVolumeId());
-        if (blob.isCompressed() && getTotalBytes() < volume.getCompressionThreshold()) {
-            try {
-                uncompressBlob(blob);
-            } catch (IOException e) {
-                dispose();
-                throw e;
-            }
-        }
-
         return blob;
-    }
-
-    static void uncompressBlob(Blob blob) throws IOException {
-        File file = blob.getFile();
-        File tmp = File.createTempFile(file.getName(), ".unzip.tmp", file.getParentFile());
-        InputStream is = null;
-        OutputStream os = null;
-        try {
-            is = new GZIPInputStream(new FileInputStream(file));
-            os = new FileOutputStream(tmp);
-            ByteUtil.copy(is, false, os, false);
-        } finally {
-            ByteUtil.closeStream(is);
-            ByteUtil.closeStream(os);
-        }
-        if (!file.delete()) {
-            throw new IOException("Unable to delete file: " + file.getAbsolutePath());
-        }
-        if (!tmp.renameTo(file)) {
-            throw new IOException(
-                String.format("Unable to rename '%s' to '%s'",
-                              tmp.getAbsolutePath(), file.getAbsolutePath()));
-        }
-        blob.setCompressed(false);
     }
 
     @Override public String toString() {

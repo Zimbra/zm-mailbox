@@ -20,6 +20,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.localconfig.DebugConfig;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -42,6 +43,9 @@ public class BlobBuilder {
     private FileChannel fc;
     private long totalBytes;
     private boolean finished;
+    private byte[] buf;
+    private int bufLen = 0;
+    private boolean compressionThresholdExceeded = false;
 
     protected BlobBuilder(Blob targetBlob) {
         this.blob = targetBlob;
@@ -65,16 +69,25 @@ public class BlobBuilder {
         return this;
     }
 
+    /**
+     * This method is called by the redolog code, so that we don't double-compress
+     * blobs that are already stored in compressed format in the redolog.  In this
+     * case we write the data directly to disk and don't calculate the size or digest.  
+     */
     public BlobBuilder disableCompression(boolean disable) {
         this.disableCompression = disable;
         return this;
+    }
+    
+    protected int getCompressionThreshold() {
+        return 0;
     }
 
     public BlobBuilder disableDigest(boolean disable) {
         this.disableDigest = disable;
         return this;
     }
-
+    
     public BlobBuilder init() throws IOException, ServiceException {
         if (!disableDigest) {
             try {
@@ -85,25 +98,24 @@ public class BlobBuilder {
         }
 
         FileOutputStream fos = new FileOutputStream(blob.getFile());
+        out = fos;
         fc = fos.getChannel();
-        if (useCompression(sizeHint)) {
-            try {
-                out = new GZIPOutputStream(fos);
-            } catch (IOException e) {
-                dispose();
-                throw e;
-            }
-            blob.setCompressed(true);
+        
+        if (useCompression()) {
+            buf = new byte[getCompressionThreshold()];
         } else {
-            out = fos;
-            blob.setCompressed(false);
+            // Kind of a gross hack.  If the caller disabled compression,
+            // it's probably because the data stream is already compressed.
+            if (!disableCompression) {
+                blob.setCompressed(false);
+            }
         }
-
+        
         return this;
     }
 
     @SuppressWarnings("unused")
-    protected boolean useCompression(long size) throws ServiceException {
+    protected boolean useCompression() throws IOException {
         return false;
     }
 
@@ -127,22 +139,46 @@ public class BlobBuilder {
             throw new IllegalStateException("BlobBuilder is finished");
 
         checkInitialized();
-
-        try {
-            out.write(b, off, len);
-            if (storageCallback != null)
-                storageCallback.wrote(blob, b, off, len);
-            if (digest != null)
-                digest.update(b, off, len);
-            totalBytes += len;
-        } catch (IOException e) {
-            dispose();
-            throw e;
+        
+        if (!compressionThresholdExceeded && useCompression()) {
+            if (bufLen + len <= getCompressionThreshold()) {
+                // Read into buffer.
+                System.arraycopy(b, off, buf, bufLen, len);
+                bufLen += len;
+                totalBytes = bufLen;
+                return this;
+            }
+            
+            // This call exceeded compression threshold.  Compress the stream and
+            // write everything that we've read so far.
+            out = new GZIPOutputStream(out);
+            writeToFile(buf, 0, bufLen);
+            blob.setCompressed(true);
+            compressionThresholdExceeded = true;
         }
-
+        
+        writeToFile(b, off, len);
+        totalBytes += len;
         return this;
     }
-
+    
+    private void writeToFile(byte[] b, int off, int len) throws IOException {
+        if (len > 0) {
+            try {
+                out.write(b, off, len);
+                if (storageCallback != null) {
+                    storageCallback.wrote(blob, b, off, len);
+                }
+                if (digest != null) {
+                    digest.update(b, off, len);
+                }
+            } catch (IOException e) {
+                dispose();
+                throw e;
+            }
+        }
+    }
+    
     public BlobBuilder append(ByteBuffer bb) throws IOException {
         if (!bb.hasArray()) {
             throw new IllegalArgumentException("ByteBuffer must have backing array");
@@ -166,6 +202,13 @@ public class BlobBuilder {
     public Blob finish() throws IOException, ServiceException {
         if (finished)
             return blob;
+        
+        if (useCompression() && !compressionThresholdExceeded) {
+            // Data was completely read into the buffer.  Write the uncompressed
+            // data to the file.
+            writeToFile(buf, 0, bufLen);
+            blob.setCompressed(false);
+        }
 
         try {
             if (!DebugConfig.disableMessageStoreFsync) {
@@ -184,7 +227,6 @@ public class BlobBuilder {
             blob.setDigest(ByteUtil.encodeFSSafeBase64(digest.digest()));
             blob.setRawSize(totalBytes);
         }
-
         if (ZimbraLog.store.isDebugEnabled())
             ZimbraLog.store.debug("stored " + this);
 

@@ -250,7 +250,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 in = validator;
             }
 
-            blob = StoreManager.getInstance().storeIncoming(in, sizeHint, null);
+            blob = StoreManager.getInstance().storeIncoming(in, null);
 
             if (validator != null && !validator.isValid()) {
                 StoreManager.getInstance().delete(blob);
@@ -455,7 +455,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 // Get msgid first, to avoid having to reopen and reparse the blob
                                 // file if Mailbox.addMessageInternal() closes it.
                                 pm.getMessageID();
-                                addedMessageIds = RuleManager.applyRulesToIncomingMessage(mbox, pm,
+                                addedMessageIds = RuleManager.applyRulesToIncomingMessage(mbox, pm, (int) blob.getRawSize(),
                                     rcptEmail, sharedDeliveryCtxt, Mailbox.ID_FOLDER_INBOX);
                             } else {
                                 pm.getMessageID();

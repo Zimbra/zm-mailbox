@@ -46,25 +46,15 @@ public abstract class StagedBlob {
         return mMailbox;
     }
 
-    /** Returns the logical size of the blob before it was staged. */
-    public long getOriginalSize() {
-        return mSize;
-    }
-
-    /** Returns the digest of the blob before it was staged. */
-    public String getOriginalDigest() {
-        return mDigest;
-    }
-
     /** Returns the logical size of the blob after it was staged. */
-    public long getStagedSize() {
+    public long getSize() {
         return mSize;
     }
 
     /** Returns the digest of the blob after it was staged. */
-    public String getStagedDigest() {
+    public String getDigest() {
         return mDigest;
     }
 
-    public abstract String getStagedLocator();
+    public abstract String getLocator();
 }

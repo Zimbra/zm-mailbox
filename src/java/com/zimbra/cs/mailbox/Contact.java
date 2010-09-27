@@ -611,7 +611,7 @@ public class Contact extends MailItem {
         }
     }
 
-    @Override void reanalyze(Object data) throws ServiceException {
+    @Override void reanalyze(Object data, long newSize) throws ServiceException {
         if (!(data instanceof ParsedContact))
             throw ServiceException.FAILURE("cannot reanalyze non-ParsedContact object", null);
 
