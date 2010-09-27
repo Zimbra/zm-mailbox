@@ -19,16 +19,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.db.Versions;
 
-public class BuildInfo {
+public final class BuildInfo {
 
     public static final String VERSION;
     public static final String TYPE;
@@ -117,177 +113,6 @@ public class BuildInfo {
             System.err.format("Unable to determine platform because %s does not exist.\n", platformFile);
         }
         return platform;
-    }
-
-    public static class Version {
-
-        public static final String FUTURE = "future";
-
-        private static Pattern mPattern = Pattern.compile("([a-zA-Z]+)(\\d*)");
-
-        enum Release {
-            BETA, M, RC,GA;
-
-            public static Release fromString(String rel) throws ServiceException {
-                try {
-                    return Release.valueOf(rel);
-                } catch (IllegalArgumentException e) {
-                    throw ServiceException.INVALID_REQUEST("unknown release: " + rel, e);
-                }
-            }
-        }
-
-        private boolean mFuture;
-        private int mMajor;
-        private int mMinor;
-        private int mPatch;
-        private Release mRel;
-        private int mRelNum;
-        private String mVersion;
-
-        /**
-         *
-         * @param version String in the format of {major number}.{minor number}.{patch number}_{release}{release number}_{buildnumber}
-         *
-         * e.g.
-         *     6
-         *     6.0
-         *     6.0.0
-         *     6.0.0_BETA1_1234
-         *     6.0.0_RC1_1234
-         *     6.0.0_GA_1234
-         */
-        public Version(String version) throws ServiceException {
-            mVersion = version;
-            if (FUTURE.equalsIgnoreCase(version)) {
-                mFuture = true;
-                return;
-            }
-
-            String ver = version;
-            int underscoreAt = version.indexOf('_');
-            int lastUnderscoreAt = version.lastIndexOf('_');
-            if(lastUnderscoreAt == -1 || lastUnderscoreAt == underscoreAt)
-                lastUnderscoreAt = version.length()-1;
-
-            if (underscoreAt != -1) {
-                ver = version.substring(0, underscoreAt);
-                Matcher matcher = mPattern.matcher(version);
-                if (matcher.find()) {
-                    mRel = Release.fromString(matcher.group(1));
-                    String relNum = matcher.group(2);
-                    if (!StringUtil.isNullOrEmpty(relNum))
-                        mRelNum = Integer.parseInt(relNum);
-                }
-            }
-
-            String[] parts = ver.split("\\.");
-
-            try {
-                if (parts.length == 1)
-                    mMajor = Integer.parseInt(parts[0]);
-                else if (parts.length == 2) {
-                    mMajor = Integer.parseInt(parts[0]);
-                    mMinor = Integer.parseInt(parts[1]);
-                } else if (parts.length == 3) {
-                    mMajor = Integer.parseInt(parts[0]);
-                    mMinor = Integer.parseInt(parts[1]);
-                    mPatch = Integer.parseInt(parts[2]);
-                } else
-                    throw ServiceException.FAILURE("invalid version format:" + version, null);
-            } catch (NumberFormatException e) {
-                throw ServiceException.FAILURE("invalid version format:" + version, e);
-            }
-
-        }
-
-        /**
-         * Compares the two versions.
-         *
-         * e.g.
-         * <ul>
-         *  <li>{@code compare("5.0.10", "5.0.9") > 0}
-         *  <li>{@code compare("5.0.10", "5.0.10") == 0}
-         *  <li>{@code compare("5.0", "5.0.9") < 0}
-         *  <li>{@code compare("5.0.10_RC1", "5.0.10_BETA3") > 0}
-         *  <li>{@code compare("5.0.10_GA", "5.0.10_RC2") > 0}
-         *  <li>{@code compare("5.0.10", "5.0.10_RC2") > 0}
-         * </ul>
-         *
-         * @return a negative integer, zero, or a positive integer as
-         * versionX is older than, equal to, or newer than the versionY.
-         */
-        public static int compare(String versionX, String versionY) throws ServiceException {
-            Version x = new Version(versionX);
-            Version y = new Version(versionY);
-            return x.compare(y);
-        }
-
-        /**
-         * Compares this object with the specified version.
-         *
-         * @param version
-         * @return a negative integer, zero, or a positive integer as this object is older than, equal to, or newer than the specified version.
-         */
-        public int compare(String version) throws ServiceException  {
-            Version other = new Version(version);
-            return compare(other);
-        }
-
-        /**
-         * Compares this object with the specified version.
-         *
-         * @param version
-         * @return a negative integer, zero, or a positive integer as this object is older than, equal to, or newer than the specified version.
-         */
-        public int compare(Version version) {
-            if (mFuture) {
-                if (version.mFuture)
-                    return 0;
-                else
-                    return 1;
-            } else if (version.mFuture)
-                return -1;
-
-            int r = mMajor - version.mMajor;
-            if (r != 0)
-                return r;
-
-            r = mMinor - version.mMinor;
-            if (r != 0)
-                return r;
-
-            r = mPatch - version.mPatch;
-            if (r != 0)
-                return r;
-
-            if (mRel != null) {
-                if (version.mRel != null) {
-                    r = mRel.ordinal() - version.mRel.ordinal();
-                    if (r != 0) {
-                        return r;
-                    }
-                    return mRelNum - version.mRelNum;
-                } else { // no Release means GA
-                    return mRel.ordinal() - Release.GA.ordinal();
-                }
-            } else { // no Release means GA
-                if (version.mRel != null) {
-                    return Release.GA.ordinal() - version.mRel.ordinal();
-                } else {
-                    return 0;
-                }
-            }
-        }
-
-        public boolean isFuture() {
-            return mFuture;
-        }
-
-        @Override
-        public String toString() {
-            return mVersion;
-        }
     }
 
     public static void main(String[] args) {

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -24,13 +24,13 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.callback.IDNCallback;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.extension.ExtensionUtil;
-import com.zimbra.cs.util.BuildInfo;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -93,7 +93,7 @@ public class AttributeManager {
     private static final String A_DEPRECATED_SINCE = "deprecatedSince";
     private static final String A_SINCE = "since";
     private static final String A_REQUIRES_RESTART = "requiresRestart";
-    
+
     private static final String E_OBJECTCLASS = "objectclass";
     private static final String E_SUP = "sup";
     private static final String E_COMMENT = "comment";
@@ -104,46 +104,46 @@ public class AttributeManager {
     private static final String E_GLOBAL_CONFIG_VALUE_UPGRADE = "globalConfigValueUpgrade";
     private static final String E_DEFAULT_COS_VALUE = "defaultCOSValue";
     private static final String E_DEFAULT_COS_VALUE_UPGRADE = "defaultCOSValueUpgrade";
-    
+
     // multi-line continuation prefix chars
     private static final String ML_CONT_PREFIX = "  ";
-    
+
     private static AttributeManager mInstance;
 
-    // contains attrs defined in one of the zimbra .xml files (currently zimbra attrs and some of the amavis attrs) 
+    // contains attrs defined in one of the zimbra .xml files (currently zimbra attrs and some of the amavis attrs)
     // these attrs have AttributeInfo
-    // 
+    //
     // Note: does *not* contains attrs defiend in the extensions(attrs in OCs specified in global config ***ExtraObjectClass)
     //
     // Extension attr names are in the class -> attrs maps:
     //     mClassToAttrsMap, mClassToLowerCaseAttrsMap, mClassToAllAttrsMap maps.
     //
     private Map<String, AttributeInfo> mAttrs = new HashMap<String, AttributeInfo>();
-    
+
     private Map<String, ObjectClassInfo> mOCs = new HashMap<String, ObjectClassInfo>();
-    
+
     // only direct attrs
     private Map<AttributeClass, Set<String>> mClassToAttrsMap = new HashMap<AttributeClass, Set<String>>();
     private Map<AttributeClass, Set<String>> mClassToLowerCaseAttrsMap = new HashMap<AttributeClass, Set<String>>();
-    
+
     // direct attrs and attrs from included objectClass's
     private Map<AttributeClass, Set<String>> mClassToAllAttrsMap = new HashMap<AttributeClass, Set<String>>();
-    
+
     private boolean mLdapSchemaExtensionInited = false;
-    
+
     private AttributeCallback mIDNCallback = new IDNCallback();
 
     private static Map<Integer,String> mGroupMap = new HashMap<Integer,String>();
 
     private static Map<Integer,String> mOCGroupMap = new HashMap<Integer,String>();
-    
+
     // do not keep comments and descriptions when running in a server
     private static boolean mMinimize = false;
-    
+
     public static AttributeManager getInstance() throws ServiceException {
         synchronized(AttributeManager.class) {
             if (mInstance != null) {
-            	return mInstance;
+                return mInstance;
             }
             String dir = LC.zimbra_attrs_directory.value();
             String className = LC.zimbra_class_attrmanager.value();
@@ -163,58 +163,58 @@ public class AttributeManager {
                 mInstance = new AttributeManager(dir);
             }
             if (mInstance.hasErrors()) {
-            	throw ServiceException.FAILURE(mInstance.getErrors(), null);
+                throw ServiceException.FAILURE(mInstance.getErrors(), null);
             }
-            
+
             mInstance.computeClassToAllAttrsMap();
-            
+
             return mInstance;
         }
     }
 
     public AttributeManager(String dir) throws ServiceException {
-    	initFlagsToAttrsMap();
-        initClassToAttrsMap();        
-    	File fdir = new File(dir);
-    	if (!fdir.exists()) {
-    		throw ServiceException.FAILURE("attrs directory does not exists: " + dir, null);
-    	}
-    	if (!fdir.isDirectory()) {
-    		throw ServiceException.FAILURE("attrs directory is not a directory: " + dir, null);
-    	}
-    	
-    	File[] files = fdir.listFiles();
-    	for (File file : files) { 
-    		if (!file.getPath().endsWith(".xml")) {
-    		    ZimbraLog.misc.warn("while loading attrs, ignoring not .xml file: " + file);
-    		    continue;
-    		}
-    		if (!file.isFile()) {
-    		    ZimbraLog.misc.warn("while loading attrs, ignored non-file: " + file);
-    		}
-    		try {
-    		    SAXReader reader = new SAXReader();
-    		    Document doc = reader.read(file);
-    		    Element root = doc.getRootElement();
-    		    if (root.getName().equals(E_ATTRS)) 
-    		        loadAttrs(file);
-    		    else if (root.getName().equals(E_OBJECTCLASSES)) 
-    		        loadObjectClasses(file);
-    		    else
-    		        ZimbraLog.misc.warn("while loading attrs, ignored unknown file: " + file);
-    			
-    		} catch (DocumentException de) {
-    			throw ServiceException.FAILURE("error loading attrs file: " + file, de);
-    		}
-    	}
+        initFlagsToAttrsMap();
+        initClassToAttrsMap();
+        File fdir = new File(dir);
+        if (!fdir.exists()) {
+            throw ServiceException.FAILURE("attrs directory does not exists: " + dir, null);
+        }
+        if (!fdir.isDirectory()) {
+            throw ServiceException.FAILURE("attrs directory is not a directory: " + dir, null);
+        }
+
+        File[] files = fdir.listFiles();
+        for (File file : files) {
+            if (!file.getPath().endsWith(".xml")) {
+                ZimbraLog.misc.warn("while loading attrs, ignoring not .xml file: " + file);
+                continue;
+            }
+            if (!file.isFile()) {
+                ZimbraLog.misc.warn("while loading attrs, ignored non-file: " + file);
+            }
+            try {
+                SAXReader reader = new SAXReader();
+                Document doc = reader.read(file);
+                Element root = doc.getRootElement();
+                if (root.getName().equals(E_ATTRS))
+                    loadAttrs(file);
+                else if (root.getName().equals(E_OBJECTCLASSES))
+                    loadObjectClasses(file);
+                else
+                    ZimbraLog.misc.warn("while loading attrs, ignored unknown file: " + file);
+
+            } catch (DocumentException de) {
+                throw ServiceException.FAILURE("error loading attrs file: " + file, de);
+            }
+        }
     }
-    
+
     private List<String> mErrors = new LinkedList<String>();
-    
+
     private boolean hasErrors() {
         return mErrors.size() > 0;
     }
-    
+
     private String getErrors() {
         StringBuilder result = new StringBuilder();
         for (String error : mErrors) {
@@ -222,7 +222,7 @@ public class AttributeManager {
         }
         return result.toString();
     }
-    
+
     private void error(String attrName, File file, String error) {
         if (attrName != null) {
             mErrors.add("attr " + attrName + " in file " + file + ": " + error);
@@ -230,7 +230,7 @@ public class AttributeManager {
             mErrors.add("file " + file + ": " + error);
         }
     }
-    
+
     private void loadAttrs(File file) throws DocumentException {
         SAXReader reader = new SAXReader();
         Document doc = reader.read(file);
@@ -243,7 +243,7 @@ public class AttributeManager {
 
         String group = root.attributeValue(A_GROUP);
         String groupIdStr = root.attributeValue(A_GROUP_ID);
-        
+
         if (group == null ^ groupIdStr == null) {
             error(null, file, A_GROUP + " and " + A_GROUP_ID + " both have to be both specified");
         }
@@ -266,7 +266,7 @@ public class AttributeManager {
                 mGroupMap.put(groupId, group);
             }
         }
-        
+
         NEXT_ATTR: for (Iterator iter = root.elementIterator(); iter.hasNext();) {
             Element eattr = (Element) iter.next();
             if (!eattr.getName().equals(E_ATTR)) {
@@ -296,10 +296,10 @@ public class AttributeManager {
                 continue;
             }
             canonicalName = name.toLowerCase();
-            
+
             List<AttributeServerType> requiresRestart = null;
-            BuildInfo.Version deprecatedSinceVer = null;
-            BuildInfo.Version sinceVer = null;
+            Version deprecatedSinceVer = null;
+            Version sinceVer = null;
 
             for (Iterator attrIter = eattr.attributeIterator(); attrIter.hasNext();) {
                 Attribute attr = (Attribute) attrIter.next();
@@ -320,11 +320,11 @@ public class AttributeManager {
                         error(name, file, "unknown <attr> type: " + attr.getValue());
                         continue NEXT_ATTR;
                     }
-                } else if (aname.equals(A_VALUE)) { 
+                } else if (aname.equals(A_VALUE)) {
                     value = attr.getValue();
                 } else if (aname.equals(A_PARENT_OID)) {
                     parentOid = attr.getValue();
-                    if (!parentOid.matches("^\\d+(\\.\\d+)+")) 
+                    if (!parentOid.matches("^\\d+(\\.\\d+)+"))
                         error(name, file, "invalid parent OID " + parentOid + ": must be an OID");
                 } else if (aname.equals(A_ID)) {
                     try {
@@ -348,34 +348,34 @@ public class AttributeManager {
                 } else if (aname.equals(A_FLAGS)) {
                     flags = parseFlags(name, file, attr.getValue());
                 } else if (aname.equals(A_ORDER)) {
-                	try {
-                		order = AttributeOrder.valueOf(attr.getValue());
-                	} catch (IllegalArgumentException iae) {
+                    try {
+                        order = AttributeOrder.valueOf(attr.getValue());
+                    } catch (IllegalArgumentException iae) {
                         error(name, file, aname + " is not valid: " + attr.getValue());
-                	}
-                } else if (aname.equals(A_REQUIRES_RESTART)) {  
+                    }
+                } else if (aname.equals(A_REQUIRES_RESTART)) {
                     requiresRestart = parseRequiresRestart(name, file, attr.getValue());
-                    
-                } else if (aname.equals(A_DEPRECATED_SINCE)) {  
+
+                } else if (aname.equals(A_DEPRECATED_SINCE)) {
                     String depreSince = attr.getValue();
                     if (depreSince != null) {
                         try {
-                            deprecatedSinceVer = new BuildInfo.Version(depreSince);
+                            deprecatedSinceVer = new Version(depreSince);
                         } catch (ServiceException e) {
                             error(name, file, aname + " is not valid: " + attr.getValue() + " (" + e.getMessage() + ")");
                         }
                     }
-                    
-                } else if (aname.equals(A_SINCE)) {  
+
+                } else if (aname.equals(A_SINCE)) {
                     String since = attr.getValue();
                     if (since != null) {
                         try {
-                            sinceVer = new BuildInfo.Version(since);
+                            sinceVer = new Version(since);
                         } catch (ServiceException e) {
                             error(name, file, aname + " is not valid: " + attr.getValue() + " (" + e.getMessage() + ")");
                         }
                     }
-                        
+
                 } else {
                     error(name, file, "unknown <attr> attr: " + aname);
                 }
@@ -387,7 +387,7 @@ public class AttributeManager {
             List<String> defaultCOSValuesUpgrade = null;   // note: init to null instead of empty List
             String description = null;
             String deprecateDesc = null;
-            
+
             for (Iterator elemIter = eattr.elementIterator(); elemIter.hasNext();) {
                 Element elem = (Element)elemIter.next();
                 if (elem.getName().equals(E_GLOBAL_CONFIG_VALUE)) {
@@ -416,20 +416,20 @@ public class AttributeManager {
                     error(name, file, "unknown element: " + elem.getName());
                 }
             }
-            
+
             if (deprecatedSinceVer != null && deprecateDesc == null)
                 error(name, file, "missing attr " + A_DEPRECATED_SINCE);
             else if (deprecatedSinceVer == null && deprecateDesc != null)
                 error(name, file, "missing element " + E_DEPRECATE_DESC);
-            
+
             if (deprecatedSinceVer != null) {
-                String deprecateInfo = "Deprecated since: " + deprecatedSinceVer.toString() + ".  " + deprecateDesc; 
+                String deprecateInfo = "Deprecated since: " + deprecatedSinceVer.toString() + ".  " + deprecateDesc;
                 if (description == null)
                     description = deprecateInfo;
                 else
                     description = deprecateInfo + ".  Orig desc: " + description;
             }
-            
+
             // since is required after(inclusive) oid 525 - first attribute in 5.0
             if (sinceVer == null && id >= 525) {
                 error(name, file, "missing since (required after(inclusive) oid 710)");
@@ -439,7 +439,7 @@ public class AttributeManager {
             if (id > 0  && cardinality == null) {
                 error(name, file, "cardinality not specified");
             }
-            
+
             // Check that if id is specified, then atleast one object class is
             // defined
             if (id > 0 && (optionalIn != null && optionalIn.isEmpty()) && (requiredIn != null && requiredIn.isEmpty())) {
@@ -451,7 +451,7 @@ public class AttributeManager {
 
             // Check that if it is COS-domain inheritable it is in account and COS and domain classes
             checkFlag(name, file, flags, AttributeFlag.accountCosDomainInherited, AttributeClass.account, AttributeClass.cos, AttributeClass.domain, requiredIn, optionalIn);
-            
+
             // Check that if it is domain inheritable it is in domain and global config
             checkFlag(name, file, flags, AttributeFlag.domainInherited, AttributeClass.domain, AttributeClass.globalConfig, null, requiredIn, optionalIn);
 
@@ -474,18 +474,18 @@ public class AttributeManager {
                     cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
                     globalConfigValuesUpgrade, defaultCOSValuesUpgrade,
                     mMinimize ? null : description, requiresRestart, sinceVer, deprecatedSinceVer);
-            
+
             if (mAttrs.get(canonicalName) != null) {
                 error(name, file, "duplicate definiton");
             }
             mAttrs.put(canonicalName, info);
 
             if (flags != null) {
-            	for (AttributeFlag flag : flags) {
-            		mFlagToAttrsMap.get(flag).add(name);
-            		if (flag == AttributeFlag.accountCosDomainInherited)
-            		    mFlagToAttrsMap.get(AttributeFlag.accountInherited).add(name);
-            	}
+                for (AttributeFlag flag : flags) {
+                    mFlagToAttrsMap.get(flag).add(name);
+                    if (flag == AttributeFlag.accountCosDomainInherited)
+                        mFlagToAttrsMap.get(AttributeFlag.accountInherited).add(name);
+                }
             }
 
             if (requiredIn != null || optionalIn != null) {
@@ -506,14 +506,14 @@ public class AttributeManager {
     }
 
     protected AttributeInfo createAttributeInfo(String name, int id, String parentOid, int groupId,
-                                                AttributeCallback callback, AttributeType type, AttributeOrder order,
-                                                String value, boolean immutable, String min, String max,
-                                                AttributeCardinality cardinality, Set<AttributeClass> requiredIn,
-                                                Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
-                                                List<String> globalConfigValues, List<String> defaultCOSValues,
-                                                List<String> globalConfigValuesUpgrade, List<String> defaultCOSValuesUpgrade,
-                                                String description, List<AttributeServerType> requiresRestart,
-                                                BuildInfo.Version sinceVer, BuildInfo.Version deprecatedSinceVer) {
+            AttributeCallback callback, AttributeType type, AttributeOrder order,
+            String value, boolean immutable, String min, String max,
+            AttributeCardinality cardinality, Set<AttributeClass> requiredIn,
+            Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
+            List<String> globalConfigValues, List<String> defaultCOSValues,
+            List<String> globalConfigValuesUpgrade, List<String> defaultCOSValuesUpgrade,
+            String description, List<AttributeServerType> requiresRestart,
+            Version sinceVer, Version deprecatedSinceVer) {
         return new AttributeInfo(
                 name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
                 cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
@@ -766,7 +766,7 @@ public class AttributeManager {
             }
         }
     }
-    
+
     private List<AttributeServerType> parseRequiresRestart(String attrName, File file, String value) {
         List<AttributeServerType> result = new ArrayList<AttributeServerType>();
         String[] serverTypes = value.split(",");
@@ -787,30 +787,30 @@ public class AttributeManager {
     /*
      * Support for lookup by class
      */
-    
+
     private void initClassToAttrsMap() {
         for (AttributeClass klass : AttributeClass.values()) {
             mClassToAttrsMap.put(klass, new HashSet<String>());
             mClassToLowerCaseAttrsMap.put(klass, new HashSet<String>());
         }
     }
-    
+
     private void computeClassToAllAttrsMap() {
-        
+
         Set<String> attrs;
-        
+
         for (AttributeClass klass : mClassToAttrsMap.keySet()) {
-            
+
             switch (klass) {
             case account:
                 attrs = SetUtil.union(new HashSet<String>(),
-                                      mClassToAttrsMap.get(AttributeClass.mailRecipient), 
+                                      mClassToAttrsMap.get(AttributeClass.mailRecipient),
                                       mClassToAttrsMap.get(AttributeClass.account));
                 mClassToAllAttrsMap.put(klass, attrs);
                 break;
             case calendarResource:
                 attrs = SetUtil.union(new HashSet<String>(),
-                        mClassToAttrsMap.get(AttributeClass.mailRecipient), 
+                        mClassToAttrsMap.get(AttributeClass.mailRecipient),
                         mClassToAttrsMap.get(AttributeClass.account));
                 attrs = SetUtil.union(attrs,
                                       mClassToAttrsMap.get(AttributeClass.calendarResource));
@@ -818,43 +818,43 @@ public class AttributeManager {
                 break;
             case distributionList:
                 attrs = SetUtil.union(new HashSet<String>(),
-                                      mClassToAttrsMap.get(AttributeClass.mailRecipient), 
+                                      mClassToAttrsMap.get(AttributeClass.mailRecipient),
                                       mClassToAttrsMap.get(AttributeClass.distributionList));
                 mClassToAllAttrsMap.put(klass, attrs);
                 break;
             case imapDataSource:
                 attrs = SetUtil.union(new HashSet<String>(),
-                        mClassToAttrsMap.get(AttributeClass.dataSource), 
+                        mClassToAttrsMap.get(AttributeClass.dataSource),
                         mClassToAttrsMap.get(AttributeClass.imapDataSource));
                 mClassToAllAttrsMap.put(klass, attrs);
                 break;
             case pop3DataSource:
                 attrs = SetUtil.union(new HashSet<String>(),
-                        mClassToAttrsMap.get(AttributeClass.dataSource), 
+                        mClassToAttrsMap.get(AttributeClass.dataSource),
                         mClassToAttrsMap.get(AttributeClass.pop3DataSource));
                 mClassToAllAttrsMap.put(klass, attrs);
                 break;
             case rssDataSource:
                 attrs = SetUtil.union(new HashSet<String>(),
-                        mClassToAttrsMap.get(AttributeClass.dataSource), 
+                        mClassToAttrsMap.get(AttributeClass.dataSource),
                         mClassToAttrsMap.get(AttributeClass.rssDataSource));
                 mClassToAllAttrsMap.put(klass, attrs);
                 break;
             case liveDataSource:
                 attrs = SetUtil.union(new HashSet<String>(),
-                        mClassToAttrsMap.get(AttributeClass.dataSource), 
+                        mClassToAttrsMap.get(AttributeClass.dataSource),
                         mClassToAttrsMap.get(AttributeClass.liveDataSource));
                 mClassToAllAttrsMap.put(klass, attrs);
                 break;
             case galDataSource:
                 attrs = SetUtil.union(new HashSet<String>(),
-                        mClassToAttrsMap.get(AttributeClass.dataSource), 
+                        mClassToAttrsMap.get(AttributeClass.dataSource),
                         mClassToAttrsMap.get(AttributeClass.galDataSource));
                 mClassToAllAttrsMap.put(klass, attrs);
                 break;
             case domain:
                 attrs = SetUtil.union(new HashSet<String>(),
-                        mClassToAttrsMap.get(AttributeClass.mailRecipient), 
+                        mClassToAttrsMap.get(AttributeClass.mailRecipient),
                         mClassToAttrsMap.get(AttributeClass.domain));
                 mClassToAllAttrsMap.put(klass, attrs);
                 break;
@@ -863,7 +863,7 @@ public class AttributeManager {
             }
         }
     }
-    
+
 
     /*
      * Support for lookup by flag
@@ -877,7 +877,7 @@ public class AttributeManager {
     }
 
     public boolean isAccountInherited(String attr) {
- 	   return mFlagToAttrsMap.get(AttributeFlag.accountInherited).contains(attr);
+        return mFlagToAttrsMap.get(AttributeFlag.accountInherited).contains(attr);
     }
 
     public boolean isAccountCosDomainInherited(String attr) {
@@ -885,23 +885,23 @@ public class AttributeManager {
      }
 
     public boolean isDomainInherited(String attr) {
- 	   return mFlagToAttrsMap.get(AttributeFlag.domainInherited).contains(attr);
+        return mFlagToAttrsMap.get(AttributeFlag.domainInherited).contains(attr);
     }
 
     public boolean isServerInherited(String attr) {
- 	   return mFlagToAttrsMap.get(AttributeFlag.serverInherited).contains(attr);
+        return mFlagToAttrsMap.get(AttributeFlag.serverInherited).contains(attr);
     }
 
     public boolean isDomainAdminModifiable(String attr, AttributeClass klass) throws ServiceException {
         // bug 32507
-        if (!mClassToAllAttrsMap.get(klass).contains(attr))    
+        if (!mClassToAllAttrsMap.get(klass).contains(attr))
             throw AccountServiceException.INVALID_ATTR_NAME("unknown attribute on " + klass.name() + ": " + attr, null);
 
         return mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).contains(attr);
     }
 
     public void makeDomainAdminModifiable(String attr) {
-    	mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).add(attr);
+        mFlagToAttrsMap.get(AttributeFlag.domainAdminModifiable).add(attr);
     }
 
     public static enum IDNType {
@@ -910,19 +910,19 @@ public class AttributeManager {
         cs_emailp, // attr type is cs_emailp
         idn,       // attr has idn flag
         none;      // attr is not of type smail, emailp, cs_emailp, nor does it has idn flag
-        
+
         public boolean isEmailOrIDN() {
             return this != none;
         }
     }
-    
+
     public static IDNType idnType(AttributeManager am, String attr) {
         if (am == null)
             return IDNType.none;
         else
             return am.idnType(attr);
     }
-    
+
     private IDNType idnType(String attr) {
         AttributeInfo ai = mAttrs.get(attr.toLowerCase());
         if (ai != null) {
@@ -941,17 +941,17 @@ public class AttributeManager {
     }
 
     public boolean inVersion(String attr, String version) throws ServiceException {
-    	AttributeInfo ai = mAttrs.get(attr.toLowerCase());
-    	if (ai != null) {
-    	    BuildInfo.Version since = ai.getSince();
-    	    if (since == null)
-    	        return true;
-    	    else
-    		    return since.compare(version) <= 0;
-    	} else
-    	    throw AccountServiceException.INVALID_ATTR_NAME("unknown attribute: " + attr, null);
+        AttributeInfo ai = mAttrs.get(attr.toLowerCase());
+        if (ai != null) {
+            Version since = ai.getSince();
+            if (since == null)
+                return true;
+            else
+                return since.compare(version) <= 0;
+        } else
+            throw AccountServiceException.INVALID_ATTR_NAME("unknown attribute: " + attr, null);
     }
-    
+
     public AttributeType getAttributeType(String attr) throws ServiceException {
         AttributeInfo ai = mAttrs.get(attr.toLowerCase());
         if (ai != null)
@@ -965,17 +965,17 @@ public class AttributeManager {
     }
 
     public Set<String> getAttrsWithFlag(AttributeFlag flag) {
- 	   return mFlagToAttrsMap.get(flag);
+        return mFlagToAttrsMap.get(flag);
     }
 
     public Set<String> getAttrsInClass(AttributeClass klass) {
         return mClassToAttrsMap.get(klass);
     }
-    
+
     public Set<String> getAllAttrsInClass(AttributeClass klass) {
         return mClassToAllAttrsMap.get(klass);
     }
-    
+
     public Set<String> getLowerCaseAttrsInClass(AttributeClass klass) {
         return mClassToLowerCaseAttrsMap.get(klass);
     }
@@ -1004,7 +1004,7 @@ public class AttributeManager {
     }
 
     public static void setMinimize(boolean minimize) { mMinimize = minimize; }
-    
+
     /**
      * @param type
      * @return
@@ -1039,12 +1039,12 @@ public class AttributeManager {
                           boolean checkImmutable,
                           boolean allowCallback)
     throws ServiceException {
-    	String[] keys = attrs.keySet().toArray(new String[0]);
-		for (int i = 0; i < keys.length; i++) {
-		    String name = keys[i];
-		    if (name.length() == 0) {
-		    	throw AccountServiceException.INVALID_ATTR_NAME("empty attr name found", null);
-		    }
+        String[] keys = attrs.keySet().toArray(new String[0]);
+        for (int i = 0; i < keys.length; i++) {
+            String name = keys[i];
+            if (name.length() == 0) {
+                throw AccountServiceException.INVALID_ATTR_NAME("empty attr name found", null);
+            }
             Object value = attrs.get(name);
             if (name.charAt(0) == '-' || name.charAt(0) == '+') name = name.substring(1);
             AttributeInfo info = mAttrs.get(name.toLowerCase());
@@ -1061,7 +1061,7 @@ public class AttributeManager {
             } else {
                 ZimbraLog.misc.warn("checkValue: no attribute info for: "+name);
             }
-		}
+        }
     }
 
     public void postModify(Map<String, ? extends Object> attrs,
@@ -1076,9 +1076,9 @@ public class AttributeManager {
                            Map context,
                            boolean isCreate,
                            boolean allowCallback) {
-    	String[] keys = attrs.keySet().toArray(new String[0]);
-		for (int i = 0; i < keys.length; i++) {
-			String name = keys[i];
+        String[] keys = attrs.keySet().toArray(new String[0]);
+        for (int i = 0; i < keys.length; i++) {
+            String name = keys[i];
 //            Object value = attrs.get(name);
             if (name.charAt(0) == '-' || name.charAt(0) == '+') name = name.substring(1);
             AttributeInfo info = mAttrs.get(name.toLowerCase());
@@ -1980,7 +1980,7 @@ public class AttributeManager {
         enumName = StringUtil.escapeJavaIdentifier(enumName.substring(0,1).toUpperCase() + enumName.substring(1));
         return enumName;
     }
-    
+
     private static void generateEnum(StringBuilder result, AttributeInfo ai) throws ServiceException {
 
         Map<String,String> values = new HashMap<String, String>();
@@ -2052,8 +2052,8 @@ public class AttributeManager {
                     generateGetter(result, ai, false, ac);
                     generateGetter(result, ai, true, ac);
                     generateSetters(result, ai, false, SetterType.set);
-                    if (ai.getType() == AttributeType.TYPE_GENTIME || 
-                        ai.getType() == AttributeType.TYPE_ENUM || 
+                    if (ai.getType() == AttributeType.TYPE_GENTIME ||
+                        ai.getType() == AttributeType.TYPE_ENUM ||
                         ai.getType() == AttributeType.TYPE_PORT) {
                         generateSetters(result, ai, true, SetterType.set);
                     }
@@ -2094,7 +2094,7 @@ public class AttributeManager {
             case server:
                 if (ai.hasFlag(AttributeFlag.serverInherited))
                     values = ai.getGlobalConfigValues();
-                else 
+                else
                     return null;
                 break;
             case globalConfig:
@@ -2209,7 +2209,7 @@ public class AttributeManager {
                     if (defaultValue == null) {
                         javaBody = String.format("return getMultiAttr(Provisioning.A_%s);", name);
                     } else {
-                        javaBody = String.format("String[] value = getMultiAttr(Provisioning.A_%s); return value.length > 0 ? value : %s;", name, defaultValue);    
+                        javaBody = String.format("String[] value = getMultiAttr(Provisioning.A_%s); return value.length > 0 ? value : %s;", name, defaultValue);
                     }
                     javaDocReturns = ", or empty array if unset";
                 }
@@ -2269,7 +2269,7 @@ public class AttributeManager {
                 putParam = String.format("%s ? Provisioning.TRUE : Provisioning.FALSE", name);
                 break;
             case TYPE_INTEGER:
-            case TYPE_PORT:    
+            case TYPE_PORT:
                 javaType = "int";
                 putParam = String.format("Integer.toString(%s)", name);
                 break;
@@ -2298,7 +2298,7 @@ public class AttributeManager {
         }
 
         String  mapType= "Map<String,Object>";
-        
+
         result.append("\n    /**\n");
         if (ai.getDescription() != null) {
             result.append(FileGenUtil.wrapComments(StringUtil.escapeHtml(ai.getDescription()), 70, "     * "));
@@ -2371,29 +2371,29 @@ public class AttributeManager {
             try {
                 AttributeManager theInstance = AttributeManager.getInstance();
                 theInstance.getLdapSchemaExtensionAttrs(prov);
-                theInstance.computeClassToAllAttrsMap();  // recompute the ClassToAllAttrsMap 
+                theInstance.computeClassToAllAttrsMap();  // recompute the ClassToAllAttrsMap
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("unable to load LDAP schema extensions", e);
             }
         }
     }
-    
+
     private void getLdapSchemaExtensionAttrs(LdapProvisioning prov) throws ServiceException {
         if (mLdapSchemaExtensionInited)
             return;
-        
+
         mLdapSchemaExtensionInited = true;
-        
+
         getExtraObjectClassAttrs(prov, AttributeClass.account, Provisioning.A_zimbraAccountExtraObjectClass);
         getExtraObjectClassAttrs(prov, AttributeClass.calendarResource, Provisioning.A_zimbraCalendarResourceExtraObjectClass);
         getExtraObjectClassAttrs(prov, AttributeClass.cos, Provisioning.A_zimbraCosExtraObjectClass);
         getExtraObjectClassAttrs(prov, AttributeClass.domain, Provisioning.A_zimbraDomainExtraObjectClass);
         getExtraObjectClassAttrs(prov, AttributeClass.server, Provisioning.A_zimbraServerExtraObjectClass);
     }
-    
+
     private void getExtraObjectClassAttrs(LdapProvisioning prov, AttributeClass ac, String extraObjectClassAttr) throws ServiceException {
         Config config = prov.getConfig();
-        
+
         String[] extraObjectClasses = config.getMultiAttr(extraObjectClassAttr);
 
         if (extraObjectClasses.length > 0) {
@@ -2401,14 +2401,14 @@ public class AttributeManager {
             getAttrsInOCs(extraObjectClasses, attrsInOCs);
         }
     }
-    
+
     private void getAttrsInOCs(String[] ocs, Set<String> attrsInOCs) throws ServiceException {
-        
+
         ZimbraLdapContext zlc = null;
         try {
             zlc = new ZimbraLdapContext(true);
             DirContext schema = zlc.getSchema();
-          
+
             Map<String, Object> attrs;
             for (String oc : ocs) {
                 attrs = null;
@@ -2419,10 +2419,10 @@ public class AttributeManager {
                 } catch (NamingException e) {
                     ZimbraLog.account.debug("unable to load LDAP schema extension for objectclass: " + oc, e);
                 }
-                
+
                 if (attrs == null)
                     continue;
-                
+
                 for (Map.Entry<String, Object> attr : attrs.entrySet()) {
                     String attrName = attr.getKey();
                     if ("MAY".compareToIgnoreCase(attrName) == 0 || "MUST".compareToIgnoreCase(attrName) == 0) {
@@ -2435,8 +2435,8 @@ public class AttributeManager {
                         }
                     }
                 }
-              
-            }          
+
+            }
 
         } catch (NamingException e) {
             ZimbraLog.account.debug("unable to load LDAP schema extension", e);
@@ -2444,10 +2444,10 @@ public class AttributeManager {
             ZimbraLdapContext.closeContext(zlc);
         }
     }
-    
-    
+
+
     static class CLOptions {
-        
+
         private static String get(String key, String defaultValue) {
             String value = System.getProperty(key);
             if (value == null)
@@ -2455,19 +2455,19 @@ public class AttributeManager {
             else
                 return value;
         }
-        
+
         public static String buildVersion() {
             return get("zimbra.version", "unknown");
         }
-    
+
         public static String getBaseDn(String entry) {
             return get(entry + ".basedn", "cn=zimbra");
         }
-    
+
         public static String getEntryName(String entry, String defaultValue) {
             return get(entry + ".name", defaultValue);
         }
-        
+
         public static String getEntryId(String entry, String defaultValue) {
             return get(entry + ".id", defaultValue);
         }
