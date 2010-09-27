@@ -1107,8 +1107,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Value for postconf message_size_limit</desc>
 </attr>
 
-<attr id="199" name="zimbraMtaRelayHost" type="astring" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta">
-  <desc>Value for postconf relayhost</desc>
+<attr id="199" name="zimbraMtaRelayHost" type="astring" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" callback="MtaRelayHost">
+  <desc>Value for postconf relayhost.  Note: there can be only one value on this attribute, see bug 50697.</desc>
 </attr>
 
 <attr id="200" name="zimbraMtaTlsAuthOnly" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta">
