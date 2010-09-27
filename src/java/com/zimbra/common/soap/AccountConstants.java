@@ -184,6 +184,11 @@ public class AccountConstants {
     public static final String A_VISIBLE = "visible";
     public static final String A_PERM_DENIED = "pd";
     
+    // gal
+    public static final String A_IS_GROUP = "isGroup";
+    public static final String A_EXP = "exp";
+    public static final String A_NEED_EXP = "needExp";
+    
     // share info
     public static final String A_FOLDER_ID = "folderId";
     public static final String A_FOLDER_PATH = "folderPath";

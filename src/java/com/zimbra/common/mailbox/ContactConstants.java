@@ -48,6 +48,7 @@ public final class ContactConstants {
     public static final String A_assistantPhone = Attr.assistantPhone.name();
     public static final String A_birthday = Attr.birthday.name();
     public static final String A_callbackPhone = Attr.callbackPhone.name();
+    public static final String A_canExpand = Attr.canExpand.name();
     public static final String A_carPhone = Attr.callbackPhone.name();
     public static final String A_company = Attr.company.name();
     public static final String A_companyPhone = Attr.companyPhone.name();
@@ -103,6 +104,7 @@ public final class ContactConstants {
     public static final String A_imAddress1 = Attr.imAddress1.name();
     public static final String A_imAddress2 = Attr.imAddress2.name();
     public static final String A_imAddress3 = Attr.imAddress3.name();
+    public static final String A_zimbraId = Attr.zimbraId.name();
 
     /**
      * Whether to auto-load remote images in HTML mail.
@@ -150,6 +152,7 @@ public final class ContactConstants {
         autoLoadRemoteImages,
         birthday,
         callbackPhone,
+        canExpand,
         carPhone,
         company,
         companyPhone,
@@ -227,7 +230,8 @@ public final class ContactConstants {
         otherCustom3,
         otherCustom4,
         vCardUID,
-        vCardXProps;
+        vCardXProps,
+        zimbraId;
 
         public static Attr fromString(String s) throws ServiceException {
             try {
