@@ -371,6 +371,24 @@
      <security-constraint>
         <web-resource-collection>
         <web-resource-name>force https</web-resource-name>
+            <url-pattern>/service/user/*</url-pattern>
+        </web-resource-collection>
+        <user-data-constraint>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+     <security-constraint>
+        <web-resource-collection>
+        <web-resource-name>force https</web-resource-name>
+            <url-pattern>/user/*</url-pattern>
+        </web-resource-collection>
+        <user-data-constraint>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+     <security-constraint>
+        <web-resource-collection>
+        <web-resource-name>force https</web-resource-name>
             <url-pattern>/service/home/*</url-pattern>
         </web-resource-collection>
         <user-data-constraint>
