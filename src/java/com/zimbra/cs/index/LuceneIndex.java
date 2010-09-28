@@ -34,6 +34,7 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.FuzzyTermEnum;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.store.NoSuchDirectoryException;
 import org.apache.lucene.store.SingleInstanceLockFactory;
 import org.apache.lucene.util.Version;
 
@@ -338,15 +339,14 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
                 ZimbraLog.index_add.debug("Deleting index " + luceneDirectory);
             }
 
-            String[] files = luceneDirectory.listAll();
-            // list method may return null (for FSDirectory if the underlying
-            // directory doesn't exist in the filesystem or there are
-            // permissions problems).
-            if (files == null) {
-                if (ZimbraLog.index_add.isDebugEnabled()) {
-                    ZimbraLog.index_add.debug("Deleting index unable to list directory " +
-                            luceneDirectory);
-                }
+            String[] files;
+            try {
+                files = luceneDirectory.listAll();
+            } catch (NoSuchDirectoryException ignore) {
+                return;
+            } catch (IOException e) {
+                ZimbraLog.index_add.warn("Failed to delete index: %s",
+                        luceneDirectory, e);
                 return;
             }
 
