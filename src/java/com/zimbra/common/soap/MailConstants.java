@@ -417,6 +417,7 @@ public class MailConstants {
     public static final String A_VERBOSE = "verbose";
     public static final String A_CSVFORMAT = "csvfmt";
     public static final String A_CSVLOCALE = "csvlocale";
+    public static final String A_CSVSEPARATOR = "csvsep";
     public static final String A_NEED_GRANTEE_NAME = "needGranteeName";
     public static final String A_INVALID = "invalid";
     
