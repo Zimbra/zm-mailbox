@@ -232,6 +232,33 @@ public class SmtpTransport extends Transport {
         }
     }
 
+    /**
+     * Sends {@code MAIL FROM} command to the server.
+     *
+     * @param from sender address
+     * @throws MessagingException error
+     */
+    public void mail(String from) throws MessagingException {
+        try {
+            connection.mail(from);
+        } catch (IOException e) {
+            throw new MessagingException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Sends {@code RSET} command to the server.
+     *
+     * @throws MessagingException error
+     */
+    public void rset() throws MessagingException {
+        try {
+            connection.rset();
+        } catch (IOException e) {
+            throw new MessagingException(e.getMessage(), e);
+        }
+    }
+
     private void notify(Exception ex, Message msg, Address[] addrs) throws SendFailedException {
         Set<String> validRcpts = connection.getValidRecipients();
         Set<String> invalidRcpts = connection.getInvalidRecipients();

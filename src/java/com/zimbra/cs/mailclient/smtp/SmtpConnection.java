@@ -55,6 +55,7 @@ public class SmtpConnection extends MailConnection {
     public static final String QUIT = "QUIT";
     public static final String AUTH = "AUTH";
     public static final String STARTTLS = "STARTTLS";
+    public static final String RSET = "RSET";
 
     // Same headers that SMTPTransport passes to MimeMessage.writeTo().
     private static final String[] IGNORE_HEADERS = new String[] { "Bcc", "Content-Length" };
@@ -492,13 +493,33 @@ public class SmtpConnection extends MailConnection {
         return reply;
     }
 
-    private void mail(String from) throws IOException {
+    /**
+     * Sends {@code MAIL FROM} command to the server.
+     *
+     * @param from sender address
+     * @throws CommandFailedException SMTP error
+     * @throws IOException socket error
+     */
+    void mail(String from) throws IOException {
         if (from == null) {
             from = "";
         }
         String reply = sendCommand(MAIL, "FROM:<" + from + ">");
         if (!isPositive(reply)) {
             throw new CommandFailedException(MAIL, reply);
+        }
+    }
+
+    /**
+     * Sends {@code RSET} command to the server.
+     *
+     * @throws CommandFailedException SMTP error
+     * @throws IOException socket error
+     */
+    void rset() throws IOException {
+        String reply = sendCommand(RSET, null);
+        if (!isPositive(reply)) {
+            throw new CommandFailedException(RSET, reply);
         }
     }
 

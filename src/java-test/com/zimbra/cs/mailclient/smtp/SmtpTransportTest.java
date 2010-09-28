@@ -341,4 +341,33 @@ public class SmtpTransportTest {
         Assert.assertNull(server.replay());
     }
 
+    @Test(timeout = 3000)
+    public void rset() throws Exception {
+        server = MockTcpServer.scenario()
+        .sendLine("220 test ready")
+        .recvLine() // EHLO
+        .sendLine("250 OK")
+        .recvLine() // MAIL FROM
+        .sendLine("250 OK")
+        .recvLine() // RSET
+        .sendLine("250 OK")
+        .build().start(PORT);
+
+        Session session = JMSession.getSession();
+        SmtpTransport transport = (SmtpTransport) session.getTransport("smtp");
+        try {
+            transport.connect("localhost", PORT, null, null);
+            transport.mail("sender@zimbra.com");
+            transport.rset();
+        } finally {
+            transport.close();
+        }
+
+        server.shutdown(1000);
+        Assert.assertEquals("EHLO localhost\r\n", server.replay());
+        Assert.assertEquals("MAIL FROM:<sender@zimbra.com>\r\n", server.replay());
+        Assert.assertEquals("RSET\r\n", server.replay());
+        Assert.assertNull(server.replay());
+    }
+
 }
