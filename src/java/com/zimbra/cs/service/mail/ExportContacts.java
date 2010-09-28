@@ -53,6 +53,10 @@ public class ExportContacts extends MailDocumentHandler  {
         
         String format = request.getAttribute(MailConstants.A_CSVFORMAT, null);
         String locale = request.getAttribute(MailConstants.A_CSVLOCALE, null);
+        String separator = request.getAttribute(MailConstants.A_CSVSEPARATOR, null);
+        Character sepChar = null;
+        if ((separator != null) && (separator.length() > 0))
+            sepChar = separator.charAt(0);
         
         List<Contact> contacts = mbox.getContactList(octxt, iidFolder != null ? iidFolder.getId() : -1);
         
@@ -62,7 +66,7 @@ public class ExportContacts extends MailDocumentHandler  {
         
         try {
             ContactCSV contactCSV = new ContactCSV();
-            contactCSV.toCSV(format, locale, contacts.iterator(), sb);
+            contactCSV.toCSV(format, locale, sepChar, contacts.iterator(), sb);
         } catch (ContactCSV.ParseException e) {
             throw MailServiceException.UNABLE_TO_EXPORT_CONTACTS(e.getMessage(), e);
         }

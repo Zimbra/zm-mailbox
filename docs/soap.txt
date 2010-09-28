@@ -2347,7 +2347,7 @@ for op="update", caller can specify any or all of: l="{folder}", t="{tag-id-list
 
 ----------
 
-<ImportContactsRequest ct="{content-type}" [l="{folder-id}"] [csvfmt="{csv-format}"]>
+<ImportContactsRequest ct="{content-type}" [l="{folder-id}"] [csvfmt="{csv-format}"] [csvlocale="{csv-locale}"]>
   <content [aid="{attach-upload-id}"]>...</content>
 </ImportContactsRequest>
 
@@ -2362,12 +2362,14 @@ for op="update", caller can specify any or all of: l="{folder}", t="{tag-id-list
 {csv-format} = the format of csv being imported.  when it's not defined Zimbra
                format is assumed.  the supported formats are defined in
                $ZIMBRA_HOME/conf/zimbra-contact-fields.xml
+{csv-locale} = The locale to use when there are multiple {csv-format} locales defined.  When it is not
+               specified, the {csv-format} with no locale specification is used.
 
 TODO: should have an option on import that matches email addresses to existing contacts, and updates/ignores them.
 
 ----------
 
-<ExportContactsRequest ct="{content-type}" [l="{folder-id}"] [csvfmt="{csv-format}"]/>
+<ExportContactsRequest ct="{content-type}" [l="{folder-id}"] [csvfmt="{csv-format}"] [csvlocale="{csv-locale}"] [csvsep="{csv-delimiter}"]/>
 
 <ExportContactsResponse>
   <content>...</content>
@@ -2377,6 +2379,9 @@ TODO: should have an option on import that matches email addresses to existing c
 {folder-id} = optional folder id to export contacts from
 {csv-format} = optional csv format for exported contacts.  the supported formats
                are defined in $ZIMBRA_HOME/conf/zimbra-contact-fields.xml
+{csv-locale} = The locale to use when there are multiple {csv-format} locales defined.  When it is not
+               specified, the {csv-format} with no locale specification is used.
+{csv-delimiter} = optional delimiter to use in the resulting csv file
 
 ----------
 

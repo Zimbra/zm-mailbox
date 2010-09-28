@@ -452,21 +452,49 @@ public static String getTags(Map<String,String> csv) {
 
 
 
+    private static final QName DELIMITERS = QName.get("delimiters");
+    private static final QName DELIMITER = QName.get("delimiter");
     private static final QName FIELDS = QName.get("fields");
     private static final QName FIELD  = QName.get("field");
     private static final QName FORMAT = QName.get("format");
     private static final QName COLUMN = QName.get("column");
     
+    private static final String ATTR_CHAR  = "char";
     private static final String ATTR_NAME  = "name";
     private static final String ATTR_LOCALE  = "locale";
     private static final String ATTR_FIELD = "field";
     private static final String ATTR_FLAG  = "flag";
+    private static final String ATTR_FORMAT  = "format";
     private static final String ATTR_TYPE  = "type";
 
-    private static Set<String>    mKnownFields;
-    private static Set<CsvFormat> mKnownFormats;
-    private static CsvFormat      mDefaultFormat;
-    
+    private static Set<String>         mKnownFields;
+    private static Set<CsvFormat>      mKnownFormats;
+    private static Map <String,Character> mDelimiterInfo;
+    private static CsvFormat           mDefaultFormat;
+
+//    <delimiters default=","> 
+//    <delimiter locale="fr" format="outlook-2003-csv" char=";" /> 
+//    ...
+//  </delimiters>
+
+    private static void populateDelimiterInfo(Element delimiters) {
+        mDelimiterInfo = new HashMap<String,Character>();
+        
+        for (Iterator elements = delimiters.elementIterator(DELIMITER); elements.hasNext(); ) {
+            Element field = (Element) elements.next();
+            String delim = field.attributeValue(ATTR_CHAR);
+            if (delim == null || delim.isEmpty())
+                continue;
+            String format = field.attributeValue(ATTR_FORMAT);
+            if (format == null || format.isEmpty())
+                continue;
+            String myLocale  = field.attributeValue(ATTR_LOCALE);
+            if (myLocale != null && !myLocale.isEmpty())
+                format = new StringBuffer(format).append("/").append(myLocale).toString();
+            mDelimiterInfo.put(format, delim.charAt(0));
+        }
+    }
+
     private static void populateFields(Element fields) {
         mKnownFields = new HashSet<String>();
         
@@ -671,6 +699,8 @@ public static String getTags(Map<String,String> csv) {
                 populateFields(elem);
             else if (elem.getQName().equals(FORMAT))
                 addFormat(elem);
+            else if (elem.getQName().equals(DELIMITERS))
+                populateDelimiterInfo(elem);
         }
     }
 
@@ -725,12 +755,25 @@ public static String getTags(Map<String,String> csv) {
         return mDefaultFormat;
     }
 
-    public void toCSV(String format, String locale, Iterator<? extends MailItem> contacts, StringBuffer sb) throws ParseException {
+    public void toCSV(String format, String locale, Character separator, Iterator<? extends MailItem> contacts, StringBuffer sb) throws ParseException {
         if (mKnownFormats == null)
             return;
 
         CsvFormat fmt = getFormat(format, locale);
-        sLog.debug("Requested format=\"%s\" locale=\"%s\" actual format used will be:%s", format, locale, fmt.toString());
+        if (separator != null) {
+            mFieldSeparator = separator;
+        } else {
+            String delimKey = fmt.name;
+            if (fmt.locale != null)
+                delimKey = new StringBuffer(delimKey).append("/").append(fmt.locale).toString();
+            Character formatDefaultDelim = mDelimiterInfo.get(delimKey);
+            if (formatDefaultDelim != null) {
+                sLog.debug("toCSV choosing %c from <delimiter> matching %s", formatDefaultDelim, delimKey);
+                mFieldSeparator = formatDefaultDelim;
+            }
+        }
+        sLog.debug("toCSV Requested=[format=\"%s\" locale=\"%s\" delim=\"%c\"] Actual=[%s delim=\"%c\"]",
+                format, locale, separator, fmt.toString(), mFieldSeparator);
 
         if (fmt == null)
             return;
@@ -764,10 +807,6 @@ public static String getTags(Map<String,String> csv) {
                 toCSVContact(fmt, (Contact)c, sb);
         }
         
-    }
-
-    public void toCSV(String format, Iterator<? extends MailItem> contacts, StringBuffer sb) throws ParseException {
-        toCSV(format, null, contacts, sb);
     }
 
     private static void addFieldValue(Map <String, String> contact, String name, String field, StringBuffer sb) {

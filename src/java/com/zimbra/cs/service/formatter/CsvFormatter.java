@@ -59,10 +59,14 @@ public class CsvFormatter extends Formatter {
             iterator = getMailItems(context, -1, -1, Integer.MAX_VALUE);
             String format = context.req.getParameter(UserServlet.QP_CSVFORMAT);
             String locale = context.req.getParameter(UserServlet.QP_CSVLOCALE);
+            String separator = context.req.getParameter(UserServlet.QP_CSVSEPARATOR);
+            Character sepChar = null;
+            if ((separator != null) && (separator.length() > 0))
+                    sepChar = separator.charAt(0);
             if (locale == null)
                 locale = context.locale.toString();
             ContactCSV contactCSV = new ContactCSV();
-            contactCSV.toCSV(format, locale, iterator, sb);
+            contactCSV.toCSV(format, locale, sepChar, iterator, sb);
         } catch (ContactCSV.ParseException e) {
             throw MailServiceException.UNABLE_TO_IMPORT_CONTACTS("could not generate CSV", e);
         } finally {
