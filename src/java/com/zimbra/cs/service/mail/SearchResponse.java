@@ -145,6 +145,7 @@ public class SearchResponse {
         } else if (hit instanceof ProxiedHit) {
             element.addElement(((ProxiedHit) hit).getElement().detach());
             size++;
+            return;
         } else {
             if (hit instanceof ConversationHit) {
                 el = add((ConversationHit) hit);
@@ -157,23 +158,22 @@ public class SearchResponse {
             } else if (hit instanceof NoteHit) {
                 el = add((NoteHit) hit);
             } else if (hit instanceof CalendarItemHit) {
-                el = add((CalendarItemHit) hit);
-                // el could be null
+                el = add((CalendarItemHit) hit); // el could be null
             } else if (hit instanceof DocumentHit) {
                 el = add((DocumentHit) hit);
             } else {
                 LOG.error("Got an unknown hit type putting search hits: " + hit);
                 return;
             }
+        }
 
-            if (el != null) {
-                size++;
-                el.addAttribute(MailConstants.A_SORT_FIELD,
-                        hit.getSortField(sortOrder).toString());
-                if (includeMailbox) {
-                    el.addAttribute(MailConstants.A_ID, new ItemId(
-                            hit.getAcctIdStr(), hit.getItemId()).toString());
-                }
+        if (el != null) {
+            size++;
+            el.addAttribute(MailConstants.A_SORT_FIELD,
+                    hit.getSortField(sortOrder).toString());
+            if (includeMailbox) {
+                el.addAttribute(MailConstants.A_ID, new ItemId(
+                        hit.getAcctIdStr(), hit.getItemId()).toString());
             }
         }
     }
