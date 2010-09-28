@@ -42,14 +42,18 @@ public class TestSmtpClient extends TestCase {
         mHost = TestUtil.getServerAttr(Provisioning.A_zimbraSmtpHostname);
         mPort = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraSmtpPort));
     }
+    
+    public void setUp() throws Exception {
+        cleanUp();
+    }
 
     public void testSimple() throws Exception {
         String sender = USER_NAME;
         String[] recipients = { USER_NAME };
         sendAndVerify(sender, recipients, "1 line", "1 line", "1 line\r\n");
-        sendAndVerify(sender, recipients, "1 line crlf", "1 line crlf\r\n", "1 line crlf\r\n");
-        sendAndVerify(sender, recipients, "2 lines", "line1\r\nline2", "line1\r\nline2\r\n");
-        sendAndVerify(sender, recipients, "2 lines crlf", "line1\r\nline2\r\n", "line1\r\nline2\r\n");
+        sendAndVerify(sender, recipients, "1 line crlf", "1 line crlf\r\n", "1 line crlf");
+        sendAndVerify(sender, recipients, "2 lines", "line1\r\nline2", "line1\r\nline2");
+        sendAndVerify(sender, recipients, "2 lines crlf", "line1\r\nline2\r\n", "line1\r\nline2");
     }
 
     public void testTwoRecipients() throws Exception {
@@ -117,10 +121,11 @@ public class TestSmtpClient extends TestCase {
         for (String recipient : recipients) {
             ZMailbox mbox = TestUtil.getZMailbox(recipient);
             ZMessage msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
-            assertEquals(expectedBody, getBodyContent(msg.getMimeStructure()));
+            String currentBody = getBodyContent(msg.getMimeStructure());
+            TestUtil.assertMessageContains(currentBody, expectedBody);
         }
     }
-
+    
     private String getBodyContent(ZMimePart part) {
         if (part.isBody()) {
             return part.getContent();
@@ -136,6 +141,10 @@ public class TestSmtpClient extends TestCase {
 
     @Override
     public void tearDown() throws Exception {
+        cleanUp();
+    }
+    
+    public void cleanUp() throws Exception {
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
         TestUtil.deleteTestData(USER2_NAME, NAME_PREFIX);
     }
