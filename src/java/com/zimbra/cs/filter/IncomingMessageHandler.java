@@ -14,13 +14,6 @@
  */
 package com.zimbra.cs.filter;
 
-import java.io.IOException;
-import java.util.Collection;
-
-import javax.mail.internet.MimeMessage;
-
-import org.apache.jsieve.mail.Action;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
@@ -28,12 +21,16 @@ import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
+
+import javax.mail.internet.MimeMessage;
+import java.io.IOException;
+import java.util.Collection;
 
 /**
  * Mail filtering implementation for messages that arrive via LMTP or from
@@ -82,7 +79,9 @@ extends FilterHandler {
     @Override
     public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
-        ItemId id = FilterUtil.addMessage(mContext, mMailbox, mParsedMessage, mRecipientAddress, folderPath, getFlagBitmask(flagActions), tags);
+        ItemId id = FilterUtil.addMessage(mContext, mMailbox, mParsedMessage, mRecipientAddress, folderPath,
+                                          false, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mMailbox),
+                                          tags, Mailbox.ID_AUTO_INCREMENT, null);
         
         // Do spam training if the user explicitly filed the message into
         // the spam folder (bug 37164).
@@ -110,38 +109,18 @@ extends FilterHandler {
 
     private Message addMessage(int folderId, Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
-        Message msg = null;
         try {
-            msg = mMailbox.addMessage(null, mParsedMessage, folderId,
-                false, getFlagBitmask(flagActions), tags, mRecipientAddress, mContext);
+            return mMailbox.addMessage(null, mParsedMessage, folderId,
+                false, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mMailbox), tags, mRecipientAddress, mContext);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add incoming message", e);
         }
-        return msg;
     }
 
     @Override
     public void redirect(String destinationAddress)
     throws ServiceException {
         FilterUtil.redirect(mMailbox, mParsedMessage.getMimeMessage(), destinationAddress);
-    }
-
-    private int getFlagBitmask(Collection<ActionFlag> flagActions) {
-        int flagBits = Flag.BITMASK_UNREAD;
-        for (Action action : flagActions) {
-            ActionFlag flagAction = (ActionFlag) action;
-            int flagId = flagAction.getFlagId();
-            try {
-                Flag flag = mMailbox.getFlagById(flagId);
-                if (flagAction.isSetFlag())
-                    flagBits |= flag.getBitmask();
-                else
-                    flagBits &= (~flag.getBitmask());
-            } catch (ServiceException e) {
-                ZimbraLog.filter.warn("Unable to flag message", e);
-            }
-        }
-        return flagBits;
     }
 
     @Override

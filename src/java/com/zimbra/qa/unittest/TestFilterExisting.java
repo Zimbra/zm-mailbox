@@ -75,7 +75,7 @@ extends TestCase {
         cleanUp();
 
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        mOriginalRules = mbox.getFilterRules();
+        mOriginalRules = mbox.getIncomingFilterRules();
         saveNewRules();
     }
     
@@ -492,12 +492,12 @@ extends TestCase {
         
         // Save rules
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        mbox.saveFilterRules(new ZFilterRules(rules));
+        mbox.saveIncomingFilterRules(new ZFilterRules(rules));
     }
 
     protected void tearDown() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        mbox.saveFilterRules(mOriginalRules);
+        mbox.saveIncomingFilterRules(mOriginalRules);
         cleanUp();
     }
 

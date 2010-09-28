@@ -23,6 +23,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.soap.ZimbraSoapContext;
+import org.dom4j.QName;
 
 
 public class ModifyFilterRules extends MailDocumentHandler {
@@ -36,10 +37,18 @@ public class ModifyFilterRules extends MailDocumentHandler {
             throw ServiceException.PERM_DENIED("cannot modify options");
 
         Element rulesElem = request.getElement(MailConstants.E_FILTER_RULES);
-        RuleManager.setXMLRules(account, rulesElem, true);
-        
-        Element response = zsc.createElement(MailConstants.MODIFY_FILTER_RULES_RESPONSE);
+        setXMLRules(account, rulesElem);
+
+        Element response = zsc.createElement(getResponseElementName());
         return response;
+    }
+
+    protected QName getResponseElementName() {
+        return MailConstants.MODIFY_FILTER_RULES_RESPONSE;
+    }
+
+    protected void setXMLRules(Account account, Element rulesElem) throws ServiceException {
+        RuleManager.setIncomingXMLRules(account, rulesElem, true);
     }
 
 }

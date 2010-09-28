@@ -37,7 +37,7 @@ public class SaveRules extends MailDocumentHandler {
             throw ServiceException.PERM_DENIED("can not modify options");
 
         Element rulesElem = document.getElement(MailConstants.E_RULES);
-        RuleManager.setXMLRules(account, rulesElem);
+        RuleManager.setIncomingXMLRules(account, rulesElem);
         
         Element response = zsc.createElement(MailConstants.SAVE_RULES_RESPONSE);
         return response;

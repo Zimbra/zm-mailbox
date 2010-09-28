@@ -1034,7 +1034,7 @@ extends Assert {
 
     public static ZFilterRule getFilterRule(ZMailbox mbox, String ruleName)
     throws ServiceException {
-        for (ZFilterRule rule : mbox.getFilterRules(true).getRules()) {
+        for (ZFilterRule rule : mbox.getIncomingFilterRules(true).getRules()) {
             if (rule.getName().equals(ruleName)) {
                 return rule;
             }

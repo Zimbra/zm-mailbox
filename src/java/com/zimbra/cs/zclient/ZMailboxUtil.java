@@ -74,7 +74,6 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -343,7 +342,8 @@ public class ZMailboxUtil implements DebugListener {
     static Option O_NO_VALIDATION = new Option(null, "noValidation", false, "don't validate file content");
 
     enum Command {
-        ADD_FILTER_RULE("addFilterRule", "afrl", "{name}  [*active|inactive] [any|*all] {conditions}+ {actions}+", "add filter rule", Category.FILTER,  2, Integer.MAX_VALUE, O_AFTER, O_BEFORE, O_FIRST, O_LAST),
+        ADD_INCOMING_FILTER_RULE("addFilterRule", "afrl", "{name}  [*active|inactive] [any|*all] {conditions}+ {actions}+", "add incoming filter rule", Category.FILTER,  2, Integer.MAX_VALUE, O_AFTER, O_BEFORE, O_FIRST, O_LAST),
+        ADD_OUTGOING_FILTER_RULE("addOutgoingFilterRule", "aofrl", "{name}  [*active|inactive] [any|*all] {conditions}+ {actions}+", "add outgoing filter rule", Category.FILTER,  2, Integer.MAX_VALUE, O_AFTER, O_BEFORE, O_FIRST, O_LAST),
         ADD_MESSAGE("addMessage", "am", "{dest-folder-path} {filename-or-dir} [{filename-or-dir} ...]", "add a message to a folder", Category.MESSAGE, 2, Integer.MAX_VALUE, O_TAGS, O_DATE, O_FLAGS, O_NO_VALIDATION),
         ADMIN_AUTHENTICATE("adminAuthenticate", "aa", "{admin-name} {admin-password}", "authenticate as an admin. can only be used by an admin", Category.ADMIN, 2, 2, O_URL),
         AUTHENTICATE("authenticate", "a", "{name} {password}", "authenticate as account and open mailbox", Category.MISC, 2, 2, O_URL),
@@ -361,7 +361,8 @@ public class ZMailboxUtil implements DebugListener {
         DELETE_CONVERSATION("deleteConversation", "dc", "{conv-ids}", "hard delete conversastion(s)", Category.CONVERSATION, 1, 1),
         DELETE_ITEM("deleteItem", "di", "{item-ids}", "hard delete item(s)", Category.ITEM, 1, 1),
         DELETE_IDENTITY("deleteIdentity", "did", "{identity-name}", "delete an identity", Category.ACCOUNT, 1, 1),
-        DELETE_FILTER_RULE("deleteFilterRule", "dfrl", "{name}", "add filter rule", Category.FILTER,  1, 1),
+        DELETE_INCOMING_FILTER_RULE("deleteFilterRule", "dfrl", "{name}", "delete incoming filter rule", Category.FILTER,  1, 1),
+        DELETE_OUTGOING_FILTER_RULE("deleteOutgoingFilterRule", "dofrl", "{name}", "delete outgoing filter rule", Category.FILTER,  1, 1),
         DELETE_FOLDER("deleteFolder", "df", "{folder-path}", "hard delete a folder (and subfolders)", Category.FOLDER, 1, 1),
         DELETE_MESSAGE("deleteMessage", "dm", "{msg-ids}", "hard delete message(s)", Category.MESSAGE, 1, 1),
         DELETE_SIGNATURE("deleteSignature", "dsig", "{signature-name|signature-id}", "delete signature", Category.ACCOUNT, 1, 1),
@@ -379,7 +380,8 @@ public class ZMailboxUtil implements DebugListener {
         GET_CONTACTS("getContacts", "gct", "{contact-ids} [attr1 [attr2...]]", "get contact(s)", Category.CONTACT, 1, Integer.MAX_VALUE, O_VERBOSE),
         GET_CONVERSATION("getConversation", "gc", "{conv-id}", "get a converation", Category.CONVERSATION, 1, 1, O_VERBOSE),
         GET_IDENTITIES("getIdentities", "gid", "", "get all identites", Category.ACCOUNT, 0, 0, O_VERBOSE),
-        GET_FILTER_RULES("getFilterRules", "gfrl", "", "get filter rules", Category.FILTER,  0, 0),
+        GET_INCOMING_FILTER_RULES("getFilterRules", "gfrl", "", "get incoming filter rules", Category.FILTER,  0, 0),
+        GET_OUTGOING_FILTER_RULES("getOutgoingFilterRules", "gofrl", "", "get outgoing filter rules", Category.FILTER,  0, 0),
         GET_FOLDER("getFolder", "gf", "{folder-path}", "get folder", Category.FOLDER, 1, 1, O_VERBOSE),
         GET_FOLDER_REQUEST("getFolderRequest", "gfr", "{folder-id}", "get folder request (always issues a GetFolderRequest)", Category.FOLDER, 1, 1, O_VERBOSE),
         GET_FOLDER_GRANT("getFolderGrant", "gfg", "{folder-path}", "get folder grants", Category.FOLDER, 1, 1, O_VERBOSE),
@@ -401,7 +403,8 @@ public class ZMailboxUtil implements DebugListener {
         MARK_MESSAGE_SPAM("markMessageSpam", "mms", "{msg} [0|1*] [{dest-folder-path}]", "mark a message as spam/not-spam, and optionally move", Category.MESSAGE, 1, 3),
         MARK_TAG_READ("markTagRead", "mtr", "{tag-name}", "mark all items with this tag as read", Category.TAG, 1, 1),
         MODIFY_CONTACT("modifyContactAttrs", "mcta", "{contact-id} [attr1 value1 [attr2 value2...]]", "modify a contact", Category.CONTACT, 3, Integer.MAX_VALUE, O_REPLACE, O_IGNORE),
-        MODIFY_FILTER_RULE("modifyFilterRule", "mfrl", "{name} [*active|inactive] [any|*all] {conditions}+ {actions}+", "add filter rule", Category.FILTER,  2, Integer.MAX_VALUE),
+        MODIFY_INCOMING_FILTER_RULE("modifyFilterRule", "mfrl", "{name} [*active|inactive] [any|*all] {conditions}+ {actions}+", "modify incoming filter rule", Category.FILTER,  2, Integer.MAX_VALUE),
+        MODIFY_OUTGOING_FILTER_RULE("modifyOutgoingFilterRule", "mofrl", "{name} [*active|inactive] [any|*all] {conditions}+ {actions}+", "modify outgoing filter rule", Category.FILTER,  2, Integer.MAX_VALUE),
         MODIFY_FOLDER_CHECKED("modifyFolderChecked", "mfch", "{folder-path} [0|1*]", "modify whether a folder is checked in the UI", Category.FOLDER, 1, 2),
         MODIFY_FOLDER_COLOR("modifyFolderColor", "mfc", "{folder-path} {new-color}", "modify a folder's color", Category.FOLDER, 2, 2),
         MODIFY_FOLDER_EXCLUDE_FREE_BUSY("modifyFolderExcludeFreeBusy", "mfefb", "{folder-path} [0|1*]", "change whether folder is excluded from free-busy", Category.FOLDER, 1, 2),
@@ -927,8 +930,11 @@ public class ZMailboxUtil implements DebugListener {
         case AUTHENTICATE:
             doAuth(args);
             break;
-        case ADD_FILTER_RULE:
-            doAddFilterRule(args);
+        case ADD_INCOMING_FILTER_RULE:
+            doAddIncomingFilterRule(args);
+            break;
+        case ADD_OUTGOING_FILTER_RULE:
+            doAddOutgoingFilterRule(args);
             break;
         case ADD_MESSAGE:
             doAddMessage(args);
@@ -968,8 +974,11 @@ public class ZMailboxUtil implements DebugListener {
         case DELETE_CONVERSATION:
             mMbox.deleteConversation(id(args[0]), param(args, 1));
             break;
-        case DELETE_FILTER_RULE:
-            doDeleteFilterRule(args);
+        case DELETE_INCOMING_FILTER_RULE:
+            doDeleteIncomingFilterRule(args);
+            break;
+        case DELETE_OUTGOING_FILTER_RULE:
+            doDeleteOutgoingFilterRule(args);
             break;
         case DELETE_FOLDER:
             mMbox.deleteFolder(lookupFolderId(args[0]));
@@ -1031,8 +1040,11 @@ public class ZMailboxUtil implements DebugListener {
         case GET_CONVERSATION:
             doGetConversation(args);
             break;
-        case GET_FILTER_RULES:
-            doGetFilterRules(args);
+        case GET_INCOMING_FILTER_RULES:
+            doGetIncomingFilterRules(args);
+            break;
+        case GET_OUTGOING_FILTER_RULES:
+            doGetOutgoingFilterRules(args);
             break;
         case GET_FOLDER:
             doGetFolder(args);
@@ -1092,8 +1104,11 @@ public class ZMailboxUtil implements DebugListener {
         case MODIFY_CONTACT:
             doModifyContact(args);
             break;
-        case MODIFY_FILTER_RULE:
-            doModifyFilterRule(args);
+        case MODIFY_INCOMING_FILTER_RULE:
+            doModifyIncomingFilterRule(args);
+            break;
+        case MODIFY_OUTGOING_FILTER_RULE:
+            doModifyOutgoingFilterRule(args);
             break;
         case MODIFY_FOLDER_CHECKED:
             mMbox.modifyFolderChecked(lookupFolderId(args[0]), paramb(args, 1, true));
@@ -1293,9 +1308,20 @@ public class ZMailboxUtil implements DebugListener {
   {name}  [*active|inactive] [any|*all] {conditions}+ {actions}+
     */
 
-    private void doAddFilterRule(String[] args) throws ServiceException {
+    private void doAddIncomingFilterRule(String[] args) throws ServiceException {
+        ZFilterRules rules = mMbox.getIncomingFilterRules();
+        doAddFilterRule(args, rules);
+        mMbox.saveIncomingFilterRules(rules);
+    }
+
+    private void doAddOutgoingFilterRule(String[] args) throws ServiceException {
+        ZFilterRules rules = mMbox.getOutgoingFilterRules();
+        doAddFilterRule(args, rules);
+        mMbox.saveOutgoingFilterRules(rules);
+    }
+
+    private void doAddFilterRule(String[] args, ZFilterRules rules) throws ServiceException {
         ZFilterRule newRule = ZFilterRule.parseFilterRule(args);
-        ZFilterRules rules = mMbox.getFilterRules();
         List<ZFilterRule> list = rules.getRules();
         if (firstOpt()) {
             list.add(0, newRule);
@@ -1328,41 +1354,67 @@ public class ZMailboxUtil implements DebugListener {
             // add to end
             list.add(newRule);
         }
-
-        mMbox.saveFilterRules(rules);
     }
 
-    private void doModifyFilterRule(String[] args) throws ServiceException {
+    private void doModifyIncomingFilterRule(String[] args) throws ServiceException {
+        ZFilterRules rules = mMbox.getIncomingFilterRules(true);
+        doModifyFilterRule(args, rules);
+        mMbox.saveIncomingFilterRules(rules);
+    }
+
+    private void doModifyOutgoingFilterRule(String[] args) throws ServiceException {
+        ZFilterRules rules = mMbox.getOutgoingFilterRules(true);
+        doModifyFilterRule(args, rules);
+        mMbox.saveOutgoingFilterRules(rules);
+    }
+
+    private static void doModifyFilterRule(String[] args, ZFilterRules rules) throws ServiceException {
         ZFilterRule modifiedRule = ZFilterRule.parseFilterRule(args);
-        ZFilterRules rules = mMbox.getFilterRules(true);
         List<ZFilterRule> list = rules.getRules();
         for (int i=0; i < list.size(); i++) {
             if (list.get(i).getName().equalsIgnoreCase(modifiedRule.getName())) {
                 list.set(i, modifiedRule);
-                mMbox.saveFilterRules(rules);
                 return;
             }
         }
         throw ZClientException.CLIENT_ERROR("can't find rule: " + args[0], null);
     }
 
-    private void doDeleteFilterRule(String[] args) throws ServiceException {
-        String name = args[0];
+    private void doDeleteIncomingFilterRule(String[] args) throws ServiceException {
+        ZFilterRules rules = mMbox.getIncomingFilterRules(true);
+        doDeleteFilterRule(args, rules);
+        mMbox.saveIncomingFilterRules(rules);
+    }
 
-        ZFilterRules rules = mMbox.getFilterRules(true);
+    private void doDeleteOutgoingFilterRule(String[] args) throws ServiceException {
+        ZFilterRules rules = mMbox.getOutgoingFilterRules(true);
+        doDeleteFilterRule(args, rules);
+        mMbox.saveOutgoingFilterRules(rules);
+    }
+
+    private static void doDeleteFilterRule(String[] args, ZFilterRules rules) throws ServiceException {
+        String name = args[0];
         List<ZFilterRule> list = rules.getRules();
         for (int i=0; i < list.size(); i++) {
             if (list.get(i).getName().equalsIgnoreCase(name)) {
                 list.remove(i);
-                mMbox.saveFilterRules(rules);
                 return;
             }
         }
-        throw ZClientException.CLIENT_ERROR("can't find rule: " + args[0], null);
+        throw ZClientException.CLIENT_ERROR("can't find rule: " + args, null);
     }
 
-    private void doGetFilterRules(String[] args) throws ServiceException {
-        ZFilterRules rules = mMbox.getFilterRules(true);
+    private void doGetIncomingFilterRules(String[] args) throws ServiceException {
+        ZFilterRules rules = mMbox.getIncomingFilterRules(true);
+        printFilterRules(rules);
+    }
+
+    private void doGetOutgoingFilterRules(String[] args) throws ServiceException {
+        ZFilterRules rules = mMbox.getOutgoingFilterRules(true);
+        printFilterRules(rules);
+    }
+
+    private static void printFilterRules(ZFilterRules rules) {
         for (ZFilterRule r : rules.getRules()) {
             stdout.println(r.generateFilterRule());
         }

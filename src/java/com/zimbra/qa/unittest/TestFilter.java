@@ -23,9 +23,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.zclient.ZEmailAddress;
 import junit.framework.TestCase;
 
 import org.apache.jsieve.parser.generated.Node;
@@ -93,7 +96,8 @@ extends TestCase {
     private static String MOUNTPOINT_SUBFOLDER_PATH = "/" + MOUNTPOINT_FOLDER_NAME + "/" + MOUNTPOINT_SUBFOLDER_NAME;
     
     private ZMailbox mMbox;
-    private ZFilterRules mOriginalRules;
+    private ZFilterRules mOriginalIncomingRules;
+    private ZFilterRules mOriginalOutgoingRules;
     private String mOriginalSpamApplyUserFilters;
     private String mOriginalSmtpPort = null;
     private String mOriginalSetEnvelopeSender = null;
@@ -113,15 +117,65 @@ extends TestCase {
         TestUtil.createMountpoint(remoteMbox, "/" + MOUNTPOINT_FOLDER_NAME, mMbox, MOUNTPOINT_FOLDER_NAME);
         TestUtil.createFolder(remoteMbox, MOUNTPOINT_SUBFOLDER_PATH);
         
-        mOriginalRules = mMbox.getFilterRules();
-        saveRules(mMbox, getRules());
-        
+        mOriginalIncomingRules = mMbox.getIncomingFilterRules();
+        saveIncomingRules(mMbox, getTestIncomingRules());
+        mOriginalOutgoingRules = mMbox.getOutgoingFilterRules();
+        saveOutgoingRules(mMbox, getTestOutgoingRules());
+
         Account account = TestUtil.getAccount(USER_NAME);
         mOriginalSpamApplyUserFilters = account.getAttr(Provisioning.A_zimbraSpamApplyUserFilters);
         mOriginalSmtpPort = Provisioning.getInstance().getLocalServer().getSmtpPortAsString();
         mOriginalSetEnvelopeSender = TestUtil.getServerAttr(Provisioning.A_zimbraMailRedirectSetEnvelopeSender); 
     }
     
+    /**
+     * Confirms that outgoing filters are applied as expected when a message is sent via SendMsgRequest.
+     */
+    public void testOutgoingFiltersWithSendMsg()
+    throws Exception {
+        String sender = TestUtil.getAddress(USER_NAME);
+        String recipient = TestUtil.getAddress(REMOTE_USER_NAME);
+        String subject = NAME_PREFIX + "Outgoing";
+
+        List<ZEmailAddress> addrs = new LinkedList<ZEmailAddress>();
+        addrs.add(new ZEmailAddress(sender, null, null, ZEmailAddress.EMAIL_TYPE_FROM));
+        addrs.add(new ZEmailAddress(recipient, null, null, ZEmailAddress.EMAIL_TYPE_TO));
+        ZMailbox.ZOutgoingMessage outgoingMsg = new ZMailbox.ZOutgoingMessage();
+        outgoingMsg.setAddresses(addrs);
+        outgoingMsg.setSubject(subject);
+
+        mMbox.sendMessage(outgoingMsg, null, false);
+
+        // make sure that sent message has been correctly tagged and filed into the correct folder
+        ZMessage msg = TestUtil.getMessage(mMbox, "in:" + FOLDER1_NAME + " " + subject);
+        TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
+
+        //make sure that sent message has not been filed into the (default) Sent folder
+        List msgs = TestUtil.search(mMbox, "in:Sent" + " " + subject);
+        assertTrue(msgs.isEmpty());
+    }
+
+    /**
+     * Confirms that outgoing filters are applied as expected when a sent message is added via AddMsgRequest.
+     */
+    public void testOutgoingFiltersWithAddMsg()
+    throws Exception {
+        String sender = TestUtil.getAddress(USER_NAME);
+        String recipient = TestUtil.getAddress(REMOTE_USER_NAME);
+        String subject = NAME_PREFIX + "Outgoing";
+        String content = new MessageBuilder().withSubject(subject).withFrom(sender).withToRecipient(recipient).create();
+
+        mMbox.addMessage("" + Mailbox.ID_FOLDER_SENT, "s", null, System.currentTimeMillis(), content, false);
+
+        // make sure that the message has been correctly tagged and filed into the correct folder
+        ZMessage msg = TestUtil.getMessage(mMbox, "in:" + FOLDER1_NAME + " " + subject);
+        TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
+
+        //make sure that sent message has not been filed into the (default) Sent folder
+        List msgs = TestUtil.search(mMbox, "in:Sent" + " " + subject);
+        assertTrue(msgs.isEmpty());
+    }
+
     public void testQuoteEscape()
     throws Exception {
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
@@ -139,7 +193,7 @@ extends TestCase {
         rules.add(new ZFilterRule(folderName, true, false, conditions, actions));
         
         ZFilterRules zRules = new ZFilterRules(rules);
-        saveRules(mMbox, zRules);
+        saveIncomingRules(mMbox, zRules);
 
         // Add a message and confirm it gets filed into the correct folder
         String address = TestUtil.getAddress(USER_NAME);
@@ -166,7 +220,7 @@ extends TestCase {
         rules.add(new ZFilterRule(folderName, true, false, conditions, actions));
         
         ZFilterRules zRules = new ZFilterRules(rules);
-        saveRules(mMbox, zRules);
+        saveIncomingRules(mMbox, zRules);
 
         // Add a message and confirm it gets filed into the correct folder
         String address = TestUtil.getAddress(USER_NAME);
@@ -240,13 +294,13 @@ extends TestCase {
     	mbox.deleteMessage(msg.getId());
     	
     	// Add matching filter rule: if subject contains "testSpam", file into folder1
-    	ZFilterRules rules = getRules();
+    	ZFilterRules rules = getTestIncomingRules();
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "testSpam"));
         actions.add(new ZFileIntoAction(FOLDER1_PATH));
         rules.getRules().add(new ZFilterRule("testBug5455", true, false, conditions, actions));
-        saveRules(mMbox, rules);
+        saveIncomingRules(mMbox, rules);
         
         // Set "apply user rules" attribute to TRUE and make sure the message gets filed into folder1
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, LdapUtil.LDAP_TRUE);
@@ -407,7 +461,7 @@ extends TestCase {
         actions.add(new ZTagAction(mTag2.getName()));
         rules.add(new ZFilterRule("testMarkRead 2", true, false, conditions, actions));
         
-        saveRules(mMbox, new ZFilterRules(rules));
+        saveIncomingRules(mMbox, new ZFilterRules(rules));
         
         // Deliver message and make sure that tag 2 was applied, but not tag 1.
         TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, content);
@@ -431,7 +485,7 @@ extends TestCase {
         conditions.add(new ZHeaderCondition("to,cc", HeaderOp.CONTAINS, "checkthis.com"));
         actions.add(new ZTagAction(mTag1.getName()));
         rules.add(new ZFilterRule("testToOrCc", true, false, conditions, actions));
-        saveRules(mMbox, new ZFilterRules(rules));
+        saveIncomingRules(mMbox, new ZFilterRules(rules));
 
         // Deliver message 1 and make sure that tag 1 was applied
         String subject = NAME_PREFIX + " testToOrCc 1";
@@ -472,7 +526,7 @@ extends TestCase {
         actions.add(new ZFileIntoAction(folderName));
         actions.add(new ZMarkAction(MarkOp.READ));
         rules.add(new ZFilterRule("testMarkRead", true, false, conditions, actions));
-        saveRules(mMbox, new ZFilterRules(rules));
+        saveIncomingRules(mMbox, new ZFilterRules(rules));
         
         // Deliver message.
         String address = TestUtil.getAddress(USER_NAME);
@@ -502,7 +556,7 @@ extends TestCase {
         rules.add(new ZFilterRule("testHeaderFolding", true, false, conditions, actions));
         
         ZFilterRules zRules = new ZFilterRules(rules);
-        saveRules(mMbox, zRules);
+        saveIncomingRules(mMbox, zRules);
 
         // Add a message and confirm it is flagged
         String address = TestUtil.getAddress(USER_NAME);
@@ -548,7 +602,7 @@ extends TestCase {
         rules.add(createRule("testInvite - reply", condition, action));
         
         ZFilterRules zRules = new ZFilterRules(rules);
-        saveRules(mMbox, zRules);
+        saveIncomingRules(mMbox, zRules);
 
         // Send an invite from user2 and check tags.
         ZMailbox organizer = TestUtil.getZMailbox(REMOTE_USER_NAME);
@@ -612,7 +666,7 @@ extends TestCase {
         
         ZFilterRules zRules = new ZFilterRules(rules);
         try {
-            mMbox.saveFilterRules(zRules);
+            mMbox.saveIncomingFilterRules(zRules);
             fail("Saving filter rules with quotes should not have succeeded");
         } catch (SoapFaultException e) {
             assertTrue("Unexpected exception: " + e, e.getMessage().contains("four asterisks"));
@@ -640,7 +694,7 @@ extends TestCase {
         
         // Save rules.
         ZFilterRules zRules = new ZFilterRules(rules);
-        mMbox.saveFilterRules(zRules);
+        mMbox.saveIncomingFilterRules(zRules);
         
         // Old message.
         String[] recipients = new String[] { USER_NAME };
@@ -726,7 +780,7 @@ extends TestCase {
         rules.add(new ZFilterRule("testHeaderMatches", true, false, conditions, actions));
         
         ZFilterRules zRules = new ZFilterRules(rules);
-        saveRules(mMbox, zRules);
+        saveIncomingRules(mMbox, zRules);
 
         // Add a message and confirm it is flagged
         String address = TestUtil.getAddress(USER_NAME);
@@ -773,7 +827,7 @@ extends TestCase {
         rules.add(new ZFilterRule("testBodyContains", true, false, conditions, actions));
         
         ZFilterRules zRules = new ZFilterRules(rules);
-        saveRules(mMbox, zRules);
+        saveIncomingRules(mMbox, zRules);
 
         // Add a message and test the flagged state.
         String address = TestUtil.getAddress(USER_NAME);
@@ -801,7 +855,7 @@ extends TestCase {
         rules.add(new ZFilterRule("testRedirect", true, false, conditions, actions));
         
         ZFilterRules zRules = new ZFilterRules(rules);
-        saveRules(mMbox, zRules);
+        saveIncomingRules(mMbox, zRules);
 
         // Add a message.  Set the From header to something bogus to make
         // sure we're not rewriting it
@@ -860,7 +914,7 @@ extends TestCase {
         rules.add(new ZFilterRule("testRedirectMailLoop", true, false, conditions, actions));
         
         ZFilterRules zRules = new ZFilterRules(rules);
-        saveRules(mMbox, zRules);
+        saveIncomingRules(mMbox, zRules);
 
         // Add a message.
         String subject = NAME_PREFIX + " testRedirectMailLoop";
@@ -895,7 +949,7 @@ extends TestCase {
         rules.add(new ZFilterRule("testAttachment2", true, false, conditions, actions));
         
         ZFilterRules zRules = new ZFilterRules(rules);
-        saveRules(mMbox, zRules);
+        saveIncomingRules(mMbox, zRules);
         
         // Add a message with an attachment.
         String address = TestUtil.getAddress(USER_NAME);
@@ -1020,7 +1074,8 @@ extends TestCase {
     }
     
     protected void tearDown() throws Exception {
-        mMbox.saveFilterRules(mOriginalRules);
+        mMbox.saveIncomingFilterRules(mOriginalIncomingRules);
+        mMbox.saveOutgoingFilterRules(mOriginalOutgoingRules);
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraSpamApplyUserFilters, mOriginalSpamApplyUserFilters);
         TestUtil.setServerAttr(Provisioning.A_zimbraSmtpPort, mOriginalSmtpPort);
         TestUtil.setServerAttr(Provisioning.A_zimbraMailRedirectSetEnvelopeSender, mOriginalSetEnvelopeSender);
@@ -1040,7 +1095,24 @@ extends TestCase {
         }
     }
     
-    private ZFilterRules getRules()
+    private ZFilterRules getTestOutgoingRules()
+    throws Exception {
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+
+        // if subject contains "TestFilterOutgoing", file into folder1 and tag with tag1
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "TestFilterOutgoing"));
+        actions.add(new ZFileIntoAction(FOLDER1_PATH));
+        actions.add(new ZTagAction(TAG1_NAME));
+        rules.add(new ZFilterRule("testOutgoingFilters1", true, false, conditions, actions));
+
+        return new ZFilterRules(rules);
+    }
+
+    private ZFilterRules getTestIncomingRules()
     throws Exception {
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
 
@@ -1104,21 +1176,37 @@ extends TestCase {
     }
     
     /**
-     * Saves the given filter rules.  Then gets them from the server and confirms that
+     * Saves the given incoming filter rules.  Then gets them from the server and confirms that
      * the element tree matches.
      */
-    private void saveRules(ZMailbox mbox, ZFilterRules rules)
+    private void saveIncomingRules(ZMailbox mbox, ZFilterRules rules)
     throws Exception {
         Element root = new XMLElement("test");
         Element expected = rules.toElement(root);
-        mbox.saveFilterRules(rules);
+        mbox.saveIncomingFilterRules(rules);
         
-        rules = mbox.getFilterRules(true);
+        rules = mbox.getIncomingFilterRules(true);
         Element actual = rules.toElement(root);
         
         TestUtil.assertEquals(expected, actual);
     }
     
+    /**
+     * Saves the given outgoing filter rules.  Then gets them from the server and confirms that
+     * the element tree matches.
+     */
+    private void saveOutgoingRules(ZMailbox mbox, ZFilterRules rules)
+    throws Exception {
+        Element root = new XMLElement("test");
+        Element expected = rules.toElement(root);
+        mbox.saveOutgoingFilterRules(rules);
+
+        rules = mbox.getOutgoingFilterRules(true);
+        Element actual = rules.toElement(root);
+
+        TestUtil.assertEquals(expected, actual);
+    }
+
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();

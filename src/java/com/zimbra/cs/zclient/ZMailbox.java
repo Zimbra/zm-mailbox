@@ -118,8 +118,6 @@ import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
 import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemFolderEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
 
-import java.util.Iterator;
-
 public class ZMailbox implements ToZJSONObject {
     public final static int MAX_NUM_CACHED_SEARCH_PAGERS = 5;
     public final static int MAX_NUM_CACHED_SEARCH_CONV_PAGERS = 5;
@@ -320,7 +318,8 @@ public class ZMailbox implements ToZJSONObject {
     private ZApptSummaryCache mApptSummaryCache;
     private Map mMessageCache;
     private Map mContactCache;
-    private ZFilterRules mRules;
+    private ZFilterRules mIncomingRules;
+    private ZFilterRules mOutgoingRules;
     private ZAuthResult mAuthResult;
     private String mClientIp;
     private List<ZPhoneAccount> mPhoneAccounts;
@@ -604,7 +603,8 @@ public class ZMailbox implements ToZJSONObject {
         ZRefreshEvent event = new ZRefreshEvent(mSize, userRoot, tagList);
         for (ZEventHandler handler : mHandlers)
         	handler.handleRefresh(event, this);
-        mRules = null;
+        mIncomingRules = null;
+        mOutgoingRules = null;
     }
 
     private void handleModified(Element modified) throws ServiceException {
@@ -3753,23 +3753,42 @@ public class ZMailbox implements ToZJSONObject {
         invoke(req);
     }
 
-    public ZFilterRules getFilterRules() throws ServiceException {
-        return getFilterRules(false);
+    public ZFilterRules getIncomingFilterRules() throws ServiceException {
+        return getIncomingFilterRules(false);
     }
 
-    public synchronized ZFilterRules getFilterRules(boolean refresh) throws ServiceException {
-        if (mRules == null || refresh) {
+    public ZFilterRules getOutgoingFilterRules() throws ServiceException {
+        return getOutgoingFilterRules(false);
+    }
+
+    public synchronized ZFilterRules getIncomingFilterRules(boolean refresh) throws ServiceException {
+        if (mIncomingRules == null || refresh) {
             Element req = newRequestElement(MailConstants.GET_FILTER_RULES_REQUEST);
-            mRules = new ZFilterRules(invoke(req).getElement(MailConstants.E_FILTER_RULES));
+            mIncomingRules = new ZFilterRules(invoke(req).getElement(MailConstants.E_FILTER_RULES));
         }
-        return new ZFilterRules(mRules);
+        return new ZFilterRules(mIncomingRules);
     }
 
-    public synchronized void saveFilterRules(ZFilterRules rules) throws ServiceException {
+    public synchronized ZFilterRules getOutgoingFilterRules(boolean refresh) throws ServiceException {
+        if (mOutgoingRules == null || refresh) {
+            Element req = newRequestElement(MailConstants.GET_OUTGOING_FILTER_RULES_REQUEST);
+            mOutgoingRules = new ZFilterRules(invoke(req).getElement(MailConstants.E_FILTER_RULES));
+        }
+        return new ZFilterRules(mOutgoingRules);
+    }
+
+    public synchronized void saveIncomingFilterRules(ZFilterRules rules) throws ServiceException {
         Element req = newRequestElement(MailConstants.MODIFY_FILTER_RULES_REQUEST);
         rules.toElement(req);
         invoke(req);
-        mRules = new ZFilterRules(rules);
+        mIncomingRules = new ZFilterRules(rules);
+    }
+
+    public synchronized void saveOutgoingFilterRules(ZFilterRules rules) throws ServiceException {
+        Element req = newRequestElement(MailConstants.MODIFY_OUTGOING_FILTER_RULES_REQUEST);
+        rules.toElement(req);
+        invoke(req);
+        mOutgoingRules = new ZFilterRules(rules);
     }
 
     public void deleteDataSource(DataSourceBy by, String key) throws ServiceException {

@@ -14,15 +14,6 @@
  */
 package com.zimbra.cs.filter;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Map;
-
-import javax.mail.Address;
-import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -35,6 +26,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -43,6 +35,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.AuthProvider;
@@ -50,6 +43,16 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
+import org.apache.jsieve.mail.Action;
+
+import javax.mail.Address;
+import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
 
 public class FilterUtil {
 
@@ -225,11 +228,11 @@ public class FilterUtil {
      * @return the id of the new message, or <tt>null</tt> if it was a duplicate
      */
     public static ItemId addMessage(DeliveryContext context, Mailbox mbox, ParsedMessage pm, String recipient,
-                                    String folderPath, int flags, String tags)
+                                    String folderPath, boolean noICal, int flags, String tags, int convId, OperationContext octxt)
     throws ServiceException {
         // Do initial lookup.
         Pair<Folder, String> folderAndPath = mbox.getFolderByPathLongestMatch(
-            null, Mailbox.ID_FOLDER_USER_ROOT, folderPath);
+            octxt, Mailbox.ID_FOLDER_USER_ROOT, folderPath);
         Folder folder = folderAndPath.getFirst();
         String remainingPath = folderAndPath.getSecond();
         ZimbraLog.filter.debug("Attempting to file to %s, remainingPath=%s.", folder, remainingPath);
@@ -275,10 +278,10 @@ public class FilterUtil {
                 // Only part of the folder path matched.  Auto-create the remaining path.
                 ZimbraLog.filter.info("Could not find folder %s.  Automatically creating it.",
                     folderPath);
-                folder = mbox.createFolder(null, folderPath, (byte) 0, MailItem.TYPE_MESSAGE);
+                folder = mbox.createFolder(octxt, folderPath, (byte) 0, MailItem.TYPE_MESSAGE);
             }
             try {
-                Message msg = mbox.addMessage(null, pm, folder.getId(), false, flags, tags, recipient, context);
+                Message msg = mbox.addMessage(octxt, pm, folder.getId(), noICal, flags, tags, convId, recipient, null, context);
                 if (msg == null) {
                     return null;
                 } else {
@@ -384,6 +387,28 @@ public class FilterUtil {
             }
         }
         return false;
+    }
+
+    public static int getFlagBitmask(Collection<ActionFlag> flagActions, int startingBitMask, Mailbox mailbox) {
+        int flagBits = startingBitMask;
+        for (Action action : flagActions) {
+            ActionFlag flagAction = (ActionFlag) action;
+            int flagId = flagAction.getFlagId();
+            try {
+                com.zimbra.cs.mailbox.Flag flag = mailbox.getFlagById(flagId);
+                if (flagAction.isSetFlag())
+                    flagBits |= flag.getBitmask();
+                else
+                    flagBits &= (~flag.getBitmask());
+            } catch (ServiceException e) {
+                ZimbraLog.filter.warn("Unable to flag message", e);
+            }
+        }
+        return flagBits;
+    }
+
+    public static String getTagsUnion(String tags1, String tags2) {
+        return Tag.bitmaskToTags(Tag.tagsToBitmask(tags1) | Tag.tagsToBitmask(tags2));
     }
 }
 

@@ -51,8 +51,8 @@ extends TestCase
         mMbox = TestUtil.getZMailbox(USER_NAME);
         mTag = mMbox.createTag(TAG_NAME, ZTag.Color.purple);
         mTag2 = mMbox.createTag(TAG2_NAME, ZTag.Color.green);
-        mOriginalRules = mMbox.getFilterRules();
-        mMbox.saveFilterRules(getRules());
+        mOriginalRules = mMbox.getIncomingFilterRules();
+        mMbox.saveIncomingFilterRules(getRules());
     }
 
     /**
@@ -74,7 +74,7 @@ extends TestCase
         mMbox.renameTag(mTag.getId(), NEW_TAG_NAME);
 
         // Confirm filter rules were updated
-        ZTagAction action = (ZTagAction) mMbox.getFilterRules(true).getRules().get(0).getActions().get(0);
+        ZTagAction action = (ZTagAction) mMbox.getIncomingFilterRules(true).getRules().get(0).getActions().get(0);
         assertEquals("Tag name didn't change", NEW_TAG_NAME, action.getTagName());
         
         // Send another message
@@ -113,7 +113,7 @@ extends TestCase
     
     public void tearDown()
     throws Exception {
-        mMbox.saveFilterRules(mOriginalRules);
+        mMbox.saveIncomingFilterRules(mOriginalRules);
         cleanUp();
     }
     

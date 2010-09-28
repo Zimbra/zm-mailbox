@@ -114,6 +114,9 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.GET_FILTER_RULES_REQUEST, new GetFilterRules());
         dispatcher.registerHandler(MailConstants.MODIFY_FILTER_RULES_REQUEST, new ModifyFilterRules());
         dispatcher.registerHandler(MailConstants.APPLY_FILTER_RULES_REQUEST, new ApplyFilterRules());
+        dispatcher.registerHandler(MailConstants.GET_OUTGOING_FILTER_RULES_REQUEST, new GetOutgoingFilterRules());
+        dispatcher.registerHandler(MailConstants.MODIFY_OUTGOING_FILTER_RULES_REQUEST, new ModifyOutgoingFilterRules());
+        dispatcher.registerHandler(MailConstants.APPLY_OUTGOING_FILTER_RULES_REQUEST, new ApplyOutgoingFilterRules());
 
         // Calendar
 

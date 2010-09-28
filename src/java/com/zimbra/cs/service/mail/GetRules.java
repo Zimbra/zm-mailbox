@@ -37,7 +37,7 @@ public class GetRules extends MailDocumentHandler {
             throw ServiceException.PERM_DENIED("can not access account");
 
         Element response = zsc.createElement(MailConstants.GET_RULES_RESPONSE);
-        Element rules = RuleManager.getRulesAsXML(response.getFactory(), account);
+        Element rules = RuleManager.getIncomingRulesAsXML(response.getFactory(), account);
         response.addUniqueElement(rules);
         return response;
     }

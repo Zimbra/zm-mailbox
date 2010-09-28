@@ -451,7 +451,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 Message msg = mbox.addMessage(null, pm, folderId, false, flags, recipient.getTags(), rcptEmail, sharedDeliveryCtxt);
                                 addedMessageIds = new ArrayList<ItemId>(1);
                                 addedMessageIds.add(new ItemId(msg));
-                            } else if (!DebugConfig.disableFilter) {
+                            } else if (!DebugConfig.disableIncomingFilter) {
                                 // Get msgid first, to avoid having to reopen and reparse the blob
                                 // file if Mailbox.addMessageInternal() closes it.
                                 pm.getMessageID();

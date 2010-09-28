@@ -70,7 +70,7 @@ public class TestPop3Import extends TestCase {
         mIsServerSideTest = false;
         cleanUp();
         createDataSource();
-        mOriginalRules = TestUtil.getZMailbox(USER_NAME).getFilterRules();
+        mOriginalRules = TestUtil.getZMailbox(USER_NAME).getIncomingFilterRules();
     }
 
     /*
@@ -229,7 +229,7 @@ public class TestPop3Import extends TestCase {
         conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "testFiltering"));
         actions.add(new ZFileIntoAction(filteredPath));
         rules.add(new ZFilterRule("testFiltering", true, false, conditions, actions));
-        localMbox.saveFilterRules(new ZFilterRules(rules));
+        localMbox.saveIncomingFilterRules(new ZFilterRules(rules));
         
         // Set up data source and run import
         ZPop3DataSource ds = getZDataSource();
@@ -286,7 +286,7 @@ public class TestPop3Import extends TestCase {
     @AfterMethod
     public void tearDown() throws Exception {
         cleanUp();
-        TestUtil.getZMailbox(USER_NAME).saveFilterRules(mOriginalRules);
+        TestUtil.getZMailbox(USER_NAME).saveIncomingFilterRules(mOriginalRules);
     }
     
     private void createDataSource() throws Exception {

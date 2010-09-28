@@ -38,7 +38,10 @@ public class DebugConfig {
     public static boolean disableConversation;
 
     /** If true, turns off filtering of incoming messages. */
-    public static boolean disableFilter;
+    public static boolean disableIncomingFilter;
+
+    /** If true, turns off filtering of outgoing messages. */
+    public static boolean disableOutgoingFilter;
 
     /** If true, turns off message structure analysis and text extraction.
      *  Attachment extraction, indexing, and objects only work when message
@@ -178,7 +181,8 @@ public class DebugConfig {
         calendarEnableInviteDeniedReplyForUnlistedAttendee = booleanValue("debug_calendar_enable_invite_denied_reply_for_unlisted_attendee", false);
 
         disableConversation = booleanValue("debug_disable_conversation", false);
-        disableFilter = booleanValue("debug_disable_filter", false);
+        disableIncomingFilter = booleanValue("debug_disable_filter", false);
+        disableOutgoingFilter = booleanValue("debug_disable_outgoing_filter", false);
         disableMessageAnalysis = booleanValue("debug_disable_message_analysis", false);
         if (disableMessageAnalysis) {
             disableMimePartExtraction = true;

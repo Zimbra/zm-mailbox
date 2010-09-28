@@ -15,13 +15,6 @@
 
 package com.zimbra.cs.service.mail;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.jsieve.parser.generated.Node;
-import org.apache.jsieve.parser.generated.ParseException;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -33,11 +26,18 @@ import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.soap.ZimbraSoapContext;
+import org.apache.jsieve.parser.generated.Node;
+import org.apache.jsieve.parser.generated.ParseException;
+import org.dom4j.QName;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 
 public class ApplyFilterRules extends MailDocumentHandler {
@@ -51,7 +51,7 @@ public class ApplyFilterRules extends MailDocumentHandler {
             throw ServiceException.PERM_DENIED("cannot access account");
 
         // Get rules.
-        String fullScript = RuleManager.getRules(account);
+        String fullScript = getRules(account);
         if (StringUtil.isNullOrEmpty(fullScript)) {
             throw ServiceException.INVALID_REQUEST("Account has no filter rules defined.", null);
         }
@@ -150,14 +150,22 @@ public class ApplyFilterRules extends MailDocumentHandler {
         }
         
         // Send response.
-        Element response = zsc.createElement(MailConstants.APPLY_FILTER_RULES_RESPONSE);
+        Element response = zsc.createElement(getResponseElementName());
         if (affectedIds.size() > 0) {
             response.addElement(MailConstants.E_MSG)
                 .addAttribute(MailConstants.A_IDS, StringUtil.join(",", affectedIds));
         }
         return response;
     }
-    
+
+    protected String getRules(Account account) {
+        return RuleManager.getIncomingRules(account);
+    }
+
+    protected QName getResponseElementName() {
+        return MailConstants.APPLY_FILTER_RULES_RESPONSE;
+    }
+
     private String getElementText(Element parent, String childName) {
         Element child = parent.getOptionalElement(childName);
         if (child == null) {

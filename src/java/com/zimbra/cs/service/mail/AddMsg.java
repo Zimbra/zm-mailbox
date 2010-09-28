@@ -19,6 +19,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -30,8 +31,11 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.filter.RuleManager;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -117,9 +121,16 @@ public class AddMsg extends MailDocumentHandler {
             mm = ParseMimeMessage.importMsgSoap(msgElem);
         
         Message msg;
+        int flagsBitMask = Flag.flagsToBitmask(flagsStr);
         try {
             ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
-            msg = mbox.addMessage(octxt, pm, folderId, noICal, Flag.flagsToBitmask(flagsStr), tagsStr);
+            if (!DebugConfig.disableOutgoingFilter && folderId == MailSender.getSentFolderId(mbox) && (flagsBitMask & Flag.BITMASK_FROM_ME) != 0) {
+                List<ItemId> addedItemIds =
+                        RuleManager.applyRulesToOutgoingMessage(octxt, mbox, pm, folderId, noICal, flagsBitMask, tagsStr, Mailbox.ID_AUTO_INCREMENT);
+                msg = addedItemIds.isEmpty() ? null : mbox.getMessageById(octxt, addedItemIds.get(0).getId());
+            } else {
+                msg = mbox.addMessage(octxt, pm, folderId, noICal, flagsBitMask, tagsStr);
+            }
         } catch(IOException ioe) {
             throw ServiceException.FAILURE("Error While Delivering Message", ioe);
         }

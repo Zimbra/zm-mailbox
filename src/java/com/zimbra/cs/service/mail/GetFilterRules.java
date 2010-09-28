@@ -22,6 +22,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.soap.ZimbraSoapContext;
+import org.dom4j.QName;
 
 public class GetFilterRules extends MailDocumentHandler {
 
@@ -32,9 +33,17 @@ public class GetFilterRules extends MailDocumentHandler {
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("cannot access account");
 
-        Element response = zsc.createElement(MailConstants.GET_FILTER_RULES_RESPONSE);
-        Element rules = RuleManager.getRulesAsXML(response.getFactory(), account, true);
+        Element response = zsc.createElement(getResponseElementName());
+        Element rules = getRulesAsXML(account, response.getFactory());
         response.addElement(rules);
         return response;
+    }
+
+    protected QName getResponseElementName() {
+        return MailConstants.GET_FILTER_RULES_RESPONSE;
+    }
+
+    protected Element getRulesAsXML(Account account, Element.ElementFactory elementFactory) throws ServiceException {
+        return RuleManager.getIncomingRulesAsXML(elementFactory, account, true);
     }
 }

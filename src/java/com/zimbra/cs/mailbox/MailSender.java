@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -47,10 +48,12 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
+import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedAddress;
@@ -240,6 +243,17 @@ public class MailSender {
         return folderId;
     }
 
+    public static int getSentFolderId(Mailbox mbox) throws ServiceException {
+        int folderId = Mailbox.ID_FOLDER_SENT;
+        String sentFolder = mbox.getAccount().getAttr(Provisioning.A_zimbraPrefSentMailFolder, null);
+        if (sentFolder != null) {
+            try {
+                folderId = mbox.getFolderByPath(null, sentFolder).getId();
+            } catch (NoSuchItemException nsie) { }
+        }
+        return folderId;
+    }
+
     /**
      * Getter save to sent flag - exposed for OfflineMailSender
      */
@@ -421,12 +435,12 @@ public class MailSender {
             boolean hasRecipients = (mm.getAllRecipients() != null);
             mSaveToSent &= hasRecipients;
 
-            // #0 is the authenticated user's, #1 is the send-as user's
-            RollbackData[] rollback = new RollbackData[2];
+            LinkedList<RollbackData> rollbacks = new LinkedList<RollbackData>();
             Object authMailbox = isDelegatedRequest ? null : mbox;
 
             // if requested, save a copy of the message to the Sent Mail folder
             ParsedMessage pm = null;
+            ItemId returnItemId = null;
             if (mSaveToSent) {
                 if (mIdentity == null)
                     mIdentity = Provisioning.getInstance().getDefaultIdentity(authuser);
@@ -442,8 +456,20 @@ public class MailSender {
 
                     // save it to the requested folder
                     int sentFolderId = getSentFolderId(mboxSave, mIdentity);
-                    Message msg = mboxSave.addMessage(octxt, pm, sentFolderId, true, flags, null, convId);
-                    rollback[0] = new RollbackData(msg);
+                    if (DebugConfig.disableOutgoingFilter) {
+                        Message msg = mboxSave.addMessage(octxt, pm, sentFolderId, true, flags, null, convId);
+                        RollbackData rollback = new RollbackData(msg);
+                        rollbacks.add(rollback);
+                        returnItemId = rollback.msgId;
+                    } else {
+                        List<ItemId> addedItemIds =
+                                RuleManager.applyRulesToOutgoingMessage(octxt, mboxSave, pm, sentFolderId, true, flags, null, convId);
+                        // pick one (say first) item id to return
+                        for (ItemId itemId : addedItemIds) {
+                            rollbacks.add(new RollbackData(mboxSave, itemId.getId()));
+                            if (returnItemId == null) returnItemId = itemId;
+                        }
+                    }
                 } else if (authMailbox instanceof ZMailbox) {
                     ZMailbox zmbxSave = (ZMailbox) authMailbox;
                     pm = new ParsedMessage(mm, mm.getSentDate().getTime(), mbox.attachmentsIndexingEnabled());
@@ -451,13 +477,14 @@ public class MailSender {
                     // save it to the requested folder
                     String sentFolder = mIdentity.getAttr(Provisioning.A_zimbraPrefSentMailFolder, "" + Mailbox.ID_FOLDER_SENT);
                     String msgId = zmbxSave.addMessage(sentFolder, "s", null, mm.getSentDate().getTime(), pm.getRawData(), true);
-                    rollback[0] = new RollbackData(zmbxSave, authuser, msgId);
+                    RollbackData rollback = new RollbackData(zmbxSave, authuser, msgId);
+                    rollbacks.add(rollback);
+                    returnItemId = rollback.msgId;
                 }
             }
 
             // for delegated sends where the authenticated user is reflected in the Sender header (c.f. updateHeaders),
             //   automatically save a copy to the "From" user's mailbox
-            Message msg = null;
             if (hasRecipients && isDelegatedRequest && mm.getSender() != null && acct.getBooleanAttr(Provisioning.A_zimbraPrefSaveToSent, true)) {
                 int flags = Flag.BITMASK_UNREAD | Flag.BITMASK_FROM_ME;
                 // save the sent copy using the target's credentials, as the sender doesn't necessarily have write access
@@ -465,12 +492,20 @@ public class MailSender {
                 if (pm == null || pm.isAttachmentIndexingEnabled() != mbox.attachmentsIndexingEnabled())
                     pm = new ParsedMessage(mm, mm.getSentDate().getTime(), mbox.attachmentsIndexingEnabled());
                 int sentFolderId = getSentFolderId(mbox, Provisioning.getInstance().getDefaultIdentity(acct));
-                msg = mbox.addMessage(octxtTarget, pm, sentFolderId, true, flags, null, convId);
-                rollback[1] = new RollbackData(msg);
+                if (DebugConfig.disableOutgoingFilter) {
+                    Message msg = mbox.addMessage(octxtTarget, pm, sentFolderId, true, flags, null, convId);
+                    rollbacks.add(new RollbackData(msg));
+                } else {
+                    List<ItemId> addedItemIds =
+                            RuleManager.applyRulesToOutgoingMessage(octxtTarget, mbox, pm, sentFolderId, true, flags, null, convId);
+                    for (ItemId itemId : addedItemIds) {
+                        rollbacks.add(new RollbackData(mbox, itemId.getId()));
+                    }
+                }
             }
 
             // actually send the message via SMTP
-            Collection<Address> sentAddresses = sendMessage(mbox, mm, mForceSendPartial, rollback);
+            Collection<Address> sentAddresses = sendMessage(mbox, mm, mForceSendPartial, rollbacks);
 
             // send intercept if save-to-sent didn't do it already
             if (!mSaveToSent) {
@@ -507,7 +542,7 @@ public class MailSender {
                 }
             }
 
-            return (rollback[0] != null ? rollback[0].msgId : null);
+            return returnItemId;
 
         } catch (SafeSendFailedException sfe) {
             Address[] invalidAddrs = sfe.getInvalidAddresses();
@@ -721,7 +756,7 @@ public class MailSender {
     }
 
     /** @return a Collection of successfully sent recipient Addresses */
-    protected Collection<Address> sendMessage(Mailbox mbox, final MimeMessage mm, final boolean forceSendPartial, final RollbackData[] rollback)
+    protected Collection<Address> sendMessage(Mailbox mbox, final MimeMessage mm, final boolean forceSendPartial, final Collection<RollbackData> rollbacks)
     throws SafeMessagingException, IOException {
         // send the message via SMTP
         HashSet<Address> sentAddresses = new HashSet<Address>();
@@ -795,17 +830,17 @@ public class MailSender {
                 }
             }
         } catch (SendFailedException e) {
-            for (RollbackData rdata : rollback)
+            for (RollbackData rdata : rollbacks)
                 if (rdata != null)
                     rdata.rollback();
             throw new SafeSendFailedException(e);
         } catch (MessagingException e) {
-            for (RollbackData rdata : rollback)
+            for (RollbackData rdata : rollbacks)
                 if (rdata != null)
                     rdata.rollback();
             throw new SafeMessagingException(e);
         } catch (RuntimeException e) {
-            for (RollbackData rdata : rollback)
+            for (RollbackData rdata : rollbacks)
                 if (rdata != null)
                     rdata.rollback();
             throw e;

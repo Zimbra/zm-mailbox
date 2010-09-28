@@ -185,7 +185,7 @@ extends FilterHandler {
         }
         
         ItemId id = FilterUtil.addMessage(new DeliveryContext(), mMailbox, getParsedMessage(),
-            mMailbox.getAccount().getName(), folderPath, getFlagBitmask(source, flagActions), tags);
+            mMailbox.getAccount().getName(), folderPath, false, getFlagBitmask(source, flagActions), tags, Mailbox.ID_AUTO_INCREMENT, null);
         if (id != null) {
             mFiltered = true;
             mFiled = true;

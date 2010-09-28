@@ -71,7 +71,7 @@ extends TestCase {
         mFolder4 = TestUtil.createFolder(mbox, FOLDER4_NAME);
 
         // Remember original rules and set rules for this test
-        mOriginalRules = mbox.getFilterRules();
+        mOriginalRules = mbox.getIncomingFilterRules();
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailSieveScript, FILTER_RULES);
     }
     
@@ -158,7 +158,7 @@ extends TestCase {
         TestUtil.getMessage(mbox, "in:inbox subject:\"" + SUBJECT3 + "\"");
         
         // Confirm that rules for folders 2 and 3 are disabled.
-        List<ZFilterRule> rules = mbox.getFilterRules(true).getRules();
+        List<ZFilterRule> rules = mbox.getIncomingFilterRules(true).getRules();
         assertEquals(4, rules.size());
         for (ZFilterRule rule : rules) {
             if (rule.getName().equals("Folder 1")) {
@@ -192,7 +192,7 @@ extends TestCase {
         TestUtil.getMessage(mbox, "in:inbox subject:\"" + SUBJECT3 + "\"");
         
         // Confirm that rules for folders 2 and 3 are disabled.
-        List<ZFilterRule> rules = mbox.getFilterRules(true).getRules();
+        List<ZFilterRule> rules = mbox.getIncomingFilterRules(true).getRules();
         assertEquals(4, rules.size());
         for (ZFilterRule rule : rules) {
             if (rule.getName().equals("Folder 1")) {
@@ -318,7 +318,7 @@ extends TestCase {
     
     protected void tearDown() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        mbox.saveFilterRules(mOriginalRules);
+        mbox.saveIncomingFilterRules(mOriginalRules);
         cleanUp();
     }
 

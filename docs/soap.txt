@@ -2698,6 +2698,32 @@ to existing messages.
 
 --------------------------
 
+Corresponding API for outgoing/sent email filters (message structure same as above):
+
+<GetOutgoingFilterRulesRequest/>
+
+<GetOutgoingFilterRulesResponse>
+  ...
+</GetOutgoingFilterRulesResponse>
+
+
+<ModifyOutgoingFilterRulesRequest>
+  ...
+</ModifyOutgoingFilterRulesRequest>
+
+<ModifyOutgoingFilterRulesResponse/>
+
+
+<ApplyOutgoingFilterRulesRequest>
+  ...
+</ApplyOutgoingFilterRulesRequest>
+
+<ApplyOutgoingFilterRulesResponse>
+  ...
+</ApplyOutgoingFilterRulesResponse>
+
+--------------------------
+
 Synchronization:
 
    *** PLEASE SEE sync.txt FOR SYNC-RELATED DOCUMENTATION ***
