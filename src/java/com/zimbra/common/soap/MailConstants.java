@@ -140,6 +140,12 @@ public class MailConstants {
     public static final QName MODIFY_FILTER_RULES_RESPONSE = QName.get("ModifyFilterRulesResponse", NAMESPACE);
     public static final QName APPLY_FILTER_RULES_REQUEST = QName.get("ApplyFilterRulesRequest", NAMESPACE);
     public static final QName APPLY_FILTER_RULES_RESPONSE = QName.get("ApplyFilterRulesResponse", NAMESPACE);
+    public static final QName GET_OUTGOING_FILTER_RULES_REQUEST = QName.get("GetOutgoingFilterRulesRequest", NAMESPACE);
+    public static final QName GET_OUTGOING_FILTER_RULES_RESPONSE = QName.get("GetOutgoingFilterRulesResponse", NAMESPACE);
+    public static final QName MODIFY_OUTGOING_FILTER_RULES_REQUEST = QName.get("ModifyOutgoingFilterRulesRequest", NAMESPACE);
+    public static final QName MODIFY_OUTGOING_FILTER_RULES_RESPONSE = QName.get("ModifyOutgoingFilterRulesResponse", NAMESPACE);
+    public static final QName APPLY_OUTGOING_FILTER_RULES_REQUEST = QName.get("ApplyOutgoingFilterRulesRequest", NAMESPACE);
+    public static final QName APPLY_OUTGOING_FILTER_RULES_RESPONSE = QName.get("ApplyOutgoingFilterRulesResponse", NAMESPACE);
 
     // Calendar
     public static final QName GET_APPT_SUMMARIES_REQUEST = QName.get("GetApptSummariesRequest", NAMESPACE);
