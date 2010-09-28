@@ -2049,7 +2049,7 @@ public class ToXML {
 
                 Document revision = null;
                 int v = 1;
-                while (revision == null && v < doc.getVersion()) {
+                while (revision == null && v <= doc.getVersion()) {
                     revision = (Document) doc.getMailbox().getItemRevision(octxt, doc.getId(), doc.getType(), v++);
                 }
                 if (revision != null) {
