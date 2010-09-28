@@ -23,6 +23,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Pair;
@@ -460,6 +461,12 @@ public class GalSearchControl {
             req.addAttribute(AccountConstants.A_ID, targetAcct.getId());
             Element resp = transport.invokeWithoutSession(req.detach());
             GalSearchResultCallback callback = mParams.getResultCallback();
+            
+            if (callback.passThruProxiedGalAcctResponse()) {
+                callback.handleProxiedResponse(resp);
+                return true;
+            }
+                
             Iterator<Element> iter = resp.elementIterator(MailConstants.E_CONTACT);
             while (iter.hasNext())
                 callback.handleElement(iter.next());
@@ -478,10 +485,25 @@ public class GalSearchControl {
                 callback.setSortBy(resp.getAttribute(MailConstants.A_SORTBY));
                 callback.setQueryOffset((int)resp.getAttributeLong(MailConstants.A_QUERY_OFFSET));
             }
+        } catch (SoapFaultException e) {
+            GalSearchResultCallback callback = mParams.getResultCallback();
+            if (callback.passThruProxiedGalAcctResponse()) {
+                Element fault = e.getFault();
+                callback.handleProxiedResponse(fault);
+                
+                // if the callback says pass thru, it is up to the callback to take full 
+                // responsibility for the result.  
+                // return true so we do *not* fallback to do the ldap search.
+                return true;
+            } else {
+                ZimbraLog.gal.warn("remote search on GalSync account failed for"+targetAcct.getName(), e);
+                return false;
+            }
         } catch (Exception e) {
             ZimbraLog.gal.warn("remote search on GalSync account failed for"+targetAcct.getName(), e);
             return false;
         }
+       
         return true;
     }
     

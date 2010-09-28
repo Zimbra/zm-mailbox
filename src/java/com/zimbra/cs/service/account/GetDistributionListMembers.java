@@ -1,29 +1,20 @@
 package com.zimbra.cs.service.account;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.cs.account.accesscontrol.Rights.User;
-import com.zimbra.cs.gal.FilteredGalSearchResultCallback;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchResultCallback;
@@ -50,11 +41,21 @@ public class GetDistributionListMembers extends AccountDocumentHandler {
         
         Account account = getAuthenticatedAccount(getZimbraSoapContext(context));
         
-        DLMembers dlMembers = searchGal(zsc, account, dlName);
+        DLMembersResult dlMembersResult = searchGal(zsc, account, dlName, request);
         
-        if (dlMembers == null)
+        if (dlMembersResult == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(dlName);
         
+        if (dlMembersResult instanceof ProxiedDLMembers) {
+            return ((ProxiedDLMembers)dlMembersResult).getResponse();
+        } else {
+            return processDLMembers(zsc, dlName, account , limit, offset, (DLMembers)dlMembersResult);
+        }
+    }
+    
+    private Element processDLMembers(ZimbraSoapContext zsc, String dlName, Account account, 
+            int limit, int offset, DLMembers dlMembers) throws ServiceException {
+          
         if (!GalSearchControl.canExpandGalGroup(dlName, dlMembers.getDLZimbraId(), account))
             throw ServiceException.PERM_DENIED("can not access dl members: " + dlName);
        
@@ -84,7 +85,11 @@ public class GetDistributionListMembers extends AccountDocumentHandler {
         return response;
     }
     
-    private interface DLMembers {
+    // common super interface for all the DLMembers classes
+    private interface DLMembersResult {
+    }
+    
+    private interface DLMembers extends DLMembersResult {
 
         int getTotal();
         
@@ -179,18 +184,39 @@ public class GetDistributionListMembers extends AccountDocumentHandler {
                 }
             }        
         }
+
     }
 
+    private static class ProxiedDLMembers implements DLMembersResult {
+        private Element mResponse;
+        
+        ProxiedDLMembers(Element response) {
+            mResponse = response;
+            mResponse.detach();
+        }
+        
+        Element getResponse() {
+            return mResponse;
+        }
+    }
     
     private static class GalGroupMembersCallback extends GalSearchResultCallback {
-        private DLMembers mDLMembers;
+        private DLMembersResult mDLMembers;
         
         GalGroupMembersCallback(GalSearchParams params) {
             super(params);
         }
         
-        DLMembers getDLMembers() {
+        public boolean passThruProxiedGalAcctResponse() {
+            return true;
+        }
+        
+        DLMembersResult getDLMembers() {
             return mDLMembers;
+        }
+        
+        public void handleProxiedResponse(Element resp) {
+            mDLMembers = new ProxiedDLMembers(resp);
         }
         
         public Element handleContact(Contact contact) throws ServiceException {
@@ -209,12 +235,13 @@ public class GetDistributionListMembers extends AccountDocumentHandler {
         }
     }
     
-    private static DLMembers searchGal(ZimbraSoapContext zsc, Account account, String groupName) throws ServiceException {
+    private static DLMembersResult searchGal(ZimbraSoapContext zsc, Account account, String groupName, Element request) throws ServiceException {
         GalSearchParams params = new GalSearchParams(account, zsc);
         params.setQuery(groupName);
         params.setType(Provisioning.GalSearchType.group);
         params.setLimit(1);
         params.setFetchGroupMembers(true);
+        params.setRequest(request);
         GalGroupMembersCallback callback = new GalGroupMembersCallback(params);
         params.setResultCallback(callback);
         

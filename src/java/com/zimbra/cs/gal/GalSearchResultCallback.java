@@ -74,6 +74,14 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     	return mResponse;
     }
     
+    public boolean passThruProxiedGalAcctResponse() {
+        return false;
+    }
+    
+    public void handleProxiedResponse(Element resp) {
+        assert(false);
+    }
+    
     public Element handleContact(Contact c) throws ServiceException {
         Element eContact;
     	if (mIdOnly)
