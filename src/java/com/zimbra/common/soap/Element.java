@@ -18,8 +18,8 @@
  */
 package com.zimbra.common.soap;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -41,7 +41,6 @@ import org.xml.sax.InputSource;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.MailConstants;
 
 public abstract class Element implements Cloneable {
     protected String  mName;
@@ -130,11 +129,22 @@ public abstract class Element implements Cloneable {
     public Element addAttribute(String key, long value) throws ContainerException     { return addAttribute(key, value, Disposition.ATTRIBUTE); }
     public Element addAttribute(String key, double value) throws ContainerException   { return addAttribute(key, value, Disposition.ATTRIBUTE); }
     public Element addAttribute(String key, boolean value) throws ContainerException  { return addAttribute(key, value, Disposition.ATTRIBUTE); }
+    public Element addAttribute(String key, Number value) throws ContainerException   { return addAttribute(key, value, Disposition.ATTRIBUTE); }
+    public Element addAttribute(String key, Boolean value) throws ContainerException   { return addAttribute(key, value, Disposition.ATTRIBUTE); }
 
     public abstract Element addAttribute(String key, String value, Disposition disp) throws ContainerException;
     public Element addAttribute(String key, long value, Disposition disp) throws ContainerException     { return addAttribute(key, Long.toString(value), disp); }
     public Element addAttribute(String key, double value, Disposition disp) throws ContainerException   { return addAttribute(key, Double.toString(value), disp); }
     public Element addAttribute(String key, boolean value, Disposition disp) throws ContainerException  { return addAttribute(key, value ? "1" : "0", disp); }
+    public Element addAttribute(String key, Number value, Disposition disp) throws ContainerException {
+        return addAttribute(key, value != null ? value.toString() : null, disp); 
+    }
+    public Element addAttribute(String key, Boolean value, Disposition disp) throws ContainerException {
+        if (value != null) {
+            return addAttribute(key, value.booleanValue(), disp);
+        }
+        return addAttribute(key, (String) null, disp);
+    }
 
     public KeyValuePair addKeyValuePair(String key, String value) throws ContainerException  { return addKeyValuePair(key, value, null, null); }
     public abstract KeyValuePair addKeyValuePair(String key, String value, String eltname, String attrname) throws ContainerException;
@@ -396,7 +406,7 @@ public abstract class Element implements Cloneable {
     public static Element parseXML(String xml, ElementFactory factory) throws org.dom4j.DocumentException {
         return convertDOM(getSAXReader(mDocumentFactory.get()).read(new StringReader(xml)).getRootElement(), factory);
     }
-
+    
     public static org.dom4j.io.SAXReader getSAXReader() {
         return getSAXReader(null);
     }
@@ -1414,8 +1424,8 @@ public abstract class Element implements Cloneable {
             System.out.println("caught exception (expected): " + spe.getMessage());
         }
 
-        System.out.println(new XMLElement("test").addAttribute("x", null).addAttribute("x", "", Disposition.CONTENT).addAttribute("x", "bar").addAttribute("x", null));
-        System.out.println(new JSONElement("test").addAttribute("x", null).addAttribute("x", "foo", Disposition.CONTENT).addAttribute("x", "bar").addAttribute("x", null));
+        System.out.println(new XMLElement("test").addAttribute("x", (String) null).addAttribute("x", "", Disposition.CONTENT).addAttribute("x", "bar").addAttribute("x", (String) null));
+        System.out.println(new JSONElement("test").addAttribute("x", (String) null).addAttribute("x", "foo", Disposition.CONTENT).addAttribute("x", "bar").addAttribute("x", (String) null));
 
         try {
             System.out.println("foo: |" + Element.parseXML("<test><foo/></test>").getAttribute("foo") + "|");

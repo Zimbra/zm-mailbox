@@ -18,6 +18,8 @@
  */
 package com.zimbra.common.util;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
 
 import java.io.BufferedReader;
@@ -203,6 +205,37 @@ public class StringUtil {
             addToMultiMap(attrs, n, v);
         }
         return attrs;
+    }
+    
+    /**
+     * Converts an old-style multimap to Guava's version.
+     */
+    public static Multimap<String, String> toNewMultimap(Map<String, Object> oldMultimap) {
+        Multimap<String, String> newMap = ArrayListMultimap.create();
+        for (String key : oldMultimap.keySet()) {
+            Object value = oldMultimap.get(key);
+            if (value instanceof String[]) {
+                for (String sVal : (String[]) value) {
+                    newMap.put(key, sVal);
+                }
+            } else if (value == null) {
+                newMap.put(key, null);
+            } else {
+                newMap.put(key, value.toString());
+            }
+        }
+        return newMap;
+    }
+    
+    /**
+     * Converts a Guava multimap to an old-style version.
+     */
+    public static Map<String, Object> toOldMultimap(Multimap<String, String> newMultimap) {
+        Map<String, Object> oldMap = new HashMap<String, Object>();
+        for (Map.Entry<String, String> entry : newMultimap.entries()) {
+            addToMultiMap(oldMap, entry.getKey(), entry.getValue());
+        }
+        return oldMap;
     }
 
     private static final int TERM_WHITESPACE = 1;

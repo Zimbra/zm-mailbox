@@ -64,4 +64,11 @@ public class SystemUtil {
         }
         return null;
     }
+
+    /**
+     * Returns {@code value}, or {@code defaultValue} if {@code value} is {@code null}.
+     */
+    public static <T> T getValue(T value, T defaultValue) {
+        return (value == null ? defaultValue : value);
+    }
 }
