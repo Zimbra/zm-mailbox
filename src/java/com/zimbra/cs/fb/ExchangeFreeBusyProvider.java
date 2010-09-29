@@ -40,6 +40,7 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.dom4j.DocumentException;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ByteUtil;
@@ -60,7 +61,7 @@ import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	
 	public static final String USER_AGENT = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322)";
-	public static final String FORM_AUTH_PATH = "/exchweb/bin/auth/owaauth.dll";
+	//public static final String FORM_AUTH_PATH = "/exchweb/bin/auth/owaauth.dll";  // specified in LC.calendar_exchange_form_auth_url
 	public static final int FB_INTERVAL = 30;
 	public static final int MULTI_STATUS = 207;
 	
@@ -348,7 +349,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		buf.append("&flags=0");
 		buf.append("&SubmitCreds=Log On");
 		buf.append("&trusted=0");
-		String url = info.url + FORM_AUTH_PATH;
+		String url = info.url + LC.calendar_exchange_form_auth_url.value();
 		PostMethod method = new PostMethod(url);
 		ByteArrayRequestEntity re = new ByteArrayRequestEntity(buf.toString().getBytes(), "x-www-form-urlencoded");
 		method.setRequestEntity(re);
