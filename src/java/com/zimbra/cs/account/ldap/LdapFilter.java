@@ -154,6 +154,10 @@ public class LdapFilter {
         return "(&(zimbraVirtualHostname=" + virtualHostname + ")(objectclass=zimbraDomain))";
     }
     
+    public static String domainByForeignName(String foreignName) {
+        return "(&(zimbraForeignName=" + foreignName + ")(objectclass=zimbraDomain))";
+    }
+    
     public static String domainLabel() {
         return "objectclass=dcObject";
     }

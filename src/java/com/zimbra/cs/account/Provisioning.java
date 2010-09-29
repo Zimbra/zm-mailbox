@@ -665,6 +665,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public Account getAccountByForeignPrincipal(String name) throws ServiceException { return get(AccountBy.foreignPrincipal, name); }
     public Account getAccountByKrb5Principal(String name) throws ServiceException { return get(AccountBy.krb5Principal, name); }
 
+    public Account getAccountByForeignName(String foreignName, String application, Domain domain) throws ServiceException {
+        throw ServiceException.FAILURE("unsupported", null);
+    }
+    
     /**
      * Looks up an account by the specified key.
      *
@@ -924,7 +928,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static enum DomainBy {
 
         // case must match protocol
-        id, name, virtualHostname, krb5Realm;
+        id, name, virtualHostname, krb5Realm, foreignName;
 
         public static DomainBy fromString(String s) throws ServiceException {
             try {
@@ -955,6 +959,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public Domain getDomainById(String id) throws ServiceException { return get(DomainBy.id, id); }
     public Domain getDomainByVirtualHostname(String host) throws ServiceException { return get(DomainBy.virtualHostname, host); }
     public Domain getDomainByKrb5Realm(String realm) throws ServiceException { return get(DomainBy.krb5Realm, realm); }
+    public Domain getDomainByForeignName(String realm) throws ServiceException { return get(DomainBy.foreignName, realm); }
+    
 
     public abstract List<Domain> getAllDomains()  throws ServiceException;
 

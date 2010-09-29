@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 jhahm 20100927-1217 */
+    /* build: 7.0.0_BETA1_1111 pshao 20100928-1622 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2879,6 +2879,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureDiscardInFiltersEnabled = "zimbraFeatureDiscardInFiltersEnabled";
 
     /**
+     * whether expanding distribution list members feature is enabled
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1134)
+    public static final String A_zimbraFeatureDistributionListExpandMembersEnabled = "zimbraFeatureDistributionListExpandMembersEnabled";
+
+    /**
      * filter prefs enabled
      */
     @ZAttr(id=143)
@@ -3219,6 +3227,24 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=227)
     public static final String A_zimbraFileUploadMaxSize = "zimbraFileUploadMaxSize";
+
+    /**
+     * foreign name for mapping an external name to a zimbra domain on domain
+     * level, it is in the format of {application}:{foreign name}
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1135)
+    public static final String A_zimbraForeignName = "zimbraForeignName";
+
+    /**
+     * handler for foreign name mapping, it is in the format of
+     * {application}:{class name}[:{params}]
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1136)
+    public static final String A_zimbraForeignNameHandler = "zimbraForeignNameHandler";
 
     /**
      * mapping to foreign principal identifier

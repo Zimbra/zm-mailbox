@@ -752,7 +752,43 @@ public class LdapProvisioning extends Provisioning {
         return account;
     }
 
+    @Override
+    public Account getAccountByForeignName(String foreignName, String application, Domain domain) throws ServiceException {
+        // first try direct match 
+        Account acct = getAccountByForeignPrincipal(application + ":" + foreignName); 
+        
+        if (acct != null)
+            return acct;
+        
+        if (domain == null) {
+            String parts[] = foreignName.split("@");
+            if (parts.length != 2)
+                return null;
+            
+            String domainName = parts[1];
 
+            domain = getDomain(DomainBy.foreignName, application + ":" + domainName, true);
+        }
+        
+        if (domain == null)
+            return null;
+        
+        String acctName;
+        
+        // see if there is a custom hander on the domain
+        DomainNameMappingHandler.HandlerConfig handlerConfig = DomainNameMappingHandler.getHandlerConfig(domain, application);
+        
+        if (handlerConfig != null) {
+            // invoke the custom handler 
+            acctName = DomainNameMappingHandler.mapName(handlerConfig, foreignName);
+        } else {
+            // do our builtin mapping of {localpart}@{zimbra domain name}
+            acctName = foreignName.split("@")[0] + "@" + domain.getName();
+        }
+            
+        return get(AccountBy.name, acctName);
+    }
+    
     private Cos lookupCos(String key, ZimbraLdapContext zlc) throws ServiceException {
         Cos c = null;
         c = getCosById(key, zlc);
@@ -1846,6 +1882,8 @@ public class LdapProvisioning extends Provisioning {
                 return getDomainByIdInternal(key, null, option);
             case virtualHostname:
                 return getDomainByVirtualHostnameInternal(key, option);
+            case foreignName:
+                return getDomainByForeignNameInternal(key, option);    
             case krb5Realm:
                 return getDomainByKrb5RealmInternal(key, option);
             default:
@@ -1923,6 +1961,20 @@ public class LdapProvisioning extends Provisioning {
             virtualHostname = LdapUtil.escapeSearchFilterArg(virtualHostname);
             domain = getDomainByQuery(LdapFilter.domainByVirtualHostame(virtualHostname), null);
             sDomainCache.put(DomainBy.virtualHostname, virtualHostname, domain);
+        }
+        return domain;
+    }
+    
+    private Domain getDomainByForeignNameInternal(String foreignName, GetFromDomainCacheOption option) throws ServiceException {
+        Domain d = sDomainCache.getByForeignName(foreignName, option);
+        if (d instanceof DomainCache.NonExistingDomain)
+            return null;
+
+        LdapDomain domain = (LdapDomain)d;
+        if (domain == null) {
+            foreignName = LdapUtil.escapeSearchFilterArg(foreignName);
+            domain = getDomainByQuery(LdapFilter.domainByForeignName(foreignName), null);
+            sDomainCache.put(DomainBy.foreignName, foreignName, domain);
         }
         return domain;
     }

@@ -23,8 +23,12 @@ public enum EntryCacheDataKey {
     /*
      * grouped entries(entries that can be in groups): account, cr, dl
      */
-    GROUPEDENTRY_DIRECT_GROUPIDS;  
+    GROUPEDENTRY_DIRECT_GROUPIDS,
     
+    /*
+     * domain
+     */
+    DOMAIN_FOREIGN_NAME_HANDLERS;
     
     // all access of the key name must be through this, 
     // not calling name() or toString() directly

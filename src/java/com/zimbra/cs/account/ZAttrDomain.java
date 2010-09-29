@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 jhahm 20100927-1217 */
+    /* build: 7.0.0_BETA1_1111 pshao 20100928-1622 */
 
     /**
      * RFC2256: descriptive information
@@ -4168,6 +4168,292 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetExternalPop3SSLPort(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraExternalPop3SSLPort, "");
+        return attrs;
+    }
+
+    /**
+     * foreign name for mapping an external name to a zimbra domain on domain
+     * level, it is in the format of {application}:{foreign name}
+     *
+     * @return zimbraForeignName, or empty array if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1135)
+    public String[] getForeignName() {
+        return getMultiAttr(Provisioning.A_zimbraForeignName);
+    }
+
+    /**
+     * foreign name for mapping an external name to a zimbra domain on domain
+     * level, it is in the format of {application}:{foreign name}
+     *
+     * @param zimbraForeignName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1135)
+    public void setForeignName(String[] zimbraForeignName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraForeignName, zimbraForeignName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * foreign name for mapping an external name to a zimbra domain on domain
+     * level, it is in the format of {application}:{foreign name}
+     *
+     * @param zimbraForeignName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1135)
+    public Map<String,Object> setForeignName(String[] zimbraForeignName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraForeignName, zimbraForeignName);
+        return attrs;
+    }
+
+    /**
+     * foreign name for mapping an external name to a zimbra domain on domain
+     * level, it is in the format of {application}:{foreign name}
+     *
+     * @param zimbraForeignName new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1135)
+    public void addForeignName(String zimbraForeignName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraForeignName, zimbraForeignName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * foreign name for mapping an external name to a zimbra domain on domain
+     * level, it is in the format of {application}:{foreign name}
+     *
+     * @param zimbraForeignName new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1135)
+    public Map<String,Object> addForeignName(String zimbraForeignName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraForeignName, zimbraForeignName);
+        return attrs;
+    }
+
+    /**
+     * foreign name for mapping an external name to a zimbra domain on domain
+     * level, it is in the format of {application}:{foreign name}
+     *
+     * @param zimbraForeignName existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1135)
+    public void removeForeignName(String zimbraForeignName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraForeignName, zimbraForeignName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * foreign name for mapping an external name to a zimbra domain on domain
+     * level, it is in the format of {application}:{foreign name}
+     *
+     * @param zimbraForeignName existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1135)
+    public Map<String,Object> removeForeignName(String zimbraForeignName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraForeignName, zimbraForeignName);
+        return attrs;
+    }
+
+    /**
+     * foreign name for mapping an external name to a zimbra domain on domain
+     * level, it is in the format of {application}:{foreign name}
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1135)
+    public void unsetForeignName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraForeignName, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * foreign name for mapping an external name to a zimbra domain on domain
+     * level, it is in the format of {application}:{foreign name}
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1135)
+    public Map<String,Object> unsetForeignName(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraForeignName, "");
+        return attrs;
+    }
+
+    /**
+     * handler for foreign name mapping, it is in the format of
+     * {application}:{class name}[:{params}]
+     *
+     * @return zimbraForeignNameHandler, or empty array if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1136)
+    public String[] getForeignNameHandler() {
+        return getMultiAttr(Provisioning.A_zimbraForeignNameHandler);
+    }
+
+    /**
+     * handler for foreign name mapping, it is in the format of
+     * {application}:{class name}[:{params}]
+     *
+     * @param zimbraForeignNameHandler new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1136)
+    public void setForeignNameHandler(String[] zimbraForeignNameHandler) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraForeignNameHandler, zimbraForeignNameHandler);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * handler for foreign name mapping, it is in the format of
+     * {application}:{class name}[:{params}]
+     *
+     * @param zimbraForeignNameHandler new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1136)
+    public Map<String,Object> setForeignNameHandler(String[] zimbraForeignNameHandler, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraForeignNameHandler, zimbraForeignNameHandler);
+        return attrs;
+    }
+
+    /**
+     * handler for foreign name mapping, it is in the format of
+     * {application}:{class name}[:{params}]
+     *
+     * @param zimbraForeignNameHandler new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1136)
+    public void addForeignNameHandler(String zimbraForeignNameHandler) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraForeignNameHandler, zimbraForeignNameHandler);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * handler for foreign name mapping, it is in the format of
+     * {application}:{class name}[:{params}]
+     *
+     * @param zimbraForeignNameHandler new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1136)
+    public Map<String,Object> addForeignNameHandler(String zimbraForeignNameHandler, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraForeignNameHandler, zimbraForeignNameHandler);
+        return attrs;
+    }
+
+    /**
+     * handler for foreign name mapping, it is in the format of
+     * {application}:{class name}[:{params}]
+     *
+     * @param zimbraForeignNameHandler existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1136)
+    public void removeForeignNameHandler(String zimbraForeignNameHandler) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraForeignNameHandler, zimbraForeignNameHandler);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * handler for foreign name mapping, it is in the format of
+     * {application}:{class name}[:{params}]
+     *
+     * @param zimbraForeignNameHandler existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1136)
+    public Map<String,Object> removeForeignNameHandler(String zimbraForeignNameHandler, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraForeignNameHandler, zimbraForeignNameHandler);
+        return attrs;
+    }
+
+    /**
+     * handler for foreign name mapping, it is in the format of
+     * {application}:{class name}[:{params}]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1136)
+    public void unsetForeignNameHandler() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraForeignNameHandler, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * handler for foreign name mapping, it is in the format of
+     * {application}:{class name}[:{params}]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1136)
+    public Map<String,Object> unsetForeignNameHandler(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraForeignNameHandler, "");
         return attrs;
     }
 
