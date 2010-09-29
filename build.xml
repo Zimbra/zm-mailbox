@@ -50,43 +50,47 @@
         <isset property="is-production"/>
     </condition>
 
-  <property name="build.dir" location="build"/>
-  <property name="build.classes.dir" location="${build.dir}/classes"/>
-  <property name="build.zmprov" location="${build.dir}/data/zmprov.txt"/>
-  <property name="dist.dir" location="build/dist"/>
-  <property name="dist.db.dir" location="build/dist/db"/>
-  <property name="dist.jetty.dir" location="${dist.dir}/jetty"/>
-  <property name="generated.java.dir" location="${build.dir}/generated/src/java"/>
-  <property name="warfilename" value="service.war"/>
-  <property name="warfile" location="${build.dir}/${warfilename}"/>
-  <property name="jarfile" location="${build.dir}/zimbrastore.jar"/>
-  <property name="common.dir" location="../ZimbraCommon"/>
-  <property name="common.classes.dir" location="${common.dir}/build/classes"/>
-  <property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar"/>
-  <property name="common.jars.dir" location="${common.dir}/jars"/>
+    <property name="build.dir" location="build"/>
+    <property name="build.classes.dir" location="${build.dir}/classes"/>
+    <property name="build.zmprov" location="${build.dir}/data/zmprov.txt"/>
+    <property name="dist.dir" location="build/dist"/>
+    <property name="dist.db.dir" location="build/dist/db"/>
+    <property name="dist.jetty.dir" location="${dist.dir}/jetty"/>
+    <property name="generated.java.dir" location="${build.dir}/generated/src/java"/>
+    <property name="warfilename" value="service.war"/>
+    <property name="warfile" location="${build.dir}/${warfilename}"/>
+    <property name="jarfile" location="${build.dir}/zimbrastore.jar"/>
+    <property name="common.dir" location="../ZimbraCommon"/>
+    <property name="common.classes.dir" location="${common.dir}/build/classes"/>
+    <property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar"/>
+    <property name="common.jars.dir" location="${common.dir}/jars"/>
 
-  <property name="im.dir" location="../ZimbraIM"/>
-  <property name="im.classes.dir" location="${im.dir}/build/classes"/>
-  <property name="im.jarfile" location="${im.dir}/build/zimbraim.jar"/>
-  <property name="im.jars.dir" location="${im.dir}/jars"/>
+    <property name="soap.dir" location="../ZimbraSoap"/>
+    <property name="soap.classes.dir" location="${soap.dir}/build/classes"/>
+    <property name="soap.jarfile" location="${soap.dir}/build/zimbrasoap.jar"/>
 
-  <property name="jars.dir" location="jars"/>
-  <property name="lib.dir" location="lib"/>
-  <property name="tools.lib.dir" location="tools/lib"/>
-  <property name="src.dir" location="src"/>
-  <property name="src.java.dir" location="${src.dir}/java"/>
-  <property name="test.dir" location="${build.dir}/test"/>
-  <property name="test.src.dir" location="${src.dir}/java-test"/>
-  <property name="test.classes.dir" location="${build.dir}/test-classes"/>
-  <property name="config.dir" location="conf"/>
+    <property name="im.dir" location="../ZimbraIM"/>
+    <property name="im.classes.dir" location="${im.dir}/build/classes"/>
+    <property name="im.jarfile" location="${im.dir}/build/zimbraim.jar"/>
+    <property name="im.jars.dir" location="${im.dir}/jars"/>
+
+    <property name="jars.dir" location="jars"/>
+    <property name="lib.dir" location="lib"/>
+    <property name="tools.lib.dir" location="tools/lib"/>
+    <property name="src.dir" location="src"/>
+    <property name="src.java.dir" location="${src.dir}/java"/>
+    <property name="test.dir" location="${build.dir}/test"/>
+    <property name="test.src.dir" location="${src.dir}/java-test"/>
+    <property name="test.classes.dir" location="${build.dir}/test-classes"/>
+    <property name="config.dir" location="conf"/>
   <property name="war.web.xml" location="${config.dir}/web.xml${production.suffix}"/>
-  <property name="jetty.xml.file" location='${config.dir}/jetty-6.1/jetty.xml' />
+    <property name="jetty.xml.file" location='${config.dir}/jetty-6.1/jetty.xml' />
 
-  <property name="deploy.war" value="${warfile}"/>
-  <property name="deploy.host" value="127.0.0.1"/>
-  <property name="deploy.port" value="7070"/>
-  <property name="ldap.host" value="127.0.0.1"/>
-  <property name="ldap.port" value="389"/>
+    <property name="deploy.war" value="${warfile}"/>
+    <property name="deploy.host" value="127.0.0.1"/>
+    <property name="deploy.port" value="7070"/>
+    <property name="ldap.host" value="127.0.0.1"/>
+    <property name="ldap.port" value="389"/>
   <property name="ldap.service.windows" value="CDSSilverSlapd" />
 
     <condition property="remote.deploy.host" value="${env.ZIMBRA_REMOTE_DEPLOY_HOST}">
@@ -237,6 +241,7 @@
 
     <path id="class.path">
         <pathelement location="${common.classes.dir}"/>
+    	<pathelement location="${soap.classes.dir}"/>
         <pathelement location="${im.classes.dir}"/>
         <pathelement location="${build.classes.dir}"/>
         <fileset dir="${jars.dir}">
@@ -528,6 +533,7 @@
 
     <target name="compile" depends="build-init">
         <ant dir="${common.dir}" target="jar" inheritAll="false"/>
+    	<ant dir="${soap.dir}" target="jar" inheritAll="false"/>
         <ant dir="${im.dir}" target="jar" inheritAll="false"/>
         <javac fork="true" memorymaximumsize="512m" destdir="${build.classes.dir}" debug="true"
                classpathref="class.path" target="${javac.target}">
@@ -553,6 +559,7 @@
 
     <target name="clean" description="Deletes classes from build directories">
         <ant dir="${common.dir}" target="clean" inheritAll="false"/>
+    	<ant dir="${soap.dir}" target="clean" inheritAll="false"/>
         <ant dir="${im.dir}" target="clean" inheritAll="false"/>
         <delete dir="${build.dir}"/>
     </target>
@@ -575,6 +582,7 @@
         <war warfile="${warfile}" webxml="${war.web.xml}">
             <fileset dir="WebRoot"/>
             <lib file="${im.jarfile}"/>
+        	<lib file="${soap.jarfile}"/>
             <lib file="${jarfile}"/>
             <lib dir="${common.jars.dir}" includes="${war.include}"/>
             <lib dir="${im.jars.dir}" includes="*.jar"/>
@@ -734,6 +742,7 @@
             <fileset dir="${im.jars.dir}" includes="*.jar"/>
         </copy>
         <copy todir="${dist.dir}/lib/jars" file="${common.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/lib/jars" file="${soap.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/lib/jars" file="${im.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
 
@@ -843,7 +852,7 @@
         </copy>
     </target>
 
-    <target name="reset-jetty" depends="stop-webserver" description="Resets jetty">
+    <target name="reset-jetty" depends="stop-webserver,build-init" description="Resets jetty">
         <delete dir="${jetty.home.dir}"/>
         <delete dir="${zimbra.home.dir}/data/tmp/jetty"/>
         <gunzip src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" dest="${build.dir}/jetty-${jetty.version}.tar"/>
