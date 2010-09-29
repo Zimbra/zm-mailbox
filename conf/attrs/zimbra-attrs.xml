@@ -5052,11 +5052,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>ip or hostname for spnego auth admin server</desc>
 </attr>
 
-<attr id="1122" name="zimbraSpnegoAuthPrincipal" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="7.0.0">
+<attr id="1122" name="zimbraSpnegoAuthPrincipal" type="string" cardinality="single" optionalIn="server" requiresRestart="mailbox" since="7.0.0">
   <desc>spnego auth principal</desc>
 </attr>
 
-<attr id="1123" name="zimbraSpnegoAuthTargetName" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="7.0.0">
+<attr id="1123" name="zimbraSpnegoAuthTargetName" type="string" cardinality="single" optionalIn="server" requiresRestart="mailbox" since="7.0.0">
   <desc>spnego auth target name</desc>
 </attr>
 
