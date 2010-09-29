@@ -56,7 +56,7 @@ public class ImportStatus {
     @Override
     public String toString() {
         return String.format(
-            "ImportStatus: { dataSourceId=%d, isRunning=%b, success=%b, error=%s, hasRun=%b }",
+            "ImportStatus: { dataSourceId=%s, isRunning=%b, success=%b, error=%s, hasRun=%b }",
             mDataSourceId, mIsRunning, mSuccess, mError, mHasRun);
     }
 }
