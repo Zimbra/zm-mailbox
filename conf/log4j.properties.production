@@ -12,19 +12,20 @@ log4j.threshhold=OFF
 %%uncomment VAR:zimbraLogToSyslog%%log4j.rootLogger=INFO,LOGFILE,SYSLOG
 
 # Appender LOGFILE writes to the file "/opt/zimbra/log/mailbox.log".
-#log4j.appender.LOGFILE=org.apache.log4j.FileAppender
-log4j.appender.LOGFILE=org.apache.log4j.DailyRollingFileAppender
+# Daily rolling policy with compressing the old log file while rotating!!
+# The archived log files location can be changed using FileNamePattern value
+log4j.appender.LOGFILE=org.apache.log4j.rolling.RollingFileAppender
+log4j.appender.LOGFILE.RollingPolicy=org.apache.log4j.rolling.TimeBasedRollingPolicy
+log4j.appender.LOGFILE.RollingPolicy.FileNamePattern=/opt/zimbra/log/mailbox.log.%d{yyyy-MM-dd}.gz
 log4j.appender.LOGFILE.File=/opt/zimbra/log/mailbox.log
-log4j.appender.LOGFILE.DatePattern='.'yyyy-MM-dd
-log4j.appender.LOGFILE.Append=true
 log4j.appender.LOGFILE.layout=com.zimbra.common.util.ZimbraPatternLayout
 log4j.appender.LOGFILE.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
 # Appender AUDIT writes to the file "audit.log".
-log4j.appender.AUDIT=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.AUDIT=org.apache.log4j.rolling.RollingFileAppender
+log4j.appender.AUDIT.RollingPolicy=org.apache.log4j.rolling.TimeBasedRollingPolicy
+log4j.appender.AUDIT.RollingPolicy.FileNamePattern=/opt/zimbra/log/audit.log.%d{yyyy-MM-dd}.gz
 log4j.appender.AUDIT.File=/opt/zimbra/log/audit.log
-log4j.appender.AUDIT.DatePattern='.'yyyy-MM-dd
-log4j.appender.AUDIT.Append=true
 log4j.appender.AUDIT.layout=com.zimbra.common.util.ZimbraPatternLayout
 log4j.appender.AUDIT.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
@@ -47,34 +48,34 @@ log4j.appender.SYSLOG.layout.ConversionPattern=mailboxd: %-5p [%t] [%z] %c{1} - 
 %%comment VAR:!zimbraLogHostname%%log4j.appender.SLOGGER.layout.ConversionPattern=mailboxd: %-5p [%t] [%z] %c{1} - %m
 
 # Appender SYNC writes to the file "sync.log".
-log4j.appender.SYNC=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.SYNC=org.apache.log4j.rolling.RollingFileAppender
+log4j.appender.SYNC.RollingPolicy=org.apache.log4j.rolling.TimeBasedRollingPolicy
+log4j.appender.SYNC.RollingPolicy.FileNamePattern=/opt/zimbra/log/sync.log.%d{yyyy-MM-dd}.gz
 log4j.appender.SYNC.File=/opt/zimbra/log/sync.log
-log4j.appender.SYNC.DatePattern='.'yyyy-MM-dd
-log4j.appender.SYNC.Append=true
 log4j.appender.SYNC.layout=com.zimbra.common.util.ZimbraPatternLayout
 log4j.appender.SYNC.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
 # Appender SYNCTRACE writes to the file "synctrace.log".
-log4j.appender.SYNCTRACE=org.apache.log4j.DailyRollingFileAppender
+llog4j.appender.SYNCTRACE=org.apache.log4j.rolling.RollingFileAppender
+log4j.appender.SYNCTRACE.RollingPolicy=org.apache.log4j.rolling.TimeBasedRollingPolicy
+log4j.appender.SYNCTRACE.RollingPolicy.FileNamePattern=/opt/zimbra/log/synctrace.log.%d{yyyy-MM-dd}.gz
 log4j.appender.SYNCTRACE.File=/opt/zimbra/log/synctrace.log
-log4j.appender.SYNCTRACE.DatePattern='.'yyyy-MM-dd
-log4j.appender.SYNCTRACE.Append=true
 log4j.appender.SYNCTRACE.layout=com.zimbra.common.util.ZimbraPatternLayout
 log4j.appender.SYNCTRACE.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
 # Appender SYNCSTATE writes to the file "syncstate.log".
-log4j.appender.SYNCSTATE=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.SYNCSTATE=org.apache.log4j.rolling.RollingFileAppender
+log4j.appender.SYNCSTATE.RollingPolicy=org.apache.log4j.rolling.TimeBasedRollingPolicy
+log4j.appender.SYNCSTATE.RollingPolicy.FileNamePattern=/opt/zimbra/log/syncstate.log.%d{yyyy-MM-dd}.gz
 log4j.appender.SYNCSTATE.File=/opt/zimbra/log/syncstate.log
-log4j.appender.SYNCSTATE.DatePattern='.'yyyy-MM-dd
-log4j.appender.SYNCSTATE.Append=true
 log4j.appender.SYNCSTATE.layout=com.zimbra.common.util.ZimbraPatternLayout
 log4j.appender.SYNCSTATE.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
 # Appender WBXML writes to the file "wbxml.log".
-log4j.appender.WBXML=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.WBXML=org.apache.log4j.rolling.RollingFileAppender
+log4j.appender.WBXML.RollingPolicy=org.apache.log4j.rolling.TimeBasedRollingPolicy
+log4j.appender.WBXML.RollingPolicy.FileNamePattern=/opt/zimbra/log/wbxml.log.%d{yyyy-MM-dd}.gz
 log4j.appender.WBXML.File=/opt/zimbra/log/wbxml.log
-log4j.appender.WBXML.DatePattern='.'yyyy-MM-dd
-log4j.appender.WBXML.Append=true
 log4j.appender.WBXML.layout=com.zimbra.common.util.ZimbraPatternLayout
 log4j.appender.WBXML.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 

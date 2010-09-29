@@ -848,7 +848,7 @@
         </copy>
         <copy todir="${dist.jetty.dir}/common/lib" file="${common.jarfile}" overwrite="true"/>
         <copy todir="${dist.jetty.dir}/lib" overwrite="true">
-            <fileset dir="${common.jars.dir}" includes="log4j*.jar"/>
+		<fileset dir="${common.jars.dir}" includes="log4j*.jar,apache-log4j-extras-1.0.jar"/>
         </copy>
     </target>
 
