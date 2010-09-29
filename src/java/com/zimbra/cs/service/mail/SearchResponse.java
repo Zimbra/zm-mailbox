@@ -319,10 +319,15 @@ public class SearchResponse {
 
         CalendarItem item = hit.getCalendarItem();
         Account acct = DocumentHandler.getRequestedAccount(zsc);
+        long rangeStart = params.getCalItemExpandStart();
+        long rangeEnd = params.getCalItemExpandEnd();
+        if (rangeStart < 0 && rangeEnd < 0) {
+            // If no time range was given, force first instance only. (bug 51267)
+            rangeStart = item.getStartTime();
+            rangeEnd = rangeStart + 1;
+        }
         EncodeCalendarItemResult encoded =
-            GetCalendarItemSummaries.encodeCalendarItemInstances(zsc, octxt,
-                    item, acct, params.getCalItemExpandStart(),
-                    params.getCalItemExpandEnd(), true);
+            GetCalendarItemSummaries.encodeCalendarItemInstances(zsc, octxt, item, acct, rangeStart, rangeEnd, true);
 
         Element el = encoded.element;
         if (el != null) {
