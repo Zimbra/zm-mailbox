@@ -1,0 +1,198 @@
+
+Spnego configuration tasks.
+
+
+==========================================
+1. Creating and Setting Up the Keytab File
+==========================================
+
+On the windows active domain controller:
+
+(A) Create an Active Directory service account.
+    This is the account you use to generate the keytab.
+       
+    - programs -> Administrative Tools -> Active Directory Users and Computers
+    
+    - right click on "Users" under the domain
+    
+    - new -> User 
+    
+    - enter HTTP/{zimbra mailbox server name} for the "User login name"
+      e.g. HTTP/server1.spnego.local
+      Note: this name is to go in the zimbraSpnegoAuthTargetName server attribute in LDAP
+      
+    - enter a short name for the "User loging name (pre-Windows 2000)"
+      e.g. server1
+      Note: this is the name you use for the {AD-user} in the setspn and ktpass commands (see below)
+      
+    - click on Next
+    
+    - enter and confirm the password (you may want to check "Password never expired") and click on Next
+      e.g. ca$hc0w
+      Note: this is the password you use for the {AD-user-password} in the ktpass command (see below)
+    
+    - click on "Finish" to create the user.   
+
+
+(B) Add the Service Principal Names (SPN) directory property for an Active Directory service account. 
+
+    setspn -A {target name for the http server} {AD-user}
+    
+    e.g.
+    - list registered SPNs (there is none)
+      C:\>setspn -L server1
+      Registered ServicePrincipalNames for CN=server1,CN=Users,DC=spnego,DC=local:
+
+    - add SPN for the service account
+      C:\>setspn -A HTTP/server1.spnego.local server1
+      Registering ServicePrincipalNames for CN=server1,CN=Users,DC=spnego,DC=local HTTP/server1.spnego.local
+      Updated object
+
+    - list registered SPNs (should see the one we just added)
+      C:\>setspn -L server1
+      Registered ServicePrincipalNames for CN=server1,CN=Users,DC=spnego,DC=local:
+      HTTP/server1.spnego.local
+
+
+(C) Create the keytab file
+   
+    ktpass -out {keytab-file-to-produce} -princ {principal-name-in-the-form-user@REALM} -mapUser {AD-user} -mapOp set -pass {AD-user-password} -crypto RC4-HMAC-NT -pType KRB5_NT_PRINCIPAL
+
+    e.g.
+    C:\>ktpass -out c:\Temp\spnego\jetty.keytab -princ HTTP/server1.spnego.local@SPNEGO.LOCAL -mapUser server1 -mapOp set -pass ca$hc0w -crypto RC4-HMAC-NT -pType KRB5_NT_PRINCIPAL
+    Targeting domain controller: jj-dc.spnego.local
+    Using legacy password setting method
+    Successfully mapped HTTP/server1.spnego.local to server1.
+    Key created.
+    Output keytab to c:\Temp\spnego\jetty.keytab:
+    Keytab version: 0x502
+    keysize 75 HTTP/server1.spnego.local@SPNEGO.LOCAL ptype 1 (KRB5_NT_PRINCIPAL)
+    vno 6 etype 0x17 (RC4-HMAC) keylength 16 (0xc383f6a25f1e195d5aef495c980c2bfe)
+    
+    The above creates jetty.keytab under c:\Temp\spnego
+    
+    
+(D) Place the Keytab File    
+    copy jetty.keytab created in step (3) to the zimbra server under /opt/zimbra/jetty/etc.
+    
+    Note: Do not rename it, the name(jetty.keytab) is referenced from various configuration 
+          files setup by the Zimbra installer.
+
+
+Repeat steps (A) to (D) for each zimbra server.
+
+
+=============================================
+2. Preparing Domain for Spnego Authentication
+=============================================
+
+(A) Setup preauth for the domain.
+    - Generate a preauth key using zmprov gdpak
+      e.g.
+      zmprov gdpak domain.com
+      preAuthKey: 4e2816f16c44fab20ecdee39fb850c3b0bb54d03f1d8e073aaea376a4f407f0c
+
+    - Set the preauth key on the domain
+      mprov md domain.com zimbraPreAuthKey 4e2816f16c44fab20ecdee39fb850c3b0bb54d03f1d8e073aaea376a4f407f0c
+      
+    - Modify /opt/zimbra/jetty/webapps/spnego/spnego_preauth.jsp with the preauth key.
+      edit the spnego_preauth.jsp
+      replace the text REPLACE-ME-WITH-THE-PREAUTH-KEY with the real preauth key.  
+
+
+(B) Setup virtual host for the domain
+    zmprov md {domain} +zimbraVirtualHostname {virtual-hostname-1} +zimbraVirtualHostname {virtual-hostname-2}
+    
+    virtual-hostname-* are the hostnames you can browse to for the Zimbra WEB UI.
+    
+    
+(C) Setup login URL for the domain
+    zmprov md {domain} zimbraWebClientLoginURL http://{server:port}/spnego/spnego_preauth.jsp
+    
+    Where {server:port} should be one of the spnego enabled zimbra servers.
+    
+    
+(D) Setup logout URL for the domain
+    zmprov md {domain} zimbraWebClientLogoutURL {TODO: bug 50345}
+
+
+(E) Setup kerberos Realm for the domain
+    zmprov md {domain} zimbraAuthKerberos5Realm {kerberos-realm}
+
+    {kerberos-realm} should be the realm set in global config attribute zimbraSpnegoAuthRealm
+    
+    e.g. 
+    zmprov md zimbra.com zimbraAuthKerberos5Realm SPNEGO.LOCAL
+
+
+===========================================
+3. Configure Spnego for the Zimbra Instance
+===========================================
+
+We support only one REALM/KDC per Zimbra installation.
+
+Modify the following global config keys with zmprov mcf
+
+zimbraSpnegoAuthAdminServer : address of the admin server for the realm
+zimbraSpnegoAuthEnabled     : TRUE
+zimbraSpnegoAuthErrorURL    : /error/spnego_error.jsp
+zimbraSpnegoAuthKDC         : address of the KDC for the realm
+zimbraSpnegoAuthRealm       : the kerberos realm
+
+On each zimbra server:
+zimbraSpnegoAuthTargetName  : the name for the service user in 1. (A), e.g. HTTP/server1.spnego.local
+zimbraSpnegoAuthPrincipal   : {zimbraSpnegoAuthTargetName}@{zimbraSpnegoAuthRealm}
+  
+
+=========================
+4. Configure your Browser
+=========================
+Firefox:
+* browse to about:config and agree to the warnings
+* search through to find the 'network' settings
+** set network.negotiate-auth.delegation-uris to http://,https://
+** set network.negotiate-auth.trusted-uris to http://,https://
+
+IE:
+* Tools -> Options -> Security -> Local Intranet -> Sites
+** make sure everything is checked here
+* Tools -> Options -> Security -> Local Intranet -> Sites -> Advanced
+** add url to server (http:// and/or https://) making sure to use the hostname
+* Tools -> Options -> Security -> Local Intranet -> Sites -> Advanced -> Close
+* Tools -> Options -> Security -> Local Intranet -> Sites -> Ok
+* Tools -> Options -> Advanced -> Security (in the checkbox list)
+** locate and check 'Enable Integrated Windows Authentication'
+* Tools -> Options -> Advanced -> Security -> Ok
+* close IE then reopen and browse to your spengo protected resource
+
+
+==============
+5. Test it out
+==============
+- On a Windows box, loging to the domain as a domain user
+  
+  Your ticket as a domain user will be saved on the computer.
+  Ths token will be picked up by the spnego aware browser and send in 
+  the Authorization header to zimbra server.
+  
+- browse to the regualr WEB UI initial page:
+  e.g. http://myserver:7070
+  
+  What should happen behind the scene:
+  - a domain get resolved by the virtual host name setting
+  
+  - the request get redirected to the login URL on the domain
+  
+  - the login URL points to a spnego protected URL (/spnego/spnego_preauth.jsp)
+  
+  - spnego auth happens
+  
+  - if the spnego auth fails, user will be redirected to an error URL, 
+    confogured in the global config key zimbraSpnegoAuthErrorURL.
+    
+  - if the spnego auth succeeds, zimbra preauth sequence will happen, 
+    user will be redirected to the preauth servlet and then finally landed 
+    on the mail app.
+    
+
+
