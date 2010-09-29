@@ -18,9 +18,12 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifySearchFolderEvent;
+import com.zimbra.soap.mail.type.SearchFolder;
+
 import org.json.JSONException;
 
 public class ZSearchFolder extends ZFolder {
@@ -41,6 +44,18 @@ public class ZSearchFolder extends ZFolder {
         }
     }
 
+    public ZSearchFolder(SearchFolder f, ZFolder parent, ZMailbox mailbox) throws ServiceException {
+        super(f, parent, mailbox);
+        mQuery = f.getQuery();
+        mTypes = f.getTypes();
+        try {
+            mSortBy = SearchSortBy.fromString(
+                SystemUtil.getValue(f.getSortBy(), SearchFolder.SortBy.dateDesc).toString());
+        } catch (ServiceException se) {
+            mSortBy = SearchSortBy.dateDesc;
+        }
+    }
+    
     public void modifyNotification(ZModifyEvent e) throws ServiceException {
         if (e instanceof ZModifySearchFolderEvent) {
             ZModifySearchFolderEvent sfe = (ZModifySearchFolderEvent) e;

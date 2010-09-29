@@ -70,7 +70,7 @@ public class DataSource extends AccountProperty {
             try {
                 return ConnectionType.valueOf(s);
             } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("invalid type: " + s + ", valid values: " + Arrays.asList(Type.values()), e); 
+                throw ServiceException.INVALID_REQUEST("invalid type: " + s + ", valid values: " + Arrays.asList(ConnectionType.values()), e); 
             }
         }
     }

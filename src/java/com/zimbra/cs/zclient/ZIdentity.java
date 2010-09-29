@@ -15,43 +15,42 @@
 
 package com.zimbra.cs.zclient;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.KeyValuePair;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.account.Provisioning;
-import org.json.JSONArray;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.soap.account.type.Attr;
+import com.zimbra.soap.account.type.Identity;
 
 public class ZIdentity  implements ToZJSONObject {
 
-    private String mName;
-    private String mId;
-    private Map<String, Object> mAttrs;
+    private Identity data;
 
-    public ZIdentity(Element e) throws ServiceException {
-        mName = e.getAttribute(AccountConstants.A_NAME);
-        mId = e.getAttribute(AccountConstants.A_ID, null);
-        mAttrs = new HashMap<String, Object>();
-        for (KeyValuePair pair : e.listKeyValuePairs(AccountConstants.E_A, AccountConstants.A_NAME)) {
-            StringUtil.addToMultiMap(mAttrs, pair.getKey(), pair.getValue());
-        }
+    public ZIdentity(Identity data) {
+        this.data = data;
+        
     }
 
     public ZIdentity(String name, Map<String, Object> attrs) {
-        mName = name;
-        mAttrs = attrs;
-        mId = get(Provisioning.A_zimbraPrefIdentityId);
+        data = new Identity();
+        data.setName(name);
+        data.setAttrs(Attr.fromMultimap(StringUtil.toNewMultimap(attrs)));
+        data.setId(get(Provisioning.A_zimbraPrefIdentityId));
+    }
+    
+    public Identity getData() {
+        return new Identity(data);
     }
 
     public String getRawName() {
-        return mName;
+        return data.getName();
     }
 
     public String getName() {
@@ -59,7 +58,7 @@ public class ZIdentity  implements ToZJSONObject {
     }
 
     public String getId() {
-        return mId;
+        return data.getId();
     }
     
     /**
@@ -67,27 +66,23 @@ public class ZIdentity  implements ToZJSONObject {
      * @return null if unset, or first value in list
      */
     public String get(String name) {
-        Object value = mAttrs.get(name);
-        if (value == null) {
+        Collection<String> values = data.getAttrsMultimap().get(name);
+        Iterator<String> iter = values.iterator();
+        if (!iter.hasNext()) {
             return null;
-        } else if (value instanceof String[]) {
-            return ((String[])value)[0];
-        } else if (value instanceof List) {
-            return (String) ((List)value).get(0);
-        } else {
-            return value.toString();
         }
+        return iter.next();
     }
     
     public Map<String, Object> getAttrs() {
-        return new HashMap<String, Object>(mAttrs);
+        return StringUtil.toOldMultimap(data.getAttrsMultimap());
     }
 
     public boolean getBool(String name) {
         return Provisioning.TRUE.equals(get(name));
     }
 
-    public boolean isDefault() { return mName.equals(Provisioning.DEFAULT_IDENTITY_NAME); }
+    public boolean isDefault() { return Provisioning.DEFAULT_IDENTITY_NAME.equals(getName()); }
     
     public String getFromAddress() { return get(Provisioning.A_zimbraPrefFromAddress); }
 
@@ -110,14 +105,10 @@ public class ZIdentity  implements ToZJSONObject {
     public boolean getReplyToEnabled() { return getBool(Provisioning.A_zimbraPrefReplyToEnabled); }
 
     public String[] getMulti(String name) {
-        Object o = mAttrs.get(name);
-        if (o instanceof String[]) {
-            return (String[]) o;
-        } else if (o instanceof String) {
-            return new String[] { o.toString() };
-        } else {
-            return new String[0];
-        }
+        Collection<String> values = data.getAttrsMultimap().get(name);
+        String[] valArray = new String[values.size()];
+        values.toArray(valArray);
+        return valArray;
     }
     
     public String[] getWhenInFolderIds() {
@@ -137,43 +128,27 @@ public class ZIdentity  implements ToZJSONObject {
 
     public Element toElement(Element parent) {
         Element identity = parent.addElement(AccountConstants.E_IDENTITY);
-        identity.addAttribute(AccountConstants.A_NAME, mName).addAttribute(AccountConstants.A_ID, mId);
-        for (Map.Entry<String,Object> entry : mAttrs.entrySet()) {
-            if (entry.getValue() instanceof String[]) {
-                String[] values = (String[]) entry.getValue();
-                for (String value : values) {
-                    identity.addKeyValuePair(entry.getKey(), value, AccountConstants.E_A,  AccountConstants.A_NAME);
-                }
-            } else {
-                identity.addKeyValuePair(entry.getKey(), entry.getValue().toString(), AccountConstants.E_A,  AccountConstants.A_NAME);
-            }
+        identity.addAttribute(AccountConstants.A_NAME, getName()).addAttribute(AccountConstants.A_ID, getId());
+        for (Map.Entry<String,String> entry : data.getAttrsMultimap().entries()) {
+            identity.addKeyValuePair(entry.getKey(), entry.getValue(), AccountConstants.E_A,  AccountConstants.A_NAME);
         }
         return identity;
     }
     
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
-        zjo.put("name", mName);
-        zjo.put("id", mId);
+        zjo.put("name", getName());
+        zjo.put("id", getId());
         JSONObject jo = new JSONObject();
         zjo.put("attrs",jo);
-        for (Map.Entry<String, Object> entry : mAttrs.entrySet()) {
-            if (entry.getValue() instanceof String[]) {
-                String[] values = (String[]) entry.getValue();
-                JSONArray ja = new JSONArray();
-                jo.put(entry.getKey(), ja);
-                for (String v: values) {
-                    ja.put(v);
-                }
-            } else {
-                jo.put(entry.getKey(), entry.getValue().toString());
-            }
+        for (Map.Entry<String, String> entry : data.getAttrsMultimap().entries()) {
+            jo.put(entry.getKey(), entry.getValue());
         }
         return zjo;
     }
 
     public String toString() {
-        return String.format("[ZIdentity %s]", mName);
+        return String.format("[ZIdentity %s]", getName());
     }
 
     public String dump() {

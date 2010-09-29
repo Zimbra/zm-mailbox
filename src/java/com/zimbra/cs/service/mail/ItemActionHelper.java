@@ -421,7 +421,6 @@ public class ItemActionHelper {
         
         ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
         zoptions.setNoSession(true);
-        zoptions.setResponseProtocol(mResponseProtocol);
         zoptions.setTargetAccount(target.getId());
         zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);

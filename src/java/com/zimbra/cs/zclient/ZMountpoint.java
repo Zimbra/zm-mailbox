@@ -21,6 +21,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
 import com.zimbra.cs.zclient.event.ZModifyMountpointEvent;
+import com.zimbra.soap.mail.type.Mountpoint;
+
 import org.json.JSONException;
 
 public class ZMountpoint extends ZFolder {
@@ -36,6 +38,13 @@ public class ZMountpoint extends ZFolder {
         mOwnerId = e.getAttribute(MailConstants.A_ZIMBRA_ID);
     }
 
+    public ZMountpoint(Mountpoint m, ZFolder parent, ZMailbox mailbox) throws ServiceException {
+        super(m, parent, mailbox);
+        mOwnerDisplayName = m.getOwnerEmail();
+        mRemoteId = Integer.toString(m.getRemoteFolderId());
+        mOwnerId = m.getOwnerAccountId();
+    }
+    
     public void modifyNotification(ZModifyEvent e) throws ServiceException {
         if (e instanceof ZModifyMountpointEvent) {
             ZModifyMountpointEvent mpe = (ZModifyMountpointEvent) e;

@@ -15,16 +15,17 @@
 
 package com.zimbra.cs.zclient;
 
-import com.zimbra.cs.account.Provisioning;
-
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
+
+import com.google.common.collect.Iterables;
+import com.zimbra.cs.account.Provisioning;
 
 public class ZFeatures {
 
-    private Map<String, List<String>> mAttrs;
+    private Map<String, Collection<String>> mAttrs;
 
-    public ZFeatures(Map<String, List<String>> attrs) {
+    public ZFeatures(Map<String, Collection<String>> attrs) {
         mAttrs = attrs;
     }
 
@@ -33,8 +34,11 @@ public class ZFeatures {
      * @return null if unset, or first value in list
      */
     private String get(String name) {
-        List<String> value = mAttrs.get(name);
-        return (value == null || value.isEmpty()) ? null : value.get(0);
+        Collection<String> value = mAttrs.get(name);
+        if (value.isEmpty()) {
+            return null;
+        }
+        return Iterables.get(value, 0);
 
     }
 
@@ -42,16 +46,7 @@ public class ZFeatures {
         return Provisioning.TRUE.equals(get(name));
     }
 
-    private long getLong(String name) {
-        String v = get(name);
-        try {
-            return v == null ? -1 : Long.parseLong(v);
-        } catch (NumberFormatException e) {
-            return -1;
-        }
-    }
-
-    public Map<String, List<String>> getAttrs() { return mAttrs; }
+    public Map<String, Collection<String>> getAttrs() { return mAttrs; }
     
     public boolean getContacts() { return getBool(Provisioning.A_zimbraFeatureContactsEnabled); }
 

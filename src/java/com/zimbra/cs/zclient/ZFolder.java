@@ -15,19 +15,25 @@
 
 package com.zimbra.cs.zclient;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.cs.zclient.event.ZModifyEvent;
-import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
-import org.json.JSONException;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import org.json.JSONException;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.cs.zclient.event.ZModifyEvent;
+import com.zimbra.cs.zclient.event.ZModifyFolderEvent;
+import com.zimbra.soap.mail.type.Folder;
+import com.zimbra.soap.mail.type.Grant;
+import com.zimbra.soap.mail.type.Mountpoint;
+import com.zimbra.soap.mail.type.SearchFolder;
 
 public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
 
@@ -137,7 +143,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
 
         public static Color fromString(String s) throws ServiceException {
             try {
-                return Color.values()[Integer.parseInt(s)];
+                return fromInt(Integer.parseInt(s));
             } catch (NumberFormatException e) {
             } catch (IndexOutOfBoundsException e) {
             }
@@ -150,6 +156,14 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         }
 
         Color(int value) { mValue = value; }
+
+        public static Color fromInt(int i) throws ServiceException {
+            try {
+                return values()[i];
+            } catch (IndexOutOfBoundsException e) {
+                throw ZClientException.CLIENT_ERROR("invalid color: "+i+", must be between 0 and " + (values().length - 1), null);
+            }
+        }
     }
 
     public enum View {
@@ -170,6 +184,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
                 return unknown;
             }
         }
+        
     }
 
     public ZFolder(Element e, ZFolder parent, ZMailbox mailbox) throws ServiceException {
@@ -222,6 +237,66 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
             mSubFolders.add(new ZMountpoint(l, this, mMailbox));
     }
 
+    public ZFolder(Folder f, ZFolder parent, ZMailbox mailbox) throws ServiceException {
+        mMailbox = mailbox;
+        mParent = parent;
+        mId = f.getId();
+        mName = f.getName();
+        mParentId = f.getParentId();
+        mIsPlaceholder = mParentId == null;
+        mFlags = f.getFlags();
+        try {
+            mColor = ZFolder.Color.fromInt(SystemUtil.getValue(f.getColor(), 0));
+        } catch (ServiceException se) {
+            mColor = ZFolder.Color.orange;
+        }
+        
+        mUnreadCount = SystemUtil.getValue(f.getUnreadCount(), 0);
+        mImapUnreadCount = SystemUtil.getValue(f.getImapUnreadCount(), mUnreadCount);
+        mMessageCount = SystemUtil.getValue(f.getItemCount(), 0);
+        mImapMessageCount = SystemUtil.getValue(f.getImapItemCount(), mMessageCount);
+        
+        mDefaultView = View.conversation;
+        if (f.getView() != null) {
+            mDefaultView = SoapConverter.FROM_SOAP_VIEW.apply(f.getView());
+        }
+        
+        mModifiedSequence = SystemUtil.getValue(f.getModifiedSequence(), -1);
+        mContentSequence = SystemUtil.getValue(f.getRevision(), -1);
+        mImapUIDNEXT = SystemUtil.getValue(f.getImapUidNext(), -1);
+        mImapMODSEQ = SystemUtil.getValue(f.getImapModifiedSequence(), -1);
+        mRemoteURL = f.getUrl();
+        mEffectivePerms = f.getPerm();
+        mSize = SystemUtil.getValue(f.getItemCount(), 0);
+        
+        mGrants = new ArrayList<ZGrant>();
+        mSubFolders = new ArrayList<ZFolder>();
+        
+        for (Grant g : f.getGrants()) {
+            mGrants.add(new ZGrant(g));
+        }
+        for (Folder folder : f.getSubfolders()) {
+            if (folder instanceof SearchFolder) {
+                mSubFolders.add(new ZSearchFolder((SearchFolder) folder, this, mMailbox));
+            } else if (folder instanceof Mountpoint) {
+                mSubFolders.add(new ZMountpoint((Mountpoint) folder, this, mMailbox));
+            } else {
+                mSubFolders.add(new ZFolder(folder, this, getMailbox()));
+            }
+        }
+
+        // TODO
+        /*
+        // search
+        for (Element s : e.listElements(MailConstants.E_SEARCH))
+            mSubFolders.add(new ZSearchFolder(s, this, mMailbox));
+        
+        // link
+        for (Element l : e.listElements(MailConstants.E_MOUNT))
+            mSubFolders.add(new ZMountpoint(l, this, mMailbox));
+            */
+    }
+    
     protected ZFolder createSubFolder(Element element) throws ServiceException {
         return new ZFolder(element, this, getMailbox());
     }

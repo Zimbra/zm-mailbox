@@ -19,6 +19,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -110,7 +111,7 @@ public class ZJSONObject {
         return this;
     }
 
-    public ZJSONObject putMapList(String key, Map<String,List<String>> attrs) throws JSONException {
+    public ZJSONObject putMapList(String key, Map<String, List<String>> attrs) throws JSONException {
         JSONObject obj = new JSONObject();
         mJO.put(key, obj);
         if (attrs != null) {

@@ -129,8 +129,6 @@ public class ZMailboxUtil implements DebugListener {
     ZSearchParams mConvSearchParams;
     ZSearchResult mConvSearchResult;
     SoapProvisioning mProv;
-    SoapProtocol mRequestProto = SoapProtocol.SoapJS;
-    SoapProtocol mResponseProto = SoapProtocol.SoapJS;
     private int mTimeout = LC.httpclient_connmgr_so_timeout.intValue();
 
     private Map<Integer, String> mIndexToId = new HashMap<Integer, String>();
@@ -157,23 +155,6 @@ public class ZMailboxUtil implements DebugListener {
     public void setPassword(String password) { mPassword = password; }
 
     public void setAdminAuthToken(ZAuthToken authToken) { mAdminAuthToken = authToken; }
-
-    private SoapProtocol parseProto(String proto) throws ZClientException {
-        if ("soap11".equals(proto)) return SoapProtocol.Soap11;
-        else     if ("soap12".equals(proto)) return SoapProtocol.Soap12;
-        else if ("json".equals(proto)) return SoapProtocol.SoapJS;
-        else throw ZClientException.CLIENT_ERROR("unknown protocol: "+proto, null);
-    }
-
-    public void setProtocol(String proto) throws ZClientException {
-        if (proto.indexOf('/') != -1) {
-            String[] protos = proto.split("/");
-            mRequestProto = parseProto(protos[0]);
-            mResponseProto = parseProto(protos[1]);
-        } else {
-            mRequestProto = mResponseProto = parseProto(proto);
-        }
-    }
 
     public void setUrl(String url, boolean admin) throws ServiceException {
         mUrl = ZMailbox.resolveUrl(url, admin);
@@ -213,7 +194,6 @@ public class ZMailboxUtil implements DebugListener {
         stdout.println("  -m/--mailbox  {name}                     mailbox to open");
         stdout.println("  -p/--password {pass}                     password for admin account and/or mailbox");
         stdout.println("  -P/--passfile {file}                     read password from file");
-        stdout.println("  -r/--protocol {proto|req-proto/response-proto} specify request/response protocol [soap11,soap12,json]");
         stdout.println("  -t/--timeout                             timeout (in seconds)");
         stdout.println("  -v/--verbose                             verbose mode (dumps full exception stack trace)");
         stdout.println("  -d/--debug                               debug mode (dumps SOAP messages)");
@@ -578,8 +558,6 @@ public class ZMailboxUtil implements DebugListener {
         mMbox = null; //make sure to null out current value so if select fails any further ops will fail
         mMailboxName = targetAccount;
         ZMailbox.Options options = getMailboxOptions(prov, AccountBy.name, mMailboxName, 60*60*24);
-        options.setRequestProtocol(mRequestProto);
-        options.setResponseProtocol(mResponseProto);
         options.setTimeout(mTimeout);
 
         if (prov.soapGetTransportDebugListener() != null)
@@ -628,8 +606,6 @@ public class ZMailboxUtil implements DebugListener {
         options.setPassword(mPassword);
         options.setUri(ZMailbox.resolveUrl(uri, false));
         options.setDebugListener(mDebug ? this : null);
-        options.setRequestProtocol(mRequestProto);
-        options.setResponseProtocol(mResponseProto);
         options.setTimeout(mTimeout);
         mMbox = ZMailbox.getMailbox(options);
         mPrompt = String.format("mbox %s> ", mMbox.getName());
@@ -2686,7 +2662,6 @@ public class ZMailboxUtil implements DebugListener {
         if (cl.hasOption('u')) pu.setUrl(cl.getOptionValue('u'), isAdmin);
         if (cl.hasOption('m')) pu.setMailboxName(cl.getOptionValue('m'));        
         if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));
-        if (cl.hasOption('r')) pu.setProtocol(cl.getOptionValue('r'));        
         if (cl.hasOption('P')) {
             pu.setPassword(StringUtil.readSingleLineFromFile(cl.getOptionValue('P')));
         }

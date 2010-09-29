@@ -418,8 +418,6 @@ public class Search extends MailDocumentHandler  {
         zoptions.setTargetAccount(nominalTargetAcctId);
         zoptions.setTargetAccountBy(AccountBy.id);
         zoptions.setNoSession(true);
-        zoptions.setRequestProtocol(SoapProtocol.SoapJS);
-        zoptions.setResponseProtocol(SoapProtocol.SoapJS);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
 
         Element resp = zmbx.invoke(req);

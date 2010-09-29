@@ -18,6 +18,7 @@ package com.zimbra.qa.unittest;
 import com.zimbra.cs.datasource.imap.ImapAppender;
 import com.zimbra.cs.mailclient.imap.MailboxInfo;
 import org.junit.*;
+import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import static org.junit.Assert.*;

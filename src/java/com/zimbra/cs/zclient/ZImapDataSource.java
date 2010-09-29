@@ -14,59 +14,55 @@
  */
 package com.zimbra.cs.zclient;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.account.Provisioning;
-import org.json.JSONException;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import org.json.JSONException;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.SystemUtil;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.soap.account.type.AccountImapDataSource;
+import com.zimbra.soap.type.DataSources;
+import com.zimbra.soap.type.ImapDataSource;
+
 public class ZImapDataSource implements ZDataSource, ToZJSONObject {
 
-    private String mId;
-    private String mName;
-    private boolean mEnabled;
-    private String mHost;
-    private int mPort;
-    private String mUsername;
-    private String mPassword;
-    private String mFolderId;
-    private boolean mImportOnly;
-    private DataSource.ConnectionType mConnectionType;
-    
-    public ZImapDataSource(Element e) throws ServiceException {
-        mId = e.getAttribute(MailConstants.A_ID);
-        mName = e.getAttribute(MailConstants.A_NAME);
-        mEnabled = e.getAttributeBool(MailConstants.A_DS_IS_ENABLED);
-        mHost = e.getAttribute(MailConstants.A_DS_HOST);
-        mPort = (int) e.getAttributeLong(MailConstants.A_DS_PORT, 110);
-        mUsername = e.getAttribute(MailConstants.A_DS_USERNAME);
-        mFolderId = e.getAttribute(MailConstants.A_FOLDER);
-        mConnectionType = DataSource.ConnectionType.fromString(
-            e.getAttribute(MailConstants.A_DS_CONNECTION_TYPE));
-        mImportOnly = e.getAttributeBool(MailConstants.A_DS_IS_IMPORTONLY);
-    }
+    private ImapDataSource data;
 
-    public ZImapDataSource(String name, boolean enabled, String host, int port,
-            String username, String password, String folderid,
-            DataSource.ConnectionType connectionType, boolean isImportOnly) {
-			mName = name;
-			mEnabled = enabled;
-			mHost = host;
-			mPort = port;
-			mUsername = username;
-			mPassword = password;
-			mFolderId = folderid;
-			mConnectionType = connectionType;
-			mImportOnly = isImportOnly;
-	}
+    public ZImapDataSource(ImapDataSource data) {
+        this.data = DataSources.newImapDataSource(data);
+    }
     
     public ZImapDataSource(String name, boolean enabled, String host, int port,
                            String username, String password, String folderid,
-                           DataSource.ConnectionType connectionType) {
+                           DataSource.ConnectionType connectionType, boolean isImportOnly)
+    throws ServiceException {
+        data = DataSources.newImapDataSource();
+        data.setName(name);
+        data.setEnabled(enabled);
+        data.setHost(host);
+        data.setPort(port);
+        data.setUsername(username);
+        data.setPassword(password);
+        
+        try {
+            data.setFolderId(folderid);
+        } catch (NumberFormatException e) {
+            throw ServiceException.INVALID_REQUEST("Invalid folder id", e);
+        }
+        
+        data.setConnectionType(SoapConverter.TO_SOAP_CONNECTION_TYPE.apply(connectionType));
+        data.setImportOnly(isImportOnly);
+    }
+    
+    public ZImapDataSource(String name, boolean enabled, String host, int port,
+                           String username, String password, String folderid,
+                           DataSource.ConnectionType connectionType) throws ServiceException {
         this(name,enabled,host,port,username,password,folderid,connectionType,false);
     }
 
@@ -74,106 +70,114 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
         if (dsrc.getType() != DataSource.Type.imap)
             throw ServiceException.INVALID_REQUEST("can't instantiate ZImapDataSource for " + dsrc.getType(), null);
 
-        mName = dsrc.getName();
-        mEnabled = dsrc.isEnabled();
-        mHost = dsrc.getHost();
-        mPort = dsrc.getPort();
-        mUsername = dsrc.getUsername();
-        mPassword = dsrc.getDecryptedPassword();
-        mFolderId = "" + dsrc.getFolderId();
-        mConnectionType = dsrc.getConnectionType();
-        mImportOnly = dsrc.isImportOnly();
+        data = new AccountImapDataSource();
+        data.setName(dsrc.getName());
+        data.setEnabled(dsrc.isEnabled());
+        data.setHost(dsrc.getHost());
+        data.setPort(dsrc.getPort());
+        data.setUsername(dsrc.getUsername());
+        data.setPassword(dsrc.getDecryptedPassword());
+        data.setFolderId(Integer.toString(dsrc.getFolderId()));
+        data.setConnectionType(SoapConverter.TO_SOAP_CONNECTION_TYPE.apply(dsrc.getConnectionType()));
+        data.setImportOnly(dsrc.isImportOnly());
     }
 
     public Element toElement(Element parent) {
         Element src = parent.addElement(MailConstants.E_DS_IMAP);
-        if (mId != null) src.addAttribute(MailConstants.A_ID, mId);
-        src.addAttribute(MailConstants.A_NAME, mName);
-        src.addAttribute(MailConstants.A_DS_IS_ENABLED, mEnabled);
-        src.addAttribute(MailConstants.A_DS_HOST, mHost);
-        src.addAttribute(MailConstants.A_DS_PORT, mPort);
-        src.addAttribute(MailConstants.A_DS_USERNAME, mUsername);
-        if (mPassword != null) src.addAttribute(MailConstants.A_DS_PASSWORD, mPassword);
-        src.addAttribute(MailConstants.A_FOLDER, mFolderId);
-        src.addAttribute(MailConstants.A_DS_CONNECTION_TYPE, mConnectionType.name());
-        src.addAttribute(MailConstants.A_DS_IS_IMPORTONLY, mImportOnly);
+        src.addAttribute(MailConstants.A_ID, data.getId());
+        src.addAttribute(MailConstants.A_NAME, data.getName());
+        src.addAttribute(MailConstants.A_DS_IS_ENABLED, data.isEnabled());
+        src.addAttribute(MailConstants.A_DS_HOST, data.getHost());
+        src.addAttribute(MailConstants.A_DS_PORT, data.getPort());
+        src.addAttribute(MailConstants.A_DS_USERNAME, data.getUsername());
+        src.addAttribute(MailConstants.A_DS_PASSWORD, data.getPassword());
+        src.addAttribute(MailConstants.A_FOLDER, data.getFolderId());
+        src.addAttribute(MailConstants.A_DS_CONNECTION_TYPE, data.getConnectionType().name());
+        src.addAttribute(MailConstants.A_DS_IS_IMPORTONLY, data.isImportOnly());
         return src;
     }
 
     public Element toIdElement(Element parent) {
         Element src = parent.addElement(MailConstants.E_DS_IMAP);
-        src.addAttribute(MailConstants.A_ID, mId);
+        src.addAttribute(MailConstants.A_ID, getId());
         return src;
     }
 
     public DataSource.Type getType() { return DataSource.Type.imap; }
 
-    public String getId() { return mId; }
+    public String getId() { return data.getId(); }
 
-    public String getName() { return mName; }
-    public void setName(String name) { mName = name; }
+    public String getName() { return data.getName(); }
+    public void setName(String name) { data.setName(name); }
 
-    public boolean isEnabled() { return mEnabled; }
-    public void setEnabled(boolean enabled) { mEnabled = enabled; }
+    public boolean isEnabled() { return SystemUtil.getValue(data.isEnabled(), Boolean.FALSE); }
+    
+    public void setEnabled(boolean enabled) { data.setEnabled(enabled); }
 
-    public String getHost() { return mHost; }
-    public void setHost(String host) { mHost = host; }
+    public String getHost() { return data.getHost(); }
+    public void setHost(String host) { data.setHost(host); }
 
-    public int getPort() { return mPort; }
-    public void setPort(int port) { mPort = port; } 
+    public int getPort() { return SystemUtil.getValue(data.getPort(), -1); }
+    public void setPort(int port) { data.setPort(port); } 
 
-    public String getUsername() { return mUsername; }
-    public void setUsername(String username) { mUsername = username; }
+    public String getUsername() { return data.getUsername(); }
+    public void setUsername(String username) { data.setUsername(username); }
 
-    public String getFolderId() { return mFolderId; }
-    public void setFolderId(String folderid) { mFolderId = folderid; }
+    public String getFolderId() { return data.getFolderId(); }
+    public void setFolderId(String folderid) { data.setFolderId(folderid); }
 
-    public DataSource.ConnectionType getConnectionType() { return mConnectionType; }
-    public void setConnectionType(DataSource.ConnectionType connectionType) { mConnectionType = connectionType; }
+    public DataSource.ConnectionType getConnectionType() {
+        DataSource.ConnectionType ct = SoapConverter.FROM_SOAP_CONNECTION_TYPE.apply(data.getConnectionType());
+        return (ct != null ? ct : DataSource.ConnectionType.cleartext);
+    }
+    
+    public void setConnectionType(DataSource.ConnectionType connectionType) {
+        data.setConnectionType(SoapConverter.TO_SOAP_CONNECTION_TYPE.apply(connectionType));
+    }
     
     public Map<String, Object> getAttrs() {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDataSourceId, mId);
-        attrs.put(Provisioning.A_zimbraDataSourceName, mName);
-        attrs.put(Provisioning.A_zimbraDataSourceEnabled, mEnabled ? "TRUE" : "FALSE");
-        attrs.put(Provisioning.A_zimbraDataSourceUsername, mUsername);
-        attrs.put(Provisioning.A_zimbraDataSourceHost, mHost);
-        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, mConnectionType);
-        if (mPort > 0)
-            attrs.put(Provisioning.A_zimbraDataSourcePort, "" + mPort);
-        if (mFolderId != null)
-            attrs.put(Provisioning.A_zimbraDataSourceFolderId, mFolderId);
-        attrs.put(Provisioning.A_zimbraDataSourceImportOnly, mImportOnly);
+        attrs.put(Provisioning.A_zimbraDataSourceId, getId());
+        attrs.put(Provisioning.A_zimbraDataSourceName, getName());
+        attrs.put(Provisioning.A_zimbraDataSourceEnabled, isEnabled() ? LdapUtil.LDAP_TRUE : LdapUtil.LDAP_FALSE);
+        attrs.put(Provisioning.A_zimbraDataSourceUsername, getUsername());
+        attrs.put(Provisioning.A_zimbraDataSourceHost, getHost());
+        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, getConnectionType().toString());
+        if (getPort() > 0)
+            attrs.put(Provisioning.A_zimbraDataSourcePort, "" + getPort());
+        if (getFolderId() != null)
+            attrs.put(Provisioning.A_zimbraDataSourceFolderId, getFolderId());
+        attrs.put(Provisioning.A_zimbraDataSourceImportOnly, isImportOnly());
         return attrs;
     }
 
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
-        zjo.put("id", mId);
-        zjo.put("name", mName);
-        zjo.put("enabled", mEnabled);
-        zjo.put("host", mHost);
-        zjo.put("port", mPort);
-        zjo.put("username", mUsername);
-        zjo.put("folderId", mFolderId);
-        zjo.put("connectionType", mConnectionType.name());
-        zjo.put("importOnly",mImportOnly);
+        zjo.put("id", data.getId());
+        zjo.put("name", data.getName());
+        zjo.put("enabled", data.isEnabled());
+        zjo.put("host", data.getHost());
+        zjo.put("port", data.getPort());
+        zjo.put("username", data.getUsername());
+        zjo.put("folderId", data.getFolderId());
+        zjo.put("connectionType", data.getConnectionType().toString());
+        zjo.put("importOnly", data.isImportOnly());
         return zjo;
     }
 
     public String toString() {
-        return String.format("[ZImapDataSource %s]", mName);
+        return String.format("[ZImapDataSource %s]", getName());
     }
 
     public String dump() {
         return ZJSONObject.toString(this);
     }
 
-	public void setImportOnly(boolean mImportOnly) {
-		this.mImportOnly = mImportOnly;
-	}
+    public void setImportOnly(boolean importOnly) {
+        data.setImportOnly(importOnly);
+    }
 
-	public boolean isImportOnly() {
-		return mImportOnly;
-	}
+    public boolean isImportOnly() {
+        return SystemUtil.getValue(data.isImportOnly(), Boolean.FALSE);
+    }
 }

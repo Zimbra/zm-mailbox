@@ -15,6 +15,7 @@
 package com.zimbra.qa.unittest;
 
 import org.junit.*;
+import org.junit.Test;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZDataSource;
 import com.zimbra.cs.zclient.ZFolder;

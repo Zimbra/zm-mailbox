@@ -19,6 +19,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.soap.mail.type.Grant;
 
 import org.json.JSONException;
 
@@ -124,7 +125,17 @@ public class ZGrant implements ToZJSONObject {
             mArgs = e.getAttribute(MailConstants.A_ACCESSKEY, null);
         else
             mArgs = e.getAttribute(MailConstants.A_PASSWORD, null);
-        
+    }
+    
+    public ZGrant(Grant grant) throws ServiceException {
+        mPermissions = grant.getPerm();
+        mGranteeName = grant.getGranteeName();
+        mGranteeId = grant.getGranteeId();
+        mGranteeType = GranteeType.fromString(grant.getGranteeType().toString());
+        if (mGranteeType == GranteeType.key)
+            mArgs = grant.getAccessKey();
+        else
+            mArgs = grant.getGuestPassword();
     }
 
     public void toElement(Element parent) {

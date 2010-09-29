@@ -147,7 +147,7 @@ element involving the session.)  If there is a session, there will be a
           <created>
             <tag id="66" name="phlox" u="8"/>
             <folder id="4353" name="a&p" u="2" l="1"/>
-            <folder id="4356" name="subfoldre" u="2" l="4353"/>
+            <folder id="4356" name="subfolder" u="2" l="4353"/>
             <link id="1" name="new-mount-point" l="1" n="6" u="1" f="u" owner="user1@example.com" zid="151bd192-e19a-40be-b8c9-259b21ffac48" rid="2" oname="user1folder">
               <folder id="151bd192-e19a-40be-b8c9-259b21ffac48:260" name="remote-subfolder" n="43" l="151bd192-e19a-40be-b8c9-259b21ffac48:2"/>
             </link>

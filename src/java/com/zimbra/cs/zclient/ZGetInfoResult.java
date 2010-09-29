@@ -15,14 +15,6 @@
 
 package com.zimbra.cs.zclient;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.KeyValuePair;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.account.Provisioning;
-import org.json.JSONException;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -31,33 +23,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.json.JSONException;
+
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.KeyValuePair;
+import com.zimbra.common.util.MapUtil;
+import com.zimbra.common.util.SystemUtil;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.soap.account.message.GetInfoResponse;
+import com.zimbra.soap.account.type.Signature;
+import com.zimbra.soap.type.CalDataSource;
+import com.zimbra.soap.type.DataSource;
+import com.zimbra.soap.type.ImapDataSource;
+import com.zimbra.soap.type.Pop3DataSource;
+import com.zimbra.soap.type.RssDataSource;
+
 public class ZGetInfoResult implements ToZJSONObject {
 
-    private String mVersion;
-    private String mId;
-    private String mName;
-    private String mRestURLBase;
-    private String mPublicURLBase;
-    private String mCrumb;
-    private long mLifetime;
-    private long mExpiration;
-    private long mMailboxQuotaUsed;
-    private String mRecent;
-    private Map<String, List<String>> mAttrs;
-    private Map<String, List<String>> mPrefAttrs;
-    private ZPrefs mPrefs;
-    private ZFeatures mFeatures;
-    private List<ZIdentity> mIdentities;
-    private List<ZDataSource> mDataSources;
-    private List<ZSignature> mSignatures;
-    private List<String> mMailURLs;
-    private Set<String> mEmailAddresses;
-    private Date mPrevSession;
-    private String mChangePasswordURL;
-    private String mPublicURL;
-
-
-    static Map<String, List<String>> getMap(Element e, String root, String elName) throws ServiceException {
+    private GetInfoResponse data;
+    private long expiration;
+    
+    static Map<String, List<String>> getMap(Element e, String root, String elName) {
         Map<String, List<String>> result = new HashMap<String, List<String>>();
         Element attrsEl = e.getOptionalElement(root);
         if (attrsEl != null) {
@@ -76,175 +66,138 @@ public class ZGetInfoResult implements ToZJSONObject {
         return result;
     }
 
-    public ZGetInfoResult(Element e) throws ServiceException {
-    	mVersion = e.getAttribute(AccountConstants.E_VERSION, "unknown");
-        mId = e.getAttribute(AccountConstants.E_ID, null); // TODO: ID was just added to GetInfo, remove ,null shortly...
-        mName = e.getAttribute(AccountConstants.E_NAME);
-        mCrumb = e.getAttribute(AccountConstants.E_CRUMB, null);
-        mLifetime = e.getAttributeLong(AccountConstants.E_LIFETIME);
-        mMailboxQuotaUsed = e.getAttributeLong(AccountConstants.E_QUOTA_USED, -1);
-        mExpiration  = mLifetime + System.currentTimeMillis();
-        mAttrs = getMap(e, AccountConstants.E_ATTRS, AccountConstants.E_ATTR);
-        mPrefAttrs = getMap(e, AccountConstants.E_PREFS, AccountConstants.E_PREF);
-        mPrefs = new ZPrefs(mPrefAttrs);
-        mFeatures = new ZFeatures(mAttrs);
-        mRecent = e.getAttribute(AccountConstants.E_RECENT_MSGS, "0");
-        mRestURLBase = e.getAttribute(AccountConstants.E_REST, null);
-        mPublicURLBase = e.getAttribute(AccountConstants.E_PUBLIC_URL, null);
-		long prevSession = e.getAttributeLong(AccountConstants.E_PREVIOUS_SESSION, 0);
-        mPrevSession = prevSession != 0 ? new Date(prevSession) : new Date();
-        mChangePasswordURL = e.getAttribute(AccountConstants.E_CHANGE_PASSWORD_URL, null);
-        mPublicURL = e.getAttribute(AccountConstants.E_PUBLIC_URL, null);
-
-        mMailURLs = new ArrayList<String>();
-        String mailUrl = e.getAttribute(AccountConstants.E_SOAP_URL, null);
-        if (mailUrl != null)
-            mMailURLs.add(mailUrl);
-
-        mIdentities = new ArrayList<ZIdentity>();
-        Element identities = e.getOptionalElement(AccountConstants.E_IDENTITIES);
-        if (identities != null) {
-            for (Element identity: identities.listElements(AccountConstants.E_IDENTITY)) {
-                mIdentities.add(new ZIdentity(identity));
-            }
-        }
-        mDataSources = new ArrayList<ZDataSource>();
-        Element sources = e.getOptionalElement(AccountConstants.E_DATA_SOURCES);
-        if (sources != null) {
-            for (Element source: sources.listElements()) {
-                if (source.getName().equals(MailConstants.E_DS_POP3))
-                    mDataSources.add(new ZPop3DataSource(source));
-            }
-        }
-        mSignatures = new ArrayList<ZSignature>();
-        Element sigs = e.getOptionalElement(AccountConstants.E_SIGNATURES);
-        if (sigs != null) {
-            for (Element sig: sigs.listElements()) {
-                if (sig.getName().equals(MailConstants.E_SIGNATURE))
-                    mSignatures.add(new ZSignature(sig));
-            }
-        }
-
+    public ZGetInfoResult(GetInfoResponse res) {
+        this.data = res;
+        expiration = data.getLifetime() + System.currentTimeMillis();
     }
 
     void setSignatures(List<ZSignature> sigs) {
-        mSignatures = sigs;
+        data.setSignatures(Iterables.transform(sigs, SoapConverter.TO_SOAP_SIGNATURE));
     }
 
     public List<ZSignature> getSignatures() {
-        return mSignatures;
+        return Lists.transform(data.getSignatures(), SoapConverter.FROM_SOAP_SIGNATURE);
     }
 
     public ZSignature getSignature(String id) {
-        for (ZSignature sig : getSignatures()) {
-            if (sig.getId().equals(id))
-                return sig;
+        for (Signature sig : data.getSignatures()) {
+            if (id.equals(sig.getId())) {
+                return SoapConverter.FROM_SOAP_SIGNATURE.apply(sig);
+            }
         }
         return null;
     }
 
     public List<ZIdentity> getIdentities() {
-        return mIdentities;
+        return Lists.transform(data.getIdentities(), SoapConverter.FROM_SOAP_IDENTITY);
     }
 
     public List<ZDataSource> getDataSources() {
-        return mDataSources;
+        List<ZDataSource> newList = new ArrayList<ZDataSource>();
+        for (DataSource ds : data.getDataSources()) {
+            if (ds instanceof Pop3DataSource) {
+                newList.add(new ZPop3DataSource((Pop3DataSource) ds));
+            } else if (ds instanceof ImapDataSource) {
+                newList.add(new ZImapDataSource((ImapDataSource) ds));
+            } else if (ds instanceof CalDataSource) {
+                newList.add(new ZCalDataSource((CalDataSource) ds));
+            } else if (ds instanceof RssDataSource) {
+                newList.add(new ZRssDataSource((RssDataSource) ds));
+            }
+        }
+        return newList;
     }
 
     public Map<String, List<String>> getAttrs() {
-        return mAttrs;
+        return MapUtil.multimapToMapOfLists(data.getAttrsMultimap());
     }
 
     /***
      *
      * @return Set of all lowercased email addresses for this account, including primary name and any aliases.
      */
-    public synchronized Set<String> getEmailAddresses() {
-        if (mEmailAddresses == null) {
-            mEmailAddresses =  new HashSet<String>();
-            mEmailAddresses.add(getName().toLowerCase());
-            List<String> aliasList = getAttrs().get(Provisioning.A_zimbraMailAlias);
-            if (aliasList != null)
-                for (String alias: aliasList)
-                    mEmailAddresses.add(alias.toLowerCase());
-            List<String> allowFromList = getAttrs().get(Provisioning.A_zimbraAllowFromAddress);
-            if (allowFromList != null)
-                for (String allowFrom: allowFromList)
-                    mEmailAddresses.add(allowFrom.toLowerCase());
+    public Set<String> getEmailAddresses() {
+        Multimap<String, String> attrs = data.getAttrsMultimap();
+        Set<String> addresses = new HashSet<String>();
+        for (String alias : attrs.get(Provisioning.A_zimbraMailAlias)) {
+            addresses.add(alias.toLowerCase());
         }
-        return mEmailAddresses;
+        for (String allowFrom : attrs.get(Provisioning.A_zimbraAllowFromAddress)) {
+            addresses.add(allowFrom.toLowerCase());
+        }
+        return addresses;
     }
 
     public long getExpiration() {
-        return mExpiration;
+        return expiration;
     }
 
     public long getLifetime() {
-        return mLifetime;
+        return data.getLifetime();
     }
 
     public String getRecent() {
-        return mRecent;
+        return SystemUtil.getValue(data.getRecentMessageCount(), 0).toString();
     }
 
     public String getChangePasswordURL() {
-        return mChangePasswordURL;
+        return data.getChangePasswordURL();
     }
 
     public String getPublicURL() {
-        return mPublicURL;
+        return data.getPublicURL();
     }
 
     public List<String> getMailURL() {
-        return mMailURLs;
+        return data.getSoapURLs();
     }
 
     public String getCrumb() {
-        return mCrumb;
+        return data.getCrumb();
     }
 
     public String getName() {
-        return mName;
+        return data.getAccountName();
     }
 
     public Map<String, List<String>> getPrefAttrs() {
-        return mPrefAttrs;
+        return MapUtil.multimapToMapOfLists(data.getPrefsMultimap());
     }
 
     public ZPrefs getPrefs() {
-        return mPrefs;
+        return new ZPrefs(data.getPrefsMultimap().asMap());
     }
 
     public ZFeatures getFeatures() {
-        return mFeatures;
+        return new ZFeatures(data.getAttrsMultimap().asMap());
     }
 
     public String getRestURLBase() {
-        return mRestURLBase;
+        return data.getRestUrl();
     }
 
     public String getPublicURLBase() {
-        return mPublicURLBase;
+        return data.getPublicURL();
     }
-
+    
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
-        jo.put("id", mId);
-        jo.put("name", mName);
-        jo.put("rest", mRestURLBase);
-        jo.put("expiration", mExpiration);
-        jo.put("lifetime", mLifetime);
-        jo.put("mailboxQuotaUsed", mMailboxQuotaUsed);
-        jo.put("recent", mRecent);
-        jo.putMapList("attrs", mAttrs);
-        jo.putMapList("prefs", mPrefAttrs);
-        jo.putList("mailURLs", mMailURLs);
-        jo.put("publicURL", mPublicURLBase);
+        jo.put("id", getId());
+        jo.put("name", getName());
+        jo.put("rest", getRestURLBase());
+        jo.put("expiration", getExpiration());
+        jo.put("lifetime", getLifetime());
+        jo.put("mailboxQuotaUsed", getMailboxQuotaUsed());
+        jo.put("recent", getRecent());
+        jo.putMapList("attrs", getAttrs());
+        jo.putMapList("prefs", getPrefAttrs());
+        jo.putList("mailURLs", getMailURL());
+        jo.put("publicURL", getPublicURL());
         return jo;
     }
 
     public String toString() {
-        return String.format("[ZGetInfoResult %s]", mName);
+        return String.format("[ZGetInfoResult %s]", getName());
     }
 
     public String dump() {
@@ -252,19 +205,23 @@ public class ZGetInfoResult implements ToZJSONObject {
     }
 
     public long getMailboxQuotaUsed() {
-        return mMailboxQuotaUsed;
+        return SystemUtil.getValue(data.getQuotaUsed(), -1L);
     }
 
     public String getId() {
-        return mId;
+        return data.getAccountId();
     }
     
     public String getVersion() {
-    	return mVersion;
+    	return data.getVersion();
     }
 
-	public Date getPrevSession() {
-		return mPrevSession;
-	}
+    public Date getPrevSession() {
+        Long timestamp = data.getPreviousSessionTime();
+        if (timestamp == null) {
+            return new Date();
+        }
+        return new Date(timestamp);
+    }
 }
 

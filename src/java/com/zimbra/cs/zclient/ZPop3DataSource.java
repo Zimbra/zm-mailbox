@@ -15,152 +15,138 @@
 
 package com.zimbra.cs.zclient;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ldap.LdapUtil;
-import org.json.JSONException;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import org.json.JSONException;
+
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.SystemUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.DataSource.ConnectionType;
+import com.zimbra.cs.account.DataSource.Type;
+import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.soap.account.type.AccountPop3DataSource;
+import com.zimbra.soap.type.DataSources;
+import com.zimbra.soap.type.Pop3DataSource;
+
 public class ZPop3DataSource implements ZDataSource, ToZJSONObject {
 
-    private String mId;
-    private String mName;
-    private boolean mEnabled;
-    private String mHost;
-    private int mPort;
-    private String mUsername;
-    private String mPassword;
-    private String mFolderId;
-    private DataSource.ConnectionType mConnectionType;
-    private boolean mLeaveOnServer;
-    
-    public ZPop3DataSource(Element e) throws ServiceException {
-        mId = e.getAttribute(MailConstants.A_ID);
-        mName = e.getAttribute(MailConstants.A_NAME);
-        mEnabled = e.getAttributeBool(MailConstants.A_DS_IS_ENABLED);
-        mHost = e.getAttribute(MailConstants.A_DS_HOST);
-        mPort = (int) e.getAttributeLong(MailConstants.A_DS_PORT, 110);
-        mUsername = e.getAttribute(MailConstants.A_DS_USERNAME);
-        mFolderId = e.getAttribute(MailConstants.A_FOLDER);
-        mConnectionType = DataSource.ConnectionType.fromString(e.getAttribute(MailConstants.A_DS_CONNECTION_TYPE));
-        mLeaveOnServer = e.getAttributeBool(MailConstants.A_DS_LEAVE_ON_SERVER);
+    private Pop3DataSource data;
+
+    public ZPop3DataSource(Pop3DataSource data) {
+        this.data = DataSources.newPop3DataSource(data);
     }
 
     public ZPop3DataSource(String name, boolean enabled, String host, int port,
                            String username, String password, String folderid,
-                           DataSource.ConnectionType connectionType, boolean leaveOnServer) {
-        mName = name;
-        mEnabled = enabled;
-        mHost = host;
-        mPort = port;
-        mUsername = username;
-        mPassword = password;
-        mFolderId = folderid;
-        mConnectionType = connectionType;
-        mLeaveOnServer = leaveOnServer;
-    }
-
-    public ZPop3DataSource(DataSource dsrc) throws ServiceException {
-        if (dsrc.getType() != DataSource.Type.pop3)
-            throw ServiceException.INVALID_REQUEST("can't instantiate ZPop3DataSource for " + dsrc.getType(), null);
-
-        mName = dsrc.getName();
-        mEnabled = dsrc.isEnabled();
-        mHost = dsrc.getHost();
-        mPort = dsrc.getPort();
-        mUsername = dsrc.getUsername();
-        mPassword = dsrc.getDecryptedPassword();
-        mFolderId = "" + dsrc.getFolderId();
-        mConnectionType = dsrc.getConnectionType();
-        mLeaveOnServer = dsrc.leaveOnServer();
+                           ConnectionType connectionType, boolean leaveOnServer) {
+        data = new AccountPop3DataSource();
+        data.setName(name);
+        data.setEnabled(enabled);
+        data.setHost(host);
+        data.setPort(port);
+        data.setUsername(username);
+        data.setPassword(password);
+        data.setFolderId(folderid);
+        data.setConnectionType(SoapConverter.TO_SOAP_CONNECTION_TYPE.apply(connectionType));
+        setLeaveOnServer(leaveOnServer);
     }
 
     public Element toElement(Element parent) {
         Element src = parent.addElement(MailConstants.E_DS_POP3);
-        if (mId != null) src.addAttribute(MailConstants.A_ID, mId);
-        src.addAttribute(MailConstants.A_NAME, mName);
-        src.addAttribute(MailConstants.A_DS_IS_ENABLED, mEnabled);
-        src.addAttribute(MailConstants.A_DS_HOST, mHost);
-        src.addAttribute(MailConstants.A_DS_PORT, mPort);
-        src.addAttribute(MailConstants.A_DS_USERNAME, mUsername);
-        if (mPassword != null) src.addAttribute(MailConstants.A_DS_PASSWORD, mPassword);
-        src.addAttribute(MailConstants.A_FOLDER, mFolderId);
-        src.addAttribute(MailConstants.A_DS_CONNECTION_TYPE, mConnectionType.name());
-        src.addAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, mLeaveOnServer);
+        src.addAttribute(MailConstants.A_ID, data.getId());
+        src.addAttribute(MailConstants.A_NAME, data.getName());
+        src.addAttribute(MailConstants.A_DS_IS_ENABLED, data.isEnabled());
+        src.addAttribute(MailConstants.A_DS_HOST, data.getHost());
+        src.addAttribute(MailConstants.A_DS_PORT, data.getPort());
+        src.addAttribute(MailConstants.A_DS_USERNAME, data.getUsername());
+        src.addAttribute(MailConstants.A_DS_PASSWORD, data.getPassword());
+        src.addAttribute(MailConstants.A_FOLDER, data.getFolderId());
+        src.addAttribute(MailConstants.A_DS_CONNECTION_TYPE, data.getConnectionType().name());
+        src.addAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, data.isLeaveOnServer());
+        ZimbraLog.test.info("XXX bburtin: " + src.prettyPrint());
         return src;
     }
 
     public Element toIdElement(Element parent) {
         Element src = parent.addElement(MailConstants.E_DS_POP3);
-        src.addAttribute(MailConstants.A_ID, mId);
+        src.addAttribute(MailConstants.A_ID, getId());
         return src;
     }
 
-    public DataSource.Type getType() { return DataSource.Type.pop3; }
+    public Type getType() { return Type.pop3; }
 
-    public String getId() { return mId; }
+    public String getId() { return data.getId(); }
 
-    public String getName() { return mName; }
-    public void setName(String name) { mName = name; }
+    public String getName() { return data.getName(); }
+    public void setName(String name) { data.setName(name); }
 
-    public boolean isEnabled() { return mEnabled; }
-    public void setEnabled(boolean enabled) { mEnabled = enabled; }
+    public boolean isEnabled() { return SystemUtil.getValue(data.isEnabled(), Boolean.FALSE); }
+    public void setEnabled(boolean enabled) { data.setEnabled(enabled); }
 
-    public String getHost() { return mHost; }
-    public void setHost(String host) { mHost = host; }
+    public String getHost() { return data.getHost(); }
+    public void setHost(String host) { data.setHost(host); }
 
-    public int getPort() { return mPort; }
-    public void setPort(int port) { mPort = port; } 
+    public int getPort() { return SystemUtil.getValue(data.getPort(), -1); }
+    public void setPort(int port) { data.setPort(port); } 
 
-    public String getUsername() { return mUsername; }
-    public void setUsername(String username) { mUsername = username; }
+    public String getUsername() { return data.getUsername(); }
+    public void setUsername(String username) { data.setUsername(username); }
 
-    public String getFolderId() { return mFolderId; }
-    public void setFolderId(String folderid) { mFolderId = folderid; }
+    public String getFolderId() { return data.getFolderId(); }
+    public void setFolderId(String folderid) { data.setFolderId(folderid); }
 
-    public DataSource.ConnectionType getConnectionType() { return mConnectionType; }
-    public void setConnectionType(DataSource.ConnectionType connectionType) { mConnectionType = connectionType; }
+    public ConnectionType getConnectionType() {
+        ConnectionType ct = SoapConverter.FROM_SOAP_CONNECTION_TYPE.apply(data.getConnectionType());
+        return (ct == null ? ConnectionType.cleartext : ct);
+    }
     
-    public boolean leaveOnServer() { return mLeaveOnServer; }
-    public void setLeaveOnServer(boolean leaveOnServer) { mLeaveOnServer = leaveOnServer; }
+    public void setConnectionType(ConnectionType connectionType) {
+        data.setConnectionType(SoapConverter.TO_SOAP_CONNECTION_TYPE.apply(connectionType));
+    }
+    
+    public boolean leaveOnServer() {
+        Boolean val = data.isLeaveOnServer();
+        return (val == null ? true : val);
+    }
+    
+    public void setLeaveOnServer(boolean leaveOnServer) { data.setLeaveOnServer(leaveOnServer); }
     
     public Map<String, Object> getAttrs() {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDataSourceId, mId);
-        attrs.put(Provisioning.A_zimbraDataSourceName, mName);
-        attrs.put(Provisioning.A_zimbraDataSourceEnabled, mEnabled ? "TRUE" : "FALSE");
-        attrs.put(Provisioning.A_zimbraDataSourceUsername, mUsername);
-        attrs.put(Provisioning.A_zimbraDataSourceHost, mHost);
-        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, mConnectionType.toString());
-        if (mPort > 0)
-            attrs.put(Provisioning.A_zimbraDataSourcePort, "" + mPort);
-        if (mFolderId != null)
-            attrs.put(Provisioning.A_zimbraDataSourceFolderId, mFolderId);
-        attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, LdapUtil.getBooleanString(mLeaveOnServer));
+        attrs.put(Provisioning.A_zimbraDataSourceId, getId());
+        attrs.put(Provisioning.A_zimbraDataSourceName, getName());
+        attrs.put(Provisioning.A_zimbraDataSourceEnabled, isEnabled() ? "TRUE" : "FALSE");
+        attrs.put(Provisioning.A_zimbraDataSourceUsername, getUsername());
+        attrs.put(Provisioning.A_zimbraDataSourceHost, getHost());
+        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, data.getConnectionType().toString());
+        if (getPort() > 0)
+            attrs.put(Provisioning.A_zimbraDataSourcePort, "" + getPort());
+        if (data.getFolderId() != null)
+            attrs.put(Provisioning.A_zimbraDataSourceFolderId, data.getFolderId());
+        attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, LdapUtil.getBooleanString(leaveOnServer()));
         return attrs;
     }
 
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
-        zjo.put("id", mId);
-        zjo.put("name", mName);
-        zjo.put("enabled", mEnabled);
-        zjo.put("host", mHost);
-        zjo.put("port", mPort);
-        zjo.put("username", mUsername);
-        zjo.put("folderId", mFolderId);
-        zjo.put("connectionType", mConnectionType.name());
-        zjo.put("leaveOnServer", mLeaveOnServer);
+        zjo.put("id", data.getId());
+        zjo.put("name", data.getName());
+        zjo.put("enabled", data.isEnabled());
+        zjo.put("host", data.getHost());
+        zjo.put("port", data.getPort());
+        zjo.put("username", data.getUsername());
+        zjo.put("folderId", data.getFolderId());
+        zjo.put("connectionType", data.getConnectionType().toString());
+        zjo.put("leaveOnServer", data.isLeaveOnServer());
         return zjo;
     }
 
     public String toString() {
-        return String.format("[ZPop3DataSource %s]", mName);
+        return String.format("[ZPop3DataSource %s]", getName());
     }
 
     public String dump() {

@@ -194,7 +194,6 @@ public class CtagInfoCache {
             ZAuthToken zat = AuthProvider.getAdminAuthToken().toZAuthToken();
             ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(acct));
             zoptions.setNoSession(true);
-            zoptions.setResponseProtocol(SoapProtocol.SoapJS);
             zoptions.setTargetAccount(acct.getId());
             zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
             ZMailbox zmbx = ZMailbox.getMailbox(zoptions);

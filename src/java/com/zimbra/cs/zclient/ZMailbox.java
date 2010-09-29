@@ -26,9 +26,9 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -40,7 +40,6 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.common.util.MapUtil;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpState;
@@ -54,6 +53,7 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.dom4j.QName;
 import org.json.JSONException;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
@@ -73,9 +73,9 @@ import com.zimbra.common.soap.VoiceConstants;
 import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ListUtil;
+import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
@@ -117,6 +117,29 @@ import com.zimbra.cs.zclient.event.ZModifyTaskEvent;
 import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemEvent;
 import com.zimbra.cs.zclient.event.ZModifyVoiceMailItemFolderEvent;
 import com.zimbra.cs.zclient.event.ZRefreshEvent;
+import com.zimbra.soap.JaxbUtil;
+import com.zimbra.soap.account.message.AuthRequest;
+import com.zimbra.soap.account.message.AuthResponse;
+import com.zimbra.soap.account.message.ChangePasswordRequest;
+import com.zimbra.soap.account.message.ChangePasswordResponse;
+import com.zimbra.soap.account.message.GetIdentitiesRequest;
+import com.zimbra.soap.account.message.GetIdentitiesResponse;
+import com.zimbra.soap.account.message.GetInfoRequest;
+import com.zimbra.soap.account.message.GetInfoResponse;
+import com.zimbra.soap.account.message.GetSignaturesRequest;
+import com.zimbra.soap.account.message.GetSignaturesResponse;
+import com.zimbra.soap.account.type.Account;
+import com.zimbra.soap.account.type.InfoSection;
+import com.zimbra.soap.mail.message.GetDataSourcesRequest;
+import com.zimbra.soap.mail.message.GetDataSourcesResponse;
+import com.zimbra.soap.mail.message.GetFolderRequest;
+import com.zimbra.soap.mail.message.GetFolderResponse;
+import com.zimbra.soap.mail.type.Folder;
+import com.zimbra.soap.type.CalDataSource;
+import com.zimbra.soap.type.DataSource;
+import com.zimbra.soap.type.ImapDataSource;
+import com.zimbra.soap.type.Pop3DataSource;
+import com.zimbra.soap.type.RssDataSource;
 
 public class ZMailbox implements ToZJSONObject {
     public final static int MAX_NUM_CACHED_SEARCH_PAGERS = 5;
@@ -176,16 +199,10 @@ public class ZMailbox implements ToZJSONObject {
         private String mVirtualHost;
         private String mUri;
         private String mClientIp;
-        private String mProxyHost;
-        private int mProxyPort;
-        private String mProxyUser;
-        private String mProxyPass;
         private String mUserAgentName;
         private String mUserAgentVersion;
         private int mTimeout = -1;
         private int mRetryCount = -1;
-        private SoapProtocol mResponseProtocol = SoapProtocol.SoapJS; //12; //JS;
-        private SoapProtocol mRequestProtocol = SoapProtocol.SoapJS; //12; //JS;
         private SoapTransport.DebugListener mDebugListener;
         private SoapHttpTransport.HttpDebugListener mHttpDebugListener;
         private String mTargetAccount;
@@ -273,12 +290,6 @@ public class ZMailbox implements ToZJSONObject {
 
         public int getRetryCount() { return mRetryCount; }
         public void setRetryCount(int retryCount) { mRetryCount = retryCount; }
-
-        public SoapProtocol getResponseProtocol() { return mResponseProtocol; }
-        public void setResponseProtocol(SoapProtocol proto) { mResponseProtocol = proto; }
-
-        public SoapProtocol getRequestProtocol() { return mRequestProtocol; }
-        public void setRequestProtocol(SoapProtocol proto) { mRequestProtocol = proto; }
 
         public SoapTransport.DebugListener getDebugListener() { return mDebugListener; }
         public void setDebugListener(SoapTransport.DebugListener listener) { mDebugListener = listener; }
@@ -447,61 +458,56 @@ public class ZMailbox implements ToZJSONObject {
 
     private ZChangePasswordResult changePassword(String key, AccountBy by, String oldPassword, String newPassword, String virtualHost) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling changePassword", null);
-        Element req = newRequestElement(AccountConstants.CHANGE_PASSWORD_REQUEST);
-        Element account = req.addUniqueElement(AccountConstants.E_ACCOUNT);
-        account.addAttribute(AccountConstants.A_BY, by.name());
-        account.setText(key);
-        req.addElement(AccountConstants.E_OLD_PASSWORD).setText(oldPassword);
-        req.addElement(AccountConstants.E_PASSWORD).setText(newPassword);
-        if (virtualHost != null)
-            req.addElement(AccountConstants.E_VIRTUAL_HOST).setText(virtualHost);
-        return new ZChangePasswordResult(invoke(req));
+
+        Account account = new Account(Account.By.valueOf(by.toString()), key);
+        ChangePasswordRequest req = new ChangePasswordRequest(account, oldPassword, newPassword);
+        req.setVirtualHost(virtualHost);
+        
+        ChangePasswordResponse res = invokeJaxb(req);
+        return new ZChangePasswordResult(res);
     }
 
-    private void addAttrsAndPrefs(Element req, Options options) {
+    private void addAttrsAndPrefs(AuthRequest req, Options options) {
         List<String> prefs = options.getPrefs();
-        if (prefs != null && !prefs.isEmpty()) {
-            Element prefsEl = req.addElement(AccountConstants.E_PREFS);
+        if (!ListUtil.isEmpty(prefs)) {
             for (String p : prefs)
-                prefsEl.addElement(AccountConstants.E_PREF).addAttribute(AccountConstants.A_NAME, p);
+                req.addPref(p);
         }
         List<String> attrs = options.getAttrs();
-        if (attrs != null && !attrs.isEmpty()) {
-            Element attrsEl = req.addElement(AccountConstants.E_ATTRS);
-            for (String a : attrs)
-                attrsEl.addElement(AccountConstants.E_ATTR).addAttribute(AccountConstants.A_NAME, a);
+        if (!ListUtil.isEmpty(attrs)) {
+            for (String a : attrs) {
+                req.addAttr(a);
+            }
         }
     }
-
+    
     private ZAuthResult authByPassword(Options options, String password) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
-        Element req = newRequestElement(AccountConstants.AUTH_REQUEST);
-        Element account = req.addElement(AccountConstants.E_ACCOUNT);
-        account.addAttribute(AccountConstants.A_BY, options.getAccountBy().name());
-        account.setText(options.getAccount());
-        req.addElement(AccountConstants.E_PASSWORD).setText(password);
-        if (options.getVirtualHost() != null)
-            req.addElement(AccountConstants.E_VIRTUAL_HOST).setText(options.getVirtualHost());
-		if (options.getRequestedSkin() != null) {
-			req.addElement(AccountConstants.E_REQUESTED_SKIN).setText(options.getRequestedSkin());
-		}
-		addAttrsAndPrefs(req, options);
-        ZAuthResult r = new ZAuthResult(invoke(req));
+        
+        Account account = new Account(Account.By.NAME, options.getAccount());
+        AuthRequest auth = new AuthRequest(account, password);
+        auth.setPassword(password);
+        auth.setVirtualHost(options.getVirtualHost());
+        auth.setRequestedSkin(options.getRequestedSkin());
+        addAttrsAndPrefs(auth, options);
+        
+        AuthResponse authRes = invokeJaxb(auth);
+        ZAuthResult r = new ZAuthResult(authRes);
         r.setSessionId(mTransport.getSessionId());
         return r;
     }
 
     private ZAuthResult authByAuthToken(Options options) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
-        Element req = newRequestElement(AccountConstants.AUTH_REQUEST);
-        ZAuthToken zat = options.getAuthToken(); // cannot be null here
         
-        zat.encodeAuthReq(req, false);
-        if (options.getRequestedSkin() != null) {
-			req.addElement(AccountConstants.E_REQUESTED_SKIN).setText(options.getRequestedSkin());
-		}
-		addAttrsAndPrefs(req, options);
-        ZAuthResult r = new ZAuthResult(invoke(req));
+        AuthRequest req = new AuthRequest();
+        ZAuthToken zat = options.getAuthToken(); // cannot be null here
+        req.setAuthToken(zat.getValue());
+        req.setRequestedSkin(options.getRequestedSkin());
+        addAttrsAndPrefs(req, options);
+        
+        AuthResponse res = invokeJaxb(req);
+        ZAuthResult r = new ZAuthResult(res);
         r.setSessionId(mTransport.getSessionId());
         return r;
     }
@@ -534,36 +540,39 @@ public class ZMailbox implements ToZJSONObject {
             mTransport.setRetryCount(options.getRetryCount());
         if (mAuthToken != null)
             mTransport.setAuthToken(mAuthToken);
-        if (options.getResponseProtocol() != null)
-            mTransport.setResponseProtocol(options.getResponseProtocol());
-        if (options.getRequestProtocol() != null)
-            mTransport.setRequestProtocol(options.getRequestProtocol());
     }
 
+    @SuppressWarnings("unchecked")
+    public <T> T invokeJaxb(Object jaxbObject) throws ServiceException {
+        Element req = JaxbUtil.jaxbToElement(jaxbObject);
+        Element res = invoke(req);
+        return (T) JaxbUtil.elementToJaxb(res);
+    }
+    
     public Element invoke(Element request) throws ServiceException {
-		return invoke(request, null);
-	}
+        return invoke(request, null);
+    }
 
-	public synchronized Element invoke(Element request, String requestedAccountId) throws ServiceException {
+    public synchronized Element invoke(Element request, String requestedAccountId) throws ServiceException {
         try {
-			boolean nosession = mNotifyPreference == NotifyPreference.nosession;
-			return mTransport.invoke(request, false, nosession, requestedAccountId);
+            boolean nosession = mNotifyPreference == NotifyPreference.nosession;
+            Element response = mTransport.invoke(request, false, nosession, requestedAccountId);
+            return response;
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (Exception e) {
-        	Throwable t = SystemUtil.getInnermostException(e);
-        	RemoteServiceException.doConnectionFailures(mTransport.getURI(), t);
-        	RemoteServiceException.doSSLFailures(t.getMessage(), t);
-        	if (e instanceof IOException)
-        		throw ZClientException.IO_ERROR(e.getMessage(), e);
-        	throw ServiceException.FAILURE(e.getMessage(), e);
+            Throwable t = SystemUtil.getInnermostException(e);
+            RemoteServiceException.doConnectionFailures(mTransport.getURI(), t);
+            RemoteServiceException.doSSLFailures(t.getMessage(), t);
+            if (e instanceof IOException)
+                throw ZClientException.IO_ERROR(e.getMessage(), e);
+            throw ServiceException.FAILURE(e.getMessage(), e);
         } finally {
             Element context = mTransport.getZimbraContext();
             mTransport.clearZimbraContext();
             handleResponseContext(context);
         }
     }
-
 
     private void handleResponseContext(Element context) throws ServiceException {
         if (context == null) return;
@@ -913,7 +922,6 @@ public class ZMailbox implements ToZJSONObject {
         return getPrefs(false);
     }
 
-
     public ZPrefs getPrefs(boolean refresh) throws ServiceException {
         return getAccountInfo(refresh).getPrefs();
     }
@@ -926,12 +934,14 @@ public class ZMailbox implements ToZJSONObject {
         return getAccountInfo(refresh).getFeatures();
     }
 
+    private static Set<InfoSection> NOT_ZIMLETS = Collections.unmodifiableSet(
+        EnumSet.complementOf(EnumSet.of(InfoSection.zimlets)));
+    
     public ZGetInfoResult getAccountInfo(boolean refresh) throws ServiceException {
         if (mGetInfoResult == null || refresh) {
-            Element req = newRequestElement(AccountConstants.GET_INFO_REQUEST);
-            // get everything but zimlets
-            req.addAttribute(AccountConstants.A_SECTIONS, "MBOX, PREFS, ATTRS, PROPS, IDENTS, SIGS, DSRCS, CHILDREN");
-            mGetInfoResult = new ZGetInfoResult(invoke(req));
+            GetInfoRequest req = new GetInfoRequest(NOT_ZIMLETS);
+            GetInfoResponse res = invokeJaxb(req);
+            mGetInfoResult = new ZGetInfoResult(res);
         }
         return mGetInfoResult;
     }
@@ -948,166 +958,6 @@ public class ZMailbox implements ToZJSONObject {
             return mTransport.invoke(req);
         } catch (IOException e) {
             throw ZClientException.IO_ERROR("invoke "+e.getMessage(), e);
-        }
-    }
-
-    public static class JsonDebugListener implements DebugListener {
-            Element env;
-            public void sendSoapMessage(Element envelope) {}
-            public void receiveSoapMessage(Element envelope) {env = envelope; }
-            public Element getEnvelope(){ return env; }
-    }
-
-    /**
-     * used when bootstrapping AJAX client.
-     *
-     * @param url url to connect to
-     * @param authToken auth token to use
-     * @param itemsPerPage number of search items to return
-     * @param doSearch whether or not to also do the intial search
-     * @param searchTypes what to search for
-     * @return top-level JSON respsonse
-     * @throws ServiceException on error
-     */
-    public static Element getBootstrapJSON(String url, String remoteAddr, ZAuthToken authToken, boolean doSearch, String itemsPerPage, String searchTypes) throws ServiceException {
-        ZMailbox.Options options = new ZMailbox.Options(authToken, url);
-        JsonDebugListener debug = new JsonDebugListener();
-        options.setNoSession(false);
-        options.setAuthAuthToken(false);
-        options.setDebugListener(debug);
-        options.setClientIp(remoteAddr);
-        options.setResponseProtocol(SoapProtocol.SoapJS);
-
-        ZMailbox mbox = getMailbox(options);
-        try {
-            Element batch = mbox.newRequestElement(ZimbraNamespace.E_BATCH_REQUEST);
-            batch.addElement(AccountConstants.GET_INFO_REQUEST);
-            if (doSearch) {
-                Element search = batch.addElement(MailConstants.SEARCH_REQUEST);
-                if (itemsPerPage != null && itemsPerPage.length() > 0)
-                    search.addAttribute(MailConstants.A_QUERY_LIMIT, itemsPerPage);
-                if (searchTypes != null && searchTypes.length() > 0)
-                    search.addAttribute(MailConstants.A_SEARCH_TYPES, searchTypes);
-            }
-            mbox.mTransport.invoke(batch);
-            return debug.getEnvelope();
-        } catch (IOException e) {
-            throw ZClientException.IO_ERROR("invoke "+e.getMessage(), e);
-        }
-    }
-
-    /**
-     * used when bootstrapping AJAX client.
-     *
-     * @param url url to connect to
-     * @param authToken auth token to use
-     * @param itemsPerPage number of search items to return
-     * @param searchTypes what to search for
-     * @return top-level JSON respsonse
-     * @throws ServiceException on error
-     */
-    public static Element getBootstrapCalSearchJSON(String url, String remoteAddr, ZAuthToken authToken, String itemsPerPage, String searchTypes) throws ServiceException {
-        ZMailbox.Options options = new ZMailbox.Options(authToken, url);
-        JsonDebugListener debug = new JsonDebugListener();
-        options.setNoSession(false);
-        options.setAuthAuthToken(false);
-        options.setDebugListener(debug);
-        options.setClientIp(remoteAddr);
-        options.setResponseProtocol(SoapProtocol.SoapJS);
-
-        ZMailbox mbox = getMailbox(options);
-        try {
-            TimeZone tz = mbox.getPrefs().getTimeZone();
-
-            Calendar currentDay = tz == null ? Calendar.getInstance() : Calendar.getInstance(tz);
-            currentDay.setTimeInMillis(System.currentTimeMillis());
-            currentDay.set(Calendar.HOUR_OF_DAY, 0);
-            currentDay.set(Calendar.MINUTE, 0);
-            currentDay.set(Calendar.SECOND, 0);
-            currentDay.set(Calendar.MILLISECOND, 0);
-            currentDay.set(Calendar.DAY_OF_MONTH, 1);
-            
-            StringBuilder sb = new StringBuilder();
-            getCheckedCalendarFoldersRecursive(mbox.getUserRoot(), sb);
-            String checkedCalendars = sb.toString();
-
-            Calendar other = Calendar.getInstance(currentDay.getTimeZone());
-            other.setTimeInMillis(currentDay.getTimeInMillis());
-            //7 days for reminder search and 1 day for timezone difference
-            other.add(Calendar.DAY_OF_MONTH, -8);
-
-            long calStart = other.getTimeInMillis();
-
-            other.setTimeInMillis(currentDay.getTimeInMillis());
-            //no of days shown for minical
-            other.add(Calendar.DAY_OF_MONTH, 42);
-
-            long calEnd = other.getTimeInMillis();
-
-            //BatchRequest
-            Element batch = new Element.JSONElement(ZimbraNamespace.E_BATCH_REQUEST);
-
-            //GetMiniCalRequest
-            Element miniCalRequest = batch.addElement(MailConstants.GET_MINI_CAL_REQUEST);
-            miniCalRequest.addAttribute(MailConstants.A_CAL_START_TIME, calStart);
-            miniCalRequest.addAttribute(MailConstants.A_CAL_END_TIME, calEnd);
-
-            String [] sArray = null;
-            StringBuilder searchQuery = new StringBuilder();
-
-            if (checkedCalendars!=null) {
-                if(checkedCalendars.indexOf(",") == -1){
-                    sArray = new String[]{checkedCalendars};
-                }else{
-                    sArray = checkedCalendars.split(",");
-                }
-                for(int i=0; i<sArray.length; i++) {
-                    Element folder = miniCalRequest.addElement(MailConstants.E_FOLDER);
-                    folder.addAttribute(MailConstants.A_ID, sArray[i]);
-                    if (searchQuery.length() > 1) searchQuery.append(" or ");
-                    searchQuery.append("inid:").append("\""+sArray[i]+"\"");
-                }
-            }
-
-            //SearchRequest
-            Element search = batch.addElement(MailConstants.SEARCH_REQUEST);
-            if (itemsPerPage != null && itemsPerPage.length() > 0)
-                search.addAttribute(MailConstants.A_QUERY_LIMIT, itemsPerPage);
-            if (searchTypes != null && searchTypes.length() > 0)
-                search.addAttribute(MailConstants.A_SEARCH_TYPES, searchTypes);
-            search.addAttribute(MailConstants.A_CAL_EXPAND_INST_START, calStart);
-            search.addAttribute(MailConstants.A_CAL_EXPAND_INST_END, calEnd);
-            search.addAttribute(MailConstants.A_QUERY_OFFSET, 0);
-
-            Element queryEl = search.addElement(MailConstants.E_QUERY);
-            queryEl.setText(searchQuery.toString());
-
-            mbox.mTransport.invoke(batch);
-
-            Element e = debug.getEnvelope();
-
-            //search params included in response
-            Element responseParams = e.addElement(MailConstants.E_SEARCH);
-            responseParams.addAttribute(MailConstants.A_CAL_START_TIME, calStart);
-            responseParams.addAttribute(MailConstants.A_CAL_END_TIME, calEnd);
-            Element queryElement = responseParams.addElement(MailConstants.A_QUERY);
-            queryElement.setText(searchQuery.toString());
-            responseParams.addAttribute(MailConstants.A_FOLDER, checkedCalendars);
-            
-            return e;
-
-        } catch (IOException e) {
-            throw ZClientException.IO_ERROR("invoke "+e.getMessage(), e);
-        }
-    }
-
-    private static void getCheckedCalendarFoldersRecursive(ZFolder f, StringBuilder sb) {
-        if (f.getDefaultView() == ZFolder.View.appointment && f.isCheckedInUI()) {
-            if (sb.length() > 0) sb.append(',');
-            sb.append(f.getId());
-        }
-        for (ZFolder child : f.getSubFolders()) {
-            getCheckedCalendarFoldersRecursive(child, sb);
         }
     }
 
@@ -3157,9 +3007,10 @@ public class ZMailbox implements ToZJSONObject {
                 return;
         }
 
-        Element response = invoke(newRequestElement(MailConstants.GET_FOLDER_REQUEST).addAttribute(MailConstants.A_VISIBLE, true));
-        Element eFolder = response.getOptionalElement(MailConstants.E_FOLDER);
-        ZFolder userRoot = (eFolder != null ? new ZFolder(eFolder, null, this) : null);
+        GetFolderRequest req = new GetFolderRequest(new Folder(), true);
+        GetFolderResponse res = invokeJaxb(req);
+        Folder root = res.getFolder();
+        ZFolder userRoot = (root != null ? new ZFolder(root, null, this) : null);
 
         ZRefreshEvent event = new ZRefreshEvent(mSize, userRoot, null);
         for (ZEventHandler handler : mHandlers)
@@ -3648,13 +3499,8 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public List<ZIdentity> getIdentities() throws ServiceException {
-        Element req = newRequestElement(AccountConstants.GET_IDENTITIES_REQUEST);
-        Element resp = invoke(req);
-        List<ZIdentity> result = new ArrayList<ZIdentity>();
-        for (Element identity : resp.listElements(AccountConstants.E_IDENTITY)) {
-            result.add(new ZIdentity(identity));
-        }
-        return result;
+        GetIdentitiesResponse res = invokeJaxb(new GetIdentitiesRequest());
+        return Lists.transform(res.getIdentities(), SoapConverter.FROM_SOAP_IDENTITY);
     }
 
     public void deleteIdentity(String name) throws ServiceException {
@@ -3710,6 +3556,20 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public List<ZDataSource> getAllDataSources() throws ServiceException {
+        GetDataSourcesResponse res = invokeJaxb(new GetDataSourcesRequest());
+        List<ZDataSource> result = new ArrayList<ZDataSource>();
+        for (DataSource ds : res.getDataSources()) {
+            if (ds instanceof Pop3DataSource) {
+                result.add(new ZPop3DataSource((Pop3DataSource) ds));
+            } else if (ds instanceof ImapDataSource) {
+                result.add(new ZImapDataSource((ImapDataSource) ds));
+            } else if (ds instanceof CalDataSource) {
+                result.add(new ZCalDataSource((CalDataSource) ds));
+            } else if (ds instanceof RssDataSource) {
+                result.add(new ZRssDataSource((RssDataSource) ds));
+            }
+        }
+        /*
         Element req = newRequestElement(MailConstants.GET_DATA_SOURCES_REQUEST);
         Element response = invoke(req);
         List<ZDataSource> result = new ArrayList<ZDataSource>();
@@ -3724,6 +3584,7 @@ public class ZMailbox implements ToZJSONObject {
                 result.add(new ZCalDataSource(ds));
             }
         }
+        */
         return result;
     }
     
@@ -4772,13 +4633,8 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public List<ZSignature> getSignatures() throws ServiceException {
-        Element req = newRequestElement(AccountConstants.GET_SIGNATURES_REQUEST);
-        Element resp = invoke(req);
-        List<ZSignature> result = new ArrayList<ZSignature>();
-        for (Element signature : resp.listElements(AccountConstants.E_SIGNATURE)) {
-            result.add(new ZSignature(signature));
-        }
-        return result;
+        GetSignaturesResponse res = invokeJaxb(new GetSignaturesRequest());
+        return Lists.transform(res.getSignatures(), SoapConverter.FROM_SOAP_SIGNATURE);
     }
 
     public synchronized void deleteSignature(String id) throws ServiceException {

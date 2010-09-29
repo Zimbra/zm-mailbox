@@ -24,14 +24,15 @@ import java.util.Set;
 
 import javax.mail.internet.MailDateFormat;
 
+import junit.framework.TestCase;
+
 import org.testng.TestNG;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import junit.framework.TestCase;
-
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
@@ -134,6 +135,7 @@ public class TestPop3Import extends TestCase {
         
         // Test modifying leave on server
         zds = getZDataSource();
+        ZimbraLog.test.info("Old leaveOnServer value: " + zds.leaveOnServer());
         zds.setLeaveOnServer(!zds.leaveOnServer());
         modifyAndCheck(zds, true);
     }
@@ -219,6 +221,7 @@ public class TestPop3Import extends TestCase {
 
         // Create local folders
         ZMailbox localMbox = TestUtil.getZMailbox(USER_NAME);
+        localMbox.getFolderByPath("/Inbox");
         ZFolder dsFolder = TestUtil.createFolder(localMbox, folderPath);
         TestUtil.createFolder(localMbox, filteredPath);
         

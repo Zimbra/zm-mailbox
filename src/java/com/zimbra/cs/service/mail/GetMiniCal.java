@@ -251,8 +251,6 @@ public class GetMiniCal extends CalendarRequest {
         zoptions.setTargetAccount(remoteAccountId);
         zoptions.setTargetAccountBy(AccountBy.id);
         zoptions.setNoSession(true);
-        zoptions.setRequestProtocol(SoapProtocol.SoapJS);
-        zoptions.setResponseProtocol(SoapProtocol.SoapJS);
         ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
         String remoteIds[] = new String[remoteFolders.size()];
         for (int i=0; i < remoteIds.length; i++) remoteIds[i] = remoteFolders.get(i).toString();

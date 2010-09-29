@@ -16,6 +16,7 @@
 package com.zimbra.qa.unittest;
 
 import org.junit.*;
+import org.junit.Test;
 import org.junit.runner.*;
 import static org.junit.Assert.*;
 

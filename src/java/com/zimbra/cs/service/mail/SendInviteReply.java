@@ -451,7 +451,6 @@ public class SendInviteReply extends CalendarRequest {
         
         ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(targetAcct));
         zoptions.setNoSession(true);
-        zoptions.setResponseProtocol(SoapProtocol.SoapJS);
         zoptions.setTargetAccount(targetAcct.getId());
         zoptions.setTargetAccountBy(Provisioning.AccountBy.id);
         return ZMailbox.getMailbox(zoptions);

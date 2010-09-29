@@ -14,9 +14,13 @@
  */
 package com.zimbra.qa.unittest;
 
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
+import junit.framework.TestCase;
+
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -25,12 +29,16 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.zclient.ZAuthResult;
+import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 
 public class TestSoap
 extends TestCase {
 
+    private static final String USER_NAME = "user1";
     private static final String NAME_PREFIX = TestSoap.class.getSimpleName();
     
     private String mOriginalSoapRequestMaxSize;
@@ -52,12 +60,12 @@ extends TestCase {
         }
         
         setSoapRequestMaxSize(100000);
-        ZMailbox mbox = TestUtil.getZMailbox("user1");
-        TestUtil.sendMessage(mbox, "user1", NAME_PREFIX + " 1", messageBody.toString());
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        TestUtil.sendMessage(mbox, USER_NAME, NAME_PREFIX + " 1", messageBody.toString());
         
         setSoapRequestMaxSize(1000);
         try {
-            TestUtil.sendMessage(mbox, "user1", NAME_PREFIX + " 2", messageBody.toString());
+            TestUtil.sendMessage(mbox, USER_NAME, NAME_PREFIX + " 2", messageBody.toString());
             fail("SOAP request should not have succeeded.");
         } catch (SoapFaultException e) {
             assertTrue("Unexpected error: " + e.toString(), e.toString().contains("bytes set for zimbraSoapRequestMaxSize"));
@@ -110,6 +118,71 @@ extends TestCase {
         assertNotNull(info.getAttribute(AccountConstants.A_VERSION_INFO_VERSION));
     }
     
+    /**
+     * Confirms that attrs and prefs are selected when specified in {@link ZMailbox} options.
+     */
+    public void testAuthRequest()
+    throws Exception {
+        // Test password auth.
+        ZMailbox.Options options = new ZMailbox.Options();
+        options.setAccount(USER_NAME);
+        options.setAccountBy(AccountBy.name);
+        options.setPassword(TestUtil.DEFAULT_PASSWORD);
+        options.setUri(TestUtil.getSoapUrl());
+        ZMailbox mbox = runAuthTest(options);
+        ZAuthToken authToken = mbox.getAuthToken();
+        
+        // Test auth token auth.
+        options = new ZMailbox.Options();
+        options.setAuthToken(authToken);
+        options.setAuthAuthToken(true);
+        options.setUri(TestUtil.getSoapUrl());
+        runAuthTest(options);
+    }
+    
+    private ZMailbox runAuthTest(ZMailbox.Options options)
+    throws Exception {
+        List<String> attrNames = Arrays.asList(
+            Provisioning.A_zimbraFeatureImportExportFolderEnabled,
+            Provisioning.A_zimbraFeatureOutOfOfficeReplyEnabled);
+        List<String> prefNames = Arrays.asList(
+            Provisioning.A_zimbraPrefComposeFormat,
+            Provisioning.A_zimbraPrefAutoSaveDraftInterval);
+        
+        options.setAttrs(attrNames);
+        options.setPrefs(prefNames);
+        ZMailbox mbox = ZMailbox.getMailbox(options);
+        
+        ZAuthResult auth = mbox.getAuthResult();
+        Map<String, List<String>> attrs = auth.getAttrs();
+        Map<String, List<String>> prefs = auth.getPrefs();
+        
+        assertEquals(attrNames.size(), attrs.size());
+        assertEquals(prefNames.size(), prefs.size());
+        
+        for (String attrName : attrNames) {
+            assertTrue(attrs.containsKey(attrName));
+        }
+        for (String prefName : prefNames) {
+            assertTrue(prefs.containsKey(prefName));
+        }
+        return mbox;
+    }
+    
+    public void testGetFolders()
+    throws Exception {
+        ZMailbox.Options options = new ZMailbox.Options();
+        options.setAccount(USER_NAME);
+        options.setAccountBy(AccountBy.name);
+        options.setPassword(TestUtil.DEFAULT_PASSWORD);
+        options.setUri(TestUtil.getSoapUrl());
+        options.setNoSession(true);
+        ZMailbox mbox = ZMailbox.getMailbox(options);
+        
+        ZFolder inbox = mbox.getFolderByPath("/Inbox");
+        assertEquals("Inbox", inbox.getName());
+    }
+    
     public void tearDown()
     throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraSoapRequestMaxSize, mOriginalSoapRequestMaxSize);
@@ -119,7 +192,7 @@ extends TestCase {
     
     private void cleanUp()
     throws Exception {
-        TestUtil.deleteTestData("user1", NAME_PREFIX);
+        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
     }
     
     private void setSoapRequestMaxSize(int numBytes)

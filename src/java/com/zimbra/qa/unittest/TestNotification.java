@@ -34,9 +34,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -321,7 +321,7 @@ extends TestCase {
             }
             assertTrue("Unexpected body: '" + interceptedBody + "'", interceptedBody == null || interceptedBody.length() == 0);
         } else {
-            assertEquals("Expected:\n'" + tappedMsgContent + "'\nGot:\n'" + interceptedMsgContent + "'", tappedMsgContent, interceptedMsgContent);
+            TestUtil.assertMessageContains(tappedMsgContent, interceptedMsgContent);
         }
     }
     
