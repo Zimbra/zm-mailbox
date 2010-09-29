@@ -1,0 +1,49 @@
+<project name="ZimbraSoap" default="jar">
+
+  <!-- Properties -->
+
+  <property name="javac.target" value="1.6"/>
+  <property name="jar.file" value="zimbrasoap.jar" />
+  <property name="src.java.dir" location="src/java" />
+  <property name="build.dir" location="build" />
+  <property name="build.classes.dir" location="${build.dir}/classes" />
+
+  <property name="common.dir" location="../ZimbraCommon"/>
+  <property name="common.classes.dir" location="${common.dir}/build/classes"/>
+  <property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar"/>
+  <property name="common.jars.dir" location="${common.dir}/jars"/>
+	
+  <property name="xml.schema.dir" location="${build.dir}/schema"/>
+
+  <path id="all.java.path">
+    <pathelement location="${src.java.dir}" />
+  </path>
+
+  <path id="class.path">
+    <pathelement location="${common.classes.dir}"/>
+    <pathelement location="${build.classes.dir}" />
+    <fileset dir="${common.jars.dir}">
+        <include name="**/*.jar"/>
+    </fileset>
+  </path>
+
+  <!-- Targets -->
+  <target name="build-init">
+    <mkdir dir="${build.classes.dir}" />
+  </target>
+
+  <target name="compile" depends="build-init" description="Compiles the source code">
+    <ant dir="${common.dir}" target="jar" inheritAll="false"/>
+    <javac destdir="${build.classes.dir}" debug="true" classpathref="class.path" target="${javac.target}">
+      <src refid="all.java.path" />
+    </javac>
+  </target>
+
+  <target name="jar" depends="compile" description="Creates the jar file">
+    <jar destfile="${build.dir}/${jar.file}" basedir="${build.classes.dir}" />
+  </target>
+
+  <target name="clean" description="Removes build files and undeploys extension">
+    <delete dir="${build.dir}" />
+  </target>
+</project>

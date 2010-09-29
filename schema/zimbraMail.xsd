@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema elementFormDefault="qualified" version="1.0" targetNamespace="urn:zimbraMail" xmlns:mail="urn:zimbraMail" xmlns:tns="urn:zimbraMail" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="GetDataSourcesRequest" type="tns:getDataSourcesRequest"/>
+
+  <xs:element name="GetDataSourcesResponse" type="tns:getDataSourcesResponse"/>
+
+  <xs:element name="GetFolderRequest" type="tns:getFolderRequest"/>
+
+  <xs:element name="GetFolderResponse" type="tns:getFolderResponse"/>
+
+  <xs:element name="folder" type="tns:folder"/>
+
+  <xs:element name="link" type="tns:mountpoint"/>
+
+  <xs:element name="mailDataSource" type="tns:mailDataSource"/>
+
+  <xs:element name="search" type="tns:searchFolder"/>
+
+  <xs:complexType name="getFolderResponse">
+    <xs:choice>
+      <xs:element ref="tns:folder"/>
+      <xs:element ref="tns:link"/>
+      <xs:element ref="tns:search"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="folder">
+    <xs:all>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="tns:folder"/>
+        <xs:element ref="tns:link"/>
+        <xs:element ref="tns:search"/>
+      </xs:choice>
+      <xs:element name="acl" form="unqualified" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="grant" type="tns:grant" form="unqualified" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="l" type="xs:string"/>
+    <xs:attribute name="f" type="xs:string"/>
+    <xs:attribute name="color" type="xs:int"/>
+    <xs:attribute name="u" type="xs:int"/>
+    <xs:attribute name="i4u" type="xs:int"/>
+    <xs:attribute name="n" type="xs:int"/>
+    <xs:attribute name="i4n" type="xs:int"/>
+    <xs:attribute name="s" type="xs:long"/>
+    <xs:attribute name="view" type="tns:view"/>
+    <xs:attribute name="url" type="xs:string"/>
+    <xs:attribute name="perm" type="xs:string"/>
+    <xs:attribute name="rest" type="xs:string"/>
+    <xs:attribute name="ms" type="xs:int"/>
+    <xs:attribute name="ref" type="xs:int"/>
+    <xs:attribute name="i4next" type="xs:int"/>
+    <xs:attribute name="i4ms" type="xs:int"/>
+  </xs:complexType>
+
+  <xs:complexType name="grant">
+    <xs:all/>
+    <xs:attribute name="perm" type="xs:string" use="required"/>
+    <xs:attribute name="gt" type="tns:granteeType" use="required"/>
+    <xs:attribute name="zid" type="xs:string" use="required"/>
+    <xs:attribute name="d" type="xs:string" use="required"/>
+    <xs:attribute name="pw" type="xs:string"/>
+    <xs:attribute name="key" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="getFolderRequest">
+    <xs:sequence>
+      <xs:element ref="tns:folder" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="visible" type="xs:boolean"/>
+    <xs:attribute name="needGranteeName" type="xs:boolean" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="getDataSourcesResponse">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="pop3" type="tns:mailPop3DataSource"/>
+        <xs:element name="imap" type="tns:mailImapDataSource"/>
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="mailPop3DataSource">
+    <xs:complexContent>
+      <xs:extension base="tns:mailDataSource">
+        <xs:all/>
+        <xs:attribute name="leaveOnServer" type="xs:boolean"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mailDataSource" abstract="true">
+    <xs:sequence>
+      <xs:element name="lastError" type="xs:string" form="unqualified" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="folderId" type="xs:string"/>
+    <xs:attribute name="enabled" type="xs:boolean"/>
+    <xs:attribute name="importOnly" type="xs:boolean"/>
+    <xs:attribute name="host" type="xs:string"/>
+    <xs:attribute name="port" type="xs:int"/>
+    <xs:attribute name="connectionType" type="tns:mdsConnectionType"/>
+    <xs:attribute name="username" type="xs:string"/>
+    <xs:attribute name="password" type="xs:string"/>
+    <xs:attribute name="pollingInterval" type="xs:string"/>
+    <xs:attribute name="emailAddress" type="xs:string"/>
+    <xs:attribute name="useAddressForForwardReply" type="xs:boolean"/>
+    <xs:attribute name="defaultSignature" type="xs:string"/>
+    <xs:attribute name="fromDisplay" type="xs:string"/>
+    <xs:attribute name="fromAddress" type="xs:string"/>
+    <xs:attribute name="replyToAddress" type="xs:string"/>
+    <xs:attribute name="replyToDisplay" type="xs:string"/>
+    <xs:attribute name="failingSince" type="xs:long"/>
+  </xs:complexType>
+
+  <xs:complexType name="mailImapDataSource">
+    <xs:complexContent>
+      <xs:extension base="tns:mailDataSource">
+        <xs:all/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="getDataSourcesRequest">
+    <xs:sequence/>
+  </xs:complexType>
+
+  <xs:complexType name="mountpoint">
+    <xs:complexContent>
+      <xs:extension base="tns:folder">
+        <xs:all/>
+        <xs:attribute name="owner" type="xs:string" use="required"/>
+        <xs:attribute name="zid" type="xs:string" use="required"/>
+        <xs:attribute name="rid" type="xs:int" use="required"/>
+        <xs:attribute name="oname" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mailCalDataSource">
+    <xs:complexContent>
+      <xs:extension base="tns:mailDataSource">
+        <xs:all/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mailRssDataSource">
+    <xs:complexContent>
+      <xs:extension base="tns:mailDataSource">
+        <xs:all/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="searchFolder">
+    <xs:complexContent>
+      <xs:extension base="tns:folder">
+        <xs:all/>
+        <xs:attribute name="query" type="xs:string"/>
+        <xs:attribute name="sortBy" type="tns:sortBy"/>
+        <xs:attribute name="types" type="xs:string"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:simpleType name="view">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value=""/>
+      <xs:enumeration value="search folder"/>
+      <xs:enumeration value="tag"/>
+      <xs:enumeration value="conversation"/>
+      <xs:enumeration value="message"/>
+      <xs:enumeration value="contact"/>
+      <xs:enumeration value="document"/>
+      <xs:enumeration value="appointment"/>
+      <xs:enumeration value="virtual conversation"/>
+      <xs:enumeration value="remote folder"/>
+      <xs:enumeration value="wiki"/>
+      <xs:enumeration value="task"/>
+      <xs:enumeration value="chat"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="granteeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="usr"/>
+      <xs:enumeration value="grp"/>
+      <xs:enumeration value="all"/>
+      <xs:enumeration value="dom"/>
+      <xs:enumeration value="gst"/>
+      <xs:enumeration value="key"/>
+      <xs:enumeration value="pub"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="mdsConnectionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="cleartext"/>
+      <xs:enumeration value="ssl"/>
+      <xs:enumeration value="tls"/>
+      <xs:enumeration value="tls_is_available"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="itemType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="appointment"/>
+      <xs:enumeration value="chat"/>
+      <xs:enumeration value="contact"/>
+      <xs:enumeration value="conversation"/>
+      <xs:enumeration value="document"/>
+      <xs:enumeration value="message"/>
+      <xs:enumeration value="tag"/>
+      <xs:enumeration value="task"/>
+      <xs:enumeration value="wiki"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="sortBy">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="dateDesc"/>
+      <xs:enumeration value="dateAsc"/>
+      <xs:enumeration value="subjDesc"/>
+      <xs:enumeration value="subjAsc"/>
+      <xs:enumeration value="nameDesc"/>
+      <xs:enumeration value="nameAsc"/>
+      <xs:enumeration value="durDesc"/>
+      <xs:enumeration value="durAsc"/>
+      <xs:enumeration value="none"/>
+      <xs:enumeration value="taskDueAsc"/>
+      <xs:enumeration value="taskStatusDesc"/>
+      <xs:enumeration value="taskStatusAsc"/>
+      <xs:enumeration value="taskStatusDesc"/>
+      <xs:enumeration value="taskPercCompletedAsc"/>
+      <xs:enumeration value="taskPercCompletedDesc"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
+
