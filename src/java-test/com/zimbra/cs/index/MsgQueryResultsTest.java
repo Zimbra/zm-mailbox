@@ -17,6 +17,10 @@ package com.zimbra.cs.index;
 import org.junit.Test;
 import org.testng.Assert;
 
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ItemId;
 
@@ -76,6 +80,27 @@ public class MsgQueryResultsTest {
         Assert.assertEquals(hit.getItemId(), 1000);
 
         Assert.assertFalse(result.hasNext());
+    }
+
+    @Test
+    public void proxiedHitNotMerged() throws Exception {
+        MockQueryResults top = new MockQueryResults(SortBy.NONE);
+        top.add(new MessageHit(null, null, 1000, null, 0, null));
+
+        Element el = XMLElement.create(SoapProtocol.Soap12, "hit");
+        el.addAttribute(MailConstants.A_ID, 1000);
+        top.add(new ProxiedHit(null, el));
+
+        MsgQueryResults result = new MsgQueryResults(top, null, SortBy.NONE,
+                Mailbox.SearchResultMode.NORMAL);
+
+        ZimbraHit hit = result.getNext();
+        Assert.assertEquals(hit.getClass(), MessageHit.class);
+        Assert.assertEquals(hit.getItemId(), 1000);
+
+        hit = result.getNext();
+        Assert.assertEquals(hit.getClass(), ProxiedHit.class);
+        Assert.assertEquals(hit.getItemId(), 1000);
     }
 
 }

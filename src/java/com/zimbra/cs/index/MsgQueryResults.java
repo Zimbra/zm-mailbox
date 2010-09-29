@@ -75,7 +75,7 @@ class MsgQueryResults extends ZimbraQueryResultsImpl {
                 // Iterate fwd a bit to see if we can pick up more message parts
                 while (mResults.hasNext()) {
                     ZimbraHit next = mResults.peekNext();
-                    if (iid == next.getItemId()) { // same msg id
+                    if (next.isLocal() && iid == next.getItemId()) {
                         mResults.getNext(); // move iterator fwd
                         if (next instanceof MessagePartHit) {
                             msgHit.addPart((MessagePartHit) next);
