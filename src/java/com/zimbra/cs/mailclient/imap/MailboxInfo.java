@@ -14,7 +14,7 @@
  */
 package com.zimbra.cs.mailclient.imap;
 
-import com.zimbra.cs.mailclient.ParseException;
+import com.zimbra.common.util.ZimbraLog;
 
 import java.io.IOException;
 
@@ -72,27 +72,25 @@ public final class MailboxInfo implements ResponseHandler {
         is.skipChar('(');
         while (!is.match(')')) {
             Atom attr = is.readAtom();
-            is.skipChar(' ');
-            long n = is.readNumber();
+            is.skipSpaces();
             switch (attr.getCAtom()) {
             case MESSAGES:
-                exists = n;
+                exists = is.readNumber();
                 break;
             case RECENT:
-                recent = n;
+                recent = is.readNumber();
                 break;
             case UIDNEXT:
-                uidNext = n;
+                uidNext = is.readNumber();
                 break;
             case UIDVALIDITY:
-                uidValidity = n;
+                uidValidity = is.readNumber();
                 break;
             case UNSEEN:
-                unseen = n;
+                unseen = is.readNumber();
                 break;
             default:
-                throw new ParseException(
-                    "Invalid STATUS response attribute: " + attr);
+                ZimbraLog.imap.debug("Ignoring invalid STATUS response attribute: %s", attr);
             }
             is.skipSpaces();
         }
