@@ -19,20 +19,22 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CharTokenizer;
+import org.apache.lucene.analysis.KeywordTokenizer;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.TokenFilter;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.analysis.AddrCharTokenizer;
+import com.zimbra.cs.index.analysis.UniversalAnalyzer;
 
 /***
  * Global analyzer wrapper for Zimbra Indexer.
@@ -40,18 +42,20 @@ import com.zimbra.cs.index.analysis.AddrCharTokenizer;
  * You DO NOT need to instantiate multiple copies of this class -- just call
  * ZimbraAnalyzer.getInstance() whenever you need an instance of this class.
  *
+ * TODO: factor out inner tokenizer classes into analysis package
+ *
  * @since Apr 26, 2004
  * @author tim
  * @author ysasaki
  */
-public class ZimbraAnalyzer extends StandardAnalyzer {
-    private static final ZimbraAnalyzer sInstance = new ZimbraAnalyzer();
-
-    private static final HashMap<String, Analyzer> sAnalyzerMap =
+public class ZimbraAnalyzer extends Analyzer {
+    private static final ZimbraAnalyzer SINGLETON = new ZimbraAnalyzer();
+    private static final Map<String, Analyzer> sAnalyzerMap =
         new HashMap<String, Analyzer>();
 
+    private final Analyzer defaultAnalyzer = new UniversalAnalyzer();
+
     protected ZimbraAnalyzer() {
-        super(LuceneIndex.VERSION);
     }
 
     /***
@@ -78,7 +82,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
      * @return singleton
      */
     public static Analyzer getDefaultAnalyzer() {
-        return sInstance;
+        return SINGLETON;
     }
 
     /**
@@ -127,7 +131,7 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
     public static String getAllTokensConcatenated(String fieldName, Reader reader) {
         StringBuilder toReturn = new StringBuilder();
 
-        TokenStream stream = sInstance.tokenStream(fieldName, reader);
+        TokenStream stream = SINGLETON.tokenStream(fieldName, reader);
         TermAttribute term = stream.addAttribute(TermAttribute.class);
 
         try {
@@ -145,48 +149,32 @@ public class ZimbraAnalyzer extends StandardAnalyzer {
         return toReturn.toString();
     }
 
-    /**
-     * "Tokenizer" which returns the entire input as a single token. Used for
-     * KEYWORD fields.
-     */
-    static class DontTokenizer extends CharTokenizer {
-
-        DontTokenizer(Reader input) {
-            super(input);
-        }
-
-        @Override
-        protected boolean isTokenChar(char c) {
-            return true;
-        }
-    }
-
     @Override
-    public TokenStream tokenStream(String fieldName, Reader reader) {
-        if (fieldName.equals(LuceneFields.L_H_MESSAGE_ID)) {
-            return new DontTokenizer(reader);
-        } else if (fieldName.equals(LuceneFields.L_FIELD)) {
+    public TokenStream tokenStream(String field, Reader reader) {
+        if (field.equals(LuceneFields.L_H_MESSAGE_ID)) {
+            return new KeywordTokenizer(reader);
+        } else if (field.equals(LuceneFields.L_FIELD)) {
             return new FieldTokenStream(reader);
-        } else if (fieldName.equals(LuceneFields.L_ATTACHMENTS) ||
-                fieldName.equals(LuceneFields.L_MIMETYPE)) {
+        } else if (field.equals(LuceneFields.L_ATTACHMENTS) ||
+                field.equals(LuceneFields.L_MIMETYPE)) {
             return new MimeTypeTokenFilter(CommaSeparatedTokenStream(reader));
-        } else if (fieldName.equals(LuceneFields.L_SORT_SIZE)) {
+        } else if (field.equals(LuceneFields.L_SORT_SIZE)) {
             return new SizeTokenFilter(new NumberTokenStream(reader));
-        } else if (fieldName.equals(LuceneFields.L_H_FROM)
-                || fieldName.equals(LuceneFields.L_H_TO)
-                || fieldName.equals(LuceneFields.L_H_CC)
-                || fieldName.equals(LuceneFields.L_H_X_ENV_FROM)
-                || fieldName.equals(LuceneFields.L_H_X_ENV_TO)) {
+        } else if (field.equals(LuceneFields.L_H_FROM)
+                || field.equals(LuceneFields.L_H_TO)
+                || field.equals(LuceneFields.L_H_CC)
+                || field.equals(LuceneFields.L_H_X_ENV_FROM)
+                || field.equals(LuceneFields.L_H_X_ENV_TO)) {
             // This is only for search. We don't need address-aware tokenization
             // because we put all possible forms of address while indexing.
             // Use RFC822AddressTokenStream for indexing.
             return new AddrCharTokenizer(reader);
-        } else if (fieldName.equals(LuceneFields.L_CONTACT_DATA)) {
+        } else if (field.equals(LuceneFields.L_CONTACT_DATA)) {
             return new ContactDataFilter(new AddrCharTokenizer(reader)); // for bug 48146
-        } else if (fieldName.equals(LuceneFields.L_FILENAME)) {
+        } else if (field.equals(LuceneFields.L_FILENAME)) {
             return new FilenameTokenizer(reader);
         } else {
-            return super.tokenStream(fieldName, reader);
+            return defaultAnalyzer.tokenStream(field, reader);
         }
     }
 
