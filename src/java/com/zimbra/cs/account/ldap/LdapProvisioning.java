@@ -337,7 +337,7 @@ public class LdapProvisioning extends Provisioning {
 
         ZimbraLdapContext zlc = null;
         try {
-            new ZimbraLdapContext(master);
+            zlc = new ZimbraLdapContext(master);
             refreshEntry(e, zlc, this);
         } finally {
             ZimbraLdapContext.closeContext(zlc);
