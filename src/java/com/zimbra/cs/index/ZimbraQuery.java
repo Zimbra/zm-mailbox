@@ -420,7 +420,7 @@ public final class ZimbraQuery {
                 index.initAnalyzer(mbox);
                 analyzer = index.getAnalyzer();
             } else {
-                analyzer = ZimbraAnalyzer.getDefaultAnalyzer();
+                analyzer = ZimbraAnalyzer.getInstance();
             }
             QueryParser parser = new QueryParser(mbox, analyzer);
             parser.setDefaultField(params.getDefaultField());

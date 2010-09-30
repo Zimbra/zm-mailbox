@@ -153,7 +153,7 @@ public final class MessageHit extends ZimbraHit {
             if (mMessage == null && mDoc != null) {
                 String sizeStr = mDoc.get(LuceneFields.L_SORT_SIZE);
                 if (sizeStr != null) {
-                    mCachedSize = ZimbraAnalyzer.SizeTokenFilter.decodeSize(sizeStr);
+                    mCachedSize = Long.parseLong(sizeStr);
                     return mCachedSize;
                 }
             }

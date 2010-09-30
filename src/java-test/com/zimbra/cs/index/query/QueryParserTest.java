@@ -50,7 +50,7 @@ public class QueryParserTest {
         Provisioning.setInstance(prov);
         MailboxManager mgr = new MockMailboxManager();
         Mailbox mbox = mgr.getMailboxByAccountId("test@zimbra.com");
-        parser = new QueryParser(mbox, ZimbraAnalyzer.getDefaultAnalyzer());
+        parser = new QueryParser(mbox, ZimbraAnalyzer.getInstance());
     }
 
     @Test

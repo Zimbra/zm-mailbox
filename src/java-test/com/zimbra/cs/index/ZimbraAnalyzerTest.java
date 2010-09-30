@@ -19,10 +19,8 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
@@ -30,7 +28,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.zimbra.cs.index.ZimbraAnalyzer;
-import com.zimbra.cs.index.analysis.AddrCharTokenizer;
 
 /**
  * Unit test for {@link ZimbraAnalyzer}.
@@ -46,46 +43,9 @@ public class ZimbraAnalyzerTest {
         "Foo.gub, \"My Mom\" <mmm@nnnn.com>,asd foo bar aaa/bbb ccc/ddd/eee " +
         "fff@ggg.com hhh@iiii";
 
-
-    @Test
-    public void contactDataFilter() throws Exception {
-        AddrCharTokenizer tokenizer = new AddrCharTokenizer(new StringReader("all-snv"));
-        TokenFilter filter = new ZimbraAnalyzer.ContactDataFilter(tokenizer);
-        Assert.assertEquals(Collections.singletonList("all-snv"),
-                toTokens(filter));
-
-        tokenizer.reset(new StringReader("."));
-        Assert.assertEquals(Collections.EMPTY_LIST,
-                toTokens(filter));
-
-        tokenizer.reset(new StringReader(".. ."));
-        Assert.assertEquals(Collections.singletonList(".."),
-                toTokens(filter));
-
-        tokenizer.reset(new StringReader(".abc"));
-        Assert.assertEquals(Collections.singletonList(".abc"),
-                toTokens(filter));
-
-        tokenizer.reset(new StringReader("a"));
-        Assert.assertEquals(Collections.singletonList("a"),
-                toTokens(filter));
-
-        tokenizer.reset(new StringReader("test.com"));
-        Assert.assertEquals(Collections.singletonList("test.com"),
-                toTokens(filter));
-
-        tokenizer.reset(new StringReader("user1@zim"));
-        Assert.assertEquals(Collections.singletonList("user1@zim"),
-                toTokens(filter));
-
-        tokenizer.reset(new StringReader("user1@zimbra.com"));
-        Assert.assertEquals(Collections.singletonList("user1@zimbra.com"),
-                toTokens(filter));
-    }
-
     @Test
     public void attachments() throws Exception {
-        TokenStream stream = ZimbraAnalyzer.getDefaultAnalyzer().tokenStream(
+        TokenStream stream = ZimbraAnalyzer.getInstance().tokenStream(
                 LuceneFields.L_ATTACHMENTS, new StringReader(LONG_SRC));
         //TODO: is it correct to prefix a space?
         Assert.assertEquals(Arrays.asList(
@@ -101,7 +61,7 @@ public class ZimbraAnalyzerTest {
 
     @Test
     public void mimeType() throws Exception {
-        TokenStream stream = ZimbraAnalyzer.getDefaultAnalyzer().tokenStream(
+        TokenStream stream = ZimbraAnalyzer.getInstance().tokenStream(
                 LuceneFields.L_MIMETYPE, new StringReader(LONG_SRC));
         Assert.assertEquals(Arrays.asList(
                 "donotreply@zimbra.com tim@foo.com \"tester address\" <test.address@mail.nnnn.com>",
@@ -117,7 +77,7 @@ public class ZimbraAnalyzerTest {
     @Test
     public void size() throws Exception {
         String src = "123 26 1000000 100000000 1,000,000,000 1,000,000,000,000,000";
-        TokenStream stream = ZimbraAnalyzer.getDefaultAnalyzer().tokenStream(
+        TokenStream stream = ZimbraAnalyzer.getInstance().tokenStream(
                 LuceneFields.L_SORT_SIZE, new StringReader(src));
         Assert.assertEquals(Arrays.asList("123", "26", "1000000", "100000000",
                 "1000000000", "1000000000000000"),
@@ -129,7 +89,7 @@ public class ZimbraAnalyzerTest {
         String src = "test1:val1 val2 val3    val4-test\t  val5\r\n" +
                 "#test2:2val1 2val2:_123 2val3\ntest3:zzz\n" +
                 "#calendarItemClass:public";
-        TokenStream stream = ZimbraAnalyzer.getDefaultAnalyzer().tokenStream(
+        TokenStream stream = ZimbraAnalyzer.getInstance().tokenStream(
                 LuceneFields.L_FIELD, new StringReader(src));
         Assert.assertEquals(Arrays.asList("test1:val1", "test1:val2",
                 "test1:val3", "test1:val4", "test1:test", "test1:val5",
@@ -141,7 +101,7 @@ public class ZimbraAnalyzerTest {
     @Test
     public void filename() throws Exception {
         String src = "This is my-filename.test.pdf";
-        TokenStream stream = ZimbraAnalyzer.getDefaultAnalyzer().tokenStream(
+        TokenStream stream = ZimbraAnalyzer.getInstance().tokenStream(
                 LuceneFields.L_FILENAME, new StringReader(src));
         Assert.assertEquals(Arrays.asList("this", "is", "my-filename", "test", "pdf"),
                 toTokens(stream));
@@ -155,7 +115,7 @@ public class ZimbraAnalyzerTest {
      */
     @Test
     public void positionIncrement() throws Exception {
-        TokenStream stream = ZimbraAnalyzer.getDefaultAnalyzer().tokenStream(
+        TokenStream stream = ZimbraAnalyzer.getInstance().tokenStream(
                 LuceneFields.L_H_SUBJECT, new StringReader("It's a test."));
         PositionIncrementAttribute posIncrAtt = stream.addAttribute(
                 PositionIncrementAttribute.class);

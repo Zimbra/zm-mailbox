@@ -54,7 +54,7 @@ public final class MailboxIndex {
         if (analyzerName != null) {
             mAnalyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
         } else {
-            mAnalyzer = ZimbraAnalyzer.getDefaultAnalyzer();
+            mAnalyzer = ZimbraAnalyzer.getInstance();
         }
 
         ZimbraLog.index.info("Initialized Index for mailbox " + mMailboxId +
@@ -337,7 +337,7 @@ public final class MailboxIndex {
                 if (analyzerName != null) {
                     mAnalyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
                 } else {
-                    mAnalyzer = ZimbraAnalyzer.getDefaultAnalyzer();
+                    mAnalyzer = ZimbraAnalyzer.getInstance();
                 }
             }
         }

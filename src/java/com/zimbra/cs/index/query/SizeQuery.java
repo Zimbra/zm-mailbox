@@ -18,7 +18,6 @@ import java.text.ParseException;
 
 import com.zimbra.cs.index.DBQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
-import com.zimbra.cs.index.ZimbraAnalyzer;
 
 /**
  * Query by size.
@@ -110,10 +109,7 @@ public final class SizeQuery extends Query {
             }
         }
 
-        mSizeStr = ZimbraAnalyzer.SizeTokenFilter.encodeSize(mSize);
-        if (mSizeStr == null) {
-            mSizeStr = "";
-        }
+        mSizeStr = String.valueOf(mSize);
     }
 
     @Override
