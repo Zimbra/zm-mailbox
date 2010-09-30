@@ -33,12 +33,14 @@ import java.util.*;
 class ItemPreloadingGrouper extends BufferingResultsGrouper {
 
     private int mChunkSize;
+    private boolean mInDumpster;
     private OperationContext mOpContext;
 
-    ItemPreloadingGrouper(ZimbraQueryResults results, int chunkSize, Mailbox mbox) {
+    ItemPreloadingGrouper(ZimbraQueryResults results, int chunkSize, Mailbox mbox, boolean inDumpster) {
         super(results);
         mChunkSize = chunkSize;
         mOpContext = mbox.getOperationContext();
+        mInDumpster = inDumpster;
         assert(mChunkSize > 0);
     }
     
@@ -93,8 +95,9 @@ class ItemPreloadingGrouper extends BufferingResultsGrouper {
         }
 
         if (numToLoad > 0) {
-            MailItem[] items = mbox.getItemById(mOpContext, unloadedIds, MailItem.TYPE_UNKNOWN);
-            for (int i = 0; i < hits.size(); i++)
+            MailItem[] items;
+            items = mbox.getItemById(mOpContext, unloadedIds, MailItem.TYPE_UNKNOWN, mInDumpster);
+            for (int i = 0; i < hits.size(); ++i)
                 if (items[i] != null)
                     ((ZimbraHit) hits.get(i)).setItem(items[i]);
         }

@@ -43,7 +43,7 @@ class MailboxErrorUtil {
               try {
                   List<Integer> singleItemList = Collections.singletonList(id);
                   ZimbraLog.mailbox.debug("attempting to delete id ["+id+"]");
-                  DbMailItem.delete(mbox,singleItemList);   
+                  DbMailItem.delete(mbox, singleItemList, false);   
                   ZimbraLog.mailbox.debug("deleted ["+id+"] OK");
               } catch (ServiceException se) {
                   ZimbraLog.mailbox.error("deleted FAILED for ["+id+"] due to exception",se);

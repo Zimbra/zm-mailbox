@@ -949,7 +949,8 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @see Folder#checkRights(short, Account, boolean) */
     short checkRights(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
         // check to see what access has been granted on the enclosing folder
-        short granted = getFolder().checkRights(rightsNeeded, authuser, asAdmin);
+        Folder folder = !inDumpster() ? getFolder() : getMailbox().getFolderById(Mailbox.ID_FOLDER_TRASH);
+        short granted = folder.checkRights(rightsNeeded, authuser, asAdmin);
         // FIXME: check to see what access has been granted on the item's tags
         //   granted |= getTags().getGrantedRights(rightsNeeded, authuser);
         // and see if the granted rights are sufficient
@@ -1212,7 +1213,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      *         Mailbox's item cache or fetching the parent's data from
      *         the database. */
     MailItem getParent() throws ServiceException {
-        if (mData.parentId == -1)
+        if (mData.parentId == -1 || inDumpster())
             return null;
         return mMailbox.getItemById(mData.parentId, TYPE_UNKNOWN);
     }
@@ -1244,7 +1245,11 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     static MailItem getById(Mailbox mbox, int id, byte type) throws ServiceException {
-        return mbox.getItem(DbMailItem.getById(mbox, id, type));
+        return getById(mbox, id, type, false);
+    }
+
+    static MailItem getById(Mailbox mbox, int id, byte type, boolean fromDumpster) throws ServiceException {
+        return mbox.getItem(DbMailItem.getById(mbox, id, type, fromDumpster));
     }
 
     static List<MailItem> getById(Mailbox mbox, Collection<Integer> ids, byte type) throws ServiceException {
@@ -1598,7 +1603,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             mRevisions = new ArrayList<MailItem>();
 
             if (isTagged(Flag.ID_FLAG_VERSIONED)) {
-                for (UnderlyingData data : DbMailItem.getRevisionInfo(this))
+                for (UnderlyingData data : DbMailItem.getRevisionInfo(this, inDumpster()))
                     mRevisions.add(constructItem(mMailbox, data));
             }
         }
@@ -2005,7 +2010,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         String indexId = mData.indexId;
         if (isIndexed()) {
             // reindex the copy if existing item (a) wasn't indexed or (b) is mutable
-            if (indexId == null || isMutable())
+            // or (c) existing item is in dumpster (which implies copy is not in dumpster)
+            if (indexId == null || isMutable() || inDumpster())
                 indexId = folder.inSpam() ? null : Integer.toString(copyId);
         }
         boolean shared = indexId != null && indexId.equals(mData.indexId);
@@ -2036,16 +2042,16 @@ public abstract class MailItem implements Comparable<MailItem> {
         data.metadata = encodeMetadata();
         data.contentChanged(mMailbox);
 
-        // if the copy needs to be reindexed, just set the deferred flag now and index it later
-        if (indexId != null && !indexId.equals(mData.indexId))
-            mMailbox.queueForIndexing(this, false, null);
-
         ZimbraLog.mailop.info("Copying %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
                               getMailopContext(this), copyId, folder.getId(), folder.getName(), data.parentId);
-        DbMailItem.copy(this, copyId, folder, data.indexId, data.parentId, data.locator, data.metadata);
+        DbMailItem.copy(this, copyId, folder, data.indexId, data.parentId, data.locator, data.metadata, inDumpster());
 
         MailItem copy = constructItem(mMailbox, data);
         copy.finishCreation(parent);
+
+        // if the copy needs to be reindexed, just set the deferred flag now and index it later
+        if ((indexId != null && !indexId.equals(mData.indexId)) || inDumpster())
+            mMailbox.queueForIndexing(copy, false, null);
 
         return copy;
     }
@@ -2515,10 +2521,15 @@ public abstract class MailItem implements Comparable<MailItem> {
             info.itemIds.remove(getType(), mId);
         }
 
-        delete(mMailbox, info, this, scope, writeTombstones);
+        delete(mMailbox, info, this, scope, writeTombstones, inDumpster());
     }
 
     static void delete(Mailbox mbox, PendingDelete info, MailItem item, DeleteScope scope, boolean writeTombstones) throws ServiceException {
+        delete(mbox, info, item, scope, writeTombstones, false);
+    }
+
+    static void delete(Mailbox mbox, PendingDelete info, MailItem item, DeleteScope scope, boolean writeTombstones, boolean fromDumpster)
+    throws ServiceException {
         // short-circuit now if nothing's actually being deleted
         if (info.itemIds.isEmpty())
             return;
@@ -2532,25 +2543,27 @@ public abstract class MailItem implements Comparable<MailItem> {
             parent = item.getParent();
         }
 
-        // update the mailbox's size
-        mbox.updateSize(-info.size);
-        mbox.updateContactCount(-info.contacts);
+        if (!fromDumpster) {
+            // update the mailbox's size
+            mbox.updateSize(-info.size);
+            mbox.updateContactCount(-info.contacts);
 
-        // update conversations and unread counts on folders and tags
-        if (item != null) {
-            item.propagateDeletion(info);
-        } else {
-            // update message counts
-            List<UnderlyingData> unreadData = DbMailItem.getById(mbox, info.unreadIds, TYPE_MESSAGE);
-            for (UnderlyingData data : unreadData) {
-                MailItem unread = mbox.getItem(data);
-                unread.updateUnread(-data.unreadCount, unread.isTagged(Flag.ID_FLAG_DELETED) ? -data.unreadCount : 0);
-            }
-
-            for (Map.Entry<Integer, DbMailItem.LocationCount> entry : info.messages.entrySet()) {
-                int folderID = entry.getKey();
-                DbMailItem.LocationCount lcount = entry.getValue();
-                mbox.getFolderById(folderID).updateSize(-lcount.count, -lcount.deleted, -lcount.size);
+            // update conversations and unread counts on folders and tags
+            if (item != null) {
+                item.propagateDeletion(info);
+            } else {
+                // update message counts
+                List<UnderlyingData> unreadData = DbMailItem.getById(mbox, info.unreadIds, TYPE_MESSAGE);
+                for (UnderlyingData data : unreadData) {
+                    MailItem unread = mbox.getItem(data);
+                    unread.updateUnread(-data.unreadCount, unread.isTagged(Flag.ID_FLAG_DELETED) ? -data.unreadCount : 0);
+                }
+    
+                for (Map.Entry<Integer, DbMailItem.LocationCount> entry : info.messages.entrySet()) {
+                    int folderID = entry.getKey();
+                    DbMailItem.LocationCount lcount = entry.getValue();
+                    mbox.getFolderById(folderID).updateSize(-lcount.count, -lcount.deleted, -lcount.size);
+                }
             }
         }
 
@@ -2584,11 +2597,11 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         // actually delete the items from the DB
         if (info.incomplete || item == null) {
-            DbMailItem.delete(mbox, info.itemIds.getAll());
+            DbMailItem.delete(mbox, info.itemIds.getAll(), fromDumpster);
         } else if (scope == DeleteScope.CONTENTS_ONLY) {
-            DbMailItem.deleteContents(item);
+            DbMailItem.deleteContents(item, fromDumpster);
         } else {
-            DbMailItem.delete(item);
+            DbMailItem.delete(item, fromDumpster);
         }
 
         // remove the deleted item(s) from the mailbox's cache
@@ -2612,7 +2625,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         // also delete any conversations whose messages have all been removed
         if (info.cascadeIds != null && !info.cascadeIds.isEmpty()) {
             try {
-                DbMailItem.delete(mbox, info.cascadeIds);
+                DbMailItem.delete(mbox, info.cascadeIds, false);
             } catch (ServiceException se) {
                 MailboxErrorUtil.handleCascadeFailure(mbox, info.cascadeIds, se);
             }
@@ -2627,7 +2640,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         mbox.markOtherItemDirty(info);
 
         // write a deletion record for later sync
-        if (writeTombstones && mbox.isTrackingSync() && !info.itemIds.isEmpty())
+        if (writeTombstones && mbox.isTrackingSync() && !info.itemIds.isEmpty() && !fromDumpster)
             DbMailItem.writeTombstones(mbox, info.itemIds);
 
         // don't actually delete the blobs or index entries here; wait until after the commit
@@ -2667,26 +2680,35 @@ public abstract class MailItem implements Comparable<MailItem> {
         info.rootId = mId;
         info.size   = getTotalSize();
         info.itemIds.add(getType(), id);
-        if (mData.unreadCount != 0 && mMailbox.getFlagById(Flag.ID_FLAG_UNREAD).canTag(this))
-            info.unreadIds.add(id);
 
-        boolean isDeleted = isTagged(Flag.ID_FLAG_DELETED);
-        info.messages.put(getFolderId(), new DbMailItem.LocationCount(1, isDeleted ? 1 : 0, getTotalSize()));
-
-        if (mData.indexId != null) {
-            if (!isTagged(Flag.ID_FLAG_COPIED))
-                info.indexIds.add(mData.indexId);
-            else
-                (info.sharedIndex = new HashSet<String>()).add(mData.indexId);
+        if (!inDumpster()) {
+            if (mData.unreadCount != 0 && mMailbox.getFlagById(Flag.ID_FLAG_UNREAD).canTag(this))
+                info.unreadIds.add(id);
+    
+            boolean isDeleted = isTagged(Flag.ID_FLAG_DELETED);
+            info.messages.put(getFolderId(), new DbMailItem.LocationCount(1, isDeleted ? 1 : 0, getTotalSize()));
         }
 
-        List<MailItem> items = new ArrayList<MailItem>(3);
-        items.add(this);  items.addAll(loadRevisions());
-        for (MailItem revision : items) {
-            try {
-                info.blobs.add(revision.getBlob());
-            } catch (Exception e) {
-                ZimbraLog.mailbox.error("missing blob for id: " + mId + ", change: " + revision.getSavedSequence());
+        // Clean up from blob store and Lucene if:
+        // 1) deleting a regular item and dumpster is not in use, OR
+        // 2) permantently deleting an item from dumpster
+        // In other words, skip the blob/index deletes when soft-deleting item to dumpster.
+        if (!getMailbox().dumpsterEnabled() || inDumpster()) {
+            if (mData.indexId != null) {
+                if (!isTagged(Flag.ID_FLAG_COPIED))
+                    info.indexIds.add(mData.indexId);
+                else
+                    (info.sharedIndex = new HashSet<String>()).add(mData.indexId);
+            }
+
+            List<MailItem> items = new ArrayList<MailItem>(3);
+            items.add(this);  items.addAll(loadRevisions());
+            for (MailItem revision : items) {
+                try {
+                    info.blobs.add(revision.getBlob());
+                } catch (Exception e) {
+                    ZimbraLog.mailbox.error("missing blob for id: " + mId + ", change: " + revision.getSavedSequence());
+                }
             }
         }
 
@@ -2990,5 +3012,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         encodeMetadata(metaMeta);
         meta.put(UnderlyingData.FN_METADATA, metaMeta.toString());
         return meta;
+    }
+
+    public boolean inDumpster() {
+        return (mData.flags & Flag.BITMASK_UNCACHED) != 0;
     }
 }

@@ -1930,6 +1930,13 @@ public class Mailbox {
     }
 
     MailItem getItemById(int id, byte type) throws ServiceException {
+        return getItemById(id, type, false);
+    }
+
+    MailItem getItemById(int id, byte type, boolean fromDumpster) throws ServiceException {
+        if (fromDumpster)
+            return MailItem.getById(this, id, type, true);
+
         // try the cache first
         MailItem item = getCachedItem(new Integer(id), type);
         if (item != null)
@@ -1970,11 +1977,15 @@ public class Mailbox {
      * @throws NoSuchItemException any item does not exist
      */
     public synchronized MailItem[] getItemById(OperationContext octxt, int[] ids, byte type) throws ServiceException {
+        return getItemById(octxt, ids, type, false);
+    }
+
+    public synchronized MailItem[] getItemById(OperationContext octxt, int[] ids, byte type, boolean fromDumpster) throws ServiceException {
         boolean success = false;
         try {
             // tag/folder caches are populated in beginTransaction...
             beginTransaction("getItemById[]", octxt);
-            MailItem[] items = getItemById(ids, type);
+            MailItem[] items = getItemById(ids, type, fromDumpster);
             // make sure all those items are visible...
             for (int i = 0; i < items.length; i++)
                 checkAccess(items[i]);
@@ -1990,12 +2001,26 @@ public class Mailbox {
     }
 
     MailItem[] getItemById(int[] ids, byte type) throws ServiceException {
+        return getItemById(ids, type, false);
+    }
+
+    MailItem[] getItemById(int[] ids, byte type, boolean fromDumpster) throws ServiceException {
         if (!mCurrentChange.active)
             throw ServiceException.FAILURE("must be in transaction", null);
         if (ids == null)
             return null;
 
         MailItem items[] = new MailItem[ids.length];
+        if (fromDumpster) {
+            for (int i = 0; i < items.length; ++i) {
+                int id = ids[i];
+                if (id > 0) {
+                    items[i] = getItemById(id, type, true);
+                }
+            }
+            return items;
+        }
+
         Set<Integer> uncached = new HashSet<Integer>();
 
         // try the cache first
@@ -3523,6 +3548,11 @@ public class Mailbox {
      * @throws ServiceException
      */
     public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, SortBy sortBy, int chunkSize)
+    throws IOException, ServiceException {
+        return search(octxt, queryString, types, sortBy, chunkSize, false);
+    }
+
+    public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, SortBy sortBy, int chunkSize, boolean inDumpster)
         throws IOException, ServiceException {
         SearchParams params = new SearchParams();
         params.setQueryStr(queryString);
@@ -3533,6 +3563,7 @@ public class Mailbox {
         params.setChunkSize(chunkSize);
         params.setPrefetch(true);
         params.setMode(SearchResultMode.NORMAL);
+        params.setInDumpster(inDumpster);
         return search(SoapProtocol.Soap12, octxt, params);
     }
 
@@ -5159,18 +5190,26 @@ public class Mailbox {
         return copy(octxt, new int[] { itemId }, type, folderId).get(0);
     }
     public synchronized List<MailItem> copy(OperationContext octxt, int[] itemIds, byte type, int folderId) throws ServiceException {
-        CopyItem redoRecorder = new CopyItem(mId, type, folderId);
-
+        return copy(octxt, itemIds, type, folderId, false);
+    }
+    public synchronized List<MailItem> copy(OperationContext octxt, int[] itemIds, byte type, int folderId, boolean fromDumpster)
+    throws ServiceException {
+        CopyItem redoRecorder = new CopyItem(mId, type, folderId, fromDumpster);
         boolean success = false;
         try {
             beginTransaction("copy", octxt, redoRecorder);
+            if (fromDumpster) {
+                Folder trash = getFolderById(ID_FOLDER_TRASH);
+                if (!trash.canAccess(ACL.RIGHT_READ))
+                    throw ServiceException.PERM_DENIED("dumpster access denied");
+            }
             CopyItem redoPlayer = (CopyItem) mCurrentChange.getRedoPlayer();
 
             List<MailItem> result = new ArrayList<MailItem>();
 
             Folder folder = getFolderById(folderId);
 
-            MailItem[] items = getItemById(itemIds, type);
+            MailItem[] items = getItemById(itemIds, type, fromDumpster);
             for (MailItem item : items)
                 checkItemChangeID(item);
 
@@ -5200,7 +5239,21 @@ public class Mailbox {
                     }
                 } else {
                     int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(item.getId()));
-                    copy = item.copy(folder, newId, item.getParentId());
+                    int parentId = item.getParentId();
+                    if (fromDumpster) {
+                        // Parent of dumpstered item may no longer exist.
+                        MailItem parent = null;
+                        if (parentId > 0) {
+                            try {
+                                parent = getItemById(parentId, MailItem.TYPE_UNKNOWN);
+                            } catch (MailServiceException.NoSuchItemException e) {
+                                // ignore
+                            }
+                        }
+                        if (parent == null)
+                            parentId = -1;
+                    }
+                    copy = item.copy(folder, newId, parentId);
                     redoRecorder.setDestId(item.getId(), newId);
                 }
 
@@ -5662,6 +5715,82 @@ public class Mailbox {
         if (!isTrackingSync() || mCurrentChange.deletes == null)
             return null;
         return new TypedIdList(mCurrentChange.deletes.itemIds);
+    }
+
+    private int deleteFromDumpster(int[] itemIds) throws ServiceException {
+        Folder trash = getFolderById(ID_FOLDER_TRASH);
+        if (!trash.canAccess(ACL.RIGHT_DELETE))
+            throw ServiceException.PERM_DENIED("dumpster access denied");
+        int numDeleted = 0;
+        for (int id : itemIds) {
+            MailItem item = null;
+            try {
+                item = getItemById(id, MailItem.TYPE_UNKNOWN, true);
+            } catch (MailServiceException.NoSuchItemException e) {
+                ZimbraLog.mailbox.info("ignoring NO_SUCH_ITEM exception during dumpster delete; item id=" + id, e);
+                continue;
+            }
+            item.delete();
+            ++numDeleted;
+        }
+        return numDeleted;
+    }
+
+    public synchronized int deleteFromDumpster(OperationContext octxt, int[] itemIds) throws ServiceException {
+        DeleteItemFromDumpster redoRecorder = new DeleteItemFromDumpster(mId, itemIds);
+        boolean success = false;
+        try {
+            beginTransaction("deleteFromDumpster[]", octxt, redoRecorder);
+            int numDeleted = deleteFromDumpster(itemIds);
+            success = true;
+            return numDeleted;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public int emptyDumpster(OperationContext octxt) throws ServiceException {
+        int numDeleted = 0;
+        int batchSize = Provisioning.getInstance().getLocalServer().getMailEmptyFolderBatchSize();
+        ZimbraLog.mailbox.info("Emptying dumpster with batchSize=" + batchSize);
+        QueryParams params = new QueryParams();
+        // +1 to catch items put into dumpster in the same second
+        params.setChangeDateBefore(System.currentTimeMillis() / 1000 + 1).setRowLimit(batchSize);
+        while (true) {
+            Set<Integer> itemIds = null;
+            Connection conn = null;
+            synchronized (this) {
+                try {
+                    conn = DbPool.getConnection();
+                    itemIds = DbMailItem.getIds(this, conn, params, true);
+                } finally {
+                    DbPool.quietClose(conn);
+                }
+
+                if (itemIds.isEmpty()) {
+                    break;
+                }
+                numDeleted += deleteFromDumpster(octxt, ArrayUtil.toIntArray(itemIds));
+            }
+        }
+        return numDeleted;
+    }
+
+    private synchronized int purgeDumpster(OperationContext octxt, long olderThanMillis, int maxItems) throws ServiceException {
+        QueryParams params = new QueryParams();
+        params.setChangeDateBefore(olderThanMillis / 1000).setRowLimit(maxItems);
+        Set<Integer> itemIds = null;
+        Connection conn = null;
+        try {
+            conn = DbPool.getConnection();
+            itemIds = DbMailItem.getIds(this, conn, params, true);
+        } finally {
+            DbPool.quietClose(conn);
+        }
+        if (!itemIds.isEmpty())
+            return deleteFromDumpster(ArrayUtil.toIntArray(itemIds));
+        else
+            return 0;
     }
 
     public synchronized Tag createTag(OperationContext octxt, String name, byte color) throws ServiceException {
@@ -6362,8 +6491,12 @@ public class Mailbox {
             }
         }
 
+        int lastChangeID;
+        synchronized (this) {
+            lastChangeID = getLastChangeID();
+        }
         QueryParams params = new QueryParams();
-        params.setFolderIds(folderIds).setModifiedBefore(System.currentTimeMillis()).setRowLimit(batchSize);
+        params.setFolderIds(folderIds).setModifiedSequenceBefore(lastChangeID + 1).setRowLimit(batchSize);
         params.setExcludedTypes(MailItem.TYPE_FOLDER, MailItem.TYPE_MOUNTPOINT, MailItem.TYPE_SEARCHFOLDER);
 
         while (true) {
@@ -6375,7 +6508,7 @@ public class Mailbox {
             synchronized (this) {
                 try {
                     conn = DbPool.getConnection();
-                    itemIds = DbMailItem.getIds(this, conn, params);
+                    itemIds = DbMailItem.getIds(this, conn, params, false);
                 } finally {
                     DbPool.quietClose(conn);
                 }
@@ -6477,10 +6610,11 @@ public class Mailbox {
      */
     private synchronized boolean purgeMessages(OperationContext octxt, Account acct, Integer maxItemsPerFolder) throws ServiceException {
         if (ZimbraLog.purge.isDebugEnabled()) {
-            ZimbraLog.purge.debug("System retention policy: Trash=%s, Junk=%s, All messages=%s",
+            ZimbraLog.purge.debug("System retention policy: Trash=%s, Junk=%s, All messages=%s, Dumpster=%s",
                 acct.getMailTrashLifetimeAsString(),
                 acct.getMailSpamLifetimeAsString(),
-                acct.getMailMessageLifetimeAsString());
+                acct.getMailMessageLifetimeAsString(),
+                acct.getMailDumpsterLifetimeAsString());
             ZimbraLog.purge.debug("User-specified retention policy: Inbox read=%s, Inbox unread=%s, Sent=%s, Junk=%s, Trash=%s",
                 acct.getPrefInboxReadLifetimeAsString(),
                 acct.getPrefInboxUnreadLifetimeAsString(),
@@ -6492,6 +6626,7 @@ public class Mailbox {
         int globalTimeout = (int) (acct.getMailMessageLifetime() / 1000);
         int systemTrashTimeout = (int) (acct.getMailTrashLifetime() / 1000);
         int systemJunkTimeout = (int) (acct.getMailSpamLifetime() / 1000);
+        long systemDumpsterTimeoutMillis = acct.getMailDumpsterLifetime();
 
         int userInboxReadTimeout = (int) (acct.getPrefInboxReadLifetime() / 1000);
         int userInboxUnreadTimeout = (int) (acct.getPrefInboxUnreadLifetime() / 1000);
@@ -6504,7 +6639,7 @@ public class Mailbox {
 
         if (globalTimeout <= 0 && trashTimeout <= 0 && spamTimeout <= 0 &&
             userInboxReadTimeout <= 0 && userInboxReadTimeout <= 0 &&
-            userInboxUnreadTimeout <= 0 && userSentTimeout <= 0) {
+            userInboxUnreadTimeout <= 0 && userSentTimeout <= 0 && systemDumpsterTimeoutMillis <= 0) {
             ZimbraLog.purge.debug("Retention policy does not require purge.");
             return true;
         }
@@ -6563,6 +6698,11 @@ public class Mailbox {
                 int numPurged = Folder.purgeMessages(this, sent, getOperationTimestamp() - userSentTimeout, null, false, false, maxItemsPerFolder);
                 purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
                 ZimbraLog.purge.debug("Purged %d messages from Sent", numPurged);
+            }
+            if (systemDumpsterTimeoutMillis > 0) {
+                int numPurged = purgeDumpster(octxt, getOperationTimestampMillis() - systemDumpsterTimeoutMillis, maxItemsPerFolder);
+                ZimbraLog.purge.debug("Purged %d messages from Dumpster", numPurged);
+                purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
             }
             // deletes have already been collected, so fetch the tombstones and write once
             TypedIdList tombstones = collectPendingTombstones();
@@ -7541,5 +7681,13 @@ public class Mailbox {
         sb.append(CN_SIZE).append(": ").append(mData.size);
         sb.append("}");
         return sb.toString();
+    }
+
+    public boolean dumpsterEnabled() {
+        boolean enabled = true;
+        try {
+            enabled = getAccount().isDumpsterEnabled();
+        } catch (ServiceException e) {}
+        return enabled;
     }
 }

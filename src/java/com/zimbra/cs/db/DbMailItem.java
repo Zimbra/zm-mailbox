@@ -73,8 +73,11 @@ import com.zimbra.cs.store.StoreManager;
 public class DbMailItem {
 
     public static final String TABLE_MAIL_ITEM = "mail_item";
+    public static final String TABLE_MAIL_ITEM_DUMPSTER = "mail_item_dumpster";
     public static final String TABLE_REVISION = "revision";
+    public static final String TABLE_REVISION_DUMPSTER = "revision_dumpster";
     public static final String TABLE_APPOINTMENT = "appointment";
+    public static final String TABLE_APPOINTMENT_DUMPSTER = "appointment_dumpster";
     public static final String TABLE_OPEN_CONVERSATION = "open_conversation";
     public static final String TABLE_TOMBSTONE = "tombstone";
 
@@ -224,7 +227,7 @@ public class DbMailItem {
         }
     }
 
-    public static void copy(MailItem item, int id, Folder folder, String indexId, int parentId, String locator, String metadata)
+    public static void copy(MailItem item, int id, Folder folder, String indexId, int parentId, String locator, String metadata, boolean fromDumpster)
     throws ServiceException {
         Mailbox mbox = item.getMailbox();
         if (id <= 0 || indexId == null || folder == null || parentId == 0)
@@ -237,15 +240,16 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            String table = getMailItemTableName(mbox);
+            String srcTable = getMailItemTableName(mbox, fromDumpster);
+            String destTable = getMailItemTableName(mbox);
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
-            stmt = conn.prepareStatement("INSERT INTO " + table +
+            stmt = conn.prepareStatement("INSERT INTO " + destTable +
                         "(" + mailbox_id +
                         " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
                         " unread, flags, tags, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
                         "SELECT " + MAILBOX_ID_VALUE +
                         " ?, type, ?, ?, ?, ?, date, size, ?, blob_digest, unread," +
-                        " flags, tags, sender, subject, name, ?, ?, ?, ? FROM " + table +
+                        " flags, tags, sender, subject, name, ?, ?, ?, ? FROM " + srcTable +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
@@ -1499,21 +1503,18 @@ public class DbMailItem {
      * table.  If the object is a <code>Folder</code> or <code>Conversation</code>,
      * deletes any corresponding messages.  Does not delete subfolders.
      */
-    public static void delete(MailItem item) throws ServiceException {
-        deleteContents(item);
+    public static void delete(MailItem item, boolean fromDumpster) throws ServiceException {
+        deleteContents(item, fromDumpster);
         if (item instanceof VirtualConversation)
             return;
-
-        List<Integer> ids = new ArrayList<Integer>();
-        ids.add(item.getId());
-        delete(item.getMailbox(), ids);
+        delete(item.getMailbox(), Collections.singletonList(item.getId()), fromDumpster);
     }
 
     /**
      * Deletes <code>MailItem</code>s with the specified ids from the <code>mail_item</code>
      * table.  Assumes that there is no data referencing the specified id's.
      */
-    public static void delete(Mailbox mbox, List<Integer> ids) throws ServiceException {
+    public static void delete(Mailbox mbox, Collection<Integer> ids, boolean fromDumpster) throws ServiceException {
         // trim out any non-persisted items
         if (ids == null || ids.size() == 0)
             return;
@@ -1528,16 +1529,18 @@ public class DbMailItem {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         Connection conn = mbox.getOperationConnection();
-        PreparedStatement stmt = null;
-        for (int i = 0; i < targets.size(); i += Db.getINClauseBatchSize()) {
+        for (int offset = 0; offset < targets.size(); offset += Db.getINClauseBatchSize()) {
+            PreparedStatement stmt = null;
             try {
-                int count = Math.min(Db.getINClauseBatchSize(), targets.size() - i);
-                stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(mbox) +
+                int count = Math.min(Db.getINClauseBatchSize(), targets.size() - offset);
+                if (!fromDumpster && mbox.dumpsterEnabled())
+                    copyToDumpster(conn, mbox, targets, offset, count);
+                stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(mbox, fromDumpster) +
                             " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
-                for (int index = i; index < i + count; index++)
-                    stmt.setInt(pos++, targets.get(index));
+                for (int i = offset; i < offset + count; ++i)
+                    stmt.setInt(pos++, targets.get(i));
                 stmt.executeUpdate();
             } catch (SQLException e) {
                 throw ServiceException.FAILURE("deleting " + ids.size() + " item(s): " + getIdListForLogging(ids), e);
@@ -1547,7 +1550,7 @@ public class DbMailItem {
         }
     }
 
-    public static void deleteContents(MailItem item) throws ServiceException {
+    public static void deleteContents(MailItem item, boolean fromDumpster) throws ServiceException {
         Mailbox mbox = item.getMailbox();
 
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
@@ -1561,8 +1564,40 @@ public class DbMailItem {
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
+        String miTableName = getMailItemTableName(item, fromDumpster);
         try {
-            stmt = conn.prepareStatement("DELETE FROM " + getMailItemTableName(item) +
+            if (!fromDumpster && mbox.dumpsterEnabled()) {
+                // Get the list of item ids to be deleted.
+                List<Integer> ids = new ArrayList<Integer>();
+                PreparedStatement listStmt = null;
+                ResultSet rs = null;
+                try {
+                    listStmt = conn.prepareStatement("SELECT id FROM " + miTableName +
+                            " WHERE " + IN_THIS_MAILBOX_AND + target +
+//                            " AND type NOT IN " + FOLDER_TYPES +  // DUMPSTER_TYPES implies !FOLDER_TYPES
+                            " AND type IN " + DUMPSTER_TYPES);
+                    int pos = 1;
+                    pos = setMailboxId(listStmt, mbox, pos);
+                    listStmt.setInt(pos++, item instanceof VirtualConversation ? ((VirtualConversation) item).getMessageId() : item.getId());
+                    rs = listStmt.executeQuery();
+                    while (rs.next()) {
+                        int id = rs.getInt(1);
+                        if (id > 0)
+                            ids.add(id);
+                    }
+                } finally {
+                    DbPool.closeResults(rs);
+                    DbPool.closeStatement(listStmt);
+                }
+                if (!ids.isEmpty()) {
+                    for (int offset = 0; offset < ids.size(); offset += Db.getINClauseBatchSize()) {
+                        int count = Math.min(Db.getINClauseBatchSize(), ids.size() - offset);
+                        copyToDumpster(conn, mbox, ids, offset, count);
+                    }
+                }
+            }
+
+            stmt = conn.prepareStatement("DELETE FROM " + miTableName +
                         " WHERE " + IN_THIS_MAILBOX_AND + target + " AND type NOT IN " + FOLDER_TYPES);
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
@@ -1572,6 +1607,86 @@ public class DbMailItem {
             throw ServiceException.FAILURE("deleting contents for " + MailItem.getNameForType(item) + " " + item.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
+        }
+    }
+
+    // parent_id = null, change_date = ? (to be set to deletion time)
+    private static String MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS =
+        (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
+        "id, type, null, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, " +
+        "unread, flags, tags, sender, subject, name, metadata, mod_metadata, ?, mod_content";
+    private static String MAIL_ITEM_DUMPSTER_COPY_DEST_FIELDS =
+        (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
+        "id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, " +
+        "unread, flags, tags, sender, subject, name, metadata, mod_metadata, change_date, mod_content";
+
+    /**
+     * Copy rows from mail_item, appointment and revision table to the corresponding dumpster tables.
+     * @param conn
+     * @param mbox
+     * @param ids
+     * @param offset offset of the first item to copy in ids
+     * @param count number of items to copy
+     * @throws SQLException
+     * @throws ServiceException
+     */
+    private static void copyToDumpster(Connection conn, Mailbox mbox, List<Integer> ids, int offset, int count)
+    throws SQLException, ServiceException {
+        String miTableName = getMailItemTableName(mbox, false);
+        String dumpsterMiTableName = getMailItemTableName(mbox, true);
+        String ciTableName = getCalendarItemTableName(mbox, false);
+        String dumpsterCiTableName = getCalendarItemTableName(mbox, true);
+        String revTableName = getRevisionTableName(mbox, false);
+        String dumpsterRevTableName = getRevisionTableName(mbox, true);
+
+        // Copy the mail_item rows being deleted to dumpster_mail_item.  Copy the corresponding rows
+        // from appointment and revision tables to their dumpster counterparts.  They are copied here,
+        // just before cascaded deletes following mail_item deletion.
+        String command = Db.supports(Db.Capability.REPLACE_INTO) ? "REPLACE" : "INSERT";
+        String whereIdIn = DbUtil.whereIn("id", count);
+        String whereItemIdIn = DbUtil.whereIn("item_id", count);
+        PreparedStatement miCopyStmt = null;
+        try {
+            miCopyStmt = conn.prepareStatement(command + " INTO " + dumpsterMiTableName +
+                    " (" + MAIL_ITEM_DUMPSTER_COPY_DEST_FIELDS + ")" +
+                    " SELECT " + MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS + " FROM " + miTableName +
+                    " WHERE " + IN_THIS_MAILBOX_AND + whereIdIn + " AND type IN " + DUMPSTER_TYPES);
+            int pos = 1;
+            miCopyStmt.setInt(pos++, mbox.getOperationTimestamp());
+            pos = setMailboxId(miCopyStmt, mbox, pos);
+            for (int i = offset; i < offset + count; ++i)
+                miCopyStmt.setInt(pos++, ids.get(i));
+            miCopyStmt.executeUpdate();
+        } finally {
+            DbPool.closeStatement(miCopyStmt);
+        }
+
+        PreparedStatement ciCopyStmt = null;
+        try {
+            ciCopyStmt = conn.prepareStatement(command + " INTO " + dumpsterCiTableName +
+                    " SELECT * FROM " + ciTableName +
+                    " WHERE " + IN_THIS_MAILBOX_AND + whereItemIdIn);
+            int pos = 1;
+            pos = setMailboxId(ciCopyStmt, mbox, pos);
+            for (int i = offset; i < offset + count; ++i)
+                ciCopyStmt.setInt(pos++, ids.get(i));
+            ciCopyStmt.executeUpdate();
+        } finally {
+            DbPool.closeStatement(ciCopyStmt);
+        }
+
+        PreparedStatement revCopyStmt = null;
+        try {
+            revCopyStmt = conn.prepareStatement(command + " INTO " + dumpsterRevTableName +
+                    " SELECT * FROM " + revTableName +
+                    " WHERE " + IN_THIS_MAILBOX_AND + whereItemIdIn);
+            int pos = 1;
+            pos = setMailboxId(revCopyStmt, mbox, pos);
+            for (int i = offset; i < offset + count; ++i)
+                revCopyStmt.setInt(pos++, ids.get(i));
+            revCopyStmt.executeUpdate();
+        } finally {
+            DbPool.closeStatement(revCopyStmt);
         }
     }
 
@@ -1702,6 +1817,9 @@ public class DbMailItem {
     private static final String MESSAGE_TYPES        = "(" + MailItem.TYPE_MESSAGE + ',' + MailItem.TYPE_CHAT + ')';
     private static final String DOCUMENT_TYPES       = "(" + MailItem.TYPE_DOCUMENT + ',' + MailItem.TYPE_WIKI + ')';
     private static final String CALENDAR_TYPES       = "(" + MailItem.TYPE_APPOINTMENT + ',' + MailItem.TYPE_TASK + ')';
+    private static final String DUMPSTER_TYPES =
+        "(" + MailItem.TYPE_MESSAGE + ',' + MailItem.TYPE_CONTACT + ',' + MailItem.TYPE_DOCUMENT +
+        ',' + MailItem.TYPE_APPOINTMENT + ',' + MailItem.TYPE_TASK + ',' + MailItem.TYPE_CHAT + ')';
 
     static final String NON_SEARCHABLE_TYPES = "(" + MailItem.TYPE_FOLDER + ',' + MailItem.TYPE_SEARCHFOLDER + ',' + MailItem.TYPE_MOUNTPOINT + ',' + MailItem.TYPE_TAG + ',' + MailItem.TYPE_CONVERSATION + ')';
 
@@ -2030,7 +2148,7 @@ public class DbMailItem {
         }
     }
 
-    public static UnderlyingData getById(Mailbox mbox, int id, byte type) throws ServiceException {
+    public static UnderlyingData getById(Mailbox mbox, int id, byte type, boolean fromDumpster) throws ServiceException {
         if (Mailbox.isCachedType(type))
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
 
@@ -2041,7 +2159,7 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                        " FROM " + getMailItemTableName(mbox, "mi") +
+                        " FROM " + getMailItemTableName(mbox, "mi", fromDumpster) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
@@ -2050,14 +2168,17 @@ public class DbMailItem {
 
             if (!rs.next())
                 throw MailItem.noSuchItem(id, type);
-            UnderlyingData data = constructItem(rs);
+            UnderlyingData data = constructItem(rs, fromDumpster);
             if (!MailItem.isAcceptableType(type, data.type))
                 throw MailItem.noSuchItem(id, type);
-            if (data.type == MailItem.TYPE_CONVERSATION)
+            if (!fromDumpster && data.type == MailItem.TYPE_CONVERSATION)
                 completeConversation(mbox, data);
             return data;
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("fetching item " + id, e);
+            if (!fromDumpster)
+                throw ServiceException.FAILURE("fetching item " + id, e);
+            else
+                throw ServiceException.FAILURE("fetching item " + id + " from dumpster", e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
@@ -2497,6 +2618,7 @@ public class DbMailItem {
      * {@link DbMailItem#accumulateLeafRevisions}, or an empty list.
      */
     private static List<Integer> accumulateLeafNodes(PendingDelete info, Mailbox mbox, ResultSet rs) throws SQLException, ServiceException {
+        boolean dumpsterEnabled = mbox.dumpsterEnabled();
         StoreManager sm = StoreManager.getInstance();
         List<Integer> versioned = new ArrayList<Integer>();
 
@@ -2548,27 +2670,29 @@ public class DbMailItem {
             else
                 count.increment(1, isDeleted ? 1 : 0, size);
 
-            String blobDigest = rs.getString(LEAF_CI_BLOB_DIGEST);
-            if (blobDigest != null) {
-                info.blobDigests.add(blobDigest);
-                String locator = rs.getString(LEAF_CI_VOLUME_ID);
-                try {
-                    MailboxBlob mblob = sm.getMailboxBlob(mbox, id, revision, locator);
-                    if (mblob == null)
-                        sLog.warn("missing blob for id: " + id + ", change: " + revision);
-                    else
-                        info.blobs.add(mblob);
-                } catch (Exception e1) { }
-            }
+            if (!dumpsterEnabled) {
+                String blobDigest = rs.getString(LEAF_CI_BLOB_DIGEST);
+                if (blobDigest != null) {
+                    info.blobDigests.add(blobDigest);
+                    String locator = rs.getString(LEAF_CI_VOLUME_ID);
+                    try {
+                        MailboxBlob mblob = sm.getMailboxBlob(mbox, id, revision, locator);
+                        if (mblob == null)
+                            sLog.warn("missing blob for id: " + id + ", change: " + revision);
+                        else
+                            info.blobs.add(mblob);
+                    } catch (Exception e1) { }
+                }
 
-            String indexId = rs.getString(LEAF_CI_INDEX_ID);
-            boolean indexed = !rs.wasNull();
-            if (indexed) {
-                if (info.sharedIndex == null)
-                    info.sharedIndex = new HashSet<String>();
-                boolean shared = (flags & Flag.BITMASK_COPIED) != 0;
-                if (!shared)  info.indexIds.add(indexId);
-                else          info.sharedIndex.add(indexId);
+                String indexId = rs.getString(LEAF_CI_INDEX_ID);
+                boolean indexed = !rs.wasNull();
+                if (indexed) {
+                    if (info.sharedIndex == null)
+                        info.sharedIndex = new HashSet<String>();
+                    boolean shared = (flags & Flag.BITMASK_COPIED) != 0;
+                    if (!shared)  info.indexIds.add(indexId);
+                    else          info.sharedIndex.add(indexId);
+                }
             }
         }
         return versioned;
@@ -2578,6 +2702,7 @@ public class DbMailItem {
         if (versioned == null || versioned.size() == 0) {
             return;
         }
+        boolean dumpsterEnabled = mbox.dumpsterEnabled();
         Connection conn = mbox.getOperationConnection();
         StoreManager sm = StoreManager.getInstance();
 
@@ -2602,16 +2727,18 @@ public class DbMailItem {
                 else
                     count.increment(0, 0, rs.getLong(3));
 
-                String blobDigest = rs.getString(6);
-                if (blobDigest != null) {
-                    info.blobDigests.add(blobDigest);
-                    try {
-                        MailboxBlob mblob = sm.getMailboxBlob(mbox, rs.getInt(1), rs.getInt(4), rs.getString(5));
-                        if (mblob == null)
-                            sLog.error("missing blob for id: " + rs.getInt(1) + ", change: " + rs.getInt(4));
-                        else
-                            info.blobs.add(mblob);
-                    } catch (Exception e1) { }
+                if (!dumpsterEnabled) {
+                    String blobDigest = rs.getString(6);
+                    if (blobDigest != null) {
+                        info.blobDigests.add(blobDigest);
+                        try {
+                            MailboxBlob mblob = sm.getMailboxBlob(mbox, rs.getInt(1), rs.getInt(4), rs.getString(5));
+                            if (mblob == null)
+                                sLog.error("missing blob for id: " + rs.getInt(1) + ", change: " + rs.getInt(4));
+                            else
+                                info.blobs.add(mblob);
+                        } catch (Exception e1) { }
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -2795,7 +2922,7 @@ public class DbMailItem {
         }
     }
 
-    public static List<UnderlyingData> getRevisionInfo(MailItem item) throws ServiceException {
+    public static List<UnderlyingData> getRevisionInfo(MailItem item, boolean fromDumpster) throws ServiceException {
         Mailbox mbox = item.getMailbox();
 
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
@@ -2808,7 +2935,7 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT " + REVISION_FIELDS + " FROM " + getRevisionTableName(mbox) +
+            stmt = conn.prepareStatement("SELECT " + REVISION_FIELDS + " FROM " + getRevisionTableName(mbox, fromDumpster) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "item_id = ?" +
                         " ORDER BY version");
             int pos = 1;
@@ -2817,7 +2944,7 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             while (rs.next())
-                dlist.add(constructRevision(rs, item));
+                dlist.add(constructRevision(rs, item, fromDumpster));
             return dlist;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting old revisions for item: " + item.getId(), e);
@@ -2893,7 +3020,6 @@ public class DbMailItem {
         }
     }
 
-
     // these columns are specified by DB_FIELDS, below
     public static final int CI_ID          = 1;
     public static final int CI_TYPE        = 2;
@@ -2923,10 +3049,18 @@ public class DbMailItem {
     
 
     private static UnderlyingData constructItem(ResultSet rs) throws SQLException {
-        return constructItem(rs, 0);
+        return constructItem(rs, 0, false);
+    }
+
+    private static UnderlyingData constructItem(ResultSet rs, boolean fromDumpster) throws SQLException {
+        return constructItem(rs, 0, fromDumpster);
     }
 
     static UnderlyingData constructItem(ResultSet rs, int offset) throws SQLException {
+        return constructItem(rs, offset, false);
+    }
+
+    static UnderlyingData constructItem(ResultSet rs, int offset, boolean fromDumpster) throws SQLException {
         UnderlyingData data = new UnderlyingData();
         data.id          = rs.getInt(CI_ID + offset);
         data.type        = rs.getByte(CI_TYPE + offset);
@@ -2943,7 +3077,11 @@ public class DbMailItem {
         data.locator    = rs.getString(CI_VOLUME_ID + offset);
         data.setBlobDigest(rs.getString(CI_BLOB_DIGEST + offset));
         data.unreadCount = rs.getInt(CI_UNREAD + offset);
-        data.flags       = rs.getInt(CI_FLAGS + offset);
+        int flags = rs.getInt(CI_FLAGS + offset);
+        if (!fromDumpster)
+            data.flags = flags;
+        else
+            data.flags = flags | Flag.BITMASK_UNCACHED | Flag.BITMASK_IN_DUMPSTER;
         data.tags        = rs.getLong(CI_TAGS + offset);
         data.subject     = rs.getString(CI_SUBJECT + offset);
         data.name        = rs.getString(CI_NAME + offset);
@@ -2960,7 +3098,7 @@ public class DbMailItem {
     private static final String REVISION_FIELDS = "date, size, volume_id, blob_digest, name, " +
                                                   "metadata, mod_metadata, change_date, mod_content";
 
-    private static UnderlyingData constructRevision(ResultSet rs, MailItem item) throws SQLException {
+    private static UnderlyingData constructRevision(ResultSet rs, MailItem item, boolean fromDumpster) throws SQLException {
         UnderlyingData data = new UnderlyingData();
         data.id          = item.getId();
         data.type        = item.getType();
@@ -2973,7 +3111,10 @@ public class DbMailItem {
         data.locator    = rs.getString(3);
         data.setBlobDigest(rs.getString(4));
         data.unreadCount = item.getUnreadCount();
-        data.flags       = item.getInternalFlagBitmask() | Flag.BITMASK_UNCACHED;
+        if (!fromDumpster)
+            data.flags = item.getInternalFlagBitmask() | Flag.BITMASK_UNCACHED;
+        else
+            data.flags = item.getInternalFlagBitmask() | Flag.BITMASK_UNCACHED | Flag.BITMASK_IN_DUMPSTER;
         data.tags        = item.getTagBitmask();
         data.subject     = item.getSubject();
         data.name        = rs.getString(5);
@@ -3183,7 +3324,8 @@ public class DbMailItem {
     
     public static class QueryParams {
         private SortedSet<Integer> mFolderIds = new TreeSet<Integer>();
-        private Long mModifiedBefore;
+        private Long mChangeDateBefore;
+        private Integer mModifiedSequenceBefore;
         private Integer mRowLimit;
         private SortedSet<Byte> mIncludedTypes = new TreeSet<Byte>();
         private SortedSet<Byte> mExcludedTypes = new TreeSet<Byte>();
@@ -3220,14 +3362,16 @@ public class DbMailItem {
         }
 
         /**
-         * @return the timestamp, in milliseconds
+         * @return the timestamp, in seconds
          */
-        public Long getModifiedBefore() { return mModifiedBefore; }
+        public Long getChangeDateBefore() { return mChangeDateBefore; }
         /**
          * Return items modified earlier than the given timestamp.
-         * @param timestamp the timestamp, in milliseconds
+         * @param timestamp the timestamp, in seconds
          */
-        public QueryParams setModifiedBefore(Long timestamp) { mModifiedBefore = timestamp; return this; }
+        public QueryParams setChangeDateBefore(Long timestamp) { mChangeDateBefore = timestamp; return this; }
+        public Integer getModifiedSequenceBefore() { return mModifiedSequenceBefore; }
+        public QueryParams setModifiedSequenceBefore(Integer changeId) { mModifiedSequenceBefore = changeId; return this; }
         
         public Integer getRowLimit() { return mRowLimit; }
         public QueryParams setRowLimit(Integer rowLimit) { mRowLimit = rowLimit; return this; }
@@ -3237,7 +3381,7 @@ public class DbMailItem {
      * Returns the ids of items that match the given query parameters.
      * @return the matching ids, or an empty <tt>Set</tt>
      */
-    public static Set<Integer> getIds(Mailbox mbox, Connection conn, QueryParams params)
+    public static Set<Integer> getIds(Mailbox mbox, Connection conn, QueryParams params, boolean fromDumpster)
     throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
         
@@ -3248,12 +3392,13 @@ public class DbMailItem {
         try {
             // Prepare the statement based on query parameters.
             StringBuilder buf = new StringBuilder();
-            buf.append("SELECT id FROM " + getMailItemTableName(mbox) + " WHERE " + IN_THIS_MAILBOX_AND + "1 = 1");
+            buf.append("SELECT id FROM " + getMailItemTableName(mbox, fromDumpster) + " WHERE " + IN_THIS_MAILBOX_AND + "1 = 1");
             
             Set<Byte> includedTypes = params.getIncludedTypes();
             Set<Byte> excludedTypes = params.getExcludedTypes();
             Set<Integer> folderIds = params.getFolderIds();
-            Long modifiedBefore = params.getModifiedBefore();
+            Long changeDateBefore = params.getChangeDateBefore();
+            Integer modifiedSequenceBefore = params.getModifiedSequenceBefore();
             Integer rowLimit = params.getRowLimit();
             
             if (!includedTypes.isEmpty()) {
@@ -3265,8 +3410,11 @@ public class DbMailItem {
             if (!folderIds.isEmpty()) {
                 buf.append(" AND ").append(DbUtil.whereIn("folder_id", folderIds.size()));
             }
-            if (modifiedBefore != null) {
-                buf.append(" AND ").append("mod_content < ?");
+            if (changeDateBefore != null) {
+                buf.append(" AND ").append("change_date < ?");
+            }
+            if (modifiedSequenceBefore != null) {
+                buf.append(" AND ").append("mod_metadata < ?");
             }
             if (rowLimit != null && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                 buf.append(" LIMIT ").append(rowLimit);
@@ -3285,8 +3433,11 @@ public class DbMailItem {
             for (int id : folderIds) {
                 stmt.setInt(pos++, id);
             }
-            if (modifiedBefore != null) {
-                stmt.setInt(pos++, (int) (modifiedBefore / 1000));
+            if (changeDateBefore != null) {
+                stmt.setInt(pos++, changeDateBefore.intValue());
+            }
+            if (modifiedSequenceBefore != null) {
+                stmt.setInt(pos++, modifiedSequenceBefore);
             }
 
             rs = stmt.executeQuery();
@@ -3548,48 +3699,72 @@ public class DbMailItem {
      * Returns the name of the table that stores {@link MailItem} data.  The table name is qualified
      * by the name of the database (e.g. <tt>mailbox1.mail_item</tt>).
      */
-    public static String getMailItemTableName(long mailboxId, long groupId) {
-        return DbMailbox.qualifyTableName(groupId, TABLE_MAIL_ITEM);
+    public static String getMailItemTableName(long mailboxId, long groupId, boolean dumpster) {
+        return DbMailbox.qualifyTableName(groupId, !dumpster ? TABLE_MAIL_ITEM : TABLE_MAIL_ITEM_DUMPSTER);
     }
     public static String getMailItemTableName(MailItem item) {
-        return DbMailbox.qualifyTableName(item.getMailbox(), TABLE_MAIL_ITEM);
+        return getMailItemTableName(item, false);
+    }
+    public static String getMailItemTableName(MailItem item, boolean dumpster) {
+        return DbMailbox.qualifyTableName(item.getMailbox(), !dumpster ? TABLE_MAIL_ITEM : TABLE_MAIL_ITEM_DUMPSTER);
     }
     public static String getMailItemTableName(Mailbox mbox) {
-        return DbMailbox.qualifyTableName(mbox, TABLE_MAIL_ITEM);
+        return getMailItemTableName(mbox, false);
+    }
+    public static String getMailItemTableName(Mailbox mbox, boolean dumpster) {
+        return DbMailbox.qualifyTableName(mbox, !dumpster ? TABLE_MAIL_ITEM : TABLE_MAIL_ITEM_DUMPSTER);
     }
     public static String getMailItemTableName(Mailbox mbox, String alias) {
-        return getMailItemTableName(mbox) + " AS " + alias;
+        return getMailItemTableName(mbox, alias, false);
+    }
+    public static String getMailItemTableName(Mailbox mbox, String alias, boolean dumpster) {
+        return getMailItemTableName(mbox, dumpster) + " AS " + alias;
     }
 
     /**
      * Returns the name of the table that stores data on old revisions of {@link MailItem}s.
-     * The table name is qualified by the name of the database (e.g. <tt>mailbox1.mail_item</tt>).
+     * The table name is qualified by the name of the database (e.g. <tt>mailbox1.revision</tt>).
      */
-    public static String getRevisionTableName(long mailboxId, long groupId) {
-        return DbMailbox.qualifyTableName(groupId, TABLE_REVISION);
+    public static String getRevisionTableName(long mailboxId, long groupId, boolean dumpster) {
+        return DbMailbox.qualifyTableName(groupId, !dumpster ? TABLE_REVISION : TABLE_REVISION_DUMPSTER);
     }
     public static String getRevisionTableName(MailItem item) {
-        return DbMailbox.qualifyTableName(item.getMailbox(), TABLE_REVISION);
+        return getRevisionTableName(item, false);
+    }
+    public static String getRevisionTableName(MailItem item, boolean dumpster) {
+        return DbMailbox.qualifyTableName(item.getMailbox(), !dumpster ? TABLE_REVISION : TABLE_REVISION_DUMPSTER);
     }
     public static String getRevisionTableName(Mailbox mbox) {
-        return DbMailbox.qualifyTableName(mbox, TABLE_REVISION);
+        return getRevisionTableName(mbox, false);
+    }
+    public static String getRevisionTableName(Mailbox mbox, boolean dumpster) {
+        return DbMailbox.qualifyTableName(mbox, !dumpster ? TABLE_REVISION : TABLE_REVISION_DUMPSTER);
     }
     public static String getRevisionTableName(Mailbox mbox, String alias) {
-        return getRevisionTableName(mbox) + " AS " + alias;
+        return getRevisionTableName(mbox, alias, false);
+    }
+    public static String getRevisionTableName(Mailbox mbox, String alias, boolean dumpster) {
+        return getRevisionTableName(mbox, dumpster) + " AS " + alias;
     }
 
     /**
      * Returns the name of the table that stores {@link CalendarItem} data.  The table name is qualified
      * by the name of the database (e.g. <tt>mailbox1.appointment</tt>).
      */
-    public static String getCalendarItemTableName(long mailboxId, long groupId) {
-        return DbMailbox.qualifyTableName(groupId, TABLE_APPOINTMENT);
+    public static String getCalendarItemTableName(long mailboxId, long groupId, boolean dumpster) {
+        return DbMailbox.qualifyTableName(groupId, !dumpster ? TABLE_APPOINTMENT : TABLE_APPOINTMENT_DUMPSTER);
     }
     public static String getCalendarItemTableName(Mailbox mbox) {
-        return DbMailbox.qualifyTableName(mbox, TABLE_APPOINTMENT);
+        return getCalendarItemTableName(mbox, false);
+    }
+    public static String getCalendarItemTableName(Mailbox mbox, boolean dumpster) {
+        return DbMailbox.qualifyTableName(mbox, !dumpster ? TABLE_APPOINTMENT : TABLE_APPOINTMENT_DUMPSTER);
     }
     public static String getCalendarItemTableName(Mailbox mbox, String alias) {
-        return getCalendarItemTableName(mbox) + " AS " + alias;
+        return getCalendarItemTableName(mbox, alias, false);
+    }
+    public static String getCalendarItemTableName(Mailbox mbox, String alias, boolean dumpster) {
+        return getCalendarItemTableName(mbox, dumpster) + " AS " + alias;
     }
 
     /**

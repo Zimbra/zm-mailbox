@@ -747,14 +747,14 @@ public class DBQueryOperation extends QueryOperation {
 
     private void fetch(final List<SearchResult> results, final Connection conn,
             final SortBy sort, final int offset, final int size) throws ServiceException {
-
+        final boolean inDumpster = searchInDumpster();
         // if fetching items, do it within a mailbox transaction.
         if (mExtra == SearchResult.ExtraData.MAIL_ITEM) {
             context.getMailbox().execute(new Mailbox.TransactionCallback() {
                 @Override
                 protected void doInTransaction(Mailbox mbox) throws ServiceException {
                     DbSearch.search(results, conn, mConstraints, mbox, sort,
-                            offset, size, mExtra);
+                            offset, size, mExtra, inDumpster);
                     // convert to MailItem before leaving this transaction
                     // otherwise you can poison MailItem cache with stale data
                     for (SearchResult result : results) {
@@ -766,7 +766,7 @@ public class DBQueryOperation extends QueryOperation {
             });
         } else {
             DbSearch.search(mDBHits, conn, mConstraints, context.getMailbox(),
-                    sort, offset, size, mExtra);
+                    sort, offset, size, mExtra, inDumpster);
         }
     }
 
@@ -793,7 +793,7 @@ public class DBQueryOperation extends QueryOperation {
     private void noLuceneGetNextChunk(Connection conn, SortBy sort) throws ServiceException {
         if (context.getParams().getEstimateSize() && mSizeEstimate == -1) {
             mSizeEstimate = DbSearch.countResults(conn, mConstraints,
-                    context.getMailbox());
+                    context.getMailbox(), searchInDumpster());
         }
 
         fetch(mDBHits, conn, sort, mCurHitsOffset, mHitsPerChunk);
@@ -806,6 +806,10 @@ public class DBQueryOperation extends QueryOperation {
         if (mHitsPerChunk > MAX_HITS_PER_CHUNK) {
             mHitsPerChunk = MAX_HITS_PER_CHUNK;
         }
+    }
+
+    private boolean searchInDumpster() {
+        return context.getParams().inDumpster();
     }
 
     private void dbFirstGetNextChunk(Connection conn, SortBy sort) throws ServiceException {
@@ -825,7 +829,7 @@ public class DBQueryOperation extends QueryOperation {
 
             if (context.getParams().getEstimateSize() && mSizeEstimate == -1) {
                 mSizeEstimate = DbSearch.countResults(conn, mConstraints,
-                        context.getMailbox());
+                        context.getMailbox(), searchInDumpster());
             }
 
             fetch(dbRes, conn, sort, mOffset, MAX_HITS_PER_CHUNK);
@@ -928,7 +932,7 @@ public class DBQueryOperation extends QueryOperation {
                 int dbResultCount;
 
                 dbResultCount = DbSearch.countResults(conn, mConstraints,
-                        context.getMailbox());
+                        context.getMailbox(), searchInDumpster());
 
                 int numTextHits = mLuceneOp.countHits();
 
@@ -1299,7 +1303,7 @@ public class DBQueryOperation extends QueryOperation {
 
     private int getDbHitCount(Connection conn, Mailbox mbox) throws ServiceException {
         if (mCountDbResults == -1)
-            mCountDbResults = DbSearch.countResults(conn, mConstraints, mbox);
+            mCountDbResults = DbSearch.countResults(conn, mConstraints, mbox, searchInDumpster());
         return mCountDbResults;
     }
 

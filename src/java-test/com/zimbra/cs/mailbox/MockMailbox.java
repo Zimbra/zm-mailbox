@@ -81,4 +81,8 @@ class MockMailbox extends Mailbox {
         return new Tag(this, data);
     }
 
+    @Override
+    public boolean dumpsterEnabled() {
+        return false;
+    }
 }

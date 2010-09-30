@@ -34,16 +34,18 @@ public class CopyItem extends RedoableOp {
     private Map<Integer, Integer> mDestIds = new HashMap<Integer, Integer>();
     private byte mType;
     private int mDestFolderId;
+    private boolean mFromDumpster;
 
     public CopyItem() {
         mType = MailItem.TYPE_UNKNOWN;
         mDestFolderId = 0;
     }
 
-    public CopyItem(long mailboxId, byte type, int folderId) {
+    public CopyItem(long mailboxId, byte type, int folderId, boolean fromDumpster) {
         setMailboxId(mailboxId);
         mType = type;
         mDestFolderId = folderId;
+        mFromDumpster = fromDumpster;
     }
 
     /**
@@ -69,6 +71,8 @@ public class CopyItem extends RedoableOp {
         sb.append(", [srcId, destId, srcImap]=");
         for (Map.Entry<Integer, Integer> entry : mDestIds.entrySet())
             sb.append('[').append(entry.getKey()).append(',').append(entry.getValue()).append(']');
+        if (mFromDumpster)
+            sb.append(", fromDumpster=").append(mFromDumpster);
         return sb.toString();
     }
 
@@ -83,6 +87,8 @@ public class CopyItem extends RedoableOp {
             out.writeInt(entry.getKey());
             out.writeInt(entry.getValue());
         }
+        if (getVersion().atLeast(1, 30))
+            out.writeBoolean(mFromDumpster);
     }
 
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
@@ -102,6 +108,10 @@ public class CopyItem extends RedoableOp {
                 mDestIds.put(srcId, in.readInt());
             }
         }
+        if (getVersion().atLeast(1, 30))
+            mFromDumpster = in.readBoolean();
+        else
+            mFromDumpster = false;
     }
 
     @Override public void redo() throws Exception {
@@ -113,7 +123,7 @@ public class CopyItem extends RedoableOp {
             itemIds[i++] = id;
 
         try {
-            mbox.copy(getOperationContext(), itemIds, mType, mDestFolderId);
+            mbox.copy(getOperationContext(), itemIds, mType, mDestFolderId, mFromDumpster);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 mLog.info("Item is already in mailbox " + mboxId);

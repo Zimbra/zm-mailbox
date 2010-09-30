@@ -146,6 +146,11 @@ public class ZSearchParams implements ToZJSONObject {
      */
     private String mConvId;
 
+    /**
+     * if true, search in dumpster
+     */
+    private boolean mInDumpster;
+
     public int hashCode() {
         if (mConvId != null)
             return (mQuery+mConvId).hashCode();
@@ -167,7 +172,8 @@ public class ZSearchParams implements ToZJSONObject {
                 this.mMarkAsRead != that.mMarkAsRead ||
                 this.mRecipientMode != that.mRecipientMode ||
                 this.mCalExpandInstStart != that.mCalExpandInstStart ||
-                this.mCalExpandInstEnd != that.mCalExpandInstEnd)
+                this.mCalExpandInstEnd != that.mCalExpandInstEnd ||
+                this.mInDumpster != that.mInDumpster)
             return false;
 
         if (    !StringUtil.equal(this.mTypes, that.mTypes) ||
@@ -202,6 +208,7 @@ public class ZSearchParams implements ToZJSONObject {
         this.mCalExpandInstEnd = that.mCalExpandInstEnd;
         this.mCalExpandInstStart = that.mCalExpandInstStart;
         this.mTimeZone = that.mTimeZone;
+        this.mInDumpster = that.mInDumpster;
     }
 
     public ZSearchParams(String query) {
@@ -330,6 +337,14 @@ public class ZSearchParams implements ToZJSONObject {
         return mField;
     }
 
+    public boolean getInDumpster() {
+        return mInDumpster;
+    }
+
+    public void setInDumpster(boolean inDumpster) {
+        mInDumpster = inDumpster;
+    }
+
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
         if (mFetch != null) zjo.put("fetch", mFetch.name());
@@ -347,6 +362,7 @@ public class ZSearchParams implements ToZJSONObject {
         zjo.put("calExpandInstStart", mCalExpandInstStart);
         if (mTimeZone != null) zjo.put("timeZone", mTimeZone.getID());
         if (mCursor != null) zjo.put("cursor", mCursor);
+        if (mInDumpster) zjo.put("inDumpster", true);
         return zjo;
     }
 

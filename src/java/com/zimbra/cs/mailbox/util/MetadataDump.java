@@ -182,7 +182,7 @@ public class MetadataDump {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            String sql = "SELECT * FROM " + DbMailItem.getMailItemTableName(mboxId, groupId) +
+            String sql = "SELECT * FROM " + DbMailItem.getMailItemTableName(mboxId, groupId, false) +
                          " WHERE mailbox_id = " + mboxId + " AND id = " + itemId;
             stmt = conn.prepareStatement(sql);
             rs = stmt.executeQuery();
@@ -214,7 +214,7 @@ public class MetadataDump {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            String sql = "SELECT * FROM " + DbMailItem.getRevisionTableName(mboxId, groupId) +
+            String sql = "SELECT * FROM " + DbMailItem.getRevisionTableName(mboxId, groupId, false) +
                          " WHERE mailbox_id = " + mboxId + " AND item_id = " + itemId +
                          " ORDER BY mailbox_id, item_id, version DESC";
             stmt = conn.prepareStatement(sql);

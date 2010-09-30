@@ -121,7 +121,7 @@ public abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
                 if (params.getPrefetch() && usePreloadingGrouper) {
                     chunkSize+= 2; // one for the ConvQueryResults, one for the Grouper
                     results = new ConvQueryResults(
-                            new ItemPreloadingGrouper(this, chunkSize, mbox),
+                            new ItemPreloadingGrouper(this, chunkSize, mbox, params.inDumpster()),
                             types, params.getSortBy(), params.getMode());
                     chunkSize *= MESSAGES_PER_CONV_ESTIMATE; // guess 2 msgs per conv
                 } else {
@@ -136,7 +136,7 @@ public abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
                 if (params.getPrefetch()  && usePreloadingGrouper) {
                     chunkSize += 2; // one for the MsgQueryResults, one for the Grouper
                     results = new MsgQueryResults(
-                            new ItemPreloadingGrouper(this, chunkSize, mbox),
+                            new ItemPreloadingGrouper(this, chunkSize, mbox, params.inDumpster()),
                             types, params.getSortBy(), params.getMode());
                 } else {
                     chunkSize++; // one for the MsgQueryResults
@@ -148,7 +148,7 @@ public abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
                 if (params.getPrefetch() && usePreloadingGrouper) {
                     chunkSize++; // one for the grouper
                     results = new UngroupedQueryResults(
-                            new ItemPreloadingGrouper(this, chunkSize, mbox),
+                            new ItemPreloadingGrouper(this, chunkSize, mbox, params.inDumpster()),
                             types, params.getSortBy(), params.getMode());
                 } else {
                     results = new UngroupedQueryResults(this, types,
@@ -162,7 +162,7 @@ public abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
         begin(new QueryContext(mbox, results, params, chunkSize));
 
         if (usePreloadingGrouper && preloadOuterResults && params.getPrefetch()) {
-            return new ItemPreloadingGrouper(results, outerChunkSize, mbox);
+            return new ItemPreloadingGrouper(results, outerChunkSize, mbox, params.inDumpster());
         } else {
             return results;
         }

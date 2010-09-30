@@ -100,6 +100,23 @@ public class ItemActionHelper {
         return ia;
     }
 
+    public static ItemActionHelper RECOVER(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+                List<Integer> ids, byte type, TargetConstraint tcon, ItemId iidFolder)
+    throws ServiceException {
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.RECOVER, type, true, tcon);
+        ia.setIidFolder(iidFolder);
+        ia.schedule();
+        return ia;
+    }
+
+    public static ItemActionHelper DUMPSTER_DELETE(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+                List<Integer> ids, byte type, TargetConstraint tcon)
+    throws ServiceException {
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.DUMPSTER_DELETE, type, true, tcon);
+        ia.schedule();
+        return ia;
+    }
+
     public static ItemActionHelper MOVE(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
                 List<Integer> ids, byte type, TargetConstraint tcon, ItemId iidFolder)
     throws ServiceException {
@@ -174,6 +191,8 @@ public class ItemActionHelper {
         READ("read"),
         COLOR("color"),
         HARD_DELETE("delete"),
+        RECOVER("recover"),
+        DUMPSTER_DELETE("dumpsterdelete"),
         MOVE("move"),
         COPY("copy"),
         SPAM("spam"),
@@ -260,7 +279,7 @@ public class ItemActionHelper {
         mName = name; 
     }
     public void setIidFolder(ItemId iidFolder)  { 
-        assert(mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE);
+        assert(mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE || mOperation == Op.RECOVER);
         mIidRequestedFolder = mIidFolder = iidFolder; 
     }
     public void setFlags(String flags) {
@@ -360,6 +379,12 @@ public class ItemActionHelper {
                 break;
             case HARD_DELETE:
                 getMailbox().delete(getOpCtxt(), mIds, mItemType, mTargetConstraint);
+                break;
+            case RECOVER:
+                getMailbox().copy(getOpCtxt(), mIds, mItemType, mIidFolder.getId(), true);
+                break;
+            case DUMPSTER_DELETE:
+                getMailbox().deleteFromDumpster(getOpCtxt(), mIds);
                 break;
             case SPAM:
             case MOVE:

@@ -319,9 +319,12 @@ public class DbMailbox {
                 sTables.add(TABLE_OUT_OF_OFFICE);
             }
             sTables.add(DbMailItem.TABLE_MAIL_ITEM);
+            sTables.add(DbMailItem.TABLE_MAIL_ITEM_DUMPSTER);
             sTables.add(DbMailItem.TABLE_OPEN_CONVERSATION);
             sTables.add(DbMailItem.TABLE_APPOINTMENT);
+            sTables.add(DbMailItem.TABLE_APPOINTMENT_DUMPSTER);
             sTables.add(DbMailItem.TABLE_REVISION);
+            sTables.add(DbMailItem.TABLE_REVISION_DUMPSTER);
             sTables.add(DbMailItem.TABLE_TOMBSTONE);
             sTables.add(DbImapFolder.TABLE_IMAP_FOLDER);
             sTables.add(DbImapMessage.TABLE_IMAP_MESSAGE);

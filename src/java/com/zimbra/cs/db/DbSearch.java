@@ -67,11 +67,11 @@ public class DbSearch {
         }
 
 
-        public static SearchResult createResult(ResultSet rs, SortBy sort) throws SQLException {
-            return createResult(rs, sort, ExtraData.NONE);
+        public static SearchResult createResult(ResultSet rs, SortBy sort, boolean inDumpster) throws SQLException {
+            return createResult(rs, sort, ExtraData.NONE, inDumpster);
         }
 
-        public static SearchResult createResult(ResultSet rs, SortBy sort, ExtraData extra) throws SQLException {
+        public static SearchResult createResult(ResultSet rs, SortBy sort, ExtraData extra, boolean inDumpster) throws SQLException {
             SearchResult result = new SearchResult();
             result.id      = rs.getInt(COLUMN_ID);
             result.indexId = rs.getString(COLUMN_INDEXID);
@@ -97,7 +97,7 @@ public class DbSearch {
             int offset = sort.getCriterion() == SortCriterion.NONE ? COLUMN_SORTKEY - 1 : COLUMN_SORTKEY;
             if (extra == ExtraData.MAIL_ITEM) {
                 // note that there's no sort column in the result set for SORT_NONE
-                result.extraData = DbMailItem.constructItem(rs, offset);
+                result.extraData = DbMailItem.constructItem(rs, offset, inDumpster);
             } else if (extra == ExtraData.IMAP_MSG) {
                 int flags = rs.getBoolean(offset + 2) ? Flag.BITMASK_UNREAD | rs.getInt(offset + 3) : rs.getInt(offset + 3);
                 result.extraData = new ImapMessage(result.id, result.type, rs.getInt(offset + 1), flags, rs.getLong(offset + 4));
@@ -252,12 +252,13 @@ public class DbSearch {
     }
 
 
-    public static int countResults(Connection conn, DbSearchConstraintsNode node, Mailbox mbox) throws ServiceException {
+    public static int countResults(Connection conn, DbSearchConstraintsNode node, Mailbox mbox, boolean inDumpster)
+    throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         // Assemble the search query
         StringBuilder statement = new StringBuilder("SELECT count(*) ");
-        statement.append(" FROM " + DbMailItem.getMailItemTableName(mbox, " mi"));
+        statement.append(" FROM " + DbMailItem.getMailItemTableName(mbox, "mi", inDumpster));
         statement.append(" WHERE ").append(DbMailItem.IN_THIS_MAILBOX_AND);
         int num = DebugConfig.disableMailboxGroups ? 0 : 1;
         
@@ -343,7 +344,7 @@ public class DbSearch {
 
     private static final String encodeSelect(Mailbox mbox, SortBy sort, SearchResult.ExtraData extra,
                                              boolean includeCalTable, DbSearchConstraintsNode node,
-                                             boolean validLIMIT) {
+                                             boolean validLIMIT, boolean inDumpster) {
         /*
          * "SELECT mi.id,mi.date, [extrafields] FROM mail_item AS mi [, appointment AS ap]
          *    [FORCE INDEX (...)]
@@ -363,9 +364,9 @@ public class DbSearch {
         else if (extra == SearchResult.ExtraData.MODCONTENT)
             select.append(", mi.mod_content");
 
-        select.append(" FROM " + DbMailItem.getMailItemTableName(mbox, "mi"));
+        select.append(" FROM " + DbMailItem.getMailItemTableName(mbox, "mi", inDumpster));
         if (includeCalTable) 
-            select.append(", ").append(DbMailItem.getCalendarItemTableName(mbox, "ap"));
+            select.append(", ").append(DbMailItem.getCalendarItemTableName(mbox, "ap", inDumpster));
         
         /*
          * FORCE INDEX (...)
@@ -541,9 +542,15 @@ public class DbSearch {
     public static List<SearchResult> search(List<SearchResult> result, Connection conn, DbSearchConstraints c,
                                             Mailbox mbox, SortBy sort, SearchResult.ExtraData extra)
     throws ServiceException {
-        return search(result, conn, c, mbox, sort, -1, -1, extra);
+        return search(result, conn, c, mbox, sort, extra, false);
     }
     
+    public static List<SearchResult> search(List<SearchResult> result, Connection conn, DbSearchConstraints c,
+            Mailbox mbox, SortBy sort, SearchResult.ExtraData extra, boolean inDumpster)
+    throws ServiceException {
+        return search(result, conn, c, mbox, sort, -1, -1, extra, inDumpster);
+    }
+
     private static <T> List<T> mergeSortedLists(List<T> toRet, List<List<T>> lists, Comparator<? super T> comparator) {
         // TODO find or code a proper merge-sort here
         int totalNumValues = 0;
@@ -562,7 +569,7 @@ public class DbSearch {
     
     public static List<SearchResult> search(List<SearchResult> result, Connection conn,
                                             DbSearchConstraintsNode node, Mailbox mbox, SortBy sort,
-                                            int offset, int limit, SearchResult.ExtraData extra)
+                                            int offset, int limit, SearchResult.ExtraData extra, boolean inDumpster)
     throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
@@ -571,7 +578,7 @@ public class DbSearch {
                         (sort.getCriterion() != SortCriterion.DATE && sort.getCriterion() != SortCriterion.SIZE) || 
                         NodeType.OR != node.getNodeType()) {
             // do it the old way
-            return searchInternal(result, conn, node, mbox, sort, offset, limit, extra);
+            return searchInternal(result, conn, node, mbox, sort, offset, limit, extra, inDumpster);
         } else {
             // run each toplevel ORed part as a separate SQL query, then merge
             // the results in memory
@@ -579,7 +586,7 @@ public class DbSearch {
             
             for (DbSearchConstraintsNode subNode : node.getSubNodes()) {
                 List<SearchResult> subNodeResults = new ArrayList<SearchResult>();
-                search(subNodeResults, conn, subNode, mbox, sort, offset, limit, extra);
+                search(subNodeResults, conn, subNode, mbox, sort, offset, limit, extra, inDumpster);
                 resultLists.add(subNodeResults);
             }
 
@@ -591,7 +598,8 @@ public class DbSearch {
         
     public static List<SearchResult> searchInternal(List<SearchResult> result, Connection conn,
                                                     DbSearchConstraintsNode node, Mailbox mbox, SortBy sort,
-                                                    int offset, int limit, SearchResult.ExtraData extra)
+                                                    int offset, int limit, SearchResult.ExtraData extra,
+                                                    boolean inDumpster)
     throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
@@ -617,7 +625,7 @@ public class DbSearch {
                  *    [FORCE INDEX (...)]
                  *    WHERE mi.mailboxid=? AND
                  */
-                statement.append(encodeSelect(mbox, sort, extra, false, node, hasValidLIMIT));
+                statement.append(encodeSelect(mbox, sort, extra, false, node, hasValidLIMIT, inDumpster));
                 
                 /*
                  *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
@@ -659,7 +667,7 @@ public class DbSearch {
                 /*
                  * SELECT...again...(this time with "appointment as ap")...WHERE...
                  */
-                statement.append(encodeSelect(mbox, sort, extra, true, node, hasValidLIMIT));
+                statement.append(encodeSelect(mbox, sort, extra, true, node, hasValidLIMIT, inDumpster));
                 numParams += encodeConstraint(mbox, node, APPOINTMENT_TABLE_TYPES, true, statement, conn);
                 
                 if (requiresUnion) {
@@ -747,7 +755,7 @@ public class DbSearch {
                     if (limit-- <= 0)
                         break;
                 }
-                result.add(SearchResult.createResult(rs, sort, extra));
+                result.add(SearchResult.createResult(rs, sort, extra, inDumpster));
             }
             
             long fetchTime = startTime > 0 ? System.currentTimeMillis() - startTime - prepTime - execTime: 0;

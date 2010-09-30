@@ -214,7 +214,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
     @Override
     boolean isCopyable() {
-        return false;
+        return inDumpster();
     }
 
     @Override
@@ -1932,9 +1932,11 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     @Override
     void delete() throws ServiceException {
         super.delete();
-        Callback cb = getCallback();
-        if (cb != null)
-            cb.deleted(this);
+        if (!inDumpster()) {
+            Callback cb = getCallback();
+            if (cb != null)
+                cb.deleted(this);
+        }
     }
 
     // YCC special

@@ -1671,6 +1671,17 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     /**
+     * permanently delete item(s) from the dumpster
+     *
+     * @param ids list of item ids to act on
+     * @return action result
+     * @throws ServiceException on error
+     */
+    public ZActionResult dumpsterDeleteItem(String ids) throws ServiceException {
+        return doAction(itemAction("dumpsterdelete", ids, null));
+    }
+
+    /**
      * move item(s) to trash
      *
      * @param ids list of item ids to act on
@@ -1764,6 +1775,18 @@ public class ZMailbox implements ToZJSONObject {
         if (tagList != null) actionEl.addAttribute(MailConstants.A_TAGS, tagList);
         if (flags != null) actionEl.addAttribute(MailConstants.A_FLAGS, flags);
         return doAction(actionEl);
+    }
+
+    /**
+     * recover items from the dumpster to the specified folder
+     *
+     * @param ids list of item ids to act on
+     * @param destFolderId id of destination folder
+     * @return action result
+     * @throws ServiceException on error
+     */
+    public ZActionResult recoverItem(String ids, String destFolderId) throws ServiceException {
+        return doAction(itemAction("recover", ids, null).addAttribute(MailConstants.A_FOLDER, destFolderId));
     }
 
     /* ------------------------------------------------- */
@@ -2689,6 +2712,15 @@ public class ZMailbox implements ToZJSONObject {
         return doAction(folderAction("empty", ids).addAttribute(MailConstants.A_RECURSIVE, subfolders));
     }
 
+    /** empties the dumpster
+     * 
+     * @throws ServiceException
+     */
+    public void emptyDumpster() throws ServiceException {
+        Element req = newRequestElement(MailConstants.EMPTY_DUMPSTER_REQUEST);
+        invoke(req);
+    }
+
     /** mark all items in folder as read
      * @param ids ids of folders to mark as read
      * @return action result
@@ -2914,6 +2946,7 @@ public class ZMailbox implements ToZJSONObject {
         if (params.isMarkAsRead()) req.addAttribute(MailConstants.A_MARK_READ, params.isMarkAsRead());
         if (params.isRecipientMode()) req.addAttribute(MailConstants.A_RECIPIENTS, params.isRecipientMode());
         if (params.getField() != null) req.addAttribute(MailConstants.A_FIELD, params.getField());
+        if (params.getInDumpster()) req.addAttribute(MailConstants.A_IN_DUMPSTER, true);
 
         req.addAttribute(MailConstants.E_QUERY, params.getQuery(), Element.Disposition.CONTENT);
 

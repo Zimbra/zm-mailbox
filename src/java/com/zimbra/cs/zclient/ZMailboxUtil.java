@@ -320,6 +320,7 @@ public class ZMailboxUtil implements DebugListener {
     static Option O_VERBOSE = new Option("v", "verbose", false, "verbose output");
     static Option O_VIEW = new Option("V", "view", true, "default type for folder (appointment,contact,conversation,document,message,task,wiki)");
     static Option O_NO_VALIDATION = new Option(null, "noValidation", false, "don't validate file content");
+    static Option O_DUMPSTER = new Option(null, "dumpster", false, "search in dumpster");
 
     enum Command {
         ADD_INCOMING_FILTER_RULE("addFilterRule", "afrl", "{name}  [*active|inactive] [any|*all] {conditions}+ {actions}+", "add incoming filter rule", Category.FILTER,  2, Integer.MAX_VALUE, O_AFTER, O_BEFORE, O_FIRST, O_LAST),
@@ -347,6 +348,8 @@ public class ZMailboxUtil implements DebugListener {
         DELETE_MESSAGE("deleteMessage", "dm", "{msg-ids}", "hard delete message(s)", Category.MESSAGE, 1, 1),
         DELETE_SIGNATURE("deleteSignature", "dsig", "{signature-name|signature-id}", "delete signature", Category.ACCOUNT, 1, 1),
         DELETE_TAG("deleteTag", "dt", "{tag-name}", "delete a tag", Category.TAG, 1, 1),
+        DUMPSTER_DELETE_ITEM("dumpsterDeleteItem", "ddi", "{item-ids}", "permanently delete item(s) from the dumpster", Category.ITEM, 1, 1),
+        EMPTY_DUMPSTER("emptyDumpster", null, "", "empty the dumpster", Category.MISC, 0, 0),
         EMPTY_FOLDER("emptyFolder", "ef", "{folder-path}", "empty all the items in a folder (including subfolders)", Category.FOLDER, 1, 1),
         EXIT("exit", "quit", "", "exit program", Category.MISC, 0, 0),
         FLAG_CONTACT("flagContact", "fct", "{contact-ids} [0|1*]", "flag/unflag contact(s)", Category.CONTACT, 1, 2),
@@ -402,11 +405,12 @@ public class ZMailboxUtil implements DebugListener {
         NOOP("noOp", "no", "", "do a NoOp SOAP call to the server", Category.MISC, 0, 1),
         POST_REST_URL("postRestURL", "pru", "{relative-path} {file-name}", "do a POST on a REST URL relative to the mailbox", Category.MISC, 2, 2,
                 O_CONTENT_TYPE, O_IGNORE_ERROR, O_PRESERVE_ALARMS, O_URL),
+        RECOVER_ITEM("recoverItem", "ri", "{item-ids} {dest-folder-path}", "recover item(s) from the dumpster to a folder", Category.ITEM, 2, 2),
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
         RENAME_SIGNATURE("renameSignature", "rsig", "{signature-name|signature-id} {new-name}", "rename signature", Category.ACCOUNT, 2, 2),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
         REVOKE_PERMISSION("revokePermission", "rvp", "{account {name}|group {name}|domain {name}||all|public|guest {email} [{password}]|key {email} [{accesskey}] {[-]right}}", "revoke a right previously granted to a grantee or a group of grantees. to revoke a denied right, put a '-' in front of the right", Category.PERMISSION, 2, 4),
-        SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 0, 1, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
+        SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 0, 1, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS, O_DUMPSTER),
         SEARCH_CONVERSATION("searchConv", "sc", "{conv-id} {query}", "perform search on conversation", Category.SEARCH, 0, 2, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
         SELECT_MAILBOX("selectMailbox", "sm", "{account-name}", "select a different mailbox. can only be used by an admin", Category.ADMIN, 1, 1),
         SYNC_FOLDER("syncFolder", "sf", "{folder-path}", "synchronize folder's contents to the remote feed specified by folder's {url}", Category.FOLDER, 1, 1),
@@ -447,14 +451,24 @@ public class ZMailboxUtil implements DebugListener {
         }
 
         public String getCommandHelp() {
-            String commandName = String.format("%s(%s)", getName(), getAlias());
+            String commandName;
+            String alias = getAlias();
+            if (alias != null)
+                commandName = String.format("%s(%s)", getName(), alias);
+            else
+                commandName = getName();
             StringBuilder sb = new StringBuilder();
             sb.append(String.format("  %-38s %s%n", commandName, getHelp()));
             return sb.toString();
         }
 
         public String getFullUsage() {
-            String commandName = String.format("%s(%s)", getName(), getAlias());
+            String commandName;
+            String alias = getAlias();
+            if (alias != null)
+                commandName = String.format("%s(%s)", getName(), alias);
+            else
+                commandName = getName();
             Collection opts = getOptions().getOptions();
 
             StringBuilder sb = new StringBuilder();
@@ -481,7 +495,7 @@ public class ZMailboxUtil implements DebugListener {
 
         private Command(String name, String alias, String syntax, String help, Category cat, int minArgLength, int maxArgLength, Option ... opts)  {
             mName = name;
-            mAlias = alias;
+            mAlias = alias != null && alias.length() > 0 ? alias : null;
             mSyntax = syntax;
             mHelp = help;
             mCat = cat;
@@ -516,12 +530,14 @@ public class ZMailboxUtil implements DebugListener {
         if (mCommandIndex.get(name) != null)
             throw new RuntimeException("duplicate command: "+name);
 
-        String alias = command.getAlias().toLowerCase();
-        if (mCommandIndex.get(alias) != null)
-            throw new RuntimeException("duplicate command: "+alias);
-
         mCommandIndex.put(name, command);
-        mCommandIndex.put(alias, command);
+        String alias = command.getAlias();
+        if (alias != null) {
+            alias = alias.toLowerCase();
+            if (mCommandIndex.get(alias) != null)
+                throw new RuntimeException("duplicate command: "+alias);
+            mCommandIndex.put(alias, command);
+        }
     }
 
     private void initCommands() {
@@ -974,6 +990,12 @@ public class ZMailboxUtil implements DebugListener {
         case DELETE_TAG:
             mMbox.deleteTag(lookupTag(args[0]).getId());
             break;
+        case DUMPSTER_DELETE_ITEM:
+            mMbox.dumpsterDeleteItem(id(args[0]));
+            break;
+        case EMPTY_DUMPSTER:
+            mMbox.emptyDumpster();
+            break;
         case EMPTY_FOLDER:
             mMbox.emptyFolder(lookupFolderId(args[0]));
             break;
@@ -1133,6 +1155,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case POST_REST_URL:
             doPostRestURL(args);
+            break;
+        case RECOVER_ITEM:
+            mMbox.recoverItem(id(args[0]), lookupFolderId(param(args, 1)));
             break;
         case RENAME_FOLDER:
             mMbox.renameFolder(lookupFolderId(args[0]), args[1]);
@@ -1904,6 +1929,7 @@ public class ZMailboxUtil implements DebugListener {
         String types = typesOpt();
         mSearchParams.setTypes(types != null ? types : ZSearchParams.TYPE_CONVERSATION);
 
+        mSearchParams.setInDumpster(mCommandLine.hasOption(O_DUMPSTER.getLongOpt()));
         mIndexToId.clear();
         mSearchPage = 0;
         ZSearchPagerResult pager = mMbox.search(mSearchParams, mSearchPage, false, false);

@@ -78,6 +78,7 @@ public class TestDocument extends TestCase {
         // Move to trash, empty trash, and confirm that both blobs were deleted.
         mbox.move(null, doc.getId(), doc.getType(), Mailbox.ID_FOLDER_TRASH);
         mbox.emptyFolder(null, Mailbox.ID_FOLDER_TRASH, false);
+        mbox.emptyDumpster(null);
         assertEquals(0, getBlobCount(blobDir, docId));
     }
     

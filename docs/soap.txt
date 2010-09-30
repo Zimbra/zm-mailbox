@@ -1252,6 +1252,7 @@ Tags:
                [calExpandInstStart=TIME_IN_MSEC] [calExpandInstEnd=TIME_IN_MSEC]
                [allowableTaskStatus="need,inprogress,completed,canceled"]
                [resultMode="{result-mode}"]
+               [inDumpster="*0|1"]
                >
   *(<header n="{header-name}/>)
   [<cursor id="prevId" sortVal="prevSortValue" endSortVal="endSortValue"/> ]
@@ -1803,7 +1804,7 @@ originally intended.
 
 <ItemActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|read|flag|tag|move|trash|rename|update|color|lock|unlock"
+  <action id="{list}" op="delete|dumpsterdelete|recover|read|flag|tag|move|trash|rename|update|color|lock|unlock"
          [tag="{id}"] [l="{folder}"] [name="{item-name}"] [color="{color}"] [rgb="{rgb-color}"]
          [tcon="[-]{constraint}"] [f="{flags}"] [t="{id-list}"]/>
 </ItemActionRequest>
@@ -1824,6 +1825,15 @@ originally intended.
   For op="update", caller can specify any or all of: l="{folder}", name="{name}", color="{color}",
     t="{tag-id-list}", f="{flags}".  When modifying tags or flags, all specified tags and flags
     are set, and all others are unset.
+
+  In op="delete" action, the item is either permanently deleted if dumpster is not in use, or
+  soft deleted to the dumpster.
+
+  In op="dumpsterdelete" action, the item in the dumpster is permanently deleted.
+
+  For op="recover", caller must specify l="{folder}".  The item is recovered from dumpster as a copy
+  in the specified folder.  Original item in dumpster remains and can be deleted separately with
+  a "deletedumpster" action.
 
   For op="tag" or op="!tag", caller must specify tag="{id}".  This changes the state of
     the specified tag without altering other tags.

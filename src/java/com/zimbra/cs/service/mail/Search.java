@@ -89,6 +89,15 @@ public class Search extends MailDocumentHandler  {
             }
         }
         SearchParams params = SearchParams.parse(request, zsc, acct.getAttr(Provisioning.A_zimbraPrefMailInitialSearch));
+        if (params.inDumpster()) {
+            byte[] types = params.getTypes();
+            if (types != null) {
+                for (byte t : types) {
+                    if (t == MailItem.TYPE_CONVERSATION)
+                        throw ServiceException.INVALID_REQUEST("cannot search for conversations in dumpster", null);
+                }
+            }
+        }
 
         String query = params.getQueryStr();
 

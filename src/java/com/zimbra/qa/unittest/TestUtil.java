@@ -518,6 +518,8 @@ extends Assert {
         if (!ids.isEmpty()) {
             mbox.deleteItem(StringUtil.join(",", ids), null);
         }
+
+        mbox.emptyDumpster();
     }
 
     private static void deleteMessages(ZMailbox mbox, String query)

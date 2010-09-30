@@ -62,6 +62,8 @@ public class ItemAction extends MailDocumentHandler {
     public static final String OP_READ        = "read";
     public static final String OP_COLOR       = "color";
     public static final String OP_HARD_DELETE = "delete";
+    public static final String OP_RECOVER     = "recover";  // recover by copying from dumpster
+    public static final String OP_DUMPSTER_DELETE = "dumpsterdelete";  // delete from dumpster
     public static final String OP_MOVE        = "move";
     public static final String OP_COPY        = "copy";
     public static final String OP_SPAM        = "spam";
@@ -137,6 +139,11 @@ public class ItemAction extends MailDocumentHandler {
                 localResults = ItemActionHelper.COLOR(octxt, mbox, responseProto, local, type, tcon, color).getResult();
             } else if (opStr.equals(OP_HARD_DELETE)) {
                 localResults = ItemActionHelper.HARD_DELETE(octxt, mbox, responseProto, local, type, tcon).getResult();
+            } else if (opStr.equals(OP_RECOVER)) {
+                ItemId iidFolder = new ItemId(action.getAttribute(MailConstants.A_FOLDER), zsc);
+                localResults = ItemActionHelper.RECOVER(octxt, mbox, responseProto, local, type, tcon, iidFolder).getResult();
+            } else if (opStr.equals(OP_DUMPSTER_DELETE)) {
+                localResults = ItemActionHelper.DUMPSTER_DELETE(octxt, mbox, responseProto, local, type, tcon).getResult();
             } else if (opStr.equals(OP_TRASH)) {
                 ItemId iidTrash = new ItemId(mbox, Mailbox.ID_FOLDER_TRASH);
                 localResults = ItemActionHelper.MOVE(octxt, mbox, responseProto, local, type, tcon, iidTrash).getResult();

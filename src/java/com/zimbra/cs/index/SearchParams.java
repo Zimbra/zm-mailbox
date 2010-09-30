@@ -273,6 +273,14 @@ public final class SearchParams implements Cloneable {
         return mEndSortValueLong;
     }
 
+    public boolean inDumpster() {
+        return mInDumpster;
+    }
+
+    public void setInDumpster(boolean inDumpster) {
+        mInDumpster = inDumpster;
+    }
+
     public void setHopCount(int hopCount) {
         mHopCount = hopCount;
     }
@@ -568,6 +576,8 @@ public final class SearchParams implements Cloneable {
         searchElt.addAttribute(MailConstants.A_QUERY_LIMIT, mLimit);
         searchElt.addAttribute(MailConstants.A_QUERY_OFFSET, mOffset);
 
+        searchElt.addAttribute(MailConstants.A_IN_DUMPSTER, mInDumpster);
+
         // skip limit
         // skip offset
         // skip cursor data
@@ -618,6 +628,7 @@ public final class SearchParams implements Cloneable {
             throw ServiceException.INVALID_REQUEST(
                     "no query submitted and no default query found", null);
         }
+        params.setInDumpster(request.getAttributeBool(MailConstants.A_IN_DUMPSTER, false));
         params.setQueryStr(query);
         params.setTypesStr(request.getAttribute(MailConstants.A_SEARCH_TYPES,
                 request.getAttribute(MailConstants.A_GROUPBY,
@@ -936,6 +947,7 @@ public final class SearchParams implements Cloneable {
             o.mAllowableTaskStatuses = new HashSet<TaskHit.Status>();
             o.mAllowableTaskStatuses.addAll(mAllowableTaskStatuses);
         }
+        o.mInDumpster = mInDumpster;
 
         return o;
     }
@@ -961,6 +973,7 @@ public final class SearchParams implements Cloneable {
     private boolean mRecipients = false;
     private long mCalItemExpandStart = -1;
     private long mCalItemExpandEnd = -1;
+    private boolean mInDumpster = false;  // search live data or dumpster data
 
     /**
      * if FALSE, then items with the /Deleted tag set are not returned.
