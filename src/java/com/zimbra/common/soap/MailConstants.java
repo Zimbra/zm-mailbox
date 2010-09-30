@@ -38,6 +38,10 @@ public class MailConstants {
     public static final QName BROWSE_REQUEST = QName.get("BrowseRequest", NAMESPACE);
     public static final QName BROWSE_RESPONSE = QName.get("BrowseResponse", NAMESPACE);
 
+    // dumpster
+    public static final QName EMPTY_DUMPSTER_REQUEST = QName.get("EmptyDumpsterRequest", NAMESPACE);
+    public static final QName EMPTY_DUMPSTER_RESPONSE = QName.get("EmptyDumpsterResponse", NAMESPACE);
+
     // generic items
     public static final QName GET_ITEM_REQUEST = QName.get("GetItemRequest", NAMESPACE);
     public static final QName GET_ITEM_RESPONSE = QName.get("GetItemResponse", NAMESPACE);
@@ -491,6 +495,7 @@ public class MailConstants {
     public static final String A_FIELD = "field";
     public static final String A_INCLUDE_TAG_DELETED = "includeTagDeleted"; //
     public static final String A_ALLOWABLE_TASK_STATUS = "allowableTaskStatus";
+    public static final String A_IN_DUMPSTER = "inDumpster";
 
     // search-result paging
     public static final String E_CURSOR = "cursor";
