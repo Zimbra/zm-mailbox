@@ -78,49 +78,45 @@ import net.freeutils.tnef.mime.TNEFMime;
  * @author bburtin
  */
 public class TnefConverter extends MimeVisitor {
-    private ThreadLocal<MimeMessage> tlMm = new ThreadLocal<MimeMessage>();
+    private MimeMessage mMimeMessage;
 
     protected boolean visitBodyPart(MimeBodyPart bp)  { return false; }
 
     protected boolean visitMessage(MimeMessage msg, VisitPhase visitKind) throws MessagingException {
         if (visitKind == VisitPhase.VISIT_BEGIN) {
-            tlMm.set(msg);
+            mMimeMessage = msg;
             return false;
         }
 
         // do the decode in the exit phase
+        MimeMultipart multi = null;
         try {
-            MimeMultipart multi = null;
-            try {
-                // we only care about "application/ms-tnef" content
-                if (!TNEFUtils.isTNEFMimeType(msg.getContentType()))
-                    return false;
-        
-                Object content = msg.getContent();
-                if (!(content instanceof MimeBodyPart))
-                    return false;
-                // try to expand the TNEF into a suitable Multipart
-                multi = expandTNEF((MimeBodyPart) content);
-                if (multi == null)
-                    return false;
-            } catch (MessagingException e) {
-                ZimbraLog.extensions.warn("exception while uudecoding message part; skipping part", e);
+            // we only care about "application/ms-tnef" content
+            if (!TNEFUtils.isTNEFMimeType(msg.getContentType()))
                 return false;
-            } catch (IOException e) {
-                ZimbraLog.extensions.warn("exception while uudecoding message part; skipping part", e);
-                return false;
-            }
     
-            // check to make sure that the caller's OK with altering the message
-            if (mCallback != null && !mCallback.onModification())
+            Object content = msg.getContent();
+            if (!(content instanceof MimeBodyPart))
                 return false;
-            // and put the new multipart/alternative where the TNEF used to be
-            msg.setContent(multi);
-            msg.setHeader("Content-Type", multi.getContentType() + "; generated=true");
+            // try to expand the TNEF into a suitable Multipart
+            multi = expandTNEF((MimeBodyPart) content);
+            if (multi == null)
+                return false;
+        } catch (MessagingException e) {
+            ZimbraLog.extensions.warn("exception while uudecoding message part; skipping part", e);
             return false;
-        } finally {
-            tlMm.set(null);
+        } catch (IOException e) {
+            ZimbraLog.extensions.warn("exception while uudecoding message part; skipping part", e);
+            return false;
         }
+
+        // check to make sure that the caller's OK with altering the message
+        if (mCallback != null && !mCallback.onModification())
+            return false;
+        // and put the new multipart/alternative where the TNEF used to be
+        msg.setContent(multi);
+        msg.setHeader("Content-Type", multi.getContentType() + "; generated=true");
+        return false;
     }
 
     protected boolean visitMultipart(MimeMultipart mmp, VisitPhase visitKind) throws MessagingException {
@@ -222,8 +218,7 @@ public class TnefConverter extends MimeVisitor {
             try {
                 TnefToICalendar calConverter = new DefaultTnefToICalendar();
                 ZCalendar.DefaultContentHandler icalHandler = new ZCalendar.DefaultContentHandler();
-                MimeMessage mm = tlMm.get();
-                if (calConverter.convert(mm, bp.getInputStream(), icalHandler)) {
+                if (calConverter.convert(mMimeMessage, bp.getInputStream(), icalHandler)) {
                     if (icalHandler.getNumCals() > 0) {
                         List<ZVCalendar> cals = icalHandler.getCals();
                         Writer writer = new StringWriter(1024);
