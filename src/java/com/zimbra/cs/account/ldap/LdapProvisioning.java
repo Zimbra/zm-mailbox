@@ -1884,6 +1884,9 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public Domain getDomain(DomainBy keyType, String key, boolean checkNegativeCache) throws ServiceException {
 
+        // note: *always* use negative cache for keys from external source
+        //       - virtualHostname, foreignName, krb5Realm
+
         GetFromDomainCacheOption option = checkNegativeCache ? GetFromDomainCacheOption.BOTH : GetFromDomainCacheOption.POSITIVE;
 
         switch(keyType) {
@@ -1892,9 +1895,9 @@ public class LdapProvisioning extends Provisioning {
             case id:
                 return getDomainByIdInternal(key, null, option);
             case virtualHostname:
-                return getDomainByVirtualHostnameInternal(key, option);
+                return getDomainByVirtualHostnameInternal(key, GetFromDomainCacheOption.BOTH);
             case krb5Realm:
-                return getDomainByKrb5RealmInternal(key, option);
+                return getDomainByKrb5RealmInternal(key, GetFromDomainCacheOption.BOTH);
             default:
                 return null;
         }
