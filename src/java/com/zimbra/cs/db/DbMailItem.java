@@ -3201,9 +3201,6 @@ public class DbMailItem {
         try {
             for (int i = 0; i < uids.size(); i += Db.getINClauseBatchSize()) {
                 int count = Math.min(Db.getINClauseBatchSize(), uids.size() - i);
-                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
-                            " SET index_id = id" +
-                            " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
                 stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                         " FROM " + getCalendarItemTableName(mbox, "ci") + ", " + getMailItemTableName(mbox, "mi") +
                         " WHERE mi.id = ci.item_id AND mi.type IN " + CALENDAR_TYPES +
