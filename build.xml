@@ -241,7 +241,7 @@
 
     <path id="class.path">
         <pathelement location="${common.classes.dir}"/>
-    	<pathelement location="${soap.classes.dir}"/>
+      <pathelement location="${soap.classes.dir}"/>
         <pathelement location="${im.classes.dir}"/>
         <pathelement location="${build.classes.dir}"/>
         <fileset dir="${jars.dir}">
@@ -533,7 +533,7 @@
 
     <target name="compile" depends="build-init">
         <ant dir="${common.dir}" target="jar" inheritAll="false"/>
-    	<ant dir="${soap.dir}" target="jar" inheritAll="false"/>
+      <ant dir="${soap.dir}" target="jar" inheritAll="false"/>
         <ant dir="${im.dir}" target="jar" inheritAll="false"/>
         <javac fork="true" memorymaximumsize="512m" destdir="${build.classes.dir}" debug="true"
                classpathref="class.path" target="${javac.target}">
@@ -559,7 +559,7 @@
 
     <target name="clean" description="Deletes classes from build directories">
         <ant dir="${common.dir}" target="clean" inheritAll="false"/>
-    	<ant dir="${soap.dir}" target="clean" inheritAll="false"/>
+      <ant dir="${soap.dir}" target="clean" inheritAll="false"/>
         <ant dir="${im.dir}" target="clean" inheritAll="false"/>
         <delete dir="${build.dir}"/>
     </target>
@@ -582,7 +582,7 @@
         <war warfile="${warfile}" webxml="${war.web.xml}">
             <fileset dir="WebRoot"/>
             <lib file="${im.jarfile}"/>
-        	<lib file="${soap.jarfile}"/>
+          <lib file="${soap.jarfile}"/>
             <lib file="${jarfile}"/>
             <lib dir="${common.jars.dir}" includes="${war.include}"/>
             <lib dir="${im.jars.dir}" includes="*.jar"/>
@@ -848,7 +848,7 @@
         </copy>
         <copy todir="${dist.jetty.dir}/common/lib" file="${common.jarfile}" overwrite="true"/>
         <copy todir="${dist.jetty.dir}/lib" overwrite="true">
-		<fileset dir="${common.jars.dir}" includes="log4j*.jar,apache-log4j-extras-1.0.jar"/>
+    <fileset dir="${common.jars.dir}" includes="log4j*.jar,apache-log4j-extras-1.0.jar"/>
         </copy>
     </target>
 
@@ -924,7 +924,7 @@
             <then>
                 <echo>Inserting default contacts:
                     ${account-to-inject.email}
-			</echo>
+      </echo>
                 <java classname="com.zimbra.common.soap.SoapTestHarness"
                     fork="true" classpathref="class.path" failonerror="true">
                     <sysproperty key="SAMPLE_USER"
@@ -956,7 +956,7 @@
             <then>
                 <echo>LmtpInject messages for
                     ${account-to-inject.email}
-				</echo>
+        </echo>
                 <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject"
                     fork="true" classpathref="class.path" failonerror="true">
                     <arg
@@ -971,7 +971,7 @@
             <then>
                 <echo>LmtpInject spam for
                     ${account-to-inject.email}
-				</echo>
+        </echo>
                 <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject"
                     fork="true" classpathref="class.path" failonerror="true">
                     <arg
@@ -1974,6 +1974,9 @@
     <mkdir dir="${test.classes.dir}"/>
     <javac srcdir="${test.src.dir}" destdir="${test.classes.dir}"
       debug="true" classpathref="class.path" target="${javac.target}"/>
+    <copy todir="${test.classes.dir}">
+      <fileset dir="${test.src.dir}" excludes="**/*.java"/>
+    </copy>
   </target>
 
   <target name="test" depends="test-compile" description="Run unit tests">
