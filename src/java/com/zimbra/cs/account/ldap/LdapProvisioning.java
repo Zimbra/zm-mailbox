@@ -766,18 +766,16 @@ public class LdapProvisioning extends Provisioning {
                 return null;
             
             String domainName = parts[1];
-
             domain = getDomain(DomainBy.foreignName, application + ":" + domainName, true);
         }
         
         if (domain == null)
             return null;
         
-        String acctName;
-        
         // see if there is a custom hander on the domain
         DomainNameMappingHandler.HandlerConfig handlerConfig = DomainNameMappingHandler.getHandlerConfig(domain, application);
         
+        String acctName;
         if (handlerConfig != null) {
             // invoke the custom handler 
             acctName = DomainNameMappingHandler.mapName(handlerConfig, foreignName);
@@ -1873,6 +1871,9 @@ public class LdapProvisioning extends Provisioning {
     @Override
     public Domain getDomain(DomainBy keyType, String key, boolean checkNegativeCache) throws ServiceException {
 
+        // note: *always* use negative cache for keys from external source
+        //       - virtualHostname, foreignName, krb5Realm
+         
         GetFromDomainCacheOption option = checkNegativeCache ? GetFromDomainCacheOption.BOTH : GetFromDomainCacheOption.POSITIVE;
 
         switch(keyType) {
@@ -1881,11 +1882,11 @@ public class LdapProvisioning extends Provisioning {
             case id:
                 return getDomainByIdInternal(key, null, option);
             case virtualHostname:
-                return getDomainByVirtualHostnameInternal(key, option);
+                return getDomainByVirtualHostnameInternal(key, GetFromDomainCacheOption.BOTH);
             case foreignName:
-                return getDomainByForeignNameInternal(key, option);    
+                return getDomainByForeignNameInternal(key, GetFromDomainCacheOption.BOTH);    
             case krb5Realm:
-                return getDomainByKrb5RealmInternal(key, option);
+                return getDomainByKrb5RealmInternal(key, GetFromDomainCacheOption.BOTH);
             default:
                 return null;
         }

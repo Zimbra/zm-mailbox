@@ -42,7 +42,7 @@ public class GetDomainInfo extends AdminDocumentHandler {
         String value = d.getText();
         
         DomainBy domainBy = DomainBy.fromString(key);
-        Domain domain = prov.get(domainBy, value);
+        Domain domain = prov.getDomain(domainBy, value, true);
 
         Element response = lc.createElement(AdminConstants.GET_DOMAIN_INFO_RESPONSE);
         
@@ -70,7 +70,7 @@ public class GetDomainInfo extends AdminDocumentHandler {
             
             if (domain == null) {
                 if (domainBy == DomainBy.virtualHostname)
-                    domain = prov.get(DomainBy.name, value);
+                    domain = prov.getDomain(DomainBy.name, value, true);
                 
                 if (domain == null)
                     domain = findDomain(prov, value);
@@ -123,7 +123,7 @@ public class GetDomainInfo extends AdminDocumentHandler {
         //     will not do com
         while (secondDotAt != -1) {
             // System.out.println(value.substring(firstDotAt+1));
-            domain = prov.get(DomainBy.name, value.substring(firstDotAt+1));
+            domain = prov.getDomain(DomainBy.name, value.substring(firstDotAt+1), true);
             if (domain != null)
                 break;
             else {
