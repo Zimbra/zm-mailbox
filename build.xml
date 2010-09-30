@@ -86,6 +86,11 @@
   <property name="war.web.xml" location="${config.dir}/web.xml${production.suffix}"/>
     <property name="jetty.xml.file" location='${config.dir}/jetty-6.1/jetty.xml' />
 
+    <property name="spnego.dir" location="${config.dir}/jetty-6.1/spnego"/>
+    <property name="spnego-war.web.xml" location="${spnego.dir}/web.xml"/>
+    <property name="spnego-warfilename" value="spnego.war"/>
+    <property name="spnego-warfile" location="${build.dir}/${spnego-warfilename}"/>
+
     <property name="deploy.war" value="${warfile}"/>
     <property name="deploy.host" value="127.0.0.1"/>
     <property name="deploy.port" value="7070"/>
@@ -590,6 +595,12 @@
         </war>
     </target>
 
+    <target name="spnego-war">
+        <war warfile="${spnego-warfile}" webxml="${spnego-war.web.xml}">
+            <fileset dir="${spnego.dir}" excludes="web.xml"/>
+        </war>
+    </target>
+        	
     <target name="service-deploy" depends="refresh-opt-zimbra,deploy-war"
             description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
@@ -659,7 +670,7 @@
         <antcall target="start-webserver"/>
     </target>
 
-    <target name="dev-dist" depends="war,dev-dist-unix,dev-dist-jetty,choose-db-schema,generate-ldap-config" description="Initializes build/dist">
+    <target name="dev-dist" depends="war,spnego-war,dev-dist-unix,dev-dist-jetty,choose-db-schema,generate-ldap-config" description="Initializes build/dist">
         <!-- bin, libexec -->
         <copy todir="${dist.dir}/bin" overwrite="true">
             <fileset dir="${src.dir}/bin" excludes="*.production,zmmailboxdctl,jetty"/>
@@ -826,6 +837,7 @@
 
   <target name="dev-dist-jetty">
         <copy todir="${dist.jetty.dir}/webapps" file="${warfile}" overwrite="true"/>
+        <copy todir="${dist.jetty.dir}/webapps" file="${spnego-warfile}" overwrite="true"/>
         <copy tofile="${dist.jetty.dir}/etc/jettyrc" file="${config.dir}/jetty-6.1/jettyrc" overwrite="true"/>
         <copy tofile="${dist.jetty.dir}/etc/jetty.xml" file="${jetty.xml.file}" overwrite="true"/>
         <copy tofile="${dist.jetty.dir}/etc/start.config" file="${config.dir}/jetty-6.1/start.config" overwrite="true"/>
