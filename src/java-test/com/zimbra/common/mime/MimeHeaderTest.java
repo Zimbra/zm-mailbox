@@ -95,7 +95,7 @@ public class MimeHeaderTest {
 
     @Test public void decode() {
         String src = "RE: [Bug 30944]=?UTF-8?Q?=20Meeting=20invitation=20that=E2=80=99s=20created=20within=20exchange=20containing=20=C3=A5=C3=A4=C3=B6=20will=20show=20within=20the=20calendar=20and=20acceptance=20notification=20as=20?=?????";
-        Assert.assertEquals("RE: [Bug 30944] Meeting invitation that’s created within exchange containing \u00e5\u00e4\u00f6 will show within the calendar and acceptance notification as ?????",
+        Assert.assertEquals("RE: [Bug 30944] Meeting invitation that\u2019s created within exchange containing \u00e5\u00e4\u00f6 will show within the calendar and acceptance notification as ?????",
                 MimeHeader.decode(src));
 
         src = "=?utf-8?Q?Hambone_x?=";
