@@ -793,10 +793,10 @@ public abstract class MailItem implements Comparable<MailItem> {
 
 
     /** Returns the "internal" flag bitmask, which does not include
-     *  {@link Flag#BITMASK_UNREAD}.  This is the same bitmask as is stored
+     *  {@link Flag#BITMASK_UNREAD} and {@link Flag@BITMASK_IN_DUMPSTER}.  This is the same bitmask as is stored
      *  in the database's <tt>MAIL_ITEM.FLAGS</tt> column. */
     public int getInternalFlagBitmask() {
-        return mData.flags;
+        return mData.flags & ~Flag.BITMASK_IN_DUMPSTER;
     }
 
     /** Returns the external string representation of this item's flags.
@@ -3015,6 +3015,6 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     public boolean inDumpster() {
-        return (mData.flags & Flag.BITMASK_UNCACHED) != 0;
+        return (mData.flags & Flag.BITMASK_IN_DUMPSTER) != 0;
     }
 }
