@@ -150,6 +150,10 @@ SECTION webxml
 	REWRITE mailboxd/etc/zimbraAdmin.web.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/web.xml
 	REWRITE mailboxd/etc/service.web.xml.in mailboxd/webapps/service/WEB-INF/web.xml
 	REWRITE mailboxd/etc/zimlet.web.xml.in mailboxd/webapps/zimlet/WEB-INF/web.xml
+	REWRITE mailboxd/etc/spnego.web.xml.in mailboxd/webapps/spnego/WEB-INF/web.xml
+	REWRITE mailboxd/etc/krb5.ini.in mailboxd/etc/krb5.ini
+	REWRITE mailboxd/etc/spnego.conf.in mailboxd/etc/spnego.conf
+	REWRITE mailboxd/etc/spnego.properties.in mailboxd/etc/spnego.properties
   RESTART mailboxd
 
 SECTION mailbox
@@ -181,6 +185,7 @@ SECTION mailbox
   REWRITE conf/log4j.properties.in conf/log4j.properties
   REWRITE mailboxd/etc/jetty.properties.in mailboxd/etc/jetty.properties
 	REWRITE mailboxd/etc/jetty.xml.in mailboxd/etc/jetty.xml
+	REWRITE conf/spnego_java_options.in conf/spnego_java_options
   RESTART mailboxd
 
 SECTION imapproxy
