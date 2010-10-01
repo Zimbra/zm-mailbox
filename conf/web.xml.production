@@ -367,7 +367,7 @@
     <url-pattern>/zimlet/*</url-pattern>
   </servlet-mapping>
 
-  <!-- HTTPSBEGIN %%comment VAR:zimbraMailMode,-->,https,redirect,mixed,both%%
+  <!-- HTTPSBEGIN %%comment VAR:zimbraMailMode,-->,https,redirect%%
      <security-constraint>
         <web-resource-collection>
         <web-resource-name>force https</web-resource-name>
@@ -386,6 +386,8 @@
             <transport-guarantee>CONFIDENTIAL</transport-guarantee>
         </user-data-constraint>
     </security-constraint>
+  %%comment VAR:zimbraMailMode,<!--,https,redirect%% HTTPSEND -->
+  <!-- HTTPSBEGIN %%comment VAR:zimbraMailMode,-->,https,redirect,mixed,both%%
      <security-constraint>
         <web-resource-collection>
         <web-resource-name>force https</web-resource-name>
