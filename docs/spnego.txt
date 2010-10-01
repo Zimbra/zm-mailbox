@@ -107,13 +107,15 @@ Repeat steps (A) to (D) for each zimbra server.
     
     
 (C) Setup login URL for the domain
-    zmprov md {domain} zimbraWebClientLoginURL http://{server:port}/spnego/spnego_preauth.jsp
-    
-    Where {server:port} should be one of the spnego enabled zimbra servers.
+    zmprov md {domain} zimbraWebClientLoginURL {public URL for the domain}/spnego/spnego_preauth.jsp
     
     
 (D) Setup logout URL for the domain
-    zmprov md {domain} zimbraWebClientLogoutURL {TODO: bug 50345}
+    zmprov md {domain} zimbraWebClientLogoutURL 
+    This is the URL to go to when user clicks on the :logout" button.
+    
+    It can be set to:
+    {public URL for the domain}/?sso=1
 
 
 (E) Setup kerberos Realm for the domain
@@ -134,9 +136,16 @@ We support only one REALM/KDC per Zimbra installation.
 Modify the following global config keys with zmprov mcf
 
 zimbraSpnegoAuthAdminServer : address of the admin server for the realm
+
 zimbraSpnegoAuthEnabled     : TRUE
-zimbraSpnegoAuthErrorURL    : /error/spnego_error.jsp
+
+zimbraSpnegoAuthErrorURL    : URL to redirect users to on spnego auth failure 
+                              Setting it to "http://{server}:{port}/zimbra/?ignoreLoginURL=1"
+                              will redirect user to the regular Zimbra login page, where 
+                              zimbra user name and password are prompted.
+                              
 zimbraSpnegoAuthKDC         : address of the KDC for the realm
+
 zimbraSpnegoAuthRealm       : the kerberos realm
 
 On each zimbra server:
