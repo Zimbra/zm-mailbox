@@ -19,7 +19,7 @@ public class TnefTimeZone {
     
     static Log sLog = ZimbraLog.tnef;
     
-    // [MS-OXOCAL] Ñ v20100729
+    // [MS-OXOCAL] - v20100729
     // Appointment and Meeting Object Protocol Specification
     // indexed Standard offset from UTC+12 (international date line) in minutes
     // The second element holds an index to the standard/DST dates table; an index 
@@ -87,7 +87,7 @@ public class TnefTimeZone {
         {20*60, 13}       //59
     };
     
-    // [MS-OXOCAL] Ñ v20100729
+    // [MS-OXOCAL] - v20100729
     // Standard and daylight saving dates are defined in the following format:
     // Standard date{wMonth, wDayOfWeek, wDay, wHour} Daylight date{wMonth, wDayOfWeek, wDay, wHour}
     static final int[][][] MS_OXOCAL_STAN_DST_DATES = {
@@ -116,7 +116,7 @@ public class TnefTimeZone {
     
     
     /**
-     * Ref: [MS-OXOCAL] Ñ v20100729
+     * Ref: [MS-OXOCAL] - v20100729
      * Returns a time zone from the given index;
      * The default TimeZone ID is "tnefTimeZone"
      * @param index
@@ -215,7 +215,7 @@ public class TnefTimeZone {
     }
     
     /**
-     * [MS-OXOCAL] Ñ v20100729
+     * [MS-OXOCAL] - v20100729
      * PidLidTimeZone
      * Type: PtypInteger32
      * The lower WORD specifies an index into a table that contains time zone information. 
