@@ -224,7 +224,7 @@
       </Set>
     </New>
 
-    <!-- uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE
+    <!-- uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE  %%comment VAR:zimbraSpnegoAuthEnabled,-->%%
     <New id="spnego" class="org.mortbay.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
       <Arg><SystemProperty name="jetty.home" default="."/>/webapps/spnego</Arg>
@@ -233,7 +233,7 @@
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/spnego</Set>
     </New>
-    -->
+    %%comment VAR:zimbraSpnegoAuthEnabled,<!--%% -->
      
     <!-- =========================================================== -->
     <!-- Configure the context deployer                              -->
@@ -293,14 +293,14 @@
     <!-- =========================================================== -->
     <Set name="UserRealms">
       <Array type="org.mortbay.jetty.security.UserRealm">
-        <!-- uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE
+		<!-- uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE  %%comment VAR:zimbraSpnegoAuthEnabled,-->%%
         <Item>
           <New class="org.mortbay.jetty.security.SpnegoUserRealm">
             <Set name="name">Spnego Authentication Realm</Set>
             <Set name="config"><SystemProperty name="jetty.home" default="."/>/etc/spnego.properties</Set>
           </New>
         </Item>
-        -->
+		%%comment VAR:zimbraSpnegoAuthEnabled,<!--%% -->
       </Array>
     </Set>
 
