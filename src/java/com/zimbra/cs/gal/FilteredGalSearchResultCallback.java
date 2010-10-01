@@ -1,14 +1,11 @@
 package com.zimbra.cs.gal;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
@@ -18,7 +15,7 @@ import com.zimbra.cs.account.EntrySearchFilter.Visitor;
 import com.zimbra.cs.mailbox.Contact;
 
 public class FilteredGalSearchResultCallback extends GalSearchResultCallback {
-
+    Element mProxiedResponse;
     Set<String> mAttrs;
     EntrySearchFilter mFilter;
     
@@ -28,6 +25,26 @@ public class FilteredGalSearchResultCallback extends GalSearchResultCallback {
         mFilter = filter;
     }
 
+    @Override
+    public boolean passThruProxiedGalAcctResponse() {
+        return true;
+    }
+    
+    @Override
+    public void handleProxiedResponse(Element resp) {
+        mProxiedResponse = resp;
+        mProxiedResponse.detach();
+    }
+    
+    @Override
+    public Element getResponse() {
+        if (mProxiedResponse != null)
+            return mProxiedResponse;
+        else
+            return super.getResponse();
+    }
+    
+    @Override
     public Element handleContact(Contact contact) throws ServiceException {
         if (matched(contact))
             com.zimbra.cs.service.account.ToXML.encodeCalendarResource(getResponse(), 
@@ -36,6 +53,7 @@ public class FilteredGalSearchResultCallback extends GalSearchResultCallback {
         return null; // return null because we don't want the sort field (sf) attr added to each hit
     }
     
+    @Override
     public void handleContact(GalContact galContact) throws ServiceException {
         if (matched(galContact))
             com.zimbra.cs.service.account.ToXML.encodeCalendarResource(getResponse(), 
@@ -43,21 +61,9 @@ public class FilteredGalSearchResultCallback extends GalSearchResultCallback {
                     galContact.getAttrs(), mAttrs, null);
     }
     
+    @Override
     public void handleElement(Element e) throws ServiceException {
-        HashMap<String,Object> contactAttrs = parseContactElement(e);
-        if (matched(contactAttrs)) {
-            Object nameObj = contactAttrs.get(ContactConstants.A_email); // should really be just a String 
-            String name = "";
-            if (nameObj instanceof String)
-                name = (String)nameObj;
-            else if (nameObj instanceof String[]) {
-                if (((String[])nameObj).length > 0)
-                    name = ((String[])nameObj)[0];
-            }
-            com.zimbra.cs.service.account.ToXML.encodeCalendarResource(getResponse(), 
-                    e.getAttribute(MailConstants.A_ID), name, 
-                    contactAttrs, mAttrs, null);
-        }
+        // should never be called
     }
     
     private boolean matched(Contact c) {
@@ -66,11 +72,6 @@ public class FilteredGalSearchResultCallback extends GalSearchResultCallback {
     }
     
     private boolean matched(GalContact c) {
-        FilterVisitor visitor = new FilterVisitor(c);
-        return evaluate(visitor);
-    }
-    
-    private boolean matched(HashMap<String,Object> c) {
         FilterVisitor visitor = new FilterVisitor(c);
         return evaluate(visitor);
     }
@@ -108,19 +109,6 @@ public class FilteredGalSearchResultCallback extends GalSearchResultCallback {
         
         public Object get(String key) {
             return mGalContact.getAttrs().get(key);
-        }
-    }
-    
-    private static class ContactAttrsKV implements KeyValue {
-        
-        Map<String, Object> mContactAttrs;
-        
-        private ContactAttrsKV(Map<String, Object> contactAttrs) {
-            mContactAttrs = contactAttrs;
-        }
-        
-        public Object get(String key) {
-            return mContactAttrs.get(key);
         }
     }
     
@@ -166,11 +154,6 @@ public class FilteredGalSearchResultCallback extends GalSearchResultCallback {
         
         private FilterVisitor(GalContact galContact) {
             mContact = new GalContactKV(galContact);
-            mParentResult = new Stack<Result>();
-        }
-        
-        private FilterVisitor(Map<String, Object> contactAttrs) {
-            mContact = new ContactAttrsKV(contactAttrs);
             mParentResult = new Stack<Result>();
         }
         

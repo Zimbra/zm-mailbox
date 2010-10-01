@@ -47,8 +47,10 @@ public class SearchCalendarResources extends AccountDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(getZimbraSoapContext(context));
 
+        /* TODO: pending bug 50263
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
+        */
         
         return searchGal(zsc, account, request);
     }
@@ -126,6 +128,7 @@ public class SearchCalendarResources extends AccountDocumentHandler {
         params.setQuery(name);
         params.setType(Provisioning.GalSearchType.resource);
         params.setLimit(1000);
+        params.setRequest(request);
         params.setResponseName(AccountConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         
         String attrsStr = request.getAttribute(AccountConstants.A_ATTRS, null);

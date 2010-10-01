@@ -207,6 +207,7 @@ public class GetDistributionListMembers extends AccountDocumentHandler {
             super(params);
         }
         
+        @Override
         public boolean passThruProxiedGalAcctResponse() {
             return true;
         }
@@ -215,23 +216,25 @@ public class GetDistributionListMembers extends AccountDocumentHandler {
             return mDLMembers;
         }
         
+        @Override
         public void handleProxiedResponse(Element resp) {
             mDLMembers = new ProxiedDLMembers(resp);
         }
         
+        @Override
         public Element handleContact(Contact contact) throws ServiceException {
             mDLMembers = new ContactDLMembers(contact);
             return null; 
         }
         
+        @Override
         public void handleContact(GalContact galContact) throws ServiceException {
             mDLMembers = new GalContactDLMembers(galContact);
         }
         
+        @Override
         public void handleElement(Element e) throws ServiceException {
-            // TODO: for perf reason proxy this request to the GAL sync account host 
-            //       if GAL sync account is configured but not on this host
-            
+            // should never be called
         }
     }
     
