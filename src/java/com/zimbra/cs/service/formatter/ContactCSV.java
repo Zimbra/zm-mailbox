@@ -22,14 +22,18 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -49,6 +53,7 @@ public class ContactCSV {
     // CSV files intended for use in locales where ',' as the decimal separator
     // sometimes use ';' as a field separator instead of ','.
     public static final char[] SUPPORTED_SEPARATORS = { DEFAULT_FIELD_SEPARATOR, ';' };
+    enum ColType { SIMPLE, MULTIVALUE, NAME, TAG, DATE };
 
     private int mLineNumber;
     private int mCurrContactStartLineNum;
@@ -56,6 +61,30 @@ public class ContactCSV {
     private boolean mDetectFieldSeparator;
     private boolean mKnowFieldSeparator;
     private char mFieldSeparator;
+    
+    private static Set<String>            mKnownFields;
+    private static Set<CsvFormat>         mKnownFormats;
+    private static Map <String,Character> mDelimiterInfo;
+    private static Map <String,String>    mDateOrderInfo;
+    private static CsvFormat              mDefaultFormat;
+
+    private static final QName DATEFORMATS = QName.get("dateformats");
+    private static final QName DATEFORMAT = QName.get("dateformat");
+    private static final QName DELIMITERS = QName.get("delimiters");
+    private static final QName DELIMITER = QName.get("delimiter");
+    private static final QName FIELDS = QName.get("fields");
+    private static final QName FIELD  = QName.get("field");
+    private static final QName FORMAT = QName.get("format");
+    private static final QName COLUMN = QName.get("column");
+    
+    private static final String ATTR_CHAR  = "char";
+    private static final String ATTR_NAME  = "name";
+    private static final String ATTR_LOCALE  = "locale";
+    private static final String ATTR_FIELD = "field";
+    private static final String ATTR_FLAG  = "flag";
+    private static final String ATTR_FORMAT  = "format";
+    private static final String ATTR_ORDER  = "order";
+    private static final String ATTR_TYPE  = "type";
 
     public ContactCSV() {
         this(DEFAULT_FIELD_SEPARATOR, true);
@@ -232,6 +261,105 @@ public class ContactCSV {
             contact.put(col.field, buf.toString());
     }
 
+    /**
+     *
+     * @param testY   candidate year
+     * @param testM   candidate month in range 1 to 12
+     * @param testD   candidate day in range 1 to 31
+     * @param leniant succeed even if the day and month might be ambiguous
+     * @return Formatted date if certain date fields are OK and wouldn't be OK in a different order, else null
+     */
+    private String populateDateFieldsIfUnambiguous(int testY, int testM, int testD, boolean leniant) {
+        if ((testY < 1600) || (testY > 4500)) {
+            // Year does not fit within what Outlook allows, probably not what is intended
+            return null;
+        }
+        int firstAllowableDay = leniant ? 1 : 13;
+        if ((testD < firstAllowableDay) || (testD > 31)) {
+            // Either an invalid date or could be a month number if guessed date string order wrong
+            return null;
+        }
+        if ((testM < 1) || (testM > 12)) {
+            // Not a valid month
+            return null;
+        }
+        ICalTimeZone tzUTC = ICalTimeZone.getUTC();
+        GregorianCalendar cal = new GregorianCalendar(tzUTC);
+        cal.set(testY, testM - 1, 1, 0, 0);
+        if (testD > cal.getActualMaximum(Calendar.DAY_OF_MONTH))
+            return  null;
+        cal.set(Calendar.DAY_OF_MONTH, testD);
+        SimpleDateFormat ymd = new SimpleDateFormat("yyyy-MM-dd");
+        ymd.setCalendar(cal);
+        return ymd.format(cal.getTime());
+    }
+
+    /**
+     * Ideally, want to store the value in "yyyy-mm-dd" format
+     * @param value
+     * @param field
+     * @param contact
+     */
+    private void addDateField(String value, String field, String dateOrderKey, ContactMap contact) {
+        if (field == null || value == null || value.length() == 0)
+            return;
+        // If we successfully parse "value" as a date, zimbraDateValue will be set.
+        String zimbraDateValue = null;
+        try {
+            String[] splitFields = value.split("/");
+            if (splitFields.length != 3)
+                splitFields = value.split("-");
+            if (splitFields.length == 3) {
+                int dateFs[] = new int[3];
+                dateFs[0] = Integer.parseInt(splitFields[0]);
+                dateFs[1] = Integer.parseInt(splitFields[1]);
+                dateFs[2] = Integer.parseInt(splitFields[2]);
+                zimbraDateValue = populateDateFieldsIfUnambiguous(
+                        dateFs[0], dateFs[1], dateFs[2], false);   // e.g. 2005/25/12
+                if (zimbraDateValue == null)
+                    zimbraDateValue = populateDateFieldsIfUnambiguous(
+                            dateFs[2], dateFs[0], dateFs[1], false); // e.g. 12/25/2005
+                if (zimbraDateValue == null)
+                    zimbraDateValue = populateDateFieldsIfUnambiguous(
+                            dateFs[2], dateFs[1], dateFs[0], false); // e.g. 25/12/2005
+                if (zimbraDateValue == null)
+                    zimbraDateValue = populateDateFieldsIfUnambiguous(
+                            dateFs[1], dateFs[2], dateFs[0], false); // e.g. 25/2005/12
+                if (zimbraDateValue == null)
+                    zimbraDateValue = populateDateFieldsIfUnambiguous(
+                            dateFs[0], dateFs[2], dateFs[1], false); // e.g. 2005/25/12
+                if (zimbraDateValue == null)
+                    zimbraDateValue = populateDateFieldsIfUnambiguous(
+                            dateFs[1], dateFs[0], dateFs[2], false); // e.g. 12/2005/25
+                if (zimbraDateValue == null) {
+                    String dateOrder = mDateOrderInfo.get(dateOrderKey);
+                    if (dateOrder != null) {
+                        ICalTimeZone tzUTC = ICalTimeZone.getUTC();
+                        GregorianCalendar cal = new GregorianCalendar(tzUTC);
+                        int yNdx = dateOrder.indexOf('y');
+                        int mNdx = dateOrder.indexOf('m');
+                        int dNdx = dateOrder.indexOf('d');
+                        if ((yNdx != -1) && (mNdx != -1) && (dNdx != -1)) {
+                            zimbraDateValue = populateDateFieldsIfUnambiguous(
+                                    dateFs[yNdx], dateFs[mNdx], dateFs[dNdx], true);
+                        }
+                    }
+                }
+            }
+        } catch (NumberFormatException ioe) {
+        }
+        if (zimbraDateValue != null)
+            contact.put(field, zimbraDateValue);
+        else {
+            // We were unable to recognise the date format for this value :-(
+            if (Character.isDigit(value.charAt(0)))
+                // Avoid later corruption from trying to process as a valid date.
+                contact.put(field, new StringBuffer("'").append(value).append("'").toString());
+            else
+                contact.put(field, value);
+        }
+    }
+
     private void addNameField(String value, String field, ContactMap contact) {
         if (field == null || value == null)
             return;
@@ -300,7 +428,9 @@ public static String getTags(Map<String,String> csv) {
         if (csv == null )
             return contactMap.getContacts();
         if (format.allFields()) {
-            for (int i = 0;i < mFields.size();i++)
+            int end = csv.size();
+            end = (end > mFields.size()) ? mFields.size() : end;
+            for (int i = 0; i < end; i++)
                 contactMap.put(mFields.get(i), csv.get(i));
         }
         else if (format.hasNoHeaders()) {
@@ -326,7 +456,7 @@ public static String getTags(Map<String,String> csv) {
                     matchingFieldLc = unseenC.matchingLcCsvFieldName(csvFieldName);
                     if (matchingFieldLc == null)
                         continue;
-                    if (unseenC.multivalue) {
+                    if (unseenC.colType == ColType.MULTIVALUE) {
                         Map <String, String> currMV = pendMV.get(matchingCol);
                         if ((currMV != null) && currMV.get(matchingFieldLc) != null)
                             // already have field with this name that matches this column
@@ -341,30 +471,38 @@ public static String getTags(Map<String,String> csv) {
                     contactMap.put(csvFieldName, fieldValue);
                     continue;
                 }
-                if (matchingCol.isName) {
-                    addNameField(fieldValue, matchingCol.field, contactMap);
-                    unseenColumns.remove(matchingCol);
-                } else if (matchingCol.mapToTag) {
-                    contactMap.put(TAG, fieldValue);
-                } else if (matchingCol.multivalue) {
-                    for ( String cname : matchingCol.names) {
-                        if (cname.toLowerCase().equals(matchingFieldLc)) {
-                            Map <String, String> currMV = pendMV.get(matchingCol);
-                            if (currMV == null) {
-                                currMV = new HashMap <String, String> ();
-                                pendMV.put(matchingCol, currMV);
-                            }
-                            currMV.put(matchingFieldLc, fieldValue);
-                            if (currMV.size() >= matchingCol.names.size()) {
-                                addMultiValueField(matchingCol, currMV, contactMap);
-                                pendMV.remove(currMV);
-                                unseenColumns.remove(matchingCol);
+                switch (matchingCol.colType) {
+                    case NAME: 
+                        addNameField(fieldValue, matchingCol.field, contactMap);
+                        unseenColumns.remove(matchingCol);
+                        break;
+                    case DATE: 
+                        addDateField(fieldValue, matchingCol.field, format.key(), contactMap);
+                        unseenColumns.remove(matchingCol);
+                        break;
+                    case TAG: 
+                        contactMap.put(TAG, fieldValue);
+                        break;
+                    case MULTIVALUE: 
+                        for ( String cname : matchingCol.names) {
+                            if (cname.toLowerCase().equals(matchingFieldLc)) {
+                                Map <String, String> currMV = pendMV.get(matchingCol);
+                                if (currMV == null) {
+                                    currMV = new HashMap <String, String> ();
+                                    pendMV.put(matchingCol, currMV);
+                                }
+                                currMV.put(matchingFieldLc, fieldValue);
+                                if (currMV.size() >= matchingCol.names.size()) {
+                                    addMultiValueField(matchingCol, currMV, contactMap);
+                                    pendMV.remove(currMV);
+                                    unseenColumns.remove(matchingCol);
+                                }
                             }
                         }
-                    }
-                } else {
-                    contactMap.put(matchingCol.field, fieldValue);
-                    unseenColumns.remove(matchingCol);
+                        break;
+                    default:
+                        contactMap.put(matchingCol.field, fieldValue);
+                        unseenColumns.remove(matchingCol);
                 }
             }
             // Process multi-value fields where only some constituent fields were present
@@ -450,32 +588,10 @@ public static String getTags(Map<String,String> csv) {
         }        
     }
 
-
-
-    private static final QName DELIMITERS = QName.get("delimiters");
-    private static final QName DELIMITER = QName.get("delimiter");
-    private static final QName FIELDS = QName.get("fields");
-    private static final QName FIELD  = QName.get("field");
-    private static final QName FORMAT = QName.get("format");
-    private static final QName COLUMN = QName.get("column");
-    
-    private static final String ATTR_CHAR  = "char";
-    private static final String ATTR_NAME  = "name";
-    private static final String ATTR_LOCALE  = "locale";
-    private static final String ATTR_FIELD = "field";
-    private static final String ATTR_FLAG  = "flag";
-    private static final String ATTR_FORMAT  = "format";
-    private static final String ATTR_TYPE  = "type";
-
-    private static Set<String>         mKnownFields;
-    private static Set<CsvFormat>      mKnownFormats;
-    private static Map <String,Character> mDelimiterInfo;
-    private static CsvFormat           mDefaultFormat;
-
 //    <delimiters default=","> 
-//    <delimiter locale="fr" format="outlook-2003-csv" char=";" /> 
-//    ...
-//  </delimiters>
+//        <delimiter locale="fr" format="outlook-2003-csv" char=";" /> 
+//        ...
+//    </delimiters>
 
     private static void populateDelimiterInfo(Element delimiters) {
         mDelimiterInfo = new HashMap<String,Character>();
@@ -492,6 +608,35 @@ public static String getTags(Map<String,String> csv) {
             if (myLocale != null && !myLocale.isEmpty())
                 format = new StringBuffer(format).append("/").append(myLocale).toString();
             mDelimiterInfo.put(format, delim.charAt(0));
+        }
+    }
+
+//    <dateformats> 
+//        <dateformat format="yahoo-csv" order="mdy" /> 
+//        ...
+//    </dateformats>
+
+    private static void populateDateFormatInfo(Element dateFormats) {
+        mDateOrderInfo = new HashMap<String,String>();
+
+        for (Iterator elements = dateFormats.elementIterator(DATEFORMAT); elements.hasNext(); ) {
+            Element dateFormat = (Element) elements.next();
+            String origOrder = dateFormat.attributeValue(ATTR_ORDER);
+            if (origOrder == null || origOrder.isEmpty())
+                continue;
+            String order = origOrder.toLowerCase();
+            if (! (order.equals("ymd") || order.equals("ydm") || order.equals("myd") ||
+                    order.equals("mdy") || order.equals("dmy") || order.equals("dym")) ) {
+                sLog.debug("invalid \"order\" %s in zimbra-contact-fields.xml", origOrder);
+                continue;
+            }
+            String format = dateFormat.attributeValue(ATTR_FORMAT);
+            if (format == null || format.isEmpty())
+                continue;
+            String myLocale  = dateFormat.attributeValue(ATTR_LOCALE);
+            if (myLocale != null && !myLocale.isEmpty())
+                format = new StringBuffer(format).append("/").append(myLocale).toString();
+            mDateOrderInfo.put(format, order);
         }
     }
 
@@ -543,36 +688,38 @@ public static String getTags(Map<String,String> csv) {
         String name;    // column name for this format
         String field;   // zimbra field that it maps to
         List<String> names;  // in case of multivalue mapping
-        boolean multivalue;
-        boolean isName;
-        boolean mapToTag;
+        ColType colType;
         CsvColumn(Element col) {
             names = new ArrayList<String>();
             name  = col.attributeValue(ATTR_NAME);
             field = col.attributeValue(ATTR_FIELD);
+            colType = ColType.SIMPLE;
             String type = col.attributeValue(ATTR_TYPE);
             if (type == null) {
                 return;
             } else if (type.equals("multivalue")) {
-                multivalue = true;
+                colType = ColType.MULTIVALUE;
                 Collections.addAll(names, name.split(","));
                 name = names.get(0);
             } else if (type.equals("name")) {
-                isName = true;
+                colType = ColType.NAME;
             } else if (type.equals("tag")) {
-                mapToTag = true;
+                colType = ColType.TAG;
+            } else if (type.equals("date")) {
+                colType = ColType.DATE;
             }
         }
 
         public String toString() {
             StringBuffer sb = new StringBuffer();
             sb.append(name).append(": ").append(field);
-            if (multivalue)
-                sb.append(" ").append("(multivalue cols=").append(names.toString()).append(")");
-            if (isName)
-                sb.append(" (name)");
-            if (mapToTag)
-                sb.append(" (tag)");
+            switch (colType) {
+            case NAME: sb.append(" (name)"); break;
+            case TAG: sb.append(" (tag)"); break;
+            case DATE: sb.append(" (date)"); break;
+            case MULTIVALUE: 
+                sb.append(" ").append("(multivalue cols=").append(names.toString()).append(")");break;
+            }
             return sb.toString();
         }
 
@@ -584,7 +731,7 @@ public static String getTags(Map<String,String> csv) {
          */
         public String matchingLcCsvFieldName(String fieldName) {
             String lcFieldName = fieldName.toLowerCase();
-            if (multivalue) {
+            if (colType == ColType.MULTIVALUE) {
                 for (String colName: names) {
                     if (colName.toLowerCase().equals(lcFieldName)) {
                         return lcFieldName;
@@ -640,6 +787,13 @@ public static String getTags(Map<String,String> csv) {
             return sb.toString();
         }
 
+        public String key() {
+            String myKey = name;
+            if (locale != null)
+                myKey = new StringBuffer(myKey).append("/").append(locale).toString();
+            return myKey;
+        }
+
         @Override
         public int compareTo(CsvFormat o) {
             final int BEFORE = -1;
@@ -692,6 +846,8 @@ public static String getTags(Map<String,String> csv) {
     }
     
     private static void readMapping(InputStream is) throws IOException, DocumentException {
+        mDelimiterInfo = new HashMap<String,Character>();
+        mDateOrderInfo = new HashMap<String,String>();
         Element root = com.zimbra.common.soap.Element.getSAXReader().read(is).getRootElement();
         for (Iterator elements = root.elementIterator(); elements.hasNext(); ) {
             Element elem = (Element) elements.next();
@@ -701,6 +857,8 @@ public static String getTags(Map<String,String> csv) {
                 addFormat(elem);
             else if (elem.getQName().equals(DELIMITERS))
                 populateDelimiterInfo(elem);
+            else if (elem.getQName().equals(DATEFORMATS))
+                populateDateFormatInfo(elem);
         }
     }
 
@@ -763,9 +921,7 @@ public static String getTags(Map<String,String> csv) {
         if (separator != null) {
             mFieldSeparator = separator;
         } else {
-            String delimKey = fmt.name;
-            if (fmt.locale != null)
-                delimKey = new StringBuffer(delimKey).append("/").append(fmt.locale).toString();
+            String delimKey = fmt.key();
             Character formatDefaultDelim = mDelimiterInfo.get(delimKey);
             if (formatDefaultDelim != null) {
                 sLog.debug("toCSV choosing %c from <delimiter> matching %s", formatDefaultDelim, delimKey);
@@ -833,7 +989,7 @@ public static String getTags(Map<String,String> csv) {
         for (CsvColumn col : fmt.columns) {
             if (!first)
                 sb.append(mFieldSeparator);
-            if (col.mapToTag) {
+            if (col.colType == ColType.TAG) {
             	try {
             		boolean firstTag = true;
                 	sb.append('"');
