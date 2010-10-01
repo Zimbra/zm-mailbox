@@ -17,6 +17,7 @@ package com.zimbra.cs.mime;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -26,6 +27,8 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
@@ -43,7 +46,7 @@ public class TnefFileCache {
      * Maps the hashcode of the <tt>MimeMessage</tt> object to one or more digests
      * of TNEF parts.
      */
-    private Map<Integer, Set<String>> mMessageToPart = new HashMap<Integer, Set<String>>();
+    private Multimap<Integer, String> mMessageToPartDigests = HashMultimap.create(); 
     
     /**
      * Maps the TNEF part digest to the file on disk.
@@ -82,32 +85,27 @@ public class TnefFileCache {
         }
     }
     
-    public synchronized File getFile(MimeMessage msg, MimeBodyPart part)
+    public File getFile(MimeMessage msg, MimeBodyPart part)
     throws IOException, MessagingException {
-        int msgHashcode = (msg == null ? 0 : msg.hashCode());
+        int msgHashcode = msg.hashCode();
         String digest = ByteUtil.getSHA1Digest(part.getInputStream(), true);
         sLog.debug("Getting file for MimeMessage %d, part digest %s.", msgHashcode, digest);
         
-        // Map the message hashcode to the digest of the TNEF part.
-        if (msg != null) {
-            Set<String> parts = mMessageToPart.get(msgHashcode);
-            if (parts == null) {
-                parts = new HashSet<String>();
-                mMessageToPart.put(msgHashcode, parts);
-            }
-            parts.add(digest);
-        }
+        synchronized (this) {
+            // Map the message hashcode to the digest of the TNEF part.
+            mMessageToPartDigests.put(msgHashcode, digest);
 
-        // Save the TNEF part to disk and put it into the digest map
-        // to indicate that the file is there.
-        File file = mDigestToFile.get(digest);
-        if (file == null) {
-            file = new File(mCacheDir, digest);
-            sLog.debug("Saving TNEF content to %s.", file);
-            part.saveFile(file);
-            mDigestToFile.put(digest, file);
+            // Save the TNEF part to disk and put it into the digest map
+            // to indicate that the file is there.
+            File file = mDigestToFile.get(digest);
+            if (file == null) {
+                file = new File(mCacheDir, digest);
+                sLog.debug("Saving TNEF content to %s.", file);
+                part.saveFile(file);
+                mDigestToFile.put(digest, file);
+            }
+            return file;
         }
-        return file;
     }
     
     public synchronized void purge(MimeMessage msg) {
@@ -117,13 +115,13 @@ public class TnefFileCache {
         int hashCode = msg.hashCode();
         sLog.debug("Purging message with hashcode %d.", hashCode);
         
-        Set<String> digests = mMessageToPart.remove(hashCode);
+        Collection<String> digests = mMessageToPartDigests.removeAll(hashCode);
         if (digests != null && !digests.isEmpty()) {
             // Delete the file only if there isn't another message that
             // is referencing it.
-            Set<String> partDigests = getMessagePartDigests();
+            Set<String> allDigests = getAllMessagePartDigests();
             for (String digest : digests) {
-                if (!partDigests.contains(digest)) {
+                if (!allDigests.contains(digest)) {
                     File file = mDigestToFile.remove(digest);
                     sLog.debug("Deleting %s.", file);
                     if (!file.delete()) {
@@ -139,10 +137,10 @@ public class TnefFileCache {
     /**
      * Returns all part digests from the <tt>mMessageToPart</tt> map.
      */
-    private synchronized Set<String> getMessagePartDigests() {
+    private synchronized Set<String> getAllMessagePartDigests() {
         Set<String> allDigests = new HashSet<String>();
-        for (Set<String> digests : mMessageToPart.values()) {
-            allDigests.addAll(digests);
+        for (int hashCode : mMessageToPartDigests.keySet()) {
+            allDigests.addAll(mMessageToPartDigests.get(hashCode));
         }
         return allDigests;
     }
