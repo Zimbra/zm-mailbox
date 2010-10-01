@@ -40,9 +40,10 @@ public abstract class DomainNameMappingHandler {
      * 
      * @param foreignName
      * @param params
-     * @return 
+     * @param zimbraDomainName
+     * @return
      */
-    abstract String mapName(String foreignName, String params) throws ServiceException;
+    public abstract String mapName(String foreignName, String params, String zimbraDomainName) throws ServiceException;
     
     
     private static class HandlerInfo {
@@ -91,7 +92,7 @@ public abstract class DomainNameMappingHandler {
     
     private static class UnknownDomainNameMappingHandler extends DomainNameMappingHandler {
         @Override
-        String mapName(String foreignName, String params) {
+        public String mapName(String foreignName, String params, String zimbraDomainName) {
             return null; // should never be called
         }
     }
@@ -151,19 +152,19 @@ public abstract class DomainNameMappingHandler {
         return handlers.get(application);
     }
 
-    static String mapName(HandlerConfig handlerConfig, String foreignName) throws ServiceException {
+    static String mapName(HandlerConfig handlerConfig, String foreignName, String zimbraDomainName) throws ServiceException {
         DomainNameMappingHandler handler = getHandler(handlerConfig);
         
         if (handler instanceof UnknownDomainNameMappingHandler)
             throw ServiceException.FAILURE("unable to load domain name mapping handler " + 
                     handlerConfig.getClassName() + " for application:" + handlerConfig.getApplicaiton(), null);
 
-        return handler.mapName(foreignName, handlerConfig.getParams());
+        return handler.mapName(foreignName, handlerConfig.getParams(), zimbraDomainName);
     }
 
 
     static class DummyHandler extends DomainNameMappingHandler {
-        public String mapName(String foreignName, String params) throws ServiceException{
+        public String mapName(String foreignName, String params, String zimbraDomainName) throws ServiceException{
             return "user2@phoebe.mbp";
         }
     }

@@ -778,7 +778,7 @@ public class LdapProvisioning extends Provisioning {
         String acctName;
         if (handlerConfig != null) {
             // invoke the custom handler 
-            acctName = DomainNameMappingHandler.mapName(handlerConfig, foreignName);
+            acctName = DomainNameMappingHandler.mapName(handlerConfig, foreignName, domain.getName());
         } else {
             // do our builtin mapping of {localpart}@{zimbra domain name}
             acctName = foreignName.split("@")[0] + "@" + domain.getName();
