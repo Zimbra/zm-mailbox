@@ -1468,7 +1468,7 @@ public class LC {
         data_source_xsync_class = new KnownKey("data_source_xsync_class", "");
         data_source_xsync_factory_class = new KnownKey("data_source_xsync_factory_class", "");
 
-        data_source_config = new KnownKey("zimbra desktop datasource configuration");
+        data_source_config = new KnownKey("zimbra_datasource_config");
         data_source_config.setDefault("${zimbra_home}" + File.separator + "conf" + File.separator + "datasource.xml");
         data_source_config.setDoc("Path to datasource configuration file.");
 
