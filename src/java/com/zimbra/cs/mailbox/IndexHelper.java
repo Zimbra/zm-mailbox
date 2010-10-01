@@ -72,9 +72,11 @@ public class IndexHelper {
     // searches while doing a full reindex...
     private boolean mFullReindexInProgress = false;
 
-    /** Status of current reindexing operation for this mailbox, or NULL
-     *  if a re-index is not in progress. */
-    private BatchedIndexStatus mReIndexStatus = null;
+    /**
+     * Status of current reindexing operation for this mailbox,
+     * or NULL if a re-index is not in progress.
+     */
+    private BatchedIndexStatus mReIndexStatus;
     private long mLastIndexDeferredTime = 0; // the ENDING time of the last index-deferred-items attempt
     private boolean mIndexingDeferredItems = false; // TRUE if we're in the middle of an index-deferred op.
     private Object mIndexingDeferredItemsLock = new Object(); // the lock protects the mIndexingDeferredItems boolean below
@@ -359,7 +361,7 @@ public class IndexHelper {
             }
         }
 
-        BatchedIndexStatus status = new BatchedIndexStatus();
+        BatchedIndexStatus status = mFullReindexInProgress ? mReIndexStatus : new BatchedIndexStatus();
         status.mNumToProcess = items.size();
         try {
             indexItemList(items, status, false);

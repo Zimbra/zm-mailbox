@@ -5,10 +5,10 @@
 Attributes for all commands can have multiple values:
 
   <a n="name1">{value}</a>
-  <a n="name2">{value}</a>  
-  <a n="name1">{value}</a>  
+  <a n="name2">{value}</a>
+  <a n="name1">{value}</a>
 
-Note that name1 appears twice. 
+Note that name1 appears twice.
 
 When updating multiple attributes, you need to specify all the old values at the same time you specify new ones.
 
@@ -18,9 +18,9 @@ When updating multiple attributes, you need to specify all the old values at the
    [<account by="name|id|foreignPrincipal">...</account>]
    <password>...</password>
  </AuthRequest>
- 
+
  Only one of <name> or <account> can/must be specified.
- 
+
  <AuthResponse>
    <authToken>...</authToken>
    <lifetime>...</lifetime>
@@ -32,9 +32,9 @@ Access: domain admin sufficient
 
 ----------------------------
  <DelegateAuthRequest xmlns="urn:zimbraAdmin" [duration="{duration}"]>
-   <account by="id|name">...</account> 
+   <account by="id|name">...</account>
  </DelegateAuthRequest>
- 
+
  <DelegateAuthResponse>
    <authToken>...</authToken>
    <lifetime>...</lifetime>
@@ -46,7 +46,7 @@ and the requesting admin's id will be stored in the auth token for auditing purp
 {duration} = lifetime in seconds of the newly-created authtoken. defaults to 1 hour. Can't be longer then zimbraAuthTokenLifetime.
 
 ----------------------------
- 
+
 <CreateAccountRequest>
   <name>...</name>
   <password>...</password>*
@@ -56,7 +56,7 @@ and the requesting admin's id will be stored in the auth token for auditing purp
 <CreateAccountResponse>
   <account name="{name}" id="{id}">
     <a n="...">...</a>+
-  </account>  
+  </account>
 </CreateAccountResponse>
 
 Notes:
@@ -65,7 +65,7 @@ Notes:
 
   name must include domain (uid@name), and domain specified in name must exist
 
-  default value for zimbraAccountStatus is "active"  
+  default value for zimbraAccountStatus is "active"
 
 Access: domain admin sufficient
 
@@ -78,7 +78,7 @@ Access: domain admin sufficient
 <GetAccountResponse>
   <account name="{name}" id="{id}">
     <a n="...">...</a>+
-  </account>  
+  </account>
 </GetAccountResponse>
 
 {apply-cos} = 0|1 (1 is default)
@@ -86,7 +86,7 @@ Access: domain admin sufficient
  if {apply-cos} is 1, then COS rules apply and unset attrs on an account will get their value from the COS.
 
  if {apply-cos} is 0, then only attributes directly set on the account will be returned
- 
+
 {req-attrs} = comma-seperated list of attrs to return
 
 Access: domain admin sufficient
@@ -98,27 +98,27 @@ Access: domain admin sufficient
 <GetAccountInfoRequest>
   <account by="id|name">...</account>
 </GetAccountInfoRequest>
- 
+
 <GetAccountInfoResponse>
    <name>{account-name}</name>
    <a n="{name}">{value}</a>+
    <soapURL>{mail-url}</soapURL>+
    <adminSoapURL>{mail-url}</adminSoapURL>
 </GetInfoResponse>
- 
+
   {account-name} = email address (user@domain)
 
   {attrs} = account attrs. Currently only two attrs are returned:
-  
+
       zimbraId       - the unique UUID of the zimbra account
       zimbraMailHost - the server on which this user's mail resides
 
   {mail-url} = URL to talk to for soap service for this account. i.e:
-  
+
        http://server:7070/service/soap/
 
        Multiple URLs can be returned if both http and https (SSL) are enabled. If only one of the two is enabled,
-       the only one URL will be returned.       
+       the only one URL will be returned.
 
 Access: domain admin sufficient
 
@@ -126,20 +126,20 @@ Access: domain admin sufficient
 
 <GetAccountMembershipRequest>
   <account by="id|name|foreignPrincipal">...</account>
-</GetAccountMembershipRequest>  
+</GetAccountMembershipRequest>
 
 <GetAccountMembershipResponse>
     <dl name="{name}" id="{id}"  via="{via-dl-name}">
       <a n="zimbraIsAdminGroup">...</a>+
     </dl>+
-</GetAccountMembershipResponse>    
+</GetAccountMembershipResponse>
 
 {via-dl-name} = is present if the account is a member of the returned list because they are either a direct
                 or indirect member of another list that is a member of the returned list. For example,
                 if a user is a member of engineering@domain.com, and engineering@domain.com is a member of all@domain.com,
                 then <dl name="all@domain.com" ... via="engineering@domain.com"/> would be returned.
 
-                
+
 -----------------------------
 
 <GetAllAdminAccountsRequest [applyCos="{apply-cos}"]/>
@@ -147,7 +147,7 @@ Access: domain admin sufficient
 <GetAllAdminAccountsResponse>
   <account name="{name}" id="{id}">
     <a n="...">...</a>+
-  </account>  
+  </account>
 </GetAllAdminAccountsResponse>
 
 -----------------------------
@@ -160,7 +160,7 @@ Access: domain admin sufficient
 <ModifyAccountResponse>
   <account name="{name}" id="{id}">
     <a n="...">...</a>+
-  </account>  
+  </account>
 </ModifyAccountResponse>
 
 Notes:
@@ -181,7 +181,7 @@ Access: domain admin sufficient. limited set of attributes that can be updated b
 <RenameAccountResponse>
   <account name="{name}" id="{id}">
     <a n="...">...</a>+
-  </account>  
+  </account>
 </RenameAccountResponse>
 
 Access: domain admin sufficient
@@ -269,29 +269,29 @@ NOTE: SearchAccountsRequest is deprecated. See SearchDirectoryRequest.
     <a n="...">...</a>+
   </account>
   <alias name="{name}" id="{id}">
-    <a n="...">...</a>+  
+    <a n="...">...</a>+
   </alias>
-  <dl name="{name}" id="{id}">  
-    <a n="...">...</a>+  
+  <dl name="{name}" id="{id}">
+    <a n="...">...</a>+
   </dl>
 </SearchAccountsResponse>
 
 Notes:
 SearchAccountsRequest
-	<query> - query string should be an LDAP-style filter string (RFC 2254)
-	limit - the number of accounts to return (0 is default and means all)
-	offset - the starting offset (0, 25, etc)
-	domain - the domain name to limit the search to
-	applyCos - whether or not (0/1) to apply the COS policy to account. specify 0 if only
-	           requesting attrs that aren't inherited from COS
-	applyConfig - whether or not (0/1) to apply the global config attrs to domain. specify 0 if only
+  <query> - query string should be an LDAP-style filter string (RFC 2254)
+  limit - the number of accounts to return (0 is default and means all)
+  offset - the starting offset (0, 25, etc)
+  domain - the domain name to limit the search to
+  applyCos - whether or not (0/1) to apply the COS policy to account. specify 0 if only
+             requesting attrs that aren't inherited from COS
+  applyConfig - whether or not (0/1) to apply the global config attrs to domain. specify 0 if only
                requesting attrs that aren't inherited from global config
-	attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraAccountStatus")
-	sortBy - name of attribute to sort on. default is the account name.
-	sortAscending - whether to sort in ascending order (0/1), 1 is default
+  attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraAccountStatus")
+  sortBy - name of attribute to sort on. default is the account name.
+  sortAscending - whether to sort in ascending order (0/1), 1 is default
     more-flag = true if more accounts left to return
     search-total = total number of accounts that matched search (not affected by limit/offset)
-    types = comma-separated list of types to return. legal values are: 
+    types = comma-separated list of types to return. legal values are:
             accounts|distributionlists|aliases|resources|domains
             (default is accounts)
 
@@ -302,7 +302,7 @@ Access: domain admin sufficient (a domain admin can't specify "domains" as a typ
  <AutoCompleteGalRequest domain="{domain}" [type="{type}"] limit="limit-returned">
    <name>...</name>
  </AutoCompleteGalRequest>
- 
+
  <AutoCompleteGalResponse more="{more}" [tokenizeKey="{tokenize-key-op}"]>
    <cn>...</cn>*
  </AutoCompleteGalResponse>
@@ -314,36 +314,36 @@ Access: domain admin sufficient (a domain admin can't specify "domains" as a typ
            "resource" for calendar resources
            "all" for combination of both types
            if omitted, defaults to "accounts"
-           
+
   {more-flag} = 1 if the results were truncated.
-  
+
   {tokenize-key-op} = and|or
          - Not present if the search key was not tokenized.
          - Some clients backtrack on GAL results assuming the results of a more
-           specific key is the subset of a more generic key, and it checks cached 
-           results instead of issuing another SOAP request to the server.    
-           If search key was tokenized and expanded with AND or OR, this cannot 
+           specific key is the subset of a more generic key, and it checks cached
+           results instead of issuing another SOAP request to the server.
+           If search key was tokenized and expanded with AND or OR, this cannot
            be assumed.
 
 Notes: admin verison of mail equiv. Used for testing via zmprov.
-  
+
 -----------------------------
  <SearchGalRequest [type="{type}"]>
    <name>...</name>
  </SearchGalRequest>
- 
+
  <SearchGalResponse more="{more}" [tokenizeKey="{tokenize-key-op}"]>
    <cn>...</cn>*
  </SearchGalResponse>
 
   {more-flag} = 1 if the results were truncated.
-  
+
   {tokenize-key-op} = and|or
          - Not present if the search key was not tokenized.
          - Some clients backtrack on GAL results assuming the results of a more
-           specific key is the subset of a more generic key, and it checks cached 
-           results instead of issuing another SOAP request to the server.    
-           If search key was tokenized and expanded with AND or OR, this cannot 
+           specific key is the subset of a more generic key, and it checks cached
+           results instead of issuing another SOAP request to the server.
+           If search key was tokenized and expanded with AND or OR, this cannot
            be assumed.
 
   {type} = type of addresses to search
@@ -351,8 +351,8 @@ Notes: admin verison of mail equiv. Used for testing via zmprov.
            "resource" for calendar resources
            "all" for combination of both types
            if omitted, defaults to "all"
-           
-Notes: admin verison of mail equiv. Used for testing via zmprov.           
+
+Notes: admin verison of mail equiv. Used for testing via zmprov.
 
 -----------------------------
 
@@ -366,44 +366,44 @@ Notes: admin verison of mail equiv. Used for testing via zmprov.
     <a n="...">...</a>+
   </account>*
   <alias name="{name}" id="{id} type="account|distributionlist|resource" targetName={target-name}">
-    <a n="...">...</a>+  
+    <a n="...">...</a>+
   </alias>*
   <dl name="{name}" id="{id}>
-    <a n="...">...</a>+  
+    <a n="...">...</a>+
   </dl>*
   <domain name="{name}" id="{id}">
-    <a n="...">...</a>+  
+    <a n="...">...</a>+
   </domain>*
   <cos name="{name}" id="{id}">
-    <a n="...">...</a>+  
-  </cos>*    
+    <a n="...">...</a>+
+  </cos>*
 </SearchDirectoryResponse>
 
 Notes:
 SearchDirectoryRequest
-	<query> - query string should be an LDAP-style filter string (RFC 2254)
-	maxResults = maximum results that the backend will attempt to fetch from the directory before
-	returning a account.TOO_MANY_SEARCH_RESULTS error.
+  <query> - query string should be an LDAP-style filter string (RFC 2254)
+  maxResults = maximum results that the backend will attempt to fetch from the directory before
+  returning a account.TOO_MANY_SEARCH_RESULTS error.
 
-	limit - the number of accounts to return per page (0 is default and means all)
-	offset - the starting offset (0, 25, etc)
-	domain - the domain name to limit the search to (do not use if searching for domains)
-	applyCos - whether or not (0/1) to apply the COS policy to account. specify 0 if only
-	           requesting attrs that aren't inherited from COS
-	attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraAccountStatus")
-	sortBy - name of attribute to sort on. default is the account name.
-	sortAscending - whether to sort in ascending order (0/1), 1 is default
+  limit - the number of accounts to return per page (0 is default and means all)
+  offset - the starting offset (0, 25, etc)
+  domain - the domain name to limit the search to (do not use if searching for domains)
+  applyCos - whether or not (0/1) to apply the COS policy to account. specify 0 if only
+             requesting attrs that aren't inherited from COS
+  attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraAccountStatus")
+  sortBy - name of attribute to sort on. default is the account name.
+  sortAscending - whether to sort in ascending order (0/1), 1 is default
     more-flag = true if more accounts left to return
     search-total = total number of accounts that matched search (not affected by limit/offset)
-    types = comma-separated list of types to return. legal values are: 
+    types = comma-separated list of types to return. legal values are:
             accounts|distributionlists|aliases|resources|domains|coses
             (default is accounts)
 
 Access: domain admin sufficient (though a domain admin can't specify "domains" as a type)
-     
+
 -----------------------------
 
-<GetQuotaUsageRequest [limit="..."] [offset="..."] [domain="{limit-to-domain}"] 
+<GetQuotaUsageRequest [limit="..."] [offset="..."] [domain="{limit-to-domain}"]
          [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"]]>
 </GetQuotaUsageRequest>
 
@@ -441,7 +441,7 @@ Notes:
 Returns all data from the mailbox table (in db.sql), except for the "comment" column.
   limit - the number of mailboxes to return (0 is default and means all)
   offset - the starting offset (0, 25, etc)
-            
+
 -----------------------------
 
 <GetMailboxStatsRequest/>
@@ -464,7 +464,7 @@ Notes:
 <GetAllAccountsResponse>
   <account name="{name}" id="{id}">
     <a n="...">...</a>+
-  </account>  
+  </account>
 </GetAllAccountsResponse>
 
 Access: domain admin sufficient
@@ -479,7 +479,7 @@ Access: domain admin sufficient
 <CreateDomainResponse>
   <domain name="{name}" id="{id}">
     <a n="...">...</a>+
-  </domain>  
+  </domain>
 </CreateDomainResponse>
 
 Notes:
@@ -492,7 +492,7 @@ Notes:
 -----------------------------
 
 <GetDomainRequest [applyConfig="{apply-config}"] [attrs="{req-attrs}"]>
-  <domain by="id|name|virtualHostname">...</domain> 
+  <domain by="id|name|virtualHostname">...</domain>
 </GetDomainRequest>
 
 <GetDomainResponse>
@@ -506,13 +506,13 @@ Notes:
  if {apply-config} is 1, then certain unset attrs on a domain will get their value from the global config.
 
  if {apply-config} is 0, then only attributes directly set on the domain will be returned
- 
+
  {req-attrs} = comma-seperated list of attrs to return
 
 -----------------------------
 
 <GetDomainInfoRequest [applyConfig="{apply-config}"]>
-  <domain by="id|name|virtualHostname">...</domain> 
+  <domain by="id|name|virtualHostname">...</domain>
 </GetDomainInfoRequest>
 
 <GetDomainInfoResponse>
@@ -521,8 +521,8 @@ Notes:
   </domain>
 </GetDomainInfoResponse>
 
-This call does *not* require an auth token.  It returuns attributes that are pertinent to domain settings 
-for cases when the user is not authenticated.  For example, URL to direct the user to upon loggin out or when 
+This call does *not* require an auth token.  It returuns attributes that are pertinent to domain settings
+for cases when the user is not authenticated.  For example, URL to direct the user to upon loggin out or when
 auth token is expired.
 
 If the domain doesn't exist, this call returns an empty body:
@@ -541,7 +541,7 @@ If the domain doesn't exist, this call returns an empty body:
 <GetAllDomainsRequest [applyConfig="{apply-config}"]/>
 
 <GetAllDomainsResponse>
-  <domain name="{name}" id="{id}">  
+  <domain name="{name}" id="{id}">
     <a n="...">...</a>+
   </domain>+
 </GetAllDomainsResponse>
@@ -609,7 +609,7 @@ Notes:
 
 <GetCosResponse>
   <cos name="{name}" id="{id}">
-    <a [c="{cos-attr}"] n="...">...</a>+    
+    <a [c="{cos-attr}"] n="...">...</a>+
   </cos>
 </GetCosResponse>
 
@@ -624,8 +624,8 @@ Notes:
 
 <GetAllCosResponse>
   <cos name="{name}" id="{id}">
-    <a [c="{cos-attr}"] n="...">...</a>+    
-  </cos>+  
+    <a [c="{cos-attr}"] n="...">...</a>+
+  </cos>+
 </GetAllCosResponse>
 
 -----------------------------
@@ -637,8 +637,8 @@ Notes:
 
 <ModifyCosResponse>
   <cos name="{name}" id="{id}">
-    <a [c="{cos-attr}"] n="...">...</a>+    
-  </cos>+  
+    <a [c="{cos-attr}"] n="...">...</a>+
+  </cos>+
 </ModifyCosResponse>
 
 Notes:
@@ -655,7 +655,7 @@ Notes:
 <RenameCosResponse>
   <cos name="{name}" id="{id}">
     <a n="...">...</a>+
-  </cos>  
+  </cos>
 </RenameCosResponse>
 
 -----------------------------
@@ -708,7 +708,7 @@ by "serviceHostname" will return the server that has zimbraServiceHostname set t
  if {apply-config} is 1, then certain unset attrs on a server will get their value from the global config.
 
  if {apply-config} is 0, then only attributes directly set on the server will be returned
- 
+
  {req-attrs} = comma-seperated list of attrs to return
 
 -----------------------------
@@ -807,12 +807,12 @@ are returned.  If the stat name is invalid, returns a SOAP fault.
 <GetLoggerStatsResponse>
   <!-- first case, list of reporting hostnames -->
   <hostname hn="..."/>+
-  
+
   <!-- second case, list of stat groupings for a given host-->
-  <hostname hn="..."> 
+  <hostname hn="...">
     <stats name="..."/>+
   </hostname>
-  
+
   <!-- third case, list of columns for a given host and grouping -->
   <hostname hn="...">
     <stats name="...">
@@ -821,7 +821,7 @@ are returned.  If the stat name is invalid, returns a SOAP fault.
       </values>
     </stats>
   </hostname>
-  
+
   <!-- fourth case, actual stat results -->
   <hostname hn="...">
     <stats name="...">
@@ -830,7 +830,7 @@ are returned.  If the stat name is invalid, returns a SOAP fault.
       </values>
     </stats>
   </hostname>
-  
+
 </GetLoggerStatsResponse>
 
 Query to retrieve Logger statistics in ZCS 6.0.
@@ -847,7 +847,7 @@ Use cases:
   - result: all of the statistics for the given host/group are returned, if start
     and end are specified, limit/expand the timerange to the given setting.
     if limit=true is specified, attempt to reduce result set to under 500 records
-    
+
 -----------------------------
 <GetServiceStatusRequest/>
 
@@ -889,17 +889,26 @@ Access: domain admin sufficient
 
 <ReIndexRequest action="start|status|cancel">
   <mbox id="{account-id}" [types={types} | ids={ids}]/>
-</ReIndexRequest>  
+</ReIndexRequest>
 
-<ReIndexResponse status="started" | "running" | "cancelled">
+<ReIndexResponse status="started|running|cancelled|idle">
   [<progress numSucceeded="SUCCEEDED" numFailed="FAILED" numRemaining="REMAINING">]
 </ReIndexResponse>
-   -- Progress data is currently ONLY returned by the "status" and "cancelled" calls
 
    -types -ids are optional, however at most ONE may be specified:
-      {ids] = comma-separated list of IDs to re-index.  
+      {ids] = comma-separated list of IDs to re-index.
       {types} 	= comma-separated list.  Legal values are:
                   conversation|message|contact|appointment|task|note|wiki|document
+
+  action start - start reindexing
+    status started - success
+    status running - reindexing is already running
+  action status - show reindexing progress
+    status running - returns progress information
+    status idle - reindexing is not running
+  action cancel - cancel reindexing
+    status cancelled - success and returns progress information
+    status idle - reindexing is not running
 
 Access: domain admin sufficient
 
@@ -972,13 +981,13 @@ code is one of the following Strings:
 
  code                         description
  -------                      -----------
- check.OK                     everything went ok 
+ check.OK                     everything went ok
  check.UNKNOWN_HOST           unable to resolve a hostname
- check.CONNECTION_REFUSED     connection to a port was refused 
+ check.CONNECTION_REFUSED     connection to a port was refused
  check.SSL_HANDSHAKE_FAILURE  SSL connect problem, most likely untrusted certificate
  check.COMMUNICATION_FAILURE  generic communication failure
  check.AUTH_FAILED            authentication failed. invalid credentials (bad dn/password)
- check.AUTH_NOT_SUPPORTED     authentication flavor not supported. LDAP server probably 
+ check.AUTH_NOT_SUPPORTED     authentication flavor not supported. LDAP server probably
                               configured to not allow passwords
  check.NAME_NOT_FOUND         unable to resolve an LDAP name. most likely invalid search base
  check.INVALID_SEARCH_FILTER  invalid ldap search filter
@@ -1005,7 +1014,7 @@ checked.
 
 <CheckGalConfigRequest>
   <a n='zimbraGalMode'>ldap</a>
-  
+
   <a n='zimbraGalLdapURL'>...</a>
   <a n='zimbraGalLdapSearchBase'>...</a>
   <a n='zimbraGalLdapFilter'>...</a>
@@ -1014,7 +1023,7 @@ checked.
   <a n='zimbraGalLdapBindPassword'>...</a>*
   <a n='zimbraGalLdapKerberos5Principal'>...</a>*
   <a n='zimbraGalLdapKerberos5Keytab'>...</a>*
-  
+
   <a n='zimbraGalSyncLdapURL'>...</a>
   <a n='zimbraGalSyncLdapSearchBase'>...</a>
   <a n='zimbraGalSyncLdapFilter'>...</a>
@@ -1023,12 +1032,12 @@ checked.
   <a n='zimbraGalSyncLdapBindPassword'>...</a>*
   <a n='zimbraGalSyncLdapKerberos5Principal'>...</a>*
   <a n='zimbraGalSyncLdapKerberos5Keytab'>...</a>*
-  
+
   <a n='zimbraGalAutoCompleteLdapFilter'>...</a>
-  
+
   <a n='zimbraGalTokenizeAutoCompleteKey'>...</a>
   <a n='zimbraGalTokenizeSearchKey'>...</a>
-  
+
   <query limit="...">...</query>*
   <action>{GAL-action}</action>*
 </CheckGalConfigRequest>
@@ -1039,11 +1048,11 @@ checked.
   <cn>...</cn>*
 </CheckGalConfigResponse>
 
-notes: 
+notes:
  - zimbraGalMode must be set to ldap, even if you eventually want to set it to "both".
  - <action> is optional.  GAL-action can be autocomplete|search|sync.  Default is search.
  - <query> is ignored if <action> is "sync".
- - AuthMech can be none|simple|kerberos5.  
+ - AuthMech can be none|simple|kerberos5.
       - Default is simple if both BindDn/BindPassword are provided.
       - Default is none if not both BindDn/BindPassword are provided.
  - BindDn/BindPassword are required if AuthMech is "simple".
@@ -1075,11 +1084,11 @@ notes:
   - zimbraAuthMech must be set to ldap/ad. There is no reason to check zimbra.
   - zimbraAuthLdapURL must be set
   - either zimbraAuthLdapBindDn or zimbraAuthLdapSearchFilter must be set
-  
+
   The following are optional, and only looked at if zimbraAuthLdapSearchFilter is set:
      - zimbraAuthLdapSearchBase is optional and defaults to ""
      - zimbraAuthLdapSearchBind{Dn,Password} are both optional
- 
+
 -----------------------------------
 
 <CreateVolumeRequest>
@@ -1212,7 +1221,7 @@ and deletes the items from the mailbox.  Exported filenames follow the
 pattern <prefix><table_name>.txt.  The files are written sqlExportDir.
 When sqlExportDir is not specified, data is not exported.  Export is
 only supported for MySQL.
- 
+
 -----------------------------
 
 <CreateDistributionListRequest>
@@ -1223,7 +1232,7 @@ only supported for MySQL.
 <CreateDistributionListResponse>
   <dl name="{name}" id="{id}">
     <a n="...">...</a>+
-  </dl>  
+  </dl>
 </CreateDistributionListResponse>
 
 Notes:
@@ -1259,7 +1268,7 @@ Notes:
 
     more-flag = true if more accounts left to return
     total = total number of distribution lists (not affected by limit/offset)
-    
+
     req-attrs = comma-seperated list of attrs to return
 
 Access: domain admin sufficient
@@ -1314,7 +1323,7 @@ modification to the list.
   <id>{value-of-zimbraId}</id>
   <a n="...">...</a>+
 </ModifyDistributionListRequest>
-  
+
 
 <ModifyDistributionListResponse>
   <dl name="{name}" id="{id}">
@@ -1370,7 +1379,7 @@ Access: domain admin sufficient
 <RenameDistributionListResponse>
   <dl name="{name}" id="{id}">
     <a n="...">...</a>+
-  </dl>  
+  </dl>
 </RenameDistributionListResponse>
 
 Access: domain admin sufficient
@@ -1379,11 +1388,11 @@ Access: domain admin sufficient
 
 <GetDistributionListMembershipRequest>
   <dl by="id|name">...</dl>
-</GetDistributionListMembershipRequest>  
+</GetDistributionListMembershipRequest>
 
 <GetDistributionListMembershipResponse>
     <dl name="{name}" id="{id}"  via="{via-dl-name}" />+
-</GetDistributionListMembershipResponse>    
+</GetDistributionListMembershipResponse>
 
 {via-dl-name} = is present if the dl is a member of the returned list because they are either a direct
                 or indirect member of another list that is a member of the returned list. For example,
@@ -1395,7 +1404,7 @@ Access: domain admin sufficient
 <GetClusterStatusRequest/>
 
 <GetClusterStatusResponse>
-  <clusterName>{cluster-name}</clusterName>	
+  <clusterName>{cluster-name}</clusterName>
   <servers>
     <server name="{server-name}" status="{1-or-0}"/>*
   </servers>
@@ -1528,12 +1537,12 @@ Access: domain admin sufficient
 </GetAllZimletsResponse>
 
 Notes:
-	{exclude} can be "none|extension|mail"
-	when exclude="extension" is specified the response returns only mail Zimlets
-	when exclude="mail" is specified the response returns only admin extensions
-	when exclude = "none" both mail and admin zimlets are returned
-	
-	default is "none"
+  {exclude} can be "none|extension|mail"
+  when exclude="extension" is specified the response returns only mail Zimlets
+  when exclude="mail" is specified the response returns only admin extensions
+  when exclude = "none" both mail and admin zimlets are returned
+
+  default is "none"
 -----------------------------
 
 <CreateZimletRequest>
@@ -1574,7 +1583,7 @@ Notes:
       ]
    ]
    </soap>
-   
+
    <imap>...</imap>
    <admin>...</admin>
 </DumpSessionsResponse>
@@ -1596,9 +1605,9 @@ GetSessionsRequest
 
     type = soap|imap|admin
     refresh = if 1, ignore any cached results and start fresh.
-	limit - the number of sessions to return per page (0 is default and means all)
-	offset - the starting offset (0, 25, etc)
-	sortBy - nameAsc, nameDesc, createdAsc, createdDesc, accessedAsc, accessedDesc
+  limit - the number of sessions to return per page (0 is default and means all)
+  offset - the starting offset (0, 25, etc)
+  sortBy - nameAsc, nameDesc, createdAsc, createdDesc, accessedAsc, accessedDesc
 
     more-flag = true if more sessions left to return
     total = total number of accounts that matched search (not affected by limit/offset)
@@ -1622,7 +1631,7 @@ those of Account.
 <CreateCalendarResourceResponse>
   <calresource name="{name}" id="{id}">
     <a n="...">...</a>+
-  </calresource>  
+  </calresource>
 </CreateCalendarResourceResponse>
 
 Notes:
@@ -1655,7 +1664,7 @@ Access: domain admin sufficient
 <ModifyCalendarResourceResponse>
   <calresource name="{name}" id="{id}">
     <a n="...">...</a>+
-  </calresource>  
+  </calresource>
 </ModifyCalendarResourceResponse>
 
 Notes:
@@ -1676,7 +1685,7 @@ Access: domain admin sufficient. limited set of attributes that can be updated b
 <RenameCalendarResourceResponse>
   <calresource name="{name}" id="{id}">
     <a n="...">...</a>+
-  </calresource>  
+  </calresource>
 </RenameCalendarResourceResponse>
 
 Access: domain admin sufficient
@@ -1692,7 +1701,7 @@ Access: domain admin sufficient
 <GetCalendarResourceResponse>
   <calresource name="{name}" id="{id}">
     <a n="...">...</a>+
-  </calresource>  
+  </calresource>
 </GetCalendarResourceResponse>
 
 {apply-cos} = 0|1 (1 is default)
@@ -1700,8 +1709,8 @@ Access: domain admin sufficient
  if {apply-cos} is 1, then COS rules apply and unset attrs on the calendar resource will get their value from the COS.
 
  if {apply-cos} is 0, then only attributes directly set on the calendar resource will be returned
- 
-{req-attrs} = comma-seperated list of attrs to return 
+
+{req-attrs} = comma-seperated list of attrs to return
 
 Access: domain admin sufficient
 
@@ -1715,7 +1724,7 @@ Access: domain admin sufficient
 <GetAllCalendarResourcesResponse>
   <calresource name="{name}" id="{id}">
     <a n="...">...</a>+
-  </calresource>  
+  </calresource>
 </GetAllCalendarResourcesResponse>
 
 Access: domain admin sufficient
@@ -1735,14 +1744,14 @@ Access: domain admin sufficient
 
 Notes:
 SearchCalendarResourcesRequest
-	limit - the number of calendar resources to return (0 is default and means all)
-	offset - the starting offset (0, 25, etc)
-	domain - the domain name to limit the search to
-	applyCos - whether or not (0/1) to apply the COS policy to calendar resource. specify 0 if only
-	           requesting attrs that aren't inherited from COS
-	attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraAccountStatus")
-	sortBy - name of attribute to sort on. default is the calendar resource name.
-	sortAscending - whether to sort in ascending order (0/1), 1 is default
+  limit - the number of calendar resources to return (0 is default and means all)
+  offset - the starting offset (0, 25, etc)
+  domain - the domain name to limit the search to
+  applyCos - whether or not (0/1) to apply the COS policy to calendar resource. specify 0 if only
+             requesting attrs that aren't inherited from COS
+  attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraAccountStatus")
+  sortBy - name of attribute to sort on. default is the calendar resource name.
+  sortAscending - whether to sort in ascending order (0/1), 1 is default
     more-flag = true if more calendar resources left to return
     search-total = total number of calendar resources that matched search (not affected by limit/offset)
 
@@ -1845,8 +1854,8 @@ Example of qs node is:
 
 Example of qi nodes:
 
-   <qi id="ABCDEF1234" 
-       from="jack@example.com" 
+   <qi id="ABCDEF1234"
+       from="jack@example.com"
        to="foo@example.com,bar@example.com"
        time="1142622329"  XXX - should this be in milliseconds?
        filter="smtp-amavis:[127.0.0.1]:10024"
@@ -1899,7 +1908,7 @@ Initializes the Notebook account used for public folder and templates.
 {template-dir} is a directory on the server that contains the Wiki
 templates.  {template-folder} is a folder in the Mailbox that
 the templates are being imported to.  The default value of {template-folder}
-is "Template" folder.  
+is "Template" folder.
 
 When the element template is present in the request,
 the server will populate the template directory of the account
@@ -2030,7 +2039,7 @@ in soap-waitset.txt
 <GetAdminSavedSearchesRequest>
   <search name="{search-name}"/>*
 </GetAdminSavedSearchesRequest>
-  
+
   If no <search> is present server will return all saved searches.
 
 <GetAdminSavedSearchesResponse>
@@ -2107,7 +2116,7 @@ in soap-waitset.txt
 
   Returns all account loggers that have been created on the given server
   since the last server start.
-  
+
 -----------------------------
 
 # Check existence of one or more directories and optionally create them.
@@ -2137,17 +2146,17 @@ in soap-waitset.txt
   </cache>
 </FlushCacheRequest>
 
-  allServers: 
+  allServers:
       0 (default) = flush cache only on the local server
       1           = flush cache on all servers (this can take on systems with lots of servers)
-    
+
 
   Directory scan caches(source of data is on local disk of the server):
       skin|locale
-      
+
   LDAP caches(source of data is LDAP):
       account|cos|domain|server|zimlet
-  	      
+
   For LDAP caches, one or more optional <entry> can be specified.
   If <entry>(s) are specified, only the specified entries will be flushed.
   If no <entry> is given, all enties of the type will be flushed from cache.
@@ -2158,7 +2167,7 @@ in soap-waitset.txt
 
 -----------------------------
 
-# count number of accounts by cos in a domain, 
+# count number of accounts by cos in a domain,
 
 <CountAccountRequest>
     <domain by="{domain-by}">...</domain>
@@ -2172,7 +2181,7 @@ in soap-waitset.txt
     Note, it doesn't include any account with zimbraIsSystemResource=TRUE,
     nor does it include any calendar resources.
 
-    
+
 
 e.g.
 <CountAccountResponse>
@@ -2186,17 +2195,17 @@ e.g.
 
 ---------------------------------------------------------------------------
 # Get server's network interfaces. Returns IP  addresses and net masks
-# This call will use zmrcd to call /opt/zimbra/libexec/zmserverips 
+# This call will use zmrcd to call /opt/zimbra/libexec/zmserverips
 
 <GetServerNIfsRequest>
  <server by="id|name|serviceHostname">...</server>
 </GetServerNIfsRequest>
 
 <GetServerNIfsResponse>
-	<ni>
-	<a n="addr">ip address</a>
-	<a n="mask">network mask</a>
-	</ni>*
+  <ni>
+  <a n="addr">ip address</a>
+  <a n="mask">network mask</a>
+  </ni>*
 </GetServerNIfsResponse>
 
 ---------------------------------------------------------------------------
@@ -2287,7 +2296,7 @@ Access: domain admin sufficient
   </share>
 </PublishShareInfoRequest>
 
-Publish share info on the specified DL shared by an owner.  
+Publish share info on the specified DL shared by an owner.
 Folders shared by the <owner> with the DL or any of the DL's parent group can be published.
 
 e.g. if owner O shares /Inbox with DL-A, and DL-B is a member of DL-A,
@@ -2295,10 +2304,10 @@ e.g. if owner O shares /Inbox with DL-A, and DL-B is a member of DL-A,
 
 Notes:
     - in <folder>, only one of l, path, or pathOrId can be specified.
-      If pathOrId is specified, server will first treat {folder-path-or-id} as a path and try to 
-      find the folder by path; if there is no such folder, server will then treat {folder-path-or-id} 
-      as a folder id and try to find the folder by id.  If <folder> is omitted, server will 
-      iterate through all folders of the owner and publish any shares granted to the DL or any of the 
+      If pathOrId is specified, server will first treat {folder-path-or-id} as a path and try to
+      find the folder by path; if there is no such folder, server will then treat {folder-path-or-id}
+      as a folder id and try to find the folder by id.  If <folder> is omitted, server will
+      iterate through all folders of the owner and publish any shares granted to the DL or any of the
       DL's parent DL.
 
 <PublishShareInfoResponse/>
@@ -2307,7 +2316,7 @@ Notes:
 
 Access: domain admin sufficient.
 note: this request is by default proxied to the owner's home server
-   
+
 ----------------------------------------
 
 <GetPublishedShareInfoRequest>
@@ -2316,12 +2325,12 @@ note: this request is by default proxied to the owner's home server
 </GetPublishedShareInfoRequest>
 
 Get share info published on the <dl>.
-If <owner> is specified, returns only shares owned by the owner.  Otherwise returns all 
+If <owner> is specified, returns only shares owned by the owner.  Otherwise returns all
 shares published on the <dl>.
 
 <GetPublishedShareInfoResponse>
-    [<share ownerId="{owner-id}" ownerEmail={owner-email} [ownerName="{owner-display-name}"] 
-            folderId="{folder-id}" folderPath="{fully-qualified-path}" 
+    [<share ownerId="{owner-id}" ownerEmail={owner-email} [ownerName="{owner-display-name}"]
+            folderId="{folder-id}" folderPath="{fully-qualified-path}"
             view="{default-type}" rights="{rights}"
             granteeType="{grantee-type}" granteeId="{grantee-id}" granteeName="{grantee-name}" [granteeDisplayName="{grantee-display-name}">]]+
 </GetPublishedShareInfoResponse>
@@ -2333,10 +2342,10 @@ shares published on the <dl>.
     <owner by="{owner-by}">...</owner>
 </GetShareInfoRequest>
 
-Iterate through all folders of the owner's mailbox and return shares that match  
+Iterate through all folders of the owner's mailbox and return shares that match
 grantees specified by the <grantee> specifier.
 
-e.g. 
+e.g.
 
 <GetShareInfoRequest>
     <grantee name="dl@test.com"/>]
@@ -2344,17 +2353,17 @@ e.g.
 </GetShareInfoRequest>
 
 returns all shares owned by user1@test.com that are shared with dl@test.com.
-    
+
 <GetShareInfoResponse>
-    [<share ownerId="{owner-id}" ownerEmail={owner-email} [ownerName="{owner-display-name}"] 
-            folderId="{folder-id}" folderPath="{fully-qualified-path}" 
+    [<share ownerId="{owner-id}" ownerEmail={owner-email} [ownerName="{owner-display-name}"]
+            folderId="{folder-id}" folderPath="{fully-qualified-path}"
             view="{default-type}" rights="{rights}"
             granteeType="{grantee-type}" granteeId="{grantee-id}" granteeName="{grantee-name}" [granteeDisplayName="{grantee-display-name}">]]+
 </GetShareInfoResponse>
 
-                        
+
 ----------------------------
- 
+
 <CreateGalSyncAccountRequest name="{identifier}" domain="{domain-name}" type="zimbra|ldap" [folder="{contact-folder-name}"] >
   <account by="id|name">...</account>
   <a n="attr-name">...</a>+
@@ -2367,7 +2376,7 @@ returns all shares owned by user1@test.com that are shared with dl@test.com.
 
 Notes:
 
-	- if the referenced account is not found it will be created.
+  - if the referenced account is not found it will be created.
     - the identifier used in name attr is used for SyncGal and SearchGal.
     - name attribute is for the name of the data source.
     - if folder attr is not present it'll default to Contacts folder.
@@ -2399,7 +2408,7 @@ example for creating domain gal sync account.
 Access: domain admin sufficient
 
 ----------------------------
- 
+
 <SyncGalAccountRequest>
   <account id="{account-id}">
     <datasource by="id|name" [fullSync="true|false"] [reset="true"] />+
@@ -2412,18 +2421,18 @@ Notes:
 
     If fullSync is set to false (or unset) the default behavior is trickle sync
     which will pull in any new contacts or modified contacts since last sync.
-    
+
     If fullSync is set to true, then the server will go through all the contacts
     that appear in GAL, and resolve deleted contacts in addition to new or
     modified ones.
-    
+
     If reset attribute is set, then all the contacts will be populated again,
     regardless of the status since last sync.  Reset needs to be done when there
     is a significant change in the configuration, such as filter, attribute map,
     or search base.
-    
+
 ----------------------------
- 
+
 <DeleteGalSyncAccountRequest>
   <account by="id|name">...</account>
 </DeleteGalSyncAccountRequest>
@@ -2433,7 +2442,7 @@ Notes:
 Remove its zimbraGalAccountId from the domain, then deletes the account.
 
 ----------------------------
- 
+
 <ReloadMemcachedClientConfigRequest/>
 
 <ReloadMemcachedClientConfigResponse/>
@@ -2443,7 +2452,7 @@ is reinitialized accordingly.  Call this command after updating memcached server
 for example.
 
 ----------------------------
- 
+
 <GetMemcachedClientConfigRequest/>
 
 <GetMemcachedClientConfigResponse

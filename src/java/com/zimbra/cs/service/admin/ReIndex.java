@@ -37,13 +37,18 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
- * Admin operation handler for <tt>reIndexMailbox(rim)<tt>.
+ * Admin operation handler for {@code reIndexMailbox(rim)}.
  */
-public class ReIndex extends AdminDocumentHandler {
+public final class ReIndex extends AdminDocumentHandler {
 
     private static final String ACTION_START = "start";
     private static final String ACTION_STATUS = "status";
     private static final String ACTION_CANCEL = "cancel";
+
+    private static final String STATUS_STARTED = "started";
+    private static final String STATUS_RUNNING = "running";
+    private static final String STATUS_IDLE = "idle";
+    private static final String STATUS_CANCELLED = "cancelled";
 
     private static final String[] TARGET_ACCOUNT_PATH = new String[] {
         AdminConstants.E_MAILBOX, AdminConstants.A_ACCOUNTID
@@ -100,61 +105,56 @@ public class ReIndex extends AdminDocumentHandler {
 
         if (ACTION_START.equalsIgnoreCase(action)) {
             if (mbox.isReIndexInProgress()) {
-                throw ServiceException.ALREADY_IN_PROGRESS(accountId, "ReIndex");
-            }
-
-            byte[] types = null;
-            String typesStr = mreq.getAttribute(MailConstants.A_SEARCH_TYPES,
-                    null);
-            if (typesStr != null) {
-                types = MailboxIndex.parseTypesString(typesStr);
-            }
-
-            Set<Integer> itemIds = null;
-            String idsStr = mreq.getAttribute(MailConstants.A_IDS, null);
-            if (idsStr != null) {
-                itemIds = new HashSet<Integer>();
-                String targets[] = idsStr.split(",");
-                for (String target : targets) {
-                    itemIds.add(Integer.parseInt(target));
-                }
-            }
-
-            HashSet<Byte> typesSet;
-            if (types == null) {
-                typesSet = null;
+                response.addAttribute(AdminConstants.A_STATUS, STATUS_RUNNING);
             } else {
-                typesSet = new HashSet<Byte>();
-                for (byte b : types) {
-                    typesSet.add(b);
+                byte[] types = null;
+                String typesStr = mreq.getAttribute(MailConstants.A_SEARCH_TYPES, null);
+                if (typesStr != null) {
+                    types = MailboxIndex.parseTypesString(typesStr);
                 }
+
+                Set<Integer> itemIds = null;
+                String idsStr = mreq.getAttribute(MailConstants.A_IDS, null);
+                if (idsStr != null) {
+                    itemIds = new HashSet<Integer>();
+                    String targets[] = idsStr.split(",");
+                    for (String target : targets) {
+                        itemIds.add(Integer.parseInt(target));
+                    }
+                }
+
+                Set<Byte> typesSet;
+                if (types == null) {
+                    typesSet = null;
+                } else {
+                    typesSet = new HashSet<Byte>();
+                    for (byte b : types) {
+                        typesSet.add(b);
+                    }
+                }
+                mbox.reIndex(getOperationContext(zsc, context), typesSet, itemIds, false);
+                response.addAttribute(AdminConstants.A_STATUS, STATUS_STARTED);
             }
-
-            mbox.reIndex(getOperationContext(zsc, context),
-                    typesSet, itemIds, false);
-
-            response.addAttribute(AdminConstants.A_STATUS, "started");
         } else if (ACTION_STATUS.equalsIgnoreCase(action)) {
             synchronized (mbox) {
                 if (mbox.isReIndexInProgress()) {
                     Mailbox.BatchedIndexStatus status = mbox.getReIndexStatus();
-                    addStatus(response, status);
-                    response.addAttribute(AdminConstants.A_STATUS, "running");
+                    addProgressInfo(response, status);
+                    response.addAttribute(AdminConstants.A_STATUS, STATUS_RUNNING);
                 } else {
-                    response.addAttribute(AdminConstants.A_STATUS, "idle");
+                    response.addAttribute(AdminConstants.A_STATUS, STATUS_IDLE);
                 }
             }
         } else if (ACTION_CANCEL.equalsIgnoreCase(action)) {
             synchronized (mbox) {
-                if (!mbox.isReIndexInProgress()) {
-                    throw ServiceException.NOT_IN_PROGRESS(accountId, "ReIndex");
+                if (mbox.isReIndexInProgress()) {
+                    Mailbox.BatchedIndexStatus status = mbox.getReIndexStatus();
+                    status.mCancel = true;
+                    response.addAttribute(AdminConstants.A_STATUS, STATUS_CANCELLED);
+                    addProgressInfo(response, status);
+                } else {
+                    response.addAttribute(AdminConstants.A_STATUS, STATUS_IDLE);
                 }
-
-                Mailbox.BatchedIndexStatus status = mbox.getReIndexStatus();
-                status.mCancel = true;
-
-                response.addAttribute(AdminConstants.A_STATUS, "cancelled");
-                addStatus(response, status);
             }
         } else {
             throw ServiceException.INVALID_REQUEST(
@@ -164,7 +164,7 @@ public class ReIndex extends AdminDocumentHandler {
         return response;
     }
 
-    public static void addStatus(Element response, Mailbox.BatchedIndexStatus status) {
+    private void addProgressInfo(Element response, Mailbox.BatchedIndexStatus status) {
         Element prog = response.addElement(AdminConstants.E_PROGRESS);
         prog.addAttribute(AdminConstants.A_NUM_SUCCEEDED,
                 status.mNumProcessed - status.mNumFailed);
