@@ -33,7 +33,7 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
 
-public class ADGalGroupHandler implements GalGroupHandler {
+public class ADGalGroupHandler extends GalGroupHandler {
 
     private static final String[] sEmptyMembers = new String[0];
     private static final String MAIL_ATTR = "mail";

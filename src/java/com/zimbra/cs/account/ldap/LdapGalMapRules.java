@@ -28,9 +28,7 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.gal.GalGroupHandler;
-import com.zimbra.cs.gal.ZimbraGalGroupHandler;
 
 /*
  * maps LDAP attrs into contact attrs. 
@@ -75,24 +73,8 @@ public class LdapGalMapRules {
         for (String rule: rules)
             add(rule);
         
-        initGroupHandler(groupHandlerClass);
-    }
-    
-    private void initGroupHandler(String className) {
-        if (className != null && !className.equals("")) {
-            try {
-                try {
-                    mGroupHandler = (GalGroupHandler)Class.forName(className).newInstance();
-                } catch (ClassNotFoundException cnfe) {
-                    // ignore and look in extensions
-                    mGroupHandler = (GalGroupHandler)ExtensionUtil.findClass(className).newInstance();
-                }
-            } catch (Exception e) {
-                ZimbraLog.gal.error("could not instantiate GalGroupHandler interface of class '" + className + "'; defaulting to ZimbraGalGroupHandler", e);
-            }
-        }
-        if (mGroupHandler == null)
-            mGroupHandler = new ZimbraGalGroupHandler();
+        mGroupHandler = GalGroupHandler.getHandler(groupHandlerClass);
+        ZimbraLog.gal.debug("groupHandlerClass=" + groupHandlerClass + ", handler instantiated=" + mGroupHandler.getClass().getCanonicalName());
     }
     
     public void setFetchGroupMembers(boolean fetchGroupMembers) {

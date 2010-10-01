@@ -28,7 +28,7 @@ import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
 
-public class ZimbraGalGroupHandler implements GalGroupHandler {
+public class ZimbraGalGroupHandler extends GalGroupHandler {
 
     private static String[] sEmptyMembers = new String[0];
     
@@ -42,6 +42,7 @@ public class ZimbraGalGroupHandler implements GalGroupHandler {
     @Override
     public String[] getMembers(ZimbraLdapContext zlc, SearchResult sr) {
         try {
+            ZimbraLog.gal.debug("Fetching members for group " + LdapUtil.getAttrString(sr.getAttributes(), LdapProvisioning.A_mail));
             Attributes ldapAttrs = sr.getAttributes();
             String[] members = LdapUtil.getMultiAttrString(ldapAttrs, Provisioning.A_zimbraMailForwardingAddress);
             Arrays.sort(members);
