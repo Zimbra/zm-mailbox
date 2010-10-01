@@ -4,42 +4,45 @@
 
 supported flags:
 
-default: default when format is not specified
-allfields: dump all fields
-noheader: skip the header line
+    default: default when format is not specified
+    allfields: dump all fields
+    noheader: skip the header line
 
 
 supported formats:
 
-zimbra-csv
-yahoo-csv
-thunderbird-csv
-outlook-2003-csv
+    zimbra-csv
+    yahoo-csv
+    thunderbird-csv
+    outlook-2003-csv
 
 type attribute:
 
-name :
+    name :
 
-if the CSV has single name field instead of parsed firstName and lastName,
-declare the column to 
+        if the CSV has single name field instead of parsed firstName and lastName,
+        declare the column to 
 
-        <column name="Name" field="firstName,middleName,lastName" type="name"/>
+            <column name="Name" field="firstName,middleName,lastName" type="name"/>
 
-then the value of Name field will be split into firstName, middleName, and
-lastName.
+        then the value of Name field will be split into firstName, middleName, and
+        lastName.
 
-multivalue :
+    multivalue :
 
-merge columns into a single Zimbra field.
+        merge columns into a single Zimbra field.
 
-        <column name="Home Address,Home Address 2" field="homeStreet" type="multivalue"/>
+            <column name="Home Address,Home Address 2" field="homeStreet" type="multivalue"/>
 
-tag :
+    tag :
 
-translate the value of into Zimbra tag.
+        translate the value of into Zimbra tag.
 
-        <column name="Category" type="tag"/>
+            <column name="Category" type="tag"/>
 
+    date :
+
+        interpret the value as a date.
 -->
 
 <contacts>
@@ -102,9 +105,34 @@ translate the value of into Zimbra tag.
         <field name="workURL"/>
     </fields>
 
+    <!--
+         "delimiters" can be used to configure the default field delimiter
+         to use for exports in particular formats if "csvsep" is not specified.
+      -->
+
     <delimiters default=","> 
         <delimiter locale="fr" format="outlook-2003-csv" char=";"/> 
     </delimiters>
+
+    <!--
+         "dateformats" can be used to configure the order of year month and day
+         for particular formats where the type of the field is "date".
+         Supported orders are : "ymd", "ydm", "myd", "mdy", "dmy" and "dym"
+         This is only used if the date is ambiguous.
+         For instance : 03/28/2004 clearly means 28th March 2004.
+         However :      03/04/2004 could mean 4th March 2004 or 3rd April 2004
+         If no order is specified, "03/04/2004" will be imported as "'03/04/2004'"
+         If a date order of "dmy" applies to the import format, it will be
+         imported as 3rd April 2004 (Internal Zimbra format 2004-04-03)
+
+         Note that for some formats, the order heavily depends on the
+         environment where the export was done and better data fidelity
+         will be achieved by not specifying a dateformat
+      -->
+
+    <dateformats> 
+        <dateformat format="yahoo-csv" order="mdy"/> 
+    </dateformats>
 
     <format name="zimbra-csv" type="csv" flag="allfields,default">
     </format>
