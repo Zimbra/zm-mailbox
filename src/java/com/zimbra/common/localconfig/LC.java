@@ -1790,7 +1790,7 @@ public class LC {
         antispam_mysql_mycnf.setDefault("${zimbra_home}/conf/antispam-my.cnf");
         
         antispam_mysql_pidfile = new KnownKey("antispam_mysql_pidfile");
-        antispam_mysql_pidfile.setDefault("${zimbra_home}/data/amavisd/db/mysql/mysql.pid");
+        antispam_mysql_pidfile.setDefault("${zimbra_home}/data/amavisd/mysql/mysql.pid");
         
         antispam_mysql_host = new KnownKey("antispam_mysql_host");
         antispam_mysql_host.setDefault("localhost");
@@ -1799,7 +1799,7 @@ public class LC {
         antispam_mysql_port.setDefault("7308");
         
         antispam_mysql_socket = new KnownKey("antispam_mysql_socket");
-        antispam_mysql_socket.setDefault("${zimbra_home}/data/amavisd/db/mysql/mysql.sock");
+        antispam_mysql_socket.setDefault("${zimbra_home}/data/amavisd/mysql/mysql.sock");
         
         antispam_mysql_user = new KnownKey("antispam_mysql_user");
         antispam_mysql_user.setDefault("zimbra");
