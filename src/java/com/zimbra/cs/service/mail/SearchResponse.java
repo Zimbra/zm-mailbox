@@ -35,6 +35,7 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
+import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
@@ -321,7 +322,7 @@ public class SearchResponse {
         Account acct = DocumentHandler.getRequestedAccount(zsc);
         long rangeStart = params.getCalItemExpandStart();
         long rangeEnd = params.getCalItemExpandEnd();
-        if (rangeStart < 0 && rangeEnd < 0) {
+        if (rangeStart < 0 && rangeEnd < 0 && (item instanceof Appointment)) {
             // If no time range was given, force first instance only. (bug 51267)
             rangeStart = item.getStartTime();
             rangeEnd = rangeStart + 1;
