@@ -37,7 +37,7 @@ public class ZPrefs {
      */
     public String get(String name) {
         Collection<String> values = mPrefs.get(name);
-        if (values.isEmpty()) {
+        if (values == null || values.isEmpty()) {
             return null;
         }
         return Iterables.get(values, 0);

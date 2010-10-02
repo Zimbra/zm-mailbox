@@ -35,7 +35,7 @@ public class ZFeatures {
      */
     private String get(String name) {
         Collection<String> value = mAttrs.get(name);
-        if (value.isEmpty()) {
+        if (value == null || value.isEmpty()) {
             return null;
         }
         return Iterables.get(value, 0);
