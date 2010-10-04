@@ -7,6 +7,8 @@ Setup Development Environment for Mac OSX
 2. $ mv p4 /usr/local/bin
 3. $ chmod +x /usr/local/bin/p4
 
+You may also want to download and install P4V, a visual Perforce client.
+
 More information is available at:
 http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#1070774
 
@@ -19,6 +21,7 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
   export P4HOST=localhost
   export P4EDITOR=/usr/bin/vi
   export PATH=$PATH:/opt/zimbra/bin
+  export ZIMBRA_HOSTNAME={your computer name}.local
 
 5. $ source ~/.bash_profile
 6. $ mkdir -p /opt/zimbra
@@ -39,11 +42,16 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
    -//depot/main/Support/... //{workspace}/Support/...
    -//depot/main/ZimbraSupportPortal/... //{workspace}/ZimbraSupportPortal/...
 
+   That view may have a lot more than you need, so you may want to consider explicitly listing
+   only what you need. Take a look at the clients of others in your group for examples.
+
 10. $ p4 sync
 
 11. Download MySQL - MySQL Community Server & install it.
   http://dev.mysql.com/downloads/mysql/
   GA > Mac OSX ver 10.6 (x86, 64-bit)
+
+  Grab the DMG version and install the two packages (MySQL and the startup item).
 
 12. $ sudo ln -s /usr/local/mysql /opt/zimbra/mysql
 13. $ sudo vi /opt/zimbra/mysql/data/my.cnf
