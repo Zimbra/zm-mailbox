@@ -19,16 +19,14 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 class MimeParser {
-    MimeParser(Properties props) {
-        properties = props;
+    MimeParser() {
         parts.add(new PartInfo(0, true));
     }
 
     MimeParser(MimeMessage target) {
-        this(target.getProperties());
+        this();
         parts.add(0, new PartInfo(target, 0, 0, PartInfo.Location.CONTENT));
     }
 
@@ -40,13 +38,13 @@ class MimeParser {
     private enum LineEnding { CR, LF, CRLF }
 
     private static class BoundaryChecker {
-        /** A <code>Map</code> mapping active boundary strings which have
-         *  matched all checked bytes in the line thus far to the number
-         *  of trailing dashes after the end of the boundary.  <tt>null</tt>
-         *  values mean that we have not yet checked the last byte in the
-         *  boundary; <tt>0</tt> means that the boundary matched completely
-         *  without trailing dashes, <tt>2</tt> means that the boundary has
-         *  matched and there are 2 trailing dashes (i.e. an end boundary). */
+        /** A {@code Map} mapping active boundary strings which have matched
+         *  all checked bytes in the line thus far to the number of trailing
+         *  dashes after the end of the boundary.  <tt>null</tt> value mean
+         *  that we have not yet checked the last byte in the boundary;
+         *  <tt>0</tt> means that the boundary matched completely without
+         *  trailing dashes, <tt>2</tt> means that the boundary has matched
+         *  and there are 2 trailing dashes (i.e. an end boundary). */
         private Map<String, Integer> boundaryCandidates;
         /** The byte position of the end of the current part if this line
          *  matches an active boundary. */
@@ -79,7 +77,7 @@ class MimeParser {
          *  haven't failed a byte check yet this line.  If a boundary doesn't
          *  match the appropriate character, it is removed from the set.<p>
          *  
-         *  <i>Should really switch to having <code>index</code> be an
+         *  <i>Should really switch to having {@code index} be an
          *  auto-incremented counter managed by the BoundaryChecker rather than
          *  a parameter to this method.</i> 
          * @param b      The byte being checked.
@@ -122,7 +120,7 @@ class MimeParser {
 
         /** Returns info on the boundary that matched the current line, or
          *  <tt>null</tt> if there was no match.
-         * @return a <code>Map.Entry</code> whose <tt>key</tt> is the boundary
+         * @return a {@code Map.Entry} whose <tt>key</tt> is the boundary
          *         that was matched and whose <tt>value</tt> is the number of
          *         trailing dashes (either 0 or 2). */
         Map.Entry<String, Integer> getMatch() {
@@ -184,27 +182,21 @@ class MimeParser {
      *  type of parsing is going on (HEADER vs. BODY) and where in the line
      *  we are (LINESTART, after CR, etc.). */
     protected ParserState state = ParserState.HEADER_LINESTART;
-    /** The <code>MimeMessage</code> resulting from a full message parse.
-     *  It is populated by either a call to {@link #getMessage()} or a call to
-     *  {@link #endParse()}. */
-    private MimeMessage mm;
-    /** The <code>Properties</code> object used in the <code>MimeMessage</code>
-     *  constructor.  It can define a default charset for parsing unencoded
-     *  high-bit-set bytes in message headers. */
-    private Properties properties;
-    /** The stack of active message parts, outermost to innermost.  The
-     *  outermost (index <tt>0</tt>) is always the <code>MimeMessage</code>
-     *  which will be returned by the call to {@link #getMessage()}. */
+
+    /** The stack of active message parts, outermost to innermost. */
     private List<PartInfo> parts = new ArrayList<PartInfo>(5);
 
     /** The parser's current position in the message (in bytes). */
     private long position;
+
     /** The position in the message of the first character of the current
      *  line.
      * @see #position */
     private long lineStart;
+
     /** The current (0-based) line number in the message. */
     private int lineNumber;
+
     /** The set of characters (CR, LF, or CRLF) that terminated the previous
      *  line. */
     protected LineEnding lastEnding;
@@ -213,11 +205,13 @@ class MimeParser {
      *  '<tt>-</tt>' characters, a member of this list, and a newline is
      *  considered a boundary line which terminates the current part. */
     private List<String> boundaries;
+
     /** The number of leading '<tt>-</tt>' characters on a line, used only
      *  when there are MIME boundaries active.  When this counter reaches
      *  <tt>2</tt>, we start matching input bytes against active
      *  boundaries.*/
     private int dashes;
+
     /** The set of active MIME boundaries that match the current line thus
      *  far.  This object is instantiated to contain all the strings in {@link
      *  #boundaries} when {@link #dashes} reaches <tt>2</tt>.  Candidates are
@@ -229,26 +223,36 @@ class MimeParser {
     /** The index of the first '<tt>:</tt>' character in the current header,
      *  or <tt>-1</tt> if the first colon has not yet been read. */
     private int colon = -1;
+
     /** The "name" (the part preceding the colon) of the current header. */
     private StringBuilder name = new StringBuilder(25);
+
     /** The entire content of the current header.  This includes the name,
      *  the colon, the raw header value, any folding, and the trailing CRLF. */
     private HeaderUtils.ByteBuilder content = new HeaderUtils.ByteBuilder(80);
 
 
-    /** Terminates message parsing and returns the <code>MimeMessage</code>
+    /** Terminates message parsing and returns the {@code MimeMessage}
      *  resulting from the parse.  <b>Do not call this method until the entire
      *  message has been passed through the parser</b>, otherwise incorrect
      *  lengths may be recorded. */
-    MimeMessage getMessage() {
+    MimePart getPart() {
         endParse();
-        return mm;
+        return parts.get(0).part;
     }
 
     /** Returns the structure representing the "currently active" part being
      *  handled by the parser. */
     protected PartInfo currentPart() {
         return parts.get(parts.size() - 1);
+    }
+
+    long getPosition() {
+        return position;
+    }
+
+    int getLineNumber() {
+        return lineNumber;
     }
 
 
@@ -396,9 +400,12 @@ class MimeParser {
     }
 
     /** Registers a newline by updating the parser's line-oriented counters. */
-    private void newline() {
+    private boolean newline() {
         if (lineStart != position) {
             lineNumber++;  lineStart = position;  dashes = 0;  boundaryChecker = null;
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -572,9 +579,9 @@ class MimeParser {
     }
 
     /** Marks the transition from parsing MIME/message headers to skimming the
-     *  part body.  Creates the corresponding <code>MimePart</code> object for
-     *  the current active part and clears the <code>MimeHeaderBlock</code>
-     *  that was accumulating part headers.  
+     *  part body.  Creates the corresponding {@code MimePart} object for the
+     *  current active part and clears the {@code MimeHeaderBlock} that was
+     *  accumulating part headers.  
      * @param pos  The byte offset of the beginning of the part body.
      * @return Whether the part was a <tt>message/rfc822</tt>, which requires
      *         a parser state transition back to header reading. */
@@ -606,15 +613,10 @@ class MimeParser {
         pcurrent.firstLine = lineNumber;
 
         // associate the new part with its parent
-        if (parent == null) {
-            // now that we have the top-level message body, we can create the enclosing message
-            parts.add(0, new PartInfo(new MimeMessage(mp, properties), 0, 0, PartInfo.Location.CONTENT));
-        } else {
-            if (parent instanceof MimeMessage) {
-                ((MimeMessage) parent).setBodyPart(mp);
-            } else if (parent instanceof MimeMultipart) {
-                ((MimeMultipart) parent).addPart(mp);
-            }
+        if (parent instanceof MimeMessage) {
+            ((MimeMessage) parent).setBodyPart(mp);
+        } else if (parent instanceof MimeMultipart) {
+            ((MimeMultipart) parent).addPart(mp);
         }
 
         if (mp instanceof MimeMultipart) {
@@ -635,17 +637,11 @@ class MimeParser {
      *  as ended.  Do <u>not</u> call this method until all message bytes have
      *  been passed through {@link #handleByte(byte)}. */
     void endParse() {
-        if (mm != null) {
-            return;
-        }
-
         // catch the case of a final MIME boundary without a newline
         processBoundary();
 
         // line count-wise, a partial line counts as a line
-        if (position > lineStart) {
-            newline();
-        }
+        newline();
 
         // catch any in-flight message headers without a newline
         if (colon > 0) {
@@ -658,23 +654,20 @@ class MimeParser {
         if (currentPart().part == null) {
             bodyStart(position);
         }
+        if (currentPart().part == null) {
+            // in some very rare cases, the first bodyStart() creates new PartInfos that themselves must be tweaked 
+            bodyStart(position);
+        }
 
         // record the end position and length in lines for all open parts
         for (PartInfo pinfo : parts) {
             endPart(pinfo, position);
         }
-
-        // the MimeMessage resulting from the parse is the outermost part
-        mm = (MimeMessage) parts.get(0).part;
     }
 
 
     static class HeaderParser extends MimeParser {
         private MimeHeaderBlock headers;
-
-        HeaderParser() {
-            super((Properties) null);
-        }
 
         MimeHeaderBlock getHeaders() {
             endParse();
@@ -704,10 +697,12 @@ class MimeParser {
 
 
     public static void main(String... args) throws java.io.IOException {
-        java.io.File msgdir = new java.io.File("/Users/dkarp/Documents/messages/unused");
+        java.io.File msgdir = new java.io.File(args[0]);
         for (java.io.File file : msgdir.listFiles()) {
-            System.out.println("+++ processing message: " + file);
-            MimeMessage.dumpParts(new MimeMessage(file));
+            if (file.isFile()) {
+                System.out.println("+++ processing message: " + file);
+                MimeMessage.dumpParts(new MimeMessage(file));
+            }
         }
     }
 }

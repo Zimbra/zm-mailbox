@@ -23,12 +23,8 @@ public class MimeParserOutputStream extends FilterOutputStream {
     private MimeParser parser;
 
     public MimeParserOutputStream(OutputStream out) {
-        this(out, null);
-    }
-
-    public MimeParserOutputStream(OutputStream out, Properties props) {
         super(out);
-        parser = new MimeParser(props);
+        parser = new MimeParser();
     }
 
     @Override public void write(int b) throws IOException {
@@ -47,7 +43,13 @@ public class MimeParserOutputStream extends FilterOutputStream {
         parser.endParse();
     }
 
-    public MimeMessage getMessage() {
-        return parser.getMessage();
+    public MimePart getPart() {
+        return parser.getPart();
+    }
+
+    public MimeMessage getMessage(Properties props) {
+        MimeMessage mm = new MimeMessage(getPart(), props);
+        mm.recordEndpoint(parser.getPosition(), parser.getLineNumber());
+        return mm;
     }
 }

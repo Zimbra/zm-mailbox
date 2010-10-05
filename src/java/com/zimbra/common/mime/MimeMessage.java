@@ -55,9 +55,9 @@ public class MimeMessage extends MimePart {
 
         setContent(file, false);
         InputStream is = new BufferedInputStream(new FileInputStream(file), 8192);
-        MimeParserInputStream mpis = new MimeParserInputStream(is, this);
+        MimeParserInputStream mpis = new MimeParserInputStream(is);
         try {
-            ByteUtil.drain(mpis);
+            ByteUtil.drain(mpis).insertBodyPart(this);
         } finally {
             ByteUtil.closeStream(mpis);
         }
@@ -79,9 +79,9 @@ public class MimeMessage extends MimePart {
 
         setContent(body, false);
         InputStream is = new ByteArrayInputStream(body);
-        MimeParserInputStream mpis = new MimeParserInputStream(is, this);
+        MimeParserInputStream mpis = new MimeParserInputStream(is);
         try {
-            ByteUtil.drain(mpis);
+            ByteUtil.drain(mpis).insertBodyPart(this);
         } catch (IOException ioe) {
             throw new RuntimeException("completely unexpected IOException while reading from byte array", ioe);
         } finally {
@@ -115,8 +115,9 @@ public class MimeMessage extends MimePart {
      *  content accessible after the parse, please use one of the standard
      *  <code>MimeMessage</code> constructors. */
     public static MimeMessage readStructure(InputStream is, Properties props) throws IOException {
-        return ByteUtil.drain(new MimeParserInputStream(is, props)).getMessage();
+        return ByteUtil.drain(new MimeParserInputStream(is)).getMessage(props);
     }
+
 
     /** Returns the {@link MimePart} that forms the "body" of this message.  For
      *  a <tt>multipart/*<tt> message, this will be a {@link MimeMultipart}, and
@@ -132,13 +133,14 @@ public class MimeMessage extends MimePart {
      *  message headers (those other than the standard MIME "<tt>Content-*</tt>"
      *  headers) are transferred to the new one.
      * @see #getBodyPart() */
-    public void setBodyPart(MimePart body) {
+    public MimeMessage setBodyPart(MimePart body) {
         if (mBody != null) {
             transferMessageHeaders(body);
             mBody.detach();
         }
         body.setParent(this);
         mBody = body;
+        return this;
     }
 
     @Override void removeChild(MimePart mp) {

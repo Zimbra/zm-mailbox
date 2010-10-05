@@ -23,17 +23,8 @@ public class MimeParserInputStream extends FilterInputStream {
     private MimeParser parser;
 
     public MimeParserInputStream(InputStream in) {
-        this(in, (Properties) null);
-    }
-
-    public MimeParserInputStream(InputStream in, Properties props) {
         super(in);
-        parser = new MimeParser(props);
-    }
-
-    MimeParserInputStream(InputStream in, MimeMessage mm) {
-        super(in);
-        parser = new MimeParser(mm);
+        parser = new MimeParser();
     }
 
     @Override public int read() throws IOException {
@@ -68,25 +59,19 @@ public class MimeParserInputStream extends FilterInputStream {
         parser.endParse();
     }
 
-    public MimeMessage getMessage() {
-        return parser.getMessage();
+    public MimePart getPart() {
+        return parser.getPart();
     }
 
+    <T extends MimeMessage> T insertBodyPart(T mm) {
+        mm.setBodyPart(getPart());
+        mm.recordEndpoint(parser.getPosition(), parser.getLineNumber());
+        return mm;
+    }
 
-    public static void main(String... args) throws IOException {
-        java.io.File file = new java.io.File("/Users/dkarp/Documents/messages/unused/undisplayed-generated");
-        MimeParserInputStream mpis = new MimeParserInputStream(new java.io.FileInputStream(file));
-        try {
-            com.zimbra.common.util.ByteUtil.drain(mpis);
-
-            MimeMessage mm = mpis.getMessage();
-            mm.setContent(file);
-            System.out.println("*** message structure ***");
-            MimeMessage.dumpParts(mm);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            mpis.close();
-        }
+    public MimeMessage getMessage(Properties props) {
+        MimeMessage mm = new MimeMessage(getPart(), props);
+        mm.recordEndpoint(parser.getPosition(), parser.getLineNumber());
+        return mm;
     }
 }
