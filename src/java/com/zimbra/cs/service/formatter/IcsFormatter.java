@@ -16,7 +16,6 @@ package com.zimbra.cs.service.formatter;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.FileBufferedWriter;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.HttpUtil.Browser;
@@ -70,6 +69,7 @@ public class IcsFormatter extends Formatter {
         try {
         	long start = context.getStartTime();
         	long end = context.getEndTime();
+            boolean hasTimeRange = start != TIME_UNSPECIFIED && end != TIME_UNSPECIFIED;
             iterator = getMailItems(context, start, end, Integer.MAX_VALUE);
 
             // this is lame
@@ -77,9 +77,13 @@ public class IcsFormatter extends Formatter {
                 MailItem item = iterator.next();
                 if (item instanceof CalendarItem) {
                 	CalendarItem calItem = (CalendarItem) item;
-                	Collection<Instance> instances = calItem.expandInstances(start, end, false);
-                	if (!instances.isEmpty())
-                		calItems.add(calItem);
+                	if (hasTimeRange) {
+                    	Collection<Instance> instances = calItem.expandInstances(start, end, false);
+                    	if (!instances.isEmpty())
+                    		calItems.add(calItem);
+                	} else {
+                	    calItems.add(calItem);
+                	}
                 }
             }
         } finally {
@@ -126,16 +130,6 @@ public class IcsFormatter extends Formatter {
         } finally {
             fileBufferedWriter.finish();
         }
-    }
-
-    // get the whole calendar
-    public long getDefaultStartTime() {    
-        return 0;
-    }
-
-    // eventually get this from query param ?end=long|YYYYMMMDDHHMMSS
-    public long getDefaultEndTime() {
-        return System.currentTimeMillis() + (365 * 100 * Constants.MILLIS_PER_DAY);            
     }
 
     public boolean canBeBlocked() {

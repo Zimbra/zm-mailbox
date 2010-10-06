@@ -15,12 +15,15 @@
 package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Iterator;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemIdFormatter;
@@ -49,9 +52,22 @@ public class XmlFormatter extends Formatter {
 
         Iterator<? extends MailItem> iterator = null;
         try {
-            iterator = getMailItems(context, getDefaultStartTime(), getDefaultEndTime(), Integer.MAX_VALUE);
-            while (iterator.hasNext())
-                ToXML.encodeItem(elt, ifmt, context.opContext, iterator.next(), ToXML.NOTIFY_FIELDS);
+            long start = context.getStartTime();
+            long end = context.getEndTime();
+            boolean hasTimeRange = start != TIME_UNSPECIFIED && end != TIME_UNSPECIFIED;
+            iterator = getMailItems(context, start, end, Integer.MAX_VALUE);
+            // this is lame
+            while (iterator.hasNext()) {
+                MailItem item = iterator.next();
+                if (item instanceof CalendarItem && hasTimeRange) {
+                    // Skip appointments that have no instance in the time range.
+                    CalendarItem calItem = (CalendarItem) item;
+                    Collection<Instance> instances = calItem.expandInstances(start, end, false);
+                    if (instances.isEmpty())
+                        continue;
+                }
+                ToXML.encodeItem(elt, ifmt, context.opContext, item, ToXML.NOTIFY_FIELDS);
+            }
 
             context.resp.getOutputStream().write(elt.toUTF8());
         } finally {

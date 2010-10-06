@@ -42,6 +42,9 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.mime.MimeConstants;
 
 public abstract class Formatter {
+
+    protected static final int TIME_UNSPECIFIED = -1;
+
     public abstract String getType();
     private static String PROGRESS = "-progress";
 
@@ -64,11 +67,11 @@ public abstract class Formatter {
 
     // eventually get this from query param ?start=long|YYYYMMMDDHHMMSS
     public long getDefaultStartTime() {
-        return -1;
+        return TIME_UNSPECIFIED;
     }
 
     public long getDefaultEndTime() {
-        return -1;
+        return TIME_UNSPECIFIED;
     }
 
     public String getDefaultSearchTypes() {
