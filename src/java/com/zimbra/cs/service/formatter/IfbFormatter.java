@@ -52,8 +52,8 @@ public class IfbFormatter extends Formatter {
         context.resp.setCharacterEncoding("UTF-8");
         context.resp.setContentType(MimeConstants.CT_TEXT_CALENDAR);
 
-        long rangeStart = Math.max(context.getStartTime(), getDefaultStartTime());
-        long rangeEnd = Math.max(context.getEndTime(), getDefaultEndTime());
+        long rangeStart = context.getStartTime();
+        long rangeEnd = context.getEndTime();
         
         if (rangeEnd < rangeStart)
             throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "End time must be after Start time");
