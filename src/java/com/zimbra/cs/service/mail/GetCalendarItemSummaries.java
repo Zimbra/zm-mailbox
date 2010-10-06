@@ -137,12 +137,13 @@ public class GetCalendarItemSummaries extends CalendarRequest {
             
             String defaultPtSt = calItem.getEffectivePartStat(defaultInvite, null);
 
+            AlarmData alarmData = calItem.getAlarmData();
+
             // add all the instances:
             int numInRange = 0;
             
             if (expandRanges) {
                 Collection<CalendarItem.Instance> instances = calItem.expandInstances(rangeStart, rangeEnd, true);
-                AlarmData alarmData = calItem.getAlarmData();
                 long alarmTime = 0;
                 long alarmInst = 0;
                 if (alarmData != null) {
@@ -182,9 +183,6 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                             calItemElem = lc.createElement(isAppointment ? MailConstants.E_APPOINTMENT : MailConstants.E_TASK);
 
                             if (showAll) {
-                                if (alarmData != null)
-                                    ToXML.encodeAlarmData(calItemElem, calItem, alarmData);
-
                                 // flags and tags
                                 String flags = calItem.getFlagString();
                                 if (flags != null && !flags.equals(""))
@@ -347,6 +345,9 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                 }
                 
                 if (showAll) {
+                    if (alarmData != null)
+                        ToXML.encodeAlarmData(calItemElem, calItem, alarmData);
+
                     String defaultPriority = defaultInvite.getPriority();
                     if (defaultPriority != null)
                         calItemElem.addAttribute(MailConstants.A_CAL_PRIORITY, defaultPriority);

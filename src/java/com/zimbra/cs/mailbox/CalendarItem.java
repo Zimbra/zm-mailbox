@@ -3241,7 +3241,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             atOrAfter = now;
 
         // startTime and endTime limit the time range for meeting instances to be examined.
-        // All instances before startTime are ignored, and by extension the alarms for them.
+        // All instances that ended before startTime are ignored, and by extension the alarms for them.
         // endTime limit is set to avoid examining too many instances, for performance reason.
         long startTime = atOrAfter;
         if (startTime > now) {
@@ -3260,17 +3260,23 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             long savedNextInstStart = currentNextAlarmData != null ? currentNextAlarmData.getNextInstanceStart() : 0;
             for (Instance inst : instances) {
                 long instStart = inst.getStart();
-                if (inst.isTimeless())
-                    continue;
-                if (instStart < startTime)
-                    continue;
-                if (instStart > savedNextInstStart)
-                    break;
-                // instStart == currNextInstStart
+                long instEnd = inst.getEnd();
+                if (!inst.isTimeless()) {
+                    // Ignore instances that ended already.
+                    if (instEnd <= startTime)
+                        continue;
+                    // For appointments (but not tasks), ignore instances whose start time has come and gone.
+                    if (instStart < startTime && (this instanceof Appointment))
+                        continue;
+                    // Done if we go beyond the previously saved alarm-associated instance.  The alarm definition
+                    // must have changed, either directly in the alarm itself or indirectly via change in instance
+                    // definition.
+                    if (instStart > savedNextInstStart)
+                        break;
+                }
                 InviteInfo invId = inst.getInviteInfo();
                 Invite inv = getInvite(invId.getMsgId(), invId.getComponentId());
                 Iterator<Alarm> alarmsIter = inv.alarmsIterator();
-                long instEnd = inst.getEnd();
                 for (; alarmsIter.hasNext(); ) {
                     Alarm alarm = alarmsIter.next();
                     long currTrigger = alarm.getTriggerTime(instStart, instEnd);
@@ -3297,12 +3303,19 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
         for (Instance inst : instances) {
             long instStart = inst.getStart();
-            if (instStart < startTime && !inst.isTimeless())
-                continue;
+            long instEnd = inst.getEnd();
+            if (!inst.isTimeless()) {
+                // Ignore instances that ended already.
+                if (instEnd <= startTime)
+                    continue;
+                // For appointments (but not tasks), ignore instances whose start time has come and gone.
+                if (instStart < startTime && (this instanceof Appointment))
+                    continue;
+            }
             InviteInfo invId = inst.getInviteInfo();
             Invite inv = getInvite(invId.getMsgId(), invId.getComponentId());
             Pair<Long, Alarm> curr =
-                getAlarmTriggerTime(atOrAfter, inv.alarmsIterator(), instStart, inst.getEnd(), alarmAction);
+                getAlarmTriggerTime(atOrAfter, inv.alarmsIterator(), instStart, instEnd, alarmAction);
             if (curr != null) {
                 long currAt = curr.getFirst();
                 if (atOrAfter <= currAt && currAt < triggerAt) {
