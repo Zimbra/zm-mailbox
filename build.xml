@@ -600,7 +600,7 @@
             <fileset dir="${spnego.dir}" excludes="web.xml"/>
         </war>
     </target>
-        	
+
     <target name="service-deploy" depends="refresh-opt-zimbra,deploy-war"
             description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
@@ -615,9 +615,9 @@
     </target>
 
     <target name="init-opt-zimbra" depends="dev-dist,localhost-ssl-cert" description="Copies build/dist to /opt/zimbra">
-    	<echo file="${zimbra.home.dir}/.platform">development</echo>
-    	<copy todir="${zimbra.home.dir}">
-        	<fileset dir="${dist.dir}" excludes="**/spnego.war"/>
+      <echo file="${zimbra.home.dir}/.platform">development</echo>
+      <copy todir="${zimbra.home.dir}">
+          <fileset dir="${dist.dir}" excludes="**/spnego.war"/>
         </copy>
         <chmod perm="a+rx">
             <fileset dir="${zimbra.home.dir}/bin"/>
@@ -705,26 +705,26 @@
         <copy tofile="${dist.dir}/conf/zimbra-contact-fields.xml"
               file="${config.dir}/contacts/zimbra-contact-fields.xml" overwrite="true"/>
         <if>
-            <not><isset property="is-production"/></not>
-            <then>
-                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-                    <arg line="-e mailboxd_directory=/opt/zimbra/jetty"/>
-                </java>
-                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-                    <arg line="-e mailboxd_keystore=/opt/zimbra/jetty/etc/keystore"/>
-                </java>
-                <!-- Enable SMTP to LMTP bridge for development. -->
-                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-                    <arg line="-e smtp_to_lmtp_enabled=true"/>
-                </java>
-                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-                    <arg line="-e ldap_read_timeout=0"/>
-                </java>
-            </then>
+          <not><isset property="is-production"/></not>
+          <then>
+            <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+              <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+              <arg line="-e mailboxd_directory=/opt/zimbra/jetty"/>
+            </java>
+            <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+              <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+              <arg line="-e mailboxd_keystore=/opt/zimbra/jetty/etc/keystore"/>
+            </java>
+            <!-- Enable SMTP to LMTP bridge for development. -->
+            <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+              <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+              <arg line="-e smtp_to_lmtp_enabled=true"/>
+            </java>
+            <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+              <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+              <arg line="-e ldap_read_timeout=0"/>
+            </java>
+          </then>
         </if>
         <copy tofile="${dist.dir}/conf/log4j.properties" file="${config.dir}/log4j.properties${production.suffix}"
               overwrite="true"/>
@@ -792,40 +792,40 @@
         </copy>
 
         <if>
-            <isset property="db-derby"/>
-            <then>
-                <copy todir="${dist.dir}/conf" file="${config.dir}/derby.properties" overwrite="true"/>
-                <copy todir="${dist.dir}/lib" file="../ZimbraServer/tools/lib/derbytools.jar" overwrite="true"/>
-                <copy todir="${dist.dir}/jetty/common/lib" file="${common.jars.dir}/derby.jar" overwrite="true"/>
-                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-                    <arg line="-e zimbra_class_database=com.zimbra.cs.db.Derby -f"/>
-                </java>
-            </then>
+          <isset property="db-derby"/>
+          <then>
+            <copy todir="${dist.dir}/conf" file="${config.dir}/derby.properties" overwrite="true"/>
+            <copy todir="${dist.dir}/lib" file="../ZimbraServer/tools/lib/derbytools.jar" overwrite="true"/>
+            <copy todir="${dist.dir}/jetty/common/lib" file="${common.jars.dir}/derby.jar" overwrite="true"/>
+            <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+              <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+              <arg line="-e zimbra_class_database=com.zimbra.cs.db.Derby -f"/>
+            </java>
+          </then>
         </if>
         <if>
-            <isset property="db-sqlite"/>
-            <then>
-                <copy todir="${dist.dir}/jetty/common/lib" overwrite="true">
-                    <fileset file="${common.jars.dir}/sqlite*.jar"/>
-                </copy>
-                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-                    <arg line="-e zimbra_class_database=com.zimbra.cs.db.SQLite -f"/>
-                </java>
-                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml" />
-                    <arg line="-e debug_disable_mailbox_group=true -f"/>
-                </java>
-                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-                    <arg line="-e sqlite_cache_size=16000 -f"/>
-                </java>
-                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
-                    <arg line="-e sqlite_page_size=2048 -f"/>
-                </java>
-            </then>
+          <isset property="db-sqlite"/>
+          <then>
+            <copy todir="${dist.dir}/jetty/common/lib" overwrite="true">
+              <fileset file="${common.jars.dir}/sqlite*.jar"/>
+            </copy>
+            <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+              <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+              <arg line="-e zimbra_class_database=com.zimbra.cs.db.SQLite -f"/>
+            </java>
+            <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+              <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml" />
+              <arg line="-e debug_disable_mailbox_group=true -f"/>
+            </java>
+            <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+              <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+              <arg line="-e sqlite_cache_size=16000 -f"/>
+            </java>
+            <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+              <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+              <arg line="-e sqlite_page_size=2048 -f"/>
+            </java>
+          </then>
         </if>
     </target>
 
@@ -1245,46 +1245,45 @@
         </exec>
     </target>
 
-    <target name="ldap-load">
-        <waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second" timeoutproperty="ldap.timeout">
-            <socket server="${ldap.host}" port="${ldap.port}"/>
-        </waitfor>
-        <fail message="ldap server is not running on port ${ldap.port}.">
-            <condition>
-                <isset property="ldap.timeout"/>
-             </condition>
-        </fail>
-        <antcall target="ldap-add">
-            <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra.ldif"/>
-        </antcall>
-        <antcall target="ldap-add">
-            <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_globalconfig.ldif"/>
-        </antcall>
-        <antcall target="ldap-add">
-            <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultcos.ldif"/>
-        </antcall>
-        <antcall target="ldap-add">
-            <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_mimehandlers.ldif"/>
-        </antcall>
-        <echo>Editing localconfig zimbra_server_hostname to be ${zimbra.server.hostname}</echo>
-        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-e zimbra_server_hostname=${zimbra.server.hostname}"/>
-        </java>
-        <echo>Editing localconfig zimbra_user to be ${zimbra.user}</echo>
-        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="-e zimbra_user=${zimbra.user}"/>
-        </java>
-        <echo>Running zmprov commands</echo>
-      <antcall target="run-zmprov-commands"/>
-    </target>
+  <target name="ldap-load">
+    <waitfor checkevery="5" checkeveryunit="second" maxwait="60" maxwaitunit="second" timeoutproperty="ldap.timeout">
+      <socket server="${ldap.host}" port="${ldap.port}"/>
+    </waitfor>
+    <fail message="ldap server is not running on port ${ldap.port}.">
+      <condition>
+        <isset property="ldap.timeout"/>
+      </condition>
+    </fail>
+    <antcall target="ldap-add">
+      <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra.ldif"/>
+    </antcall>
+    <antcall target="ldap-add">
+      <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_globalconfig.ldif"/>
+    </antcall>
+    <antcall target="ldap-add">
+      <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultcos.ldif"/>
+    </antcall>
+    <antcall target="ldap-add">
+      <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_mimehandlers.ldif"/>
+    </antcall>
+    <echo>Editing localconfig zimbra_server_hostname to be ${zimbra.server.hostname}</echo>
+    <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+      <arg line="-e zimbra_server_hostname=${zimbra.server.hostname}"/>
+    </java>
+    <echo>Editing localconfig zimbra_user to be ${zimbra.user}</echo>
+    <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+      <arg line="-e zimbra_user=${zimbra.user}"/>
+    </java>
+    <echo>Running zmprov commands</echo>
+    <antcall target="run-zmprov-commands"/>
+  </target>
 
-    <target name="zmlocalconfig">
-        <echo> Running localconfig with with argument: ${localconfig-args}</echo>
-        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-            <arg line="${localconfig-args}"/>
-        </java>
-
-    </target>
+  <target name="zmlocalconfig">
+    <echo>Running localconfig with with argument: ${localconfig-args}</echo>
+    <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+      <arg line="${localconfig-args}"/>
+    </java>
+  </target>
 
   <target name="run-zmprov-commands" depends="zmprov-commands">
     <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
@@ -1754,38 +1753,38 @@
         </java>
     </target>
 
-    <target name="server2-generate-localconfig">
-        <copy tofile="${dist.dir}/conf/localconfig-2.xml" file="${config.dir}/localconfig.xml${production.suffix}" overwrite="true"/>
-        <if>
-            <not><isset property="is-production"/></not>
-            <then>
-                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
-                    <arg line="-e mailboxd_directory=/opt/zimbra/jetty-2"/>
-                </java>
-                <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-                    <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
-                    <arg line="-e mailboxd_keystore=/opt/zimbra/jetty/etc/keystore"/>
-                </java>
-            </then>
-        </if>
-        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-            <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
-            <arg line="-e zimbra_server_hostname=${zimbra.alt.hostname}"/>
+  <target name="server2-generate-localconfig">
+    <copy tofile="${dist.dir}/conf/localconfig-2.xml" file="${config.dir}/localconfig.xml${production.suffix}" overwrite="true"/>
+    <if>
+      <not><isset property="is-production"/></not>
+      <then>
+        <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+          <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
+          <arg line="-e mailboxd_directory=/opt/zimbra/jetty-2"/>
         </java>
-        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-            <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
-            <arg line="-e zimbra_admin_service_port=11071"/>
+        <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+          <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
+          <arg line="-e mailboxd_keystore=/opt/zimbra/jetty/etc/keystore"/>
         </java>
-        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-            <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
-            <arg line="-e zmstat_log_directory=${zimbra.home.dir}/zmstat-2"/>
-        </java>
-        <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
-            <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
-            <arg line="-e debug_mock_multiserver_install=true"/>
-        </java>
-    </target>
+      </then>
+    </if>
+    <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+      <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
+      <arg line="-e zimbra_server_hostname=${zimbra.alt.hostname}"/>
+    </java>
+    <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+      <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
+      <arg line="-e zimbra_admin_service_port=11071"/>
+    </java>
+    <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+      <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
+      <arg line="-e zmstat_log_directory=${zimbra.home.dir}/zmstat-2"/>
+    </java>
+    <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+      <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig-2.xml"/>
+      <arg line="-e debug_mock_multiserver_install=true"/>
+    </java>
+  </target>
 
   <target name="server2-war">
     <copy file="${config.dir}/web.xml${production.suffix}" tofile="${build.dir}/web.xml" overwrite="true"/>
@@ -1843,7 +1842,7 @@
 
     <antcall target="server2-generate-localconfig"/>
     <echo>Updating primary server localconfig to reflect mock-multiserver install</echo>
-    <java classname="com.zimbra.common.localconfig.Main" fork="true" classpathref="class.path" failonerror="true">
+    <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
       <arg line="-e debug_mock_multiserver_install=true"/>
     </java>
 
