@@ -68,12 +68,18 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
                     conn = DbPool.getConnection();
                     String filePath = makePath(dirPath, DbMailItem.TABLE_MAIL_ITEM, prefix);
                     export(conn, mbox, DbMailItem.TABLE_MAIL_ITEM, "id", itemIds, filePath);
+                    filePath = makePath(dirPath, DbMailItem.TABLE_MAIL_ITEM, prefix);
+                    export(conn, mbox, DbMailItem.TABLE_MAIL_ITEM_DUMPSTER, "id", itemIds, filePath);
 
                     filePath = makePath(dirPath, DbMailItem.TABLE_REVISION, prefix);
                     export(conn, mbox, DbMailItem.TABLE_REVISION, "item_id", itemIds, filePath);
+                    filePath = makePath(dirPath, DbMailItem.TABLE_REVISION, prefix);
+                    export(conn, mbox, DbMailItem.TABLE_REVISION_DUMPSTER, "item_id", itemIds, filePath);
 
                     filePath = makePath(dirPath, DbMailItem.TABLE_APPOINTMENT, prefix);
                     export(conn, mbox, DbMailItem.TABLE_APPOINTMENT, "item_id", itemIds, filePath);
+                    filePath = makePath(dirPath, DbMailItem.TABLE_APPOINTMENT, prefix);
+                    export(conn, mbox, DbMailItem.TABLE_APPOINTMENT_DUMPSTER, "item_id", itemIds, filePath);
                 } finally {
                     DbPool.quietClose(conn);
                 }

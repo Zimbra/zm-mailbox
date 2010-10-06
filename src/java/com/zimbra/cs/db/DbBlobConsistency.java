@@ -44,14 +44,28 @@ public class DbBlobConsistency {
         try {
             stmt = conn.prepareStatement(
                 "SELECT id, mod_content, 0, size " +
-                "FROM " + DbMailItem.getMailItemTableName(mbox) +
+                "FROM " + DbMailItem.getMailItemTableName(mbox, false) +
+                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND +
+                " id BETWEEN " + minId + " AND " + maxId +
+                " AND blob_digest IS NOT NULL " +
+                "AND volume_id = " + volumeId +
+                " UNION " +
+                "SELECT id, mod_content, 0, size " +
+                "FROM " + DbMailItem.getMailItemTableName(mbox, true) +
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND +
                 " id BETWEEN " + minId + " AND " + maxId +
                 " AND blob_digest IS NOT NULL " +
                 "AND volume_id = " + volumeId +
                 " UNION " +
                 "SELECT item_id, mod_content, version, size " +
-                "FROM " + DbMailItem.getRevisionTableName(mbox) +
+                "FROM " + DbMailItem.getRevisionTableName(mbox, false) +
+                " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND +
+                " item_id BETWEEN " + minId + " AND " + maxId +
+                " AND blob_digest IS NOT NULL " +
+                "AND volume_id = " + volumeId +
+                " UNION " +
+                "SELECT item_id, mod_content, version, size " +
+                "FROM " + DbMailItem.getRevisionTableName(mbox, true) +
                 " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND +
                 " item_id BETWEEN " + minId + " AND " + maxId +
                 " AND blob_digest IS NOT NULL " +
@@ -59,6 +73,8 @@ public class DbBlobConsistency {
             if (!DebugConfig.disableMailboxGroups) {
                 stmt.setLong(1, mbox.getId());
                 stmt.setLong(2, mbox.getId());
+                stmt.setLong(3, mbox.getId());
+                stmt.setLong(4, mbox.getId());
             }
             Db.getInstance().enableStreaming(stmt);
             rs = stmt.executeQuery();
@@ -84,25 +100,30 @@ public class DbBlobConsistency {
     
     public static long getMaxId(Connection conn, Mailbox mbox)
     throws ServiceException {
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        
-        try {
-            String sql = "SELECT MAX(id) " +
-                "FROM " + DbMailItem.getMailItemTableName(mbox);
-            if (!DebugConfig.disableMailboxGroups) {
-                sql += " WHERE mailbox_id = " + mbox.getId();
+        long maxId = 0;
+        boolean[] dumpster = new boolean[] { false, true };
+        for (boolean fromDumpster : dumpster) {
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+            try {
+                String sql = "SELECT MAX(id) " +
+                    "FROM " + DbMailItem.getMailItemTableName(mbox, fromDumpster);
+                if (!DebugConfig.disableMailboxGroups) {
+                    sql += " WHERE mailbox_id = " + mbox.getId();
+                }
+                stmt = conn.prepareStatement(sql);
+                rs = stmt.executeQuery();
+                rs.next();
+                long id = rs.getLong(1);
+                maxId = Math.max(id, maxId);
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("getting max id for mailbox " + mbox.getId(), e);
+            } finally {
+                DbPool.closeResults(rs);
+                DbPool.quietCloseStatement(stmt);
             }
-            stmt = conn.prepareStatement(sql);
-            rs = stmt.executeQuery();
-            rs.next();
-            return rs.getLong(1);
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("getting max id for mailbox " + mbox.getId(), e);
-        } finally {
-            DbPool.closeResults(rs);
-            DbPool.quietCloseStatement(stmt);
         }
+        return maxId;
     }
     
     public static int getNumRows(Connection conn, Mailbox mbox, String tableName,
