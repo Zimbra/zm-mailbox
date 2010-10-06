@@ -578,8 +578,12 @@ public class GalSearchControl {
 	public static boolean canExpandGalGroup(String groupName, String groupId, Account authedAcct) {
 	    boolean canExpand = false;
 	    
-	    if (groupName == null || groupId == null || authedAcct == null)
+	    if (groupName == null || authedAcct == null)
 	        return false;
+	    
+	    // if no groupId we consider it's an external group, no ACL checking
+	    if (groupId == null)
+	        return true;
 	    
 	    // check feature enabled
 	    // if (!authedAcct.)
