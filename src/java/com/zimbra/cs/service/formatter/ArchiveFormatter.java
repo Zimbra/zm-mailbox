@@ -20,17 +20,20 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.StringWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.base.Charsets;
+import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -201,15 +204,18 @@ public abstract class ArchiveFormatter extends Formatter {
                 }
             }
             if (lock != null && (lock.equals("1") || lock.equals("t") ||
-                lock.equals("true")))
+                    lock.equals("true"))) {
                 ml = MailboxManager.getInstance().beginMaintenance(
-                    context.targetMailbox.getAccountId(),
-                    context.targetMailbox.getId());
+                        context.targetMailbox.getAccountId(),
+                        context.targetMailbox.getId());
+            }
+            Charset charset = getCharset(context);
+            CharsetEncoder encoder = charset.newEncoder();
             if (context.respListItems != null) {
                 try {
                     for (MailItem mi : context.respListItems)
                         aos = saveItem(context, mi, fldrs, cnts, names, false,
-                            aos);
+                                aos, encoder);
                 } catch (Exception e) {
                     warn(e);
                 }
@@ -217,7 +223,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 Folder)) {
                 try {
                     aos = saveItem(context, context.target, fldrs, cnts, names,
-                        false, aos);
+                            false, aos, encoder);
                 } catch (Exception e) {
                     warn(e);
                 }
@@ -246,7 +252,7 @@ public abstract class ArchiveFormatter extends Formatter {
                         Collections.sort(items, sp);
                         for (MailItem item : items)
                             aos = saveItem(context, item, fldrs, cnts, names,
-                                false, aos);
+                                    false, aos, encoder);
                     }
                     if (types == null || types.equals(""))
                         conversations = true;
@@ -259,16 +265,16 @@ public abstract class ArchiveFormatter extends Formatter {
                         if (saveTargetFolder) {
                             saveTargetFolder = false;
                             aos = saveItem(context, context.target,
-                                fldrs, cnts, names, false, aos);
+                                    fldrs, cnts, names, false, aos, encoder);
                         }
                         aos = saveItem(context, results.getNext().getMailItem(),
-                            fldrs, cnts, names, false, aos);
+                                fldrs, cnts, names, false, aos, encoder);
                     }
                     if (conversations) {
                         for (MailItem item : context.targetMailbox.getItemList(
                             context.opContext, MailItem.TYPE_CONVERSATION))
                             aos = saveItem(context, item, fldrs, cnts, names,
-                                false, aos);
+                                    false, aos, encoder);
                     }
                 } catch (Exception e) {
                     warn(e);
@@ -301,10 +307,10 @@ public abstract class ArchiveFormatter extends Formatter {
     }
 
     private ArchiveOutputStream saveItem(Context context, MailItem mi,
-        HashMap<Integer, String> fldrs, HashMap<Integer, Integer> cnts,
-        Set<String> names, boolean version, ArchiveOutputStream aos) throws
-        ServiceException {
-        String charset = context.params.get("charset");
+        Map<Integer, String> fldrs, Map<Integer, Integer> cnts,
+        Set<String> names, boolean version, ArchiveOutputStream aos,
+        CharsetEncoder charsetEncoder) throws ServiceException {
+
         String ext = null, name = null;
         String extra = null;
         Integer fid = mi.getFolderId();
@@ -313,13 +319,12 @@ public abstract class ArchiveFormatter extends Formatter {
         String metaParam = context.params.get(UserServlet.QP_META);
         boolean meta = metaParam == null ? getDefaultMeta() : !metaParam.equals("0");
 
-        if (charset == null)
-            charset = UTF8;
         if (!version && mi.isTagged(Flag.ID_FLAG_VERSIONED)) {
             for (MailItem rev : context.targetMailbox.getAllRevisions(
                 context.opContext, mi.getId(), mi.getType())) {
                 if (mi.getVersion() != rev.getVersion())
-                    aos = saveItem(context, rev, fldrs, cnts, names, true, aos);
+                    aos = saveItem(context, rev, fldrs, cnts, names, true,
+                            aos, charsetEncoder);
             }
         }
         switch (mi.getType()) {
@@ -399,8 +404,10 @@ public abstract class ArchiveFormatter extends Formatter {
 
             cnts.put(fid, 1);
             fldr = f.getPath();
-            if (fldr.startsWith("/"))
+            if (fldr.startsWith("/")) {
                 fldr = fldr.substring(1);
+            }
+            fldr = sanitize(fldr, charsetEncoder);
             fldr = ILLEGAL_FOLDER_CHARS.matcher(fldr).replaceAll("_");
             fldrs.put(fid, fldr);
         } else if (!(mi instanceof Folder)) {
@@ -415,7 +422,7 @@ public abstract class ArchiveFormatter extends Formatter {
         try {
             ArchiveOutputEntry aoe;
             byte data[] = null;
-            String path = getEntryName(mi, fldr, name, ext, names);
+            String path = getEntryName(mi, fldr, name, ext, names, charsetEncoder);
             long miSize = mi.getSize();
 
             if (miSize == 0 && mi.getDigest() != null) {
@@ -430,7 +437,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 return aos;
             }
             if (aos == null)
-                aos = getOutputStream(context, charset);
+                aos = getOutputStream(context, charsetEncoder.charset().name());
             aoe = aos.newOutputEntry(path + ".meta",
                 MailItem.getNameForType(mi), mi.getType(), mi.getDate());
             if (mi instanceof Message && (mi.getFlagBitmask() &
@@ -460,12 +467,12 @@ public abstract class ArchiveFormatter extends Formatter {
                     context.targetMailbox.writeICalendarForCalendarItems(
                         writer, octxt, calItems, useOutlookCompatMode, true,
                         needAppleICalHacks, true);
-                    data = writer.toString().getBytes(charset);
+                    data = writer.toString().getBytes(charsetEncoder.charset());
                 }
             } else if (mi instanceof Contact) {
                 VCard vcf = VCard.formatContact((Contact)mi);
 
-                data = vcf.formatted.getBytes(charset);
+                data = vcf.formatted.getBytes(charsetEncoder.charset());
             } else if (mi instanceof Message) {
                 if (context.hasPart()) {
                     MimeMessage mm = ((Message)mi).getMimeMessage();
@@ -494,9 +501,9 @@ public abstract class ArchiveFormatter extends Formatter {
                         }
                         bs = new BufferStream(sz, 1024 * 1024);
                         bs.readFrom(mp.getInputStream());
-                        aoe = aos.newOutputEntry(getEntryName(mi, "", name,
-                            ext, names), MailItem.getNameForType(mi),
-                            mi.getType(), mi.getDate());
+                        aoe = aos.newOutputEntry(
+                                getEntryName(mi, "", name, ext, names, charsetEncoder),
+                                MailItem.getNameForType(mi), mi.getType(), mi.getDate());
                         sz = bs.getSize();
                         aoe.setSize(sz);
                         aos.putNextEntry(aoe);
@@ -561,17 +568,25 @@ public abstract class ArchiveFormatter extends Formatter {
         return aos;
     }
 
-    protected String getEntryName(MailItem mi, String fldr, String name,
-        String ext, Set<String> names) {
+    private String getEntryName(MailItem mi, String fldr, String name,
+            String ext, Set<String> names, CharsetEncoder encoder) {
         int counter = 0;
         String lpath, path;
 
-        if ((name == null || name.length() == 0) &&
-            (name = mi.getName()).length() == 0 &&
-            (name = mi.getSubject()).length() == 0)
+        if (Strings.isNullOrEmpty(name)) {
+            name = mi.getName();
+        }
+        if (Strings.isNullOrEmpty(name)) {
+            name = mi.getSubject();
+        }
+        if (!Strings.isNullOrEmpty(name)) {
+            name = sanitize(name, encoder);
+        }
+        if (Strings.isNullOrEmpty(name)) {
             name = MailItem.getNameForType(mi) + '-' + mi.getId();
-        else if (name.length() > 121)
+        } else if (name.length() > 121) {
             name = name.substring(0, 120);
+        }
         if (mi.isTagged(Flag.ID_FLAG_VERSIONED))
             name += String.format("-%05d", mi.getVersion());
         name = ILLEGAL_FILE_CHARS.matcher(name).replaceAll("_").trim();
@@ -590,8 +605,9 @@ public abstract class ArchiveFormatter extends Formatter {
         return path;
     }
 
-    @Override public void saveCallback(Context context, String contentType,
-        Folder fldr, String file) throws IOException, ServiceException {
+    @Override
+    public void saveCallback(Context context, String contentType, Folder fldr,
+            String file) throws IOException, ServiceException {
         Exception ex = null;
         ItemData id = null;
         Map<String, Integer> digestMap = new HashMap<String, Integer>();
@@ -601,14 +617,11 @@ public abstract class ArchiveFormatter extends Formatter {
         Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
         long last = System.currentTimeMillis();
         String types = context.getTypesString();
-        String charset = context.params.get("charset");
         String resolve = context.params.get("resolve");
         String subfolder = context.params.get("subfolder");
         String timestamp = context.params.get("timestamp");
         String timeout = context.params.get("timeout");
 
-        if (charset == null)
-            charset = UTF8;
         try {
             ArchiveInputStream ais;
             int ids[] = null;
@@ -639,8 +652,9 @@ public abstract class ArchiveFormatter extends Formatter {
                     }
                 }
             }
+            Charset charset = getCharset(context);
             try {
-                ais = getInputStream(context, charset);
+                ais = getInputStream(context, charset.name());
             } catch (Exception e) {
                 String filename = context.params.get(UserServlet.UPLOAD_NAME);
 
@@ -1339,7 +1353,7 @@ public abstract class ArchiveFormatter extends Formatter {
     private void addData(Context context, Folder fldr, Map<Object, Folder> fmap,
         byte[] searchTypes, Resolve r, boolean timestamp,
         ArchiveInputStream ais, ArchiveInputEntry aie,
-        List<ServiceException> errs) throws MessagingException, ServiceException {
+        List<ServiceException> errs) throws ServiceException {
         try {
             int defaultFldr;
             Mailbox mbox = fldr.getMailbox();
@@ -1508,4 +1522,34 @@ public abstract class ArchiveFormatter extends Formatter {
                     aie.getName(), e));
         }
     }
+
+    private Charset getCharset(Context context) {
+        String charset = context.params.get("charset");
+        return charset != null ? Charset.forName(charset) : Charsets.UTF_8;
+    }
+
+    /**
+     * Replaces characters which can't be encoded by the charset with '#'.
+     *
+     * @param str string to sanitize
+     * @param encoder charset encoder
+     * @return sanitized string or unchanged original string
+     */
+    private String sanitize(String str, CharsetEncoder encoder) {
+        if (encoder.canEncode(str)) {
+            return str;
+        } else {
+            StringBuilder buf = new StringBuilder(str.length());
+            for (int i = 0; i < str.length(); i++) {
+                char c = str.charAt(i);
+                if (encoder.canEncode(c)) {
+                    buf.append(c);
+                } else {
+                    buf.append('#');
+                }
+            }
+            return buf.toString();
+        }
+    }
+
 }

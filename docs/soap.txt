@@ -3,6 +3,7 @@ REST URL for requesting content:
 
 http://server/service/home/[&tilde;][{username}]/[{folder}]?[{query-params}]
        fmt={ics, csv, etc}
+       charset={Windows-31J, GBK, etc, default is UTF-8}
        id={item-id}
        imap_id={item-imap-id}
        part={mime-part}
@@ -683,7 +684,7 @@ import and export of addressbook.
 
   exp: if the user can (has right to) expand group members
        returned only if needExp is 1 in the request and only on group entries (type=group in attrs on a <cn>).
-    
+
   see SearchRequest for use of cursor.
 
 ----------------------------
@@ -719,10 +720,10 @@ import and export of addressbook.
 
   needExp: if the "exp" flag is needed in the response for group entries.
            default is 0
-  
+
   exp: if the user can (has right to) expand group members
        returned only if needExp is 1 in the request and only on group entries (type=group in attrs on a <cn>).
-               
+
 ----------------------------
 
 <AutoCompleteRequest [folders="{folders}"] [includeGal="0|1"] [needExp="1|0"]>
@@ -743,7 +744,7 @@ import and export of addressbook.
   - needExp: if the "exp" flag is needed in the response for group entries.
              default is 0
   - exp: if the user can (has right to) expand group members
-         returned only if needExp is 1 in the request and only on group entries (isGroup=1). 
+         returned only if needExp is 1 in the request and only on group entries (isGroup=1).
 
 ----------------------------
 
@@ -788,9 +789,9 @@ import and export of addressbook.
    attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraCalResType")
    sortBy - name of attribute to sort on. default is the calendar resource name.
    sortAscending - whether to sort in ascending order (0/1), 1 is default
-   
+
    name: if specified, pass through to the GAL search as the search key
-   
+
    must have exactly one <conds> child or exactly one <cond> child and no other child element
 
    conds: denotes a compound condition
