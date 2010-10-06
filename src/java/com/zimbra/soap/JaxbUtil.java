@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -36,16 +36,18 @@ import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
+import com.zimbra.soap.admin.message.ReloadLocalConfigRequest;
+import com.zimbra.soap.admin.message.ReloadLocalConfigResponse;
 import com.zimbra.soap.mail.message.GetDataSourcesRequest;
 import com.zimbra.soap.mail.message.GetDataSourcesResponse;
 import com.zimbra.soap.mail.message.GetFolderRequest;
 import com.zimbra.soap.mail.message.GetFolderResponse;
 
-public class JaxbUtil {
+public final class JaxbUtil {
 
-    private static Class<?>[] MESSAGE_CLASSES;
+    private static final Class<?>[] MESSAGE_CLASSES;
     private static JAXBContext JAXB_CONTEXT;
-    
+
     static {
         MESSAGE_CLASSES = new Class<?>[] {
             // zimbraAccount
@@ -59,21 +61,28 @@ public class JaxbUtil {
             GetInfoResponse.class,
             GetSignaturesRequest.class,
             GetSignaturesResponse.class,
-            
+
             // zimbraMail
             GetDataSourcesRequest.class,
             GetDataSourcesResponse.class,
             GetFolderRequest.class,
-            GetFolderResponse.class
+            GetFolderResponse.class,
+
+            // zimbraAdmin
+            ReloadLocalConfigRequest.class,
+            ReloadLocalConfigResponse.class
         };
-        
+
         try {
             JAXB_CONTEXT = JAXBContext.newInstance(MESSAGE_CLASSES);
         } catch (JAXBException e) {
             ZimbraLog.soap.error("Unable to initialize JAXB", e);
         }
     }
-    
+
+    private JaxbUtil() {
+    }
+
     public static Element jaxbToElement(Object o)
     throws ServiceException {
         try {
@@ -87,7 +96,7 @@ public class JaxbUtil {
             throw ServiceException.FAILURE("Unable to convert " + o.getClass().getName() + " to Element", e);
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     public static <T> T elementToJaxb(Element e)
     throws ServiceException {
@@ -98,7 +107,7 @@ public class JaxbUtil {
         } catch (JAXBException ex) {
             throw ServiceException.FAILURE("Unable to unmarshal response for " + e.getName(), ex);
         }
-        
+
     }
 
     private static JAXBContext getContext()
