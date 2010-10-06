@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -75,7 +75,7 @@ public class KnownKey {
         return kk.mValue;
     }
 
-    static boolean needForceToEdit(String key) {
+    public static boolean needForceToEdit(String key) {
         KnownKey kk = mKnownKeys.get(key);
         if (kk == null) {
             return false;
@@ -96,7 +96,7 @@ public class KnownKey {
     /**
      * The only public method here.  If you have a KnownKey object, this
      * is a shortcut to get it's value.
-     * 
+     *
      * @see LC#get
      */
     public String value() {
@@ -122,13 +122,13 @@ public class KnownKey {
     /**
      * Returns the value of this KnownKey as an int, but forces it to be within
      * the range of minValue <= RETURN <= maxValue
-     * 
+     *
      * @param minValue
      * @param maxValue
      */
     public int intValueWithinRange(int minValue, int maxValue) {
         int toRet = intValue();
-        if (toRet < minValue) 
+        if (toRet < minValue)
             toRet = minValue;
         if (toRet > maxValue)
             toRet = maxValue;
@@ -146,13 +146,13 @@ public class KnownKey {
     /**
      * Returns the value of this KnownKey as a long, but forces it to be within
      * the range of minValue <= RETURN <= maxValue
-     * 
+     *
      * @param minValue
      * @param maxValue
      */
     public long longValueWithinRange(long minValue, long maxValue) {
         long toRet = longValue();
-        if (toRet < minValue) 
+        if (toRet < minValue)
             toRet = minValue;
         if (toRet > maxValue)
             toRet = maxValue;
@@ -160,7 +160,7 @@ public class KnownKey {
     }
 
     public String key() {
-        return mKey;   
+        return mKey;
     }
 
     public String doc() {

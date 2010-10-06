@@ -54,20 +54,18 @@ public class LocalConfig {
         return zimbra_config;
     }
 
-    String getConfigFile() {
+    public String getConfigFile() {
         return mConfigFile;
     }
 
     private Map<String, String> mConfiguredKeys = new HashMap<String, String>();
     private Map<String, String> mExpanded = new HashMap<String, String>();
 
-    void set(String key, String value)
-    {
+    public void set(String key, String value) {
         mConfiguredKeys.put(key, value);
     }
 
-    String getRaw(String key)
-    {
+    String getRaw(String key) {
         if (mConfiguredKeys.containsKey(key))
             return mConfiguredKeys.get(key);
 
@@ -76,7 +74,7 @@ public class LocalConfig {
 
         return null;
     }
-         
+
     String findKey(String value) {
         int begin = value.indexOf("${");
         if (begin == -1) {
@@ -90,7 +88,7 @@ public class LocalConfig {
 
         return value.substring(begin + 2, end);
     }
-    
+
     private String expandDeep(String key, Set<String> seenKeys) throws ConfigException {
         if (seenKeys.contains(key)) {
             StringBuilder sb = new StringBuilder();
@@ -99,9 +97,9 @@ public class LocalConfig {
                 sb.append(" ").append(seen);
             throw new ConfigException(sb.toString());
         }
-        
+
         seenKeys.add(key);
-        
+
         String replacement = getRaw(key);
         if (replacement == null)
             throw new ConfigException("null valued key '" + key + "' referenced");
@@ -112,15 +110,15 @@ public class LocalConfig {
             String target = "${" + nestedKey +  "}";
             replacement = replacement.replace(target, expanded);
         }
-        
+
         seenKeys.remove(key);
         return replacement;
     }
-    
+
     String expand(String key, String rawValue) throws ConfigException {
         if (rawValue == null)
             return null;
-        
+
         return expandDeep(key, new HashSet<String>());
     }
 
@@ -138,7 +136,7 @@ public class LocalConfig {
     //
     // Load & save
     //
-    void save() throws IOException, ConfigException {
+    public void save() throws IOException, ConfigException {
         ConfigWriter xmlWriter = ConfigWriter.getInstance("xml", false, false);
         for (String key : mConfiguredKeys.keySet()) {
             String value = getRaw(key);
@@ -187,18 +185,18 @@ public class LocalConfig {
         expandAll();
     }
 
-    boolean isSet(String key) {
+    public boolean isSet(String key) {
         return mConfiguredKeys.containsKey(key) || KnownKey.isKnown(key);
     }
 
-    void remove(String key) {
+    public void remove(String key) {
         mConfiguredKeys.remove(key);
     }
 
     //
     // Print
     //
-    static void printDoc(PrintStream ps, String[] keys) {
+    public static void printDoc(PrintStream ps, String[] keys) {
         if (keys.length == 0) {
             keys = KnownKey.getAll();
             Arrays.sort(keys);
@@ -216,7 +214,9 @@ public class LocalConfig {
         }
     }
 
-    void printChanged(OutputStream out, ConfigWriter writer, String[] keys) throws ConfigException, IOException {
+    public void printChanged(OutputStream out, ConfigWriter writer, String[] keys)
+        throws ConfigException, IOException {
+
         if (keys.length == 0) {
             keys = mConfiguredKeys.keySet().toArray(new String[0]);
             Arrays.sort(keys);
@@ -243,8 +243,9 @@ public class LocalConfig {
         writer.write(new OutputStreamWriter(out));
     }
 
-    void printDefaults(OutputStream out, ConfigWriter writer, String[] keys) throws IOException, ConfigException
-    {
+    public void printDefaults(OutputStream out, ConfigWriter writer, String[] keys)
+        throws IOException, ConfigException {
+
         if (keys.length == 0) {
             keys = KnownKey.getAll();
             Arrays.sort(keys);
@@ -282,7 +283,9 @@ public class LocalConfig {
         return union.toArray(new String[0]);
     }
 
-    void print(OutputStream out, ConfigWriter writer, String[] keys) throws IOException, ConfigException {
+    public void print(OutputStream out, ConfigWriter writer, String[] keys)
+        throws IOException, ConfigException {
+
         if (keys.length == 0) {
             keys = allKeys();
             Arrays.sort(keys);
