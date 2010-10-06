@@ -2026,10 +2026,13 @@ public abstract class MailItem implements Comparable<MailItem> {
                 ZimbraLog.mailop.debug("setting copied flag for %s", getMailopContext(this));
         }
 
+        boolean inDumpster = inDumpster();
+        StoreManager sm = StoreManager.getInstance();
+
+        // main item
         String locator = null;
         MailboxBlob srcMblob = getBlob();
         if (srcMblob != null) {
-            StoreManager sm = StoreManager.getInstance();
             MailboxBlob mblob = sm.link(srcMblob, mMailbox, copyId, mMailbox.getOperationChangeID());
             mMailbox.markOtherItemDirty(mblob);
             locator = mblob.getLocator();
@@ -2044,7 +2047,21 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         ZimbraLog.mailop.info("Copying %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
                               getMailopContext(this), copyId, folder.getId(), folder.getName(), data.parentId);
-        DbMailItem.copy(this, copyId, folder, data.indexId, data.parentId, data.locator, data.metadata, inDumpster());
+        DbMailItem.copy(this, copyId, folder, data.indexId, data.parentId, data.locator, data.metadata, inDumpster);
+        if (this instanceof CalendarItem)
+            DbMailItem.copyCalendarItem((CalendarItem) this, copyId, inDumpster);
+
+        // older revisions
+        for (MailItem revision : loadRevisions()) {
+            MailboxBlob srcRevBlob = revision.getBlob();
+            String revLocator = null;
+            if (srcRevBlob != null) {
+                MailboxBlob copyRevBlob = sm.link(srcRevBlob, mMailbox, copyId, revision.getSavedSequence());
+                mMailbox.markOtherItemDirty(copyRevBlob);
+                revLocator = copyRevBlob.getLocator();
+            }
+            DbMailItem.copyRevision(revision, copyId, revLocator, inDumpster);
+        }
 
         MailItem copy = constructItem(mMailbox, data);
         copy.finishCreation(parent);

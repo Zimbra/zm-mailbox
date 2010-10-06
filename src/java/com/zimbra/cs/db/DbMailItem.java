@@ -262,7 +262,7 @@ public class DbMailItem {
             stmt.setString(pos++, indexId);                       // INDEX_ID
             stmt.setInt(pos++, id);                            // IMAP_ID is initially the same as ID
             if (locator != null)
-                stmt.setString(pos++, locator);                // VOLUME_ID specified by caller
+                stmt.setString(pos++, locator);      // VOLUME_ID specified by caller
             else
                 stmt.setNull(pos++, Types.VARCHAR);            //   or, no VOLUME_ID
             stmt.setString(pos++, checkMetadataLength(metadata));  // METADATA
@@ -280,6 +280,90 @@ public class DbMailItem {
                 throw MailServiceException.ALREADY_EXISTS(id, e);
             else
                 throw ServiceException.FAILURE("copying " + MailItem.getNameForType(item ) + ": " + item.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static void copyCalendarItem(CalendarItem calItem, int newId, boolean fromDumpster)
+    throws ServiceException {
+        Mailbox mbox = calItem.getMailbox();
+        if (newId <= 0)
+            throw ServiceException.FAILURE("invalid data for DB item copy", null);
+
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
+            stmt = conn.prepareStatement("INSERT INTO " + getCalendarItemTableName(mbox) +
+                    "(" + mailbox_id +
+                    " uid, item_id, start_time, end_time) " +
+                    "SELECT " + MAILBOX_ID_VALUE +
+                    " uid, ?, start_time, end_time FROM " + getCalendarItemTableName(mbox, fromDumpster) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "item_id = ?");
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, newId);
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, calItem.getId());
+            int num = stmt.executeUpdate();
+            if (num != 1)
+                throw ServiceException.FAILURE("failed to create object", null);
+        } catch (SQLException e) {
+            // catch item_id uniqueness constraint violation and return failure
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
+                throw MailServiceException.ALREADY_EXISTS(newId, e);
+            else
+                throw ServiceException.FAILURE("copying " + MailItem.getNameForType(calItem) + ": " + calItem.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static void copyRevision(MailItem revision, int newId, String locator, boolean fromDumpster)
+    throws ServiceException {
+        Mailbox mbox = revision.getMailbox();
+        if (newId <= 0)
+            throw ServiceException.FAILURE("invalid data for DB item copy", null);
+
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
+            stmt = conn.prepareStatement("INSERT INTO " + getRevisionTableName(mbox) +
+                    "(" + mailbox_id +
+                    " item_id, version, date, size, volume_id, blob_digest, name, metadata," +
+                    " mod_metadata, change_date, mod_content) " +
+                    "SELECT " + MAILBOX_ID_VALUE +
+                    " ?, version, date, size, ?, blob_digest, name, metadata," +
+                    " mod_metadata, change_date, mod_content" +
+                    " FROM " + getRevisionTableName(mbox, fromDumpster) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "item_id = ? AND version = ?");
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, newId);
+            if (locator != null)
+                stmt.setString(pos++, locator);       // VOLUME_ID specified by caller
+            else
+                stmt.setNull(pos++, Types.VARCHAR);      //   or, no VOLUME_ID
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, revision.getId());
+            stmt.setInt(pos++, revision.getVersion());
+            int num = stmt.executeUpdate();
+            if (num != 1)
+                throw ServiceException.FAILURE("failed to create object", null);
+        } catch (SQLException e) {
+            // catch item_id uniqueness constraint violation and return failure
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
+                throw MailServiceException.ALREADY_EXISTS(newId, e);
+            else
+                throw ServiceException.FAILURE(
+                        "copying revision " + revision.getVersion() + " for " +
+                        MailItem.getNameForType(revision) + ": " + revision.getId(), e);
         } finally {
             DbPool.closeStatement(stmt);
         }
