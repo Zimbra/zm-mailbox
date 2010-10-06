@@ -45,6 +45,8 @@ SECTION archiving DEPENDS amavis
 SECTION mta DEPENDS amavis
   LOCAL postfix_enable_smtpd_policyd
   REWRITE postfix/conf/master.cf.in postfix/conf/master.cf
+  REWRITE conf/mta_milter_options.in conf/mta_milter_options
+  VAR zimbraMilterServerEnabled
 	VAR zimbraMtaRestriction
 	VAR zimbraMtaAuthEnabled
 	VAR zimbraMtaBlockedExtension
