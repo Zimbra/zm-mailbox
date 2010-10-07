@@ -15,8 +15,8 @@
 package com.zimbra.common.util;
 
 public class Pair<F,S> {
-	private F mFirst;
-	private S mSecond;
+    private F mFirst;
+    private S mSecond;
 
     public Pair(F first, S second) {
         mFirst = first;
@@ -29,12 +29,12 @@ public class Pair<F,S> {
     public S cdr() {
         return getSecond();
     }
-	public F getFirst() {
-		return mFirst;
-	}
-	public S getSecond() {
-		return mSecond;
-	}
+    public F getFirst() {
+        return mFirst;
+    }
+    public S getSecond() {
+        return mSecond;
+    }
 
     public void setFirst(F first) {
         mFirst = first;
