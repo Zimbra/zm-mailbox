@@ -106,14 +106,6 @@ public final class ContactConstants {
     public static final String A_imAddress3 = Attr.imAddress3.name();
     public static final String A_zimbraId = Attr.zimbraId.name();
 
-    /**
-     * Whether to auto-load remote images in HTML mail.
-     *
-     * @since Helix
-     */
-    public static final String A_autoLoadRemoteImages =
-        Attr.autoLoadRemoteImages.name();
-
     // Comcast specific fields
     public static final String A_homeAddress = Attr.homeAddress.name();
     public static final String A_workAddress = Attr.workAddress.name();
@@ -149,7 +141,6 @@ public final class ContactConstants {
      */
     public enum Attr {
         assistantPhone,
-        autoLoadRemoteImages,
         birthday,
         callbackPhone,
         canExpand,
