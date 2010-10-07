@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -40,18 +40,22 @@ import com.zimbra.common.mime.MimeConstants;
 
 public class CsvFormatter extends Formatter {
 
+    @Override
     public String getType() {
         return "csv";
     }
 
+    @Override
     public String[] getDefaultMimeTypes() {
         return new String[] { "text/csv", "text/comma-separated-values", MimeConstants.CT_TEXT_PLAIN };
     }
 
+    @Override
     public String getDefaultSearchTypes() {
         return MailboxIndex.SEARCH_FOR_CONTACTS;
     }
 
+    @Override
     public void formatCallback(Context context) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         StringBuffer sb = new StringBuffer();
@@ -80,24 +84,28 @@ public class CsvFormatter extends Formatter {
             filename = "contacts";
         String cd = Part.ATTACHMENT + "; filename=" + HttpUtil.encodeFilename(context.req, filename + ".csv");
         context.resp.addHeader("Content-Disposition", cd);
-        context.resp.setCharacterEncoding(MimeConstants.P_CHARSET_UTF8);
+        context.resp.setCharacterEncoding(context.getCharset().name());
         context.resp.setContentType("text/csv");
         context.resp.getWriter().print(sb.toString());
     }
 
+    @Override
     public boolean canBeBlocked() {
         return false;
     }
 
+    @Override
     public boolean supportsSave() {
         return true;
     }
 
+    @Override
     public void saveCallback(Context context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException {
-        InputStreamReader isr = new InputStreamReader(context.getRequestInputStream(), MimeConstants.P_CHARSET_UTF8);
+        InputStreamReader isr = new InputStreamReader(
+                context.getRequestInputStream(), context.getCharset());
         BufferedReader reader = new BufferedReader(isr);
-        
+
         try {
             String format = context.params.get(UserServlet.QP_CSVFORMAT);
             String locale = context.req.getParameter(UserServlet.QP_CSVLOCALE);
@@ -105,7 +113,7 @@ public class CsvFormatter extends Formatter {
                 locale = context.locale.toString();
             List<Map<String, String>> contacts = ContactCSV.getContacts(reader, format, locale);
             ItemId iidFolder = new ItemId(folder);
-            
+
             ImportContacts.ImportCsvContacts(context.opContext, context.targetMailbox, iidFolder, contacts);
         } catch (ContactCSV.ParseException e) {
             ZimbraLog.misc.debug("ContactCSV - ParseException thrown", e);
@@ -115,4 +123,5 @@ public class CsvFormatter extends Formatter {
             reader.close();
         }
     }
+
 }

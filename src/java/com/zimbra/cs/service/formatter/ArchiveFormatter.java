@@ -32,7 +32,6 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
@@ -209,7 +208,7 @@ public abstract class ArchiveFormatter extends Formatter {
                         context.targetMailbox.getAccountId(),
                         context.targetMailbox.getId());
             }
-            Charset charset = getCharset(context);
+            Charset charset = context.getCharset();
             CharsetEncoder encoder = charset.newEncoder();
             if (context.respListItems != null) {
                 try {
@@ -652,7 +651,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     }
                 }
             }
-            Charset charset = getCharset(context);
+            Charset charset = context.getCharset();
             try {
                 ais = getInputStream(context, charset.name());
             } catch (Exception e) {
@@ -1521,11 +1520,6 @@ public abstract class ArchiveFormatter extends Formatter {
                 addError(errs, FormatterServiceException.UNKNOWN_ERROR(
                     aie.getName(), e));
         }
-    }
-
-    private Charset getCharset(Context context) {
-        String charset = context.params.get("charset");
-        return charset != null ? Charset.forName(charset) : Charsets.UTF_8;
     }
 
     /**
