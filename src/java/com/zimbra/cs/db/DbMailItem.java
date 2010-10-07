@@ -149,7 +149,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, data.parentId);
             stmt.setInt(pos++, data.folderId);
             if (data.indexId == -1)
-                stmt.setNull(pos++, Types.VARCHAR);
+                stmt.setNull(pos++, Types.INTEGER);
             else
                 stmt.setInt(pos++, data.indexId);
             if (data.imapId <= 0)
@@ -565,7 +565,7 @@ public class DbMailItem {
             stmt.setInt(pos++, folder.getId());
             if (hasIndexId)
                 if (item.getIndexId() == -1)
-                    stmt.setNull(pos++, Types.VARCHAR);
+                    stmt.setNull(pos++, Types.INTEGER);
                 else
                     stmt.setInt(pos++, item.getIndexId());
             stmt.setInt(pos++, mbox.getOperationChangeID());
