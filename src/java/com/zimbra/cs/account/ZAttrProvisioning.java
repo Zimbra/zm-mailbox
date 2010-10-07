@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101004-1531 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101005-2027 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3007,6 +3007,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=566)
     public static final String A_zimbraFeatureMailPriorityEnabled = "zimbraFeatureMailPriorityEnabled";
+
+    /**
+     * whether the send later feature is enabled
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1137)
+    public static final String A_zimbraFeatureMailSendLaterEnabled = "zimbraFeatureMailSendLaterEnabled";
 
     /**
      * email upsell enabled

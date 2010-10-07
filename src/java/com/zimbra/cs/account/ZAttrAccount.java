@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101004-1531 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101005-2027 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -9685,6 +9685,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureMailPriorityEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureMailPriorityEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * whether the send later feature is enabled
+     *
+     * @return zimbraFeatureMailSendLaterEnabled, or false if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1137)
+    public boolean isFeatureMailSendLaterEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureMailSendLaterEnabled, false);
+    }
+
+    /**
+     * whether the send later feature is enabled
+     *
+     * @param zimbraFeatureMailSendLaterEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1137)
+    public void setFeatureMailSendLaterEnabled(boolean zimbraFeatureMailSendLaterEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailSendLaterEnabled, zimbraFeatureMailSendLaterEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the send later feature is enabled
+     *
+     * @param zimbraFeatureMailSendLaterEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1137)
+    public Map<String,Object> setFeatureMailSendLaterEnabled(boolean zimbraFeatureMailSendLaterEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailSendLaterEnabled, zimbraFeatureMailSendLaterEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether the send later feature is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1137)
+    public void unsetFeatureMailSendLaterEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailSendLaterEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the send later feature is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1137)
+    public Map<String,Object> unsetFeatureMailSendLaterEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMailSendLaterEnabled, "");
         return attrs;
     }
 

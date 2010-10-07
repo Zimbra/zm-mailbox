@@ -5121,5 +5121,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>handler for foreign name mapping, it is in the format of {application}:{class name}[:{params}]</desc>
 </attr>
 
+<attr id="1137" name="zimbraFeatureMailSendLaterEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether the send later feature is enabled</desc>
+</attr>
+
 
 </attrs>
