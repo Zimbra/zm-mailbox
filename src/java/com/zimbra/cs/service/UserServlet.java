@@ -977,11 +977,19 @@ public class UserServlet extends ZimbraServlet {
         /**
          * Shortcut to {@code params.get("charset")}.
          *
-         * @return value of charset parameter or UTF-8 if null
+         * @return value of charset parameter, or UTF-8 if the charset name is
+         * null or invalid
          */
         public Charset getCharset() {
             String charset = params.get("charset");
-            return charset != null ? Charset.forName(charset) : Charsets.UTF_8;
+            if (charset != null) {
+                try {
+                    return Charset.forName(charset);
+                } catch (IllegalArgumentException e) { // default to UTF-8
+                    ZimbraLog.mailbox.warn("invalid charset: %s", charset);
+                }
+            }
+            return Charsets.UTF_8;
         }
 
         public boolean cookieAuthAllowed() {
