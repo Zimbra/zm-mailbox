@@ -28,8 +28,13 @@ public interface LmtpBackend {
     /**
      * Delivers this message to the list of recipients in the message, and sets the
      * delivery status on each recipient address.
+     *
+     * @param env
+     * @param in
+     * @param sizeHint
+     * @throws UnrecoverableLmtpException for errors such as disk-full
      */
-    public void deliver(LmtpEnvelope env, InputStream in, int sizeHint);
+    public void deliver(LmtpEnvelope env, InputStream in, int sizeHint) throws UnrecoverableLmtpException;
 
     /**
      * Delivers this message to the list of recipients in the message, and sets the

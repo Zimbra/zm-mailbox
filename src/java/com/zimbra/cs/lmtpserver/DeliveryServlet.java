@@ -128,7 +128,11 @@ public class DeliveryServlet extends ZimbraServlet {
         }
 
         if (!envelope.getRecipients().isEmpty()) {
-            lmtpServer.getLmtpConfig().getLmtpBackend().deliver(envelope, req.getInputStream(), 0);
+            try {
+                lmtpServer.getLmtpConfig().getLmtpBackend().deliver(envelope, req.getInputStream(), 0);
+            } catch (UnrecoverableLmtpException e) {
+                throw new IOException(e);
+            }
         }
         
         for (LmtpAddress recipient : envelope.getRecipients()) {

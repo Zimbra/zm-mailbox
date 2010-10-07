@@ -164,7 +164,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
     
-    public void deliver(LmtpEnvelope env, InputStream in, int sizeHint) {
+    public void deliver(LmtpEnvelope env, InputStream in, int sizeHint) throws UnrecoverableLmtpException {
         try {
             deliverMessageToLocalMailboxes(in, env, sizeHint);
         } catch (ServiceException e) {
@@ -254,7 +254,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
     private void deliverMessageToLocalMailboxes(InputStream in,
                                                 LmtpEnvelope env, 
                                                 int sizeHint)
-        throws ServiceException, IOException {
+            throws ServiceException, IOException, UnrecoverableLmtpException {
         int bufLen = Provisioning.getInstance().getLocalServer().getMailDiskStreamingThreshold();
         CopyInputStream cis = new CopyInputStream(in, sizeHint, bufLen, bufLen);
         in = cis;
@@ -264,9 +264,14 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             validator = new Rfc822ValidationInputStream(cis, LC.zimbra_lmtp_max_line_length.longValue());
             in = validator;
         }
-        
-        Blob blob = StoreManager.getInstance().storeIncoming(in, sizeHint, null);
-        
+
+        Blob blob;
+        try {
+            blob = StoreManager.getInstance().storeIncoming(in, sizeHint, null);
+        } catch (IOException e) {
+            throw new UnrecoverableLmtpException("Error is storing incoming message", e);
+        }
+
         if (validator != null && !validator.isValid()) {
             StoreManager.getInstance().delete(blob);
             setDeliveryStatuses(env.getRecipients(), LmtpReply.INVALID_BODY_PARAMETER);
