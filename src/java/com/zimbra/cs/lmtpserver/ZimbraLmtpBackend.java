@@ -236,9 +236,9 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
-    public void deliver(LmtpEnvelope env, InputStream in, int sizeHint) {
-        CopyInputStream cis = null;
-        Blob blob = null;
+    public void deliver(LmtpEnvelope env, InputStream in, int sizeHint) throws UnrecoverableLmtpException {
+        CopyInputStream cis;
+        Blob blob;
         try {
             int bufLen = Provisioning.getInstance().getLocalServer().getMailDiskStreamingThreshold();
             cis = new CopyInputStream(in, sizeHint, bufLen, bufLen);
@@ -250,14 +250,22 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 in = validator;
             }
 
-            blob = StoreManager.getInstance().storeIncoming(in, null);
+            try {
+                blob = StoreManager.getInstance().storeIncoming(in, null);
+            } catch (IOException e) {
+                throw new UnrecoverableLmtpException("Error is storing incoming message", e);
+            }
 
             if (validator != null && !validator.isValid()) {
-                StoreManager.getInstance().delete(blob);
+                try {
+                    StoreManager.getInstance().delete(blob);
+                } catch (IOException e) {
+                    ZimbraLog.lmtp.warn("Error in deleting blob %s", blob, e);
+                }
                 setDeliveryStatuses(env.getRecipients(), LmtpReply.INVALID_BODY_PARAMETER);
                 return;
             }
-        } catch (Exception e) {
+        } catch (ServiceException e) {
             ZimbraLog.lmtp.warn("Exception delivering mail (temporary failure)", e);
             setDeliveryStatuses(env.getRecipients(), LmtpReply.TEMPORARY_FAILURE);
             return;
@@ -502,9 +510,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         ZimbraLog.lmtp.info("rejecting message " + rcptEmail + ": account or mailbox not found");
                         reply = LmtpReply.PERMANENT_FAILURE;
                     }
-                } catch (IOException ioe) {
-                    reply = LmtpReply.TEMPORARY_FAILURE;
-                    ZimbraLog.lmtp.warn("try again for " + rcptEmail + ": exception occurred", ioe);
                 } catch (ServiceException se) {
                     if (se.getCode().equals(MailServiceException.QUOTA_EXCEEDED)) {
                         ZimbraLog.lmtp.info("rejecting message " + rcptEmail + ": overquota");

@@ -359,16 +359,16 @@ public abstract class LmtpHandler extends ProtocolHandler {
         finishMessageData(blob.getRawSize());
     }
     
-    protected void processMessageData(LmtpMessageInputStream in) throws IOException {
+    protected void processMessageData(LmtpMessageInputStream in) throws UnrecoverableLmtpException {
 	// TODO cleanup: add Date if not present
 	// TODO cleanup: add From header from envelope if not present
 	// TODO there should be a too many recipients test (for now protected by postfix config)
 
-	mConfig.getLmtpBackend().deliver(mEnvelope, in, mEnvelope.getSize());
+        mConfig.getLmtpBackend().deliver(mEnvelope, in, mEnvelope.getSize());
         finishMessageData(in.getMessageSize());
     }
 
-    private void finishMessageData(long size) throws IOException {
+    private void finishMessageData(long size) {
 	int numRecipients = mEnvelope.getRecipients().size();
 	ZimbraPerf.COUNTER_LMTP_RCVD_MSGS.increment();
 	ZimbraPerf.COUNTER_LMTP_RCVD_BYTES.increment(size);
