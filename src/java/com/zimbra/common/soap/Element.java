@@ -261,6 +261,12 @@ public abstract class Element implements Cloneable {
             throw ServiceException.INVALID_REQUEST("invalid long value '" + value + "' for attribute: " + key, nfe);
         }
     }
+    public static int parseInt(String key, String value) throws ServiceException {
+        try { return Integer.parseInt(value); }
+        catch (NumberFormatException nfe) {
+            throw ServiceException.INVALID_REQUEST("invalid int value '" + value + "' for attribute: " + key, nfe);
+        }
+    }
     public static double parseDouble(String key, String value) throws ServiceException {
         try { return Double.parseDouble(value); }
         catch (NumberFormatException nfe) {
