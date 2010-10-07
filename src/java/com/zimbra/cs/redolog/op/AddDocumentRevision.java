@@ -30,7 +30,7 @@ public class AddDocumentRevision extends SaveDocument {
     public AddDocumentRevision() {
     }
 
-    public AddDocumentRevision(long mailboxId, String digest, int msgSize, int folderId) {
+    public AddDocumentRevision(int mailboxId, String digest, int msgSize, int folderId) {
         super(mailboxId, digest, msgSize, folderId);
     }
 
@@ -57,15 +57,13 @@ public class AddDocumentRevision extends SaveDocument {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         OperationContext octxt = getOperationContext();
         try {
             mbox.addDocumentRevision(octxt, mDocId, getAuthor(), getFilename(), getDescription(), getAdditionalDataStream());
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
-                mLog.info("Document revision " + getMessageId() + " is already in mailbox " + mboxId);
+                mLog.info("Document revision " + getMessageId() + " is already in mailbox " + mbox.getId());
                 return;
             } else {
                 throw e;

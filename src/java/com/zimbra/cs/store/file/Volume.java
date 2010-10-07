@@ -124,27 +124,19 @@ public class Volume {
         if (allowReservedVals && (id == ID_AUTO_INCREMENT || id == ID_NONE))
             return;
         if (id < 1 || id > ID_MAX)
-            throw VolumeServiceException.INVALID_REQUEST(
-                    "Volume ID " + id + " is outside the range of [1, " +
-                    ID_MAX + "]");
+            throw VolumeServiceException.INVALID_REQUEST("Volume ID " + id + " is outside the range of [1, " + ID_MAX + "]");
     }
 
     private static void validateType(short type)
     throws VolumeServiceException {
-        if (type != TYPE_MESSAGE &&
-            type != TYPE_MESSAGE_SECONDARY &&
-            type != TYPE_INDEX)
-        {
-            throw VolumeServiceException.INVALID_REQUEST(
-                    "Invalid volume type " + type);
-        }
+        if (type != TYPE_MESSAGE && type != TYPE_MESSAGE_SECONDARY && type != TYPE_INDEX)
+            throw VolumeServiceException.INVALID_REQUEST("Invalid volume type " + type);
     }
 
     private static void validatePath(String path)
     throws VolumeServiceException {
         if (path == null || path.length() < 1)
-            throw VolumeServiceException.INVALID_REQUEST(
-                    "Missing volume path");
+            throw VolumeServiceException.INVALID_REQUEST("Missing volume path");
         
         path = getAbsolutePath(path);
 
@@ -178,12 +170,10 @@ public class Volume {
         validateID(id, true);
         validateType(type);
         if (name == null || name.length() < 1)
-            throw VolumeServiceException.INVALID_REQUEST(
-                    "Missing volume name");
+            throw VolumeServiceException.INVALID_REQUEST("Missing volume name");
         validatePath(path);
         if (compressionThreshold < 0)
-            throw VolumeServiceException.INVALID_REQUEST(
-                    "compressionThreshold cannot be a negative number");
+            throw VolumeServiceException.INVALID_REQUEST("compressionThreshold cannot be a negative number");
 
         // no validation on the bits params for now
     }
@@ -731,11 +721,11 @@ public class Volume {
     public boolean getCompressBlobs() { return mCompressBlobs; }
     public long getCompressionThreshold() { return mCompressionThreshold; }
 
-    private StringBuffer getMailboxDirStringBuffer(long mboxId, String subdir, int extraCapacity) {
+    private StringBuffer getMailboxDirStringBuffer(int mboxId, String subdir, int extraCapacity) {
         StringBuffer sb;
         int capacity;
 
-        long dir = mboxId >> mMboxBits;
+        int dir = mboxId >> mMboxBits;
         dir &= mMboxGroupBitMask;
 
         capacity = mRootPath.length() + 20 + extraCapacity;
@@ -749,12 +739,12 @@ public class Volume {
         return sb;
     }
 
-    public String getMailboxDir(long mboxId, int type) {
+    public String getMailboxDir(int mboxId, int type) {
         String subdir = type == TYPE_INDEX ? SUBDIR_INDEX : SUBDIR_MESSAGE;
         return getMailboxDirStringBuffer(mboxId, subdir, 0).toString();
     }
 
-    public String getBlobDir(long mboxId, int itemId) {
+    public String getBlobDir(int mboxId, int itemId) {
         long dir = itemId >> mFileBits;
         dir &= mFileGroupBitMask;
 
@@ -763,7 +753,7 @@ public class Volume {
         return sb.toString();
     }
     
-    public String getMessageRootDir(long mboxId) {
+    public String getMessageRootDir(int mboxId) {
         return getMailboxDirStringBuffer(mboxId, null, 0).toString();
     }
 

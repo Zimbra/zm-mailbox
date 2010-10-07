@@ -276,10 +276,10 @@ public class DbDataSource {
     	        sb.append(IN_THIS_MAILBOX_AND);
     	        sb.append("  data_source_id = ? AND folder_id = ?");
     	        stmt = conn.prepareStatement(sb.toString());
-    	        int i = 1;
-    	        i = DbMailItem.setMailboxId(stmt, mbox, i);
-    	        stmt.setString(i++, ds.getId());
-    	        stmt.setInt(i++, folderId);
+    	        int pos = 1;
+    	        pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+    	        stmt.setString(pos++, ds.getId());
+    	        stmt.setInt(pos++, folderId);
     	        int numRows = stmt.executeUpdate();
     	        conn.commit();
     	        stmt.close();
@@ -366,10 +366,10 @@ public class DbDataSource {
                 sb.append(IN_THIS_MAILBOX_AND);
                 sb.append("  data_source_id = ? AND folder_id = ?");
                 stmt = conn.prepareStatement(sb.toString());
-                int i = 1;
-                i = DbMailItem.setMailboxId(stmt, mbox, i);
-                stmt.setString(i++, ds.getId());
-                stmt.setInt(i++, folderId);
+                int pos = 1;
+                pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+                stmt.setString(pos++, ds.getId());
+                stmt.setInt(pos++, folderId);
                 rs = stmt.executeQuery();
                 while (rs.next()) {
                     Metadata md = null;
@@ -416,10 +416,10 @@ public class DbDataSource {
                 sb.append(IN_THIS_MAILBOX_AND);
                 sb.append("  data_source_id = ? AND ").append(thisTable).append(".folder_id = ?");
                 stmt = conn.prepareStatement(sb.toString());
-                int i = 1;
-                i = DbMailItem.setMailboxId(stmt, mbox, i);
-                stmt.setString(i++, ds.getId());
-                stmt.setInt(i++, folderId);
+                int pos = 1;
+                pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+                stmt.setString(pos++, ds.getId());
+                stmt.setInt(pos++, folderId);
                 rs = stmt.executeQuery();
                 while (rs.next()) {
                     Metadata md = null;
@@ -469,7 +469,7 @@ public class DbDataSource {
                     fmt.format(" AND remote_id LIKE '%s%%'", prefix);
                 }
                 stmt = conn.prepareStatement(fmt.toString());
-                stmt.setLong(1, mbox.getId());
+                stmt.setInt(1, mbox.getId());
                 stmt.setString(2, ds.getId());
                 stmt.setInt(3, folderId);
                 rs = stmt.executeQuery();

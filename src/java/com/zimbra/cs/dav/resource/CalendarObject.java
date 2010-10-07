@@ -162,13 +162,13 @@ public interface CalendarObject {
             mInvite = inv;
             addProperty(CalDavProperty.getCalendarData(this));
         }
-        public String getUid() {
+        @Override public String getUid() {
             return mInvite.getUid();
         }
-        public boolean match(Filter filter) {
+        @Override public boolean match(Filter filter) {
             return true;
         }
-        public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException {
+        @Override public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException {
             StringBuilder buf = new StringBuilder();
             buf.append("BEGIN:VCALENDAR\r\n");
             buf.append("VERSION:").append(ZCalendar.sIcalVersion).append("\r\n");
@@ -210,7 +210,7 @@ public interface CalendarObject {
         private Invite mInvite;
     }
     public static class LightWeightCalendarObject extends DavResource implements CalendarObject {
-        private long mMailboxId;
+        private int mMailboxId;
         private int mId;
         private String mUid;
         private String mEtag;
@@ -228,10 +228,10 @@ public interface CalendarObject {
             setProperty(DavElements.P_GETETAG, mEtag);
             addProperty(CalDavProperty.getCalendarData(this));
         }
-        public String getUid() {
+        @Override public String getUid() {
             return mUid;
         }
-        public boolean match(Filter filter) {
+        @Override public boolean match(Filter filter) {
             TimeRange range = filter.getTimeRange();
             if (range == null)
                 return true;
@@ -240,7 +240,7 @@ public interface CalendarObject {
         @Override public String getEtag() {
             return mEtag;
         }
-        public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException {
+        @Override public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException {
             ZimbraLog.dav.debug("constructing full resource");
             return getFullResource(ctxt).getVcalendar(ctxt, filter);
         }
@@ -314,12 +314,12 @@ public interface CalendarObject {
         private String mUid;
         private Invite[] mInvites;
         private TimeZoneMap mTzmap;
-        private long mMailboxId;
+        private int mMailboxId;
         private long mStart;
         private long mEnd;
 
         /* Returns true if the supplied Filter matches this calendar object. */
-        public boolean match(Filter filter) {
+        @Override public boolean match(Filter filter) {
             TimeRange range = filter.getTimeRange();
             if (range != null && !range.matches(mMailboxId, mId, mStart, mEnd))
                 return false;

@@ -45,7 +45,7 @@ public class ModifyInvitePartStat extends RedoableOp
     public ModifyInvitePartStat() {
     }
 
-    public ModifyInvitePartStat(long mailboxId, int calItemId, RecurId recurId, 
+    public ModifyInvitePartStat(int mailboxId, int calItemId, RecurId recurId, 
             String cnStr, String addressStr, String cutypeStr, String roleStr, String partStatStr, Boolean rsvp, 
             int seqNo, long dtStamp)
     {

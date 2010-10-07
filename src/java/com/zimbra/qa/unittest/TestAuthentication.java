@@ -35,7 +35,7 @@ extends TestCase {
     private static String PASSWORD = "test123";
     
     private Provisioning mProv;
-    private Long mMboxId;
+    private Integer mMboxId;
     
     @Override public void setUp()
     throws Exception {

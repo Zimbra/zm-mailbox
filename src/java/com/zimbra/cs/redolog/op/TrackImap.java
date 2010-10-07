@@ -28,7 +28,7 @@ public class TrackImap extends RedoableOp {
     public TrackImap() {
     }
 
-    public TrackImap(long mailboxId) {
+    public TrackImap(int mailboxId) {
         setMailboxId(mailboxId);
     }
 

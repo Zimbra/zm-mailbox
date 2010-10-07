@@ -35,7 +35,7 @@ public class SetSubscriptionData extends RedoableOp {
         mLastItemGuid = "";
     }
 
-    public SetSubscriptionData(long mailboxId, int folderId, long date, String guid) {
+    public SetSubscriptionData(int mailboxId, int folderId, long date, String guid) {
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mLastItemDate = date;

@@ -52,7 +52,7 @@ public class CreateContact extends RedoableOp {
         mFolderId = UNKNOWN_ID;
     }
 
-    public CreateContact(long mailboxId, int folderId, ParsedContact pc, String tags) {
+    public CreateContact(int mailboxId, int folderId, ParsedContact pc, String tags) {
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
         mFolderId = folderId;
@@ -153,7 +153,7 @@ public class CreateContact extends RedoableOp {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
+        int mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         InputStream in = null;

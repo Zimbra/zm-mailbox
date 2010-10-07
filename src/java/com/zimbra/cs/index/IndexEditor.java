@@ -68,7 +68,7 @@ public class IndexEditor {
 
     private static Log mLog = LogFactory.getLog(IndexEditor.class);
 
-    public void deleteIndex(long mailboxId) throws ServiceException {
+    public void deleteIndex(int mailboxId) throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
         MailboxIndex mi = mbox.getMailboxIndex();
         try {
@@ -86,7 +86,7 @@ public class IndexEditor {
             ZimbraLog.index.error("could not retrieve mailbox manager; aborting reindex", e);
             return;
         }
-        long ids[] = mmgr.getMailboxIds();
+        int ids[] = mmgr.getMailboxIds();
         for (int i = 0; i < ids.length; i++) {
             mLog.info("Mailbox "+ids[i]+"\n");
             try {
@@ -98,21 +98,16 @@ public class IndexEditor {
         }
     }
 
-    public void reIndex(long mailboxId) {
-        MailboxIndex midx = null;
+    public void reIndex(int mailboxId) {
         try {
             Mailbox mbx = MailboxManager.getInstance().getMailboxById(mailboxId);
             mbx.reIndex(null, null, null, false);
         } catch(Exception e) {
             outputStream.println("Re-index FAILED with " + ExceptionToString.ToString(e));
-        } finally {
-            if (midx != null) {
-                midx.flush();
-            }
         }
     }
 
-    public void checkIndex(long mailboxId, boolean repair) {
+    public void checkIndex(int mailboxId, boolean repair) {
     }
 
     public interface QueryRunner {
@@ -121,15 +116,14 @@ public class IndexEditor {
     }
 
     public class SingleQueryRunner implements QueryRunner {
-        long mMailboxId;
+        int mMailboxId;
 
-        SingleQueryRunner(long mailboxId) throws ServiceException {
+        SingleQueryRunner(int mailboxId) {
             mMailboxId = mailboxId;
         }
 
-        @Override
-        public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy)
-            throws IOException, MailServiceException, ServiceException {
+        @Override public ZimbraQueryResults runQuery(String qstr, byte[] types, SortBy sortBy)
+        throws IOException, MailServiceException, ServiceException {
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
             SearchParams params = new SearchParams();
             params.setQueryStr(qstr);
@@ -145,19 +139,19 @@ public class IndexEditor {
     }
 
     public class MultiQueryRunner implements QueryRunner {
-        long[] mMailboxId;
+        int[] mMailboxId;
 
-        MultiQueryRunner(long[] mailboxId) throws ServiceException {
-            mMailboxId = new long[mailboxId.length];
+        MultiQueryRunner(int[] mailboxId) {
+            mMailboxId = new int[mailboxId.length];
             for (int i = 0; i < mailboxId.length; i++) {
                 mMailboxId[i] = mailboxId[i];
             }
         }
 
-        MultiQueryRunner(List<Long> mailboxId) throws ServiceException {
-            mMailboxId = new long[mailboxId.size()];
+        MultiQueryRunner(List<Integer> mailboxId) {
+            mMailboxId = new int[mailboxId.size()];
             for (int i = 0; i < mailboxId.size(); i++) {
-                mMailboxId[i] = ((Long) mailboxId.get(i)).longValue();
+                mMailboxId[i] = mailboxId.get(i).intValue();
             }
         }
 
@@ -215,7 +209,6 @@ public class IndexEditor {
             }
             ZimbraQueryResults res = runner.runQuery(qstr, types, sortOrder);
             try {
-
                 long endTime = System.currentTimeMillis();
                 int HITS_PER_PAGE = 20;
                 int totalShown = 0;
@@ -264,7 +257,7 @@ public class IndexEditor {
         }
     }
 
-    public void dumpFields(long mailboxId) throws IOException, ServiceException {
+    public void dumpFields(int mailboxId) throws IOException, ServiceException {
     }
 
     public boolean confirm(String confirmString) {
@@ -347,23 +340,21 @@ public class IndexEditor {
         }
     }
 
-    public void dumpAll(long mailboxId) throws IOException, ServiceException {
+    public void dumpAll(int mailboxId) throws IOException, ServiceException {
     }
 
-    public void dumpDocumentByMailItemId(long mailboxId, int mailItemId) throws ServiceException, IOException {
+    public void dumpDocumentByMailItemId(int mailboxId, int mailItemId) throws ServiceException, IOException {
     }
 
-    public void dumpTerms(long mailboxId) throws IOException, ServiceException {
+    public void dumpTerms(int mailboxId) throws IOException, ServiceException {
     }
 
-    public void getTerms(long mailboxId, String field, int minNum, int maxNum,
-            Collection<?> ret) throws IOException, ServiceException {
+    public void getTerms(int mailboxId, String field, int minNum, int maxNum, Collection<?> ret)
+    throws IOException, ServiceException {
     }
 
     public static class TwoTerms implements Comparable<TwoTerms> {
-        @Override
-        public int compareTo(TwoTerms o) {
-            TwoTerms other = (TwoTerms)o;
+        @Override public int compareTo(TwoTerms other) {
             if (other.mCount == mCount) {
                 if (other.s1.equals(s1)) {
                     return -(other.s2.compareTo(s2));
@@ -377,7 +368,7 @@ public class IndexEditor {
         public String s2;
     }
 
-    public void spanTest(long mailboxId) throws IOException, ServiceException {
+    public void spanTest(int mailboxId) throws IOException, ServiceException {
     }
 
     static IndexEditorTcpServer sTcpServer = null;
@@ -396,7 +387,6 @@ public class IndexEditor {
     }
 
     public static void EndTcpEditor() {
-
         for (Object cur : inputs) {
             try {
                 if (cur instanceof InputStream) {
@@ -429,7 +419,6 @@ public class IndexEditor {
     }
 
     private static class IndexEditorTcpServer extends TcpServer {
-
         IndexEditorTcpServer(String name, int numThreads, int threadPriority,
                 ServerSocket serverSocket) {
             super(name, numThreads, threadPriority, serverSocket);
@@ -448,8 +437,7 @@ public class IndexEditor {
     }
 
 
-    private static class IndexEditorProtocolhandler extends ProtocolHandler
-    {
+    private static class IndexEditorProtocolhandler extends ProtocolHandler {
         private InputStream mInputStream;
         private OutputStream mOutputStream;
 //      private String mRemoteAddress;
@@ -577,13 +565,12 @@ public class IndexEditor {
         run(new BufferedReader(new InputStreamReader(System.in)), System.out);
     }
 
-    public void run(BufferedReader _inputReader, PrintStream _outputStream)
-    {
+    public void run(BufferedReader _inputReader, PrintStream _outputStream) {
         inputReader = _inputReader;
         outputStream = _outputStream;
 
         String mailboxIdStr = null;
-        long mailboxId = 0;
+        int mailboxId = 0;
         boolean quit = false;
 
         while(!quit) {
@@ -651,15 +638,15 @@ public class IndexEditor {
                     QueryRunner runner = new SingleQueryRunner(mailboxId);
                     doQuery(runner,true, SEARCH_RETURN_DOCUMENTS);
                 } else if (command.equals("mq")) {
-                    ArrayList<Long> ids = new ArrayList<Long>();
+                    ArrayList<Integer> ids = new ArrayList<Integer>();
                     do {
                         outputStream.print("Enter Mailbox ID (blank when done): ");
                         mailboxIdStr = inputReader.readLine();
 
                         if (!mailboxIdStr.equals("")) {
-                            long id = getMailboxIdFromString(mailboxIdStr);
+                            int id = getMailboxIdFromString(mailboxIdStr);
                             outputStream.println("\tAdded mailbox ID "+id);
-                            ids.add(new Long(id));
+                            ids.add(new Integer(id));
                         }
                     } while (!mailboxIdStr.equals(""));
                     QueryRunner runner = new MultiQueryRunner(ids);
@@ -727,7 +714,7 @@ public class IndexEditor {
     }
 
 
-    long getMailboxIdFromString(String str) throws ServiceException {
+    int getMailboxIdFromString(String str) throws ServiceException {
         if (str != null && !str.equals("")) {
             if (str.indexOf('@') >= 0) {
                 // account
@@ -736,7 +723,7 @@ public class IndexEditor {
                 return mbx.getId();
 
             } else {
-                return Long.parseLong(str);
+                return Integer.parseInt(str);
             }
         }
         return 0;
@@ -803,7 +790,7 @@ public class IndexEditor {
         MailboxIndex.shutdown();
     }
 
-    void getSize(long mailboxId) throws ServiceException {
+    void getSize(int mailboxId) throws ServiceException {
         Mailbox mbx = MailboxManager.getInstance().getMailboxById(mailboxId);
         long size = mbx.getSize();
         outputStream.println("Mailbox "+mailboxId+" has size "+size+" ("+(size/1024)+"kb)");

@@ -113,7 +113,7 @@ public class TimeRange {
         return mEnd;
     }
 
-    public boolean matches(long mboxId, int itemId, long apptRangeStart, long apptRangeEnd) {
+    public boolean matches(int mboxId, int itemId, long apptRangeStart, long apptRangeEnd) {
         // it matches if the range of the appointment is completely contained in the requested range.
         if (apptRangeStart >= mStart && apptRangeEnd <= mEnd)
             return true;

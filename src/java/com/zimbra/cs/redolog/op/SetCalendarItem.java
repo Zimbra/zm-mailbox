@@ -84,7 +84,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
     throws IOException, MessagingException {
         Mailbox.SetCalendarItemData toRet = new Mailbox.SetCalendarItemData();
 
-        long mboxId = getMailboxId();
+        int mboxId = getMailboxId();
         try {
             in.readBoolean();  // keep this for backward compatibility with when SetCalendarItemData
                                // used to have mForce field
@@ -192,8 +192,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         try {
             if (hasDefaultInvite) {
                 mDefaultInvite = deserializeSetCalendarItemData(in, mAttachmentIndexingEnabled);
-                if (tzmapInv == null)
-                    tzmapInv = mDefaultInvite.mInv;
+                tzmapInv = mDefaultInvite.mInv;
             }
             int numExceptions = in.readInt();
             if (numExceptions > 0) {
@@ -247,7 +246,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         }
     }
 
-    public SetCalendarItem(long mailboxId, boolean attachmentIndexingEnabled,
+    public SetCalendarItem(int mailboxId, boolean attachmentIndexingEnabled,
                            int flags, long tags) {
         super(); 
         setMailboxId(mailboxId);
@@ -280,20 +279,20 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         return mExceptions[exceptionNum];
     }
 
-    public void setCalendarItemAttrs(int calItemId, int folderId) {
+    @Override public void setCalendarItemAttrs(int calItemId, int folderId) {
         mCalendarItemId = calItemId;
         mFolderId = folderId;
     }
 
-    public int getCalendarItemId() {
+    @Override public int getCalendarItemId() {
         return mCalendarItemId;
     }
 
-    public String getCalendarItemPartStat() {
+    @Override public String getCalendarItemPartStat() {
         return mCalendarItemPartStat;
     }
 
-    public void setCalendarItemPartStat(String partStat) {
+    @Override public void setCalendarItemPartStat(String partStat) {
         mCalendarItemPartStat = partStat;
     }
 
@@ -333,10 +332,8 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         return toRet.toString();
     }
 
-    public void redo() throws Exception {
-        long mboxId = getMailboxId();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-        
+    @Override public void redo() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         mbox.setCalendarItem(getOperationContext(), mFolderId, mFlags, mTags,
                              mDefaultInvite, mExceptions, mReplies, mNextAlarm);
     }

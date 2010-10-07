@@ -106,7 +106,7 @@ public class CalItemReminderService extends MailboxListener {
      * @param mailboxId
      * @return true if no error was encountered during cancellation
      */
-    static boolean cancelExistingReminder(int calItemId, long mailboxId) {
+    static boolean cancelExistingReminder(int calItemId, int mailboxId) {
         try {
             ScheduledTaskManager.cancel(CalItemReminderTask.class.getName(),
                                         "reminderTask" + Integer.toString(calItemId),

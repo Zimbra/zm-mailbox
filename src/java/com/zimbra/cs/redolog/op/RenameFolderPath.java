@@ -31,7 +31,7 @@ public class RenameFolderPath extends RenameItemPath {
         mType = MailItem.TYPE_FOLDER;
     }
 
-    public RenameFolderPath(long mailboxId, int id, String path) {
+    public RenameFolderPath(int mailboxId, int id, String path) {
         super(mailboxId, id, MailItem.TYPE_FOLDER, path);
     }
 

@@ -33,7 +33,7 @@ public class PurgeOldMessages extends RedoableOp {
     public PurgeOldMessages() {
     }
 
-    public PurgeOldMessages(long mailboxId) {
+    public PurgeOldMessages(int mailboxId) {
         setMailboxId(mailboxId);
     }
 

@@ -257,7 +257,7 @@ public class DbImapFolder {
     }
 
 
-    public static String getTableName(long mailboxId, long groupId) {
+    public static String getTableName(int mailboxId, int groupId) {
         return DbMailbox.qualifyTableName(groupId, TABLE_IMAP_FOLDER);
     }
 

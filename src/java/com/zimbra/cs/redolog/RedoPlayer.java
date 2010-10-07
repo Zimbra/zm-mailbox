@@ -78,7 +78,7 @@ public class RedoPlayer {
         mOpsMap.clear();
     }
 
-    public void scanLog(File logfile, boolean redoCommitted, Map<Long, Long> mboxIDsMap,
+    public void scanLog(File logfile, boolean redoCommitted, Map<Integer, Integer> mboxIDsMap,
             long startTime, long endTime)
     throws IOException, ServiceException {
         scanLog(logfile, redoCommitted, mboxIDsMap, startTime, endTime, Long.MAX_VALUE);
@@ -109,7 +109,7 @@ public class RedoPlayer {
      *                               Long.MAX_VALUE to not ignore any committed ops.
      * @throws IOException
      */
-    private void scanLog(File logfile, boolean redoCommitted, Map<Long, Long> mboxIDsMap,
+    private void scanLog(File logfile, boolean redoCommitted, Map<Integer, Integer> mboxIDsMap,
             long startTime, long endTime, long ignoreCommitsAtOrAfter)
     throws IOException, ServiceException {
         FileLogReader logReader = new FileLogReader(logfile, mWritable);
@@ -171,7 +171,7 @@ public class RedoPlayer {
 
     private final void processOp(RedoableOp op,
             boolean redoCommitted,
-            Map<Long, Long> mboxIDsMap,
+            Map<Integer, Integer> mboxIDsMap,
             long startTime,
             long endTime,
             long ignoreCommitsAtOrAfter)
@@ -270,23 +270,23 @@ public class RedoPlayer {
                             // Caller doesn't care which mailbox(es) the op is for.
                             allowRedo = true;
                         } else {
-                            long opMailboxId = prepareOp.getMailboxId();
+                            int opMailboxId = prepareOp.getMailboxId();
                             if (prepareOp instanceof StoreIncomingBlob) {
                                 assert(opMailboxId == RedoableOp.MAILBOX_ID_ALL);
                                 // special case for StoreIncomingBlob op that has
                                 // a list of mailbox IDs.
                                 StoreIncomingBlob storeOp = (StoreIncomingBlob) prepareOp;
-                                List<Long> list = storeOp.getMailboxIdList();
+                                List<Integer> list = storeOp.getMailboxIdList();
                                 if (list != null) {
-                                    Set<Long> opMboxIds = new HashSet<Long>(list);
-                                    for (Map.Entry<Long, Long> entry : mboxIDsMap.entrySet()) {
+                                    Set<Integer> opMboxIds = new HashSet<Integer>(list);
+                                    for (Map.Entry<Integer, Integer> entry : mboxIDsMap.entrySet()) {
                                         if (opMboxIds.contains(entry.getKey())) {
                                             allowRedo = true;
                                             // Replace the mailbox ID list in the op.  We're
                                             // replaying it only for the target mailbox ID we're
                                             // interested in.
-                                            List<Long> newList =
-                                                new ArrayList<Long>(mboxIDsMap.values());
+                                            List<Integer> newList =
+                                                new ArrayList<Integer>(mboxIDsMap.values());
                                             storeOp.setMailboxIdList(newList);
                                             break;
                                         }
@@ -304,7 +304,7 @@ public class RedoPlayer {
                                 // MAILBOX_ID_ALL.
                                 allowRedo = true;
                             } else {
-                                for (Map.Entry<Long, Long> entry : mboxIDsMap.entrySet()) {
+                                for (Map.Entry<Integer, Integer> entry : mboxIDsMap.entrySet()) {
                                     if (opMailboxId == entry.getKey().intValue()) {
                                         if (entry.getValue() != null) {
                                             // restore to a different mailbox

@@ -125,11 +125,11 @@ extends Thread {
         }
         
         while (true) {
-            List<Long> mailboxIds = getMailboxIds();
+            List<Integer> mailboxIds = getMailboxIds();
             boolean slept = false;
             
             for (int i = 0; i < mailboxIds.size(); i++) {
-                long mailboxId = mailboxIds.get(i);
+                int mailboxId = mailboxIds.get(i);
                 if (mShutdownRequested) {
                     ZimbraLog.purge.info("Shutting down purge thread.");
                     sPurgeThread = null;
@@ -151,7 +151,7 @@ extends Thread {
                             ZimbraLog.purge.info("Not all messages were purged.  Scheduling mailbox to be purged again.");
                             mailboxIds.add(mailboxId);
                         }
-                        Config.setLong(Config.KEY_PURGE_LAST_MAILBOX_ID, mbox.getId());
+                        Config.setInt(Config.KEY_PURGE_LAST_MAILBOX_ID, mbox.getId());
                     } else {
                         ZimbraLog.purge.debug("Skipping mailbox %d because it is not loaded into memory.", mailboxId);
                     }
@@ -229,18 +229,18 @@ extends Thread {
      * Returns all the mailbox id's in purge order, starting with the one
      * after {@link Config#KEY_PURGE_LAST_MAILBOX_ID}.
      */
-    private List<Long> getMailboxIds() {
-        List<Long> mailboxIds = new ArrayList<Long>();
+    private List<Integer> getMailboxIds() {
+        List<Integer> mailboxIds = new ArrayList<Integer>();
 
         try {
             // Get sorted list of id's
-            for (long id : MailboxManager.getInstance().getMailboxIds()) {
+            for (int id : MailboxManager.getInstance().getMailboxIds()) {
                 mailboxIds.add(id);
             }
             Collections.sort(mailboxIds);
             
             // Reorder id's so that we start with the one after the last purged
-            long lastId = Config.getLong(Config.KEY_PURGE_LAST_MAILBOX_ID, 0);
+            int lastId = Config.getInt(Config.KEY_PURGE_LAST_MAILBOX_ID, 0);
             for (int i = 0; i < mailboxIds.size(); i++) {
                 if (mailboxIds.get(i) > lastId) {
                     Collections.rotate(mailboxIds, -i);

@@ -42,7 +42,7 @@ public class SetItemTags extends RedoableOp {
         mConstraint = null;
     }
 
-    public SetItemTags(long mailboxId, int[] itemIds, byte itemType, int flags, long tags, TargetConstraint tcon) {
+    public SetItemTags(int mailboxId, int[] itemIds, byte itemType, int flags, long tags, TargetConstraint tcon) {
         setMailboxId(mailboxId);
         mIds = itemIds;
         mType = itemType;

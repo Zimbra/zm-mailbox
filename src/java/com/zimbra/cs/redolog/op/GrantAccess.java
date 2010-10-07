@@ -39,7 +39,7 @@ public class GrantAccess extends RedoableOp {
         mGrantee = "";
     }
 
-    public GrantAccess(long mailboxId, int folderId, String grantee, byte granteeType, short rights, String password) {
+    public GrantAccess(int mailboxId, int folderId, String grantee, byte granteeType, short rights, String password) {
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mGrantee = grantee == null ? "" : grantee;

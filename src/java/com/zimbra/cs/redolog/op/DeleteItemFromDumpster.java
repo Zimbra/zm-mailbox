@@ -31,7 +31,7 @@ public class DeleteItemFromDumpster extends RedoableOp {
     public DeleteItemFromDumpster() {
     }
 
-    public DeleteItemFromDumpster(long mailboxId, int[] ids) {
+    public DeleteItemFromDumpster(int mailboxId, int[] ids) {
         setMailboxId(mailboxId);
         mIds = ids;
     }
@@ -59,14 +59,13 @@ public class DeleteItemFromDumpster extends RedoableOp {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
 
         try {
             mbox.deleteFromDumpster(getOperationContext(), mIds);
         } catch (MailServiceException.NoSuchItemException e) {
             if (mLog.isInfoEnabled())
-                mLog.info("Some of the items being deleted were already deleted from dumpster " + mboxId);
+                mLog.info("Some of the items being deleted were already deleted from dumpster " + getMailboxId());
         }
     }
 

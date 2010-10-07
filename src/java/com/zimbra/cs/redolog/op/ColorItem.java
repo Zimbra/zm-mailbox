@@ -34,7 +34,7 @@ public class ColorItem extends RedoableOp {
 
     public ColorItem() { }
 
-    public ColorItem(long mailboxId, int[] ids, byte type, MailItem.Color color) {
+    public ColorItem(int mailboxId, int[] ids, byte type, MailItem.Color color) {
         setMailboxId(mailboxId);
         mIds = ids;
         mType = type;
@@ -80,7 +80,7 @@ public class ColorItem extends RedoableOp {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
+        int mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
         mailbox.setColor(getOperationContext(), mIds, mType, MailItem.Color.fromMetadata(mColor));
     }

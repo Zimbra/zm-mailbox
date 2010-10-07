@@ -36,7 +36,7 @@ public class SetImapUid extends RedoableOp {
     public SetImapUid() {
     }
 
-    public SetImapUid(long mailboxId, List<Integer> msgIds) {
+    public SetImapUid(int mailboxId, List<Integer> msgIds) {
         setMailboxId(mailboxId);
         for (int id : msgIds)
             mImapUids.put(id, UNKNOWN_ID);

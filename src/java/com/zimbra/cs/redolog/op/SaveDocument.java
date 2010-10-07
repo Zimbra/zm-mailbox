@@ -35,7 +35,7 @@ public class SaveDocument extends CreateMessage {
     public SaveDocument() {
     }
 
-    public SaveDocument(long mailboxId, String digest, int msgSize, int folderId) {
+    public SaveDocument(int mailboxId, String digest, int msgSize, int folderId) {
         super(mailboxId, ":API:", false, digest, msgSize, folderId, true, 0, null);
     }
 
@@ -110,14 +110,12 @@ public class SaveDocument extends CreateMessage {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         try {
             mbox.createDocument(getOperationContext(), getFolderId(), mFilename, mMimeType, mAuthor, mDescription, getAdditionalDataStream(), mItemType);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
-                mLog.info("Document " + getMessageId() + " is already in mailbox " + mboxId);
+                mLog.info("Document " + getMessageId() + " is already in mailbox " + mbox.getId());
                 return;
             } else {
                 throw e;

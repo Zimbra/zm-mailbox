@@ -29,7 +29,7 @@ public class PurgeRevision extends RedoableOp {
 
     public PurgeRevision() { }
 
-    public PurgeRevision(long mailboxId, int id, int rev, boolean includeOlderRevisions) {
+    public PurgeRevision(int mailboxId, int id, int rev, boolean includeOlderRevisions) {
         setMailboxId(mailboxId);
         mId = id;
         mRev = rev;

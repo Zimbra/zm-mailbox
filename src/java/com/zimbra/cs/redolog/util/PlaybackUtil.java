@@ -179,7 +179,7 @@ public class PlaybackUtil {
         public long fromSeq = Long.MIN_VALUE;
         public long toTime = Long.MAX_VALUE;
         public long toSeq = Long.MAX_VALUE;
-        public long mboxId = MBOX_ID_UNSET;
+        public int mboxId = MBOX_ID_UNSET;
         public int threads = PLAYER_THREADS;
         public int queueCapacity = QUEUE_CAPACITY;
         public File[] logfiles;
@@ -245,7 +245,7 @@ public class PlaybackUtil {
         }
 
         if (cl.hasOption(OPT_MAILBOX_ID)) {
-            params.mboxId = Long.parseLong(cl.getOptionValue(OPT_MAILBOX_ID));
+            params.mboxId = Integer.parseInt(cl.getOptionValue(OPT_MAILBOX_ID));
             System.out.printf("Replaying operations for mailbox %d only\n", params.mboxId);
         } else {
             System.out.println("Replaying operations for all mailboxes");
@@ -334,9 +334,9 @@ public class PlaybackUtil {
                 if (until < Long.MAX_VALUE)
                     until++;
                 try {
-                    Map<Long, Long> mboxIdMap = null;
+                    Map<Integer, Integer> mboxIdMap = null;
                     if (mParams.mboxId != Params.MBOX_ID_UNSET) {
-                        mboxIdMap = new HashMap<Long, Long>(1);
+                        mboxIdMap = new HashMap<Integer, Integer>(1);
                         mboxIdMap.put(mParams.mboxId, mParams.mboxId);
                     }
                     mPlayer.scanLog(redolog, true, mboxIdMap, mParams.fromTime, until);

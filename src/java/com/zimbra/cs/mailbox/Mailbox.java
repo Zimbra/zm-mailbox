@@ -183,8 +183,8 @@ public class Mailbox {
 
 
     public static final class MailboxData implements Cloneable {
-        public long    id;
-        public long    schemaGroupId;
+        public int     id;
+        public int     schemaGroupId;
         public String  accountId;
         public long    size;
         public int     contacts;
@@ -348,6 +348,7 @@ public class Mailbox {
                 return true;
             return false;
         }
+
         void reset() {
             if (conn != null)
                 DbPool.quietClose(conn);
@@ -384,7 +385,7 @@ public class Mailbox {
     private static final int MAX_ITEM_CACHE_WITHOUT_LISTENERS = LC.zimbra_mailbox_inactive_cache.intValue();
     private static final int MAX_MSGID_CACHE = 10;
 
-    private long          mId;
+    private int           mId;
     private MailboxData   mData;
     private MailboxChange mCurrentChange = new MailboxChange();
     private List<Session> mListeners = new CopyOnWriteArrayList<Session>();
@@ -496,12 +497,12 @@ public class Mailbox {
     /** Returns the server-local numeric ID for this mailbox.  To get a
      *  system-wide, persistent unique identifier for the mailbox, use
      *  {@link #getAccountId()}. */
-    public long getId() {
+    public int getId() {
         return mId;
     }
 
     /** Returns which MBOXGROUP<N> database this mailbox is homed in. */
-    public long getSchemaGroupId() {
+    public int getSchemaGroupId() {
         return mData.schemaGroupId;
     }
 

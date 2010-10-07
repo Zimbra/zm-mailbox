@@ -85,13 +85,13 @@ public class DbMailItem {
 
     /** Maps the mailbox id to the set of all tag combinations stored for all
      *  items in the mailbox.  Enables fast database lookup by tag. */
-    private static final Map<Long, TagsetCache> sTagsetCache =
-        new TimeoutMap<Long, TagsetCache>(120 * Constants.MILLIS_PER_MINUTE);
+    private static final Map<Integer, TagsetCache> sTagsetCache =
+        new TimeoutMap<Integer, TagsetCache>(120 * Constants.MILLIS_PER_MINUTE);
 
     /** Maps the mailbox id to the set of all flag combinations stored for all
      *  items in the mailbox.  Enables fast database lookup by flag. */
-    private static final Map<Long, TagsetCache> sFlagsetCache =
-        new TimeoutMap<Long, TagsetCache>(120 * Constants.MILLIS_PER_MINUTE);
+    private static final Map<Integer, TagsetCache> sFlagsetCache =
+        new TimeoutMap<Integer, TagsetCache>(120 * Constants.MILLIS_PER_MINUTE);
 
     public static final int MAX_SENDER_LENGTH  = 128;
     public static final int MAX_SUBJECT_LENGTH = 1024;
@@ -106,11 +106,11 @@ public class DbMailItem {
     
     public static final int setMailboxId(PreparedStatement stmt, Mailbox mbox, int pos) throws SQLException {
         if (!DebugConfig.disableMailboxGroups)
-            stmt.setLong(pos++, mbox.getId());
+            stmt.setInt(pos++, mbox.getId());
         return pos;
     }
     
-    public static final String getInThisMailboxAnd(long mboxId, String miAlias, String apAlias) {
+    public static final String getInThisMailboxAnd(int mboxId, String miAlias, String apAlias) {
         if (DebugConfig.disableMailboxGroups)
             return "";
 
@@ -686,7 +686,7 @@ public class DbMailItem {
         if (children == null || children.length == 0)
             return;
         Mailbox mbox = children[0].getMailbox();
-        if (mbox != parent.getMailbox())
+        if (parent != null && mbox != parent.getMailbox())
             throw MailServiceException.WRONG_MAILBOX();
 
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
@@ -3780,7 +3780,7 @@ public class DbMailItem {
      * Returns the name of the table that stores {@link MailItem} data.  The table name is qualified
      * by the name of the database (e.g. <tt>mailbox1.mail_item</tt>).
      */
-    public static String getMailItemTableName(long mailboxId, long groupId, boolean dumpster) {
+    public static String getMailItemTableName(int mailboxId, int groupId, boolean dumpster) {
         return DbMailbox.qualifyTableName(groupId, !dumpster ? TABLE_MAIL_ITEM : TABLE_MAIL_ITEM_DUMPSTER);
     }
     public static String getMailItemTableName(MailItem item) {
@@ -3806,7 +3806,7 @@ public class DbMailItem {
      * Returns the name of the table that stores data on old revisions of {@link MailItem}s.
      * The table name is qualified by the name of the database (e.g. <tt>mailbox1.revision</tt>).
      */
-    public static String getRevisionTableName(long mailboxId, long groupId, boolean dumpster) {
+    public static String getRevisionTableName(int mailboxId, int groupId, boolean dumpster) {
         return DbMailbox.qualifyTableName(groupId, !dumpster ? TABLE_REVISION : TABLE_REVISION_DUMPSTER);
     }
     public static String getRevisionTableName(MailItem item) {
@@ -3832,7 +3832,7 @@ public class DbMailItem {
      * Returns the name of the table that stores {@link CalendarItem} data.  The table name is qualified
      * by the name of the database (e.g. <tt>mailbox1.appointment</tt>).
      */
-    public static String getCalendarItemTableName(long mailboxId, long groupId, boolean dumpster) {
+    public static String getCalendarItemTableName(int mailboxId, int groupId, boolean dumpster) {
         return DbMailbox.qualifyTableName(groupId, !dumpster ? TABLE_APPOINTMENT : TABLE_APPOINTMENT_DUMPSTER);
     }
     public static String getCalendarItemTableName(Mailbox mbox) {
@@ -3852,7 +3852,7 @@ public class DbMailItem {
      * Returns the name of the table that maps subject hashes to {@link Conversation} ids.  The table 
      * name is qualified by the name of the database (e.g. <tt>mailbox1.open_conversation</tt>).
      */
-    public static String getConversationTableName(long mailboxId, long groupId) {
+    public static String getConversationTableName(int mailboxId, int groupId) {
         return DbMailbox.qualifyTableName(groupId, TABLE_OPEN_CONVERSATION);
     }
     public static String getConversationTableName(MailItem item) {
@@ -3869,7 +3869,7 @@ public class DbMailItem {
      * Returns the name of the table that stores data on deleted items for the purpose of sync.
      * The table name is qualified by the name of the database (e.g. <tt>mailbox1.tombstone</tt>).
      */
-    public static String getTombstoneTableName(long mailboxId, long groupId) {
+    public static String getTombstoneTableName(int mailboxId, int groupId) {
         return DbMailbox.qualifyTableName(groupId, TABLE_TOMBSTONE);
     }
     public static String getTombstoneTableName(Mailbox mbox) {
@@ -3894,8 +3894,8 @@ public class DbMailItem {
     }
 
     static TagsetCache getTagsetCache(Connection conn, Mailbox mbox) throws ServiceException {
-        long mailboxId = mbox.getId();
-        Long id = new Long(mailboxId);
+        int mailboxId = mbox.getId();
+        Integer id = new Integer(mailboxId);
         TagsetCache tagsets = null;
 
         synchronized (sTagsetCache) {
@@ -3925,8 +3925,8 @@ public class DbMailItem {
     }
 
     static TagsetCache getFlagsetCache(Connection conn, Mailbox mbox) throws ServiceException {
-        long mailboxId = mbox.getId();
-        Long id = new Long(mailboxId);
+        int mailboxId = mbox.getId();
+        Integer id = new Integer(mailboxId);
         TagsetCache flagsets = null;
 
         synchronized (sFlagsetCache) {

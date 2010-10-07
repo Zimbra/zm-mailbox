@@ -43,7 +43,7 @@ public class ExportAndDeleteItems extends AdminDocumentHandler {
         
         // Parse request.
         Element mboxEl = request.getElement(AdminConstants.E_MAILBOX);
-        long mboxId = mboxEl.getAttributeLong(AdminConstants.A_ID);
+        int mboxId = (int) mboxEl.getAttributeLong(AdminConstants.A_ID);
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
         List<Integer> itemIds = new ArrayList<Integer>();
         for (Element itemEl : mboxEl.listElements(AdminConstants.E_ITEM)) {

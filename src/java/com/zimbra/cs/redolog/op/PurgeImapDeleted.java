@@ -25,7 +25,7 @@ public class PurgeImapDeleted extends RedoableOp {
     public PurgeImapDeleted() {
     }
 
-    public PurgeImapDeleted(long mailboxId) {
+    public PurgeImapDeleted(int mailboxId) {
         setMailboxId(mailboxId);
     }
 

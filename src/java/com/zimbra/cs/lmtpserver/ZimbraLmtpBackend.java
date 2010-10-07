@@ -100,7 +100,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         addCallback(QuotaWarning.getInstance());
     }
 
-    public LmtpReply getAddressStatus(LmtpAddress address) {
+    @Override public LmtpReply getAddressStatus(LmtpAddress address) {
         String addr = address.getEmailAddress();
 
         try {
@@ -164,7 +164,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
     }
 
     // TODO - this method would be removed as part of bug 48995
-    public void deliver(LmtpEnvelope env, Blob blob) {
+    @Override public void deliver(LmtpEnvelope env, Blob blob) {
         try {
             deliverMessageToLocalMailboxes(blob, null, env);
         } catch (ServiceException e) {
@@ -185,9 +185,9 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             return false;
 
         synchronized (sReceivedMessageIDs) {
-            Set<Long> mboxIds = (Set<Long>) sReceivedMessageIDs.get(msgid);
+            Set<Integer> mboxIds = (Set<Integer>) sReceivedMessageIDs.get(msgid);
             if (mboxIds == null) {
-                mboxIds = new HashSet<Long>();
+                mboxIds = new HashSet<Integer>();
                 sReceivedMessageIDs.put(msgid, mboxIds);
             } else {
                 if (mboxIds.contains(mbox.getId())) {
@@ -203,11 +203,11 @@ public class ZimbraLmtpBackend implements LmtpBackend {
     private void removeFromDedupeCache(String msgid, Mailbox mbox) {
         if (sReceivedMessageIDs == null || msgid == null || mbox == null)
             return;
-        if (msgid == null || msgid.equals(""))
+        if (msgid.equals(""))
             return;
 
         synchronized (sReceivedMessageIDs) {
-            Set<Long> mboxIds = (Set<Long>) sReceivedMessageIDs.get(msgid);
+            Set<Integer> mboxIds = (Set<Integer>) sReceivedMessageIDs.get(msgid);
             if (mboxIds != null) {
                 mboxIds.remove(mbox.getId());
             }
@@ -304,7 +304,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         String envSender = env.getSender().getEmailAddress();
 
         boolean shared = recipients.size() > 1;
-        List<Long> targetMailboxIds = new ArrayList<Long>(recipients.size());
+        List<Integer> targetMailboxIds = new ArrayList<Integer>(recipients.size());
 
         Map<LmtpAddress, RecipientDetail> rcptMap = new HashMap<LmtpAddress, RecipientDetail>(recipients.size());
         try {
@@ -333,7 +333,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                         ZimbraLog.mailbox.warn("No account found delivering mail to " + rcptEmail);
                         continue;
                     }
-                    if (account.getBooleanAttr(Provisioning.A_zimbraPrefMailLocalDeliveryDisabled, false)) {
+                    if (account.isPrefMailLocalDeliveryDisabled()) {
                         ZimbraLog.lmtp.debug("Local delivery disabled for account %s", rcptEmail);
                         rcptMap.put(recipient, new RecipientDetail(null, null, null, false, DeliveryAction.discard));
                         continue;
@@ -405,8 +405,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                     msgId == null ? "" : msgId);
             }
 
-            DeliveryContext sharedDeliveryCtxt =
-                new DeliveryContext(shared, targetMailboxIds);
+            DeliveryContext sharedDeliveryCtxt = new DeliveryContext(shared, targetMailboxIds);
             sharedDeliveryCtxt.setIncomingBlob(blob);
 
             // We now know which addresses are valid and which ParsedMessage

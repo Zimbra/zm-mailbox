@@ -41,7 +41,7 @@ public class CopyItem extends RedoableOp {
         mDestFolderId = 0;
     }
 
-    public CopyItem(long mailboxId, byte type, int folderId, boolean fromDumpster) {
+    public CopyItem(int mailboxId, byte type, int folderId, boolean fromDumpster) {
         setMailboxId(mailboxId);
         mType = type;
         mDestFolderId = folderId;
@@ -115,7 +115,7 @@ public class CopyItem extends RedoableOp {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
+        int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         int i = 0, itemIds[] = new int[mDestIds.size()];

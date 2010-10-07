@@ -38,7 +38,7 @@ public class ReindexMailbox extends RedoableOp {
 
     public ReindexMailbox() { }
 
-    public ReindexMailbox(long mailboxId, Set<Byte> typesOrNull, Set<Integer> itemIdsOrNull, int completionId, boolean skipDelete) {
+    public ReindexMailbox(int mailboxId, Set<Byte> typesOrNull, Set<Integer> itemIdsOrNull, int completionId, boolean skipDelete) {
         setMailboxId(mailboxId);
         assert(typesOrNull == null || itemIdsOrNull == null);
         mTypes = typesOrNull;

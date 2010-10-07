@@ -157,7 +157,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
         return luceneDirectory.getBytesRead();
     }
 
-    LuceneIndex(MailboxIndex mbidx, String idxParentDir, long mailboxId) throws ServiceException {
+    LuceneIndex(MailboxIndex mbidx, String idxParentDir, int mailboxId) throws ServiceException {
         mMbidx = mbidx;
         mIndexWriter = null;
 
@@ -1010,7 +1010,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
         return reader.reopen();
     }
 
-    long getMailboxId() {
+    int getMailboxId() {
         return mMbidx.getMailboxId();
     }
 

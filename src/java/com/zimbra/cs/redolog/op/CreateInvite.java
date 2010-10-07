@@ -42,7 +42,7 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
     
     public CreateInvite() { }
 
-    public CreateInvite(long mailboxId, Invite inv, int folderId, byte[] data,
+    public CreateInvite(int mailboxId, Invite inv, int folderId, byte[] data,
                         boolean preserveExistingAlarms, boolean discardExistingInvites, boolean addRevision) {
         setMailboxId(mailboxId);
         mInvite = inv;
@@ -138,24 +138,24 @@ public class CreateInvite extends RedoableOp implements CreateCalendarItemRecord
             mAddRevision = false;
     }
 
-    public void setCalendarItemAttrs(int appointmentId, int folderId) {
+    @Override public void setCalendarItemAttrs(int appointmentId, int folderId) {
         mCalendarItemId = appointmentId;
         mFolderId = folderId;
     }
 
-    public int getCalendarItemId() {
+    @Override public int getCalendarItemId() {
         return mCalendarItemId;
     }
 
-    public String getCalendarItemPartStat() {
+    @Override public String getCalendarItemPartStat() {
         return mCalendarItemPartStat;
     }
 
-    public void setCalendarItemPartStat(String partStat) {
+    @Override public void setCalendarItemPartStat(String partStat) {
         mCalendarItemPartStat = partStat;
     }
 
-    public int getFolderId() {
+    @Override public int getFolderId() {
         return mFolderId;
     }
 

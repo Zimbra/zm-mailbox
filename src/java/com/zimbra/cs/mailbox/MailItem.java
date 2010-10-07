@@ -275,7 +275,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         private static final String FN_MOD_METADATA = "modm";
         private static final String FN_MOD_CONTENT  = "modc";
         private static final String FN_DATE_CHANGED = "dc";
-        private static final String FN_LOCK_USER    = "lu";
 
         Metadata serialize() {
             Metadata meta = new Metadata();
@@ -575,7 +574,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     /** Returns the numeric ID of the {@link Mailbox} this item belongs to. */
-    public long getMailboxId() {
+    public int getMailboxId() {
         return mMailbox.getId();
     }
 
@@ -1018,32 +1017,32 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
     }
 
-    public int compareTo(MailItem that) {
+    @Override public int compareTo(MailItem that) {
         if (this == that)
             return 0;
         return mId - that.getId();
     }
 
     public static final class SortIdAscending implements Comparator<MailItem> {
-        public int compare(MailItem m1, MailItem m2) {
+        @Override public int compare(MailItem m1, MailItem m2) {
             return m1.getId() - m2.getId();
         }
     }
 
     public static final class SortIdDescending implements Comparator<MailItem> {
-        public int compare(MailItem m1, MailItem m2) {
+        @Override public int compare(MailItem m1, MailItem m2) {
             return m2.getId() - m1.getId();
         }
     }
 
     public static final class SortModifiedSequenceAscending implements Comparator<MailItem> {
-        public int compare(MailItem m1, MailItem m2) {
+        @Override public int compare(MailItem m1, MailItem m2) {
             return m1.getModifiedSequence() - m2.getModifiedSequence();
         }
     }
 
     public static final class SortDateAscending implements Comparator<MailItem> {
-        public int compare(MailItem m1, MailItem m2) {
+        @Override public int compare(MailItem m1, MailItem m2) {
             long t1 = m1.getDate(), t2 = m2.getDate();
 
             if (t1 < t2)        return -1;
@@ -1053,7 +1052,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     public static final class SortDateDescending implements Comparator<MailItem> {
-        public int compare(MailItem m1, MailItem m2) {
+        @Override public int compare(MailItem m1, MailItem m2) {
             long t1 = m1.getDate(), t2 = m2.getDate();
 
             if (t1 < t2)        return 1;
@@ -1063,19 +1062,19 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     public static final class SortImapUid implements Comparator<MailItem> {
-        public int compare(MailItem m1, MailItem m2) {
+        @Override public int compare(MailItem m1, MailItem m2) {
             return m1.getImapUid() - m2.getImapUid();
         }
     }
 
     public static final class SortSubjectAscending implements Comparator<MailItem> {
-        public int compare(MailItem m1, MailItem m2) {
+        @Override public int compare(MailItem m1, MailItem m2) {
             return m1.getSubject().compareToIgnoreCase(m2.getSubject());
         }
     }
 
     public static final class SortSubjectDescending implements Comparator<MailItem> {
-        public int compare(MailItem m1, MailItem m2) {
+        @Override public int compare(MailItem m1, MailItem m2) {
             return -m1.getSubject().compareToIgnoreCase(m2.getSubject());
         }
     }
@@ -1101,7 +1100,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 return this;
             }
         }
-        public int compare(MailItem m1, MailItem m2) {
+        @Override public int compare(MailItem m1, MailItem m2) {
             if (m1.getName() == null)
                 return returnResult(1);
             else if (m2.getName() == null)
@@ -2893,7 +2892,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         @Override public boolean equals(Object that) {
             if (that instanceof Color)
-                return mValue == ((Color)that).mValue;
+                return mValue == ((Color) that).mValue;
             return false;
         }
         @Override public String toString() {

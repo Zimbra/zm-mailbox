@@ -44,7 +44,7 @@ import com.zimbra.cs.store.StoreManager;
 public class BlobConsistencyChecker {
 
     public static class BlobInfo {
-        public long itemId;
+        public int itemId;
         public int modContent;
         public int version;
         public long dbSize;
@@ -57,7 +57,7 @@ public class BlobConsistencyChecker {
     }
     
     public static class Results {
-        public long mboxId;
+        public int mboxId;
         public Collection<BlobInfo> missingBlobs = new ArrayList<BlobInfo>();
         public Collection<BlobInfo> incorrectSize = new ArrayList<BlobInfo>();
         public Collection<BlobInfo> unexpectedBlobs = new ArrayList<BlobInfo>();
@@ -71,10 +71,10 @@ public class BlobConsistencyChecker {
             if (!mboxElement.getName().equals(AdminConstants.E_MAILBOX)) {
                 throw ServiceException.INVALID_REQUEST("Unexpected element: " + mboxElement.getName(), null);
             }
-            mboxId = mboxElement.getAttributeLong(AdminConstants.A_ID);
+            mboxId = (int) mboxElement.getAttributeLong(AdminConstants.A_ID);
             for (Element item : mboxElement.getElement(AdminConstants.E_MISSING_BLOBS).listElements(AdminConstants.E_ITEM)) {
                 BlobInfo blob = new BlobInfo();
-                blob.itemId = item.getAttributeLong(AdminConstants.A_ID);
+                blob.itemId = (int) item.getAttributeLong(AdminConstants.A_ID);
                 blob.modContent = (int) item.getAttributeLong(AdminConstants.A_REVISION);
                 blob.dbSize = item.getAttributeLong(AdminConstants.A_SIZE);
                 blob.volumeId = (short) item.getAttributeLong(AdminConstants.A_VOLUME_ID);
@@ -83,7 +83,7 @@ public class BlobConsistencyChecker {
             }
             for (Element itemEl : mboxElement.getElement(AdminConstants.E_INCORRECT_SIZE).listElements(AdminConstants.E_ITEM)) {
                 BlobInfo blob = new BlobInfo();
-                blob.itemId = itemEl.getAttributeLong(AdminConstants.A_ID);
+                blob.itemId = (int) itemEl.getAttributeLong(AdminConstants.A_ID);
                 blob.modContent = (int) itemEl.getAttributeLong(AdminConstants.A_REVISION);
                 blob.dbSize = itemEl.getAttributeLong(AdminConstants.A_SIZE);
                 blob.volumeId = (short) itemEl.getAttributeLong(AdminConstants.A_VOLUME_ID);
@@ -103,7 +103,7 @@ public class BlobConsistencyChecker {
             }
             for (Element itemEl : mboxElement.getElement(AdminConstants.E_INCORRECT_REVISION).listElements(AdminConstants.E_ITEM)) {
                 BlobInfo blob = new BlobInfo();
-                blob.itemId = itemEl.getAttributeLong(AdminConstants.A_ID);
+                blob.itemId = (int) itemEl.getAttributeLong(AdminConstants.A_ID);
                 blob.modContent = (int) itemEl.getAttributeLong(AdminConstants.A_REVISION);
                 blob.dbSize = itemEl.getAttributeLong(AdminConstants.A_SIZE);
                 blob.volumeId = (short) itemEl.getAttributeLong(AdminConstants.A_VOLUME_ID);
@@ -168,13 +168,13 @@ public class BlobConsistencyChecker {
 
     private static final Log sLog = LogFactory.getLog(BlobConsistencyChecker.class);
     private Results mResults;
-    private long mMailboxId;
+    private int mMailboxId;
     private boolean mCheckSize = true;
     
     public BlobConsistencyChecker() {
     }
     
-    public Results check(Collection<Short> volumeIds, long mboxId, boolean checkSize)
+    public Results check(Collection<Short> volumeIds, int mboxId, boolean checkSize)
     throws ServiceException {
         StoreManager sm = StoreManager.getInstance();
         if (!(sm instanceof FileBlobStore)) {
@@ -198,18 +198,18 @@ public class BlobConsistencyChecker {
                 }
                 int numGroups = 1 << vol.getFileGroupBits();
                 int filesPerGroup = 1 << vol.getFileBits();
-                long mailboxMaxId = DbBlobConsistency.getMaxId(conn, mbox); // Maximum id for the entire mailbox
+                int mailboxMaxId = DbBlobConsistency.getMaxId(conn, mbox); // Maximum id for the entire mailbox
 
                 // Iterate group directories one at a time, looking up all item id's
                 // that have blobs in each directory.  Each group can have multiple blocks
                 // of id's if we wrap from group 255 back to group 0.
-                long minId = 0; // Minimum id for the current block
+                int minId = 0; // Minimum id for the current block
                 int group = 0; // Current group number
                 
                 while (minId < mailboxMaxId && group < numGroups) {
-                    Map<Long, BlobInfo> blobsById = new HashMap<Long, BlobInfo>();
-                    long maxId = minId + filesPerGroup - 1; // Maximum id for the current block
-                    String blobDir = vol.getBlobDir(mbox.getId(), (int) minId);
+                    Map<Integer, BlobInfo> blobsById = new HashMap<Integer, BlobInfo>();
+                    int maxId = minId + filesPerGroup - 1; // Maximum id for the current block
+                    String blobDir = vol.getBlobDir(mbox.getId(), minId);
                     
                     while (minId < mailboxMaxId) {
                         for (BlobInfo blob : DbBlobConsistency.getBlobInfo(conn, mbox, minId, maxId, volumeId)) {
@@ -239,7 +239,7 @@ public class BlobConsistencyChecker {
      * Reconciles blobs against the files in the given directory and adds any inconsistencies
      * to the current result set.
      */
-    private void check(short volumeId, String blobDirPath, Map<Long, BlobInfo> blobsById)
+    private void check(short volumeId, String blobDirPath, Map<Integer, BlobInfo> blobsById)
     throws IOException {
         File blobDir = new File(blobDirPath);
         File[] files = blobDir.listFiles();
@@ -250,10 +250,10 @@ public class BlobConsistencyChecker {
         for (File file : files) {
             // Parse id and mod_content value from filename.
             Matcher matcher = PAT_BLOB_FILENAME.matcher(file.getName());
-            long itemId = 0;
+            int itemId = 0;
             int modContent = 0;
             if (matcher.matches()) {
-                itemId = Long.parseLong(matcher.group(1));
+                itemId = Integer.parseInt(matcher.group(1));
                 modContent = Integer.parseInt(matcher.group(2));
             }
             

@@ -116,7 +116,7 @@ public class ParseMailboxID
      * @return the integer ID part of the mailbox, if we have one.  Note that if the
      * mailbox is nonlocal, then we may not have this value...
      */
-    public long getMailboxId() { return mMailboxId; }
+    public int getMailboxId() { return mMailboxId; }
     
     
     /**
@@ -145,7 +145,7 @@ public class ParseMailboxID
     
     protected String mHostName = null; // if not localhost
     protected Mailbox mMailbox = null;
-    protected long mMailboxId = 0;
+    protected int mMailboxId = 0;
     protected boolean mIsLocal = false;
     protected boolean mAllMailboxIds = false;
     protected boolean mAllServers = false;
@@ -208,11 +208,11 @@ public class ParseMailboxID
                 if (mAllServers==true) {
                     throw new IllegalArgumentException("Invalid mailboxID (\"*/number is not allowed): "+ idStr);
                 }
-                mMailboxId = Long.parseLong(substrs[2]);
+                mMailboxId = Integer.parseInt(substrs[2]);
             }
                 
             
-            String localhost = Provisioning.getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
+            String localhost = Provisioning.getInstance().getLocalServer().getServiceHostname();
             if (mHostName.equals(localhost)) {
                 mIsLocal = true;
                 mHostName = null;

@@ -36,7 +36,7 @@ public class DeliveryContext {
     private boolean mShared;
     private Blob mIncomingBlob;
     private MailboxBlob mMailboxBlob;
-    private List<Long> mMailboxIdList;
+    private List<Integer> mMailboxIdList;
     private boolean mIsFirst = true;
 
     /**
@@ -53,7 +53,7 @@ public class DeliveryContext {
      * @param shared
      * @param mboxIdList list of ID of mailboxes being delivered to
      */
-    public DeliveryContext(boolean shared, List<Long> mboxIdList) {
+    public DeliveryContext(boolean shared, List<Integer> mboxIdList) {
     	mShared = shared;
         mMailboxBlob = null;
         mMailboxIdList = mboxIdList;
@@ -63,7 +63,7 @@ public class DeliveryContext {
     	return mShared;
     }
 
-    public List<Long> getMailboxIdList() {
+    public List<Integer> getMailboxIdList() {
     	return mMailboxIdList;
     }
 

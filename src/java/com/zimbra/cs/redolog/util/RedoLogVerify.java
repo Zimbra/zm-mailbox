@@ -101,7 +101,7 @@ public class RedoLogVerify {
     }
 
     private static class Params {
-        public Set<Long> mboxIds = new HashSet<Long>();
+        public Set<Integer> mboxIds = new HashSet<Integer>();
         public boolean quiet = false;
         public boolean hideOffset = false;
         public boolean showBlob = false;
@@ -125,7 +125,7 @@ public class RedoLogVerify {
                 for (String val : ids) {
                     if (val != null && val.length() > 0) {
                         try {
-                            long i = Long.parseLong(val);
+                            int i = Integer.parseInt(val);
                             if (i > 0)
                                 params.mboxIds.add(i);
                             else
@@ -182,12 +182,12 @@ public class RedoLogVerify {
                 lastOpStartOffset = logReader.getLastOpStartOffset();
                 lastPosition = logReader.position();
                 if (hasMailboxIdsFilter) {
-                    long mboxId = op.getMailboxId();
+                    int mboxId = op.getMailboxId();
                     if (op instanceof StoreIncomingBlob) {
-                        List<Long> list = ((StoreIncomingBlob) op).getMailboxIdList();
+                        List<Integer> list = ((StoreIncomingBlob) op).getMailboxIdList();
                         if (list != null) {
                             boolean match = false;
-                            for (Long mid : list) {
+                            for (Integer mid : list) {
                                 if (mParams.mboxIds.contains(mid)) {
                                     match = true;
                                     break;

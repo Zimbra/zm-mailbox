@@ -45,11 +45,11 @@ public class StoreIncomingBlob extends RedoableOp {
     private String mPath;           // full path to blob file
     private int mMsgSize;           // original, uncompressed blob size in bytes
     private RedoableOpData mData;
-    private List<Long> mMailboxIdList;
+    private List<Integer> mMailboxIdList;
 
     public StoreIncomingBlob()  {}
 
-    public StoreIncomingBlob(String digest, int msgSize, List<Long> mboxIdList) {
+    public StoreIncomingBlob(String digest, int msgSize, List<Integer> mboxIdList) {
         setMailboxId(MAILBOX_ID_ALL);
         mDigest = digest != null ? digest : "";
         mMsgSize = msgSize;
@@ -60,11 +60,11 @@ public class StoreIncomingBlob extends RedoableOp {
         return OP_STORE_INCOMING_BLOB;
     }
 
-    public List<Long> getMailboxIdList() {
+    public List<Integer> getMailboxIdList() {
         return mMailboxIdList;
     }
 
-    public void setMailboxIdList(List<Long> list) {
+    public void setMailboxIdList(List<Integer> list) {
         mMailboxIdList = list;
     }
 
@@ -83,22 +83,11 @@ public class StoreIncomingBlob extends RedoableOp {
         sb.append(mDigest).append("\", size=").append(mMsgSize);
         sb.append(", dataLen=").append(mData.getLength());
         sb.append(", path=").append(mPath);
-        sb.append(", mbox=[");
-        if (mMailboxIdList != null) {
-            int i = 0;
-            for (Long mboxId : mMailboxIdList) {
-                if (i > 0)
-                    sb.append(", ");
-                sb.append(mboxId.toString());
-                i++;
-            }
-        }
-        sb.append("]");
+        sb.append(", mbox=").append(mMailboxIdList == null ? "[]" : mMailboxIdList);
         return sb.toString();
     }
 
-    @Override public InputStream getAdditionalDataStream()
-    throws IOException {
+    @Override public InputStream getAdditionalDataStream() throws IOException {
         return mData.getInputStream();
     }
 
@@ -106,11 +95,13 @@ public class StoreIncomingBlob extends RedoableOp {
         if (getVersion().atLeast(1, 0)) {
             if (mMailboxIdList != null) {
                 out.writeInt(mMailboxIdList.size());
-                for (Long mboxId : mMailboxIdList) {
-                    if (getVersion().atLeast(1, 26))
+                for (Integer mboxId : mMailboxIdList) {
+                    // still writing and reading long mailbox IDs for backwards compatibility, even though they're ints again
+                    if (getVersion().atLeast(1, 26)) {
                         out.writeLong(mboxId.longValue());
-                    else
+                    } else {
                         out.writeInt(mboxId.intValue());
+                    }
                 }
             } else {
                 out.writeInt(0);
@@ -133,16 +124,18 @@ public class StoreIncomingBlob extends RedoableOp {
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
         if (getVersion().atLeast(1, 0)) {
             int listLen = in.readInt();
-            if (listLen > MAX_MAILBOX_LIST_LENGTH)
-                throw new IOException("Deserialized mailbox list too large (" +
-                        listLen + ")");
+            if (listLen > MAX_MAILBOX_LIST_LENGTH) {
+                throw new IOException("Deserialized mailbox list too large (" + listLen + ")");
+            }
             if (listLen >= 1) {
-                List<Long> list = new ArrayList<Long>(listLen);
+                List<Integer> list = new ArrayList<Integer>(listLen);
                 for (int i = 0; i < listLen; i++) {
-                    if (getVersion().atLeast(1, 26))
-                        list.add(new Long(in.readLong()));
-                    else
-                        list.add(new Long(in.readInt()));
+                    // still writing and reading long mailbox IDs for backwards compatibility, even though they're ints again
+                    if (getVersion().atLeast(1, 26)) {
+                        list.add(new Integer((int) in.readLong()));
+                    } else {
+                        list.add(new Integer(in.readInt()));
+                    }
                 }
                 mMailboxIdList = list;
             }
@@ -184,16 +177,18 @@ public class StoreIncomingBlob extends RedoableOp {
         try {
             boolean compressed = mData.getLength() != mMsgSize;
             Blob blob = StoreManager.getInstance().storeIncoming(mData.getInputStream(), null, compressed);
-            if (compressed)
+            if (compressed) {
                 blob.setDigest(mDigest).setRawSize(mMsgSize).setCompressed(compressed);
+            }
             registerBlob(mPath, blob);
             success = true;
         } finally {
             if (redoRecorder != null) {
-                if (success)
+                if (success) {
                     redoRecorder.commit();
-                else
+                } else {
                     redoRecorder.abort();
+                }
             }
         }
     }

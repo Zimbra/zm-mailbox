@@ -55,7 +55,7 @@ public class DbScheduledTask {
                 "VALUES (?, ?, ?, ?, ?, ?)");
             stmt.setString(1, task.getClass().getName());
             stmt.setString(2, task.getName());
-            stmt.setLong(3, task.getMailboxId());
+            stmt.setInt(3, task.getMailboxId());
             stmt.setTimestamp(4, DbUtil.dateToTimestamp(task.getExecTime()));
             if (task.getIntervalMillis() > 0) {
                 stmt.setLong(5, task.getIntervalMillis());
@@ -78,7 +78,7 @@ public class DbScheduledTask {
      * for all classes
      * @param mailboxId the mailbox ID, or <tt>0</tt> for all mailboxes
      */
-    public static List<ScheduledTask> getTasks(String className, long mailboxId)
+    public static List<ScheduledTask> getTasks(String className, int mailboxId)
     throws ServiceException {
         ZimbraLog.scheduler.debug("Retrieving tasks for class %s, mailbox %d", className, mailboxId);
         
@@ -109,7 +109,7 @@ public class DbScheduledTask {
                     stmt.setString(i++, className);
                 }
                 if (mailboxId > 0) {
-                    stmt.setLong(i++, mailboxId);
+                    stmt.setInt(i++, mailboxId);
                 }
     
                 rs = stmt.executeQuery();
@@ -136,7 +136,7 @@ public class DbScheduledTask {
                     }
                     
                     // Set member vars
-                    task.setMailboxId(rs.getLong("mailbox_id"));
+                    task.setMailboxId(rs.getInt("mailbox_id"));
                     task.setExecTime(DbUtil.timestampToDate(rs.getTimestamp("exec_time")));
                     task.setIntervalMillis(rs.getLong("interval_millis"));
                     
@@ -174,7 +174,7 @@ public class DbScheduledTask {
                 "UPDATE  " + TABLE_SCHEDULED_TASK  +
                 " SET mailbox_id = ?, exec_time = ?, interval_millis = ?, metadata = ? " +
                 "WHERE class_name = ? AND name = ?");
-            stmt.setLong(1, task.getMailboxId());
+            stmt.setInt(1, task.getMailboxId());
             stmt.setTimestamp(2, DbUtil.dateToTimestamp(task.getExecTime()));
             if (task.getIntervalMillis() > 0) {
                 stmt.setLong(3, task.getIntervalMillis());

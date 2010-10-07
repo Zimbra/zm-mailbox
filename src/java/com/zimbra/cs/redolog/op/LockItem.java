@@ -29,7 +29,7 @@ public class LockItem extends RedoableOp {
 
     public LockItem() { }
 
-    public LockItem(long mailboxId, int id, byte type, String accountId) {
+    public LockItem(int mailboxId, int id, byte type, String accountId) {
         setMailboxId(mailboxId);
         mId = id;
         mType = type;

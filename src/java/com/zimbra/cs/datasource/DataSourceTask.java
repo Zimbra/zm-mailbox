@@ -25,8 +25,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTask;
 
-public class DataSourceTask
-extends ScheduledTask {
+public class DataSourceTask extends ScheduledTask {
 
     private static final String KEY_DATA_SOURCE_ID = "dsid";
     
@@ -36,7 +35,7 @@ extends ScheduledTask {
     public DataSourceTask() {
     }
     
-    public DataSourceTask(long mailboxId, String accountId, String dataSourceId, long intervalMillis) {
+    public DataSourceTask(int mailboxId, String accountId, String dataSourceId, long intervalMillis) {
         if (StringUtil.isNullOrEmpty(accountId)) {
             throw new IllegalArgumentException("accountId cannot be null or empty");
         }
@@ -55,8 +54,7 @@ extends ScheduledTask {
         return getProperty(KEY_DATA_SOURCE_ID);
     }
     
-    public Void call()
-    throws Exception {
+    @Override public Void call() {
         ZimbraLog.clearContext();
         ZimbraLog.addMboxToContext(getMailboxId());
         ZimbraLog.datasource.debug("Running scheduled import for DataSource %s",

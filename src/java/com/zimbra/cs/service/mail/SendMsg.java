@@ -73,7 +73,6 @@ import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
 
-
 /**
  * Process the <SendMsg> request from the client and send an email message.
  */
@@ -238,10 +237,10 @@ public class SendMsg extends MailDocumentHandler {
     }
 
 
-    private static final Map<Long, List<Pair<String, ItemId>>> sSentTokens = new HashMap<Long, List<Pair<String, ItemId>>>(100);
+    private static final Map<Integer, List<Pair<String, ItemId>>> sSentTokens = new HashMap<Integer, List<Pair<String, ItemId>>>(100);
     private static final int MAX_SEND_UID_CACHE = 5;
 
-    private static Pair<SendState, Pair<String, ItemId>> findPendingSend(Long mailboxId, String sendUid) {
+    private static Pair<SendState, Pair<String, ItemId>> findPendingSend(Integer mailboxId, String sendUid) {
         SendState state = SendState.NEW;
         Pair<String, ItemId> sendRecord = null;
 
@@ -272,7 +271,7 @@ public class SendMsg extends MailDocumentHandler {
         return new Pair<SendState, Pair<String, ItemId>>(state, sendRecord);
     }
 
-    private static void clearPendingSend(Long mailboxId, Pair<String, ItemId> sendRecord) {
+    private static void clearPendingSend(Integer mailboxId, Pair<String, ItemId> sendRecord) {
         if (sendRecord != null) {
             synchronized (sSentTokens) {
                 sSentTokens.get(mailboxId).remove(sendRecord);
@@ -310,15 +309,15 @@ public class SendMsg extends MailDocumentHandler {
 
         static class ICalendarModificationCallback implements MimeVisitor.ModificationCallback {
             private boolean mWouldModify;
-            public boolean wouldCauseModification()  { return mWouldModify; }
-            public boolean onModification()          { mWouldModify = true; return false; }
+            public boolean wouldCauseModification()    { return mWouldModify; }
+            @Override public boolean onModification()  { mWouldModify = true; return false; }
         }
 
         OutlookICalendarFixupMimeVisitor(Account acct, Mailbox mbox) {
             mAccount = acct;
             mMailbox = mbox;
             mMsgDepth = 0;
-            mDefaultCharset = (acct == null ? null : acct.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null));
+            mDefaultCharset = (acct == null ? null : acct.getPrefMailDefaultCharset());
         }
 
         @Override protected boolean visitMessage(MimeMessage mm, VisitPhase visitKind) throws MessagingException {
@@ -369,13 +368,11 @@ public class SendMsg extends MailDocumentHandler {
             return modified;
         }
 
-        @Override
-        protected boolean visitMultipart(MimeMultipart mp, VisitPhase visitKind) {
+        @Override protected boolean visitMultipart(MimeMultipart mp, VisitPhase visitKind) {
             return false;
         }
 
-        @Override
-        protected boolean visitBodyPart(MimeBodyPart bp) throws MessagingException {
+        @Override protected boolean visitBodyPart(MimeBodyPart bp) throws MessagingException {
             // Ignore any forwarded message parts.
             if (mMsgDepth != 1)
                 return false;
@@ -445,25 +442,25 @@ public class SendMsg extends MailDocumentHandler {
                     if (token == null)
                         continue;
                     switch (token) {
-                    case ORGANIZER:
-                    case ATTENDEE:
-                        if (mFromEmails != null && mSentBy != null) {
-                            String addr = prop.getValue();
-                            if (addressMatchesFrom(addr)) {
-                                ZParameter sentBy = prop.getParameter(ICalTok.SENT_BY);
-                                if (sentBy == null) {
-                                    prop.addParameter(new ZParameter(ICalTok.SENT_BY, mSentBy));
-                                    modified = true;
-                                    ZimbraLog.calendar.info(
-                                            "Fixed up " + token + " (" + addr +
-                                            ") by adding SENT-BY=" + mSentBy);
+                        case ORGANIZER:
+                        case ATTENDEE:
+                            if (mFromEmails != null && mSentBy != null) {
+                                String addr = prop.getValue();
+                                if (addressMatchesFrom(addr)) {
+                                    ZParameter sentBy = prop.getParameter(ICalTok.SENT_BY);
+                                    if (sentBy == null) {
+                                        prop.addParameter(new ZParameter(ICalTok.SENT_BY, mSentBy));
+                                        modified = true;
+                                        ZimbraLog.calendar.info(
+                                                "Fixed up " + token + " (" + addr +
+                                                ") by adding SENT-BY=" + mSentBy);
+                                    }
                                 }
                             }
-                        }
-                        break;
-                    case RRULE:
-                        isSeries = true;
-                        break;
+                            break;
+                        case RRULE:
+                            isSeries = true;
+                            break;
                     }
                 }
                 if (isSeries) {

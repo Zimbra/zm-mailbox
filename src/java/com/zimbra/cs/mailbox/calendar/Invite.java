@@ -116,7 +116,7 @@ public class Invite {
             RecurId recurrenceId,
             long dtstamp,
             int seqno,
-            long mailboxId,
+            int mailboxId,
             int mailItemId,
             int componentNum,
             boolean sentByMe,
@@ -228,7 +228,7 @@ public class Invite {
      * @param sentByMe TRUE if this mailbox sent this invite 
      */
     public static Invite createInvite(
-            long mailboxId,
+            int mailboxId,
             byte itemType,
             String method,
             TimeZoneMap tzMap, 
@@ -551,7 +551,7 @@ public class Invite {
      * @return
      * @throws ServiceException
      */
-    public static Invite decodeMetadata(long mailboxId, Metadata meta, CalendarItem calItem, ICalTimeZone accountTZ) 
+    public static Invite decodeMetadata(int mailboxId, Metadata meta, CalendarItem calItem, ICalTimeZone accountTZ) 
     throws ServiceException {
         byte itemType = (byte) meta.getLong(FN_ITEMTYPE, MailItem.TYPE_APPOINTMENT);
         String uid = meta.get(FN_UID, null);
@@ -1017,8 +1017,8 @@ public class Invite {
     }
     public int getComponentNum() { return mComponentNum; }
     public void setComponentNum(int num) { mComponentNum = num; }
-    public long getMailboxId() { return mMailboxId; }
-    void setMailboxId(long id) { mMailboxId = id; }
+    public int getMailboxId() { return mMailboxId; }
+    void setMailboxId(int id) { mMailboxId = id; }
     public int getMailItemId() { return mMailItemId; }
     public void setMailItemId(int id) { mMailItemId = id; }
     public int getFlags() { return mFlags; }
@@ -1293,7 +1293,7 @@ public class Invite {
     protected boolean mRsvp = false;
 
     // not in metadata:
-    protected long mMailboxId = 0;
+    protected int mMailboxId = 0;
     protected int mMailItemId = 0;
     protected int mComponentNum = 0;
 

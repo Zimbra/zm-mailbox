@@ -39,7 +39,7 @@ import com.zimbra.cs.store.file.Volume;
 public final class MailboxIndex {
 
     private final LuceneIndex luceneIndex;
-    private final long mMailboxId;
+    private final int mMailboxId;
     private final Mailbox mMailbox;
     private Analyzer mAnalyzer = null;
 
@@ -49,7 +49,7 @@ public final class MailboxIndex {
         Volume indexVol = Volume.getById(mbox.getIndexVolume());
         String idxParentDir = indexVol.getMailboxDir(mMailboxId, Volume.TYPE_INDEX);
         luceneIndex = new LuceneIndex(this, idxParentDir, mMailboxId);
-        String analyzerName = mbox.getAccount().getAttr(Provisioning.A_zimbraTextAnalyzer, null);
+        String analyzerName = mbox.getAccount().getTextAnalyzer();
 
         if (analyzerName != null) {
             mAnalyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
@@ -325,7 +325,7 @@ public final class MailboxIndex {
         // mbox.getAccount() is synchronized, we must lock here.
         synchronized (mbox) {
             synchronized (getLock()) {
-                String analyzerName = mbox.getAccount().getAttr(Provisioning.A_zimbraTextAnalyzer, null);
+                String analyzerName = mbox.getAccount().getTextAnalyzer();
 
                 if (analyzerName != null) {
                     mAnalyzer = ZimbraAnalyzer.getAnalyzer(analyzerName);
@@ -470,7 +470,7 @@ public final class MailboxIndex {
         return mMailbox;
     }
 
-    long getMailboxId() {
+    int getMailboxId() {
         return mMailboxId;
     }
 

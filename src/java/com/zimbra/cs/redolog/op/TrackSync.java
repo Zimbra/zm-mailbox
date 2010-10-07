@@ -27,7 +27,7 @@ public class TrackSync extends RedoableOp {
     public TrackSync() {
     }
 
-    public TrackSync(long mailboxId) {
+    public TrackSync(int mailboxId) {
         setMailboxId(mailboxId);
     }
 

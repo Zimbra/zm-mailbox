@@ -29,39 +29,33 @@ public class RenameMailbox extends RedoableOp {
 
     public RenameMailbox() {}
 
-    public RenameMailbox(long mailboxId, String oldName, String newName) {
+    public RenameMailbox(int mailboxId, String oldName, String newName) {
         setMailboxId(mailboxId);
         mNewName = newName;
     }
 
-    @Override
-    public int getOpCode() {
+    @Override public int getOpCode() {
         return OP_RENAME_MAILBOX;
     }
 
-    @Override
-    protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mNewName);
         if (getVersion().atLeast(1,25))
             out.writeUTF(mOldName);
     }
 
-    @Override
-    protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mNewName = in.readUTF();
         if (getVersion().atLeast(1,25)) 
             mOldName = in.readUTF();
     }
 
-    @Override
-    protected String getPrintableData() {
+    @Override protected String getPrintableData() {
         return "newName=" + mNewName+" oldName="+mOldName;
     }
 
-    @Override
-    public void redo() throws Exception {
-        long mboxId = getMailboxId();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+    @Override public void redo() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         if (mNewName != null)
             mbox.renameMailbox(mOldName, mNewName);
     }

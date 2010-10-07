@@ -31,7 +31,7 @@ public class DismissCalendarItemAlarm extends RedoableOp {
         mId = UNKNOWN_ID;
     }
 
-    public DismissCalendarItemAlarm(long mailboxId, int id, long dismissedAt) {
+    public DismissCalendarItemAlarm(int mailboxId, int id, long dismissedAt) {
         setMailboxId(mailboxId);
         mId = id;
         mDismissedAt = dismissedAt;
@@ -58,7 +58,7 @@ public class DismissCalendarItemAlarm extends RedoableOp {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
+        int mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
         mailbox.dismissCalendarItemAlarm(getOperationContext(), mId, mDismissedAt);
     }

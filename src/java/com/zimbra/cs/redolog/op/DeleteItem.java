@@ -41,7 +41,7 @@ public class DeleteItem extends RedoableOp {
         mConstraint = null;
     }
 
-    public DeleteItem(long mailboxId, int[] ids, byte type, TargetConstraint tcon) {
+    public DeleteItem(int mailboxId, int[] ids, byte type, TargetConstraint tcon) {
         setMailboxId(mailboxId);
         mIds = ids;
         mType = type;
@@ -87,7 +87,7 @@ public class DeleteItem extends RedoableOp {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
+        int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         TargetConstraint tcon = null;

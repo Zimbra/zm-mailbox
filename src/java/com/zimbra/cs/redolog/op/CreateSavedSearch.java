@@ -42,8 +42,7 @@ public class CreateSavedSearch extends RedoableOp {
         mSearchId = UNKNOWN_ID;
     }
 
-    public CreateSavedSearch(long mailboxId, int folderId, String name,
-        String query, String types, String sort, int flags, MailItem.Color color) {
+    public CreateSavedSearch(int mailboxId, int folderId, String name, String query, String types, String sort, int flags, MailItem.Color color) {
         setMailboxId(mailboxId);
         mSearchId = UNKNOWN_ID;
         mName = name != null ? name : "";
@@ -103,7 +102,7 @@ public class CreateSavedSearch extends RedoableOp {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
+        int mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {

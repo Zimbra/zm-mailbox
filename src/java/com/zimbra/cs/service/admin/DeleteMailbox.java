@@ -75,14 +75,14 @@ public class DeleteMailbox extends AdminDocumentHandler {
             IMPersona.deleteIMPersona(account.getName());
         
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId, false);
-        long mailboxId = -1;
+        int mailboxId = -1;
         if (mbox != null) {
             mailboxId = mbox.getId();
             mbox.deleteMailbox();
         }
         
         String idString = (mbox == null) ?
-            "<no mailbox for account " + accountId + ">" : Long.toString(mailboxId);
+            "<no mailbox for account " + accountId + ">" : Integer.toString(mailboxId);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
             new String[] {"cmd", "DeleteMailbox","id", idString}));
         

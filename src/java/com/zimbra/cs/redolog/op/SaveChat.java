@@ -28,7 +28,7 @@ public class SaveChat extends CreateChat {
     
     public SaveChat() {}
     
-    public SaveChat(long mailboxId, int chatId, String digest, int msgSize,
+    public SaveChat(int mailboxId, int chatId, String digest, int msgSize,
                     int folderId, int flags, String tags) {
         super(mailboxId, digest, msgSize, folderId, flags, tags);
         setMessageId(chatId);

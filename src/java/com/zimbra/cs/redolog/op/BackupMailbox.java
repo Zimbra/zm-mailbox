@@ -47,7 +47,7 @@ public class BackupMailbox extends RedoableOp {
     public BackupMailbox() {
     }
 
-    public BackupMailbox(long mailboxId, long backupSetTstamp, long startTime, long endTime, String label) {
+    public BackupMailbox(int mailboxId, long backupSetTstamp, long startTime, long endTime, String label) {
         setMailboxId(mailboxId);
         mBackupSetTstamp = backupSetTstamp;
         mStartTime = startTime;

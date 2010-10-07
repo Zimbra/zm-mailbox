@@ -34,7 +34,7 @@ public class EditNote extends RedoableOp {
         mId = UNKNOWN_ID;
     }
 
-    public EditNote(long mailboxId, int id, String content) {
+    public EditNote(int mailboxId, int id, String content) {
         setMailboxId(mailboxId);
         mId = id;
         mContent = content != null ? content : "";

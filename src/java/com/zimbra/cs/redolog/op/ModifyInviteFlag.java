@@ -34,7 +34,7 @@ public class ModifyInviteFlag extends RedoableOp {
     public ModifyInviteFlag() {
     }
 
-    public ModifyInviteFlag(long mailboxId, int id, int compNum, int flag, boolean add) {
+    public ModifyInviteFlag(int mailboxId, int id, int compNum, int flag, boolean add) {
         setMailboxId(mailboxId);
         mId = id;
         mCompNum = compNum;

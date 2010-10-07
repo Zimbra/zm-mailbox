@@ -31,7 +31,7 @@ public class RenameFolder extends RenameItem {
         mType = MailItem.TYPE_FOLDER;
     }
 
-    public RenameFolder(long mailboxId, int id, String name, int parentId) {
+    public RenameFolder(int mailboxId, int id, String name, int parentId) {
         super(mailboxId, id, MailItem.TYPE_FOLDER, name, parentId);
     }
 

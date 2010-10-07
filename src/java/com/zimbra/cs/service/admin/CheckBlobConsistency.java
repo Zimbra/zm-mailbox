@@ -68,17 +68,17 @@ public class CheckBlobConsistency extends AdminDocumentHandler {
         }
         
         // Assemble the list of mailboxes.
-        List<Long> mailboxIds = new ArrayList<Long>();
+        List<Integer> mailboxIds = new ArrayList<Integer>();
         List<Element> mboxElementList = request.listElements(AdminConstants.E_MAILBOX);
         if (mboxElementList.isEmpty()) {
             // Get all mailbox id's.
-            for (long mboxId : MailboxManager.getInstance().getMailboxIds()) {
+            for (int mboxId : MailboxManager.getInstance().getMailboxIds()) {
                 mailboxIds.add(mboxId);
             }
         } else {
             // Read mailbox id's from the request.
             for (Element mboxEl : mboxElementList) {
-                Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxEl.getAttributeLong(AdminConstants.A_ID));
+                Mailbox mbox = MailboxManager.getInstance().getMailboxById((int) mboxEl.getAttributeLong(AdminConstants.A_ID));
                 mailboxIds.add(mbox.getId());
             }
         }
@@ -88,7 +88,7 @@ public class CheckBlobConsistency extends AdminDocumentHandler {
         // Check blobs and assemble response.
         Element response = zsc.createElement(AdminConstants.CHECK_BLOB_CONSISTENCY_RESPONSE);
         
-        for (long mboxId : mailboxIds) {
+        for (int mboxId : mailboxIds) {
             BlobConsistencyChecker checker = new BlobConsistencyChecker();
             BlobConsistencyChecker.Results results = checker.check(volumeIds, mboxId, checkSize);
             if (results.hasInconsistency()) {

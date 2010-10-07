@@ -38,7 +38,7 @@ public class RenameItemPath extends RedoableOp {
         mType = MailItem.TYPE_UNKNOWN;
     }
 
-    public RenameItemPath(long mailboxId, int id, byte type, String path) {
+    public RenameItemPath(int mailboxId, int id, byte type, String path) {
         setMailboxId(mailboxId);
         mId = id;
         mPath = path != null ? path : "";

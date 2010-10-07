@@ -128,7 +128,7 @@ final class IndexReaderRef {
         line.append(curThread.getName() + DEBUG_DELIM);
 
         // MailboxId
-        long mailboxId = -1;
+        int mailboxId = -1;
         mailboxId = mIdx.getMailboxId();
         if (mailboxId == -1) {
             line.append("unknown" + DEBUG_DELIM);

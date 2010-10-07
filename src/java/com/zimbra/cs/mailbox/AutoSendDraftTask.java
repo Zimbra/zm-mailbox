@@ -3,7 +3,6 @@ package com.zimbra.cs.mailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.util.ItemId;
 
 import java.util.Date;
@@ -11,12 +10,12 @@ import java.util.Date;
 /**
  * Auto-send-draft scheduled task.
  */
-public class AutoSendDraftTask extends ScheduledTask {
+public class AutoSendDraftTask extends ScheduledTask<Object> {
 
     /**
      * Returns the task name.
      */
-    public String getName() {
+    @Override public String getName() {
         return "autoSendDraftTask" + getProperty("draftId");
     }
 
@@ -26,7 +25,7 @@ public class AutoSendDraftTask extends ScheduledTask {
      * @return computed result
      * @throws Exception if unable to compute a result
      */
-    public Void call() throws Exception {
+    @Override public Void call() throws Exception {
         if (ZimbraLog.scheduler.isDebugEnabled())
             ZimbraLog.scheduler.debug("Running task " + this);
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
@@ -69,7 +68,7 @@ public class AutoSendDraftTask extends ScheduledTask {
      * @param mailboxId
      * @throws ServiceException
      */
-    public static void cancelTask(int draftId, long mailboxId) throws ServiceException {
+    public static void cancelTask(int draftId, int mailboxId) throws ServiceException {
         ScheduledTaskManager.cancel(AutoSendDraftTask.class.getName(),
                                     "autoSendDraftTask" + Integer.toString(draftId),
                                     mailboxId,
@@ -85,7 +84,7 @@ public class AutoSendDraftTask extends ScheduledTask {
      * @param autoSendTime
      * @throws ServiceException
      */
-    public static void scheduleTask(int draftId, long mailboxId, long autoSendTime) throws ServiceException {
+    public static void scheduleTask(int draftId, int mailboxId, long autoSendTime) throws ServiceException {
         AutoSendDraftTask autoSendDraftTask = new AutoSendDraftTask();
         autoSendDraftTask.setMailboxId(mailboxId);
         autoSendDraftTask.setExecTime(new Date(autoSendTime));

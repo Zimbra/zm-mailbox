@@ -34,7 +34,7 @@ public class SetFolderUrl extends RedoableOp {
         mURL = "";
     }
 
-    public SetFolderUrl(long mailboxId, int folderId, String url) {
+    public SetFolderUrl(int mailboxId, int folderId, String url) {
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mURL = url == null ? "" : url;

@@ -55,11 +55,11 @@ public class FileLogWriter implements LogWriter {
     private static String sServerId;
     static {
         try {
-			sServerId = Provisioning.getInstance().getLocalServer().getId();
-		} catch (ServiceException e) {
+            sServerId = Provisioning.getInstance().getLocalServer().getId();
+        } catch (ServiceException e) {
             ZimbraLog.redolog.error("Unable to get local server ID", e);
             sServerId = "unknown";
-		}
+        }
     }
 
     protected RedoLogManager mRedoLogMgr;
@@ -112,7 +112,7 @@ public class FileLogWriter implements LogWriter {
         mCommitNotifyQueue = new CommitNotifyQueue(100);
     }
 
-    public long getSequence() {
+    @Override public long getSequence() {
         synchronized (mLock) {
             return mHeader.getSequence();
         }
@@ -121,7 +121,7 @@ public class FileLogWriter implements LogWriter {
     /* (non-Javadoc)
      * @see com.zimbra.cs.redolog.LogWriter#getSize()
      */
-    public long getSize() {
+    @Override public long getSize() {
         synchronized (mLock) {
             return mFileSize;
         }
@@ -130,7 +130,7 @@ public class FileLogWriter implements LogWriter {
     /* (non-Javadoc)
      * @see com.zimbra.cs.redolog.logger.LogWriter#getCreateTime()
      */
-    public long getCreateTime() {
+    @Override public long getCreateTime() {
         synchronized (mLock) {
             return mCreateTime;
         }
@@ -139,7 +139,7 @@ public class FileLogWriter implements LogWriter {
     /* (non-Javadoc)
      * @see com.zimbra.cs.redolog.logger.LogWriter#getLastLogTime()
      */
-    public long getLastLogTime() {
+    @Override public long getLastLogTime() {
         synchronized (mLock) {
         	return mLastLogTime;
         }
@@ -148,42 +148,42 @@ public class FileLogWriter implements LogWriter {
     /* (non-Javadoc)
      * @see com.zimbra.cs.redolog.logger.LogWriter#isEmpty()
      */
-    public boolean isEmpty() throws IOException {
+    @Override public boolean isEmpty() throws IOException {
         return getSize() <= FileHeader.HEADER_LEN;
     }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.redolog.logger.LogWriter#exists()
      */
-    public boolean exists() {
+    @Override public boolean exists() {
         return mFile.exists();
     }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.redolog.LogWriter#getAbsolutePath()
      */
-    public String getAbsolutePath() {
+    @Override public String getAbsolutePath() {
         return mFile.getAbsolutePath();
     }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.redolog.LogWriter#renameTo()
      */
-    public boolean renameTo(File dest) {
+    @Override public boolean renameTo(File dest) {
         return mFile.renameTo(dest);
     }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.redolog.logger.LogWriter#delete()
      */
-    public boolean delete() {
+    @Override public boolean delete() {
         return mFile.delete();
     }
 
     /* (non-Javadoc)
      * @see com.zimbra.cs.redolog.LogWriter#open()
      */
-    public synchronized void open() throws IOException {
+    @Override public synchronized void open() throws IOException {
         synchronized (mLock) {
             if (mRAF != null) return;  // already open
 
@@ -221,7 +221,7 @@ public class FileLogWriter implements LogWriter {
     /* (non-Javadoc)
      * @see com.zimbra.cs.redolog.LogWriter#close()
      */
-    public synchronized void close() throws IOException {
+    @Override public synchronized void close() throws IOException {
         stopFsyncThread();
 
         synchronized (mLock) {
@@ -267,7 +267,7 @@ public class FileLogWriter implements LogWriter {
      * special case this condition to mean fsync should be done by the calling
      * thread.
      */
-    public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException {
+    @Override public void log(RedoableOp op, InputStream data, boolean synchronous) throws IOException {
         int seq;
         boolean sameMboxAsLastOp = false;
 
@@ -352,9 +352,9 @@ public class FileLogWriter implements LogWriter {
         }
     }
 
-    private long mLastOpMboxId;
+    private int mLastOpMboxId;
 
-    public void flush() throws IOException {
+    @Override public void flush() throws IOException {
         fsync();
     }
 
@@ -364,7 +364,7 @@ public class FileLogWriter implements LogWriter {
     }
 
     @SuppressWarnings("unchecked")
-    public synchronized File rollover(LinkedHashMap /*<TxnId, RedoableOp>*/ activeOps)
+    @Override public synchronized File rollover(LinkedHashMap /*<TxnId, RedoableOp>*/ activeOps)
     throws IOException {
         RolloverManager romgr = mRedoLogMgr.getRolloverManager();
 
@@ -513,7 +513,7 @@ public class FileLogWriter implements LogWriter {
             mRunning = true;
         }
 
-        public void run() {
+        @Override public void run() {
             boolean running = true;
             while (running) {
                 // Sleep between fsyncs.

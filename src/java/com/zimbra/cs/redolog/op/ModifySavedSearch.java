@@ -36,7 +36,7 @@ public class ModifySavedSearch extends RedoableOp {
         mSearchId = UNKNOWN_ID;
     }
 
-    public ModifySavedSearch(long mailboxId, int searchId, String query, String types, String sort) {
+    public ModifySavedSearch(int mailboxId, int searchId, String query, String types, String sort) {
         setMailboxId(mailboxId);
         mSearchId = searchId;
         mQuery = query != null ? query : "";

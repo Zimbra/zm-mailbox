@@ -272,7 +272,7 @@ public abstract class RedoableOp {
     private long mTimestamp;		// timestamp of the operation
     private int mChangeId = -1;
     private int mChangeConstraint;
-    private long mMailboxId;
+    private int mMailboxId;
     private RedoLogManager mRedoLogMgr;
     private boolean mUnloggedReplay;  // true if redo of this op is not redo-logged
     RedoCommitCallback mCommitCallback;
@@ -423,11 +423,11 @@ public abstract class RedoableOp {
         mTxnId = txnId;
     }
 
-    public long getMailboxId() {
+    public int getMailboxId() {
         return mMailboxId;
     }
 
-    public void setMailboxId(long mboxId) {
+    public void setMailboxId(int mboxId) {
         mMailboxId = mboxId;
     }
 
@@ -440,6 +440,7 @@ public abstract class RedoableOp {
         out.writeInt(mChangeId);
         out.writeInt(mChangeConstraint);
         mTxnId.serialize(out);
+        // still writing and reading long mailbox IDs for backwards compatibility, even though they're ints again
         out.writeLong(mMailboxId);
     }
 
@@ -452,10 +453,12 @@ public abstract class RedoableOp {
         mChangeConstraint = in.readInt();
         mTxnId = new TransactionId();
         mTxnId.deserialize(in);
-        if (getVersion().atLeast(1, 26))
-            mMailboxId = in.readLong();
-        else
+        // still writing and reading long mailbox IDs for backwards compatibility, even though they're ints again
+        if (getVersion().atLeast(1, 26)) {
+            mMailboxId = (int) in.readLong();
+        } else {
             mMailboxId = in.readInt();
+        }
 
         // Deserialize the subclass.
         deserializeData(in);

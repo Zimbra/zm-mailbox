@@ -30,7 +30,7 @@ public class SetCustomData extends RedoableOp {
 
     public SetCustomData() { }
 
-    public SetCustomData(long mailboxId, int id, byte type, CustomMetadata custom) {
+    public SetCustomData(int mailboxId, int id, byte type, CustomMetadata custom) {
         setMailboxId(mailboxId);
         mId = id;
         mType = type;

@@ -26,7 +26,7 @@ public class DeleteMailbox extends RedoableOp {
     public DeleteMailbox() {
     }
 
-    public DeleteMailbox(long mailboxId) {
+    public DeleteMailbox(int mailboxId) {
         setMailboxId(mailboxId);
     }
 

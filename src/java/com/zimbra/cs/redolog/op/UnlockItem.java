@@ -23,7 +23,7 @@ public class UnlockItem extends LockItem {
         super();
     }
 
-    public UnlockItem(long mailboxId, int id, byte type, String accountId) {
+    public UnlockItem(int mailboxId, int id, byte type, String accountId) {
         super(mailboxId, id, type, accountId);
     }
 

@@ -106,7 +106,7 @@ public final class ConversationHit extends ZimbraHit {
 
     @Override
     public String toString() {
-        return super.toString() + " C" + Long.toString(getId());
+        return super.toString() + " C" + Integer.toString(getId());
     }
 
     @Override

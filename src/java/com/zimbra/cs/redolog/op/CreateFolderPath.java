@@ -39,7 +39,7 @@ public class CreateFolderPath extends RedoableOp {
 
     public CreateFolderPath()  { }
 
-    public CreateFolderPath(long mailboxId, String name, byte attrs, byte view, int flags, MailItem.Color color, String url) {
+    public CreateFolderPath(int mailboxId, String name, byte attrs, byte view, int flags, MailItem.Color color, String url) {
         setMailboxId(mailboxId);
         mPath = name == null ? "" : name;
         mAttrs = attrs;
@@ -114,7 +114,7 @@ public class CreateFolderPath extends RedoableOp {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
+        int mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {

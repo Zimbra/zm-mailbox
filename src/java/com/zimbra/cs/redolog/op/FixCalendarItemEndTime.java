@@ -30,7 +30,7 @@ public class FixCalendarItemEndTime extends RedoableOp {
 
     public FixCalendarItemEndTime()  {}
 
-    public FixCalendarItemEndTime(long mailboxId, int itemId) {
+    public FixCalendarItemEndTime(int mailboxId, int itemId) {
         setMailboxId(mailboxId);
         mId = itemId;
     }
@@ -54,8 +54,7 @@ public class FixCalendarItemEndTime extends RedoableOp {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         OperationContext octxt = getOperationContext();
         CalendarItem calItem = mbox.getCalendarItemById(octxt, mId);
         if (calItem != null)

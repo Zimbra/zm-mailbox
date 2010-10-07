@@ -140,11 +140,11 @@ public class MailServiceException extends ServiceException {
         super(message, code, isReceiversFault, cause, args);
     }
     
-    public static MailServiceException MAINTENANCE(long id) {
+    public static MailServiceException MAINTENANCE(int id) {
         return new MailServiceException("mailbox in maintenance mode: "+ id, MAINTENANCE, RECEIVERS_FAULT, new Argument(MAILBOX_ID, id, Argument.Type.IID));
     }
 
-    public static MailServiceException NO_SUCH_MBOX(long id) {
+    public static MailServiceException NO_SUCH_MBOX(int id) {
         return new MailServiceException("no such mailbox: "+ id, NO_SUCH_MBOX, SENDERS_FAULT, new Argument(MAILBOX_ID, id, Argument.Type.IID));
     }
 
@@ -264,7 +264,7 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("WaitSet not found: " + id, NO_SUCH_WAITSET, SENDERS_FAULT, new Argument(ID, id, Argument.Type.STR));
     }
 
-    public static MailServiceException NO_SUCH_BLOB(long mboxId, int itemId, int revision) {
+    public static MailServiceException NO_SUCH_BLOB(int mboxId, int itemId, int revision) {
         return new MailServiceException("No such blob: mailbox=" + mboxId + ", item=" + itemId + ", change=" + revision, NO_SUCH_BLOB, SENDERS_FAULT);
     }
 

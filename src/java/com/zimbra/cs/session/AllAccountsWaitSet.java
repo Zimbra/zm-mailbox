@@ -163,14 +163,14 @@ public final class AllAccountsWaitSet extends WaitSetBase {
         
         CommitId cid = CommitId.decodeFromString(commitIdStr);
         
-        Pair<Set<Long>, CommitId> changes = rmgr.getChangedMailboxesSince(cid);
+        Pair<Set<Integer>, CommitId> changes = rmgr.getChangedMailboxesSince(cid);
         if (changes == null) {
             throw ServiceException.FAILURE("Unable to sync to commit id "+commitIdStr, null);
         }
         
-        Set<Long> mailboxes = changes.getFirst();
+        Set<Integer> mailboxes = changes.getFirst();
         
-        for (Long id : mailboxes) {
+        for (Integer id : mailboxes) {
             try {
                 Mailbox mbox = MailboxManager.getInstance().getMailboxById(id);
                 if (mbox != null) {

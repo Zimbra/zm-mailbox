@@ -44,7 +44,7 @@ public class AlterItemTag extends RedoableOp {
         mConstraint = null;
     }
 
-    public AlterItemTag(long mailboxId, int[] ids, byte type, int tagId, boolean tagged, TargetConstraint tcon) {
+    public AlterItemTag(int mailboxId, int[] ids, byte type, int tagId, boolean tagged, TargetConstraint tcon) {
         setMailboxId(mailboxId);
         mIds = ids;
         mType = type;

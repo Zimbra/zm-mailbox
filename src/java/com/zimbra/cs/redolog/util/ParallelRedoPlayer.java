@@ -62,7 +62,7 @@ public class ParallelRedoPlayer extends RedoPlayer {
 
     @Override protected void playOp(RedoableOp op) throws Exception {
         checkError();
-        long mboxId = op.getMailboxId();
+        int mboxId = op.getMailboxId();
         if (mboxId == RedoableOp.MAILBOX_ID_ALL || mboxId == RedoableOp.UNKNOWN_ID) {
             // Multi-mailbox ops are executed by the main thread to prevent later ops
             // that depend on this op's result aren't run out of order.
@@ -74,7 +74,7 @@ public class ParallelRedoPlayer extends RedoPlayer {
             // all ops for the same mailbox are sent to the same player thread.  The
             // ops are added to the thread's internal queue and played back in order.
             // This assignment of ops to threads will result in uneven distribution.
-            int index = (int) Math.abs(mboxId % mPlayerThreads.length);
+            int index = Math.abs(mboxId % mPlayerThreads.length);
             PlayerThread player = mPlayerThreads[index];
             RedoTask task = new RedoTask(op);
             if (ZimbraLog.redolog.isDebugEnabled())

@@ -45,7 +45,7 @@ public class IndexItem extends RedoableOp {
         mCommitAbortDone = false;
     }
 
-    public IndexItem(long mailboxId, int id, byte type, boolean deleteFirst) {
+    public IndexItem(int mailboxId, int id, byte type, boolean deleteFirst) {
         setMailboxId(mailboxId);
         mId = id;
         mType = type;
@@ -86,8 +86,7 @@ public class IndexItem extends RedoableOp {
 
     @Override
     public void redo() throws Exception {
-        long mboxId = getMailboxId();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         MailItem item;
         try {
             item = mbox.getItemById(null, mId, mType);

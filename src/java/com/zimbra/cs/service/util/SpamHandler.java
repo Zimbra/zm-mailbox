@@ -182,13 +182,13 @@ public class SpamHandler {
 
     private static final class SpamReport {
         final String mAccountName;
-        final long mMailboxId;
+        final int mMailboxId;
         final int mMessageId;
         final boolean mIsSpam;
         final String mOrigIp;
         private String mDescString;
         
-        SpamReport(String accountName, long mailboxId, int messageId, boolean isSpam, String origIp) {
+        SpamReport(String accountName, int mailboxId, int messageId, boolean isSpam, String origIp) {
             mAccountName = accountName;
             mMailboxId = mailboxId;
             mMessageId = messageId;

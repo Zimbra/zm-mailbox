@@ -35,7 +35,7 @@ public class RepositionNote extends RedoableOp {
         mId = UNKNOWN_ID;
     }
 
-    public RepositionNote(long mailboxId, int id, Note.Rectangle bounds) {
+    public RepositionNote(int mailboxId, int id, Note.Rectangle bounds) {
         setMailboxId(mailboxId);
         mId = id;
         mBounds = bounds;

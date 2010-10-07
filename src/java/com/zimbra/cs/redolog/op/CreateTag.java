@@ -38,7 +38,7 @@ public class CreateTag extends RedoableOp {
         mColor = 0;
     }
 
-    public CreateTag(long mailboxId, String name, MailItem.Color color) {
+    public CreateTag(int mailboxId, String name, MailItem.Color color) {
         setMailboxId(mailboxId);
         mTagId = UNKNOWN_ID;
         mName = name != null ? name : "";
@@ -80,7 +80,7 @@ public class CreateTag extends RedoableOp {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
+        int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {

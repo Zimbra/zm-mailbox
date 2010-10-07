@@ -31,7 +31,7 @@ public class ICalReply extends RedoableOp {
     
     public ICalReply()  {}
 
-    public ICalReply(long mailboxId, Invite inv) {
+    public ICalReply(int mailboxId, Invite inv) {
         setMailboxId(mailboxId);
         mInvite = inv;
     }

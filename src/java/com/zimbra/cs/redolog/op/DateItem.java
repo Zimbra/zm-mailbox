@@ -32,7 +32,7 @@ public class DateItem extends RedoableOp {
 
     public DateItem() { }
 
-    public DateItem(long mailboxId, int itemId, byte type, long date) {
+    public DateItem(int mailboxId, int itemId, byte type, long date) {
         setMailboxId(mailboxId);
         mId = itemId;
         mType = type;

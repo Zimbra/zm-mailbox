@@ -36,7 +36,7 @@ public class EmptyFolder extends RedoableOp {
         mSubfolders = false;
     }
 
-    public EmptyFolder(long mailboxId, int id, boolean subfolders) {
+    public EmptyFolder(int mailboxId, int id, boolean subfolders) {
         setMailboxId(mailboxId);
         mId = id;
         mSubfolders = subfolders;

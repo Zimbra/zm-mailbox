@@ -41,7 +41,7 @@ public class CreateMountpoint extends RedoableOp {
         mId = UNKNOWN_ID;
     }
 
-    public CreateMountpoint(long mailboxId, int folderId, String name, String ownerId, int remoteId,
+    public CreateMountpoint(int mailboxId, int folderId, String name, String ownerId, int remoteId,
                             byte view, int flags, MailItem.Color color) {
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
@@ -101,7 +101,7 @@ public class CreateMountpoint extends RedoableOp {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
+        int mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {

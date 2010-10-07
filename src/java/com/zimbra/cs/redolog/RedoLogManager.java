@@ -717,9 +717,9 @@ public class RedoLogManager {
      * @throws IOException
      * @throws MailServiceException
      */
-    public Pair<Set<Long>, CommitId> getChangedMailboxesSince(CommitId cid)
+    public Pair<Set<Integer>, CommitId> getChangedMailboxesSince(CommitId cid)
     throws IOException, MailServiceException {
-        Set<Long> mailboxes = new HashSet<Long>();
+        Set<Integer> mailboxes = new HashSet<Integer>();
 
         // Grab a read lock to prevent rollover.
         ReadLock readLock = mRWLock.readLock();
@@ -797,7 +797,7 @@ public class RedoLogManager {
 
                         lastCommitTxn = (CommitTxn) op;
                         if (foundMarker) {
-                            long mboxId = op.getMailboxId();
+                            int mboxId = op.getMailboxId();
                             if (mboxId > 0)
                                 mailboxes.add(mboxId);
                         } else {
@@ -816,7 +816,7 @@ public class RedoLogManager {
                 throw MailServiceException.INVALID_COMMIT_ID(cid.toString());
             }
             CommitId lastCommitId = new CommitId(lastSeq, lastCommitTxn);
-            return new Pair(mailboxes, lastCommitId);
+            return new Pair<Set<Integer>, CommitId>(mailboxes, lastCommitId);
         } finally {
             if (linkDir != null) {
                 // Clean up the temp dir with links.

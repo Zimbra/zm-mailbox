@@ -33,7 +33,7 @@ public class RenameTag extends RenameItem {
         mFolderId = Mailbox.ID_FOLDER_TAGS;
     }
 
-    public RenameTag(long mailboxId, int tagId, String name) {
+    public RenameTag(int mailboxId, int tagId, String name) {
         super(mailboxId, tagId, MailItem.TYPE_TAG, name, Mailbox.ID_FOLDER_TAGS);
     }
 

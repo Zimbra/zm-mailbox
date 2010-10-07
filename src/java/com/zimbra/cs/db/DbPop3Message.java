@@ -188,7 +188,7 @@ public class DbPop3Message {
     }
 
 
-    public static String getTableName(long mailboxId, long groupId) {
+    public static String getTableName(int mailboxId, int groupId) {
         return DbMailbox.qualifyTableName(groupId, TABLE_POP3_MESSAGE);
     }
 

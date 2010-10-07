@@ -36,7 +36,7 @@ public class ImapCopyItem extends RedoableOp {
         mDestFolderId = 0;
     }
 
-    public ImapCopyItem(long mailboxId, byte type, int folderId) {
+    public ImapCopyItem(int mailboxId, byte type, int folderId) {
         setMailboxId(mailboxId);
         mType = type;
         mDestFolderId = folderId;
@@ -94,7 +94,7 @@ public class ImapCopyItem extends RedoableOp {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
+        int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         int i = 0, itemIds[] = new int[mDestIds.size()];

@@ -59,11 +59,11 @@ public class CreateMailbox extends RedoableOp {
     }
 
     @Override public void redo() throws Exception {
-        long opMboxId = getMailboxId();
+        int opMboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId, false);
 
         if (mbox != null) {
-            long mboxId = mbox.getId();
+            int mboxId = mbox.getId();
             if (opMboxId == mboxId) {
                 mLog.info("Mailbox " + opMboxId + " for account " + mAccountId + " already exists");
                 return;

@@ -32,7 +32,7 @@ public class SetFolderDefaultView extends RedoableOp {
         mDefaultView = MailItem.TYPE_UNKNOWN;
     }
 
-    public SetFolderDefaultView(long mailboxId, int folderId, byte view) {
+    public SetFolderDefaultView(int mailboxId, int folderId, byte view) {
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mDefaultView = view;

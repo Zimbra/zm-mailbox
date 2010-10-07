@@ -43,7 +43,7 @@ public class MoveItem extends RedoableOp {
         mConstraint = null;
     }
 
-    public MoveItem(long mailboxId, int[] ids, byte type, int destId, TargetConstraint tcon) {
+    public MoveItem(int mailboxId, int[] ids, byte type, int destId, TargetConstraint tcon) {
         setMailboxId(mailboxId);
         mIds = ids;
         mType = type;

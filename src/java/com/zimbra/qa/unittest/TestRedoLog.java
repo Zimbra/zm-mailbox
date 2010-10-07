@@ -71,7 +71,7 @@ extends TestCase {
         // Replay log to destination account.
         Account destAccount = TestUtil.createAccount(RESTORED_NAME);
         RedoPlayer player = new RedoPlayer(false, true, false, false);
-        Map<Long, Long> idMap = new HashMap<Long, Long>();
+        Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
         Mailbox destMbox = MailboxManager.getInstance().getMailboxByAccount(destAccount); 
         idMap.put(sourceMbox.getId(), destMbox.getId());
         player.scanLog(getRedoLogFile(), true, idMap, startTime, Long.MAX_VALUE);

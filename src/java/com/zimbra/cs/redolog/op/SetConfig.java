@@ -35,7 +35,7 @@ public class SetConfig extends RedoableOp {
         mConfig = "";
     }
 
-    public SetConfig(long mailboxId, String section, Metadata config) {
+    public SetConfig(int mailboxId, String section, Metadata config) {
         setMailboxId(mailboxId);
         mSection = section == null ? "" : section;
         mConfig = config == null ? "" : config.toString();

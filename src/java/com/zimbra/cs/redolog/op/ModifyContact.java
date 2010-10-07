@@ -47,7 +47,7 @@ public class ModifyContact extends RedoableOp {
         mId = UNKNOWN_ID;
     }
 
-    public ModifyContact(long mailboxId, int id, ParsedContact pc) {
+    public ModifyContact(int mailboxId, int id, ParsedContact pc) {
         setMailboxId(mailboxId);
         mId = id;
         mFields = pc.getFields();

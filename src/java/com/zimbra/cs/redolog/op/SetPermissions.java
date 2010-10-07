@@ -33,7 +33,7 @@ public class SetPermissions extends RedoableOp {
         mACL = "";
     }
 
-    public SetPermissions(long mailboxId, int folderId, ACL acl) {
+    public SetPermissions(int mailboxId, int folderId, ACL acl) {
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mACL = acl == null ? "" : acl.toString();

@@ -30,7 +30,7 @@ public class SaveWiki extends SaveDocument {
     public SaveWiki() {
     }
 
-    public SaveWiki(long mailboxId, String digest, int msgSize, int folderId) {
+    public SaveWiki(int mailboxId, String digest, int msgSize, int folderId) {
         super(mailboxId, digest, msgSize, folderId);
     }
 
@@ -57,14 +57,12 @@ public class SaveWiki extends SaveDocument {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
-        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
-
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         try {
             mbox.createWiki(getOperationContext(), getFolderId(), mWikiword, getAuthor(), getDescription(), getAdditionalDataStream());
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
-                mLog.info("Wiki " + getMessageId() + " is already in mailbox " + mboxId);
+                mLog.info("Wiki " + getMessageId() + " is already in mailbox " + mbox.getId());
                 return;
             } else {
                 throw e;

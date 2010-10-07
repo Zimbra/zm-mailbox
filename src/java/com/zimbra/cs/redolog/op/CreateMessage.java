@@ -28,7 +28,6 @@ import javax.activation.DataSource;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -85,13 +84,13 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         mNoICal = false;
     }
 
-    protected CreateMessage(long mailboxId, String rcptEmail, boolean shared,
+    protected CreateMessage(int mailboxId, String rcptEmail, boolean shared,
                             String digest, int msgSize, int folderId, boolean noICal,
                             int flags, String tags) {
         this(mailboxId, rcptEmail, RECEIVED_DATE_UNSET, shared, digest, msgSize, folderId, noICal, flags, tags, null);
     }
 
-    public CreateMessage(long mailboxId, String rcptEmail, long receivedDate,
+    public CreateMessage(int mailboxId, String rcptEmail, long receivedDate,
                          boolean shared, String digest, int msgSize, int folderId,
                          boolean noICal, int flags, String tags, CustomMetadata extended) {
         setMailboxId(mailboxId);
@@ -383,7 +382,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
+        int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         DeliveryContext deliveryCtxt = new DeliveryContext(mShared, Arrays.asList(mboxId));

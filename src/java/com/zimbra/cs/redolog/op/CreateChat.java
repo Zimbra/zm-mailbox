@@ -28,7 +28,7 @@ public class CreateChat extends CreateMessage {
     public CreateChat() {
     }
 
-    public CreateChat(long mailboxId, String digest, int msgSize, int folderId, int flags, String tags) {
+    public CreateChat(int mailboxId, String digest, int msgSize, int folderId, int flags, String tags) {
         super(mailboxId, ":API:", false, digest, msgSize, folderId, true, flags, tags);
     }
     
@@ -45,7 +45,7 @@ public class CreateChat extends CreateMessage {
     }
     
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
+        int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         ParsedMessage  pm = new ParsedMessage(getMessageBody(), getTimestamp(), mbox.attachmentsIndexingEnabled());

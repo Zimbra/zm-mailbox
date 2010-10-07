@@ -35,7 +35,7 @@ public class RevokeAccess extends RedoableOp {
         mGrantee = "";
     }
 
-    public RevokeAccess(long mailboxId, int folderId, String grantee) {
+    public RevokeAccess(int mailboxId, int folderId, String grantee) {
         setMailboxId(mailboxId);
         mFolderId = folderId;
         mGrantee = grantee == null ? "" : grantee;

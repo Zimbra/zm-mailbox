@@ -48,7 +48,7 @@ public class Collection extends MailItemResource {
 
     protected byte mView;
     protected byte mType;
-    protected long mMailboxId;
+    protected int mMailboxId;
 
     public Collection(DavContext ctxt, Folder f) throws DavException, ServiceException {
         super(ctxt, f);

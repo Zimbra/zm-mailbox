@@ -51,7 +51,7 @@ public class FoldersTagsCache {
     private static FoldersTagsCache sTheInstance = new FoldersTagsCache();
 
     private MemcachedMap<FoldersTagsCacheKey, FoldersTags> mMemcachedLookup;
-    private Map<Long, Mailbox> mDirtyMailboxes;
+    private Map<Integer, Mailbox> mDirtyMailboxes;
 
     public static FoldersTagsCache getInstance() { return sTheInstance; }
 
@@ -59,7 +59,7 @@ public class FoldersTagsCache {
         ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
         FoldersTagsSerializer serializer = new FoldersTagsSerializer();
         mMemcachedLookup = new MemcachedMap<FoldersTagsCacheKey, FoldersTags>(memcachedClient, serializer, false);
-        mDirtyMailboxes = new HashMap<Long, Mailbox>(100);
+        mDirtyMailboxes = new HashMap<Integer, Mailbox>(100);
         if (!DebugConfig.disableFoldersTagsCache)
             Zimbra.sTimer.schedule(new DirtyMailboxesTask(), SWEEP_INTERVAL_MSEC, SWEEP_INTERVAL_MSEC);
     }

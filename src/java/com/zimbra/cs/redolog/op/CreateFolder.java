@@ -36,11 +36,11 @@ public class CreateFolder extends RedoableOp {
 
     public CreateFolder()  { }
 
-    public CreateFolder(long mailboxId, String name, int parentId, byte view, int flags, MailItem.Color color, String url) {
-    	this(mailboxId, name, parentId, (byte)0, view, flags, color, url);
+    public CreateFolder(int mailboxId, String name, int parentId, byte view, int flags, MailItem.Color color, String url) {
+        this(mailboxId, name, parentId, (byte)0, view, flags, color, url);
     }
-    
-    public CreateFolder(long mailboxId, String name, int parentId, byte attrs, byte view, int flags, MailItem.Color color, String url) {
+
+    public CreateFolder(int mailboxId, String name, int parentId, byte attrs, byte view, int flags, MailItem.Color color, String url) {
         setMailboxId(mailboxId);
         mName = name == null ? "" : name;
         mParentId = parentId;
@@ -105,7 +105,7 @@ public class CreateFolder extends RedoableOp {
 
     @Override
     public void redo() throws Exception {
-        long mboxId = getMailboxId();
+        int mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {

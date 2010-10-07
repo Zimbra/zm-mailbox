@@ -28,7 +28,7 @@ public class FixCalendarItemTimeZone extends RedoableOp {
 
     public FixCalendarItemTimeZone() {}
 
-    public FixCalendarItemTimeZone(long mailboxId, int itemId, long after, String country) {
+    public FixCalendarItemTimeZone(int mailboxId, int itemId, long after, String country) {
         setMailboxId(mailboxId);
         mId = itemId;
         mAfter = after;

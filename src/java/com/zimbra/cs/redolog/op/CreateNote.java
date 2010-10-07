@@ -41,7 +41,7 @@ public class CreateNote extends RedoableOp {
         mFolderId = UNKNOWN_ID;
     }
 
-    public CreateNote(long mailboxId, int folderId,
+    public CreateNote(int mailboxId, int folderId,
                       String content, MailItem.Color color, Note.Rectangle bounds) {
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
@@ -103,7 +103,7 @@ public class CreateNote extends RedoableOp {
     }
 
     @Override public void redo() throws Exception {
-        long mboxId = getMailboxId();
+        int mboxId = getMailboxId();
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {
