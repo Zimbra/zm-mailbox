@@ -978,15 +978,15 @@ public class UserServlet extends ZimbraServlet {
          * Shortcut to {@code params.get("charset")}.
          *
          * @return value of charset parameter, or UTF-8 if null
-         * @throws UserServletException if the charset name is invalid
+         * @throws ServiceException if the charset name is invalid
          */
-        public Charset getCharset() throws UserServletException {
+        public Charset getCharset() throws ServiceException {
             String charset = params.get("charset");
             if (charset != null) {
                 try {
                     return Charset.forName(charset);
                 } catch (IllegalArgumentException e) {
-                    throw UserServletException.badRequest("invalid charset: " + charset);
+                    throw ServiceException.INVALID_REQUEST("invalid charset: " + charset, e);
                 }
             } else {
                 return Charsets.UTF_8;
