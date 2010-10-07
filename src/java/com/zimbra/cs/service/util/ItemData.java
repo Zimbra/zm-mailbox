@@ -73,7 +73,7 @@ public class ItemData {
              * ud.indexId = json.optString(Keys.index_id.toString());
              * ud.locator = json.getString(Keys.volume_id.toString());
              */
-            ud.indexId = null;
+            ud.indexId = -1;
             ud.locator = null;
             ud.imapId = json.getInt(Keys.imap_id.toString());
             ud.date = json.getInt(Keys.date.toString());

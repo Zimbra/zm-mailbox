@@ -186,6 +186,7 @@ public class Metadata {
 
     public String get(String key, String defaultValue)  { Object value = mMap.get(key);  return (value == null ? defaultValue : value.toString()); }
     public long getLong(String key, long defaultValue) throws ServiceException        { String raw = get(key, null); return (raw == null ? defaultValue : Element.parseLong(key, raw)); }
+    public int getInt(String key, int defaultValue) throws ServiceException           { String raw = get(key, null); return (raw == null ? defaultValue : Element.parseInt(key, raw)); }
     public double getDouble(String key, double defaultValue) throws ServiceException  { String raw = get(key, null); return (raw == null ? defaultValue : Element.parseDouble(key, raw)); }
     public boolean getBool(String key, boolean defaultValue) throws ServiceException  { String raw = get(key, null); return (raw == null ? defaultValue : Element.parseBool(key, raw)); }
 

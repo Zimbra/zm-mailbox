@@ -465,7 +465,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         data.type     = type;
         data.folderId = folder.getId();
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
-            data.indexId  = mbox.generateIndexId(id);
+            data.indexId  = id;
         data.imapId   = id;
         data.date     = mbox.getOperationTimestamp();
         data.flags    = flags & Flag.FLAGS_GENERIC;

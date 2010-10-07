@@ -177,13 +177,6 @@ public class IndexHelper {
         }
     }
 
-    String generateIndexId(int itemId) {
-        if (getMailboxIndex() != null)
-            return getMailboxIndex().generateIndexId(itemId);
-        else
-            return null;
-    }
-
     /** Returns the maximum number of items to be batched in a single indexing
      *  pass.  (If a search comes in that requires use of the index, all
      *  pending unindexed items are immediately indexed regardless of batch
@@ -210,7 +203,7 @@ public class IndexHelper {
             mMailboxIndex.deleteIndex();
     }
 
-    List<String> deleteDocuments(List<String> indexIds) throws IOException {
+    List<Integer> deleteDocuments(List<Integer> indexIds) throws IOException {
         if (getMailboxIndex() != null)
             return getMailboxIndex().deleteDocuments(indexIds);
         else
@@ -551,7 +544,7 @@ public class IndexHelper {
                         if (!skipDelete) {
                             // if (!wholeMailbox) {
                             // NOT reindexing everything: delete manually
-                            List<String> toDelete = new ArrayList<String>(msgs.size());
+                            List<Integer> toDelete = new ArrayList<Integer>(msgs.size());
                             for (SearchResult s : msgs)
                                 toDelete.add(s.indexId);
 
@@ -975,7 +968,7 @@ public class IndexHelper {
         }
     }
 
-    void indexingPartOfEndTransaction(List<IndexItemEntry> itemsToIndex, List<String> itemsToDelete) {
+    void indexingPartOfEndTransaction(List<IndexItemEntry> itemsToIndex, List<Integer> itemsToDelete) {
         try {
             if (getMailboxIndex() != null && (itemsToDelete != null && !itemsToDelete.isEmpty()))
                 getMailboxIndex().deleteDocuments(itemsToDelete);

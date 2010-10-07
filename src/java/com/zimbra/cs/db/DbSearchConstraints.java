@@ -176,7 +176,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
     public Set<ItemId> remoteItemIds = new HashSet<ItemId>();                             /* optional - ANY of these itemIDs are OK.*/
     public Set<ItemId> prohibitedRemoteItemIds = new HashSet<ItemId>(); /* optional - ALL of these itemIDs are excluded*/
 
-    public Set<String> indexIds = new HashSet<String>();                   /* optional - ANY of these indexIDs are OK.  */
+    public Set<Integer> indexIds = new HashSet<Integer>();                   /* optional - ANY of these indexIDs are OK.  */
     public Boolean hasIndexId = null;                                      /* optional - index_id must be present */
     
     public Set<Byte> types = new HashSet<Byte>();                         /* optional - ANY of these types are OK.  */
@@ -479,7 +479,6 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         //
         Printer<Tag> tp = new Printer<Tag>()         { void printOne(StringBuilder s, Tag t)     { s.append(t.getName()); } };
         Printer<Integer> ip = new Printer<Integer>() { void printOne(StringBuilder s, Integer i) { s.append(i); } };
-        Printer<String> sp = new Printer<String>()   { void printOne(StringBuilder s, String in) { s.append(in); } };
         Printer<Byte> bp = new Printer<Byte>()       { void printOne(StringBuilder s, Byte b)    { s.append(b); } };
         
         FolderPrinter fp = new FolderPrinter();
@@ -528,7 +527,7 @@ public class DbSearchConstraints implements DbSearchConstraintsNode, Cloneable {
         iip.run(retVal, false, prohibitedRemoteItemIds, "ITEM");
         
         // indexId
-        sp.run(retVal, indexIds, "INDEXID");
+        ip.run(retVal, indexIds, "INDEXID");
         
         if (hasIndexId != null) {
             if (hasIndexId) {

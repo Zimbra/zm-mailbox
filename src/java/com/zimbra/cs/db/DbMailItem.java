@@ -148,10 +148,10 @@ public class DbMailItem {
             else
                 stmt.setInt(pos++, data.parentId);
             stmt.setInt(pos++, data.folderId);
-            if (data.indexId == null)
+            if (data.indexId == -1)
                 stmt.setNull(pos++, Types.VARCHAR);
             else
-                stmt.setString(pos++, data.indexId);
+                stmt.setInt(pos++, data.indexId);
             if (data.imapId <= 0)
                 stmt.setNull(pos++, Types.INTEGER);
             else
@@ -227,10 +227,10 @@ public class DbMailItem {
         }
     }
 
-    public static void copy(MailItem item, int id, Folder folder, String indexId, int parentId, String locator, String metadata, boolean fromDumpster)
+    public static void copy(MailItem item, int id, Folder folder, int indexId, int parentId, String locator, String metadata, boolean fromDumpster)
     throws ServiceException {
         Mailbox mbox = item.getMailbox();
-        if (id <= 0 || indexId == null || folder == null || parentId == 0)
+        if (id <= 0 || indexId == -1 || folder == null || parentId == 0)
             throw ServiceException.FAILURE("invalid data for DB item copy", null);
 
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
@@ -259,7 +259,7 @@ public class DbMailItem {
             else
                 stmt.setInt(pos++, parentId);                  //   or, PARENT_ID specified by caller
             stmt.setInt(pos++, folder.getId());                // FOLDER_ID
-            stmt.setString(pos++, indexId);                       // INDEX_ID
+            stmt.setInt(pos++, indexId);                       // INDEX_ID
             stmt.setInt(pos++, id);                            // IMAP_ID is initially the same as ID
             if (locator != null)
                 stmt.setString(pos++, locator);      // VOLUME_ID specified by caller
@@ -401,7 +401,7 @@ public class DbMailItem {
             int pos = 1;
             stmt.setInt(pos++, data.id);                       // ID
             stmt.setInt(pos++, data.folderId);                 // FOLDER_ID
-            stmt.setString(pos++, data.indexId);               // INDEX_ID
+            stmt.setInt(pos++, data.indexId);                  // INDEX_ID
             stmt.setInt(pos++, data.imapId);                   // IMAP_ID
             if (data.locator != null)
                 stmt.setString(pos++, data.locator);           // VOLUME_ID
@@ -564,10 +564,10 @@ public class DbMailItem {
             }
             stmt.setInt(pos++, folder.getId());
             if (hasIndexId)
-                if (item.getIndexId() == null)
+                if (item.getIndexId() == -1)
                     stmt.setNull(pos++, Types.VARCHAR);
                 else
-                    stmt.setString(pos++, item.getIndexId());
+                    stmt.setInt(pos++, item.getIndexId());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             pos = setMailboxId(stmt, mbox, pos);
@@ -2768,11 +2768,11 @@ public class DbMailItem {
                     } catch (Exception e1) { }
                 }
 
-                String indexId = rs.getString(LEAF_CI_INDEX_ID);
+                int indexId = rs.getInt(LEAF_CI_INDEX_ID);
                 boolean indexed = !rs.wasNull();
                 if (indexed) {
                     if (info.sharedIndex == null)
-                        info.sharedIndex = new HashSet<String>();
+                        info.sharedIndex = new HashSet<Integer>();
                     boolean shared = (flags & Flag.BITMASK_COPIED) != 0;
                     if (!shared)  info.indexIds.add(indexId);
                     else          info.sharedIndex.add(indexId);
@@ -2867,7 +2867,7 @@ public class DbMailItem {
 
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
-        List<String> indexIDs = new ArrayList<String>(info.sharedIndex);
+        List<Integer> indexIDs = new ArrayList<Integer>(info.sharedIndex);
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -2880,7 +2880,7 @@ public class DbMailItem {
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++)
-                    stmt.setString(pos++, indexIDs.get(index));
+                    stmt.setInt(pos++, indexIDs.get(index));
                 rs = stmt.executeQuery();
                 while (rs.next())
                     info.sharedIndex.remove(rs.getString(1));
@@ -3150,9 +3150,9 @@ public class DbMailItem {
         data.type        = rs.getByte(CI_TYPE + offset);
         data.parentId    = rs.getInt(CI_PARENT_ID + offset);
         data.folderId    = rs.getInt(CI_FOLDER_ID + offset);
-        data.indexId     = rs.getString(CI_INDEX_ID + offset);
+        data.indexId     = rs.getInt(CI_INDEX_ID + offset);
         if (rs.wasNull())
-            data.indexId = null;
+            data.indexId = -1;
         data.imapId      = rs.getInt(CI_IMAP_ID + offset);
         if (rs.wasNull())
             data.imapId = -1;
@@ -3188,7 +3188,7 @@ public class DbMailItem {
         data.type        = item.getType();
         data.parentId    = item.getParentId();
         data.folderId    = item.getFolderId();
-        data.indexId     = null;
+        data.indexId     = -1;
         data.imapId      = -1;
         data.date        = rs.getInt(1);
         data.size        = rs.getLong(2);

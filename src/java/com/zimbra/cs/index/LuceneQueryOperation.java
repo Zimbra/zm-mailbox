@@ -361,7 +361,7 @@ public final class LuceneQueryOperation extends QueryOperation {
                 try {
                     if (mbid != null) {
                         start = System.currentTimeMillis();
-                        toRet.addHit(mbid, d, score);
+                        toRet.addHit(Integer.parseInt(mbid), d, score);
                         long end = System.currentTimeMillis();
                         timeUsed += (end-start);
                     }
@@ -701,13 +701,13 @@ public final class LuceneQueryOperation extends QueryOperation {
      * the {@link DBQueryOperation} will use to check against the DB.
      */
     static final class LuceneResultsChunk {
-        private Map<String/*indexId*/, ScoredLuceneHit> mHits =
-            new LinkedHashMap<String, ScoredLuceneHit>();
+        private Map<Integer, ScoredLuceneHit> mHits =
+            new LinkedHashMap<Integer, ScoredLuceneHit>();
 
-        Set<String> getIndexIds() {
-            Set<String> toRet = new LinkedHashSet<String>(mHits.keySet().size());
-            for (Iterator<String> iter = mHits.keySet().iterator(); iter.hasNext();) {
-                String curId= iter.next();
+        Set<Integer> getIndexIds() {
+            Set<Integer> toRet = new LinkedHashSet<Integer>(mHits.keySet().size());
+            for (Iterator<Integer> iter = mHits.keySet().iterator(); iter.hasNext();) {
+                int curId = iter.next();
                 toRet.add(curId);
             }
             return toRet;
@@ -717,7 +717,7 @@ public final class LuceneQueryOperation extends QueryOperation {
             return mHits.size();
         }
 
-        void addHit(String indexId, Document doc, float score) {
+        void addHit(int indexId, Document doc, float score) {
             ScoredLuceneHit sh = mHits.get(indexId);
             if (sh == null) {
                 sh = new ScoredLuceneHit(score);
@@ -727,7 +727,7 @@ public final class LuceneQueryOperation extends QueryOperation {
             sh.mDocs.add(doc);
         }
 
-        ScoredLuceneHit getScoredHit(String indexId) {
+        ScoredLuceneHit getScoredHit(int indexId) {
             return mHits.get(indexId);
         }
     }

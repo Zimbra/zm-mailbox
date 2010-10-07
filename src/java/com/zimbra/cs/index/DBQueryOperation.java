@@ -847,7 +847,7 @@ public class DBQueryOperation extends QueryOperation {
                     // For each search result, do two things:
                     //    -- remember the indexId in a hash, so we can find the SearchResult later
                     //    -- add that indexId to our new booleanquery
-                    Map<String, List<SearchResult>> mailItemToResultsMap = new HashMap<String, List<SearchResult>>();
+                    Map<Integer, List<SearchResult>> mailItemToResultsMap = new HashMap<Integer, List<SearchResult>>();
 
                     for (SearchResult res : dbRes) {
                         List<SearchResult> l = mailItemToResultsMap.get(res.indexId);
@@ -858,7 +858,7 @@ public class DBQueryOperation extends QueryOperation {
                         l.add(res);
 
                         // add the new query to the mLuceneOp's query
-                        mLuceneOp.addFilterClause(new Term(LuceneFields.L_MAILBOX_BLOB_ID, res.indexId));
+                        mLuceneOp.addFilterClause(new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(res.indexId)));
                     }
 
                     boolean hasMore = true;
@@ -869,11 +869,11 @@ public class DBQueryOperation extends QueryOperation {
                     while(hasMore) {
                         mLuceneChunk = mLuceneOp.getNextResultsChunk(MAX_HITS_PER_CHUNK);
 
-                        Collection<String> indexIds = mLuceneChunk.getIndexIds();
+                        Collection<Integer> indexIds = mLuceneChunk.getIndexIds();
                         if (indexIds.size() < MAX_HITS_PER_CHUNK) {
                             hasMore = false;
                         }
-                        for (String indexId : indexIds) {
+                        for (int indexId : indexIds) {
                             List<SearchResult> l = mailItemToResultsMap.get(indexId);
 
                             if (l == null) {
@@ -928,7 +928,7 @@ public class DBQueryOperation extends QueryOperation {
 
             if (context.getParams().getEstimateSize() && mSizeEstimate==-1) {
                 // FIXME TODO should probably be a %age, this is worst-case
-                sc.indexIds = new HashSet<String>();
+                sc.indexIds = new HashSet<Integer>();
                 int dbResultCount;
 
                 dbResultCount = DbSearch.countResults(conn, mConstraints,

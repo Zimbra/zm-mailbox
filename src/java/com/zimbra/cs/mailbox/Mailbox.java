@@ -252,7 +252,7 @@ public class Mailbox {
         Connection conn      = null;
         RedoableOp recorder  = null;
         List<IndexItemEntry> indexItems = new ArrayList<IndexItemEntry>();
-        List<String> indexItemsToDelete = new ArrayList<String>();
+        List<Integer> indexItemsToDelete = new ArrayList<Integer>();
         Map<Integer, MailItem> itemCache = null;
         OperationContext octxt = null;
         TargetConstraint tcon  = null;
@@ -328,7 +328,7 @@ public class Mailbox {
         /**
          * Add an item to the list of things to be deleted at the end of the current transaction
          */
-        void addIndexDelete(String id) {
+        void addIndexDelete(Integer id) {
             indexItemsToDelete.add(id);
         }
 
@@ -1059,17 +1059,6 @@ public class Mailbox {
             mCurrentChange.mOtherDirtyStuff.add(obj);
     }
 
-    /**
-     * IndexIDs are generated differently based on the particular type of index you have instantiated,
-     * this call makes that happen.
-     *
-     * @param itemId
-     * @return
-     */
-    String generateIndexId(int itemId) {
-        return mIndexHelper.generateIndexId(itemId);
-    }
-
     /** Adds the MailItem to the current change's list of things that need
      *  to be added to the Lucene index once the current transaction has
      *  committed.
@@ -1081,7 +1070,7 @@ public class Mailbox {
     void queueForIndexing(MailItem item, boolean deleteFirst, List<IndexDocument> data) {
         assert(Thread.holdsLock(this));
 
-        if (item.getIndexId() == null) {
+        if (item.getIndexId() == -1) {
             // this item shouldn't be indexed
             return;
         }
@@ -1101,7 +1090,7 @@ public class Mailbox {
 
         // if no data is provided then we ALWAYS batch
         if (data != null && indexImmediately()) {
-            if (item.getIndexId() != null)
+            if (item.getIndexId() != -1)
                 mCurrentChange.addIndexItem(new IndexItemEntry(deleteFirst, item, item.getSavedSequence(), data));
         } else {
             // increment index deferred count
@@ -7467,7 +7456,7 @@ public class Mailbox {
             PendingDelete deletes = mCurrentChange.deletes;
             if (deletes != null && deletes.indexIds != null && !deletes.indexIds.isEmpty()) {
                 try {
-                    List<String> idxDeleted = mIndexHelper.deleteDocuments(deletes.indexIds);
+                    List<Integer> idxDeleted = mIndexHelper.deleteDocuments(deletes.indexIds);
                     if (idxDeleted.size() != deletes.indexIds.size()) {
                         if (ZimbraLog.index_add.isInfoEnabled())
                             ZimbraLog.index_add.info("could not delete all index entries for items: " + deletes.itemIds.getAll());

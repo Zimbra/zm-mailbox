@@ -205,13 +205,6 @@ public final class MailboxIndex {
     }
 
     /**
-     * @see LuceneIndex#generateIndexId(int)
-     */
-    public String generateIndexId(int itemId) {
-        return luceneIndex.generateIndexId(itemId);
-    }
-
-    /**
      * @see LuceneIndex#getDomainsForField(String, String, Collection)
      */
     public void getDomainsForField(String fieldName, String regex,
@@ -273,7 +266,7 @@ public final class MailboxIndex {
      *  operation was completely successful.
      * @throws IOException on index open failure, nothing processed.
      */
-    public List<String> deleteDocuments(List<String> itemIds) throws IOException {
+    public List<Integer> deleteDocuments(List<Integer> itemIds) throws IOException {
         return luceneIndex.deleteDocuments(itemIds);
     }
 
@@ -431,7 +424,7 @@ public final class MailboxIndex {
 
         initAnalyzer(mbox);
         synchronized(getLock()) {
-            String indexId = mi.getIndexId();
+            String indexId = mi.getIndexId() == -1 ? null : Integer.toString(mi.getIndexId());
             try {
                 if (docList != null) {
                     IndexDocument[] docs = new IndexDocument[docList.size()];

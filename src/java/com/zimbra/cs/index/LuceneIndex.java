@@ -157,10 +157,6 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
         return luceneDirectory.getBytesRead();
     }
 
-    public String generateIndexId(int itemId) {
-        return Integer.toString(itemId);
-    }
-
     LuceneIndex(MailboxIndex mbidx, String idxParentDir, long mailboxId) throws ServiceException {
         mMbidx = mbidx;
         mIndexWriter = null;
@@ -295,26 +291,26 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
      * Deletes all the documents from the index that have {@code indexIds} as
      * specified.
      */
-    public List<String> deleteDocuments(List<String> itemIds) throws IOException {
+    public List<Integer> deleteDocuments(List<Integer> itemIds) throws IOException {
         synchronized (getLock()) {
             beginWriteOperation();
             try {
                 int i = 0;
-                for (String itemIdStr : itemIds) {
+                for (Integer itemId : itemIds) {
                     try {
-                        Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, itemIdStr);
+                        Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, itemId.toString());
                         mIndexWriter.deleteDocuments(toDelete);
                         // NOTE!  The numDeleted may be < you expect here, the document may
                         // already be deleted and just not be optimized out yet -- some lucene
                         // APIs (e.g. docFreq) will still return the old count until the indexes
                         // are optimized...
                         if (ZimbraLog.index_add.isDebugEnabled()) {
-                            ZimbraLog.index_add.debug("Deleted index documents for itemId " + itemIdStr);
+                            ZimbraLog.index_add.debug("Deleted index documents for itemId " + itemId);
                         }
                     } catch (IOException ioe) {
                         ZimbraLog.index_add.debug("deleteDocuments exception on index " + i +
                                 " out of "+itemIds.size() + " (id=" + itemIds.get(i) + ")");
-                        List<String> toRet = new ArrayList<String>(i);
+                        List<Integer> toRet = new ArrayList<Integer>(i);
                         for (int j = 0; j < i; j++) {
                             toRet.add(itemIds.get(j));
                         }

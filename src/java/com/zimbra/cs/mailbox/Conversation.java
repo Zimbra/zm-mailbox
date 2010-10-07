@@ -491,8 +491,8 @@ public class Conversation extends MailItem {
             
             // moved an item out of the spam folder, need to index it
             if (msg.inSpam() && !target.inSpam()) {
-                if (msg.isIndexed() && msg.getIndexId() != null) {
-                    msg.indexIdChanged(msg.getMailbox().generateIndexId(msg.getId()));
+                if (msg.isIndexed() && msg.getIndexId() != -1) {
+                    msg.indexIdChanged(msg.getId());
                     indexUpdated.add(msg);
                 }
             }
