@@ -22,7 +22,7 @@ import com.zimbra.common.util.ZimbraLog;
 import org.apache.commons.dbcp.DelegatingConnection;
 
 class DebugConnection extends DelegatingConnection {
-    private final Connection mConn;
+    protected final Connection mConn;
 
     DebugConnection(Connection conn) {
         super(conn);

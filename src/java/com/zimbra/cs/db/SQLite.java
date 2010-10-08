@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -49,8 +48,6 @@ public class SQLite extends Db {
     private String journalMode;
     private String pageSize;
     private String syncMode;
-    private final ReentrantReadWriteLock attachLock = new ReentrantReadWriteLock(); 
-
 
     SQLite() {
         mErrorCodes = new HashMap<Db.Error, String>(6);
@@ -214,23 +211,16 @@ public class SQLite extends Db {
         if (attachedDBs != null && attachedDBs.containsKey(dbname))
             return;
 
-        try {
-            attachLock.readLock().unlock(); //upgrade lock 
-            attachLock.writeLock().lock();
-            // if we're using more databases than we're allowed to, detach the least recently used
-            if (attachedDBs != null && attachedDBs.size() >= MAX_ATTACHED_DATABASES) {
-                for (Iterator<String> it = attachedDBs.keySet().iterator(); attachedDBs.size() >= MAX_ATTACHED_DATABASES && it.hasNext(); ) {
-                    String name = it.next();
-                    
-                    if (!name.equals("zimbra") && detachDatabase(conn, name))
-                        it.remove();
-                }
+        // if we're using more databases than we're allowed to, detach the least recently used
+        if (attachedDBs != null && attachedDBs.size() >= MAX_ATTACHED_DATABASES) {
+            for (Iterator<String> it = attachedDBs.keySet().iterator(); attachedDBs.size() >= MAX_ATTACHED_DATABASES && it.hasNext(); ) {
+                String name = it.next();
+                
+                if (!name.equals("zimbra") && detachDatabase(conn, name))
+                    it.remove();
             }
-            attachDatabase(conn, dbname);
-        } finally {
-            attachLock.readLock().lock();  //downgrade lock
-            attachLock.writeLock().unlock();
         }
+        attachDatabase(conn, dbname);
     }
 
     void attachDatabase(Connection conn, String dbname) throws SQLException, ServiceException {
@@ -284,15 +274,17 @@ public class SQLite extends Db {
         }
     }
 
-    @Override
-    void postOpen(Connection conn) throws SQLException {
-        attachLock.readLock().lock();
-    }
-
-    @Override 
-    void preClose(Connection conn) {
-        attachLock.readLock().unlock();
-    }
+//    @Override void preClose(Connection conn) {
+//        LinkedHashMap<String, String> attachedDBs = getAttachedDatabases(conn);
+//        if (attachedDBs == null)
+//            return;
+//
+//        // simplest solution it to just detach all the active databases every time we close the connection
+//        for (Iterator<String> it = attachedDBs.keySet().iterator(); it.hasNext(); ) {
+//            if (detachDatabase(conn, it.next()))
+//                it.remove();
+//        }
+//    }
 
     @Override public boolean databaseExists(Connection conn, String dbname) throws ServiceException {
         if (!new File(getDatabaseFilename(dbname)).exists())
