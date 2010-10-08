@@ -1254,16 +1254,13 @@ public class ParsedMessage {
             Pair<String, Boolean> normalized = trimPrefixes(mSubject);
             mNormalizedSubject = compressWhitespace(normalized.getFirst());
             mSubjectIsReply = normalized.getSecond();
-            if (mNormalizedSubject.length() > DbMailItem.MAX_SUBJECT_LENGTH)
-                mNormalizedSubject = mNormalizedSubject.substring(0, DbMailItem.MAX_SUBJECT_LENGTH).trim();
+            mNormalizedSubject = DbMailItem.truncateSubjectToMaxAllowedLength(mNormalizedSubject);
         }
     }
 
     public static String normalize(String subject) {
         subject = compressWhitespace(trimPrefixes(StringUtil.stripControlCharacters(subject)).getFirst());
-        if (subject != null && subject.length() > DbMailItem.MAX_SUBJECT_LENGTH)
-            subject = subject.substring(0, DbMailItem.MAX_SUBJECT_LENGTH).trim();
-        return subject;
+        return DbMailItem.truncateSubjectToMaxAllowedLength(subject);
     }
 
     public static boolean isReply(String subject) {

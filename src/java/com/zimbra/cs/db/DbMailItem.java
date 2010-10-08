@@ -3751,6 +3751,17 @@ public class DbMailItem {
         throw ServiceException.FAILURE("subject too long", null);
     }
 
+    /** Truncates the subject to {@link MAX_SUBJECT_LENGTH}.
+     *
+     * @param subject
+     * @return
+     */
+    public static String truncateSubjectToMaxAllowedLength(String subject) {
+        if (subject != null && subject.length() > MAX_SUBJECT_LENGTH)
+            return subject.substring(0, DbMailItem.MAX_SUBJECT_LENGTH).trim();
+        return subject;
+    }
+
     /** Makes sure that the argument won't overflow the maximum length of a
      *  MySQL MEDIUMTEXT column (16,777,216 bytes) after conversion to UTF-8.
      * 

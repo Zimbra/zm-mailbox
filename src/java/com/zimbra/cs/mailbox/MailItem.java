@@ -729,8 +729,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     /** Returns the SORT-FORM (UPPERCASED, maybe truncated, etc.) of the
      *  subject of this mail item. */
     public String getSortSubject() {
-        String subject = getSubject();
-        return subject.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SUBJECT_LENGTH, subject.length()));
+        return DbMailItem.truncateSubjectToMaxAllowedLength(getSubject()).toUpperCase();
     }
 
     /** Returns the SORT-FORM (UPPERCASED, maybe truncated, etc.) of the

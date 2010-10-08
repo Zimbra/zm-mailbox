@@ -238,8 +238,7 @@ public class Message extends MailItem {
     }
 
     @Override public String getSortSubject() {
-        String subject = getNormalizedSubject();
-        return subject.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SUBJECT_LENGTH, subject.length()));
+        return getNormalizedSubject().toUpperCase();
     }
 
     @Override public String getSortSender() {

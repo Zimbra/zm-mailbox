@@ -470,7 +470,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         data.date     = mbox.getOperationTimestamp();
         data.flags    = flags & Flag.FLAGS_GENERIC;
         data.tags     = tags;
-        data.subject  = subject;
+        data.subject  = DbMailItem.truncateSubjectToMaxAllowedLength(subject);
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, custom, uid, startTime, endTime, recur,
                                        invites, firstInvite.getTimeZoneMap(), new ReplyList(), null);
         data.contentChanged(mbox);

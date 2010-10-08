@@ -228,7 +228,7 @@ public class Conversation extends MailItem {
         data.id          = id;
         data.type        = TYPE_CONVERSATION;
         data.folderId    = Mailbox.ID_FOLDER_CONVERSATIONS;
-        data.subject     = msgs.length > 0 ? msgs[0].getSubject() : "";
+        data.subject     = msgs.length > 0 ? DbMailItem.truncateSubjectToMaxAllowedLength(msgs[0].getSubject()) : "";
         data.date        = date;
         data.size        = msgs.length;
         data.unreadCount = unread;
@@ -787,8 +787,7 @@ public class Conversation extends MailItem {
     
     @Override public String getSortSubject() {
         // not actually used since Conversations aren't indexed...but here for correctness/completeness
-        String subject = getNormalizedSubject();
-        return subject.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SUBJECT_LENGTH, subject.length()));
+        return getNormalizedSubject().toUpperCase();
     }
 
     @Override public String toString() {
