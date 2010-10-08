@@ -56,7 +56,7 @@ public abstract class AbstractRetry<T> {
                 }
             }
         }
-        throw new SQLException("SQLITE_BUSY retry gave up after "+tries+" attempts.",sqle);
+        throw new SQLException("SQLITE_BUSY retry gave up after "+tries+" attempts.");
     }
 
 }
