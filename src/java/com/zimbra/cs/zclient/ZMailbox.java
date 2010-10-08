@@ -950,17 +950,6 @@ public class ZMailbox implements ToZJSONObject {
         return mTransport.getTimeout();
     }
 
-    public Element getItemInfoJSON(String id) throws ServiceException {
-        try {
-            Element req = newRequestElement(MailConstants.GET_ITEM_REQUEST);
-            Element item = req.addElement(MailConstants.E_ITEM);
-            item.addAttribute(MailConstants.A_ID, id);
-            return mTransport.invoke(req);
-        } catch (IOException e) {
-            throw ZClientException.IO_ERROR("invoke "+e.getMessage(), e);
-        }
-    }
-
     public String maskRemoteItemId(String folderId, String id) throws ServiceException {
         int folderIndex = folderId.indexOf(':');
         int idIndex = id.indexOf(':');
