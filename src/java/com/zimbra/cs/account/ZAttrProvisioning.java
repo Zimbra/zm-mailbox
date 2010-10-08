@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101005-2027 */
+    /* build: 7.0.0_BETA1_1111 ysasaki 20101007-1512 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4543,6 +4543,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailTrustedIP = "zimbraMailTrustedIP";
 
     /**
+     * Maximum number of entries for zimbraPrefMailTrustedSenderList.
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1139)
+    public static final String A_zimbraMailTrustedSenderListMaxNumEntries = "zimbraMailTrustedSenderListMaxNumEntries";
+
+    /**
      * Deprecated since: 6.0.7. Deprecated per bug 43497. The number of
      * uncompressed files on disk will never exceed
      * zimbraMailFileDescriptorCacheSize.. Orig desc: max number of bytes
@@ -6343,6 +6351,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=812)
     public static final String A_zimbraPrefMailToasterEnabled = "zimbraPrefMailToasterEnabled";
+
+    /**
+     * Trusted sender email addresses or domains. External images in emails
+     * sent by trusted senders are automatically loaded in the message view.
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1138)
+    public static final String A_zimbraPrefMailTrustedSenderList = "zimbraPrefMailTrustedSenderList";
 
     /**
      * whether mandatory spell check is enabled

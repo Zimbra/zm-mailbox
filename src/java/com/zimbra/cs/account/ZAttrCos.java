@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101005-2027 */
+    /* build: 7.0.0_BETA1_1111 ysasaki 20101007-1512 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -11203,6 +11203,78 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Maximum number of entries for zimbraPrefMailTrustedSenderList.
+     *
+     * @return zimbraMailTrustedSenderListMaxNumEntries, or 100 if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1139)
+    public int getMailTrustedSenderListMaxNumEntries() {
+        return getIntAttr(Provisioning.A_zimbraMailTrustedSenderListMaxNumEntries, 100);
+    }
+
+    /**
+     * Maximum number of entries for zimbraPrefMailTrustedSenderList.
+     *
+     * @param zimbraMailTrustedSenderListMaxNumEntries new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1139)
+    public void setMailTrustedSenderListMaxNumEntries(int zimbraMailTrustedSenderListMaxNumEntries) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailTrustedSenderListMaxNumEntries, Integer.toString(zimbraMailTrustedSenderListMaxNumEntries));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries for zimbraPrefMailTrustedSenderList.
+     *
+     * @param zimbraMailTrustedSenderListMaxNumEntries new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1139)
+    public Map<String,Object> setMailTrustedSenderListMaxNumEntries(int zimbraMailTrustedSenderListMaxNumEntries, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailTrustedSenderListMaxNumEntries, Integer.toString(zimbraMailTrustedSenderListMaxNumEntries));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of entries for zimbraPrefMailTrustedSenderList.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1139)
+    public void unsetMailTrustedSenderListMaxNumEntries() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailTrustedSenderListMaxNumEntries, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of entries for zimbraPrefMailTrustedSenderList.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1139)
+    public Map<String,Object> unsetMailTrustedSenderListMaxNumEntries(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailTrustedSenderListMaxNumEntries, "");
+        return attrs;
+    }
+
+    /**
      * Maximum number of entries for per user white list. This restricts the
      * number of values that can be set on the amavisWhitelistSender
      * attribute of an account. If set to 0, the per user white list feature
@@ -21953,6 +22025,149 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefMailToasterEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefMailToasterEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Trusted sender email addresses or domains. External images in emails
+     * sent by trusted senders are automatically loaded in the message view.
+     *
+     * @return zimbraPrefMailTrustedSenderList, or empty array if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1138)
+    public String[] getPrefMailTrustedSenderList() {
+        return getMultiAttr(Provisioning.A_zimbraPrefMailTrustedSenderList);
+    }
+
+    /**
+     * Trusted sender email addresses or domains. External images in emails
+     * sent by trusted senders are automatically loaded in the message view.
+     *
+     * @param zimbraPrefMailTrustedSenderList new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1138)
+    public void setPrefMailTrustedSenderList(String[] zimbraPrefMailTrustedSenderList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailTrustedSenderList, zimbraPrefMailTrustedSenderList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Trusted sender email addresses or domains. External images in emails
+     * sent by trusted senders are automatically loaded in the message view.
+     *
+     * @param zimbraPrefMailTrustedSenderList new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1138)
+    public Map<String,Object> setPrefMailTrustedSenderList(String[] zimbraPrefMailTrustedSenderList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailTrustedSenderList, zimbraPrefMailTrustedSenderList);
+        return attrs;
+    }
+
+    /**
+     * Trusted sender email addresses or domains. External images in emails
+     * sent by trusted senders are automatically loaded in the message view.
+     *
+     * @param zimbraPrefMailTrustedSenderList new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1138)
+    public void addPrefMailTrustedSenderList(String zimbraPrefMailTrustedSenderList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefMailTrustedSenderList, zimbraPrefMailTrustedSenderList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Trusted sender email addresses or domains. External images in emails
+     * sent by trusted senders are automatically loaded in the message view.
+     *
+     * @param zimbraPrefMailTrustedSenderList new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1138)
+    public Map<String,Object> addPrefMailTrustedSenderList(String zimbraPrefMailTrustedSenderList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefMailTrustedSenderList, zimbraPrefMailTrustedSenderList);
+        return attrs;
+    }
+
+    /**
+     * Trusted sender email addresses or domains. External images in emails
+     * sent by trusted senders are automatically loaded in the message view.
+     *
+     * @param zimbraPrefMailTrustedSenderList existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1138)
+    public void removePrefMailTrustedSenderList(String zimbraPrefMailTrustedSenderList) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefMailTrustedSenderList, zimbraPrefMailTrustedSenderList);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Trusted sender email addresses or domains. External images in emails
+     * sent by trusted senders are automatically loaded in the message view.
+     *
+     * @param zimbraPrefMailTrustedSenderList existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1138)
+    public Map<String,Object> removePrefMailTrustedSenderList(String zimbraPrefMailTrustedSenderList, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefMailTrustedSenderList, zimbraPrefMailTrustedSenderList);
+        return attrs;
+    }
+
+    /**
+     * Trusted sender email addresses or domains. External images in emails
+     * sent by trusted senders are automatically loaded in the message view.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1138)
+    public void unsetPrefMailTrustedSenderList() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailTrustedSenderList, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Trusted sender email addresses or domains. External images in emails
+     * sent by trusted senders are automatically loaded in the message view.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1138)
+    public Map<String,Object> unsetPrefMailTrustedSenderList(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefMailTrustedSenderList, "");
         return attrs;
     }
 
