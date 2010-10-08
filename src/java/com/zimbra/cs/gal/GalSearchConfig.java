@@ -113,7 +113,7 @@ public class GalSearchConfig {
 	
 	protected void loadZimbraConfig(Domain domain, GalOp op, GalSearchType stype) throws ServiceException {
 		
-        mRules = new LdapGalMapRules(domain);
+        mRules = new LdapGalMapRules(domain, true);
         mOp = op;
         String filterName = null;
         
@@ -156,8 +156,8 @@ public class GalSearchConfig {
 			 (mAuthMech.equals(Provisioning.LDAP_AM_KERBEROS5) && mKerberosKeytab != null && mKerberosPrincipal != null));
 	}
 	protected void loadConfig(Domain domain, GalOp op) throws ServiceException {
-		
-        mRules = new LdapGalMapRules(domain);
+	    
+        mRules = new LdapGalMapRules(domain, false);
         mOp = op;
         
         GalMode galMode = domain.getGalMode();

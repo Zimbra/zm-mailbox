@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20101007-1512 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101008-1333 */
 
     /**
      * RFC2256: descriptive information
@@ -8597,20 +8597,20 @@ public class ZAttrConfig extends Entry {
 
     /**
      * the handler class for mapping groups from GAL source to zimbra GAL
-     * contacts
+     * contacts for external GAL
      *
-     * @return zimbraGalLdapGroupHandlerClass, or "com.zimbra.cs.gal.ZimbraGalGroupHandler" if unset
+     * @return zimbraGalLdapGroupHandlerClass, or null if unset
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1112)
     public String getGalLdapGroupHandlerClass() {
-        return getAttr(Provisioning.A_zimbraGalLdapGroupHandlerClass, "com.zimbra.cs.gal.ZimbraGalGroupHandler");
+        return getAttr(Provisioning.A_zimbraGalLdapGroupHandlerClass, null);
     }
 
     /**
      * the handler class for mapping groups from GAL source to zimbra GAL
-     * contacts
+     * contacts for external GAL
      *
      * @param zimbraGalLdapGroupHandlerClass new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8626,7 +8626,7 @@ public class ZAttrConfig extends Entry {
 
     /**
      * the handler class for mapping groups from GAL source to zimbra GAL
-     * contacts
+     * contacts for external GAL
      *
      * @param zimbraGalLdapGroupHandlerClass new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8643,7 +8643,7 @@ public class ZAttrConfig extends Entry {
 
     /**
      * the handler class for mapping groups from GAL source to zimbra GAL
-     * contacts
+     * contacts for external GAL
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -8658,7 +8658,7 @@ public class ZAttrConfig extends Entry {
 
     /**
      * the handler class for mapping groups from GAL source to zimbra GAL
-     * contacts
+     * contacts for external GAL
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

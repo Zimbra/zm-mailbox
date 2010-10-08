@@ -4872,10 +4872,10 @@ public class LdapProvisioning extends Provisioning {
         return queryExpr;
     }
 
-    private synchronized LdapGalMapRules getGalRules(Domain d) {
+    private synchronized LdapGalMapRules getGalRules(Domain d, boolean isZimbraGal) {
         LdapGalMapRules rules = (LdapGalMapRules) d.getCachedData(DATA_GAL_RULES);
         if (rules == null) {
-            rules = new LdapGalMapRules(d);
+            rules = new LdapGalMapRules(d, isZimbraGal);
             d.setCachedData(DATA_GAL_RULES, rules);
         }
         return rules;
@@ -4934,7 +4934,7 @@ public class LdapProvisioning extends Provisioning {
                                galParams.searchBase(),
                                query,
                                maxResults,
-                               getGalRules(domain),
+                               getGalRules(domain, true),
                                token,
                                result);
         } finally {
@@ -4955,7 +4955,7 @@ public class LdapProvisioning extends Provisioning {
 
         GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(domain, galOp);
 
-        LdapGalMapRules rules = getGalRules(domain);
+        LdapGalMapRules rules = getGalRules(domain, false);
         try {
             return LdapUtil.searchLdapGal(galParams,
                                           galOp,

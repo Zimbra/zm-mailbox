@@ -478,7 +478,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>LDAP bind password for external GAL queries</desc>
 </attr>
 
-<attr id="51" name="zimbraGalLdapFilter" type="string" max="4096" cardinality="single" optionalIn="domain">
+<attr id="51" name="zimbraGalLdapFilter" type="string" max="4096" cardinality="single" optionalIn="domain" callback="GalLdapFilter">
   <desc>LDAP search filter for external GAL search queries</desc>
 </attr>
 
@@ -5003,8 +5003,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="1112" name="zimbraGalLdapGroupHandlerClass" type="string" max="1024" cardinality="single" optionalIn="globalConfig,domain,galDataSource" flags="domainInherited" since="7.0.0">
-  <globalConfigValue>com.zimbra.cs.gal.ZimbraGalGroupHandler</globalConfigValue>
-  <desc>the handler class for mapping groups from GAL source to zimbra GAL contacts</desc>
+  <desc>the handler class for mapping groups from GAL source to zimbra GAL contacts for external GAL</desc>
 </attr>
 
 <attr id="1113" name="zimbraAdminImapImportNumThreads" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="7.0.0">

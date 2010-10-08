@@ -193,7 +193,7 @@ public class Check {
 
         GalParams.ExternalGalParams galParams = new GalParams.ExternalGalParams(attrs, galOp);
 
-        LdapGalMapRules rules = new LdapGalMapRules(Provisioning.getInstance().getConfig());
+        LdapGalMapRules rules = new LdapGalMapRules(Provisioning.getInstance().getConfig(), false);
 
         try {
             SearchGalResult result = null;

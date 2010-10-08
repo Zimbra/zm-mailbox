@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20101007-1512 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101008-1333 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -16365,13 +16365,13 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * Maximum number of entries for zimbraPrefMailTrustedSenderList.
      *
-     * @return zimbraMailTrustedSenderListMaxNumEntries, or 100 if unset
+     * @return zimbraMailTrustedSenderListMaxNumEntries, or 500 if unset
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1139)
     public int getMailTrustedSenderListMaxNumEntries() {
-        return getIntAttr(Provisioning.A_zimbraMailTrustedSenderListMaxNumEntries, 100);
+        return getIntAttr(Provisioning.A_zimbraMailTrustedSenderListMaxNumEntries, 500);
     }
 
     /**

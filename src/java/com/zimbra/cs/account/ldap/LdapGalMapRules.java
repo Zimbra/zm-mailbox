@@ -45,18 +45,22 @@ public class LdapGalMapRules {
         init(rules, valueMaps, groupHandlerClass);
     }
     
-    public LdapGalMapRules(Config config) {
-        init(config);
+    public LdapGalMapRules(Config config, boolean isZimbraGal) {
+        init(config, isZimbraGal);
     }
     
-    public LdapGalMapRules(Domain domain) {
-        init(domain);
+    public LdapGalMapRules(Domain domain, boolean isZimbraGal) {
+        init(domain, isZimbraGal);
     }
 
-    private void init(Entry entry) {
+    private void init(Entry entry, boolean isZimbraGal) {
+        String groupHanlderClass = null;
+        if (!isZimbraGal)
+            groupHanlderClass = entry.getAttr(Provisioning.A_zimbraGalLdapGroupHandlerClass);
+        
         init(entry.getMultiAttr(Provisioning.A_zimbraGalLdapAttrMap),
              entry.getMultiAttr(Provisioning.A_zimbraGalLdapValueMap), 
-             entry.getAttr(Provisioning.A_zimbraGalLdapGroupHandlerClass));
+             groupHanlderClass);
     }
     
     private void init(String[] rules, String[] valueMaps, String groupHandlerClass) {
