@@ -226,23 +226,6 @@ public class DbPool {
         }
     }
     
-    static class ZimbraConnectionFactory
-    extends DriverManagerConnectionFactory {
-        ZimbraConnectionFactory(String connectUri, Properties props) {
-            super(connectUri, props);
-        }
-        
-        /**
-         * Wraps the JDBC connection from the pool with a <tt>DebugConnection</tt>,
-         * which does  <tt>sqltrace</tt> logging.
-         */
-        @Override public java.sql.Connection createConnection() throws SQLException {
-            java.sql.Connection conn = super.createConnection();
-            Db.getInstance().postCreate(conn);
-            return new DebugConnection(conn);
-        }
-    }
-
     /** Initializes the connection pool. */
     private static synchronized PoolingDataSource getPool() {
     	if (isShutdown)
@@ -253,7 +236,7 @@ public class DbPool {
 
         PoolConfig pconfig = Db.getInstance().getPoolConfig();
         sConnectionPool = new GenericObjectPool(null, pconfig.mPoolSize, GenericObjectPool.WHEN_EXHAUSTED_BLOCK, -1, pconfig.mPoolSize);
-        ConnectionFactory cfac = new ZimbraConnectionFactory(pconfig.mConnectionUrl, pconfig.mDatabaseProperties);
+        ConnectionFactory cfac = ZimbraConnectionFactory.getConnectionFactory(pconfig);
 
         boolean defAutoCommit = false, defReadOnly = false;
         new PoolableConnectionFactory(cfac, sConnectionPool, null, null, defReadOnly, defAutoCommit);
