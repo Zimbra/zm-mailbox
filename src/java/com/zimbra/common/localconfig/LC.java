@@ -417,6 +417,7 @@ public class LC {
     public static final KnownKey zimbra_class_datasourcemanager;
     public static final KnownKey zimbra_class_attrmanager;
     public static final KnownKey zimbra_class_soapsessionfactory;
+    public static final KnownKey zimbra_class_dbconnfactory;
 
     // XXX REMOVE AND RELEASE NOTE
     public static final KnownKey data_source_trust_self_signed_certs;
@@ -1352,6 +1353,7 @@ public class LC {
         zimbra_class_datasourcemanager = new KnownKey("zimbra_class_datasourcemanager", "com.zimbra.cs.datasource.DataSourceManager");
         zimbra_class_attrmanager = new KnownKey("zimbra_class_attrmanager", "com.zimbra.cs.account.AttributeManager");
         zimbra_class_soapsessionfactory = new KnownKey("zimbra_class_soapsessionfactory", "com.zimbra.soap.SoapSessionFactory");
+        zimbra_class_dbconnfactory = new KnownKey("zimbra_class_dbconnfactory", "com.zimbra.cs.db.ZimbraConnectionFactory");
 
         data_source_trust_self_signed_certs = new KnownKey("data_source_trust_self_signed_certs", "false");
         data_source_fetch_size = new KnownKey("data_source_fetch_size", "5");
