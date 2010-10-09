@@ -37,6 +37,11 @@ SECTION antispam DEPENDS amavis
   REWRITE conf/salocal.cf.in conf/salocal.cf
   VAR zimbraMtaMyNetworks
   VAR zimbraMtaAntiSpamLockMethod
+  LOCAL antispam_mysql_enabled
+  LOCAL antispam_mysql_host
+  LOCAL antispam_mysql_port
+  LOCAL antispam_mysql_user
+  LOCAL antispam_mysql_password
   RESTART antispam mta
 
 SECTION archiving DEPENDS amavis
