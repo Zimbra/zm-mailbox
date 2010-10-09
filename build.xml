@@ -7,12 +7,15 @@
   <property name="src.java.dir" location="src/java" />
   <property name="build.dir" location="build" />
   <property name="build.classes.dir" location="${build.dir}/classes" />
+  <property name="test.dir" location="${build.dir}/test"/>
+  <property name="test.src.dir" location="src/java-test"/>
+  <property name="test.classes.dir" location="${build.dir}/test-classes"/>
 
   <property name="common.dir" location="../ZimbraCommon"/>
   <property name="common.classes.dir" location="${common.dir}/build/classes"/>
   <property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar"/>
   <property name="common.jars.dir" location="${common.dir}/jars"/>
-	
+
   <property name="xml.schema.dir" location="${build.dir}/schema"/>
 
   <path id="all.java.path">
@@ -46,4 +49,35 @@
   <target name="clean" description="Removes build files and undeploys extension">
     <delete dir="${build.dir}" />
   </target>
+
+  <target name="test-compile" depends="compile">
+    <mkdir dir="${test.classes.dir}"/>
+    <javac srcdir="${test.src.dir}" destdir="${test.classes.dir}"
+      debug="true" classpathref="class.path" target="${javac.target}"/>
+    <copy todir="${test.classes.dir}">
+      <fileset dir="${test.src.dir}" excludes="**/*.java"/>
+    </copy>
+  </target>
+
+  <target name="test" depends="test-compile" description="Run unit tests">
+    <delete dir="${test.dir}" quiet="true"/>
+    <mkdir dir="${test.dir}/output"/>
+    <mkdir dir="${test.dir}/report"/>
+    <junit printsummary="on" haltonfailure="on" tempdir="${test.dir}">
+      <classpath refid="class.path"/>
+      <classpath path="${test.classes.dir}"/>
+      <formatter type="xml"/>
+      <batchtest todir="${test.dir}/output">
+        <fileset dir="${test.src.dir}">
+          <include name="**/*Test.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
+    <junitreport todir="${test.dir}/report">
+      <fileset dir="${test.dir}/output"/>
+      <report todir="${test.dir}/report"/>
+    </junitreport>
+    <echo>Test Report: ${test.dir}/report/index.html</echo>
+  </target>
+
 </project>
