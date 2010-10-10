@@ -22,13 +22,25 @@ import java.util.Iterator;
 
 public class MimeHeaderBlock implements Iterable<MimeHeader> {
     private final ArrayList<MimeHeader> mHeaders;
+    private MimePart mParent;
 
     public MimeHeaderBlock(boolean isMessage) {
+        this(isMessage, null);
+    }
+
+    public MimeHeaderBlock(boolean isMessage, MimePart parent) {
         mHeaders = new ArrayList<MimeHeader>(isMessage ? 20 : 5);
+        mParent = parent;
     }
 
     public MimeHeaderBlock(MimeHeaderBlock headers) {
         mHeaders = new ArrayList<MimeHeader>(headers.mHeaders);
+    }
+
+
+    MimeHeaderBlock setParent(MimePart parent) {
+        mParent = parent;
+        return this;
     }
 
     public boolean isEmpty() {
@@ -66,8 +78,36 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
         return null;
     }
 
+    private class HeaderIterator implements Iterator<MimeHeader> {
+        private final Iterator<MimeHeader> mIterator;
+
+        HeaderIterator(Iterable<MimeHeader> headers) {
+            mIterator = headers.iterator();
+        }
+
+        @Override public boolean hasNext() {
+            return mIterator.hasNext();
+        }
+
+        @Override public MimeHeader next() {
+            return mIterator.next();
+        }
+
+        @Override public void remove() {
+            mIterator.remove();
+            markDirty();
+        }
+    }
+
     @Override public Iterator<MimeHeader> iterator() {
-        return mHeaders.iterator();
+        return new HeaderIterator(mHeaders);
+    }
+
+
+    void markDirty() {
+        if (mParent != null) {
+            mParent.markDirty(false);
+        }
     }
 
     String validateFieldName(String name) {
@@ -86,6 +126,7 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
             for (Iterator<MimeHeader> it = mHeaders.iterator(); it.hasNext(); ) {
                 if (it.next().getName().equalsIgnoreCase(name)) {
                     it.remove();
+                    markDirty();
                 }
             }
             addHeader(name, header);
@@ -95,6 +136,7 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
     public void addHeader(String name, MimeHeader header) {
         if ((name = validateFieldName(name)) != null && header != null) {
             mHeaders.add(header);
+            markDirty();
         }
     }
 

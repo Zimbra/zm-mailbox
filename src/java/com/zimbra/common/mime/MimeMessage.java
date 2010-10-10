@@ -140,6 +140,8 @@ public class MimeMessage extends MimePart {
         }
         body.setParent(this);
         mBody = body;
+        // almost certainly unnecessary due to header transfer, but don't cost nothin'
+        markDirty(true);
         return this;
     }
 
@@ -199,12 +201,12 @@ public class MimeMessage extends MimePart {
         return listMimeParts(parts, "");
     }
 
-    @Override Map<String, MimePart> listMimeParts(Map<String, MimePart> parts, String prefix) {
+    @Override Map<String, MimePart> listMimeParts(Map<String, MimePart> parts, String parentName) {
         boolean isMultipart = mBody instanceof MimeMultipart;
-        boolean topLevel = prefix.equals("");
+        boolean topLevel = parentName.isEmpty();
 
-        parts.put(prefix + (topLevel ? "" : ".") + (isMultipart ? "TEXT" : "1"), mBody);
-        return mBody.listMimeParts(parts, prefix + (isMultipart ? "" : (topLevel ? "" : ".") + "1"));
+        parts.put(parentName + (topLevel ? "" : ".") + (isMultipart ? "TEXT" : "1"), mBody);
+        return mBody.listMimeParts(parts, parentName + (isMultipart ? "" : (topLevel ? "" : ".") + "1"));
     }
 
 
@@ -250,7 +252,7 @@ public class MimeMessage extends MimePart {
 
 
     public static void main(String[] args) throws FileNotFoundException, IOException {
-        MimeMessage mm = new MimeMessage(new File("C:\\Temp\\mail\\24250"));
+        MimeMessage mm = new MimeMessage(new File(args[0] + File.separator + "24250"));
 //        dumpParts(mm);
         mm.setHeader("X-Mailer", "Zimbra 5.0 RC2");
 //        ((MimeBodyPart) mm.getSubpart("1.1")).setTransferEncoding(ContentTransferEncoding.BASE64);
@@ -260,17 +262,21 @@ public class MimeMessage extends MimePart {
 //        ByteUtil.copy(mm.getSubpart("1").getInputStream(), true, System.out, false);
 //        System.out.write(mm.getSubpart("1").getContent());
 
-        mm = new MimeMessage(new File("C:\\Temp\\mail\\digest-attachment-16771"));
-//        dumpParts(mm);
+        mm = new MimeMessage(new File(args[0] + File.separator + "digest-attachment-16771"));
+        dumpParts(mm);
+        MimeMessage extra = new MimeMessage(new File(args[0] + File.separator + "23079"));
+        ((MimeMultipart) mm.getSubpart("TEXT")).addPart(extra.getSubpart("1"), 1);
+        dumpParts(mm);
+        ByteUtil.copy(mm.getInputStream(), true, System.out, false);
 
-        mm = new MimeMessage(new File("C:\\Temp\\mail\\bad-ctype-params-11946"));
+        mm = new MimeMessage(new File(args[0] + File.separator + "bad-ctype-params-11946"));
 //        dumpParts(mm);
         ((MimeBodyPart) mm.getSubpart("1")).setTransferEncoding(ContentTransferEncoding.SEVEN_BIT);
 //        ((MimeBodyPart) mm.getSubpart("1")).setTransferEncoding(ContentTransferEncoding.QUOTED_PRINTABLE);
 //        ByteUtil.copy(mm.getSubpart("1").getRawContentStream(), true, System.out, false);
 //        ByteUtil.copy(mm.getInputStream(), true, System.out, false);
 
-        mm = new MimeMessage(new File("C:\\Temp\\blank-base64-ellen"));
+        mm = new MimeMessage(new File(args[0] + File.separator + "blank-base64-ellen"));
         dumpParts(mm);
 //        InputStream in1 = mm.getSubpart("2").getContentStream(), in2 = null;
 //        try {
@@ -306,10 +312,10 @@ public class MimeMessage extends MimePart {
         ((MimeMultipart) mm.getBodyPart()).setContentType(((MimeMultipart) mm.getBodyPart()).getContentType().setParameter("boundary", "b*o*u*n*d*a*r*y"));
 //        System.out.write(mm.getContent());
 
-        mm = new MimeMessage(new File("C:\\Temp\\mail\\partial-multipart-5775"));
+        mm = new MimeMessage(new File(args[0] + File.separator + "partial-multipart-5775"));
 //        dumpParts(mm);
 
-        mm = new MimeMessage(new File("C:\\Temp\\mail\\zimbra-accent"));
+        mm = new MimeMessage(new File(args[0] + File.separator + "zimbra-accent"));
 //        dumpParts(mm);
         ((MimeBodyPart) mm.getSubpart("1")).setContentType(new ContentType("text/plain; format=flowed; charset=iso-8859-2"));
         ((MimeBodyPart) mm.getSubpart("1")).setTransferEncoding(ContentTransferEncoding.BASE64);
@@ -329,11 +335,11 @@ public class MimeMessage extends MimePart {
 //        dumpParts(mm);
 //        System.out.write(mm.getRawContent());
 
-        mm = MimeMessage.readStructure(new FileInputStream(new File("C:\\Temp\\mail\\report-attachment-6667")), null);
+        mm = MimeMessage.readStructure(new FileInputStream(new File(args[0] + File.separator + "report-attachment-6667")), null);
 //        dumpParts(mm);
 //        ByteUtil.copy(mm.getInputStream(), true, System.out, false);
 
-        mm = new MimeMessage(new File("C:\\Temp\\mail\\report-attachment-6667"));
+        mm = new MimeMessage(new File(args[0] + File.separator + "report-attachment-6667"));
 //        dumpParts(mm);
         ((MimeBodyPart) mm.getSubpart("1")).setTransferEncoding(ContentTransferEncoding.QUOTED_PRINTABLE);
 //        System.out.write(mm.getSubpart("2").getRawContent());
@@ -341,12 +347,12 @@ public class MimeMessage extends MimePart {
 //        ByteUtil.copy(mm.getInputStream(), true, System.out, false);
 
 
-//        mm = new MimeMessage(new File("C:\\Temp\\mail\\brinkster-16512"));
+//        mm = new MimeMessage(new File(args[0] + File.separator + "brinkster-16512"));
 //        dumpParts(mm);
 //
 //        long time = System.currentTimeMillis();
 //        for (int i = 0; i < 10; i++)
-//            new MimeMessage(new File("C:\\Temp\\mail\\brinkster-16512"));
+//            new MimeMessage(new File(args[0] + File.separator + "brinkster-16512"));
 //        System.out.println("NEW: " + (System.currentTimeMillis() - time) / 10 + "ms");
 //
 //        javax.mail.Session jsession = javax.mail.Session.getInstance(new Properties());
@@ -354,7 +360,7 @@ public class MimeMessage extends MimePart {
 //        time = System.currentTimeMillis();
 //        try {
 //            for (int i = 0; i < 10; i++) {
-//                jmm = new javax.mail.internet.MimeMessage(jsession, new FileInputStream("C:\\Temp\\mail\\brinkster-16512"));
+//                jmm = new javax.mail.internet.MimeMessage(jsession, new FileInputStream(args[0] + File.separator + "brinkster-16512"));
 //                Mime.getParts(jmm);
 //            }
 //            System.out.println("OLD: " + (System.currentTimeMillis() - time) / 10 + "ms");

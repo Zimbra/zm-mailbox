@@ -89,11 +89,8 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
         }
     }
 
-    @Override Map<String, MimePart> listMimeParts(Map<String, MimePart> parts, String prefix) {
-        if (!prefix.equals("")) {
-            prefix += '.';
-        }
-
+    @Override Map<String, MimePart> listMimeParts(Map<String, MimePart> parts, String parentName) {
+        String prefix = parentName.isEmpty() ? "" : parentName + ".";
         for (int i = 0; i < mChildren.size(); i++) {
             MimePart child = mChildren.get(i);
             String childName = prefix + (i + 1);
@@ -122,12 +119,14 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
             throw new IndexOutOfBoundsException(Integer.toString(index));
         }
 
+        markDirty(true);
         mp.setParent(this);
         mChildren.add(index - 1, mp);
         return this;
     }
 
     @Override void removeChild(MimePart mp) {
+        markDirty(true);
         mChildren.remove(mp);
     }
 
@@ -176,8 +175,9 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
 
 
     @Override public InputStream getRawContentStream() throws IOException {
-        if (!isDirty())
+        if (!isDirty()) {
             return super.getRawContentStream();
+        }
 
         byte[] startBoundary = ("\r\n--" + mBoundary + "\r\n").getBytes();
 
