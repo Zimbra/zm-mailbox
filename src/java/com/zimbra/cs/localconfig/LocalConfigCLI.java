@@ -195,6 +195,7 @@ public final class LocalConfigCLI {
         }
 
         if (cl.hasOption("l")) {
+            CliUtil.toolSetup("WARN");
             try {
                 reload();
             } catch (ServiceException e) {
@@ -272,7 +273,8 @@ public final class LocalConfigCLI {
     }
 
     public static void main(String[] args) {
-        CliUtil.toolSetup("WARN");
+        // Don't call CliUtil.toolSetup() until it's necessary as JNI libs
+        // aren't in place in some cases during build.
         Logging.setUseZimbraLog(false);
         new LocalConfigCLI().exec(args);
     }
