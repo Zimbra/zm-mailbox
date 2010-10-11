@@ -15,10 +15,14 @@
 
 package com.zimbra.qa.unittest;
 
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.zclient.ZFeatures;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZPrefs;
+import com.zimbra.cs.zclient.ZMailbox.Options;
 
 import junit.framework.TestCase;
 
@@ -27,6 +31,11 @@ extends TestCase {
     
     private static final String USER_NAME = "user1";
 
+    public void setUp()
+    throws Exception {
+        cleanUp();
+    }
+    
     /**
      * Confirms that the prefs accessor works (bug 51384).
      */
@@ -46,5 +55,40 @@ extends TestCase {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFeatures features = mbox.getFeatures();
         features.getPop3Enabled();
+    }
+
+    public void testChangePassword()
+    throws Exception {
+        Account account = TestUtil.getAccount(USER_NAME);
+        Options options = new Options();
+        options.setAccount(account.getName());
+        options.setAccountBy(AccountBy.name);
+        options.setPassword(TestUtil.DEFAULT_PASSWORD);
+        options.setNewPassword("test456");
+        options.setUri(TestUtil.getSoapUrl());
+        ZMailbox.changePassword(options);
+        
+        try {
+            TestUtil.getZMailbox(USER_NAME);
+        } catch (SoapFaultException e) {
+            assertEquals(AuthFailedServiceException.AUTH_FAILED, e.getCode());
+        }
+    }
+    
+    public void tearDown()
+    throws Exception {
+        cleanUp();
+    }
+    
+    private void cleanUp()
+    throws Exception {
+        Account account = TestUtil.getAccount(USER_NAME);
+        account.setPassword(TestUtil.DEFAULT_PASSWORD);
+    }
+    
+    public static void main(String[] args)
+    throws Exception {
+        TestUtil.cliSetup();
+        TestUtil.runTest(TestZClient.class);
     }
 }

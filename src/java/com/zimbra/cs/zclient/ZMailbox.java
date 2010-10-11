@@ -459,7 +459,7 @@ public class ZMailbox implements ToZJSONObject {
     private ZChangePasswordResult changePassword(String key, AccountBy by, String oldPassword, String newPassword, String virtualHost) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling changePassword", null);
 
-        Account account = new Account(Account.By.valueOf(by.toString()), key);
+        Account account = new Account(SoapConverter.TO_SOAP_ACCOUNT_BY.apply(by), key);
         ChangePasswordRequest req = new ChangePasswordRequest(account, oldPassword, newPassword);
         req.setVirtualHost(virtualHost);
         
