@@ -31,7 +31,6 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
-import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.Versions;
 import com.zimbra.cs.extension.ExtensionUtil;
@@ -169,13 +168,6 @@ public class Zimbra {
             WellKnownTimeZones.loadFromFile(tzFile);
         } catch (Throwable t) {
             Zimbra.halt("Unable to load timezones from " + tzFilePath, t);
-        }
-
-        try {
-            DataSourceManager.init();
-        }
-        catch (IOException e) {
-            Zimbra.halt("Unable to load datasource config", e);
         }
 
         Provisioning prov = Provisioning.getInstance();
