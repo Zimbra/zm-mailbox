@@ -1,7 +1,42 @@
+I Spnego Flow
 
-Spnego configuration tasks.
+1. user login to Windows as a domain user or a local user
+
+2. user browses to the regular Zimbra entry page, e.g. http://mail.company.com
+
+3. a domain(e.g. zimbra.com) gets resolved by virtual host name (mail.company.com)
+
+4. zimbraWebClientLoginURL on domain redirects user to a preauth jsp under a spnego protected webapp/URL.
+
+5. spnego authentication happens (by jetty)
+
+6. if spnego auth succeeds, goto 7, if failed goto step 13
+   Windows local user will fail.
+   Windows domain user will pass, in the rare case spnego auth can fail for a domain user,
+   (e.g. jetty can't contact the KDC), the flow goes to step 13.
+
+7. user is redirected to the Zimbra preauth servlet
+
+8. Zimbra preauth happens and succeeds
+
+9. user gets redirected to the Zimbra mail app, all is well.
+
+10. user clicks on the "logout" button, and gets redirected to the zimbraWebClientLogOutURL 
+    configured on the domain.
+
+11. the logout URL points to the page UI, which has a "Launch" button
+
+12. user clicks on "Launch", and gets redirected to the regular Zimbra entry page (goto step 2)
+ 
+13. (spnego auth failed) user is redirected to the error URL, which we set to {regular-Zimbra_entry}/?igoreLoginURL=1
+    e.g. http://mail.company.com/?igoreLoginURL=1
+
+14. zimbraWebClientLoginURL is ignored because of the "?igoreLoginURL=1", and user sees the Zimbra user/pass page.
+
+15. user enters his Zimbra user/pass to login, all is well.
 
 
+II Configuration
 ======================================
 1. Create and Set Up the Keytab File
 ======================================
