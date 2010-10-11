@@ -425,7 +425,7 @@ public abstract class ArchiveFormatter extends Formatter {
             long miSize = mi.getSize();
 
             if (miSize == 0 && mi.getDigest() != null) {
-                ZimbraLog.misc.error("blob db size 0 for item %d", mi.getId());
+                ZimbraLog.misc.debug("blob db size 0 for item %d", mi.getId());
                 return aos;
             }
             try {
