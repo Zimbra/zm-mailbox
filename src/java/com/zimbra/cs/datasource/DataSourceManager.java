@@ -14,16 +14,6 @@
  */
 package com.zimbra.cs.datasource;
 
-import java.io.File;
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
@@ -32,16 +22,16 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.DataSource.DataImport;
 import com.zimbra.cs.account.DataSourceConfig;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.DataSource.DataImport;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.datasource.imap.ImapSync;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbScheduledTask;
 import com.zimbra.cs.db.DbPool.Connection;
+import com.zimbra.cs.db.DbScheduledTask;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.gal.GalImport;
 import com.zimbra.cs.mailbox.Folder;
@@ -50,7 +40,15 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.util.Zimbra;
 
+import java.io.File;
+import java.lang.reflect.Constructor;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+
+import static com.zimbra.common.util.TaskUtil.newDaemonThreadFactory;
 import static java.util.Collections.newSetFromMap;
+import static java.util.concurrent.Executors.newCachedThreadPool;
 
 public class DataSourceManager {
     
@@ -66,6 +64,8 @@ public class DataSourceManager {
     private static final Set<Object> sManagedDataSources = newConcurrentHashSet();
 
     private final DataSourceConfig config;
+
+    private static final ExecutorService executor = newCachedThreadPool(newDaemonThreadFactory("ImportData"));
 
     private static <E> Set<E> newConcurrentHashSet() {
         return newSetFromMap(new ConcurrentHashMap<E, Boolean>());
@@ -240,6 +240,31 @@ public class DataSourceManager {
         }
         
         return importStatus;
+    }
+
+    public static void asyncImportData(final DataSource ds) {
+        ZimbraLog.datasource.debug("Requesting async import for DataSource %s", ds.getId());
+
+        executor.submit(new Runnable() {
+            public void run() {
+                try {
+                    // todo exploit comonality with DataSourceTask
+                    ZimbraLog.clearContext();
+                    ZimbraLog.addMboxToContext(ds.getMailbox().getId());
+                    ZimbraLog.addAccountNameToContext(ds.getAccount().getName());
+                    ZimbraLog.addDataSourceNameToContext(ds.getName());
+                    ZimbraLog.datasource.debug("Running on-demand import for DataSource %s", ds.getId());
+
+                    DataSourceManager.importData(ds);
+
+                } catch (Exception e) {
+                    ZimbraLog.datasource.warn("On-demand DataSource import failed.", e);
+                }
+                finally {
+                    ZimbraLog.clearContext();
+                }
+            }
+        });
     }
 
     public static void importData(DataSource ds) throws ServiceException {

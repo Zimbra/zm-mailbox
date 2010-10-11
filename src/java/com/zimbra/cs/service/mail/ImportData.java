@@ -19,7 +19,6 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
@@ -40,7 +39,7 @@ public class ImportData extends MailDocumentHandler {
 
         for (Element elem : request.listElements()) {
             DataSource ds;
-            
+
             String name, id = elem.getAttribute(MailConstants.A_ID, null);
             if (id != null) {
                 ds = prov.get(account, DataSourceBy.id, id);
@@ -55,13 +54,13 @@ public class ImportData extends MailDocumentHandler {
             } else {
                 throw ServiceException.INVALID_REQUEST("must specify either 'id' or 'name'", null);
             }
-            
+
             ZimbraLog.addDataSourceNameToContext(ds.getName());
-            DataSourceManager.importData(ds);
+            DataSourceManager.asyncImportData(ds);
         }
-        
+
         Element response = zsc.createElement(MailConstants.IMPORT_DATA_RESPONSE);
         return response;
     }
-    
+
 }
