@@ -2,9 +2,9 @@
 Spnego configuration tasks.
 
 
-==========================================
-1. Creating and Setting Up the Keytab File
-==========================================
+======================================
+1. Create and Set Up the Keytab File
+======================================
 
 On the windows active domain controller:
 
@@ -82,9 +82,16 @@ On the windows active domain controller:
 Repeat steps (A) to (D) for each zimbra server.
 
 
-=============================================
-2. Preparing Domain for Spnego Authentication
-=============================================
+=====================
+2. Configure Zimbra
+=====================
+- For production system, do 2.1, 2.2, 2.3.
+
+- For dev system: do "ant spnego-deploy" under ZimbraServer.
+
+
+2.1. Configure Domain
+---------------------
 
 (A) Setup preauth for the domain.
     - Generate a preauth key using zmprov gdpak
@@ -111,11 +118,8 @@ Repeat steps (A) to (D) for each zimbra server.
     
     
 (D) Setup logout URL for the domain
-    zmprov md {domain} zimbraWebClientLogoutURL 
+    zmprov md {domain} zimbraWebClientLogoutURL {public URL for the domain}/?sso=1
     This is the URL to go to when user clicks on the :logout" button.
-    
-    It can be set to:
-    {public URL for the domain}/?sso=1
 
 
 (E) Setup kerberos Realm for the domain
@@ -127,9 +131,8 @@ Repeat steps (A) to (D) for each zimbra server.
     zmprov md zimbra.com zimbraAuthKerberos5Realm SPNEGO.LOCAL
 
 
-===========================================
-3. Configure Spnego for the Zimbra Instance
-===========================================
+2.2. Configure Global Config
+----------------------------
 
 We support only one REALM/KDC per Zimbra installation.
 
@@ -148,14 +151,18 @@ zimbraSpnegoAuthKDC         : address of the KDC for the realm
 
 zimbraSpnegoAuthRealm       : the kerberos realm
 
+
+2.3. Configure Servers
+----------------------
 On each zimbra server:
 zimbraSpnegoAuthTargetName  : the name for the service user in 1. (A), e.g. HTTP/server1.spnego.local
+
 zimbraSpnegoAuthPrincipal   : {zimbraSpnegoAuthTargetName}@{zimbraSpnegoAuthRealm}
   
 
-=========================
-4. Configure your Browser
-=========================
+===========================
+3. Configure Your Browser
+===========================
 Firefox:
 * browse to about:config and agree to the warnings
 * search through to find the 'network' settings
@@ -175,9 +182,9 @@ IE:
 * close IE then reopen and browse to your spengo protected resource
 
 
-==============
-5. Test it out
-==============
+================
+4. Test it out
+================
 - On a Windows box, loging to the domain as a domain user
   
   Your ticket as a domain user will be saved on the computer.
