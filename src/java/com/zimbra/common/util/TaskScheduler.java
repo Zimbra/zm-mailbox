@@ -22,9 +22,10 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.zimbra.common.util.StringUtil.isNullOrEmpty;
+import static com.zimbra.common.util.TaskUtil.newDaemonThreadFactory;
 
 /**
  * Runs a <tt>Callable</tt> task either once or at a given interval.  Subsequent
@@ -33,36 +34,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @param <V> the result type returned by the task 
  */
 public class TaskScheduler<V> {
-    
-    /**
-     * A modified version of java.util.concurrent.Executors.DefaultThreadFactory
-     * which creates daemon threads instead of user threads.
-     */
-    static class TaskSchedulerThreadFactory implements ThreadFactory {
-        final ThreadGroup mGroup;
-        final AtomicInteger mThreadNumber = new AtomicInteger(1);
-        String mNamePrefix;
-
-        TaskSchedulerThreadFactory(String name) {
-            SecurityManager s = System.getSecurityManager();
-            mGroup = (s != null)? s.getThreadGroup() :
-                Thread.currentThread().getThreadGroup();
-            mNamePrefix = "ScheduledTask-";
-            if (!StringUtil.isNullOrEmpty(name)) {
-                mNamePrefix += name + "-"; 
-            }
-        }
-
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(mGroup, r, 
-                mNamePrefix + mThreadNumber.getAndIncrement(),
-                0);
-            t.setDaemon(true);
-            if (t.getPriority() != Thread.NORM_PRIORITY)
-                t.setPriority(Thread.NORM_PRIORITY);
-            return t;
-        }
-    }
 
     /**
      * <tt>Callable</tt> wrapper that takes care of catching exceptions and
@@ -145,7 +116,8 @@ public class TaskScheduler<V> {
      * @see ScheduledThreadPoolExecutor#setMaximumPoolSize(int)
      */
     public TaskScheduler(String name, int corePoolSize, int maximumPoolSize) {
-        mThreadPool = new ScheduledThreadPoolExecutor(corePoolSize, new TaskSchedulerThreadFactory(name));
+        name = isNullOrEmpty(name) ? "ScheduledTask" : "ScheduledTask-" + name;
+        mThreadPool = new ScheduledThreadPoolExecutor(corePoolSize, newDaemonThreadFactory(name));
         mThreadPool.setMaximumPoolSize(maximumPoolSize);
     }
 

@@ -17,7 +17,12 @@ package com.zimbra.common.util;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.zimbra.common.util.StringUtil.isNullOrEmpty;
 
 public final class TaskUtil {
     private static Timer timer;
@@ -44,6 +49,43 @@ public final class TaskUtil {
             // the call was completed.
             task.stop();
             Thread.interrupted();
+        }
+    }
+
+    /**
+     * Like {@link Executors#defaultThreadFactory()} except it creates daemon threads
+     * and allows specifying the thread name prefix.
+     *
+     * @param threadNamePrefix a counter is appended to this value to generate a name for each new thread
+     * @return the thread factory
+     */
+    public static ThreadFactory newDaemonThreadFactory(final String threadNamePrefix) {
+        return new DaemonThreadFactory(threadNamePrefix);
+    }
+
+    /**
+     * A modified version of {@link Executors.DefaultThreadFactory}
+     * which creates daemon threads instead of user threads and allows specifying
+     * the thread name prefix.
+     */
+    public static class DaemonThreadFactory implements ThreadFactory {
+        final AtomicInteger threadNumber = new AtomicInteger(1);
+        final ThreadGroup group;
+        final String namePrefix;
+
+        DaemonThreadFactory(String name) {
+            SecurityManager s = System.getSecurityManager();
+            group = s != null ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
+            namePrefix = (isNullOrEmpty(name) ? "pool" : name) + "-";
+        }
+
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement(), 0);
+            if (!t.isDaemon())
+                t.setDaemon(true);
+            if (t.getPriority() != Thread.NORM_PRIORITY)
+                t.setPriority(Thread.NORM_PRIORITY);
+            return t;
         }
     }
 
