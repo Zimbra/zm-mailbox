@@ -601,7 +601,54 @@
         </war>
     </target>
 
-    <target name="service-deploy" depends="refresh-opt-zimbra,deploy-war"
+    <target name="spnego-deploy" depends="spnego-war">
+    	<antcall target="stop-webserver"/>
+    	
+    	<delete file="${jetty.home.dir}/webapps/spnego.war"/>
+    	
+        <delete dir="${jetty.home.dir}/webapps/spnego"/>
+        <mkdir dir='${jetty.home.dir}/webapps/spnego'/>
+    	<mkdir dir="${jetty.home.dir}/work/spnego"/>
+    	
+        <copy file="${spnego-warfile}" todir="${jetty.home.dir}/webapps"/>
+        <unzip dest="${jetty.home.dir}/webapps/spnego" src="${jetty.home.dir}/webapps/${spnego-warfilename}"/>
+    	
+    	<!-- rewrite variables -->
+    	<replace file="${jetty.home.dir}/webapps/spnego/WEB-INF/web.xml">
+    	    <replacefilter token="%%zimbraSpnegoAuthRealm%%" value="SPNEGO.LOCAL"/>
+    	</replace>
+        <replace file="${jetty.home.dir}/webapps/spnego/krb5.ini">
+            <replacefilter token="%%zimbraSpnegoAuthRealm%%" value="SPNEGO.LOCAL"/>
+        	<replacefilter token="%%zimbraSpnegoAuthKDC%%" value="10.114.13.137"/>
+        	<replacefilter token="%%zimbraSpnegoAuthAdminServer%%" value="10.114.13.137"/>
+        </replace>
+        <replace file="${jetty.home.dir}/webapps/spnego/spnego.conf">
+            <replacefilter token="%%zimbraSpnegoAuthPrincipal%%" value="HTTP/jj-server.spnego.local@SPNEGO.LOCAL"/>
+        </replace>
+        <replace file="${jetty.home.dir}/webapps/spnego/spnego.properties">
+            <replacefilter token="%%zimbraSpnegoAuthTargetName%%" value="HTTP/jj-server.spnego.local"/>
+        </replace>
+    	
+        <replace file="${zimbra.home.dir}/bin/jetty">
+            <replacefilter token="zimbraSpnegoAuthEnabled: FALSE" value="zimbraSpnegoAuthEnabled: TRUE"/>
+        </replace>
+    	<chmod file="${zimbra.home.dir}/bin/jetty" perm="+x" />
+        	
+        <replace file="${jetty.conf.dir}/jetty.xml">
+            <replacefilter token="&lt;!-- zimbraSpnegoAuthEnabled" value=""/>
+        	<replacefilter token="zimbraSpnegoAuthEnabled --&gt;" value=""/>
+        </replace>
+    	
+    	<!-- move files to jetty/etc -->
+    	<move file="${jetty.home.dir}/webapps/spnego/krb5.ini" todir="${jetty.conf.dir}"/>
+    	<move file="${jetty.home.dir}/webapps/spnego/spnego.conf" todir="${jetty.conf.dir}"/>
+    	<move file="${jetty.home.dir}/webapps/spnego/spnego.properties" todir="${jetty.conf.dir}"/>
+    	
+    	<antcall target="start-webserver"/>
+    	
+    </target>
+        	
+	<target name="service-deploy" depends="refresh-opt-zimbra,deploy-war"
             description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
     <target name="deploy-war" depends="stop-jetty,war,copy-war,start-jetty"/>
@@ -670,6 +717,7 @@
         <antcall target="start-webserver"/>
     </target>
 
+	<!-- target called by the production build -->
     <target name="dev-dist" depends="war,spnego-war,dev-dist-unix,dev-dist-jetty,choose-db-schema,generate-ldap-config" description="Initializes build/dist">
         <!-- bin, libexec -->
         <copy todir="${dist.dir}/bin" overwrite="true">
