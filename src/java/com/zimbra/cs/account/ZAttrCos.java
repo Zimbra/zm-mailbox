@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101008-1333 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101011-1015 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -15722,6 +15722,83 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * email address identifying the default device for receiving reminders
+     * for appointments and tasks
+     *
+     * @return zimbraPrefCalendarReminderDeviceEmail, or null if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1140)
+    public String getPrefCalendarReminderDeviceEmail() {
+        return getAttr(Provisioning.A_zimbraPrefCalendarReminderDeviceEmail, null);
+    }
+
+    /**
+     * email address identifying the default device for receiving reminders
+     * for appointments and tasks
+     *
+     * @param zimbraPrefCalendarReminderDeviceEmail new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1140)
+    public void setPrefCalendarReminderDeviceEmail(String zimbraPrefCalendarReminderDeviceEmail) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderDeviceEmail, zimbraPrefCalendarReminderDeviceEmail);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * email address identifying the default device for receiving reminders
+     * for appointments and tasks
+     *
+     * @param zimbraPrefCalendarReminderDeviceEmail new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1140)
+    public Map<String,Object> setPrefCalendarReminderDeviceEmail(String zimbraPrefCalendarReminderDeviceEmail, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderDeviceEmail, zimbraPrefCalendarReminderDeviceEmail);
+        return attrs;
+    }
+
+    /**
+     * email address identifying the default device for receiving reminders
+     * for appointments and tasks
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1140)
+    public void unsetPrefCalendarReminderDeviceEmail() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderDeviceEmail, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * email address identifying the default device for receiving reminders
+     * for appointments and tasks
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1140)
+    public Map<String,Object> unsetPrefCalendarReminderDeviceEmail(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderDeviceEmail, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
      * used. Orig desc: When to send the first reminder for an event.
      *
@@ -16102,11 +16179,13 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether or not email reminders for appointments and tasks are enabled
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: whether or not email reminders for appointments and
+     * tasks are enabled
      *
      * @return zimbraPrefCalendarReminderSendEmail, or true if unset
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=576)
     public boolean isPrefCalendarReminderSendEmail() {
@@ -16114,12 +16193,14 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether or not email reminders for appointments and tasks are enabled
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: whether or not email reminders for appointments and
+     * tasks are enabled
      *
      * @param zimbraPrefCalendarReminderSendEmail new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=576)
     public void setPrefCalendarReminderSendEmail(boolean zimbraPrefCalendarReminderSendEmail) throws com.zimbra.common.service.ServiceException {
@@ -16129,13 +16210,15 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether or not email reminders for appointments and tasks are enabled
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: whether or not email reminders for appointments and
+     * tasks are enabled
      *
      * @param zimbraPrefCalendarReminderSendEmail new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=576)
     public Map<String,Object> setPrefCalendarReminderSendEmail(boolean zimbraPrefCalendarReminderSendEmail, Map<String,Object> attrs) {
@@ -16145,11 +16228,13 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether or not email reminders for appointments and tasks are enabled
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: whether or not email reminders for appointments and
+     * tasks are enabled
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=576)
     public void unsetPrefCalendarReminderSendEmail() throws com.zimbra.common.service.ServiceException {
@@ -16159,12 +16244,14 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether or not email reminders for appointments and tasks are enabled
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: whether or not email reminders for appointments and
+     * tasks are enabled
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=576)
     public Map<String,Object> unsetPrefCalendarReminderSendEmail(Map<String,Object> attrs) {

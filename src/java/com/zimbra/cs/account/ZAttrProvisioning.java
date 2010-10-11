@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101008-1333 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101011-1015 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5661,6 +5661,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarNotifyDelegatedChanges = "zimbraPrefCalendarNotifyDelegatedChanges";
 
     /**
+     * email address identifying the default device for receiving reminders
+     * for appointments and tasks
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1140)
+    public static final String A_zimbraPrefCalendarReminderDeviceEmail = "zimbraPrefCalendarReminderDeviceEmail";
+
+    /**
      * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
      * used. Orig desc: When to send the first reminder for an event.
      *
@@ -5705,9 +5714,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarReminderMobile = "zimbraPrefCalendarReminderMobile";
 
     /**
-     * whether or not email reminders for appointments and tasks are enabled
+     * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
+     * used. Orig desc: whether or not email reminders for appointments and
+     * tasks are enabled
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 5.0.0
      */
     @ZAttr(id=576)
     public static final String A_zimbraPrefCalendarReminderSendEmail = "zimbraPrefCalendarReminderSendEmail";
