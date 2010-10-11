@@ -149,6 +149,7 @@ public class ZInvite implements ToZJSONObject {
         private ZFreeBusyStatus mActualFreeBusyStatus;
         private ZTransparency mTransparency;
         private boolean mIsAllDay;
+        private boolean mDraft;
         private String mName;
         private String mLocation;
         private List<String> mCategories;
@@ -194,6 +195,7 @@ public class ZInvite implements ToZJSONObject {
             mActualFreeBusyStatus = ZFreeBusyStatus.fromString(e.getAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, ZFreeBusyStatus.B.name()));
             mTransparency = ZTransparency.fromString(e.getAttribute(MailConstants.A_APPT_TRANSPARENCY, "O"));
             mIsAllDay = e.getAttributeBool(MailConstants.A_CAL_ALLDAY, false);
+            mDraft = e.getAttributeBool(MailConstants.A_CAL_DRAFT, false);
             mName = e.getAttribute(MailConstants.A_NAME, null);
             mLocation = e.getAttribute(MailConstants.A_CAL_LOCATION, null);
             mMethod = ZMethod.fromString(e.getAttribute(MailConstants.A_CAL_METHOD, ZMethod.PUBLISH.name()));
@@ -296,6 +298,7 @@ public class ZInvite implements ToZJSONObject {
             if (mActualFreeBusyStatus != null) compEl.addAttribute(MailConstants.A_APPT_FREEBUSY_ACTUAL, mActualFreeBusyStatus.name());
             if (mTransparency != null) compEl.addAttribute(MailConstants.A_APPT_TRANSPARENCY, mTransparency.name());
             if (mIsAllDay) compEl.addAttribute(MailConstants.A_CAL_ALLDAY, mIsAllDay);
+            if (mDraft) compEl.addAttribute(MailConstants.A_CAL_DRAFT, mDraft);
             if (mName != null) compEl.addAttribute(MailConstants.A_NAME, mName);
             if (mLocation != null) compEl.addAttribute(MailConstants.A_CAL_LOCATION, mLocation);
             if (mCategories != null) {
@@ -638,6 +641,7 @@ public class ZInvite implements ToZJSONObject {
             zjo.put("actualFreeBusyStatus", mActualFreeBusyStatus.name());
             zjo.put("transparency", mTransparency.name());
             zjo.put("isAllDay", mIsAllDay);
+            zjo.put("draft", mDraft);
             zjo.put("name", mName);
             zjo.put("method", mMethod.name());
             zjo.put("compNum", mComponentNum);

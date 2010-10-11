@@ -1205,7 +1205,16 @@ public class Invite {
             mFlags &= ~APPT_FLAG_HAS_ATTACHMENT;
         }
     }
-    
+
+    public boolean isDraft() { return ((mFlags & APPT_FLAG_DRAFT)!=0); }
+    public void setDraft(boolean draft) {
+        if (draft) {
+            mFlags |= APPT_FLAG_DRAFT;
+        } else {
+            mFlags &= ~APPT_FLAG_DRAFT;
+        }
+    }
+
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("{ ");
@@ -1238,6 +1247,8 @@ public class Invite {
         sb.append(", recurId: ").append(getRecurId());
         sb.append(", DTStamp: ").append(mDTStamp);
         sb.append(", mSeqNo ").append(mSeqNo);
+        if (isDraft())
+            sb.append(", draft: ").append(true);
 
         for (Alarm alarm : mAlarms) {
             sb.append(", alarm: ").append(alarm.toString());
@@ -1262,7 +1273,8 @@ public class Invite {
     public static final int APPT_FLAG_HASALARM        = 0x10;  // obsolete
     public static final int APPT_FLAG_ISRECUR         = 0x20;
     public static final int APPT_FLAG_NEEDS_REPLY     = 0x40;  // obsolete
-    public static final int APPT_FLAG_HAS_ATTACHMENT  = 0x80;  // obsolete
+    public static final int APPT_FLAG_HAS_ATTACHMENT  = 0x80;
+    public static final int APPT_FLAG_DRAFT           = 0x100;  // save-not-send; attendees haven't been notified
     
     protected CalendarItem mCalItem = null;
     

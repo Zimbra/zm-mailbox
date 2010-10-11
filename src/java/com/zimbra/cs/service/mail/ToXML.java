@@ -1544,6 +1544,9 @@ public class ToXML {
 
             if (allDay)
                 e.addAttribute(MailConstants.A_CAL_ALLDAY, true);
+
+            if (invite.isDraft())
+                e.addAttribute(MailConstants.A_CAL_DRAFT, true);
         }
 
         return e;

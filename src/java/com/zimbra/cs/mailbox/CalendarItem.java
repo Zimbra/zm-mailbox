@@ -426,6 +426,10 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             firstInvite.setHasAttachment(false);
             flags &= ~Flag.BITMASK_ATTACHED;
         }
+        if (firstInvite.isDraft())
+            flags |= Flag.BITMASK_DRAFT;
+        else
+            flags &= ~Flag.BITMASK_DRAFT;
 
         byte type = firstInvite.isEvent() ? TYPE_APPOINTMENT : TYPE_TASK;
 
@@ -468,7 +472,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             data.indexId  = id;
         data.imapId   = id;
         data.date     = mbox.getOperationTimestamp();
-        data.flags    = flags & Flag.FLAGS_GENERIC;
+        data.flags    = flags & (Flag.FLAGS_CALITEM | Flag.FLAGS_GENERIC);
         data.tags     = tags;
         data.subject  = DbMailItem.truncateSubjectToMaxAllowedLength(subject);
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, custom, uid, startTime, endTime, recur,
@@ -1828,20 +1832,28 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             move(folder);
         }
 
-        boolean hasAttachments = false;
-        boolean hasRequests = false;
+        // Check if there are any surviving non-cancel invites after applying the update.
+        // Also check for changes in flags.
+        int oldFlags = mData.flags;
+        int newFlags = mData.flags & ~Flag.BITMASK_ATTACHED & ~Flag.BITMASK_DRAFT;
+        boolean hasSurvivingRequests = false;
         for (Invite cur : mInvites) {
             String method = cur.getMethod();
             if (method.equals(ICalTok.REQUEST.toString()) ||
                 method.equals(ICalTok.PUBLISH.toString())) {
-                hasRequests = true;
-            }
-            if (cur.hasAttachment()) {
-                hasAttachments = true;
+                hasSurvivingRequests = true;
+                if (cur.hasAttachment())
+                    newFlags |= Flag.BITMASK_ATTACHED;
+                if (cur.isDraft())
+                    newFlags |= Flag.BITMASK_DRAFT;
             }
         }
+        if (newFlags != oldFlags) {
+            mData.flags = newFlags;
+            modifiedCalItem = true;
+        }
 
-        if (!hasRequests) {
+        if (!hasSurvivingRequests) {
             if (!isCancel)
                 ZimbraLog.calendar.warn(
                         "Invalid state: deleting calendar item " + getId() +
@@ -1873,11 +1885,6 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                                         pm != null ? pm.getMimeMessage() : null,
                                         false,
                                         newInvite.getPartStat());
-                    }
-                    if (hasAttachments) {
-                        mData.flags |= Flag.BITMASK_ATTACHED;
-                    } else {
-                        mData.flags &= ~Flag.BITMASK_ATTACHED;
                     }
 
                     // Did the appointment have a blob before the change?

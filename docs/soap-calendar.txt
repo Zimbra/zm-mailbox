@@ -118,6 +118,7 @@
             [noBlob="1"]        // set if invite has no blob data, i.e. all data is in db metadata
             [changes="comma-separated list of changed data in an updated invite"]
                 // Possible values are "subject", "location", "time" (start time, end time, or duration), and "recurrence".
+            [draft="0|1"]       // set to 1 if invite has changes that haven't been sent to attendees; for organizer only
         >
 
            <s DATETIME> // Start date-time (required)
@@ -585,6 +586,7 @@ OR
 //      status="TENT|CONF|CANC"
 //      ptst="NE|TE|AC|DE|DG"
 //      [allDay="1"]             // if set, this is an "all day" appointment
+//      [draft="1"]              // set if invite has changes that haven't been sent to attendees; for organizer only
 //      [otherAtt="1"]           // if set, this appointment has other attendees
 //      [alarm="1"] [recur="1"]
 //      [name="NAME"] [loc="LOCATION"]
@@ -772,6 +774,7 @@ OR
             [ridZ="YYYYMMDD[ThhmmssZ]"]   // RECURRENCE-ID in "Z" (UTC) timezone, if this is an exception
             [changes="comma-separated list of changed data in an updated invite"]
                 // Possible values are "subject", "location", "time" (start time, end time, or duration), and "recurrence".
+            [draft="0|1"]  // set to 1 if invite has changes that haven't been sent to attendees; for organizer only
            >
 
            <s DATETIME

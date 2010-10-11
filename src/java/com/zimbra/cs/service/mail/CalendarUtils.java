@@ -1112,6 +1112,14 @@ public class CalendarUtils {
         // organizer in this invite or not.
         newInv.setIsOrganizer(account);
 
+        // draft flag
+        // True means invite has changes that haven't been sent to attendees.
+        // Not supported for cancels.
+        if (!newInv.isCancel()) {
+            boolean draft = element.getAttributeBool(MailConstants.A_CAL_DRAFT, false);
+            newInv.setDraft(draft);
+        }
+
         // RECUR
         Element recur = element.getOptionalElement(MailConstants.A_CAL_RECUR);
         if (recur != null) {

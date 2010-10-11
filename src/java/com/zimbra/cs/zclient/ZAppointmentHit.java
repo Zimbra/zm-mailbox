@@ -104,6 +104,7 @@ public class ZAppointmentHit implements ZSearchHit {
     private String mClass;
     private String mPartStatus;
     private boolean mIsAllDay;
+    private boolean mDraft;
     private boolean mIsOtherAttendees;
     private boolean mIsAlarm;
     private boolean mIsRecurring;
@@ -178,6 +179,7 @@ public class ZAppointmentHit implements ZSearchHit {
         String classProp = e.getAttribute(MailConstants.A_CAL_CLASS, null);
         String pstatus = e.getAttribute(MailConstants.A_CAL_PARTSTAT, null);
         boolean isAllDay = e.getAttributeBool(MailConstants.A_CAL_ALLDAY, false);
+        boolean isDraft = e.getAttributeBool(MailConstants.A_CAL_DRAFT, false);
         boolean otherAtt = e.getAttributeBool(MailConstants.A_CAL_OTHER_ATTENDEES, false);
         boolean isAlarm = e.getAttributeBool(MailConstants.A_CAL_ALARM, false);
         boolean isRecurring = e.getAttributeBool(MailConstants.A_CAL_RECUR, false);
@@ -243,6 +245,8 @@ public class ZAppointmentHit implements ZSearchHit {
             appt.mConvId = convId;
             appt.mHitDate = hitDate;
             appt.mIsTask = isTask;
+
+            appt.mDraft = inst.getAttributeBool(MailConstants.A_CAL_DRAFT, isDraft);
 
             appt.mIsAllDay = inst.getAttributeBool(MailConstants.A_CAL_ALLDAY, isAllDay);
             appt.mTimeZoneOffset = inst.getAttributeLong(MailConstants.A_CAL_TZ_OFFSET,  appt.mTimeZoneOffset);
@@ -406,6 +410,7 @@ public class ZAppointmentHit implements ZSearchHit {
         jo.put("class", mClass);
         jo.put("participantStatus", mPartStatus);
         jo.put("allDay", mIsAllDay);
+        jo.put("draft", mDraft);
         jo.put("otherAttendees", mIsOtherAttendees);
         jo.put("alarm", mIsAlarm);
         jo.put("recurring", mIsRecurring);
@@ -469,6 +474,7 @@ public class ZAppointmentHit implements ZSearchHit {
     public boolean isPartStatusTentative() { return PSTATUS_TENTATIVE.equals(mPartStatus); }
 
     public boolean isAllDay() { return mIsAllDay; }
+    public boolean isDraft() { return mDraft; }
 
     public boolean isOtherAttendees() { return mIsOtherAttendees; }
 

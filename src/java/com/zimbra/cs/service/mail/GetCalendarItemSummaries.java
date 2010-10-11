@@ -38,7 +38,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.calendar.Geo;
-import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
@@ -302,6 +301,8 @@ public class GetCalendarItemSummaries extends CalendarRequest {
 
                             if (defaultInvite.isAllDayEvent() != inv.isAllDayEvent())
                                 instElt.addAttribute(MailConstants.A_CAL_ALLDAY, inv.isAllDayEvent());
+                            if (defaultInvite.isDraft() != inv.isDraft())
+                                instElt.addAttribute(MailConstants.A_CAL_DRAFT, inv.isDraft());
                             if (defaultInvite.isRecurrence() != inv.isRecurrence())
                                 instElt.addAttribute(MailConstants.A_CAL_RECUR, inv.isRecurrence());
                         } else {
@@ -402,6 +403,8 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                     calItemElem.addAttribute(newFormat ? MailConstants.A_CAL_NEW_DURATION : MailConstants.A_CAL_DURATION, defDurationMsecs);
                 if (defaultInvite.isAllDayEvent())
                     calItemElem.addAttribute(MailConstants.A_CAL_ALLDAY, defaultInvite.isAllDayEvent());
+                if (defaultInvite.isDraft())
+                    calItemElem.addAttribute(MailConstants.A_CAL_DRAFT, defaultInvite.isDraft());
                 if (defaultInvite.isRecurrence())
                     calItemElem.addAttribute(MailConstants.A_CAL_RECUR, defaultInvite.isRecurrence());
                 
@@ -421,7 +424,6 @@ public class GetCalendarItemSummaries extends CalendarRequest {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         Account acct = getRequestedAccount(zsc);
-        Account authAcct = getAuthenticatedAccount(zsc);
         
         long rangeStart = request.getAttributeLong(MailConstants.A_CAL_START_TIME);
         long rangeEnd = request.getAttributeLong(MailConstants.A_CAL_END_TIME);
