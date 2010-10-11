@@ -82,8 +82,8 @@ public class Flag extends Tag {
             new FlagInfo("\\Deleted",     'x',    FLAG_GENERIC,      false, ID_FLAG_DELETED);
             new FlagInfo("\\Notified",    'n',    FLAG_MESSAGE_ONLY, false, ID_FLAG_NOTIFIED);
             new FlagInfo("\\Unread",      'u',    FLAG_MESSAGE_ONLY, false, ID_FLAG_UNREAD);
-            new FlagInfo("\\Urgent",      '!',    FLAG_MESSAGE_ONLY, true,  ID_FLAG_HIGH_PRIORITY);
-            new FlagInfo("\\Bulk",        '?',    FLAG_MESSAGE_ONLY, true,  ID_FLAG_LOW_PRIORITY);
+            new FlagInfo("\\Urgent",      '!',    (byte) (FLAG_MESSAGE_ONLY | FLAG_CALITEM_ONLY), true, ID_FLAG_HIGH_PRIORITY);
+            new FlagInfo("\\Bulk",        '?',    (byte) (FLAG_MESSAGE_ONLY | FLAG_CALITEM_ONLY), true, ID_FLAG_LOW_PRIORITY);
             new FlagInfo("\\Versioned",   '/',    FLAG_GENERIC,      true,  ID_FLAG_VERSIONED);
             new FlagInfo("\\IdxDeferred", HIDDEN, FLAG_GENERIC,      true,  ID_FLAG_INDEXING_DEFERRED);
             new FlagInfo("\\Subscribed",  '*',    FLAG_FOLDER_ONLY,  false, ID_FLAG_SUBSCRIBED);

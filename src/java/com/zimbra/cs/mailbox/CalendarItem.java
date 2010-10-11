@@ -430,6 +430,14 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             flags |= Flag.BITMASK_DRAFT;
         else
             flags &= ~Flag.BITMASK_DRAFT;
+        if (firstInvite.isHighPriority())
+            flags |= Flag.BITMASK_HIGH_PRIORITY;
+        else
+            flags &= ~Flag.BITMASK_HIGH_PRIORITY;
+        if (firstInvite.isLowPriority())
+            flags |= Flag.BITMASK_LOW_PRIORITY;
+        else
+            flags &= ~Flag.BITMASK_LOW_PRIORITY;
 
         byte type = firstInvite.isEvent() ? TYPE_APPOINTMENT : TYPE_TASK;
 
@@ -1835,7 +1843,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         // Check if there are any surviving non-cancel invites after applying the update.
         // Also check for changes in flags.
         int oldFlags = mData.flags;
-        int newFlags = mData.flags & ~Flag.BITMASK_ATTACHED & ~Flag.BITMASK_DRAFT;
+        int newFlags = mData.flags & ~(Flag.BITMASK_ATTACHED | Flag.BITMASK_DRAFT | Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
         boolean hasSurvivingRequests = false;
         for (Invite cur : mInvites) {
             String method = cur.getMethod();
@@ -1846,6 +1854,10 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                     newFlags |= Flag.BITMASK_ATTACHED;
                 if (cur.isDraft())
                     newFlags |= Flag.BITMASK_DRAFT;
+                if (cur.isHighPriority())
+                    newFlags |= Flag.BITMASK_HIGH_PRIORITY;
+                if (cur.isLowPriority())
+                    newFlags |= Flag.BITMASK_LOW_PRIORITY;
             }
         }
         if (newFlags != oldFlags) {

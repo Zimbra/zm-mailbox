@@ -2722,4 +2722,26 @@ public class Invite {
         instInv.setDtEnd(dtEnd);
         return instInv;
     }
+
+    // iCalendar PRIORITY to hi/med/low mapping according to RFC5545 Section 3.8.1.9
+    public boolean isHighPriority() {
+        if (mPriority != null) {
+            int prio = 0;
+            try {
+                prio = Integer.parseInt(mPriority);
+            } catch (NumberFormatException e) {}
+            return prio >= 1 && prio <= 4;
+        }
+        return false;
+    }
+    public boolean isLowPriority() {
+        if (mPriority != null) {
+            int prio = 0;
+            try {
+                prio = Integer.parseInt(mPriority);
+            } catch (NumberFormatException e) {}
+            return prio >= 6 && prio <= 9;
+        }
+        return false;
+    }
 }
