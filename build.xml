@@ -624,6 +624,7 @@
     	<property name="zimbraSpnegoAuthRealm"       value="SPNEGO.LOCAL"/>
     	<property name="zimbraSpnegoAuthKDC"         value="10.114.13.137"/>
     	<property name="zimbraSpnegoAuthAdminServer" value="10.114.13.137"/>
+    	<property name="zimbraSpnegoAuthErrorURL"    value="http://jj-server.spnego.local:7070/zimbra/?ignoreLoginURL=1"/>
     	
     	<!-- server -->
     	<property name="zimbraSpnegoAuthPrincipal"   value="HTTP/jj-server.spnego.local@SPNEGO.LOCAL"/>
@@ -648,6 +649,9 @@
         </antcall>
         <antcall target="zmprov">
             <param name="args" value="-l mcf zimbraSpnegoAuthAdminServer ${zimbraSpnegoAuthAdminServer}"/>
+        </antcall>
+        <antcall target="zmprov">
+            <param name="args" value="-l mcf zimbraSpnegoAuthErrorURL ${zimbraSpnegoAuthErrorURL}"/>
         </antcall>
     	
         <antcall target="zmprov">
@@ -679,6 +683,10 @@
         </replace>
     	
     	<!-- mimic zmconfigd -->
+    	<replace file="${jetty.home.dir}/webapps/spnego/spnego_error.jsp">
+            <replacefilter token="%%zimbraSpnegoAuthErrorURL%%" value="${zimbraSpnegoAuthErrorURL}"/>
+        </replace>
+    	
     	<replace file="${jetty.home.dir}/webapps/spnego/WEB-INF/web.xml">
     	    <replacefilter token="%%zimbraSpnegoAuthRealm%%" value="${zimbraSpnegoAuthRealm}"/>
     	</replace>
