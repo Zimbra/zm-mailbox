@@ -88,10 +88,10 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
       label_1:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case LPAREN:
         case AND:
         case OR:
         case NOT:
-        case LPAREN:
         case PLUS:
         case MINUS:
         case TERM:
@@ -111,13 +111,16 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
         case TOFROMCC:
         case IN:
         case UNDER:
-        case INID:
-        case UNDERID:
-        case HAS:
         case FILENAME:
-        case TYPE:
-        case ATTACHMENT:
-        case IS:
+        case TAG:
+        case MESSAGE:
+        case MY:
+        case AUTHOR:
+        case TITLE:
+        case KEYWORDS:
+        case COMPANY:
+        case METADATA:
+        case FIELD:
         case DATE:
         case DAY:
         case WEEK:
@@ -125,29 +128,26 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
         case YEAR:
         case AFTER:
         case BEFORE:
+        case APPT_START:
+        case APPT_END:
+        case CONV_START:
+        case CONV_END:
         case SIZE:
         case BIGGER:
         case SMALLER:
-        case TAG:
-        case PRIORITY:
-        case MESSAGE:
-        case MY:
-        case MODSEQ:
         case CONV:
         case CONV_COUNT:
         case CONV_MINM:
         case CONV_MAXM:
-        case CONV_START:
-        case CONV_END:
-        case APPT_START:
-        case APPT_END:
-        case AUTHOR:
-        case TITLE:
-        case KEYWORDS:
-        case COMPANY:
-        case METADATA:
+        case MODSEQ:
+        case PRIORITY:
+        case IS:
+        case INID:
+        case UNDERID:
+        case HAS:
+        case TYPE:
+        case ATTACHMENT:
         case ITEM:
-        case FIELD:
           ;
           break;
         default:
@@ -234,31 +234,31 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
       case TOFROMCC:
       case IN:
       case UNDER:
-      case INID:
-      case UNDERID:
-      case HAS:
       case FILENAME:
-      case TYPE:
-      case ATTACHMENT:
-      case IS:
-      case SIZE:
-      case BIGGER:
-      case SMALLER:
       case TAG:
-      case PRIORITY:
       case MESSAGE:
       case MY:
-      case MODSEQ:
-      case CONV:
-      case CONV_COUNT:
-      case CONV_MINM:
-      case CONV_MAXM:
       case AUTHOR:
       case TITLE:
       case KEYWORDS:
       case COMPANY:
       case METADATA:
       case FIELD:
+      case SIZE:
+      case BIGGER:
+      case SMALLER:
+      case CONV:
+      case CONV_COUNT:
+      case CONV_MINM:
+      case CONV_MAXM:
+      case MODSEQ:
+      case PRIORITY:
+      case IS:
+      case INID:
+      case UNDERID:
+      case HAS:
+      case TYPE:
+      case ATTACHMENT:
         TextClause();
         break;
       case ITEM:
@@ -271,10 +271,10 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
       case YEAR:
       case AFTER:
       case BEFORE:
-      case CONV_START:
-      case CONV_END:
       case APPT_START:
       case APPT_END:
+      case CONV_START:
+      case CONV_END:
         DateClause();
         break;
       case TERM:
@@ -724,10 +724,10 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
         label_2:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+          case LPAREN:
           case AND:
           case OR:
           case NOT:
-          case LPAREN:
           case PLUS:
           case MINUS:
           case TERM:
@@ -818,10 +818,10 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
         label_3:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+          case LPAREN:
           case AND:
           case OR:
           case NOT:
-          case LPAREN:
           case PLUS:
           case MINUS:
           case TERM:
@@ -914,10 +914,10 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
         label_4:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+          case LPAREN:
           case AND:
           case OR:
           case NOT:
-          case LPAREN:
           case PLUS:
           case MINUS:
           case TERM:
@@ -1032,13 +1032,13 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants, ParserConstan
       jj_la1_init_2();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x1,0x1,0x0,0x0,0xffff2778,0x18,0x0,0x320,0xffff2440,0x2400,0xffff0000,0x0,0x18,0x320,0x0,0x320,0x2778,0x18,0x320,0x2440,0x320,0xa778,0x18,0x320,0xa440,0x20,0x2778,0x18,0x20,0x300,0x300,0x2400,0x2740,};
+      jj_la1_0 = new int[] {0x1,0x1,0x0,0x0,0xffff27e8,0x60,0x0,0x380,0xffff2408,0x2400,0xffff0000,0x0,0x60,0x380,0x0,0x380,0x27e8,0x60,0x380,0x2408,0x380,0xa7e8,0x60,0x380,0xa408,0x80,0x27e8,0x60,0x80,0x300,0x300,0x2400,0x2708,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x0,0x0,0x0,0x0,0xffffffff,0x0,0x0,0x0,0xffffffff,0x0,0xe1ffe03f,0x1e001fc0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
+      jj_la1_1 = new int[] {0x0,0x0,0x0,0x0,0xfffff9ff,0x0,0x0,0x0,0xfffff9ff,0x0,0xffc001ff,0x3ff800,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x100,0x100,0x18,0x18,0x27,0x0,0x18,0x0,0x27,0x0,0x23,0x0,0x0,0x0,0x18,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
+      jj_la1_2 = new int[] {0x100,0x100,0xc0,0xc0,0x3f,0x0,0xc0,0x0,0x3f,0x0,0x1f,0x0,0x0,0x0,0xc0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
    }
 
   /** Constructor with InputStream. */

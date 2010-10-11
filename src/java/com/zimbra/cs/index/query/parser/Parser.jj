@@ -26,83 +26,92 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants/*@egen*/ {/*@b
 
 /*@egen*/
 }PARSER_END(Parser)
-SKIP : {
+<*> SKIP : {
     " " | "\t"
 }
 
-TOKEN : {
+<*> TOKEN : {
+    <LPAREN: "(">
+|   <RPAREN: ")">
+}
+
+<DEFAULT> TOKEN : {
     <AND: ("and" | "&&")>
 |   <OR: ("or" | "||")>
 |   <NOT: ("not" | "!")>
-|   <LPAREN: "(">
-|   <RPAREN: ")">
 |   <PLUS: "+">
 |   <MINUS: "-">
-|   <TERM: <_TERM_START_CHAR> (<_TERM_CHAR>)*>
-|   <#_TERM_START_CHAR: (~["{", "}", " ", "\t", "\n", "\r", ":", "+", "-", "\"", "(", ")"] | <_ESCAPED_QUOTE>)>
-|   <#_TERM_CHAR: (<_TERM_START_CHAR> | "-" | "+" | "@")>
-|   <QUOTED_TERM: "\"" (<_ESCAPED_QUOTE> | ~["\n", "\""])* "\"">
-|   <#_ESCAPED_QUOTE: "\\\"">
-|   <BRACED_TERM: "{" (~["}"])+ "}">
 }
 
-TOKEN : {
-    <CONTENT: "content:">
-|   <SUBJECT: "subject:">
-|   <MSGID: "msgid:">
-|   <ENVTO: "envto:">
-|   <ENVFROM: "envfrom:">
-|   <CONTACT: "contact:">
-|   <TO: "to:">
-|   <FROM: "from:">
-|   <CC: "cc:">
-|   <TOFROM: "tofrom:">
-|   <TOCC: "tocc:">
-|   <FROMCC: "fromcc:">
-|   <TOFROMCC: "tofromcc:">
-|   <IN: "in:">
-|   <UNDER: "under:">
-|   <INID: "inid:">
-|   <UNDERID: "underid:">
-|   <HAS: "has:">
-|   <FILENAME: "filename:">
-|   <TYPE: "type:">
-|   <ATTACHMENT: "attachment:">
-|   <IS: "is:">
-|   <DATE: "date:">
+<DEFAULT, TEXT> TOKEN : {
+    <TERM: <_TERM_START_CHAR> (<_TERM_CHAR>)*> : DEFAULT
+|   <#_TERM_START_CHAR: (~["{", "}", " ", "\t", "\n", "\r", ":", "+", "-", "\"", "(", ")"] | <_ESCAPED_QUOTE>)>
+|   <#_TERM_CHAR: (<_TERM_START_CHAR> | "-" | "+" | "@")>
+|   <QUOTED_TERM: "\"" (<_ESCAPED_QUOTE> | ~["\n", "\""])* "\""> : DEFAULT
+|   <#_ESCAPED_QUOTE: "\\\"">
+|   <BRACED_TERM: "{" (~["}"])+ "}"> : DEFAULT
+}
+
+// Don't match operators after these tokens
+<DEFAULT> TOKEN : {
+    <CONTENT: "content:"> : TEXT
+|   <SUBJECT: "subject:"> : TEXT
+|   <MSGID: "msgid:"> : TEXT
+|   <ENVTO: "envto:"> : TEXT
+|   <ENVFROM: "envfrom:"> : TEXT
+|   <CONTACT: "contact:"> : TEXT
+|   <TO: "to:"> : TEXT
+|   <FROM: "from:"> : TEXT
+|   <CC: "cc:"> : TEXT
+|   <TOFROM: "tofrom:"> : TEXT
+|   <TOCC: "tocc:"> : TEXT
+|   <FROMCC: "fromcc:"> : TEXT
+|   <TOFROMCC: "tofromcc:"> : TEXT
+|   <IN: "in:"> : TEXT
+|   <UNDER: "under:"> : TEXT
+|   <FILENAME: "filename:"> : TEXT
+|   <TAG: "tag:"> : TEXT
+|   <MESSAGE: "message:"> : TEXT
+|   <MY: "my:"> : TEXT
+|   <AUTHOR: "author:"> : TEXT
+|   <TITLE: "title:"> : TEXT
+|   <KEYWORDS: "keywords:"> : TEXT
+|   <COMPANY: "company:"> : TEXT
+|   <METADATA: "metadata:"> : TEXT
+|   <FIELD: <_FIELD1> | <_FIELD2>> : TEXT
+|   <#_FIELD1: "field" ("[" <TERM> "]")? ":">
+|   <#_FIELD2: "#" <TERM> ":">
+}
+
+<DEFAULT> TOKEN : {    <DATE: "date:">
 |   <DAY: "day:">
 |   <WEEK: "week:">
 |   <MONTH: "month:">
 |   <YEAR: "year:">
 |   <AFTER: "after:">
 |   <BEFORE: "before:">
+|   <APPT_START: "appt-start:">
+|   <APPT_END: "appt-end:">
+|   <CONV_START: "conv-start:">
+|   <CONV_END: "conv-end:">
 |   <SIZE: "size:">
 |   <BIGGER: "bigger:" | "larger:">
 |   <SMALLER: "smaller:">
-|   <TAG: "tag:">
-|   <PRIORITY: "priority:">
-|   <MESSAGE: "message:">
-|   <MY: "my:">
-|   <MODSEQ: "modseq:">
-|   <CONV: "conv:">
+|   <CONV: "conv:"> : TEXT
 |   <CONV_COUNT: "conv-count:">
 |   <CONV_MINM: "conv-minm:">
 |   <CONV_MAXM: "conv-maxm:">
-|   <CONV_START: "conv-start:">
-|   <CONV_END: "conv-end:">
-|   <APPT_START: "appt-start:">
-|   <APPT_END: "appt-end:">
-|   <AUTHOR: "author:">
-|   <TITLE: "title:">
-|   <KEYWORDS: "keywords:">
-|   <COMPANY: "company:">
-|   <METADATA: "metadata:">
+|   <MODSEQ: "modseq:">
+|   <PRIORITY: "priority:">
+|   <IS: "is:">
+|   <INID: "inid:">
+|   <UNDERID: "underid:">
+|   <HAS: "has:">
+|   <TYPE: "type:">
+|   <ATTACHMENT: "attachment:">
 |   <ITEM: "item:">
 |   <SORTBY: "sortby:">
 |   <SORT: "sort:">
-|   <FIELD: <_FIELD1> | <_FIELD2>>
-|   <#_FIELD1: "field" ("[" <TERM> "]")? ":">
-|   <#_FIELD2: "#" <TERM> ":">
 }
 SimpleNode parse()       : {/*@bgen(jjtree) Root */
   SimpleNode jjtn000 = new SimpleNode(JJTROOT);
@@ -333,7 +342,8 @@ private void DateClause() : {/*@bgen(jjtree) DateClause */
 
 private void TextField()       : {
 }
-{    <FIELD> | <MSGID> | <MODSEQ> | <TYPE> | <MY> | <IS> | <TAG> | <PRIORITY>
+{
+    <FIELD> | <MSGID> | <MODSEQ> | <TYPE> | <MY> | <IS> | <TAG> | <PRIORITY>
 |   <FROM> | <TO> | <CC> | <ENVFROM> | <ENVTO>
 |   <TOFROM> | <TOCC> | <FROMCC> | <TOFROMCC>
 |   <SUBJECT> | <MESSAGE> | <CONTENT>

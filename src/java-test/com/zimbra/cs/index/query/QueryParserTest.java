@@ -498,4 +498,12 @@ public class QueryParserTest {
                 query.toQueryString(query.getField(), "company:zimbra\"vmware"));
     }
 
+    @Test
+    public void textLexicalState() throws Exception {
+        String src = "from:and or from:or or not from:not";
+        List<Query> result = parser.parse(src);
+        Assert.assertEquals("Q(from,and) || Q(from,or) || -Q(from,not)",
+                Query.toString(result));
+    }
+
 }

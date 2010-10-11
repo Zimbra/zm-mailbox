@@ -11,15 +11,15 @@ interface ParserConstants {
   /** End of File. */
   int EOF = 0;
   /** RegularExpression Id. */
-  int AND = 3;
+  int LPAREN = 3;
   /** RegularExpression Id. */
-  int OR = 4;
+  int RPAREN = 4;
   /** RegularExpression Id. */
-  int NOT = 5;
+  int AND = 5;
   /** RegularExpression Id. */
-  int LPAREN = 6;
+  int OR = 6;
   /** RegularExpression Id. */
-  int RPAREN = 7;
+  int NOT = 7;
   /** RegularExpression Id. */
   int PLUS = 8;
   /** RegularExpression Id. */
@@ -67,101 +67,103 @@ interface ParserConstants {
   /** RegularExpression Id. */
   int UNDER = 30;
   /** RegularExpression Id. */
-  int INID = 31;
+  int FILENAME = 31;
   /** RegularExpression Id. */
-  int UNDERID = 32;
+  int TAG = 32;
   /** RegularExpression Id. */
-  int HAS = 33;
+  int MESSAGE = 33;
   /** RegularExpression Id. */
-  int FILENAME = 34;
+  int MY = 34;
   /** RegularExpression Id. */
-  int TYPE = 35;
+  int AUTHOR = 35;
   /** RegularExpression Id. */
-  int ATTACHMENT = 36;
+  int TITLE = 36;
   /** RegularExpression Id. */
-  int IS = 37;
+  int KEYWORDS = 37;
   /** RegularExpression Id. */
-  int DATE = 38;
+  int COMPANY = 38;
   /** RegularExpression Id. */
-  int DAY = 39;
+  int METADATA = 39;
   /** RegularExpression Id. */
-  int WEEK = 40;
+  int FIELD = 40;
   /** RegularExpression Id. */
-  int MONTH = 41;
+  int _FIELD1 = 41;
   /** RegularExpression Id. */
-  int YEAR = 42;
+  int _FIELD2 = 42;
   /** RegularExpression Id. */
-  int AFTER = 43;
+  int DATE = 43;
   /** RegularExpression Id. */
-  int BEFORE = 44;
+  int DAY = 44;
   /** RegularExpression Id. */
-  int SIZE = 45;
+  int WEEK = 45;
   /** RegularExpression Id. */
-  int BIGGER = 46;
+  int MONTH = 46;
   /** RegularExpression Id. */
-  int SMALLER = 47;
+  int YEAR = 47;
   /** RegularExpression Id. */
-  int TAG = 48;
+  int AFTER = 48;
   /** RegularExpression Id. */
-  int PRIORITY = 49;
+  int BEFORE = 49;
   /** RegularExpression Id. */
-  int MESSAGE = 50;
+  int APPT_START = 50;
   /** RegularExpression Id. */
-  int MY = 51;
+  int APPT_END = 51;
   /** RegularExpression Id. */
-  int MODSEQ = 52;
+  int CONV_START = 52;
   /** RegularExpression Id. */
-  int CONV = 53;
+  int CONV_END = 53;
   /** RegularExpression Id. */
-  int CONV_COUNT = 54;
+  int SIZE = 54;
   /** RegularExpression Id. */
-  int CONV_MINM = 55;
+  int BIGGER = 55;
   /** RegularExpression Id. */
-  int CONV_MAXM = 56;
+  int SMALLER = 56;
   /** RegularExpression Id. */
-  int CONV_START = 57;
+  int CONV = 57;
   /** RegularExpression Id. */
-  int CONV_END = 58;
+  int CONV_COUNT = 58;
   /** RegularExpression Id. */
-  int APPT_START = 59;
+  int CONV_MINM = 59;
   /** RegularExpression Id. */
-  int APPT_END = 60;
+  int CONV_MAXM = 60;
   /** RegularExpression Id. */
-  int AUTHOR = 61;
+  int MODSEQ = 61;
   /** RegularExpression Id. */
-  int TITLE = 62;
+  int PRIORITY = 62;
   /** RegularExpression Id. */
-  int KEYWORDS = 63;
+  int IS = 63;
   /** RegularExpression Id. */
-  int COMPANY = 64;
+  int INID = 64;
   /** RegularExpression Id. */
-  int METADATA = 65;
+  int UNDERID = 65;
   /** RegularExpression Id. */
-  int ITEM = 66;
+  int HAS = 66;
   /** RegularExpression Id. */
-  int SORTBY = 67;
+  int TYPE = 67;
   /** RegularExpression Id. */
-  int SORT = 68;
+  int ATTACHMENT = 68;
   /** RegularExpression Id. */
-  int FIELD = 69;
+  int ITEM = 69;
   /** RegularExpression Id. */
-  int _FIELD1 = 70;
+  int SORTBY = 70;
   /** RegularExpression Id. */
-  int _FIELD2 = 71;
+  int SORT = 71;
 
   /** Lexical state. */
-  int DEFAULT = 0;
+  int TEXT = 0;
+  /** Lexical state. */
+  int DEFAULT = 1;
 
   /** Literal token values. */
   String[] tokenImage = {
     "<EOF>",
     "\" \"",
     "\"\\t\"",
+    "\"(\"",
+    "\")\"",
     "<AND>",
     "<OR>",
     "<NOT>",
-    "\"(\"",
-    "\")\"",
     "\"+\"",
     "\"-\"",
     "<TERM>",
@@ -185,13 +187,18 @@ interface ParserConstants {
     "\"tofromcc:\"",
     "\"in:\"",
     "\"under:\"",
-    "\"inid:\"",
-    "\"underid:\"",
-    "\"has:\"",
     "\"filename:\"",
-    "\"type:\"",
-    "\"attachment:\"",
-    "\"is:\"",
+    "\"tag:\"",
+    "\"message:\"",
+    "\"my:\"",
+    "\"author:\"",
+    "\"title:\"",
+    "\"keywords:\"",
+    "\"company:\"",
+    "\"metadata:\"",
+    "<FIELD>",
+    "<_FIELD1>",
+    "<_FIELD2>",
     "\"date:\"",
     "\"day:\"",
     "\"week:\"",
@@ -199,33 +206,28 @@ interface ParserConstants {
     "\"year:\"",
     "\"after:\"",
     "\"before:\"",
+    "\"appt-start:\"",
+    "\"appt-end:\"",
+    "\"conv-start:\"",
+    "\"conv-end:\"",
     "\"size:\"",
     "<BIGGER>",
     "\"smaller:\"",
-    "\"tag:\"",
-    "\"priority:\"",
-    "\"message:\"",
-    "\"my:\"",
-    "\"modseq:\"",
     "\"conv:\"",
     "\"conv-count:\"",
     "\"conv-minm:\"",
     "\"conv-maxm:\"",
-    "\"conv-start:\"",
-    "\"conv-end:\"",
-    "\"appt-start:\"",
-    "\"appt-end:\"",
-    "\"author:\"",
-    "\"title:\"",
-    "\"keywords:\"",
-    "\"company:\"",
-    "\"metadata:\"",
+    "\"modseq:\"",
+    "\"priority:\"",
+    "\"is:\"",
+    "\"inid:\"",
+    "\"underid:\"",
+    "\"has:\"",
+    "\"type:\"",
+    "\"attachment:\"",
     "\"item:\"",
     "\"sortby:\"",
     "\"sort:\"",
-    "<FIELD>",
-    "<_FIELD1>",
-    "<_FIELD2>",
     "\"\\r\"",
   };
 
