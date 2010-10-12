@@ -295,6 +295,9 @@ public class AdminConstants {
     // calendar item end time fixup
     public static final QName FIX_CALENDAR_END_TIME_REQUEST = QName.get("FixCalendarEndTimeRequest", NAMESPACE);
     public static final QName FIX_CALENDAR_END_TIME_RESPONSE = QName.get("FixCalendarEndTimeResponse", NAMESPACE);
+    // calendar item priority fixup
+    public static final QName FIX_CALENDAR_PRIORITY_REQUEST = QName.get("FixCalendarPriorityRequest", NAMESPACE);
+    public static final QName FIX_CALENDAR_PRIORITY_RESPONSE = QName.get("FixCalendarPriorityResponse", NAMESPACE);
 
     // Admin saved searches
     public static final QName GET_ADMIN_SAVED_SEARCHES_REQUEST = QName.get("GetAdminSavedSearchesRequest", NAMESPACE);
