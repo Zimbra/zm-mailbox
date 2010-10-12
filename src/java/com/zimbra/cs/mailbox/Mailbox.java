@@ -4040,7 +4040,7 @@ public class Mailbox {
         }
         ZimbraLog.calendar.info(
                 "Finished: end time fixup in calendar of mailbox " +
-                getId() + "; fixed " + numFixed + " timezone entries");
+                getId() + "; fixed " + numFixed + " entries");
         return numFixed;
     }
 
@@ -4057,6 +4057,70 @@ public class Mailbox {
                 calItem.saveMetadata();
                 markItemModified(calItem, Change.MODIFIED_CONTENT | Change.MODIFIED_INVITE);
                 success = true;
+            }
+            return numFixed;
+        } finally {
+            endTransaction(success);
+        }
+    }
+
+    public int fixAllCalendarItemPriority(OperationContext octxt) throws ServiceException {
+        int numFixed = 0;
+        ZimbraLog.calendar.info("Started: priority fixup in calendar of mailbox " + getId());
+        @SuppressWarnings("unchecked")
+        List<MailItem>[] lists = new List[2];
+        lists[0] = getItemList(octxt, MailItem.TYPE_APPOINTMENT);
+        lists[1] = getItemList(octxt, MailItem.TYPE_TASK);
+        for (List<MailItem> items : lists) {
+            for (Iterator<MailItem> iter = items.iterator(); iter.hasNext(); ) {
+                Object obj = iter.next();
+                if (!(obj instanceof CalendarItem))
+                    continue;
+                CalendarItem calItem = (CalendarItem) obj;
+                try {
+                    numFixed += fixCalendarItemPriority(octxt, calItem);
+                } catch (ServiceException e) {
+                    ZimbraLog.calendar.error(
+                            "Error fixing calendar item " + calItem.getId() +
+                            " in mailbox " + getId() + ": " + e.getMessage(), e);
+                }
+            }
+        }
+        ZimbraLog.calendar.info(
+                "Finished: priority fixup in calendar of mailbox " +
+                getId() + "; fixed " + numFixed + " entries");
+        return numFixed;
+    }
+
+    public synchronized int fixCalendarItemPriority(OperationContext octxt, CalendarItem calItem)
+    throws ServiceException {
+        FixCalendarItemPriority redoRecorder = new FixCalendarItemPriority(getId(), calItem.getId());
+        boolean success = false;
+        try {
+            beginTransaction("fixupCalendarItemPriority", octxt, redoRecorder);
+            int flags = calItem.mData.flags & ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
+            Invite[] invs = calItem.getInvites();
+            if (invs != null) {
+                for (Invite cur : invs) {
+                    String method = cur.getMethod();
+                    if (method.equals(ICalTok.REQUEST.toString()) ||
+                        method.equals(ICalTok.PUBLISH.toString())) {
+                        if (cur.isHighPriority())
+                            flags |= Flag.BITMASK_HIGH_PRIORITY;
+                        if (cur.isLowPriority())
+                            flags |= Flag.BITMASK_LOW_PRIORITY;
+                    }
+                }
+            }
+            int numFixed = 0;
+            if (flags != calItem.mData.flags) {
+                ZimbraLog.calendar.info("Fixed calendar item " + calItem.getId());
+                calItem.mData.flags = flags;
+                calItem.snapshotRevision();
+                calItem.saveMetadata();
+                markItemModified(calItem, Change.MODIFIED_INVITE);
+                success = true;
+                numFixed = 1;
             }
             return numFixed;
         } finally {

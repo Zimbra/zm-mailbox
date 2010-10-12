@@ -176,6 +176,8 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.FIX_CALENDAR_TZ_REQUEST, new FixCalendarTZ());
         // calendar item end time fixup
         dispatcher.registerHandler(AdminConstants.FIX_CALENDAR_END_TIME_REQUEST, new FixCalendarEndTime());
+        // calendar item priority fixup
+        dispatcher.registerHandler(AdminConstants.FIX_CALENDAR_PRIORITY_REQUEST, new FixCalendarPriority());
 
         // admin saved searches
         dispatcher.registerHandler(AdminConstants.GET_ADMIN_SAVED_SEARCHES_REQUEST, new GetAdminSavedSearches());

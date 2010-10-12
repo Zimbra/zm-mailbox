@@ -172,7 +172,9 @@ public abstract class RedoableOp {
     public static final int OP_PURGE_REVISION           = 76;
 
     public static final int OP_DELETE_ITEM_FROM_DUMPSTER = 77;
-    public static final int OP_LAST                     = 78;
+
+    public static final int OP_FIX_CALENDAR_ITEM_PRIORITY = 78;
+    public static final int OP_LAST                     = 79;
 
 
     // Element index is same as Redoable.OP_* constants.
@@ -255,7 +257,8 @@ public abstract class RedoableOp {
         "LockItem",
         "UnlockItem",
         "PurgeRevision",
-        "DeleteItemFromDumpster"
+        "DeleteItemFromDumpster",
+        "FixCalendarItemPriority"
     };
 
     public static String getOpClassName(int opcode) {
