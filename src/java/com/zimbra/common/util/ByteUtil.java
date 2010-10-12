@@ -89,26 +89,40 @@ public class ByteUtil {
         return buffer;
     }
 
+    public static int countBytes(InputStream is) throws IOException {
+        return countBytes(is, true);
+    }
+
     /**
      * Count the total number of bytes of the <code>InputStream</code>
      * @param is The stream to read from.
      * @return total number of bytes
      * @throws IOException
      */
-    public static int countBytes(InputStream is) throws IOException {
-        byte[] buf = new byte[8192];
-        int count = 0;
-        int num = 0;
-        // if you tweak this implementation, make sure drain() still works...
-        while ((num = is.read(buf)) != -1)
-            count += num;
-        return count;
+    public static int countBytes(InputStream is, boolean closeStream) throws IOException {
+        try {
+            byte[] buf = new byte[8192];
+            int count = 0;
+            int num = 0;
+            // if you tweak this implementation, make sure drain() still works...
+            while ((num = is.read(buf)) != -1)
+                count += num;
+            return count;
+        } finally {
+            if (closeStream) {
+                ByteUtil.closeStream(is);
+            }
+        }
+    }
+
+    public static <T extends InputStream> T drain(T is) throws IOException {
+        return drain(is, true);
     }
 
     /** Read the stream to its end, discarding all read data. */
-    public static <T extends InputStream> T drain(T is) throws IOException {
+    public static <T extends InputStream> T drain(T is, boolean closeStream) throws IOException {
         // side effect of our implementation of counting bytes is draining the stream
-        countBytes(is);
+        countBytes(is, closeStream);
         return is;
     }
 
@@ -258,7 +272,7 @@ public class ByteUtil {
 
         if (is instanceof PipedInputStream) {
             try {
-                drain(is);
+                drain(is, false);
             } catch (Exception e) {
                 ZimbraLog.misc.debug("ignoring exception while draining PipedInputStream", e);
             }

@@ -59,10 +59,22 @@ public class MimeBodyPart extends MimePart {
     }
 
     public void setTransferEncoding(ContentTransferEncoding cte) {
+        ContentTransferEncoding newEncoding = cte == null ? ContentTransferEncoding.BINARY : cte;
+        if (newEncoding.normalize() != mTargetEncoding.normalize()) {
+            markDirty(Dirty.CTE);
+        }
         setMimeHeader("Content-Transfer-Encoding", cte == null ? null : cte.toString());
-        mTargetEncoding = cte == null ? ContentTransferEncoding.BINARY : cte;
+        mTargetEncoding = newEncoding;
     }
 
+
+    @Override public long getSize() throws IOException {
+        long size = super.getSize();
+        if (size == -1) {
+            size = recordSize(ByteUtil.countBytes(getRawContentStream()));
+        }
+        return size;
+    }
 
     @Override public InputStream getRawContentStream() throws IOException {
         InputStream stream = super.getRawContentStream();
@@ -174,7 +186,7 @@ public class MimeBodyPart extends MimePart {
         }
 
         if (getParent() != null) {
-            getParent().markDirty(true);
+            getParent().markDirty(Dirty.CONTENT);
         }
         setContentType(ctype.setContentType("text/" + subtype).setParameter("charset", charset));
 

@@ -119,14 +119,14 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
             throw new IndexOutOfBoundsException(Integer.toString(index));
         }
 
-        markDirty(true);
+        markDirty(Dirty.CONTENT);
         mp.setParent(this);
         mChildren.add(index - 1, mp);
         return this;
     }
 
     @Override void removeChild(MimePart mp) {
-        markDirty(true);
+        markDirty(Dirty.CONTENT);
         mChildren.remove(mp);
     }
 
@@ -141,7 +141,7 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
         // changing the boundary forces a recalc of the content
         String newBoundary = ctype.getParameter("boundary");
         if (!mBoundary.equals(newBoundary)) {
-            markDirty(true);
+            markDirty(Dirty.CONTENT);
             mBoundary = newBoundary;
         }
 
@@ -173,6 +173,23 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
         return "=_" + UUID.randomUUID().toString();
     }
 
+
+    @Override public long getSize() throws IOException {
+        long size = super.getSize();
+        if (size == -1) {
+            size = mPreamble == null ? 0 : mPreamble.getSize();
+            int bndlen = mBoundary.getBytes().length, count = mPreamble == null ? 0 : 1;
+            for (MimePart mp : mChildren) {
+                size += count++ == 0 ? bndlen + 4 : bndlen + 6;
+                size += mp.getMimeHeaderBlock().getLength();
+                size += mp.getSize();
+            }
+            size += bndlen + 8;
+            size += mEpilogue == null ? 0 : mEpilogue.getSize();
+            size = recordSize(size);
+        }
+        return size;
+    }
 
     @Override public InputStream getRawContentStream() throws IOException {
         if (!isDirty()) {

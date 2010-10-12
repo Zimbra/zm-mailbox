@@ -14,7 +14,6 @@
  */
 package com.zimbra.common.mime;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -43,9 +42,6 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
         return this;
     }
 
-    public boolean isEmpty() {
-        return mHeaders == null || mHeaders.isEmpty();
-    }
 
     /** Returns the value of the last header matching the given
      *  <tt>name</tt>. */
@@ -106,7 +102,7 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
 
     void markDirty() {
         if (mParent != null) {
-            mParent.markDirty(false);
+            mParent.markDirty(MimePart.Dirty.HEADERS);
         }
     }
 
@@ -140,16 +136,34 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
         }
     }
 
-    public byte[] toByteArray() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
+
+    public boolean isEmpty() {
+        return mHeaders == null || mHeaders.isEmpty();
+    }
+
+    public int getLength() {
+        int length = 0;
         if (mHeaders != null) {
             for (MimeHeader header : mHeaders) {
-                byte[] content = header.getRawHeader();
-                baos.write(content, 0, content.length);
+                length += header.getRawHeader().length;
             }
         }
-        baos.write('\r');  baos.write('\n');
-        return baos.toByteArray();
+        // include the trailing "\r\n" terminating the block
+        return length + 2;
+    }
+
+    public byte[] toByteArray() {
+        byte[] block = new byte[getLength()];
+        int offset = 0;
+        if (mHeaders != null) {
+            for (MimeHeader header : mHeaders) {
+                byte[] line = header.getRawHeader();
+                System.arraycopy(line, 0, block, offset, line.length);
+                offset += line.length;
+            }
+        }
+        block[offset++] = '\r';  block[offset++] = '\n';
+        return block;
     }
 
     @Override public String toString() {
@@ -159,8 +173,8 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
 
     public static MimeHeaderBlock parse(InputStream is) throws IOException {
         MimeParser.HeaderParser parser = new MimeParser.HeaderParser();
-        for (byte b = (byte) is.read(); b != -1; b = (byte) is.read()) {
-            if (!parser.handleByte(b)) {
+        for (int b = is.read(); b != -1; b = is.read()) {
+            if (!parser.handleByte((byte) b)) {
                 break;
             }
         }

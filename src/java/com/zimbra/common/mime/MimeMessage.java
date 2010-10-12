@@ -55,12 +55,7 @@ public class MimeMessage extends MimePart {
 
         setContent(file, false);
         InputStream is = new BufferedInputStream(new FileInputStream(file), 8192);
-        MimeParserInputStream mpis = new MimeParserInputStream(is);
-        try {
-            ByteUtil.drain(mpis).insertBodyPart(this);
-        } finally {
-            ByteUtil.closeStream(mpis);
-        }
+        ByteUtil.drain(new MimeParserInputStream(is)).insertBodyPart(this);
     }
 
     /** Parses a MIME message from a byte array.  The structure of the message
@@ -79,13 +74,10 @@ public class MimeMessage extends MimePart {
 
         setContent(body, false);
         InputStream is = new ByteArrayInputStream(body);
-        MimeParserInputStream mpis = new MimeParserInputStream(is);
         try {
-            ByteUtil.drain(mpis).insertBodyPart(this);
+            ByteUtil.drain(new MimeParserInputStream(is)).insertBodyPart(this);
         } catch (IOException ioe) {
             throw new RuntimeException("completely unexpected IOException while reading from byte array", ioe);
-        } finally {
-            ByteUtil.closeStream(mpis);
         }
     }
 
@@ -141,7 +133,7 @@ public class MimeMessage extends MimePart {
         body.setParent(this);
         mBody = body;
         // almost certainly unnecessary due to header transfer, but don't cost nothin'
-        markDirty(true);
+        markDirty(Dirty.CONTENT);
         return this;
     }
 
@@ -242,6 +234,14 @@ public class MimeMessage extends MimePart {
     }
 
 
+    @Override public long getSize() throws IOException {
+        long size = super.getSize();
+        if (size == -1 && mBody != null) {
+            size = recordSize(mBody.getMimeHeaderBlock().getLength() + mBody.getSize());
+        }
+        return size;
+    }
+
     @Override public InputStream getInputStream() throws IOException {
         return getParent() != null ? super.getInputStream() : mBody.getInputStream();
     }
@@ -252,12 +252,14 @@ public class MimeMessage extends MimePart {
 
 
     public static void main(String[] args) throws FileNotFoundException, IOException {
-        MimeMessage mm = new MimeMessage(new File(args[0] + File.separator + "24250"));
-//        dumpParts(mm);
+        MimeMessage mm = new MimeMessage(new File(args[0] + File.separator + "toplevel-nested-message"));
+        dumpParts(mm);
         mm.setHeader("X-Mailer", "Zimbra 5.0 RC2");
-//        ((MimeBodyPart) mm.getSubpart("1.1")).setTransferEncoding(ContentTransferEncoding.BASE64);
+        dumpParts(mm);
+        ((MimeBodyPart) mm.getSubpart("1.1")).setTransferEncoding(ContentTransferEncoding.BASE64);
+        dumpParts(mm);
 //        ByteUtil.copy(mm.getSubpart("1").getRawContentStream(), true, System.out, false);
-//        ByteUtil.copy(mm.getInputStream(), true, System.out, false);
+        ByteUtil.copy(mm.getInputStream(), true, System.out, false);
 //        System.out.write(mm.getSubpart("1").getRawContent());
 //        ByteUtil.copy(mm.getSubpart("1").getInputStream(), true, System.out, false);
 //        System.out.write(mm.getSubpart("1").getContent());
@@ -371,7 +373,7 @@ public class MimeMessage extends MimePart {
 //        }
     }
 
-    static void dumpParts(MimeMessage mm) {
+    static void dumpParts(MimeMessage mm) throws IOException {
         for (Map.Entry<String, MimePart> mpi : mm.listMimeParts().entrySet()) {
             MimePart part = mpi.getValue();
             String filename = part.getFilename() == null ? "" : " [" + part.getFilename() + "]";

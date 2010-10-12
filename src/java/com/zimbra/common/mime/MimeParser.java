@@ -527,7 +527,7 @@ class MimeParser {
         long partEnd = Math.max(mp.getBodyOffset(), end);
         mp.recordEndpoint(partEnd, lineNumber - pinfo.firstLine);
 
-        if (mp.getSize() > 0) {
+        if (mp.getBodyOffset() > mp.getEndOffset()) {
             if (pinfo.location == PartInfo.Location.PREAMBLE) {
                 ((MimeMultipart) mp.getParent()).setPreamble((MimeBodyPart) mp);
             } else if (pinfo.location == PartInfo.Location.EPILOGUE) {
