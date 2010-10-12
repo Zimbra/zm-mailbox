@@ -57,68 +57,6 @@ public class TestUtilCode extends TestCase
         cleanUp();
     }
     
-    public void testFillTemplate() {
-        String template = "The quick ${COLOR} ${ANIMAL}\njumped over the ${ADJECTIVE} dogs.\n";
-        Map<String, String> vars = new HashMap<String, String>();
-        vars.put("COLOR", "brown");
-        vars.put("ANIMAL", "fox");
-        vars.put("ADJECTIVE", "lazy");
-        String result = StringUtil.fillTemplate(template, vars);
-        String expected = "The quick brown fox\njumped over the lazy dogs.\n";
-        assertEquals(expected, result);
-    }
-
-    public void testFillTemplateWithNewlineValue() {
-        String template = "New message received at ${RECIPIENT_ADDRESS}." +
-            "${NEWLINE}Sender: ${SENDER_ADDRESS}${NEWLINE}Subject: ${SUBJECT}";
-
-        Map<String, String> vars = new HashMap<String, String>();
-        vars.put("SENDER_ADDRESS", "sender@example.zimbra.com");
-        vars.put("RECIPIENT_ADDRESS", "recipient@example.zimbra.com");
-        vars.put("RECIPIENT_DOMAIN", "example.zimbra.com");
-        vars.put("NOTIFICATION_ADDRESS", "notify@example.zimbra.com");
-        vars.put("SUBJECT", "Cool stuff");
-        vars.put("NEWLINE", "\n");
-
-        String expected = "New message received at recipient@example.zimbra.com." +
-        "\nSender: sender@example.zimbra.com\nSubject: Cool stuff";
-        String actual = StringUtil.fillTemplate(template, vars);
-        assertEquals("expected: '" + expected + "', actual: '" + actual + "'",
-                expected, actual);
-    }
-
-    public void testFillTemplateWithBraces() {
-        String template = "Beginning ${VAR} { end }";
-        Map<String, String> vars = new HashMap<String, String>();
-        vars.put("VAR", "middle");
-        String result = StringUtil.fillTemplate(template, vars);
-        String expected = "Beginning middle { end }";
-        assertEquals(expected, result);
-    }
-    
-    public void testJoin() {
-        List<String> list = new ArrayList<String>();
-        list.add("a");
-        list.add("b");
-        list.add("c");
-        assertEquals("a,b,c", StringUtil.join(",", list));
-        String[] array = new String[list.size()];
-        list.toArray(array);
-        assertEquals("a,b,c", StringUtil.join(",", array));
-        
-        // Make sure things still work if the first element is empty (bug 29513)
-        list.set(0, "");
-        assertEquals(",b,c", StringUtil.join(",", list));
-        list.toArray(array);
-        assertEquals(",b,c", StringUtil.join(",", array));
-    }
-
-    public void testSimpleClassName() {
-        assertEquals("MyClass", StringUtil.getSimpleClassName("my.package.MyClass"));
-        Integer i = 0;
-        assertEquals("Integer", StringUtil.getSimpleClassName(i));
-    }
-
     public void testValueCounter()
     throws Exception {
         ValueCounter<String> vc = new ValueCounter<String>();
