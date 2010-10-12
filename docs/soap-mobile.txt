@@ -112,4 +112,25 @@ Cancel a pending Remote Wipe request.  Remote Wipe can't be canceled once the de
   <device id="{device_id}" />
 </CancelPendingRemoteWipeRequest>
 
-<CancelPendingRemoteWipeResponsei />
+<CancelPendingRemoteWipeResponse />
+
+
+
+zimbra sync specific admin SOAP messages:
+-----------------------------------------
+<GetDevicesCountRequest>
+<GetDevicesCountResponse>
+
+
+------------------------
+<GetDevicesCountRequest>
+------------------------
+
+Get the registered devices count on the server.
+
+<GetDevicesCountRequest xmlns="urn:zimbraAdmin"/>
+         
+<GetDevicesCountResponse>
+  <count>1023</count>
+</GetDevicesCountResponse>
+
