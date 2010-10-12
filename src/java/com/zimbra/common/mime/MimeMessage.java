@@ -218,19 +218,19 @@ public class MimeMessage extends MimePart {
 //        mBody.addMimeHeader(name, value);
 //    }
 
-    @Override public void setContentType(ContentType ctype) {
-        if (ctype == null) {
-            ctype = new ContentType(ContentType.MESSAGE_RFC822);
-        } else if (!ctype.getContentType().equals(ContentType.MESSAGE_RFC822)) {
+    @Override public MimePart setContentType(ContentType ctype) {
+        if (ctype != null && !ctype.getContentType().equals(ContentType.MESSAGE_RFC822)) {
             throw new UnsupportedOperationException("cannot change a message to another type");
         }
-        super.setContentType(ctype);
+        super.setContentType(ctype == null ? new ContentType(ContentType.MESSAGE_RFC822) : ctype);
+        return this;
     }
 
-    @Override void checkContentType(ContentType ctype) {
+    @Override ContentType checkContentType(ContentType ctype) {
         if (ctype == null || !ctype.getContentType().equals(ContentType.MESSAGE_RFC822)) {
             throw new UnsupportedOperationException("cannot change a message to text");
         }
+        return ctype;
     }
 
 

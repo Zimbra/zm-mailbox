@@ -43,31 +43,30 @@ public class MimeBodyPart extends MimePart {
     @Override void removeChild(MimePart mp)  {}
 
 
-    @Override void checkContentType(ContentType ctype) {
+    @Override ContentType checkContentType(ContentType ctype) {
         if (ctype != null && (ctype.getPrimaryType().equals("multipart") || ctype.getContentType().equals(ContentType.MESSAGE_RFC822))) {
             throw new UnsupportedOperationException("cannot change a message to text");
         }
+        return ctype;
     }
 
-    @Override public void setContentType(ContentType ctype) {
-        if (ctype == null) {
-            ctype = new ContentType(ContentType.TEXT_PLAIN);
-        }
-        checkContentType(ctype);
-        super.setContentType(ctype);
+    @Override public MimeBodyPart setContentType(ContentType ctype) {
+        super.setContentType(checkContentType(ctype == null ? new ContentType(ContentType.TEXT_PLAIN) : ctype));
+        return this;
     }
 
     public ContentTransferEncoding getTransferEncoding() {
         return mTargetEncoding;
     }
 
-    public void setTransferEncoding(ContentTransferEncoding cte) {
+    public MimeBodyPart setTransferEncoding(ContentTransferEncoding cte) {
         ContentTransferEncoding newEncoding = cte == null ? ContentTransferEncoding.BINARY : cte;
         if (newEncoding.normalize() != mTargetEncoding.normalize()) {
             markDirty(Dirty.CTE);
         }
         setMimeHeader("Content-Transfer-Encoding", cte == null ? null : cte.toString());
         mTargetEncoding = newEncoding;
+        return this;
     }
 
 
@@ -188,8 +187,7 @@ public class MimeBodyPart extends MimePart {
         ctype.setParameter("charset", cset);
 
         setContent((text == null ? "" : text).getBytes(cset), cte);
-        setContentType(ctype);
-        return this;
+        return setContentType(ctype);
     }
 
     public MimeBodyPart setContent(byte[] content) throws IOException {

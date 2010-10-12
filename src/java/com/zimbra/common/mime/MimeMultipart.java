@@ -131,13 +131,17 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
     }
 
 
-    @Override void checkContentType(ContentType ctype) {
+    @Override ContentType checkContentType(ContentType ctype) {
         if (ctype == null || !ctype.getPrimaryType().equals("multipart")) {
             throw new UnsupportedOperationException("cannot change a multipart to text");
         }
+        return ctype;
     }
 
-    @Override public void setContentType(ContentType ctype) {
+    @Override public MimeMultipart setContentType(ContentType ctypeParam) {
+        ContentType ctype = ctypeParam == null ? new ContentType("multipart/mixed") : ctypeParam;
+        super.setContentType(checkContentType(ctype));
+
         // changing the boundary forces a recalc of the content
         String newBoundary = ctype.getParameter("boundary");
         if (!mBoundary.equals(newBoundary)) {
@@ -145,8 +149,8 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
             mBoundary = newBoundary;
         }
 
-        super.setContentType(ctype);
         // FIXME: if moving to/from multipart/digest, make sure to recalculate defaults on subparts
+        return this;
     }
 
     String getBoundary() {

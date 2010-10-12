@@ -163,12 +163,13 @@ public abstract class MimePart {
         return new ContentType(mContentType);
     }
 
-    public void setContentType(ContentType ctype) {
+    public MimePart setContentType(ContentType ctype) {
         mContentType = new ContentType(ctype);
         setMimeHeader("Content-Type", ctype);
+        return this;
     }
 
-    abstract void checkContentType(ContentType ctype);
+    abstract ContentType checkContentType(ContentType ctype);
 
     public ContentDisposition getContentDisposition() {
         return new ContentDisposition(getMimeHeader("Content-Disposition"));
