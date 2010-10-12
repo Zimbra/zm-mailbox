@@ -50,7 +50,7 @@ public class ZSearchFolder extends ZFolder {
         mTypes = f.getTypes();
         try {
             mSortBy = SearchSortBy.fromString(
-                SystemUtil.getValue(f.getSortBy(), SearchFolder.SortBy.dateDesc).toString());
+                SystemUtil.coalesce(f.getSortBy(), SearchFolder.SortBy.dateDesc).toString());
         } catch (ServiceException se) {
             mSortBy = SearchSortBy.dateDesc;
         }

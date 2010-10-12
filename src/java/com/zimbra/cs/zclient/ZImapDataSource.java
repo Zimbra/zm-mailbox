@@ -110,14 +110,14 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
     public String getName() { return data.getName(); }
     public void setName(String name) { data.setName(name); }
 
-    public boolean isEnabled() { return SystemUtil.getValue(data.isEnabled(), Boolean.FALSE); }
+    public boolean isEnabled() { return SystemUtil.coalesce(data.isEnabled(), Boolean.FALSE); }
     
     public void setEnabled(boolean enabled) { data.setEnabled(enabled); }
 
     public String getHost() { return data.getHost(); }
     public void setHost(String host) { data.setHost(host); }
 
-    public int getPort() { return SystemUtil.getValue(data.getPort(), -1); }
+    public int getPort() { return SystemUtil.coalesce(data.getPort(), -1); }
     public void setPort(int port) { data.setPort(port); } 
 
     public String getUsername() { return data.getUsername(); }
@@ -178,6 +178,6 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
     }
 
     public boolean isImportOnly() {
-        return SystemUtil.getValue(data.isImportOnly(), Boolean.FALSE);
+        return SystemUtil.coalesce(data.isImportOnly(), Boolean.FALSE);
     }
 }

@@ -73,7 +73,7 @@ public class ZSignature implements Comparable<ZSignature>, ToZJSONObject {
         if (content == null) {
             return DEFAULT_CONTENT_TYPE;
         }
-        return SystemUtil.getValue(content.getContentType(), DEFAULT_CONTENT_TYPE);
+        return SystemUtil.coalesce(content.getContentType(), DEFAULT_CONTENT_TYPE);
     }
     
     private SignatureContent getFirstContent() {

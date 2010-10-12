@@ -80,7 +80,7 @@ public class ZRssDataSource implements ZDataSource, ToZJSONObject {
     }
     
     public boolean isEnabled() {
-        return SystemUtil.getValue(data.isEnabled(), Boolean.FALSE);
+        return SystemUtil.coalesce(data.isEnabled(), Boolean.FALSE);
     }
 
     public Element toElement(Element parent) {

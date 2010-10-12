@@ -246,28 +246,28 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mIsPlaceholder = mParentId == null;
         mFlags = f.getFlags();
         try {
-            mColor = ZFolder.Color.fromInt(SystemUtil.getValue(f.getColor(), 0));
+            mColor = ZFolder.Color.fromInt(SystemUtil.coalesce(f.getColor(), 0));
         } catch (ServiceException se) {
             mColor = ZFolder.Color.orange;
         }
         
-        mUnreadCount = SystemUtil.getValue(f.getUnreadCount(), 0);
-        mImapUnreadCount = SystemUtil.getValue(f.getImapUnreadCount(), mUnreadCount);
-        mMessageCount = SystemUtil.getValue(f.getItemCount(), 0);
-        mImapMessageCount = SystemUtil.getValue(f.getImapItemCount(), mMessageCount);
+        mUnreadCount = SystemUtil.coalesce(f.getUnreadCount(), 0);
+        mImapUnreadCount = SystemUtil.coalesce(f.getImapUnreadCount(), mUnreadCount);
+        mMessageCount = SystemUtil.coalesce(f.getItemCount(), 0);
+        mImapMessageCount = SystemUtil.coalesce(f.getImapItemCount(), mMessageCount);
         
         mDefaultView = View.conversation;
         if (f.getView() != null) {
             mDefaultView = SoapConverter.FROM_SOAP_VIEW.apply(f.getView());
         }
         
-        mModifiedSequence = SystemUtil.getValue(f.getModifiedSequence(), -1);
-        mContentSequence = SystemUtil.getValue(f.getRevision(), -1);
-        mImapUIDNEXT = SystemUtil.getValue(f.getImapUidNext(), -1);
-        mImapMODSEQ = SystemUtil.getValue(f.getImapModifiedSequence(), -1);
+        mModifiedSequence = SystemUtil.coalesce(f.getModifiedSequence(), -1);
+        mContentSequence = SystemUtil.coalesce(f.getRevision(), -1);
+        mImapUIDNEXT = SystemUtil.coalesce(f.getImapUidNext(), -1);
+        mImapMODSEQ = SystemUtil.coalesce(f.getImapModifiedSequence(), -1);
         mRemoteURL = f.getUrl();
         mEffectivePerms = f.getPerm();
-        mSize = SystemUtil.getValue(f.getItemCount(), 0);
+        mSize = SystemUtil.coalesce(f.getItemCount(), 0);
         
         mGrants = new ArrayList<ZGrant>();
         mSubFolders = new ArrayList<ZFolder>();

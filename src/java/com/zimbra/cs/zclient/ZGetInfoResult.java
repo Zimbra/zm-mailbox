@@ -137,7 +137,7 @@ public class ZGetInfoResult implements ToZJSONObject {
     }
 
     public String getRecent() {
-        return SystemUtil.getValue(data.getRecentMessageCount(), 0).toString();
+        return SystemUtil.coalesce(data.getRecentMessageCount(), 0).toString();
     }
 
     public String getChangePasswordURL() {
@@ -205,7 +205,7 @@ public class ZGetInfoResult implements ToZJSONObject {
     }
 
     public long getMailboxQuotaUsed() {
-        return SystemUtil.getValue(data.getQuotaUsed(), -1L);
+        return SystemUtil.coalesce(data.getQuotaUsed(), -1L);
     }
 
     public String getId() {
