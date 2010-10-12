@@ -99,7 +99,7 @@ public class CheckRight extends RightDocumentHandler {
             Element eVia = resp.addElement(AdminConstants.E_VIA);
             
             Element eViaTarget = eVia.addElement(AdminConstants.E_TARGET);
-            eViaTarget.addAttribute(AdminConstants.A_TYPE, via.getGranteeType());
+            eViaTarget.addAttribute(AdminConstants.A_TYPE, via.getTargetType());
             eViaTarget.setText(via.getTargetName());
             
             Element eViaGrantee = eVia.addElement(AdminConstants.E_GRANTEE);
