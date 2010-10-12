@@ -53,7 +53,7 @@ public class MimeMessage extends MimePart {
         super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
         mProperties = props;
 
-        setContent(file, false);
+        attachSource(file);
         InputStream is = new BufferedInputStream(new FileInputStream(file), 8192);
         ByteUtil.drain(new MimeParserInputStream(is)).insertBodyPart(this);
     }
@@ -72,7 +72,7 @@ public class MimeMessage extends MimePart {
         super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
         mProperties = props;
 
-        setContent(body, false);
+        attachSource(body);
         InputStream is = new ByteArrayInputStream(body);
         try {
             ByteUtil.drain(new MimeParserInputStream(is)).insertBodyPart(this);

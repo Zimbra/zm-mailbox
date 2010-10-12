@@ -14,6 +14,9 @@
  */
 package com.zimbra.common.mime;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -135,7 +138,7 @@ public class MimeBodyPart extends MimePart {
 
         // if we're here, either there was no explicit charset or it was invalid, so try the default charset
         String defaultCharset = getDefaultCharset();
-        if (defaultCharset != null && !defaultCharset.trim().equals("")) {
+        if (defaultCharset != null && !defaultCharset.trim().isEmpty()) {
             try {
                 return new InputStreamReader(is, HeaderUtils.normalizeCharset(defaultCharset));
             } catch (UnsupportedEncodingException e) { }
@@ -162,65 +165,88 @@ public class MimeBodyPart extends MimePart {
 
     /** Changes the <tt>Content-Type</tt> of the part to <tt>text/plain</tt>
      *  and sets the part's content to the given text using the default
-     *  charset.
-     * @throws UnsupportedEncodingException */
-    public MimeBodyPart setText(String text) throws UnsupportedEncodingException {
+     *  charset. */
+    public MimeBodyPart setText(String text) throws IOException {
         return setText(text, null, null, null);
     }
 
-    public MimeBodyPart setText(String text, String charset, String subtype, ContentTransferEncoding cte) throws UnsupportedEncodingException {
+    public MimeBodyPart setText(String text, String charset, String subtype, ContentTransferEncoding cte) throws IOException {
         // default the subtype and charset appropriately
         ContentType ctype = getContentType();
-        if (subtype == null || subtype.trim().equals("")) {
-            subtype = ctype.getSubType();
-        }
+        ctype.setContentType("text/" + (subtype == null || subtype.trim().isEmpty() ? ctype.getSubType() : subtype));
 
-        if (charset == null || charset.trim().equals("")) {
-            charset = ctype.getParameter("charset");
+        String cset = charset;
+        if (cset == null || cset.trim().isEmpty()) {
+            cset = ctype.getParameter("charset");
         }
-        if (charset == null || charset.trim().equals("")) {
-            charset = getDefaultCharset();
+        if (cset == null || cset.trim().isEmpty()) {
+            cset = getDefaultCharset();
         }
-        if (charset == null || charset.trim().equals("")) {
-            charset = "utf-8";
+        if (cset == null || cset.trim().isEmpty()) {
+            cset = "utf-8";
         }
+        ctype.setParameter("charset", cset);
 
-        if (getParent() != null) {
-            getParent().markDirty(Dirty.CONTENT);
-        }
-        setContentType(ctype.setContentType("text/" + subtype).setParameter("charset", charset));
-
-        byte[] content = (text == null ? "" : text).getBytes(charset);
-        if (cte == null) {
-            // determine an appropriate Content-Transfer-Encoding if none was mandated
-            int encodeable = 0, toolong = 0, column = 0;
-            for (int i = 0, length = content.length; i < length; i++) {
-                byte octet = content[i];
-                if (octet >= 0x7F || (octet < 0x20 && octet != '\t' && octet != '\r' && octet != '\n')) {
-                    encodeable++;
-                }
-                if (octet == '\n') {
-                    if (column > 998) {
-                        toolong++;
-                    }
-                    column = 0;
-                } else {
-                    column++;
-                }
-            }
-
-            if (encodeable == 0 && toolong == 0) {
-                cte = ContentTransferEncoding.SEVEN_BIT;
-            } else if (encodeable < content.length / 4) {
-                cte = ContentTransferEncoding.QUOTED_PRINTABLE;
-            } else {
-                cte = ContentTransferEncoding.BASE64;
-            }
-        }
-
-        setContent(content);
-        mEncoding = (cte == ContentTransferEncoding.BINARY ? ContentTransferEncoding.BINARY : ContentTransferEncoding.EIGHT_BIT);
-        mTargetEncoding = cte;
+        setContent((text == null ? "" : text).getBytes(cset), cte);
+        setContentType(ctype);
         return this;
+    }
+
+    public MimeBodyPart setContent(byte[] content) throws IOException {
+        return setContent(content, null);
+    }
+
+    public MimeBodyPart setContent(byte[] content, ContentTransferEncoding cte) throws IOException {
+        return setContent(content == null ? null : new PartSource(content), cte);
+    }
+
+    public MimeBodyPart setContent(File file) throws IOException {
+        return setContent(file, null);
+    }
+
+    public MimeBodyPart setContent(File file, ContentTransferEncoding cte) throws IOException {
+        return setContent(file == null || !file.exists() ? null : new PartSource(file), cte);
+    }
+
+    private MimeBodyPart setContent(PartSource psource, ContentTransferEncoding cte) throws IOException {
+        super.setContent(psource);
+        mEncoding = ContentTransferEncoding.BINARY;
+        mTargetEncoding = cte == null ? pickEncoding() : cte;
+        return this;
+    }
+
+    private ContentTransferEncoding pickEncoding() throws IOException {
+        int encodeable = 0, toolong = 0, length = 0;
+
+        InputStream is = getRawContentStream();
+        if (is != null) {
+            try {
+                is = is instanceof ByteArrayInputStream || is instanceof BufferedInputStream ? is : new BufferedInputStream(is);
+                for (int octet = is.read(), column = 0; octet != -1; octet = is.read()) {
+                    if (octet >= 0x7F || (octet < 0x20 && octet != '\t' && octet != '\r' && octet != '\n')) {
+                        encodeable++;
+                    }
+                    if (octet == '\n') {
+                        if (column > 998) {
+                            toolong++;
+                        }
+                        column = 0;
+                    } else {
+                        column++;
+                    }
+                    length++;
+                }
+            } finally {
+                ByteUtil.closeStream(is);
+            }
+        }
+
+        if (encodeable == 0 && toolong == 0) {
+            return ContentTransferEncoding.SEVEN_BIT;
+        } else if (encodeable < length / 4) {
+            return ContentTransferEncoding.QUOTED_PRINTABLE;
+        } else {
+            return ContentTransferEncoding.BASE64;
+        }
     }
 }
