@@ -18,7 +18,6 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
@@ -251,7 +250,7 @@ public class MimeMessage extends MimePart {
     }
 
 
-    public static void main(String[] args) throws FileNotFoundException, IOException {
+    public static void main(String[] args) throws IOException {
         MimeMessage mm = new MimeMessage(new File(args[0] + File.separator + "toplevel-nested-message"));
         dumpParts(mm);
         mm.setHeader("X-Mailer", "Zimbra 5.0 RC2");
@@ -266,8 +265,17 @@ public class MimeMessage extends MimePart {
 
         mm = new MimeMessage(new File(args[0] + File.separator + "digest-attachment-16771"));
         dumpParts(mm);
-        MimeMessage extra = new MimeMessage(new File(args[0] + File.separator + "23079"));
-        ((MimeMultipart) mm.getSubpart("TEXT")).addPart(extra.getSubpart("1"), 1);
+        try {
+            javax.mail.Session jsession = javax.mail.Session.getInstance(new Properties());
+            javax.mail.internet.MimeMessage jmm = new javax.mail.internet.MimeMessage(jsession, new FileInputStream(args[0] + File.separator + "23079"));
+            javax.mail.internet.MimeMultipart jmmulti = (javax.mail.internet.MimeMultipart) jmm.getContent();
+            javax.mail.internet.MimeBodyPart jmmbp = (javax.mail.internet.MimeBodyPart) jmmulti.getBodyPart(1);
+            javax.mail.internet.MimePartDataSource jmmpds = new javax.mail.internet.MimePartDataSource(jmmbp);
+            MimePart mp = new MimeBodyPart(new ContentType("text/html")).setContent(jmmpds).setTransferEncoding(ContentTransferEncoding.QUOTED_PRINTABLE);
+            ((MimeMultipart) mm.getSubpart("TEXT")).addPart(mp, 1);
+        } catch (javax.mail.MessagingException e) {
+            e.printStackTrace();
+        }
         dumpParts(mm);
         ByteUtil.copy(mm.getInputStream(), true, System.out, false);
 
@@ -324,7 +332,7 @@ public class MimeMessage extends MimePart {
         ((MimeMultipart) mm.getBodyPart()).setContentType(((MimeMultipart) mm.getBodyPart()).getContentType().setParameter("boundary", "b*o*u*n*d*a*r*y"));
 //        System.out.write(mm.getSubpart("2").getContent());
 //        ByteUtil.copy(mm.getSubpart("2").getContentStream(), true, System.out, false);
-//        System.out.write(mm.getContent());
+        System.out.write(mm.getContent());
 
         MimeBodyPart body = new MimeBodyPart(new ContentType("text/enriched; charset=us-ascii"));
         body.setMimeHeader("Content-Disposition", "attachment; filename=bar.txt");
@@ -376,10 +384,11 @@ public class MimeMessage extends MimePart {
     static void dumpParts(MimeMessage mm) throws IOException {
         for (Map.Entry<String, MimePart> mpi : mm.listMimeParts().entrySet()) {
             MimePart part = mpi.getValue();
+            String size = part.getSize() < 0 ? "unknown size" : part.getSize() + " bytes";
+            String lines = part.getLineCount() < 0 ? "" : ", " + part.getLineCount() + " lines";
             String filename = part.getFilename() == null ? "" : " [" + part.getFilename() + "]";
             String desc = part.getMimeHeader("Content-Description") == null ? "" : " {" + part.getMimeHeader("Content-Description") + "}";
-            String lines = part.getLineCount() < 0 ? "" : ", " + part.getLineCount() + " lines";
-            System.out.println('"' + mpi.getKey() + "\": " + part.getContentType().getContentType() + " (" + part.getSize() + " bytes" + lines + ")" + filename + desc);
+            System.out.println('"' + mpi.getKey() + "\": " + part.getContentType().getContentType() + " (" + size + lines + ")" + filename + desc);
             if (mm.getSubpart(mpi.getKey()) != mpi.getValue()) {
                 System.out.println("  MISMATCH!");
             }

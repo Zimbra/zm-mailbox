@@ -23,6 +23,8 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 
+import javax.activation.DataSource;
+
 import com.zimbra.common.util.ByteUtil;
 
 public class MimeBodyPart extends MimePart {
@@ -204,6 +206,14 @@ public class MimeBodyPart extends MimePart {
 
     public MimeBodyPart setContent(File file, ContentTransferEncoding cte) throws IOException {
         return setContent(file == null || !file.exists() ? null : new PartSource(file), cte);
+    }
+
+    public MimeBodyPart setContent(DataSource ds) throws IOException {
+        return setContent(ds, null);
+    }
+
+    public MimeBodyPart setContent(DataSource ds, ContentTransferEncoding cte) throws IOException {
+        return setContent(ds == null ? null : new PartSource(ds), cte);
     }
 
     private MimeBodyPart setContent(PartSource psource, ContentTransferEncoding cte) throws IOException {

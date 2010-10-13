@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.activation.DataSource;
+
 import com.zimbra.common.util.ByteUtil;
 
 public abstract class MimePart {
@@ -297,8 +299,13 @@ public abstract class MimePart {
         return attachSource(file == null || !file.exists() ? null : new PartSource(file));
     }
 
+    public MimePart attachSource(DataSource ds) {
+        return attachSource(ds == null ? null : new PartSource(ds));
+    }
+
     MimePart setContent(PartSource psource) {
         // switch to "headers dirty" and propagate upwards, regardless of previous dirty state
+        mDirty = Dirty.NONE;
         markDirty(Dirty.HEADERS);
 
         mPartSource  = psource;
@@ -333,18 +340,28 @@ public abstract class MimePart {
     static class PartSource {
         private final byte[] mBodyContent;
         private final File mBodyFile;
+        private final DataSource mBodySource;
         private final long mLength;
 
         PartSource(byte[] content) {
             mBodyContent = content;
             mBodyFile    = null;
+            mBodySource  = null;
             mLength      = mBodyContent.length;
         }
 
         PartSource(File file) {
             mBodyContent = null;
             mBodyFile    = file;
+            mBodySource  = null;
             mLength      = mBodyFile.length();
+        }
+
+        PartSource(DataSource ds) {
+            mBodyContent = null;
+            mBodyFile    = null;
+            mBodySource  = ds;
+            mLength      = -1;
         }
 
         long getLength() {
@@ -352,17 +369,23 @@ public abstract class MimePart {
         }
 
         InputStream getContentStream(long start, long end) throws IOException {
-            long sstart = Math.max(0, Math.min(start, mLength));
-            long send = end < 0 ? mLength : Math.max(sstart, Math.min(end, mLength));
+            long sbound = mLength == -1 ? Long.MAX_VALUE : mLength;
+            long sstart = Math.max(0, Math.min(start, sbound));
+            long send = end < 0 ? mLength : Math.max(sstart, Math.min(end, sbound));
 
             if (sstart == send) {
                 return new ByteArrayInputStream(new byte[0]);
             } else if (mBodyContent != null) {
                 return new ByteArrayInputStream(mBodyContent, (int) sstart, (int) (send - sstart));
-            } else if (mBodyFile != null) {
-                InputStream is = new FileInputStream(mBodyFile);
+            } else if (mBodyFile != null || mBodySource != null) {
+                InputStream is = mBodyFile != null ? new FileInputStream(mBodyFile) : mBodySource.getInputStream();
                 try {
-                    return sstart == 0 && send == mLength ? is : ByteUtil.SegmentInputStream.create(is, sstart, send);
+                    if (send == -1 || send == mLength) {
+                        is.skip(sstart);
+                        return is;
+                    } else {
+                        return ByteUtil.SegmentInputStream.create(is, sstart, send);
+                    }
                 } catch (IOException ioe) {
                     ByteUtil.closeStream(is);
                     throw ioe;
@@ -396,13 +419,29 @@ public abstract class MimePart {
                 } catch (FileNotFoundException fnfe) {
                     return null;
                 }
+            } else if (mBodySource != null) {
+                InputStream is = getContentStream(sstart, send);
+                try {
+                    int remaining = size;
+                    while (remaining > 0) {
+                        int read = is.read(content, size - remaining, remaining);
+                        if (read < 0) {
+                            break;
+                        }
+                        remaining -= read;
+                    }
+                    return content;
+                } finally {
+                    ByteUtil.closeStream(is);
+                }
             } else {
                 return null;
             }
         }
     }
 
-    static class VectorInputStream extends InputStream {
+
+    public static class VectorInputStream extends InputStream {
         private final List<Object> mItems;
         private int mNextIndex;
         private InputStream mCurrentStream;
