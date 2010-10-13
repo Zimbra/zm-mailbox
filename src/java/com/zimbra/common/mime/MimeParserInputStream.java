@@ -14,13 +14,19 @@
  */
 package com.zimbra.common.mime;
 
+import java.io.File;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import javax.activation.DataSource;
+
+import com.zimbra.common.mime.MimePart.PartSource;
+
 public class MimeParserInputStream extends FilterInputStream {
     private MimeParser parser;
+    private MimePart.PartSource psource;
 
     public MimeParserInputStream(InputStream in) {
         super(in);
@@ -59,19 +65,37 @@ public class MimeParserInputStream extends FilterInputStream {
         parser.endParse();
     }
 
+
+    public MimeParserInputStream setSource(byte[] content) {
+        psource = content == null ? null : new PartSource(content);
+        return this;
+    }
+
+    public MimeParserInputStream setSource(File file) {
+        psource = file == null || !file.exists() ? null : new PartSource(file);
+        return this;
+    }
+
+    public MimeParserInputStream setSource(DataSource ds) {
+        psource = ds == null ? null : new PartSource(ds);
+        return this;
+    }
+
     public MimePart getPart() {
-        return parser.getPart();
+        return parser.getPart().attachSource(psource);
     }
 
     <T extends MimeMessage> T insertBodyPart(T mm) {
         mm.setBodyPart(getPart());
         mm.recordEndpoint(parser.getPosition(), parser.getLineNumber());
+        mm.attachSource(psource);
         return mm;
     }
 
     public MimeMessage getMessage(Properties props) {
         MimeMessage mm = new MimeMessage(getPart(), props);
         mm.recordEndpoint(parser.getPosition(), parser.getLineNumber());
+        mm.attachSource(psource);
         return mm;
     }
 }

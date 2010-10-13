@@ -14,13 +14,19 @@
  */
 package com.zimbra.common.mime;
 
+import java.io.File;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Properties;
 
+import javax.activation.DataSource;
+
+import com.zimbra.common.mime.MimePart.PartSource;
+
 public class MimeParserOutputStream extends FilterOutputStream {
     private MimeParser parser;
+    private MimePart.PartSource psource;
 
     public MimeParserOutputStream(OutputStream out) {
         super(out);
@@ -43,13 +49,30 @@ public class MimeParserOutputStream extends FilterOutputStream {
         parser.endParse();
     }
 
+
+    public MimeParserOutputStream setSource(byte[] content) {
+        psource = content == null ? null : new PartSource(content);
+        return this;
+    }
+
+    public MimeParserOutputStream setSource(File file) {
+        psource = file == null || !file.exists() ? null : new PartSource(file);
+        return this;
+    }
+
+    public MimeParserOutputStream setSource(DataSource ds) {
+        psource = ds == null ? null : new PartSource(ds);
+        return this;
+    }
+
     public MimePart getPart() {
-        return parser.getPart();
+        return parser.getPart().attachSource(psource);
     }
 
     public MimeMessage getMessage(Properties props) {
         MimeMessage mm = new MimeMessage(getPart(), props);
         mm.recordEndpoint(parser.getPosition(), parser.getLineNumber());
+        mm.attachSource(psource);
         return mm;
     }
 }

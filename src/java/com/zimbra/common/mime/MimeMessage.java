@@ -52,9 +52,8 @@ public class MimeMessage extends MimePart {
         super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
         mProperties = props;
 
-        attachSource(file);
         InputStream is = new BufferedInputStream(new FileInputStream(file), 8192);
-        ByteUtil.drain(new MimeParserInputStream(is)).insertBodyPart(this);
+        ByteUtil.drain(new MimeParserInputStream(is)).setSource(file).insertBodyPart(this);
     }
 
     /** Parses a MIME message from a byte array.  The structure of the message
@@ -71,10 +70,9 @@ public class MimeMessage extends MimePart {
         super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
         mProperties = props;
 
-        attachSource(body);
         InputStream is = new ByteArrayInputStream(body);
         try {
-            ByteUtil.drain(new MimeParserInputStream(is)).insertBodyPart(this);
+            ByteUtil.drain(new MimeParserInputStream(is)).setSource(body).insertBodyPart(this);
         } catch (IOException ioe) {
             throw new RuntimeException("completely unexpected IOException while reading from byte array", ioe);
         }

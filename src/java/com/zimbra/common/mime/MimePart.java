@@ -195,11 +195,12 @@ public abstract class MimePart {
     }
 
 
-    protected void recordEndpoint(long position, int lineCount) {
+    protected MimePart recordEndpoint(long position, int lineCount) {
         mEndOffset = position;
         mSize      = position - mBodyOffset;
         mLineCount = lineCount;
         mDirty     = Dirty.NONE;
+        return this;
     }
 
     protected long recordSize(long size) {
@@ -284,23 +285,11 @@ public abstract class MimePart {
     }
 
 
-    private MimePart attachSource(PartSource psource) {
+    MimePart attachSource(PartSource psource) {
         if (mBodyOffset != -1) {
             mPartSource = psource;
         }
         return this;
-    }
-
-    public MimePart attachSource(byte[] content) {
-        return attachSource(content == null ? null : new PartSource(content));
-    }
-
-    public MimePart attachSource(File file) {
-        return attachSource(file == null || !file.exists() ? null : new PartSource(file));
-    }
-
-    public MimePart attachSource(DataSource ds) {
-        return attachSource(ds == null ? null : new PartSource(ds));
     }
 
     MimePart setContent(PartSource psource) {
