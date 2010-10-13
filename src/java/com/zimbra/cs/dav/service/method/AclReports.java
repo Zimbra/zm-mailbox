@@ -81,6 +81,7 @@ public class AclReports extends Report {
 			else if (queryType.compareToIgnoreCase("RESOURCE") == 0)
 				type = Provisioning.GalSearchType.resource;
 		}
+		@SuppressWarnings("unchecked")
 		List propSearch = query.elements(DavElements.E_PROPERTY_SEARCH);
 		for (Object obj : propSearch) {
 			if (!(obj instanceof Element))
@@ -102,6 +103,8 @@ public class AclReports extends Report {
 		ArrayList<DavResource> ret = new ArrayList<DavResource>();
 		Account authAccount = ctxt.getAuthAccount();
 		if (prop.equals(DavElements.E_DISPLAYNAME)) {
+		    if (!authAccount.isFeatureGalEnabled() || !authAccount.isFeatureGalAutoCompleteEnabled())
+		        return ret;
 	        SearchGalResult result = prov.searchGal(prov.getDomain(authAccount), match, type, Provisioning.GalMode.zimbra, null);
 	        for (GalContact ct : result.getMatches()) {
 	            String email = (String)ct.getAttrs().get(ContactConstants.A_email);
