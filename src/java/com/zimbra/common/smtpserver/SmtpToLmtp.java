@@ -31,16 +31,11 @@ public class SmtpToLmtp {
     private int smtpPort;
     private String lmtpHost;
     private int lmtpPort;
-    private boolean debug = false;
     
     public SmtpToLmtp(int smtpPort, String lmtpHost, int lmtpPort) {
         this.smtpPort = smtpPort;
         this.lmtpHost = lmtpHost;
         this.lmtpPort = lmtpPort;
-    }
-    
-    public void setDebug(boolean debug) {
-        this.debug = debug;
     }
     
     private void run() {
@@ -131,7 +126,6 @@ public class SmtpToLmtp {
                 }
             } catch (IOException e) {
                 ZimbraLog.smtp.info("", e);
-                e.printStackTrace(System.err);
                 close();
             }
         }
@@ -186,9 +180,7 @@ public class SmtpToLmtp {
         }
         
         private void send(PrintWriter out, String response) {
-            if (debug) {
-                System.out.println("Sending " + response + " to " + out);
-            }
+            ZimbraLog.smtp.debug("S: %s", response);
             out.print(response + "\r\n");
             out.flush();
         }
@@ -206,9 +198,10 @@ public class SmtpToLmtp {
                 }
                 buf.append((char) c);
             }
-            if (debug) {
-                System.out.println("Read " + buf.toString() + " from " + in);
+            if (c < 0) {
+                throw new IOException("Client disconnected");
             }
+            ZimbraLog.smtp.debug("C: %s", buf);
             return buf.toString();
         }
         
