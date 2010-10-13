@@ -15,6 +15,7 @@
 package com.zimbra.cs.mailbox;
 
 import com.zimbra.cs.fb.FreeBusyProvider;
+import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.alerts.CalItemReminderService;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.util.ZimbraApplication;
@@ -33,7 +34,7 @@ public abstract class MailboxListener {
 	
 	static {
 		sListeners = new HashSet<MailboxListener>();
-        if (ZimbraApplication.getInstance().supports(CalItemReminderService.class)) {
+        if (ZimbraApplication.getInstance().supports(CalItemReminderService.class) && !DebugConfig.disableCalendarReminderEmail) {
             register(new CalItemReminderService());
         }
     }

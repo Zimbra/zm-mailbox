@@ -3234,7 +3234,17 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         mAlarmData = getNextAlarm(nextAlarm, skipAlarmDefChangeCheck, Alarm.Action.DISPLAY, mAlarmData);
     }
 
-    public AlarmData getNextAlarm(long nextAlarm, boolean skipAlarmDefChangeCheck, Alarm.Action alarmAction, AlarmData currentNextAlarmData)
+    /**
+     * Gets the alarm data corresponding to the next (starting from current time) EMAIL alarm.
+     *
+     * @return
+     * @throws ServiceException
+     */
+    public AlarmData getNextEmailAlarm() throws ServiceException {
+        return getNextAlarm(System.currentTimeMillis(), true, Alarm.Action.EMAIL, null);
+    }
+
+    private AlarmData getNextAlarm(long nextAlarm, boolean skipAlarmDefChangeCheck, Alarm.Action alarmAction, AlarmData currentNextAlarmData)
     throws ServiceException {
         if (nextAlarm == NEXT_ALARM_ALL_DISMISSED || !hasAlarm()) {
             return null;

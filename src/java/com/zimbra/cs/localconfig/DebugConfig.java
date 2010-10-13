@@ -161,6 +161,8 @@ public class DebugConfig {
 
     public static boolean disableComputeGroupMembershipOptimization;
 
+    public static boolean disableCalendarReminderEmail;
+
     public static int imapSerializedSessionNotificationOverloadThreshold;
     public static int imapSessionSerializerFrequency;
     public static boolean imapCacheConsistencyCheck;
@@ -242,6 +244,8 @@ public class DebugConfig {
         
         disableFreeBusyUsingZimbraHttpConnectionManager = booleanValue("disable_freebusy_using_ZimbraHttpConnectionManager", false);
         disableFreeBusyUsingHttpClientUtil = booleanValue("disable_freebusy_using_HttpClientUtil", false);
+
+        disableCalendarReminderEmail = booleanValue("debug_disable_calendar_reminder_email", false);        
     }
 
     protected static boolean booleanValue(String key, boolean defaultValue) {

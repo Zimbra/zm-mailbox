@@ -12,9 +12,11 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
 import com.zimbra.cs.mailbox.calendar.Alarm;
+import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.session.PendingModifications;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,7 +32,7 @@ public class CalItemReminderService extends MailboxListener {
             ZimbraLog.scheduler.error("Error in getting account", e);
         }
         if (account == null) {
-            ZimbraLog.scheduler.error("Account not found for id " + accountId);
+            ZimbraLog.scheduler.error("Account not found for id %s", accountId);
             return;
         }
         if (mods.created != null) {
@@ -38,8 +40,8 @@ public class CalItemReminderService extends MailboxListener {
                 MailItem item = entry.getValue();
                 if (item instanceof CalendarItem) {
                     if (ZimbraLog.scheduler.isDebugEnabled())
-                        ZimbraLog.scheduler.debug("Handling creation of calendar item (id=" + item.getId() + ",mailboxId=" + item.getMailboxId() + ")");
-                    scheduleNextReminder((CalendarItem) item);
+                        ZimbraLog.scheduler.debug("Handling creation of calendar item (id=%s,mailboxId=%s)", item.getId(), item.getMailboxId());
+                    scheduleNextReminders((CalendarItem) item);
                 }
             }
         }
@@ -49,7 +51,7 @@ public class CalItemReminderService extends MailboxListener {
                 if (change.what instanceof CalendarItem) {
                     CalendarItem calItem = (CalendarItem) change.what;
                     if (ZimbraLog.scheduler.isDebugEnabled())
-                        ZimbraLog.scheduler.debug("Handling modification of calendar item (id=" + calItem.getId() + ",mailboxId=" + calItem.getMailboxId() + ")");
+                        ZimbraLog.scheduler.debug("Handling modification of calendar item (id=%s,mailboxId=%s)", calItem.getId(), calItem.getMailboxId());
                     boolean calItemCanceled = false;
                     try {
                         if ((change.why & PendingModifications.Change.MODIFIED_FOLDER) != 0 && calItem.inTrash()) {
@@ -58,9 +60,10 @@ public class CalItemReminderService extends MailboxListener {
                     } catch (ServiceException e) {
                         ZimbraLog.scheduler.error("Error in fetching calendar item's folder", e);
                     }
-                    boolean scheduleNext = cancelExistingReminder(calItem);
-                    if (scheduleNext && !calItemCanceled) {
-                        scheduleNextReminder(calItem);
+                    if (!calItemCanceled) {
+                        if (cancelExistingReminders(calItem)) {
+                            scheduleNextReminders(calItem);
+                        }
                     }
                 }
             }
@@ -71,18 +74,18 @@ public class CalItemReminderService extends MailboxListener {
                 if (deletedObj instanceof CalendarItem) {
                     CalendarItem calItem = (CalendarItem) deletedObj;
                     if (ZimbraLog.scheduler.isDebugEnabled())
-                        ZimbraLog.scheduler.debug("Handling deletion of calendar item (id=" + calItem.getId() + ",mailboxId=" + calItem.getMailboxId() + ")");
-                    cancelExistingReminder(calItem);
+                        ZimbraLog.scheduler.debug("Handling deletion of calendar item (id=%s,mailboxId=%s)", calItem.getId(), calItem.getMailboxId());
+                    cancelExistingReminders(calItem);
                 } else if (deletedObj instanceof Integer) {
                     // We only have item id
                     Mailbox mbox = null;
                     try {
                         mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId, MailboxManager.FetchMode.DO_NOT_AUTOCREATE);
                     } catch (ServiceException e) {
-                        ZimbraLog.scheduler.error("Error looking up the mailbox of account " + accountId, e);
+                        ZimbraLog.scheduler.error("Error looking up the mailbox of account %s", accountId, e);
                     }
                     if (mbox != null) {
-                        cancelExistingReminder((Integer) deletedObj, mbox.getId());
+                        cancelExistingReminders((Integer) deletedObj, mbox.getId());
                     }
                 }
             }
@@ -90,61 +93,84 @@ public class CalItemReminderService extends MailboxListener {
     }
 
     /**
-     * Cancels any reminder for an existing calendar item.
+     * Cancels email reminders for the calendar item.
      *
      * @param calItem
      * @return true if no error was encountered during cancellation
      */
-    static boolean cancelExistingReminder(CalendarItem calItem) {
-        return cancelExistingReminder(calItem.getId(), calItem.getMailboxId());
+    static boolean cancelExistingReminders(CalendarItem calItem) {
+        return cancelExistingReminders(calItem.getId(), calItem.getMailboxId());
     }
 
     /**
-     * Cancels any reminder for an existing calendar item.
+     * Cancels existing reminders for the calendar item.
      *
      * @param calItemId
      * @param mailboxId
      * @return true if no error was encountered during cancellation
      */
-    static boolean cancelExistingReminder(int calItemId, int mailboxId) {
+    static boolean cancelExistingReminders(int calItemId, int mailboxId) {
         try {
-            ScheduledTaskManager.cancel(CalItemReminderTask.class.getName(),
-                                        "reminderTask" + Integer.toString(calItemId),
+            ScheduledTaskManager.cancel(CalItemEmailReminderTask.class.getName(),
+                                        CalItemEmailReminderTask.TASK_NAME_PREFIX + Integer.toString(calItemId),
+                                        mailboxId,
+                                        false);
+            ScheduledTaskManager.cancel(CalItemSmsReminderTask.class.getName(),
+                                        CalItemSmsReminderTask.TASK_NAME_PREFIX + Integer.toString(calItemId),
                                         mailboxId,
                                         false);
         } catch (ServiceException e) {
-            ZimbraLog.scheduler.warn("Canceling reminder task failed", e);
+            ZimbraLog.scheduler.warn("Canceling reminder tasks failed", e);
             return false;
         }
         return true;
     }
 
     /**
-     * Schedules email reminder task for a calendar item.
+     * Schedules next reminders for the calendar item.
      *
      * @param calItem
      */
-    static void scheduleNextReminder(CalendarItem calItem) {
-        CalendarItem.AlarmData alarmData = null;
+    static void scheduleNextReminders(CalendarItem calItem) {
         try {
-            alarmData = calItem.getNextAlarm(System.currentTimeMillis(), true, Alarm.Action.EMAIL, null);
-        } catch (ServiceException e) {
-            ZimbraLog.scheduler.error("Error in getting next EMAIL alarm data", e);
-        }
-        if (alarmData == null)
-            return;
-        CalItemReminderTask reminderTask = new CalItemReminderTask();
-        reminderTask.setMailboxId(calItem.getMailboxId());
-        reminderTask.setExecTime(new Date(alarmData.getNextAt()));
-        reminderTask.setProperty("calItemId", Integer.toString(calItem.getId()));
-        reminderTask.setProperty("invId", Integer.toString(alarmData.getInvId()));
-        reminderTask.setProperty("compNum", Integer.toString(alarmData.getCompNum()));
-        reminderTask.setProperty("nextInstStart", Long.toString(alarmData.getNextInstanceStart()));
-        try {
-            ScheduledTaskManager.schedule(reminderTask);
+            CalendarItem.AlarmData alarmData = calItem.getNextEmailAlarm();
+            if (alarmData == null)
+                return;
+            boolean sendEmail = true;
+            boolean sendSms = false;
+            Alarm emailAlarm = alarmData.getAlarm();
+            List<ZAttendee> recipients = emailAlarm.getAttendees();
+            if (recipients != null && !recipients.isEmpty()) {
+                sendEmail = false;
+                Account acct = calItem.getAccount();
+                String defaultEmailAddress = acct.getAttr(Provisioning.A_zimbraPrefCalendarReminderEmail);
+                String defaultDeviceAddress = acct.getAttr(Provisioning.A_zimbraPrefCalendarReminderDeviceEmail);
+                for (ZAttendee recipient : recipients) {
+                    if (recipient.getAddress().equals(defaultEmailAddress))
+                        sendEmail = true;
+                    if (recipient.getAddress().equals(defaultDeviceAddress))
+                        sendSms = true;
+                }
+            }
+            if (sendEmail)
+                scheduleReminder(new CalItemEmailReminderTask(), calItem, alarmData);
+            if (sendSms)
+                scheduleReminder(new CalItemSmsReminderTask(), calItem, alarmData);
         } catch (ServiceException e) {
             ZimbraLog.scheduler.error("Error in scheduling reminder task", e);
         }
+    }
+
+    private static void scheduleReminder(
+            CalItemReminderTaskBase reminderTask, CalendarItem calItem, CalendarItem.AlarmData alarmData)
+            throws ServiceException {
+        reminderTask.setMailboxId(calItem.getMailboxId());
+        reminderTask.setExecTime(new Date(alarmData.getNextAt()));
+        reminderTask.setProperty(CalItemReminderTaskBase.CAL_ITEM_ID_PROP_NAME, Integer.toString(calItem.getId()));
+        reminderTask.setProperty(CalItemReminderTaskBase.INV_ID_PROP_NAME, Integer.toString(alarmData.getInvId()));
+        reminderTask.setProperty(CalItemReminderTaskBase.COMP_NUM_PROP_NAME, Integer.toString(alarmData.getCompNum()));
+        reminderTask.setProperty(CalItemReminderTaskBase.NEXT_INST_START_PROP_NAME, Long.toString(alarmData.getNextInstanceStart()));
+        ScheduledTaskManager.schedule(reminderTask);
     }
 
     public int registerForItemTypes() {

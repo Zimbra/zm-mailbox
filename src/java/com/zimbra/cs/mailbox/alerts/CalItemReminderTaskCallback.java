@@ -13,10 +13,11 @@ import java.util.concurrent.Callable;
 public class CalItemReminderTaskCallback implements ScheduledTaskCallback<ScheduledTaskResult> {
 
     public void afterTaskRun(Callable<ScheduledTaskResult> task, ScheduledTaskResult lastResult) {
-        if (task instanceof CalItemReminderTask && lastResult != null) {
-            if (ZimbraLog.scheduler.isDebugEnabled())
-                ZimbraLog.scheduler.debug(getClass().getName() + ".afterTaskRun() for " + task);
-            CalItemReminderService.scheduleNextReminder((CalendarItem) lastResult);
+        if (lastResult == null)
+            return;
+        if (task instanceof CalItemReminderTaskBase) {
+            ZimbraLog.scheduler.debug("afterTaskRun() for %s", task);
+            CalItemReminderService.scheduleNextReminders((CalendarItem) lastResult);
         }
     }
 }
