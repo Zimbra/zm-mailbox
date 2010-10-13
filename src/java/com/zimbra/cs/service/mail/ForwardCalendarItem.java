@@ -564,8 +564,6 @@ public class ForwardCalendarItem extends CalendarRequest {
                         if (mPlainNew != null)
                             mp.addBodyPart(mPlainNew);
                         mPlainPartReplaced = true;
-                    } else {
-                        throw new MessagingException("Unable to remove old plain part");
                     }
                 }
                 if (!mHtmlPartReplaced && mHtmlPart != null) {
@@ -576,8 +574,6 @@ public class ForwardCalendarItem extends CalendarRequest {
                         if (mHtmlNew != null)
                             mp.addBodyPart(mHtmlNew);
                         mHtmlPartReplaced = true;
-                    } else {
-                        throw new MessagingException("Unable to remove old html part");
                     }
                 }
                 if (!mCalendarPartReplaced && mCalendarPart != null) {
