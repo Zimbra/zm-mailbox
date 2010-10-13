@@ -87,6 +87,10 @@ public class L10nUtil {
         taskReminderEmailBody,
         taskReminderEmailBodyHtml,
 
+        apptReminderSmsText,
+        taskReminderSmsText,
+        deviceSendVerificationCodeText,
+
         // caldav messages
         caldavCalendarDescription,
 

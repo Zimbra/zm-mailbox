@@ -277,7 +277,13 @@ public class MailConstants {
     // contact ranking mgmt
     public static final QName RANKING_ACTION_REQUEST  = QName.get("RankingActionRequest", NAMESPACE);
     public static final QName RANKING_ACTION_RESPONSE = QName.get("RankingActionResponse", NAMESPACE);
-    
+
+    // device verification for sms reminders
+    public static final QName SEND_VERIFICATION_CODE_REQUEST = QName.get("SendVerificationCodeRequest", NAMESPACE);
+    public static final QName SEND_VERIFICATION_CODE_RESPONSE = QName.get("SendVerificationCodeResponse", NAMESPACE);
+    public static final QName VERIFY_CODE_REQUEST = QName.get("VerifyCodeRequest", NAMESPACE);
+    public static final QName VERIFY_CODE_RESPONSE = QName.get("VerifyCodeResponse", NAMESPACE);
+
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
     public static final String E_MSG = "m";
@@ -807,4 +813,7 @@ public class MailConstants {
     public static final String A_DISPLAYNAME = "display";
     public static final String A_MATCH_TYPE = "type";
 
+    // device verification for reminders
+    public static final String A_VERIFICATION_CODE = "code";
+    public static final String A_VERIFICATION_SUCCESS = "success";
 }
