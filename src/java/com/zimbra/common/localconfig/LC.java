@@ -183,6 +183,9 @@ public class LC {
     public static final KnownKey soap_response_buffer_size;
     public static final KnownKey soap_response_chunked_transfer_encoding_disabled;
     public static final KnownKey zimbra_servlet_output_stream_buffer_size;
+    public static final KnownKey servlet_max_concurrent_requests_per_session =
+        new KnownKey("servlet_max_concurrent_requests_per_session", "10",
+                "max number of concurrent HTTP requests per HTTP session");
 
     public static final KnownKey ldap_host;
     public static final KnownKey ldap_port;
@@ -381,9 +384,9 @@ public class LC {
     public static final KnownKey calendar_cache_range_months;
     public static final KnownKey calendar_cache_max_stale_items;
     public static final KnownKey calendar_exchange_form_auth_url;
-    
+
     public static final KnownKey spnego_java_options;
-    
+
     public static final KnownKey text_attachments_base64;
 
     public static final KnownKey nio_imap_enabled =
@@ -655,7 +658,7 @@ public class LC {
 
     public static final KnownKey out_of_disk_error_unix;
     public static final KnownKey out_of_disk_error_windows;
-    
+
     // antispam
     public static final KnownKey antispam_mysql_bind_address;
     public static final KnownKey antispam_mysql_directory;
@@ -669,7 +672,7 @@ public class LC {
     public static final KnownKey antispam_mysql_user;
     public static final KnownKey antispam_mysql_root_password;
     public static final KnownKey antispam_mysql_password;
-    
+
 
     static {
         @SuppressWarnings("unused")
@@ -1403,7 +1406,7 @@ public class LC {
 
         calendar_exchange_form_auth_url = new KnownKey("calendar_exchange_form_auth_url");
         calendar_exchange_form_auth_url.setDefault("/exchweb/bin/auth/owaauth.dll");
-        
+
         krb5_keytab = new KnownKey("krb5_keytab");
         krb5_keytab.setDefault("${zimbra_home}" + FS + "conf" + FS + "krb5.keytab");
 
@@ -1767,52 +1770,52 @@ public class LC {
         out_of_disk_error_windows = new KnownKey("out_of_disk_error_windows");
         out_of_disk_error_windows.setDefault("There is not enough space on the disk");
         out_of_disk_error_windows.setDoc("IOException message string for out of disk error on Windows");
-        
+
         spnego_java_options = new KnownKey("spnego_java_options");
-        
+
         spnego_java_options.setDefault(
-                "-Djava.security.krb5.conf=" + "${mailboxd_directory}" + FS + "etc" + FS + "krb5.ini " + 
+                "-Djava.security.krb5.conf=" + "${mailboxd_directory}" + FS + "etc" + FS + "krb5.ini " +
                 "-Djava.security.auth.login.config=" + "${mailboxd_directory}" + FS + "etc" + FS + "spnego.conf " +
                 "-Djavax.security.auth.useSubjectCredsOnly=false");
-        
-        
+
+
         antispam_mysql_bind_address = new KnownKey("antispam_mysql_bind_address");
         antispam_mysql_bind_address.setDefault("localhost");
-        
+
         antispam_mysql_directory = new KnownKey("antispam_mysql_directory");
         antispam_mysql_directory.setDefault("${zimbra_home}/mta/mysql");
-        
+
         antispam_mysql_data_directory = new KnownKey("antispam_mysql_data_directory");
         antispam_mysql_data_directory.setDefault("${zimbra_home}/data/amavisd/mysql/data");
 
         antispam_mysql_errlogfile = new KnownKey("antispam_mysql_errlogfile");
         antispam_mysql_errlogfile.setDefault("${zimbra_home}/log/antispam-mysqld.log");
-        
+
         antispam_mysql_mycnf = new KnownKey("antispam_mysql_mycnf");
         antispam_mysql_mycnf.setDefault("${zimbra_home}/conf/antispam-my.cnf");
-        
+
         antispam_mysql_pidfile = new KnownKey("antispam_mysql_pidfile");
         antispam_mysql_pidfile.setDefault("${zimbra_home}/data/amavisd/mysql/mysql.pid");
-        
+
         antispam_mysql_host = new KnownKey("antispam_mysql_host");
         antispam_mysql_host.setDefault("localhost");
-        
+
         antispam_mysql_port = new KnownKey("antispam_mysql_port");
         antispam_mysql_port.setDefault("7308");
-        
+
         antispam_mysql_socket = new KnownKey("antispam_mysql_socket");
         antispam_mysql_socket.setDefault("${zimbra_home}/data/amavisd/mysql/mysql.sock");
-        
+
         antispam_mysql_user = new KnownKey("antispam_mysql_user");
         antispam_mysql_user.setDefault("zimbra");
-        
+
         antispam_mysql_root_password = new KnownKey("antispam_mysql_root_password");
         antispam_mysql_root_password.setDefault("");
-        
+
         antispam_mysql_password = new KnownKey("antispam_mysql_password");
         antispam_mysql_password.setDefault("");
 
-        
+
         // NOTE: When adding a new KnownKey, you do not need to call
         //       setDoc. The documentation string will come from the
         //       ZsMsg properties file, using the same key as the
