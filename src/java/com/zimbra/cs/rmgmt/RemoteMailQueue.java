@@ -56,7 +56,6 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.soap.Element;
 
 public class RemoteMailQueue {
-
     private static Map<String,RemoteMailQueue> mMailQueueCache = new HashMap<String,RemoteMailQueue>();
 
     public static RemoteMailQueue getRemoteMailQueue(Server server, String queueName, boolean forceScan) throws ServiceException {
@@ -547,7 +546,6 @@ public class RemoteMailQueue {
 
     public void action(Server server, QueueAction action, String[] ids) throws ServiceException {
         if (ZimbraLog.rmgmt.isDebugEnabled()) ZimbraLog.rmgmt.debug("action=" + action + " ids=" + Arrays.deepToString(ids) + " " + this);
-//    	boolean firstTime = true;
         RemoteManager rm = RemoteManager.getRemoteManager(server);
         IndexReader indexReader = null;
 
@@ -558,7 +556,7 @@ public class RemoteMailQueue {
                 clearIndex();
                 all = true;
             } else {
-                indexReader = IndexReader.open(LuceneDirectory.open(mIndexPath));
+                indexReader = IndexReader.open(LuceneDirectory.open(mIndexPath), false);
             }
 
             int done = 0;
@@ -584,7 +582,6 @@ public class RemoteMailQueue {
                     sb.append(ids[i].toUpperCase());
                 }
                 done = last;
-                //System.out.println("will execute action command: " + sb.toString());
                 rm.execute(sb.toString());
             }
         } catch (IOException ioe) {
