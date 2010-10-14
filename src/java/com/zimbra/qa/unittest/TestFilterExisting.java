@@ -125,7 +125,8 @@ extends TestCase {
         TestUtil.getMessage(mbox, query);
     }
 
-    public void testFileInto()
+    // TODO: Reenable this test after bug 51855 is fixed. 
+    public void disabledTestFileInto()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         TestUtil.createFolder(mbox, FOLDER1_PATH);
