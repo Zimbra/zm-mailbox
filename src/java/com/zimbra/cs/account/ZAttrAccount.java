@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101011-1015 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101012-1039 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -31899,11 +31899,11 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * Skin to use for this account
      *
-     * @return zimbraPrefSkin, or "beach" if unset
+     * @return zimbraPrefSkin, or "carbon" if unset
      */
     @ZAttr(id=355)
     public String getPrefSkin() {
-        return getAttr(Provisioning.A_zimbraPrefSkin, "beach");
+        return getAttr(Provisioning.A_zimbraPrefSkin, "carbon");
     }
 
     /**
