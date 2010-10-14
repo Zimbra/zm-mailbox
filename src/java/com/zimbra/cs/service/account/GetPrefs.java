@@ -90,6 +90,10 @@ public class GetPrefs extends AccountDocumentHandler  {
                 prefs.addKeyValuePair(key, (String) value, AccountConstants.E_PREF, AccountConstants.A_NAME);
             }
         }
+        
+        if (attrsMap.get(Provisioning.A_zimbraPrefCalendarReminderEmail) == null)
+            prefs.addKeyValuePair(Provisioning.A_zimbraPrefCalendarReminderEmail, acct.getName(), 
+                    AccountConstants.E_PREF, AccountConstants.A_NAME);
     }   
 
 }

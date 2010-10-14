@@ -2900,7 +2900,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <deprecateDesc>was added for Yahoo calendar, no longer used</deprecateDesc>
 </attr>
 
-<attr id="575" name="zimbraPrefCalendarReminderEmail" type="email" max="256" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="7.0.0">
+<attr id="575" name="zimbraPrefCalendarReminderEmail" type="email" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="7.0.0">
   <desc>RFC822 email address for receiving reminders for appointments and tasks</desc>
 </attr>
 
