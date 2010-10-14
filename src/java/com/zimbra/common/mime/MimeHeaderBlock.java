@@ -14,36 +14,29 @@
  */
 package com.zimbra.common.mime;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class MimeHeaderBlock implements Iterable<MimeHeader> {
     private final ArrayList<MimeHeader> mHeaders;
-    private MimePart mParent;
 
     public MimeHeaderBlock(boolean isMessage) {
-        this(isMessage, null);
-    }
-
-    public MimeHeaderBlock(boolean isMessage, MimePart parent) {
         mHeaders = new ArrayList<MimeHeader>(isMessage ? 20 : 5);
-        mParent = parent;
     }
 
     public MimeHeaderBlock(MimeHeaderBlock headers) {
         mHeaders = new ArrayList<MimeHeader>(headers.mHeaders);
     }
 
-
-    MimeHeaderBlock setParent(MimePart parent) {
-        mParent = parent;
-        return this;
+    public boolean isEmpty() {
+        return mHeaders == null || mHeaders.isEmpty();
     }
 
-
-    /** Returns the value of the last header matching the given
+    /** Returns the value of the first header matching the given
      *  <tt>name</tt>. */
     public String getHeader(String name) {
         return getHeader(name, null);
@@ -55,9 +48,8 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
     public String getHeader(String name, String defaultCharset) {
         for (int i = mHeaders.size() - 1; i >= 0; i--) {
             MimeHeader hdr = mHeaders.get(i);
-            if (hdr.getName().equalsIgnoreCase(name)) {
+            if (hdr.getName().equalsIgnoreCase(name))
                 return hdr.getValue(defaultCharset);
-            }
         }
         return null;
     }
@@ -67,117 +59,130 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
     public byte[] getRawHeader(String name) {
         for (int i = mHeaders.size() - 1; i >= 0; i--) {
             MimeHeader hdr = mHeaders.get(i);
-            if (hdr.getName().equalsIgnoreCase(name)) {
+            if (hdr.getName().equalsIgnoreCase(name))
                 return hdr.getRawHeader();
-            }
         }
         return null;
     }
 
-    private class HeaderIterator implements Iterator<MimeHeader> {
-        private final Iterator<MimeHeader> mIterator;
-
-        HeaderIterator(Iterable<MimeHeader> headers) {
-            mIterator = headers.iterator();
-        }
-
-        @Override public boolean hasNext() {
-            return mIterator.hasNext();
-        }
-
-        @Override public MimeHeader next() {
-            return mIterator.next();
-        }
-
-        @Override public void remove() {
-            mIterator.remove();
-            markDirty();
-        }
-    }
-
-    @Override public Iterator<MimeHeader> iterator() {
-        return new HeaderIterator(mHeaders);
-    }
-
-
-    void markDirty() {
-        if (mParent != null) {
-            mParent.markDirty(MimePart.Dirty.HEADERS);
-        }
+    public Iterator<MimeHeader> iterator() {
+        return mHeaders.iterator();
     }
 
     String validateFieldName(String name) {
         // FIXME: need a sanity-check that more closely parallels the 2822 ABNF
-        if (name != null) {
-            name = name.trim();
-            if (name.equals("")) {
-                return null;
-            }
-        }
+        if (name == null)
+            return null;
+        name = name.trim();
+        if (name.equals(""))
+            return null;
         return name;
     }
 
     public void setHeader(String name, MimeHeader header) {
-        if ((name = validateFieldName(name)) != null) {
-            for (Iterator<MimeHeader> it = mHeaders.iterator(); it.hasNext(); ) {
-                if (it.next().getName().equalsIgnoreCase(name)) {
-                    it.remove();
-                    markDirty();
-                }
-            }
-            addHeader(name, header);
+        if ((name = validateFieldName(name)) == null)
+            return;
+        for (Iterator<MimeHeader> it = mHeaders.iterator(); it.hasNext(); ) {
+            if (it.next().getName().equalsIgnoreCase(name))
+                it.remove();
         }
+        addHeader(name, header);
     }
 
     public void addHeader(String name, MimeHeader header) {
-        if ((name = validateFieldName(name)) != null && header != null) {
+        if ((name = validateFieldName(name)) == null)
+            return;
+        if (header != null)
             mHeaders.add(header);
-            markDirty();
-        }
-    }
-
-
-    public boolean isEmpty() {
-        return mHeaders == null || mHeaders.isEmpty();
-    }
-
-    public int getLength() {
-        int length = 0;
-        if (mHeaders != null) {
-            for (MimeHeader header : mHeaders) {
-                length += header.getRawHeader().length;
-            }
-        }
-        // include the trailing "\r\n" terminating the block
-        return length + 2;
     }
 
     public byte[] toByteArray() {
-        byte[] block = new byte[getLength()];
-        int offset = 0;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
         if (mHeaders != null) {
             for (MimeHeader header : mHeaders) {
-                byte[] line = header.getRawHeader();
-                System.arraycopy(line, 0, block, offset, line.length);
-                offset += line.length;
+                byte[] content = header.getRawHeader();
+                baos.write(content, 0, content.length);
             }
         }
-        block[offset++] = '\r';  block[offset++] = '\n';
-        return block;
+        baos.write('\r');  baos.write('\n');
+        return baos.toByteArray();
     }
 
-    @Override public String toString() {
-        return new String(toByteArray());
+    @Override public String toString()  { return new String(toByteArray()); }
+
+    public MimeHeaderBlock parse(InputStream is) throws IOException {
+        return parse(new MimePart.ParseState(new MimePart.PeekAheadInputStream(is)), null);
     }
 
+    MimeHeaderBlock parse(MimePart.ParseState pstate, List<String> boundaries) throws IOException {
+        MimePart.PeekAheadInputStream pais = pstate.getInputStream();
+        pstate.clearBoundary();
 
-    public static MimeHeaderBlock parse(InputStream is) throws IOException {
-        MimeParser.HeaderParser parser = new MimeParser.HeaderParser();
-        for (int b = is.read(); b != -1; b = is.read()) {
-            if (!parser.handleByte((byte) b)) {
-                break;
+        StringBuilder name = new StringBuilder(25);
+        ByteArrayOutputStream content = new ByteArrayOutputStream(80);
+        int c;
+        do {
+            long linestart = pais.getPosition();
+            name.setLength(0);  content.reset();
+
+            // read the field name
+            for (c = pais.read(); c != -1; c = pais.read()) {
+                content.write(c);
+                if (c == ':' || c == '\n' || c == '\r') {
+                    if (c == '\r' && pais.peek() == '\n')
+                        content.write(pais.read());
+                    break;
+                }
+                name.append((char) c);
             }
-        }
-        return parser.getHeaders();
+
+            boolean dashdash = boundaries != null && name.length() > 2 && name.charAt(0) == '-' && name.charAt(1) == '-';
+
+            if (c != ':') {
+                // check for the CRLF CRLF that terminates the headers
+                if (name.length() == 0)
+                    break;
+                // check for incorrectly-located boundary delimiter
+                if (dashdash && MimeBodyPart.checkBoundary(content.toByteArray(), 2, pstate, boundaries, linestart))
+                    return this;
+                // no colon, so abort now rather than reading more data
+                continue;
+            }
+            int valuestart = content.size();  boolean colon = true;
+
+            // read the field value, including extra lines from folding
+            boolean folded = false;
+            for (c = pais.read(); c != -1; c = pais.read()) {
+                content.write(c);
+                if (c == ' ' && colon) {
+                    // if there's a space after the colon, the value starts after the space
+                    valuestart++;
+                } else if (c == '\n' || c == '\r') {
+                    if (c == '\r' && pais.peek() == '\n') 
+                        content.write(pais.read());
+                    // unless the first char on the next line is whitespace (i.e. folding), this header is complete
+                    if (pais.peek() != ' ' && pais.peek() != '\t')
+                        break;
+                    // check for incorrectly-located boundary delimiter
+                    if (dashdash && !folded && MimeBodyPart.checkBoundary(content.toByteArray(), 2, pstate, boundaries, linestart))
+                        return this;
+                    folded = true;
+                }
+                colon = false;
+            }
+
+            // check for incorrectly-located boundary delimiter
+            if (dashdash && !folded && MimeBodyPart.checkBoundary(content.toByteArray(), 2, pstate, boundaries, linestart))
+                return this;
+
+            // if the name was valid, save the header to the hash
+            String key = name.toString().trim();
+            if (!key.equals(""))
+                mHeaders.add(new MimeHeader(key, content.toByteArray(), valuestart));
+
+            // FIXME: note that the first multipart/* Content-Type header needs to add a new boundary to the <code>boundaries</code> list
+        } while (c != -1);
+
+        return this;
     }
 }
