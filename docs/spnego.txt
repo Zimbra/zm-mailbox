@@ -1,4 +1,30 @@
-I Spnego Flow
+I. SPNEGO SSO
+   The SPNEGO SSO feature allows Windows domain users to enter their Zimbra mailbox without 
+   having to re-authenticate themselves to Zimbra by entering their Zimbra credentials.
+    
+   Microsoft's Active Directory/Kerberos implementation is the single authentication store.
+   
+   It is essential that a user must logon to a Windows 2000 domain, local logons will not work.
+   
+   Supported browsers:
+     - Internet Explorer 6.0 or later
+     - Firefox 3.0 or later
+     
+   
+   A high level description of the Authentication Overview
+   (see http://msdn.microsoft.com/en-us/library/ms995329.aspx for more information)
+   
+   - The logged-on user must have acquired Kerberos credentials from the domain.
+   - The logged-on user then attempts to access Zimbra. 
+   - Zimbra is configured to redirect the request to a resource URL under SPNEGO protection. 
+   - The Zimbra server asks for authentication with Kerberos (by using SPNEGO). 
+   - The client obtains a ticket for the requested service from the KDC and presents these credentials back to Zimbra server.
+   - The Zimbra server extracts the user's credentials and authenticates the request and identifies the user.
+   - The request is then redirected to Zimbra's preauth servlet with all required preauth parameters for the identified user.
+   - The Zimbra preauth servlet verifies the preauth parameters and redirect the user into the Zimbra mail page.
+
+
+II. Zimbra UI Flow
 
 1. user login to Windows as a domain user or a local user
 
@@ -36,7 +62,7 @@ I Spnego Flow
 15. user enters his Zimbra user/pass to login, all is well.
 
 
-II Configuration
+III. Configuration
 ======================================
 1. Create and Set Up the Keytab File
 ======================================
