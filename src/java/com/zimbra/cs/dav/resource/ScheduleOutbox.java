@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.mail.Address;
 import javax.mail.internet.AddressException;
@@ -47,7 +48,9 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
+import com.zimbra.cs.mailbox.calendar.FriendlyCalendaringDescription;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
+import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.ParsedDuration;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
@@ -256,8 +259,6 @@ public class ScheduleOutbox extends Collection {
         if (status.equals("CANCELLED"))
             subject = "Meeting Cancelled: ";
         subject += req.getPropVal(ICalTok.SUMMARY, "");
-        desc = req.getPropVal(ICalTok.DESCRIPTION, "");
-        descHtml = req.getDescriptionHtml();
         uid = req.getPropVal(ICalTok.UID, null);
         if (uid == null) {
             resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
@@ -265,8 +266,14 @@ public class ScheduleOutbox extends Collection {
             return;
         }
         try {
-            MimeMessage mm = CalendarMailSender.createCalendarMessage(from, sender, recipients, subject, desc, descHtml, uid, cal);
+            List<Invite> components = Invite.createFromCalendar(ctxt.getAuthAccount(), null, cal, false);
+            FriendlyCalendaringDescription friendlyDesc = new FriendlyCalendaringDescription(components, ctxt.getAuthAccount());
+            desc = friendlyDesc.getAsPlainText();
+            descHtml = req.getDescriptionHtml();
+            if ((descHtml == null) || (descHtml.length() == 0))
+                descHtml = friendlyDesc.getAsHtml();
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(ctxt.getAuthAccount());
+            MimeMessage mm = CalendarMailSender.createCalendarMessage(from, sender, recipients, subject, desc, descHtml, uid, cal);
             mbox.getMailSender().sendMimeMessage(ctxt.getOperationContext(), mbox, true, mm, null, null, null, null, null, true, false);
         } catch (ServiceException e) {
             resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);
