@@ -164,6 +164,7 @@ public class AccountConstants {
     public static final String A_ID = "id";
     public static final String A_ID_ONLY = "idOnly";
     public static final String A_isDL = "isDL";
+    public static final String A_isExternal = "isExternal";
     public static final String A_BY = "by";
     public static final String A_TYPE = "type";
     public static final String A_LIMIT = "limit";
