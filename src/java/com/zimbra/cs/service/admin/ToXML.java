@@ -43,9 +43,25 @@ public class ToXML {
 
     public static Element encodeAccount(Element parent, Account account, boolean applyCos, 
             Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
+        return encodeAccount(parent, account, 
+                applyCos, false, reqAttrs,  attrRightChecker);
+    }
+    
+    public static Element encodeAccount(Element parent, Account account, 
+            boolean applyCos, boolean needsExternalIndicator,
+            Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
         Element acctElem = parent.addElement(AccountConstants.E_ACCOUNT);
         acctElem.addAttribute(AccountConstants.A_NAME, account.getUnicodeName());
         acctElem.addAttribute(AccountConstants.A_ID, account.getId());
+        
+        if (needsExternalIndicator) {
+            try {
+                boolean isExternal = account.isAccountExternal();
+                acctElem.addAttribute(AccountConstants.A_isExternal, isExternal);
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("unable to determine if account is external", e);
+            }
+        }
         Map attrs = account.getUnicodeAttrs(applyCos);
         encodeAttrs(acctElem, attrs, AdminConstants.A_N, reqAttrs, attrRightChecker);
         return acctElem;

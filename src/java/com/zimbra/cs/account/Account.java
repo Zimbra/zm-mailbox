@@ -20,6 +20,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
+import com.zimbra.cs.account.Provisioning.ServerBy;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.auth.AuthContext;
 
@@ -216,6 +217,20 @@ public class Account extends ZAttrAccount implements GroupedEntry {
     public boolean isAccountStatusActive() {
         return Provisioning.ACCOUNT_STATUS_ACTIVE.equals(getAccountStatus(getProvisioning()));
     }
+    
+    public boolean isAccountExternal() throws ServiceException {
+        Server server = getServer();
+        if (server == null)
+            return true;
+        
+        return !server.mailTransportMatches(getAttr(Provisioning.A_zimbraMailTransport));
+    }
+    
+    public Server getServer() throws ServiceException {
+        String serverId = getAttr(Provisioning.A_zimbraMailHost);
+        return (serverId == null ? null : getProvisioning().get(ServerBy.name, serverId));
+    }
+
     
     public String getAccountStatus(Provisioning prov) {
         

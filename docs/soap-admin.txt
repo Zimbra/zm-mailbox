@@ -265,7 +265,7 @@ NOTE: SearchAccountsRequest is deprecated. See SearchDirectoryRequest.
 </SearchAccountsRequest>
 
 <SearchAccountsResponse more="{more-flag}" [searchTotal="{search-total}"]>
-  <account name="{name}" id="{id}">
+  <account name="{name}" id="{id} isExternal="1|0"">
     <a n="...">...</a>+
   </account>
   <alias name="{name}" id="{id}">
@@ -295,6 +295,9 @@ SearchAccountsRequest
             accounts|distributionlists|aliases|resources|domains
             (default is accounts)
 
+SearchAccountsResponse
+  isExternal: whether the account's zimbraMailTranport points to the designated protocol(lmtp) and server(home server of the account).
+  
 Access: domain admin sufficient (a domain admin can't specify "domains" as a type)
 
 -----------------------------
@@ -328,7 +331,7 @@ Access: domain admin sufficient (a domain admin can't specify "domains" as a typ
 Notes: admin verison of mail equiv. Used for testing via zmprov.
 
 -----------------------------
- <SearchGalRequest [type="{type}"]>
+ <SearchGalRequest [type="{type}"] [limit="..."]>
    <name>...</name>
  </SearchGalRequest>
 
@@ -362,7 +365,7 @@ Notes: admin verison of mail equiv. Used for testing via zmprov.
 </SearchDirectoryRequest>
 
 <SearchDirectoryResponse more="{more-flag}" [searchTotal="{search-total}"]>
-  <account name="{name}" id="{id}">
+  <account name="{name}" id="{id}" isExternal="1|0">
     <a n="...">...</a>+
   </account>*
   <alias name="{name}" id="{id} type="account|distributionlist|resource" targetName={target-name}">
@@ -399,6 +402,9 @@ SearchDirectoryRequest
             accounts|distributionlists|aliases|resources|domains|coses
             (default is accounts)
 
+SearchDirectoryResponse
+  isExternal: whether the account's zimbraMailTranport points to the designated protocol(lmtp) and server(home server of the account).
+  
 Access: domain admin sufficient (though a domain admin can't specify "domains" as a type)
 
 -----------------------------

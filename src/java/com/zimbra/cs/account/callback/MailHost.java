@@ -73,7 +73,7 @@ public class MailHost extends AttributeCallback {
                     Server oldServer = prov.get(ServerBy.serviceHostname, oldMailHost);
                     if (oldServer != null) {
                 	    String curMailTransport = entry.getAttr(Provisioning.A_zimbraMailTransport);
-                	    if (!mailTransportMatches(oldServer, curMailTransport))
+                	    if (!oldServer.mailTransportMatches(curMailTransport))
                             throw ServiceException.INVALID_REQUEST("current value of zimbraMailHost does not match zimbraMailTransport" +
                                     ", computed mail transport from current zimbraMailHost=" + mailTransport(oldServer) +
                         	        ", current zimbraMailTransport=" + curMailTransport, 
@@ -90,31 +90,11 @@ public class MailHost extends AttributeCallback {
         }
     }
     
-    private static String mailTransport(Server  server) {
+    private static String mailTransport(Server server) {
         String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
         int lmtpPort = server.getIntAttr(Provisioning.A_zimbraLmtpBindPort, Config.D_LMTP_BIND_PORT);
         String transport = "lmtp:" + serviceName + ":" + lmtpPort;
         return transport;
-    }
-    
-    /*
-     * compare only proto and host, ignore port, because if port on the server was changed we 
-     * still want the change to go through.
-     */
-    private static boolean mailTransportMatches(Server server, String mailTransport) {
-        // if there is no mailTransport, it sure "matches"
-        if (mailTransport == null)
-            return true;
-        
-        String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, null);
-        
-        String[] parts = mailTransport.split(":");
-        if (serviceName != null && parts.length == 3) {
-            if (parts[0].equals("lmtp") && parts[1].equals(serviceName))
-                return true;
-        }
-        
-        return false;
     }
 
 

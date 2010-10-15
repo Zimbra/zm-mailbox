@@ -79,7 +79,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         String domain = request.getAttribute(AdminConstants.A_DOMAIN, null);
         boolean applyCos = request.getAttributeBool(AdminConstants.A_APPLY_COS, true);
         boolean applyConfig = request.getAttributeBool(AdminConstants.A_APPLY_CONFIG, true);
-        String attrsStr = request.getAttribute(AdminConstants.A_ATTRS, null);
+        String origAttrsStr = request.getAttribute(AdminConstants.A_ATTRS, null);
         String sortBy = request.getAttribute(AdminConstants.A_SORT_BY, null);
         String types = request.getAttribute(AdminConstants.A_TYPES, "accounts");
         boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, true);
@@ -98,8 +98,17 @@ public class SearchDirectory extends AdminDocumentHandler {
             (domain != null))
             throw ServiceException.INVALID_REQUEST("cannot specify domain with coses flag", null);
 
+        // add zimbraMailTransport if account is requested
+        // it is needed for figuring out if the account is an "external"(not yet migrated) account.
+        String attrsStr = origAttrsStr;
+        if ((flags & Provisioning.SA_ACCOUNT_FLAG) == Provisioning.SA_ACCOUNT_FLAG &&
+                attrsStr != null && !attrsStr.contains(Provisioning.A_zimbraMailTransport)) {
+            attrsStr = attrsStr + "," + Provisioning.A_zimbraMailTransport;
+        }
+        
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
         Set<String> reqAttrs = attrs == null ? null : new HashSet(Arrays.asList(attrs));
+        
         Element response = zsc.createElement(AdminConstants.SEARCH_DIRECTORY_RESPONSE);
         
         // if we are a domain admin only, restrict to domain
@@ -177,7 +186,11 @@ public class SearchDirectory extends AdminDocumentHandler {
         LdapProvisioning ldapProv = null;
         if (prov instanceof LdapProvisioning)
             ldapProv = (LdapProvisioning)prov;
-
+        
+        // use originally requested attrs for encoding
+        String[] origAttrs = origAttrsStr == null ? null : origAttrsStr.split(",");
+        Set<String> origReqAttrs = origAttrs == null ? null : new HashSet(Arrays.asList(origAttrs));
+        
         int i, limitMax = offset+limit;
         for (i=offset; i < limitMax && i < accounts.size(); i++) {
             NamedEntry entry = (NamedEntry) accounts.get(i);
@@ -191,7 +204,7 @@ public class SearchDirectory extends AdminDocumentHandler {
                 applyDefault = applyConfig;
             }
             
-            encodeEntry(prov, response, entry, applyDefault, reqAttrs, aac);
+            encodeEntry(prov, response, entry, applyDefault, origReqAttrs, aac);
         }          
 
         response.addAttribute(AdminConstants.A_MORE, i < accounts.size());
@@ -215,7 +228,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         if (entry instanceof CalendarResource) {
             ToXML.encodeCalendarResource(parent, (CalendarResource)entry, applyDefault, reqAttrs, aac.getAttrRightChecker((CalendarResource)entry));
         } else if (entry instanceof Account) {
-            ToXML.encodeAccount(parent, (Account)entry, applyDefault, reqAttrs, aac.getAttrRightChecker((Account)entry));
+            ToXML.encodeAccount(parent, (Account)entry, applyDefault, true, reqAttrs, aac.getAttrRightChecker((Account)entry));
         } else if (entry instanceof DistributionList) {
             GetDistributionList.encodeDistributionList(parent, (DistributionList)entry, false, reqAttrs, aac.getAttrRightChecker((DistributionList)entry));
         } else if (entry instanceof Alias) {

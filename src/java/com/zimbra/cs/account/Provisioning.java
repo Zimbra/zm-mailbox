@@ -376,12 +376,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return the Server object where this account's mailbox is homed
      * @throws ServiceException
      */
+    // TODO: change all callsite to call Account.getServer();
     public Server getServer(Account acct) throws ServiceException {
-        String serverId = acct.getAttr(Provisioning.A_zimbraMailHost);
-        return (serverId == null ? null : get(ServerBy.name, serverId));
+        return acct.getServer();
     }
-
-
 
     /**
      * @return the COS object for this account, or null if account has no COS
