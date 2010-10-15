@@ -88,6 +88,7 @@ public class TestDataSource extends TestCase {
         mOriginalCosImapPollingInterval = cos.getAttr(Provisioning.A_zimbraDataSourceImapPollingInterval, "");
     }
     
+    @Test
     public void testPollingInterval()
     throws Exception {
         // Create data source
@@ -126,6 +127,7 @@ public class TestDataSource extends TestCase {
      * Tests the <tt>lastError</tt> element and <tt>failingSince</tt> attribute
      * for <tt>GetInfoRequest</tt> and <tt>GetDataSourcesRequest</tt>.
      */
+    @Test
     public void testErrorStatus()
     throws Exception {
         Account account = TestUtil.createAccount(TEST_USER_NAME);
@@ -219,6 +221,7 @@ public class TestDataSource extends TestCase {
     /**
      * Tests {@link DataSource#isScheduled()}.
      */
+    @Test
     public void testIsScheduled()
     throws Exception {
         // Create data source
@@ -254,6 +257,7 @@ public class TestDataSource extends TestCase {
         assertTrue(ds.isScheduled());
     }
     
+    @Test
     public void testMigratePollingInterval()
     throws Exception {
         Account account = TestUtil.getAccount(USER_NAME);
@@ -488,7 +492,6 @@ public class TestDataSource extends TestCase {
     throws Exception {
         TestUtil.cliSetup();
         TestNG testng = TestUtil.newTestNG();
-        testng.setJUnit(true);
         testng.setExcludedGroups("Server");
         testng.setTestClasses(new Class[] { TestDataSource.class });
         testng.run();

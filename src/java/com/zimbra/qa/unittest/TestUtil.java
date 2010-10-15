@@ -817,15 +817,7 @@ extends Assert {
     throws Exception {
         List<ZDataSource> dataSources = new ArrayList<ZDataSource>();
         dataSources.add(dataSource);
-        try {
-            localMbox.importData(dataSources);
-            assertTrue(expectedSuccess);
-        } catch (SoapFaultException e) {
-            if (expectedSuccess) {
-                throw e;
-            }
-            return;
-        }
+        localMbox.importData(dataSources);
         String type = dataSource.getType().toString();
 
         // Wait for import to complete
@@ -845,7 +837,10 @@ extends Assert {
                 break;
             }
         }
-        assertTrue("Import failed: " + status.getError(), status.getSuccess());
+        assertEquals(expectedSuccess, status.getSuccess());
+        if (!expectedSuccess) {
+            assertNotNull(status.getError());
+        }
 
         // Get any state changes from the server
         localMbox.noOp();
