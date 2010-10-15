@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!--
-  Copyright 2004 Zimbra Systems, Inc
+  Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
 -->
 
 <web-app xmlns="http://java.sun.com/xml/ns/j2ee"
@@ -11,51 +11,57 @@
   <display-name>Zimbra Service</display-name>
   <description>SOAP Service</description>
 
-    <filter>
-        <filter-name>GzipFilter</filter-name>
-        <filter-class>
-	    org.mortbay.servlet.jetty.IncludableGzipFilter
-        </filter-class>
+  <filter>
+    <filter-name>ThrottlingFilter</filter-name>
+    <filter-class>com.zimbra.cs.servlet.ThrottlingFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>ThrottlingFilter</filter-name>
+    <url-pattern>/zimlet/*</url-pattern>
+  </filter-mapping>
 
-        <init-param>
-            <param-name>mimeTypes</param-name>
-            <param-value>application/soap+xml,application/vnd.ms-sync.wbxml</param-value>
-        </init-param>
+  <filter>
+    <filter-name>GzipFilter</filter-name>
+    <filter-class>org.mortbay.servlet.jetty.IncludableGzipFilter</filter-class>
 
-        <init-param>
-            <param-name>userAgent</param-name>
-            <param-value>(?:Mozilla[^\(]*\(compatible;\s*+([^;]*);.*)|(?:.*?([^\s]+/[^\s]+).*)</param-value>
-        </init-param>
+    <init-param>
+      <param-name>mimeTypes</param-name>
+      <param-value>application/soap+xml,application/vnd.ms-sync.wbxml</param-value>
+    </init-param>
 
-        <init-param>
-            <param-name>excludedAgents</param-name>
-            <param-value>MSIE 6.0</param-value>
-        </init-param>
+    <init-param>
+      <param-name>userAgent</param-name>
+      <param-value>(?:Mozilla[^\(]*\(compatible;\s*+([^;]*);.*)|(?:.*?([^\s]+/[^\s]+).*)</param-value>
+    </init-param>
 
-        <init-param>
-            <param-name>minGzipSize</param-name>
-            <param-value>2048</param-value>
-        </init-param>
+    <init-param>
+      <param-name>excludedAgents</param-name>
+      <param-value>MSIE 6.0</param-value>
+    </init-param>
 
-        <init-param>
-            <param-name>uncheckedPrintWriter</param-name>
-            <param-value>true</param-value>
-        </init-param>
-    </filter>
+    <init-param>
+      <param-name>minGzipSize</param-name>
+      <param-value>2048</param-value>
+    </init-param>
 
-    <filter-mapping>
-        <filter-name>GzipFilter</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
-  
-	<filter>
-		<filter-name>SetHeaderFilter</filter-name>
-		<filter-class>com.zimbra.cs.servlet.SetHeaderFilter</filter-class>
-	</filter>
-	<filter-mapping>
-		<filter-name>SetHeaderFilter</filter-name>
-		<url-pattern>/*</url-pattern>
-	</filter-mapping>
+    <init-param>
+      <param-name>uncheckedPrintWriter</param-name>
+      <param-value>true</param-value>
+    </init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>GzipFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>SetHeaderFilter</filter-name>
+    <filter-class>com.zimbra.cs.servlet.SetHeaderFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>SetHeaderFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
 
   <filter>
     <filter-name>ZimletFilter</filter-name>
@@ -86,7 +92,7 @@
       <param-value>80, 443, 7070, 7071, 7072, 7443</param-value>
     </init-param>
   </servlet>
-  
+
   <servlet>
     <servlet-name>SoapServlet</servlet-name>
     <servlet-class>com.zimbra.soap.SoapServlet</servlet-class>
@@ -259,25 +265,25 @@
       <param-name>allowed.ports</param-name>
       <param-value>80, 443, 7070, 7443, 7071</param-value>
     </init-param>
-	<!--
-	<init-param>
-		<description>The initial size of the resource cache.</description>
-		<param-name>resource-cache-size</param-name>
-		<param-value>1000</param-value>
-	</init-param>
-	-->
-	<init-param>
-		<description>
-			The temp directory of the resource cache. The servlet creates
-			a "zimletres" sub-directory in the specified directory. So you
-			should NOT append that to the directory.
-			NOTE: The special string "${webapp}" can be used to specify
-			the webapp/service/ directory. It should ONLY be used at the
-			beginning of the parameter value.
-		</description>
-		<param-name>resource-cache-dir</param-name>
-		<param-value>${webapp}/../../work/resource-cache</param-value>
-	</init-param>
+  <!--
+  <init-param>
+    <description>The initial size of the resource cache.</description>
+    <param-name>resource-cache-size</param-name>
+    <param-value>1000</param-value>
+  </init-param>
+  -->
+  <init-param>
+    <description>
+      The temp directory of the resource cache. The servlet creates
+      a "zimletres" sub-directory in the specified directory. So you
+      should NOT append that to the directory.
+      NOTE: The special string "${webapp}" can be used to specify
+      the webapp/service/ directory. It should ONLY be used at the
+      beginning of the parameter value.
+    </description>
+    <param-name>resource-cache-dir</param-name>
+    <param-value>${webapp}/../../work/resource-cache</param-value>
+  </init-param>
   </servlet>
 
   <servlet-mapping>
@@ -322,7 +328,7 @@
 
   <servlet-mapping>
     <servlet-name>PreAuthServlet</servlet-name>
-    <url-pattern>/preauth</url-pattern>    
+    <url-pattern>/preauth</url-pattern>
   </servlet-mapping>
 
   <servlet-mapping>
@@ -339,16 +345,16 @@
     <servlet-name>CollectConfigFiles</servlet-name>
     <url-pattern>/collectconfig/*</url-pattern>
   </servlet-mapping>
-  
+
   <servlet-mapping>
     <servlet-name>CollectLDAPConfigZimbra</servlet-name>
     <url-pattern>/collectldapconfig/*</url-pattern>
   </servlet-mapping>
 
-    <servlet-mapping>
-        <servlet-name>AdminFileDownload</servlet-name>
-        <url-pattern>/afd/*</url-pattern>
-    </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>AdminFileDownload</servlet-name>
+    <url-pattern>/afd/*</url-pattern>
+  </servlet-mapping>
 
   <servlet-mapping>
     <servlet-name>ProxyServlet</servlet-name>
