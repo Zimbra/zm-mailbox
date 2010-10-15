@@ -1126,15 +1126,15 @@ public class ProxyConfGen
             return(exitCode);
         }
 
-        mProv = Provisioning.getInstance();
-        ProxyConfVar.configSource = mProv.getConfig();
-        ProxyConfVar.serverSource = ProxyConfVar.configSource;
-
-        if (cl.hasOption('v')) {
+        if (cl.hasOption('v')) { //BUG 51624, must initialize log4j first
             CliUtil.toolSetup("DEBUG");
         } else {
             CliUtil.toolSetup("INFO");
         }
+        
+        mProv = Provisioning.getInstance();
+        ProxyConfVar.configSource = mProv.getConfig();
+        ProxyConfVar.serverSource = ProxyConfVar.configSource;
 
         if (cl.hasOption('h')) {
             usage(null);
