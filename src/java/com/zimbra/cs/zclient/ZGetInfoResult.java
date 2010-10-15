@@ -25,12 +25,11 @@ import java.util.Set;
 
 import org.json.JSONException;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
+import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.cs.account.Provisioning;
@@ -72,11 +71,11 @@ public class ZGetInfoResult implements ToZJSONObject {
     }
 
     void setSignatures(List<ZSignature> sigs) {
-        data.setSignatures(Iterables.transform(sigs, SoapConverter.TO_SOAP_SIGNATURE));
+        data.setSignatures(ListUtil.newArrayList(sigs, SoapConverter.TO_SOAP_SIGNATURE));
     }
 
     public List<ZSignature> getSignatures() {
-        return Lists.transform(data.getSignatures(), SoapConverter.FROM_SOAP_SIGNATURE);
+        return ListUtil.newArrayList(data.getSignatures(), SoapConverter.FROM_SOAP_SIGNATURE);
     }
 
     public ZSignature getSignature(String id) {
@@ -89,7 +88,7 @@ public class ZGetInfoResult implements ToZJSONObject {
     }
 
     public List<ZIdentity> getIdentities() {
-        return Lists.transform(data.getIdentities(), SoapConverter.FROM_SOAP_IDENTITY);
+        return ListUtil.newArrayList(data.getIdentities(), SoapConverter.FROM_SOAP_IDENTITY);
     }
 
     public List<ZDataSource> getDataSources() {

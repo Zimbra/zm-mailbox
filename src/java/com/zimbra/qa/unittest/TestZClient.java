@@ -22,6 +22,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.zclient.ZFeatures;
+import com.zimbra.cs.zclient.ZGetInfoResult;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZPrefs;
 import com.zimbra.cs.zclient.ZSignature;
@@ -86,6 +87,14 @@ extends TestCase {
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         List<ZSignature> signatures = mbox.getSignatures();
+        try {
+            signatures.set(signatures.size(), null);
+        } catch (IndexOutOfBoundsException e) {
+            // Not UnsupportedOperationException, so we're good.
+        }
+        
+        ZGetInfoResult info = mbox.getAccountInfo(true);
+        signatures = info.getSignatures();
         try {
             signatures.set(signatures.size(), null);
         } catch (IndexOutOfBoundsException e) {
