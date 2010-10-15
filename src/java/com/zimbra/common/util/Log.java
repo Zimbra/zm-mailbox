@@ -84,6 +84,7 @@ public class Log {
             accountLogger = Logger.getLogger(accountCategory);
             mAccountLoggers.put(accountName, accountLogger);
         }
+        
         accountLogger.setLevel(ZIMBRA_TO_LOG4J.get(level));
     }
     
@@ -107,11 +108,7 @@ public class Log {
     }
     
     private static String getAccountCategory(String category, String accountName) {
-        // appender additivity
-        // The output of a log statement of logger C will go to all the appenders in C and its ancestors.
-        // For example; if account logger is added for category zimbra.sync, logs will be sent to logger zimbra.sync
-        return String.format("%s.%s", category, accountName);
-    }
+        return String.format("%s.%s", accountName, category);    }
     
     public boolean isDebugEnabled() {
         return getLogger().isDebugEnabled();

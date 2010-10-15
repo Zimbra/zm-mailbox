@@ -19,14 +19,15 @@ import java.util.*;
 
 public class ListUtil {
 	
-    /**
-     * Returns {@code true} if the collection is {@code null} or empty. 
-     */
-    public static boolean isEmpty(Collection<?> c) {
-        return (c == null || c.isEmpty());
-    }
-
-    /**
+	public static boolean isEmpty(List l) {
+		return (l == null || l.size() == 0);
+	}
+	
+	public static boolean isEmpty(Collection c) {
+		return (c == null || c.size() == 0);
+	}
+    
+	/**
      * Given two unsorted lists, return TRUE if they contain exactly the same things
      * (regardless of order)
      * 
