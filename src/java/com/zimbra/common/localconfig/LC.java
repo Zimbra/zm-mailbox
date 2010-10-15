@@ -184,8 +184,8 @@ public class LC {
     public static final KnownKey soap_response_chunked_transfer_encoding_disabled;
     public static final KnownKey zimbra_servlet_output_stream_buffer_size;
     public static final KnownKey servlet_max_concurrent_requests_per_session =
-        new KnownKey("servlet_max_concurrent_requests_per_session", "10",
-                "max number of concurrent HTTP requests per HTTP session");
+        new KnownKey("servlet_max_concurrent_requests_per_session", "0",
+                "max number of concurrent HTTP requests per HTTP session (0 means no limit)");
 
     public static final KnownKey ldap_host;
     public static final KnownKey ldap_port;
