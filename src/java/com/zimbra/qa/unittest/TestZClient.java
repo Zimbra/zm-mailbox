@@ -15,6 +15,8 @@
 
 package com.zimbra.qa.unittest;
 
+import java.util.List;
+
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
@@ -22,6 +24,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.zclient.ZFeatures;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZPrefs;
+import com.zimbra.cs.zclient.ZSignature;
 import com.zimbra.cs.zclient.ZMailbox.Options;
 
 import junit.framework.TestCase;
@@ -72,6 +75,21 @@ extends TestCase {
             TestUtil.getZMailbox(USER_NAME);
         } catch (SoapFaultException e) {
             assertEquals(AuthFailedServiceException.AUTH_FAILED, e.getCode());
+        }
+    }
+    
+    /**
+     * Confirms that the {@code List} of signatures returned by {@link ZMailbox#getSignatures}
+     * is modifiable (see bug 51842). 
+     */
+    public void testModifySignatures()
+    throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        List<ZSignature> signatures = mbox.getSignatures();
+        try {
+            signatures.set(signatures.size(), null);
+        } catch (IndexOutOfBoundsException e) {
+            // Not UnsupportedOperationException, so we're good.
         }
     }
     

@@ -3522,7 +3522,7 @@ public class ZMailbox implements ToZJSONObject {
 
     public List<ZIdentity> getIdentities() throws ServiceException {
         GetIdentitiesResponse res = invokeJaxb(new GetIdentitiesRequest());
-        return Lists.transform(res.getIdentities(), SoapConverter.FROM_SOAP_IDENTITY);
+        return ListUtil.newArrayList(res.getIdentities(), SoapConverter.FROM_SOAP_IDENTITY);
     }
 
     public void deleteIdentity(String name) throws ServiceException {
@@ -4656,7 +4656,7 @@ public class ZMailbox implements ToZJSONObject {
 
     public List<ZSignature> getSignatures() throws ServiceException {
         GetSignaturesResponse res = invokeJaxb(new GetSignaturesRequest());
-        return Lists.transform(res.getSignatures(), SoapConverter.FROM_SOAP_SIGNATURE);
+        return ListUtil.newArrayList(res.getSignatures(), SoapConverter.FROM_SOAP_SIGNATURE);
     }
 
     public synchronized void deleteSignature(String id) throws ServiceException {
