@@ -3908,17 +3908,12 @@ public class LdapProvisioning extends Provisioning {
         // update the validity value to invalidate auto-standing auth tokens
         acct.setAuthTokenValidityValue(acct.getAuthTokenValidityValue()+1, attrs);
 
-        ChangePasswordListener cpListener = ChangePasswordListener.getHandler(acct);
-        HashMap context = null;
-        if (cpListener != null) {
-            context = new HashMap();
-            cpListener.preModify(acct, newPassword, context, attrs);
-        }
+        ChangePasswordListener.ChangePasswordListenerContext ctxts = new ChangePasswordListener.ChangePasswordListenerContext();
+        ChangePasswordListener.invokePreModify(acct, newPassword, ctxts, attrs);
 
         modifyAttrs(acct, attrs);
 
-        if (cpListener != null)
-            cpListener.postModify(acct, newPassword, context);
+        ChangePasswordListener.invokePostModify(acct, newPassword, ctxts);
     }
 
     public Zimlet getZimlet(String name) throws ServiceException {
