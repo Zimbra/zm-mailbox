@@ -38,7 +38,8 @@ public enum UpgradeTask {
     BUG_42828(ZimbraGalLdapAttrMap_ZimbraContactHiddenAttributes_externalCRandGroup.class),
     BUG_43779(ZimbraGalLdapFilterDef_zimbraGroup.class),
     BUG_50258(ZimbraMtaSaslAuthEnable.class),
-    BUG_50465(DisableBriefcase.class);
+    BUG_50465(DisableBriefcase.class),
+    BUG_50458(Bug50458.class);
     
     
     private Class mUpgradeClass;

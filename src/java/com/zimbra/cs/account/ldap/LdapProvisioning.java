@@ -3873,17 +3873,13 @@ public class LdapProvisioning extends Provisioning {
         // update the validity value to invalidate auto-standing auth tokens
         acct.setAuthTokenValidityValue(acct.getAuthTokenValidityValue()+1, attrs);
 
-        ChangePasswordListener cpListener = ChangePasswordListener.getHandler(acct);
-        Map<String, Object> context = null;
-        if (cpListener != null) {
-            context = new HashMap<String, Object>();
-            cpListener.preModify(acct, newPassword, context, attrs);
-        }
+        ChangePasswordListener.ChangePasswordListenerContext ctxts = new ChangePasswordListener.ChangePasswordListenerContext();
+        ChangePasswordListener.invokePreModify(acct, newPassword, ctxts, attrs);
 
+        // modify the password
         modifyAttrs(acct, attrs);
 
-        if (cpListener != null)
-            cpListener.postModify(acct, newPassword, context);
+        ChangePasswordListener.invokePostModify(acct, newPassword, ctxts);
     }
 
     @Override

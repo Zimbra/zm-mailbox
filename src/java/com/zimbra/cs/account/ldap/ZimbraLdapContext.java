@@ -656,6 +656,14 @@ public class ZimbraLdapContext {
         mDirContext.modifyAttributes(cpName, DirContext.REPLACE_ATTRIBUTE, attrs);
     }
     
+    public void removeAttributes(String dn, Attributes attrs) throws NamingException {
+        Name cpName = new CompositeName().add(dn);
+        
+        if (ZimbraLog.ldap.isDebugEnabled())
+            ZimbraLog.ldap.debug("REMOVE ATTRS: dn=" + dn + ", mods=" + attrs.toString());
+        mDirContext.modifyAttributes(cpName, DirContext.REMOVE_ATTRIBUTE, attrs);
+    }
+    
     public NamingEnumeration<SearchResult> searchDir(String base, String filter, SearchControls cons) throws NamingException {
         if (ZimbraLog.ldap.isDebugEnabled())
             ZimbraLog.ldap.debug("SEARCH: base=" + base + ", filter=" + filter);
