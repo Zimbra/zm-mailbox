@@ -68,7 +68,7 @@ final class Validators {
         @Override
         public void validate(Provisioning prov, String action, Object... args) throws ServiceException {
             if (args.length < 1) return;
-            if (!action.equals(CREATE_ACCOUNT) || !(args[0] instanceof String))
+            if (!(action.equals(CREATE_ACCOUNT) || action.equals(RENAME_ACCOUNT)) || !(args[0] instanceof String))
                 return;
 
             if (args.length > 1 && args[1] instanceof String[] &&
@@ -170,6 +170,7 @@ final class Validators {
         public void validate(Provisioning prov, String action, Object... args) throws ServiceException {
 
             if (!CREATE_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE.equals(action) &&
+                    !RENAME_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE.equals(action) &&
                     !MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE.equals(action)) {
                 return;
             }

@@ -2042,7 +2042,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
             "createAccountCheckDomainCosAndFeature";
         static final String MODIFY_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE =
             "modifyAccountCheckDomainCosAndFeature";
-
+        static final String RENAME_ACCOUNT = "renameAccount";
+        static final String RENAME_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE =
+            "renameAccountCheckDomainCosAndFeature";
+        
         void validate(Provisioning prov, String action, Object... args) throws ServiceException;
         void refresh();
     }

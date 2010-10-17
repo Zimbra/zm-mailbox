@@ -2327,7 +2327,14 @@ public class LdapProvisioning extends Provisioning {
             Domain domain = getDomainByAsciiName(newDomain, zlc);
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(newDomain);
-
+            
+            boolean domainChanged = !oldDomain.equals(newDomain);
+            
+            if (domainChanged) {
+                validate(ProvisioningValidator.RENAME_ACCOUNT, newName, acct.getMultiAttr(Provisioning.A_objectClass, false), acct.getAttrs(false));
+                validate(ProvisioningValidator.RENAME_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE, newName, acct.getAttrs(false));
+            }
+            
             String newDn = mDIT.accountDNRename(oldDn, newLocal, domain.getName());
             boolean dnChanged = (!newDn.equals(oldDn));
 
@@ -2348,7 +2355,6 @@ public class LdapProvisioning extends Provisioning {
                 newAttrs.put(Provisioning.A_mail, replacedMails.newAddrs());
             }
 
-            boolean domainChanged = !oldDomain.equals(newDomain);
             ReplaceAddressResult replacedAliases = replaceMailAddresses(acct, Provisioning.A_zimbraMailAlias, oldEmail, newName);
             if (replacedAliases.newAddrs().length > 0) {
                 newAttrs.put(Provisioning.A_zimbraMailAlias, replacedAliases.newAddrs());
