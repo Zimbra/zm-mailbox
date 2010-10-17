@@ -1,3 +1,4 @@
+%%contains VAR:zimbraServiceEnabled cbpolicyd, check_policy_service inet:127.0.0.1:10031%%
 reject_non_fqdn_recipient
 permit_sasl_authenticated
 permit_mynetworks
