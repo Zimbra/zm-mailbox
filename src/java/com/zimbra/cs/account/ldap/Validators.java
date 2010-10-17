@@ -69,7 +69,7 @@ public class Validators {
         
         public void validate(LdapProvisioning prov, String action, Object... args) throws ServiceException {
             if (args.length < 1) return;
-            if (!action.equals("createAccount") || !(args[0] instanceof String))
+            if (!(action.equals("createAccount") || action.equals("renameAccount")) || !(args[0] instanceof String))
                 return;
             
             if (args.length > 1 && args[1] instanceof String[] &&
@@ -169,6 +169,7 @@ public class Validators {
         public void validate(LdapProvisioning prov, String action, Object... args) throws ServiceException {
             
             if (!"createAccountCheckDomainCosAndFeature".equals(action) &&
+            		!"renameAccountCheckDomainCosAndFeature".equals(action) &&
                     !"modifyAccountCheckDomainCosAndFeature".equals(action))
                 return;
             
