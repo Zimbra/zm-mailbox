@@ -21,6 +21,8 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -525,18 +527,18 @@ class ProxyConfVar
 }
 
 /**
- * A simple class of Pair<VirtualHostName, DomainName>. Uses
+ * A simple class of Triple<VirtualHostName, VirtualIPAddress, DomainName>. Uses
  * this only for convenient and HashMap can't guarantee order
- * 
  * @author jiankuan
- *
  */
-class DnVhnMap {
+class DnVhnVIPItem {
     public String domainName;
     public String virtualHostname;
-    public DnVhnMap(String dn, String vhn) {
+    public String virtualIPAddress;
+    public DnVhnVIPItem(String dn, String vhn, String vip) {
         this.domainName = dn;
         this.virtualHostname = vhn;
+        this.virtualIPAddress = vip;
     }
 }
 
@@ -563,7 +565,7 @@ public class ProxyConfGen
     private static Server mServer = null;
     private static Map<String, ProxyConfVar> mConfVars = new HashMap<String, ProxyConfVar>();
     private static Map<String, String> mVars = new HashMap<String, String>();
-    private static List<DnVhnMap> mQualifiedVhns;
+    private static List<DnVhnVIPItem> mQualifiedVhnsAndVIPs;
 
     /** the pattern for custom header cmd, such as "!{explode domain} */
     private static Pattern cmdPattern = Pattern.compile("(.*)\\!\\{([^\\}]+)\\}(.*)", Pattern.DOTALL);
@@ -614,16 +616,15 @@ public class ProxyConfGen
     }
     
     /**
-     * Retrieve the cert/key pair of each reverse proxy domain from LDAP. Only
-     * the domains with non-null virtual host name, cert and key will be
-     * retrieved.
+     * Retrieve all the zimbraVirtualHostname and zimbraVirtualIPAddress pairs
+     * for all domains which contain custom certificates and private keys.
      * 
-     * @return a list of domain name.
+     * @return a list of <code>DnVhnVIPItem</code>
      * @throws ServiceException
      *             this method can work only when LDAP is available
      * @author Jiankuan
      */
-    private static List<DnVhnMap> loadReverseProxyVhns()
+    private static List<DnVhnVIPItem> loadReverseProxyVhnAndVIP()
             throws ServiceException {
 
         if (!(mProv instanceof LdapProvisioning))
@@ -635,7 +636,7 @@ public class ProxyConfGen
         attrsNeeded.add(Provisioning.A_zimbraSSLCertificate);
         attrsNeeded.add(Provisioning.A_zimbraSSLPrivateKey);
 
-        final List<DnVhnMap> result = new ArrayList<DnVhnMap>();
+        final List<DnVhnVIPItem> result = new ArrayList<DnVhnVIPItem>();
 
         // visit domains
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
@@ -648,15 +649,26 @@ public class ProxyConfGen
                     .getAttr(Provisioning.A_zimbraSSLCertificate);
                 String privateKey = entry
                     .getAttr(Provisioning.A_zimbraSSLPrivateKey);
-                if (virtualHostnames.length == 0 || certificate == null
-                            || privateKey == null) {
+                if (virtualHostnames.length == 0 ||certificate == null ||
+                                privateKey == null) {
                     return; // ignore the items that don't have virtual host
                             // name, cert or key. Those domains will use the
                             // config
                 }
 
-                for(String vhn: virtualHostnames) {
-                    result.add(new DnVhnMap(domainName, vhn));
+                //Here assume virtualHostnames and virtualIPAddresses are
+                //same in number
+                int i = 0;
+                try {
+                    for(; i < virtualHostnames.length; i++) {
+                        String vip = InetAddress.getByName(virtualHostnames[i])
+                                                    .getHostAddress();
+                        result.add(new DnVhnVIPItem(domainName,
+                            virtualHostnames[i], vip));
+                    }
+                } catch (UnknownHostException e) {
+                    throw ServiceException.
+                        FAILURE("Cannot find the IP of " + virtualHostnames[i], e);
                 }
             }
         };
@@ -690,103 +702,31 @@ public class ProxyConfGen
         return s;
     }
 
-    public static String getCoreConf () {
+    private static String getCoreConf () {
         return mConfPrefix;
     }
 
-    public static String getCoreConfTemplate () {
+    private static String getCoreConfTemplate () {
         return mTemplatePrefix + mTemplateSuffix;
     }
-
-    public static String getMainConf () {
-        return mConfPrefix + ".main";
+    
+    private static String getConfFileName(String name) {
+        return mConfPrefix + "." + name;
+    }
+    
+    private static String getConfTemplateFileName(String name) {
+        return mTemplatePrefix + "." + name + mTemplateSuffix;
     }
 
-    public static String getMainConfTemplate () {
-        return mTemplatePrefix + ".main" + mTemplateSuffix;
-    }
-
-    public static String getMemcacheConf () {
-        return mConfPrefix + ".memcache";
-    }
-
-    public static String getMemcacheConfTemplate () {
-        return mTemplatePrefix + ".memcache" + mTemplateSuffix;
-    }
-
-    public static String getMailConf () {
-        return mConfPrefix + ".mail";
-    }
-
-    public static String getMailConfTemplate () {
-        return mTemplatePrefix + ".mail" + mTemplateSuffix;
-    }
-
-    public static String getMailImapConf () {
-        return mConfPrefix + ".mail.imap";
-    }
-
-    public static String getMailImapConfTemplate () {
-        return mTemplatePrefix + ".mail.imap" + mTemplateSuffix;
-    }
-
-    public static String getMailImapSConf () {
-        return mConfPrefix + ".mail.imaps";
-    }
-
-    public static String getMailImapSConfTemplate () {
-        return mTemplatePrefix + ".mail.imaps" + mTemplateSuffix;
-    }
-
-    public static String getMailPop3Conf () {
-        return mConfPrefix + ".mail.pop3";
-    }
-
-    public static String getMailPop3ConfTemplate () {
-        return mTemplatePrefix + ".mail.pop3" + mTemplateSuffix;
-    }
-
-    public static String getMailPop3SConf () {
-        return mConfPrefix + ".mail.pop3s";
-    }
-
-    public static String getMailPop3SConfTemplate () {
-        return mTemplatePrefix + ".mail.pop3s" + mTemplateSuffix;
-    }
-
-    public static String getWebConf () {
-        return mConfPrefix + ".web";
-    }
-
-    public static String getWebConfTemplate () {
-        return mTemplatePrefix + ".web" + mTemplateSuffix;
-    }
-
-    public static String getWebHttpConf () {
-        return mConfPrefix + ".web.http";
-    }
-
-    public static String getWebHttpConfTemplate () {
-        return mTemplatePrefix + ".web.http" + mTemplateSuffix;
-    }
-
-    public static String getWebHttpSConf () {
-        return mConfPrefix + ".web.https";
-    }
-
-    public static String getWebHttpSConfTemplate () {
-        return mTemplatePrefix + ".web.https" + mTemplateSuffix;
-    }
-
-    public static String getWebHttpModeConf (String mode) {
+    private static String getWebHttpModeConf (String mode) {
         return mConfPrefix + ".web.http.mode-" + mode;
     }
 
-    public static String getWebHttpModeConfTemplate (String mode) {
+    private static String getWebHttpModeConfTemplate (String mode) {
         return mTemplatePrefix + ".web.http.mode-" + mode + mTemplateSuffix;
     }
 
-    public static String getWebHttpSModeConf (String mode) {
+    private static String getWebHttpSModeConf (String mode) {
         return mConfPrefix + ".web.https.mode-" + mode;
     }
 
@@ -827,8 +767,8 @@ public class ProxyConfGen
                 //command selection can be extracted if more commands are introduced
                 if(cmd_arg.length == 2 && 
                         cmd_arg[0].compareTo("explode") == 0 && 
-                        cmd_arg[1].compareTo("vhn_ssl") == 0) {
-                    expandTemplateExplodeSSLConfigsForAllVhns(r, w);
+                        cmd_arg[1].compareTo("vhn_vip_ssl") == 0) {
+                    expandTemplateExplodeSSLConfigsForAllVhnsAndVIPs(r, w);
                 } else {
                     throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
                 }
@@ -858,19 +798,20 @@ public class ProxyConfGen
     }
     
     /**
-     * Enumerate all domain names and apply them into the var replacement
+     * Enumerate all virtual host names and virtual ip addresses and 
+     * apply them into the var replacement.
      * @author Jiankuan
      */
-    private static void expandTemplateExplodeSSLConfigsForAllVhns(
+    private static void expandTemplateExplodeSSLConfigsForAllVhnsAndVIPs(
         BufferedReader temp, BufferedWriter conf) throws IOException {
-        int size = mQualifiedVhns.size();
+        int size = mQualifiedVhnsAndVIPs.size();
         List<String> cache = null;
         if (size > 0) {
-            mVars.put("server_name.enabled", ""); // enable 'server_name'
-                                                  // command
-            Iterator<DnVhnMap> it = mQualifiedVhns.iterator();
-            DnVhnMap item = it.next();
+
+            Iterator<DnVhnVIPItem> it = mQualifiedVhnsAndVIPs.iterator();
+            DnVhnVIPItem item = it.next();
             mVars.put("vhn", item.virtualHostname);
+            mVars.put("vip", item.virtualIPAddress);
             mVars.put("ssl.crt", mDomainSSLDir + File.separator +
                 item.domainName + mSSLCrtExt);
             mVars.put("ssl.key", mDomainSSLDir + File.separator +
@@ -880,24 +821,14 @@ public class ProxyConfGen
             while (it.hasNext()) {
                 item = it.next();
                 mVars.put("vhn", item.virtualHostname);
+                mVars.put("vip", item.virtualIPAddress);
                 mVars.put("ssl.crt", mDomainSSLDir + File.separator +
                     item.domainName + mSSLCrtExt);
                 mVars.put("ssl.key", mDomainSSLDir + File.separator +
                     item.domainName + mSSLKeyExt);
                 expandTempateFromCache(cache, conf);
+                conf.newLine();
             }
-        }
-
-        // always write the default configs
-        mVars.put("server_name.enabled", "#"); // comment out "server_name"
-                                               // command
-        mVars.put("vhn", "default");
-        mVars.put("ssl.crt", mDefaultSSLCrt);
-        mVars.put("ssl.key", mDefaultSSLKey);
-        if (cache == null) {
-            expandTemplateSimple(temp, conf);
-        } else {
-            expandTempateFromCache(cache, conf);
         }
     }
     
@@ -1211,7 +1142,7 @@ public class ProxyConfGen
         overrideDefaultVars(cl);
         
         mLog.debug("Loading virtual host names and domain names");
-        mQualifiedVhns = loadReverseProxyVhns();
+        mQualifiedVhnsAndVIPs = loadReverseProxyVhnAndVIP();
         
         if (cl.hasOption('D')) {
             displayVariables();
@@ -1240,27 +1171,37 @@ public class ProxyConfGen
             if (!confDir.exists()) {
                 throw new ProxyConfException ("Configuration directory " + confDir.getAbsolutePath() + " does not exist");
             }
-            expandTemplate(new File(mTemplateDir,getCoreConfTemplate()), new File(mConfDir,getCoreConf())); /* Only core nginx conf goes to mConfDir, rest to mConfIncludesDir */
-            expandTemplate(new File(mTemplateDir,getMainConfTemplate()), new File(mConfIncludesDir,getMainConf()));
-            expandTemplate(new File(mTemplateDir,getMemcacheConfTemplate()), new File(mConfIncludesDir,getMemcacheConf()));
-            expandTemplate(new File(mTemplateDir,getMailConfTemplate()), new File(mConfIncludesDir,getMailConf()));
-            expandTemplate(new File(mTemplateDir,getMailImapConfTemplate()), new File(mConfIncludesDir,getMailImapConf()));
-            expandTemplate(new File(mTemplateDir,getMailImapSConfTemplate()), new File(mConfIncludesDir,getMailImapSConf()));
-            expandTemplate(new File(mTemplateDir,getMailPop3ConfTemplate()), new File(mConfIncludesDir,getMailPop3Conf()));
-            expandTemplate(new File(mTemplateDir,getMailPop3SConfTemplate()), new File(mConfIncludesDir,getMailPop3SConf()));
-            expandTemplate(new File(mTemplateDir,getWebConfTemplate()), new File(mConfIncludesDir,getWebConf()));
-            expandTemplate(new File(mTemplateDir,getWebHttpConfTemplate()), new File(mConfIncludesDir,getWebHttpConf()));
-            expandTemplate(new File(mTemplateDir,getWebHttpSConfTemplate()), new File(mConfIncludesDir,getWebHttpSConf()));
-            expandTemplate(new File(mTemplateDir,getWebHttpModeConfTemplate("http")), new File(mConfIncludesDir,getWebHttpModeConf("http")));
-            expandTemplate(new File(mTemplateDir,getWebHttpModeConfTemplate("https")), new File(mConfIncludesDir,getWebHttpModeConf("https")));
-            expandTemplate(new File(mTemplateDir,getWebHttpModeConfTemplate("both")), new File(mConfIncludesDir,getWebHttpModeConf("both")));
-            expandTemplate(new File(mTemplateDir,getWebHttpModeConfTemplate("redirect")), new File(mConfIncludesDir,getWebHttpModeConf("redirect")));
-            expandTemplate(new File(mTemplateDir,getWebHttpModeConfTemplate("mixed")), new File(mConfIncludesDir,getWebHttpModeConf("mixed")));
-            expandTemplate(new File(mTemplateDir,getWebHttpSModeConfTemplate("http")), new File(mConfIncludesDir,getWebHttpSModeConf("http")));
-            expandTemplate(new File(mTemplateDir,getWebHttpSModeConfTemplate("https")), new File(mConfIncludesDir,getWebHttpSModeConf("https")));
-            expandTemplate(new File(mTemplateDir,getWebHttpSModeConfTemplate("both")), new File(mConfIncludesDir,getWebHttpSModeConf("both")));
-            expandTemplate(new File(mTemplateDir,getWebHttpSModeConfTemplate("redirect")), new File(mConfIncludesDir,getWebHttpSModeConf("redirect")));
-            expandTemplate(new File(mTemplateDir,getWebHttpSModeConfTemplate("mixed")), new File(mConfIncludesDir,getWebHttpSModeConf("mixed")));
+            File wDir = new File(mConfIncludesDir, "");
+            if(!wDir.exists()) {
+                wDir.mkdirs();
+            }
+            expandTemplate(new File(mTemplateDir, getCoreConfTemplate()), new File(mConfDir,getCoreConf())); /* Only core nginx conf goes to mConfDir, rest to mConfIncludesDir */
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("main")), new File(mConfIncludesDir, getConfFileName("main")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("memcache")), new File(mConfIncludesDir,getConfFileName("memcache")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail")), new File(mConfIncludesDir, getConfFileName("mail")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.imap")), new File(mConfIncludesDir, getConfFileName("mail.imap")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.imap.default")), new File(mConfIncludesDir, getConfFileName("mail.imap.default")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.imaps")), new File(mConfIncludesDir, getConfFileName("mail.imaps")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.imaps.default")), new File(mConfIncludesDir, getConfFileName("mail.imaps.default")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.pop3")), new File(mConfIncludesDir, getConfFileName("mail.pop3")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.pop3.default")), new File(mConfIncludesDir, getConfFileName("mail.pop3.default")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.pop3s")), new File(mConfIncludesDir, getConfFileName("mail.pop3s")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("mail.pop3s.default")), new File(mConfIncludesDir, getConfFileName("mail.pop3s.default")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web")), new File(mConfIncludesDir,getConfFileName("web")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.http")), new File(mConfIncludesDir, getConfFileName("web.http")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.http.default")), new File(mConfIncludesDir, getConfFileName("web.http.default")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.https")), new File(mConfIncludesDir, getConfFileName("web.https")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.https.default")), new File(mConfIncludesDir, getConfFileName("web.https.default")));
+            expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("http")), new File(mConfIncludesDir, getWebHttpModeConf("http")));
+            expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("https")), new File(mConfIncludesDir, getWebHttpModeConf("https")));
+            expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("both")), new File(mConfIncludesDir, getWebHttpModeConf("both")));
+            expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("redirect")), new File(mConfIncludesDir, getWebHttpModeConf("redirect")));
+            expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("mixed")), new File(mConfIncludesDir, getWebHttpModeConf("mixed")));
+            expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("http")), new File(mConfIncludesDir, getWebHttpSModeConf("http")));
+            expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("https")), new File(mConfIncludesDir, getWebHttpSModeConf("https")));
+            expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("both")), new File(mConfIncludesDir, getWebHttpSModeConf("both")));
+            expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("redirect")), new File(mConfIncludesDir, getWebHttpSModeConf("redirect")));
+            expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("mixed")), new File(mConfIncludesDir, getWebHttpSModeConf("mixed")));
         } catch (ProxyConfException pe) {
             mLog.error("Error while expanding templates: " + pe.getMessage());
             exitCode = 1;
@@ -1268,6 +1209,12 @@ public class ProxyConfGen
             mLog.error("Error while expanding templates: " + se.getMessage());
             exitCode = 1;
         }
+        if (exitCode != 1) {
+            mLog.info("Proxy configuration files are generated successfully");
+        } else {
+            mLog.info("Proxy configuration files generation is interrupted by errors");
+        }
+        
         return (exitCode);
     }
 
