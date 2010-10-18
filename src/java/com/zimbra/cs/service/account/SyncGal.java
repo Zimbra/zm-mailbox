@@ -20,13 +20,17 @@ package com.zimbra.cs.service.account;
 
 import java.util.Map;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.cs.gal.GalSearchResultCallback;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -51,6 +55,8 @@ public class SyncGal extends AccountDocumentHandler {
         params.setIdOnly(idOnly);
         if (galAcctId != null)
         	params.setGalSyncAccount(Provisioning.getInstance().getAccountById(galAcctId));
+        params.setResultCallback(new SyncGalCallback(params));
+        
         GalSearchControl gal = new GalSearchControl(params);
         gal.sync();
         return params.getResultCallback().getResponse();
@@ -59,5 +65,73 @@ public class SyncGal extends AccountDocumentHandler {
     @Override
     public boolean needsAuth(Map<String, Object> context) {
         return true;
+    }
+    
+    // bug 51189, return zimbraMailForwardingAddress for groups members
+    // for pre 7.0 ZCO/ZCB clients
+    private static class SyncGalCallback extends GalSearchResultCallback {
+        private static final String UA_ZCO = "ZimbraConnectorForOutlook";
+        private static final String UA_ZCB = "ZimbraConnectorForBES";
+        
+        boolean mNeedPreHelixCompatibility;
+        
+        private SyncGalCallback(GalSearchParams params) {
+            super(params);
+            
+            ZimbraSoapContext zsc = params.getSoapContext();
+            if (zsc != null) {
+                String ua = zsc.getUserAgent();
+                
+                // user agent is in the format of: name + "/" + version;
+                // ZCO: ZimbraConnectorForOutlook/7.0.0.0
+                // ZCB: ZimbraConnectorForBES/7.0.0.0
+                if (ua != null) {
+                    String[] parts = ua.split("/");
+                    if (parts.length == 2) {
+                        String app = parts[0];
+                        String version = parts[1];
+                        
+                        if (UA_ZCO.equalsIgnoreCase(app) || UA_ZCB.equalsIgnoreCase(app)) {
+                            String[] release = version.split("\\.");
+                            if (release.length >= 1) {
+                                try {
+                                    int major = Integer.parseInt(release[0]);
+                                    if (major < 7)
+                                        mNeedPreHelixCompatibility = true;
+                                } catch (NumberFormatException e) {
+                                    ZimbraLog.gal.debug("unable to parse user agent version " + version, e);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        /*
+         * no need to fixup for the gal sync accont path, pre-helix ZCO/ZCB clients has not 
+         * correctly adapted the sync token format that will lead to gal sync account search.
+         * 
+        @Override
+        public Element handleContact(Contact c) throws ServiceException {
+        }
+        */
+        
+        @Override
+        public void handleContact(GalContact c) throws ServiceException {
+            if (mNeedPreHelixCompatibility && c.isGroup()) {
+                boolean isZimbraGroup = c.getSingleAttr(Provisioning.A_zimbraId) != null;
+                if (isZimbraGroup) {
+                    Map<String, Object> attrs = c.getAttrs();
+                    Object member = attrs.get(ContactConstants.A_member);
+                    Object mailForwardingAddress = attrs.get(Provisioning.A_zimbraMailForwardingAddress);
+                    if (member != null && mailForwardingAddress == null) {
+                        attrs.put(Provisioning.A_zimbraMailForwardingAddress, member);
+                        attrs.remove(ContactConstants.A_member);
+                    }
+                }
+            }
+            super.handleContact(c);
+        }
     }
 }
