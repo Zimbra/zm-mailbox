@@ -3372,16 +3372,24 @@ public class Mailbox {
         boolean useOutlookCompatMode, boolean ignoreErrors, boolean needAppleICalHacks,
         boolean trimCalItemsList)
     throws ServiceException {
-            writeICalendarForCalendarItems(writer, octxt, calItems, useOutlookCompatMode, ignoreErrors, needAppleICalHacks, trimCalItemsList, false);
+            writeICalendarForCalendarItems(writer, octxt, calItems, null, useOutlookCompatMode, ignoreErrors, needAppleICalHacks, trimCalItemsList, false);
     }
 
     public synchronized void writeICalendarForCalendarItems(
-            Writer writer, OperationContext octxt, Collection<CalendarItem> calItems,
+            Writer writer, OperationContext octxt, Collection<CalendarItem> calItems, Folder f,
             boolean useOutlookCompatMode, boolean ignoreErrors, boolean needAppleICalHacks,
             boolean trimCalItemsList, boolean escapeHtmlTags)
     throws ServiceException {
         try {
             writer.write("BEGIN:VCALENDAR\r\n");
+            if (f != null) {
+                writer.write("X-WR-CALNAME:");
+                writer.write(f.getName());
+                writer.write("\r\n");
+                writer.write("X-WR-CALID:");
+                writer.write(new ItemId(f).toString());
+                writer.write("\r\n");
+            }
 
             ZProperty prop;
             prop = new ZProperty(ICalTok.PRODID, ZCalendar.sZimbraProdID);
@@ -3455,7 +3463,7 @@ public class Mailbox {
             beginTransaction("writeICalendarForRange", octxt);
             Collection<CalendarItem> calItems = getCalendarItemsForRange(octxt, start, end, folderId, null);
             writeICalendarForCalendarItems(
-                    writer, octxt, calItems, useOutlookCompatMode, ignoreErrors, needAppleICalHacks, true, escapeHtmlTags);
+                    writer, octxt, calItems, null, useOutlookCompatMode, ignoreErrors, needAppleICalHacks, true, escapeHtmlTags);
         } finally {
             endTransaction(success);
         }
