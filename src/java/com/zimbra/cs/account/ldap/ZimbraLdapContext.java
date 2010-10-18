@@ -97,9 +97,10 @@ public class ZimbraLdapContext {
                 return LDAPS;
             
             boolean ldap_starttls_supported = "1".equals(LC.ldap_starttls_supported.value());
+            boolean ldap_starttls_required = LC.ldap_starttls_required.booleanValue();
             boolean zimbra_require_interprocess_security = "1".equals(LC.zimbra_require_interprocess_security.value());
             
-            if (ldap_starttls_supported && zimbra_require_interprocess_security)
+            if (ldap_starttls_supported && ldap_starttls_required && zimbra_require_interprocess_security)
                 return STARTTLS;
             
             return PLAIN;
