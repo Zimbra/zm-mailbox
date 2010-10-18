@@ -1458,7 +1458,7 @@ Access: domain admin sufficient
 <DeployZimletRequest/>
 
 <DeployZimletResponse>
-  [<progress server="{server-name}" status="succeeded|failed|pending"/>]+
+  [<progress server="{server-name}" status="succeeded|failed|pending" error="{error-message}"/>]+
 </DeployZimletResponse>
 
 -----------------------------

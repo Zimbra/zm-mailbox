@@ -17,7 +17,6 @@ package com.zimbra.cs.service.admin;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.zimbra.common.util.MapUtil;
 
@@ -48,34 +47,50 @@ public class DeployZimlet extends AdminDocumentHandler {
 	private Map mProgressMap;
 
 	private static class Progress implements DeployListener {
-		private Map<String,String> mStatus;
+	    private static class Status {
+	        String value;
+	        Exception error;
+	    }
+		private Map<String,Status> mStatus;
 		
 		public Progress(boolean allServers) throws ServiceException {
-			mStatus = new HashMap<String,String>();
+			mStatus = new HashMap<String,Status>();
 			Provisioning prov = Provisioning.getInstance();
 			if (!allServers) {
-				mStatus.put(prov.getLocalServer().getName(), sPENDING);
+				changeStatus(prov.getLocalServer().getName(), sPENDING);
 				return;
 			}
 			List<Server> servers = prov.getAllServers();
 			for (Server s : servers) {
 			    boolean hasMailboxService = s.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains("mailbox");
 			    if (hasMailboxService)
-			        mStatus.put(s.getName(), sPENDING);
+			        changeStatus(s.getName(), sPENDING);
             }
 		}
 		public void markFinished(Server s) {
-			mStatus.put(s.getName(), sSUCCEEDED);
+			changeStatus(s.getName(), sSUCCEEDED);
 		}
-		public void markFailed(Server s) {
-			mStatus.put(s.getName(), sFAILED);
+		public void markFailed(Server s, Exception e) {
+			changeStatus(s.getName(), sFAILED);
+			mStatus.get(s.getName()).error = e;
+		}
+		public void changeStatus(String name, String status) {
+		    Status s = mStatus.get(name);
+		    if (s == null) {
+                s = new Status();
+                mStatus.put(name, s);
+		    }
+		    s.value = status;
 		}
 		public void writeResponse(Element resp) {
-			Set<Map.Entry<String,String>> entries = mStatus.entrySet();
-			for (Map.Entry<String, String> entry : entries) {
+			for (Map.Entry<String, Status> entry : mStatus.entrySet()) {
 				Element progress = resp.addElement(AdminConstants.E_PROGRESS);
 				progress.addAttribute(AdminConstants.A_SERVER, entry.getKey());
-				progress.addAttribute(AdminConstants.A_STATUS, entry.getValue());
+				progress.addAttribute(AdminConstants.A_STATUS, entry.getValue().value);
+				Exception e = entry.getValue().error;
+				if (e != null) {
+	                progress.addAttribute(AdminConstants.A_ERROR, e.getMessage());
+				}
 			}
 		}
 	}
@@ -100,7 +115,7 @@ public class DeployZimlet extends AdminDocumentHandler {
 			} catch (Exception e) {
 				ZimbraLog.zimlet.info("deploy", e);
 				if (s != null)
-					progress.markFailed(s);
+					progress.markFailed(s, e);
 			} finally {
 				FileUploadServlet.deleteUpload(upload);
 			}
