@@ -51,6 +51,8 @@ public class AutoSendDraftTask extends ScheduledTask<Object> {
         }
         if (msg.inTrash()) {
             ZimbraLog.scheduler.debug("Draft with id %s was moved to Trash", draftId);
+            // remove scheduling metadata from the draft
+            msg.setDraftAutoSendTime(0);
             return null;
         }
         // send draft
