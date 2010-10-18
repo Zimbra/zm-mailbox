@@ -39,6 +39,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailConfig;
+import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.mailclient.pop3.ContentInputStream;
 import com.zimbra.cs.mailclient.pop3.Pop3Capabilities;
 import com.zimbra.cs.mailclient.pop3.Pop3Config;
@@ -262,7 +263,11 @@ public class Pop3Sync extends MailItemImport {
             LOG.warn("Error fetching message number %d: %s", msgno, e.getMessage());
         } finally {
             if (cis != null) {
-                cis.close();
+                try {
+                    cis.close();
+                } catch (ParseException pe) {
+                    LOG.error("ParseException while closing ContentInputStream. Assuming cis is effectively closed", pe);
+                }
             }
             if (mc != null) {
                 mc.cleanup();
