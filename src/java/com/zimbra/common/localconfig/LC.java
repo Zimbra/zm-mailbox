@@ -208,6 +208,7 @@ public class LC {
     public static final KnownKey ldap_amavis_password;
     public static final KnownKey ldap_nginx_password;
     public static final KnownKey ldap_starttls_supported;
+    public static final KnownKey ldap_starttls_required;
     public static final KnownKey ldap_common_loglevel;
     public static final KnownKey ldap_common_require_tls;
     public static final KnownKey ldap_common_threads;
@@ -1016,6 +1017,9 @@ public class LC {
 
         ldap_starttls_supported = new KnownKey("ldap_starttls_supported");
         ldap_starttls_supported.setDefault("0");
+        
+        ldap_starttls_required = new KnownKey("ldap_starttls_required", "true",
+                "whether starttls is required for java ldap client when it establishes connections to the Zimbra ldap server");
 
         ldap_cache_account_maxsize = new KnownKey("ldap_cache_account_maxsize", "20000");
 
