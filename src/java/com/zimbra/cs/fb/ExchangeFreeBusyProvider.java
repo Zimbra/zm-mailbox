@@ -314,7 +314,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	private int sendRequest(HttpMethod method, ServerInfo info) throws IOException {
 		method.setDoAuthentication(true);
 		method.setRequestHeader(HEADER_USER_AGENT, USER_AGENT);
-		HttpClient client = DebugConfig.disableFreeBusyUsingZimbraHttpConnectionManager? new HttpClient() : ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
+		HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
 		HttpProxyUtil.configureProxy(client);
 		switch (info.scheme) {
 		case basic:
@@ -324,7 +324,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			formAuth(client, info);
 			break;
 		}
-		return DebugConfig.disableFreeBusyUsingHttpClientUtil ? client.executeMethod(method) : HttpClientUtil.executeMethod(client, method);
+		return HttpClientUtil.executeMethod(client, method);
 	}
 	
 	private boolean basicAuth(HttpClient client, ServerInfo info) {
@@ -356,7 +356,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 		HttpState state = new HttpState();
 		client.setState(state);
 		try {
-			int status = DebugConfig.disableFreeBusyUsingHttpClientUtil ? client.executeMethod(method) : HttpClientUtil.executeMethod(client, method);
+			int status = HttpClientUtil.executeMethod(client, method);
 			if (status >= 400) {
 				ZimbraLog.fb.error("form auth to Exchange returned an error: "+status);
 				return false;
