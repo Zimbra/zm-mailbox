@@ -131,7 +131,7 @@ public class DeliveryServlet extends ZimbraServlet {
             try {
                 lmtpServer.getLmtpConfig().getLmtpBackend().deliver(envelope, req.getInputStream(), 0);
             } catch (UnrecoverableLmtpException e) {
-                throw new IOException(e);
+                throw new IOException(e.getMessage());
             }
         }
         
