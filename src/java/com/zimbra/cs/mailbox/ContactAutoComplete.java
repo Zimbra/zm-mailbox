@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeSet;
 
 import com.zimbra.common.mailbox.ContactConstants;
@@ -135,7 +134,7 @@ public class ContactAutoComplete {
         public boolean isDlist() {
             return mDlist != null;
         }
-        
+
         public boolean isGroup() {
             return mIsGroup;
         }
@@ -143,7 +142,7 @@ public class ContactAutoComplete {
         public boolean canExpandGroupMembers() {
             return mCanExpandGroupMembers;
         }
-        
+
         public String getDisplayName() {
             return mDisplayName;
         }
@@ -151,13 +150,13 @@ public class ContactAutoComplete {
         void setIsGalGroup(String email, Map<String,? extends Object> attrs, Account authedAcct, boolean needCanExpand) {
             setIsGalGroup(email, (String)attrs.get(ContactConstants.A_zimbraId), authedAcct, needCanExpand);
         }
-        
+
         void setIsGalGroup(String email, String zimbraId, Account authedAcct, boolean needCanExpand) {
             mIsGroup = true;
             if (needCanExpand)
                 mCanExpandGroupMembers = GalSearchControl.canExpandGalGroup(email, zimbraId, authedAcct);
         }
-        
+
         void setName(String name) {
             if (name == null) {
                 name = "";
@@ -237,7 +236,7 @@ public class ContactAutoComplete {
     private GalSearchType mSearchType;
     private ZimbraSoapContext mZsc;
     private Account mAuthedAcct;
-    
+
     private static final String[] DEFAULT_EMAIL_KEYS = {
         ContactConstants.A_email, ContactConstants.A_email2, ContactConstants.A_email3
     };
@@ -246,7 +245,7 @@ public class ContactAutoComplete {
     public ContactAutoComplete(String accountId) {
         this (accountId, null);
     }
-    
+
     public ContactAutoComplete(String accountId, ZimbraSoapContext zsc) {
         mZsc = zsc;
         Provisioning prov = Provisioning.getInstance();
@@ -258,7 +257,7 @@ public class ContactAutoComplete {
                 mEmailKeys = Arrays.asList(emailKeys.split(","));
             }
             mIncludeGal = acct.getBooleanAttr(Provisioning.A_zimbraPrefGalAutoCompleteEnabled , false);
-            
+
             if (mZsc != null) {
                 String authedAcctId = mZsc.getAuthtokenAccountId();
                 if (authedAcctId != null)
@@ -266,7 +265,7 @@ public class ContactAutoComplete {
             }
             if (mAuthedAcct == null)
                 mAuthedAcct = acct;
-                    
+
         } catch (ServiceException se) {
             ZimbraLog.gal.warn("error initializing ContactAutoComplete", se);
         }
@@ -288,7 +287,7 @@ public class ContactAutoComplete {
     public void setIncludeGal(boolean includeGal) {
         mIncludeGal = includeGal;
     }
-    
+
     public void setNeedCanExpand(boolean needCanExpand) {
         mNeedCanExpand = needCanExpand;
     }
@@ -312,11 +311,11 @@ public class ContactAutoComplete {
 
         // query ranking table
         Collection<ContactEntry> rankingTableMatches = result.rankings.search(str);
-        
+
         if (!rankingTableMatches.isEmpty()) {
             Map<String, String> galGroups = new HashMap<String, String>();
             queryGalGroups(str, galGroups);
-            
+
             for (ContactEntry entry : rankingTableMatches) {
                 String emailAddr = entry.getKey();
                 if (galGroups.keySet().contains(emailAddr)) {
@@ -338,9 +337,9 @@ public class ContactAutoComplete {
         if (mIncludeGal && result.entries.size() < limit) {
             queryGal(str, result);
         }
-        
-        
-        
+
+
+
         long t3 = System.currentTimeMillis();
 
         ZimbraLog.gal.info("autocomplete: overall="+(t3-t0)+"ms, ranking="+(t1-t0)+"ms, folder="+(t2-t1)+"ms, gal="+(t3-t2)+"ms");
@@ -373,7 +372,7 @@ public class ContactAutoComplete {
             return;
         }
     }
-    
+
     private void queryGalGroups(String str, Map<String, String> result) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account account = prov.get(Provisioning.AccountBy.id, mAccountId);
@@ -445,22 +444,23 @@ public class ContactAutoComplete {
         public void setHasMoreResult(boolean more) {
         }
     }
-    
+
     private class AutoCompleteGroupCallback extends AutoCompleteCallback {
         Map<String, String> groupResult;
-        
+
         public AutoCompleteGroupCallback(String str, Map<String, String> result, GalSearchParams params) {
             super(str, null, params);
             groupResult = result;
         }
 
+        @Override
         public void handleContactAttrs(Map<String,? extends Object> attrs) {
             String email = (String)attrs.get(ContactConstants.A_email);
             if (email != null)
                 groupResult.put((String)attrs.get(ContactConstants.A_email), (String)attrs.get(ContactConstants.A_zimbraId));
         }
     }
-    
+
     private boolean matches(String query, String text) {
         if (query == null || text == null) {
             return false;
@@ -538,7 +538,7 @@ public class ContactAutoComplete {
             //
             // is a local contact group
             //
-            
+
             if (acct != null &&
                     acct.isPrefContactsDisableAutocompleteOnContactGroupMembers() &&
                     !matches(query, nickname)) {
@@ -562,7 +562,7 @@ public class ContactAutoComplete {
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mAccountId);
             OperationContext octxt = (mZsc == null) ?
-                    new OperationContext(mbox) : 
+                    new OperationContext(mbox) :
                     new OperationContext(mZsc.getAuthtokenAccountId());
             List<Folder> folders = new ArrayList<Folder>();
             Map<ItemId, Mountpoint> mountpoints = new HashMap<ItemId, Mountpoint>();
@@ -660,7 +660,10 @@ public class ContactAutoComplete {
             buf.append(folder instanceof Mountpoint ? "underid:" : "inid:");
             buf.append(fid);
         }
-        buf.append(") AND contact:(").append(query).append(")");
+
+        buf.append(") AND contact:\"");
+        buf.append(query.replace("\"", "\\\"")); // escape quotes
+        buf.append("*\"");
         return buf.toString();
     }
 }
