@@ -130,10 +130,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             String rsrcId = (xpath != null ? getXPath(request, xpath) : null);
             if (rsrcId != null) {
                 CalendarResource rsrc = getCalendarResource(prov, CalendarResourceBy.id, rsrcId);
-                if (rsrc != null) {
-                    Server server = prov.get(ServerBy.name, rsrc.getAttr(Provisioning.A_zimbraMailHost));
-                    if (server != null && !getLocalHostId().equalsIgnoreCase(server.getId()))
-                        return proxyRequest(request, context, server);
+                if (rsrc != null && !Provisioning.onLocalServer(rsrc)) {
+                    return proxyRequest(request, context, rsrcId);
                 }
             }
 
@@ -141,10 +139,8 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
             Element resourceElt = (xpath != null ? getXPathElement(request, xpath) : null);
             if (resourceElt != null) {
                 CalendarResource rsrc = getCalendarResource(prov, CalendarResourceBy.fromString(resourceElt.getAttribute(AdminConstants.A_BY)), resourceElt.getText());
-                if (rsrc != null) {
-                    Server server = prov.get(ServerBy.name, rsrc.getAttr(Provisioning.A_zimbraMailHost));
-                    if (server != null && !getLocalHostId().equalsIgnoreCase(server.getId()))
-                        return proxyRequest(request, context, server);
+                if (rsrc != null && !Provisioning.onLocalServer(rsrc)) {
+                    return proxyRequest(request, context, rsrc.getId());
                 }
             }
 
