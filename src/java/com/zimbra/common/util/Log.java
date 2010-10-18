@@ -105,12 +105,16 @@ public class Log {
         Logger logger = mAccountLoggers.remove(accountName);
         return (logger != null);
     }
-    
+
+    /**
+     * Returns the account logger category name in the following format:
+     * {@code <category>.<accountName>.<category>}.  The first {@code <category>}
+     * allows account loggers to inherit log settings from the parent category.
+     * The second{@code <category>} makes sure that the category name in the
+     * log file is written correctly (otherwise the account name would be used).
+     */
     private static String getAccountCategory(String category, String accountName) {
-        // appender additivity
-        // The output of a log statement of logger C will go to all the appenders in C and its ancestors.
-        // For example; if account logger is added for category zimbra.sync, logs will be sent to logger zimbra.sync
-        return String.format("%s.%s", category, accountName);
+        return String.format("%s.%s.%s", category, accountName, category);
     }
     
     public boolean isDebugEnabled() {
