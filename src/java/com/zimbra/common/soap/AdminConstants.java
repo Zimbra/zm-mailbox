@@ -741,4 +741,6 @@ public class AdminConstants {
     public static final String A_SYNCHRONOUS = "synchronous";
     
     public static final String E_MIGRATE = "migrate";
+    
+    public static final String A_ERROR = "error";
 }
