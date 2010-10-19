@@ -525,6 +525,14 @@ extends TestCase {
         } catch (ServiceException e) {
             assertEquals(MailServiceException.QUOTA_EXCEEDED, e.getCode());
         }
+        
+        // Verify that saving a draft is allowed (bug 51457).
+        String draftSubject1 = subject + " save draft 1";
+        String draftSubject2 = subject + " save draft 2 two";
+        ZOutgoingMessage outgoingDraft = TestUtil.getOutgoingMessage(USER_NAME, draftSubject1, draftSubject1, null);
+        ZMessage draftMsg = mbox.saveDraft(outgoingDraft, null, Integer.toString(Mailbox.ID_FOLDER_DRAFTS)); // Add message
+        outgoingDraft = TestUtil.getOutgoingMessage(USER_NAME, draftSubject2, draftSubject2, null);
+        mbox.saveDraft(outgoingDraft, draftMsg.getId(), Integer.toString(Mailbox.ID_FOLDER_DRAFTS)); // Set content of existing message
     }
     
     public void tearDown()
