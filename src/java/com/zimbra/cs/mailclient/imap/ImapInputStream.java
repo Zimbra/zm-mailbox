@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.mailclient.imap;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailclient.util.Io;
 import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.mailclient.util.TraceInputStream;
@@ -315,7 +316,7 @@ public final class ImapInputStream extends MailInputStream {
         return sbuf.toString();
     }
 
-    public void skipChar(char expectedChar) throws IOException {
+    public void skipChar(char expectedChar) throws ParseException, IOException {
         char c = readChar();
         if (c != expectedChar) {
             throw new ParseException(
@@ -332,9 +333,18 @@ public final class ImapInputStream extends MailInputStream {
     }
     
     public void skipCRLF() throws IOException {
-        skipSpaces();
-        skipChar('\r');
-        skipChar('\n');
+        try {
+            skipSpaces();
+            skipChar('\r');
+            skipChar('\n');
+        } catch (ParseException pe) {
+            //parse exception; read until the end of line so we can get meaningful debug
+            ZimbraLog.datasource.error("ParseException reading EOL",pe);
+            char c;
+            //do nothing, just advancing to EOL. If we never find a \n then stream is prematurely closed or server is noncompliant
+            while ((c = readChar()) != '\n') {
+            }
+        }
     }
 
     /**
