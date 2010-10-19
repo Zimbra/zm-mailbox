@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101012-1039 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101019-0711 */
 
     /**
      * RFC2256: descriptive information
@@ -31563,6 +31563,185 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLoginURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @return zimbraWebClientLoginURLAllowedUA, or empty array if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1141)
+    public String[] getWebClientLoginURLAllowedUA() {
+        return getMultiAttr(Provisioning.A_zimbraWebClientLoginURLAllowedUA);
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLoginURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @param zimbraWebClientLoginURLAllowedUA new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1141)
+    public void setWebClientLoginURLAllowedUA(String[] zimbraWebClientLoginURLAllowedUA) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientLoginURLAllowedUA, zimbraWebClientLoginURLAllowedUA);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLoginURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @param zimbraWebClientLoginURLAllowedUA new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1141)
+    public Map<String,Object> setWebClientLoginURLAllowedUA(String[] zimbraWebClientLoginURLAllowedUA, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientLoginURLAllowedUA, zimbraWebClientLoginURLAllowedUA);
+        return attrs;
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLoginURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @param zimbraWebClientLoginURLAllowedUA new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1141)
+    public void addWebClientLoginURLAllowedUA(String zimbraWebClientLoginURLAllowedUA) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraWebClientLoginURLAllowedUA, zimbraWebClientLoginURLAllowedUA);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLoginURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @param zimbraWebClientLoginURLAllowedUA new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1141)
+    public Map<String,Object> addWebClientLoginURLAllowedUA(String zimbraWebClientLoginURLAllowedUA, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraWebClientLoginURLAllowedUA, zimbraWebClientLoginURLAllowedUA);
+        return attrs;
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLoginURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @param zimbraWebClientLoginURLAllowedUA existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1141)
+    public void removeWebClientLoginURLAllowedUA(String zimbraWebClientLoginURLAllowedUA) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraWebClientLoginURLAllowedUA, zimbraWebClientLoginURLAllowedUA);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLoginURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @param zimbraWebClientLoginURLAllowedUA existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1141)
+    public Map<String,Object> removeWebClientLoginURLAllowedUA(String zimbraWebClientLoginURLAllowedUA, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraWebClientLoginURLAllowedUA, zimbraWebClientLoginURLAllowedUA);
+        return attrs;
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLoginURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1141)
+    public void unsetWebClientLoginURLAllowedUA() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientLoginURLAllowedUA, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLoginURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1141)
+    public Map<String,Object> unsetWebClientLoginURLAllowedUA(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientLoginURLAllowedUA, "");
+        return attrs;
+    }
+
+    /**
      * logout URL for web client to send the user to upon explicit loggin out
      *
      * @return zimbraWebClientLogoutURL, or null if unset
@@ -31621,6 +31800,185 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetWebClientLogoutURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraWebClientLogoutURL, "");
+        return attrs;
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLogoutURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @return zimbraWebClientLogoutURLAllowedUA, or empty array if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1142)
+    public String[] getWebClientLogoutURLAllowedUA() {
+        return getMultiAttr(Provisioning.A_zimbraWebClientLogoutURLAllowedUA);
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLogoutURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @param zimbraWebClientLogoutURLAllowedUA new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1142)
+    public void setWebClientLogoutURLAllowedUA(String[] zimbraWebClientLogoutURLAllowedUA) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientLogoutURLAllowedUA, zimbraWebClientLogoutURLAllowedUA);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLogoutURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @param zimbraWebClientLogoutURLAllowedUA new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1142)
+    public Map<String,Object> setWebClientLogoutURLAllowedUA(String[] zimbraWebClientLogoutURLAllowedUA, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientLogoutURLAllowedUA, zimbraWebClientLogoutURLAllowedUA);
+        return attrs;
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLogoutURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @param zimbraWebClientLogoutURLAllowedUA new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1142)
+    public void addWebClientLogoutURLAllowedUA(String zimbraWebClientLogoutURLAllowedUA) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraWebClientLogoutURLAllowedUA, zimbraWebClientLogoutURLAllowedUA);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLogoutURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @param zimbraWebClientLogoutURLAllowedUA new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1142)
+    public Map<String,Object> addWebClientLogoutURLAllowedUA(String zimbraWebClientLogoutURLAllowedUA, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraWebClientLogoutURLAllowedUA, zimbraWebClientLogoutURLAllowedUA);
+        return attrs;
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLogoutURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @param zimbraWebClientLogoutURLAllowedUA existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1142)
+    public void removeWebClientLogoutURLAllowedUA(String zimbraWebClientLogoutURLAllowedUA) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraWebClientLogoutURLAllowedUA, zimbraWebClientLogoutURLAllowedUA);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLogoutURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @param zimbraWebClientLogoutURLAllowedUA existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1142)
+    public Map<String,Object> removeWebClientLogoutURLAllowedUA(String zimbraWebClientLogoutURLAllowedUA, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraWebClientLogoutURLAllowedUA, zimbraWebClientLogoutURLAllowedUA);
+        return attrs;
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLogoutURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1142)
+    public void unsetWebClientLogoutURLAllowedUA() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientLogoutURLAllowedUA, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLogoutURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1142)
+    public Map<String,Object> unsetWebClientLogoutURLAllowedUA(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientLogoutURLAllowedUA, "");
         return attrs;
     }
 

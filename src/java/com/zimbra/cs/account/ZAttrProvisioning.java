@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101012-1039 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101019-0711 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -8076,10 +8076,36 @@ public class ZAttrProvisioning {
     public static final String A_zimbraWebClientLoginURL = "zimbraWebClientLoginURL";
 
     /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLoginURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1141)
+    public static final String A_zimbraWebClientLoginURLAllowedUA = "zimbraWebClientLoginURLAllowedUA";
+
+    /**
      * logout URL for web client to send the user to upon explicit loggin out
      */
     @ZAttr(id=507)
     public static final String A_zimbraWebClientLogoutURL = "zimbraWebClientLogoutURL";
+
+    /**
+     * regex to be matched for allowed user agents for honoring
+     * zimbraWebClientLogoutURL. If not set, all UAs are allowed. If multiple
+     * values are set, an UA is allowed as long as it matches any one of the
+     * values. e.g. &quot;.*Windows NT.*Firefox/3.*&quot; will match firefox
+     * 3 or later browsers on Windows. &quot;.*MSIE.*Windows NT.*&quot; will
+     * match IE browsers on Windows.
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1142)
+    public static final String A_zimbraWebClientLogoutURLAllowedUA = "zimbraWebClientLogoutURLAllowedUA";
 
     /**
      * whether or not to show link to offline version in the web UI top bar
