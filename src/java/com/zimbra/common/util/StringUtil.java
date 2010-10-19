@@ -95,49 +95,119 @@ public class StringUtil {
         return count;
     }
 
-    public static String stripControlCharacters(String raw) {
-        if (raw == null) {
-            return null;
+    /** Returns the passed-in {@code string} with all XML-unsafe characters
+     *  removed.  If nothing needs to be removed, the original {@code String}
+     *  is returned.  Those characters considered "unsafe" are:<ul>
+     *    <li>control characters below 0x20 other than TAB, CR, and LF
+     *    <li>byte-order markers (0xFFFE and 0xFFFF)
+     *    <li>unmatched UTF-16 surrogates</ul>
+     *  XML 1.1 permits all control characters other than NUL (0x00), but
+     *  this method sanitizes for XML 1.0 with its more restrictive rules. */
+    public static String stripControlCharacters(String string) {
+        if (isNullOrEmpty(string)) {
+            return string;
         }
 
-        int i;
-        for (i = 0; i < raw.length(); i++) {
-            char c = raw.charAt(i);
-            // invalid control characters
-            if (c < 0x20 && c != 0x09 && c != 0x0A && c != 0x0D) {
+        StringBuilder sb = null;
+        int start = 0;
+        for (int i = 0, len = string.length(); i < len; i++) {
+            for ( ; i < len; i++) {
+                char c = string.charAt(i);
+                // invalid control characters (note: XML 1.1 disallows only 0x00)
+                if (c < 0x20 && c != 0x09 && c != 0x0A && c != 0x0D) {
+                    break;
+                }
+                // byte-order markers and unmatched low surrogates
+                if (c == 0xFFFE || c == 0xFFFF || Character.isLowSurrogate(c)) {
+                    break;
+                }
+                // high surrogates without a subsequent low surrogate
+                if (Character.isHighSurrogate(c)) {
+                    if (i == string.length() - 1 || !Character.isLowSurrogate(string.charAt(i + 1))) {
+                        break;
+                    }
+                    i++;
+                }
+            }
+            if (i >= len) {
                 break;
             }
-            // byte-order markers and high/low surrogates
-            if (c == 0xFFFE || c == 0xFFFF || (c > 0xD7FF && c < 0xE000)) {
-                break;
+
+            if (sb == null) {
+                sb = new StringBuilder(len - 1);
             }
-        }
-        if (i >= raw.length()) {
-            return raw;
+            if (start < i) {
+                sb.append(string.substring(start, i));
+            }
+            start = i + 1;
         }
 
-        StringBuilder sb = new StringBuilder(raw.substring(0, i));
-        for ( ; i < raw.length(); i++) {
-            char c = raw.charAt(i);
-            if (c >= 0x20 || c == 0x09 || c == 0x0A || c == 0x0D) {
-                if (c != 0xFFFE && c != 0xFFFF && (c <= 0xD7FF || c >= 0xE000)) {
-                    sb.append(c);
+        if (sb == null) {
+            return string;
+        } else {
+            start = Math.min(start, string.length());
+            return sb.append(string.substring(start)).toString();
+        }
+    }
+
+    /** Replaces all high and low surrogate character pairs (0xD800-0xDFFF)
+     *  with the '?' character.  This is sometimes needed when handing data to
+     *  third-party applications which cannot handle characters outside the
+     *  Basic Multilingual Plane (U+10000 and higher). */
+    public static String removeSurrogates(String string) {
+        if (isNullOrEmpty(string)) {
+            return string;
+        }
+
+        StringBuilder sb = null;
+        int start = 0;
+        for (int i = 0, len = string.length(); i < len; i++) {
+            char c = string.charAt(i);
+            if (c >= 0xD800 && c <= 0xDFFF) {
+                if (sb == null) {
+                    sb = new StringBuilder(len - 1);
+                }
+                if (start < i) {
+                    sb.append(string.substring(start, i));
+                }
+                sb.append('?');
+                start = ++i + 1;
+            }
+        }
+        if (sb == null) {
+            return string;
+        } else {
+            start = Math.min(start, string.length());
+            return sb.append(string.substring(start)).toString();
+        }
+    }
+
+    /** Returns whether the passed-in {@code string} contains any surrogates
+     *  (0xD800-0xDFFF).  Two surrogate chars are used to encode a character
+     *  outside the Basic Multilingual Plane (U+10000 and higher). */
+    public static boolean containsSurrogates(String string) {
+        if (!isNullOrEmpty(string)) {
+            for (int i = 0, len = string.length(); i < len; i++) {
+                char c = string.charAt(i);
+                if (c >= 0xD800 && c <= 0xDFFF) {
+                    return true;
                 }
             }
         }
-        return sb.toString();
+        return false;
     }
 
     /** Returns whether the passed-in {@code String} is comprised only of
      *  printable ASCII characters.  The "printable ASCII characters" are CR,
-     *  LF, TAB, and all characters from 0x20 to 0x7E. */
-    public static boolean isAsciiString(String str) {
-        if (str == null) {
+     *  LF, TAB, and all characters from 0x20 to 0x7E.  If the argument is
+     *  {@code null}, returns {@code false}. */
+    public static boolean isAsciiString(String string) {
+        if (string == null) {
             return false;
         }
 
-        for (int i = 0, len = str.length(); i < len; i++) {
-            char c = str.charAt(i);
+        for (int i = 0, len = string.length(); i < len; i++) {
+            char c = string.charAt(i);
             if ((c < 0x20 || c >= 0x7F) && c != '\r' && c != '\n' && c != '\t') {
                 return false;
             }
@@ -462,6 +532,19 @@ public class StringUtil {
         dump("backslash \\\\");
         dump("backslash \\f");
         dump("a           b");
+        assert stripControlCharacters(null) == null;
+        assert stripControlCharacters("").equals("");
+        assert stripControlCharacters("ccc").equals("ccc");
+        assert stripControlCharacters("\u0000").equals("");
+        assert stripControlCharacters("\u0000\u0002").equals("");
+        assert stripControlCharacters("\u0000v\u0002").equals("v");
+        assert stripControlCharacters("c\u0000v\u0002").equals("cv");
+        assert stripControlCharacters("\u0000v\u0002x").equals("vx");
+        assert stripControlCharacters("\u0000v\u0002x").equals("vx");
+        assert stripControlCharacters("\uDC00\uDBFFv\u0002x").equals("vx");
+        assert stripControlCharacters("v\u0002x\uDC00\uDBFF").equals("vx");
+        assert stripControlCharacters("\uDBFF\uDC00v\u0002x").equals("\uDBFF\uDC00vx");
+        assert stripControlCharacters("\uDBFF\uDC00\uFFFFvx").equals("\uDBFF\uDC00vx");
     }
 
     // A pattern that matches the beginning of a string followed by ${KEY_NAME} followed
