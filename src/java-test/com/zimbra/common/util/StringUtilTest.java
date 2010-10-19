@@ -92,4 +92,31 @@ public class StringUtilTest {
         Integer i = 0;
         Assert.assertEquals("Integer", StringUtil.getSimpleClassName(i));
     }
+
+    @Test
+    public void testStripControlCharacters() {
+        Assert.assertEquals("null string", StringUtil.stripControlCharacters(null), null);
+        Assert.assertEquals("empty string", StringUtil.stripControlCharacters(""), "");
+        Assert.assertEquals("no stripping", StringUtil.stripControlCharacters("ccc"), "ccc");
+        Assert.assertEquals("one NUL", StringUtil.stripControlCharacters("\u0000"), "");
+        Assert.assertEquals("just strippable chars", StringUtil.stripControlCharacters("\u0000\u0002"), "");
+        Assert.assertEquals("char between strippable chars", StringUtil.stripControlCharacters("\u0000v\u0002"), "v");
+        Assert.assertEquals("char, strip, char, strip", StringUtil.stripControlCharacters("c\u0000v\u0002"), "cv");
+        Assert.assertEquals("strip, char, strip, char", StringUtil.stripControlCharacters("\u0000v\u0002x"), "vx");
+        Assert.assertEquals("misordered surrogates at start", StringUtil.stripControlCharacters("\uDC00\uDBFFv\u0002x"), "vx");
+        Assert.assertEquals("misordered surrogates at end", StringUtil.stripControlCharacters("v\u0002x\uDC00\uDBFF"), "vx");
+        Assert.assertEquals("surrogates and char, strip, char", StringUtil.stripControlCharacters("\uDBFF\uDC00v\u0002x"), "\uDBFF\uDC00vx");
+        Assert.assertEquals("surrogates and BOM", StringUtil.stripControlCharacters("\uDBFF\uDC00\uFFFFvx"), "\uDBFF\uDC00vx");
+    }
+
+    @Test
+    public void testReplaceSurrogates() {
+        Assert.assertEquals("null string", StringUtil.removeSurrogates(null), null);
+        Assert.assertEquals("empty string", StringUtil.removeSurrogates(""), "");
+        Assert.assertEquals("no surrogates", StringUtil.removeSurrogates("asda"), "asda");
+        Assert.assertEquals("leading surrogate", StringUtil.removeSurrogates("\uDBFF\uDC00\uFFFFvx"), "?\uFFFFvx");
+        Assert.assertEquals("trailing surrogate", StringUtil.removeSurrogates("\uFFFFvx\uDBFF\uDC00"), "\uFFFFvx?");
+        Assert.assertEquals("consecutive surrogates", StringUtil.removeSurrogates("\uFFFFvx\uDBFF\uDC00\uDBFF\uDC00"), "\uFFFFvx??");
+    }
+
 }

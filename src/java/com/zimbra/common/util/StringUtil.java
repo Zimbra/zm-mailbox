@@ -532,19 +532,6 @@ public class StringUtil {
         dump("backslash \\\\");
         dump("backslash \\f");
         dump("a           b");
-        assert stripControlCharacters(null) == null;
-        assert stripControlCharacters("").equals("");
-        assert stripControlCharacters("ccc").equals("ccc");
-        assert stripControlCharacters("\u0000").equals("");
-        assert stripControlCharacters("\u0000\u0002").equals("");
-        assert stripControlCharacters("\u0000v\u0002").equals("v");
-        assert stripControlCharacters("c\u0000v\u0002").equals("cv");
-        assert stripControlCharacters("\u0000v\u0002x").equals("vx");
-        assert stripControlCharacters("\u0000v\u0002x").equals("vx");
-        assert stripControlCharacters("\uDC00\uDBFFv\u0002x").equals("vx");
-        assert stripControlCharacters("v\u0002x\uDC00\uDBFF").equals("vx");
-        assert stripControlCharacters("\uDBFF\uDC00v\u0002x").equals("\uDBFF\uDC00vx");
-        assert stripControlCharacters("\uDBFF\uDC00\uFFFFvx").equals("\uDBFF\uDC00vx");
     }
 
     // A pattern that matches the beginning of a string followed by ${KEY_NAME} followed
