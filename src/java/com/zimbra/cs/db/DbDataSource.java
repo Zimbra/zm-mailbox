@@ -54,11 +54,11 @@ public class DbDataSource {
             itemFlags = fl;
         }
     }
-	
+
     public static final String TABLE_DATA_SOURCE_ITEM = "data_source_item";
 
     public static void addMapping(DataSource ds, DataSourceItem item) throws ServiceException {
-    	Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
+        Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -66,7 +66,7 @@ public class DbDataSource {
 
         if (item.remoteId == null)
             item.remoteId = "";
-        
+
         ZimbraLog.datasource.debug("Adding mapping for dataSource %s: itemId(%d), remoteId(%s)", ds.getName(), item.itemId, item.remoteId);
 
         synchronized (getSynchronizer(mbox)) {
@@ -325,7 +325,7 @@ public class DbDataSource {
                 rs = stmt.executeQuery();
                 while (rs.next()) {
                     Metadata md = null;
-                    String buf = rs.getString(4);
+                    String buf = DbMailItem.decodeMetadata(rs.getString(4));
                     if (buf != null)
                         md = new Metadata(buf);
                     items.add(new DataSourceItem(rs.getInt(2), rs.getInt(1), rs.getString(3), md));
@@ -373,7 +373,7 @@ public class DbDataSource {
                 rs = stmt.executeQuery();
                 while (rs.next()) {
                     Metadata md = null;
-                    String buf = rs.getString(3);
+                    String buf = DbMailItem.decodeMetadata(rs.getString(3));
                     if (buf != null)
                         md = new Metadata(buf);
                     items.add(new DataSourceItem(folderId, rs.getInt(1), rs.getString(2), md));
@@ -423,7 +423,7 @@ public class DbDataSource {
                 rs = stmt.executeQuery();
                 while (rs.next()) {
                     Metadata md = null;
-                    String buf = rs.getString(3);
+                    String buf = DbMailItem.decodeMetadata(rs.getString(3));
                     int unread = rs.getInt(4);
                     int flags = rs.getInt(5);
 
@@ -474,7 +474,7 @@ public class DbDataSource {
                 stmt.setInt(3, folderId);
                 rs = stmt.executeQuery();
                 while (rs.next()) {
-                    String s = rs.getString(3);
+                    String s = DbMailItem.decodeMetadata(rs.getString(3));
                     Metadata md = s != null ? new Metadata(s) : null;
                     items.add(new DataSourceItem(folderId, rs.getInt(1), rs.getString(2), md));
                 }
@@ -519,7 +519,7 @@ public class DbDataSource {
                 if (rs.next()) {
                     folderId = rs.getInt(1);
                     remoteId = rs.getString(2);
-                    String buf = rs.getString(3);
+                    String buf = DbMailItem.decodeMetadata(rs.getString(3));
                     if (buf != null)
                         md = new Metadata(buf);
                 }
@@ -566,7 +566,7 @@ public class DbDataSource {
                 if (rs.next()) {
                     itemId = rs.getInt(1);
                     folderId = rs.getInt(2);
-                    String buf = rs.getString(3);
+                    String buf = DbMailItem.decodeMetadata(rs.getString(3));
                     if (buf != null)
                         md = new Metadata(buf);
                 }
@@ -619,7 +619,7 @@ public class DbDataSource {
                         itemId = rs.getInt(1);
                         remoteId = rs.getString(2);
                         folderId = rs.getInt(3);
-                        String buf = rs.getString(4);
+                        String buf = DbMailItem.decodeMetadata(rs.getString(4));
                         if (buf != null)
                             md = new Metadata(buf);
                         items.add( new DataSourceItem(folderId, itemId, remoteId, md));
@@ -674,7 +674,7 @@ public class DbDataSource {
                         itemId = rs.getInt(1);
                         remoteId = rs.getString(2);
                         folderId = rs.getInt(3);
-                        String buf = rs.getString(4);
+                        String buf = DbMailItem.decodeMetadata(rs.getString(4));
                         if (buf != null)
                             md = new Metadata(buf);
                         items.add( new DataSourceItem(folderId, itemId, remoteId, md));

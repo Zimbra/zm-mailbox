@@ -242,8 +242,9 @@ public class Message extends MailItem {
     }
 
     @Override public String getSortSender() {
-        String sender = new ParsedAddress(getSender()).getSortString();
-        return sender.toUpperCase().substring(0, Math.min(DbMailItem.MAX_SENDER_LENGTH, sender.length()));
+        String sender = new ParsedAddress(getSender()).getSortString().toUpperCase();
+        // remove surrogate characters and trim to DbMailItem.MAX_SENDER_LENGTH
+        return DbMailItem.checkSenderLength(sender);
     }
 
     /** Returns whether the Message was sent by the owner of this mailbox.

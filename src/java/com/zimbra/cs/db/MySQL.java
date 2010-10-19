@@ -61,6 +61,7 @@ public class MySQL extends Db {
             case FILE_PER_DATABASE:          return false;
             case LIMIT_CLAUSE:               return true;
             case MULTITABLE_UPDATE:          return true;
+            case NON_BMP_CHARACTERS:         return false;
             case ON_DUPLICATE_KEY:           return true;
             case ON_UPDATE_CASCADE:          return true;
             case READ_COMMITTED_ISOLATION:   return true;

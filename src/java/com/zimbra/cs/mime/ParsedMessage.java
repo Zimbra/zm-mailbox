@@ -1256,8 +1256,8 @@ public class ParsedMessage {
     }
 
     public static String normalize(String subject) {
-        subject = compressWhitespace(trimPrefixes(StringUtil.stripControlCharacters(subject)).getFirst());
-        return DbMailItem.truncateSubjectToMaxAllowedLength(subject);
+        String trimmed = compressWhitespace(trimPrefixes(StringUtil.stripControlCharacters(subject)).getFirst());
+        return DbMailItem.truncateSubjectToMaxAllowedLength(trimmed);
     }
 
     public static boolean isReply(String subject) {

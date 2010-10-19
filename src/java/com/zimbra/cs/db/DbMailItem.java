@@ -39,6 +39,10 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.EncoderException;
+import org.apache.commons.codec.net.BCodec;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
@@ -3133,19 +3137,19 @@ public class DbMailItem {
                                     "mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content";
 
 
-    private static UnderlyingData constructItem(ResultSet rs) throws SQLException {
+    private static UnderlyingData constructItem(ResultSet rs) throws SQLException, ServiceException {
         return constructItem(rs, 0, false);
     }
 
-    private static UnderlyingData constructItem(ResultSet rs, boolean fromDumpster) throws SQLException {
+    private static UnderlyingData constructItem(ResultSet rs, boolean fromDumpster) throws SQLException, ServiceException {
         return constructItem(rs, 0, fromDumpster);
     }
 
-    static UnderlyingData constructItem(ResultSet rs, int offset) throws SQLException {
+    static UnderlyingData constructItem(ResultSet rs, int offset) throws SQLException, ServiceException {
         return constructItem(rs, offset, false);
     }
 
-    static UnderlyingData constructItem(ResultSet rs, int offset, boolean fromDumpster) throws SQLException {
+    static UnderlyingData constructItem(ResultSet rs, int offset, boolean fromDumpster) throws SQLException, ServiceException {
         UnderlyingData data = new UnderlyingData();
         data.id          = rs.getInt(CI_ID + offset);
         data.type        = rs.getByte(CI_TYPE + offset);
@@ -3170,7 +3174,7 @@ public class DbMailItem {
         data.tags        = rs.getLong(CI_TAGS + offset);
         data.subject     = rs.getString(CI_SUBJECT + offset);
         data.name        = rs.getString(CI_NAME + offset);
-        data.metadata    = rs.getString(CI_METADATA + offset);
+        data.metadata    = decodeMetadata(rs.getString(CI_METADATA + offset));
         data.modMetadata = rs.getInt(CI_MODIFIED + offset);
         data.modContent  = rs.getInt(CI_SAVED + offset);
         data.dateChanged = rs.getInt(CI_MODIFY_DATE + offset);
@@ -3183,7 +3187,7 @@ public class DbMailItem {
     private static final String REVISION_FIELDS = "date, size, volume_id, blob_digest, name, " +
                                                   "metadata, mod_metadata, change_date, mod_content";
 
-    private static UnderlyingData constructRevision(ResultSet rs, MailItem item, boolean fromDumpster) throws SQLException {
+    private static UnderlyingData constructRevision(ResultSet rs, MailItem item, boolean fromDumpster) throws SQLException, ServiceException {
         UnderlyingData data = new UnderlyingData();
         data.id          = item.getId();
         data.type        = item.getType();
@@ -3203,7 +3207,7 @@ public class DbMailItem {
         data.tags        = item.getTagBitmask();
         data.subject     = item.getSubject();
         data.name        = rs.getString(5);
-        data.metadata    = rs.getString(6);
+        data.metadata    = decodeMetadata(rs.getString(6));
         data.modMetadata = rs.getInt(7);
         data.dateChanged = rs.getInt(8);
         data.modContent  = rs.getInt(9);
@@ -3697,7 +3701,7 @@ public class DbMailItem {
             if (data.folderId != dbdata.folderId)        failures += " FOLDER_ID";
             if (data.indexId != dbdata.indexId)          failures += " INDEX_ID";
             if (data.imapId != dbdata.imapId)            failures += " IMAP_ID";
-            if (data.locator != dbdata.locator)        failures += " VOLUME_ID";
+            if (data.locator != dbdata.locator)          failures += " VOLUME_ID";
             if (data.date != dbdata.date)                failures += " DATE";
             if (data.size != dbdata.size)                failures += " SIZE";
             if (dbdata.type != MailItem.TYPE_CONVERSATION) {
@@ -3727,16 +3731,25 @@ public class DbMailItem {
         }
     }
 
+
     /** Makes sure that the argument won't overflow the maximum length of a
      *  MySQL VARCHAR(128) column (128 characters) by truncating the string
-     *  if necessary.
+     *  if necessary.  Strips surrogate characters from the string if needed
+     *  so that the database (i.e. MySQL) doesn't choke on Unicode characters
+     *  outside the BMP (U+10000 and higher).
      *
      * @param sender  The string to check (can be null).
      * @return The passed-in String, truncated to 128 chars. */
     public static String checkSenderLength(String sender) {
-        if (sender == null || sender.length() <= MAX_SENDER_LENGTH)
+        if (sender == null) {
             return sender;
-        return sender.substring(0, MAX_SENDER_LENGTH);
+        }
+
+        String trimmed = sender.length() <= MAX_SENDER_LENGTH ? sender : sender.substring(0, MAX_SENDER_LENGTH).trim();
+        if (!Db.supports(Db.Capability.NON_BMP_CHARACTERS)) {
+            trimmed = StringUtil.removeSurrogates(trimmed);
+        }
+        return trimmed;
     }
 
     /** Makes sure that the argument won't overflow the maximum length of a
@@ -3752,45 +3765,78 @@ public class DbMailItem {
         throw ServiceException.FAILURE("subject too long", null);
     }
 
-    /** Truncates the subject to {@link MAX_SUBJECT_LENGTH}.
-     *
-     * @param subject
-     * @return
-     */
+    /** Truncates the passed-in {@code String} to a maximum length of
+     *  {@link #MAX_SUBJECT_LENGTH} characters.  Strips surrogate characters
+     *  from the string if needed so that the database (i.e. MySQL) doesn't
+     *  choke on Unicode characters outside the BMP (U+10000 and higher). */
     public static String truncateSubjectToMaxAllowedLength(String subject) {
-        if (subject != null && subject.length() > MAX_SUBJECT_LENGTH)
-            return subject.substring(0, DbMailItem.MAX_SUBJECT_LENGTH).trim();
-        return subject;
+        if (subject == null) {
+            return subject;
+        }
+
+        String trimmed = subject.length() <= MAX_SUBJECT_LENGTH ? subject : subject.substring(0, MAX_SUBJECT_LENGTH).trim();
+        if (!Db.supports(Db.Capability.NON_BMP_CHARACTERS)) {
+            trimmed = StringUtil.removeSurrogates(trimmed);
+        }
+        return trimmed;
     }
 
     /** Makes sure that the argument won't overflow the maximum length of a
      *  MySQL MEDIUMTEXT column (16,777,216 bytes) after conversion to UTF-8.
      *
      * @param metadata  The string to check (can be null).
-     * @return The passed-in String.
+     * @return The passed-in String, possibly re-encoded as base64 to hide
+     *         non-BMP characters from the database.
      * @throws ServiceException <code>service.FAILURE</code> if the
      *         parameter would be silently truncated when inserted. */
     public static String checkMetadataLength(String metadata) throws ServiceException {
-        if (metadata == null)
+        if (metadata == null) {
             return null;
-        int len = metadata.length();
+        }
+
+        String result = encodeMetadata(metadata);
+        int len = result.length();
         if (len > MAX_MEDIUMTEXT_LENGTH / 4) {  // every char uses 4 bytes in worst case
-            if (StringUtil.isAsciiString(metadata)) {
+            if (StringUtil.isAsciiString(result)) {
                 if (len > MAX_MEDIUMTEXT_LENGTH)
                     throw ServiceException.FAILURE("metadata too long", null);
             } else {
                 try {
-                    if (metadata.getBytes("utf-8").length > MAX_MEDIUMTEXT_LENGTH)
+                    if (result.getBytes("utf-8").length > MAX_MEDIUMTEXT_LENGTH)
                         throw ServiceException.FAILURE("metadata too long", null);
                 } catch (UnsupportedEncodingException uee) { }
             }
         }
-        return metadata;
+        return result;
+    }
+
+    public static String encodeMetadata(String metadata) throws ServiceException {
+        if (Db.supports(Db.Capability.NON_BMP_CHARACTERS) || !StringUtil.containsSurrogates(metadata)) {
+            return metadata;
+        }
+
+        try {
+            return new BCodec("utf-8").encode(metadata);
+        } catch (EncoderException ee) {
+            throw ServiceException.FAILURE("encoding non-BMP metadata", ee);
+        }
+    }
+
+    public static String decodeMetadata(String metadata) throws ServiceException {
+        if (StringUtil.isNullOrEmpty(metadata) || !metadata.startsWith("=?")) {
+            return metadata;
+        } else {
+            try {
+                return new BCodec("utf-8").decode(metadata);
+            } catch (DecoderException de) {
+                throw ServiceException.FAILURE("encoding non-BMP metadata", de);
+            }
+        }
     }
 
     /**
      * Returns the name of the table that stores {@link MailItem} data.  The table name is qualified
-     * by the name of the database (e.g. <tt>mailbox1.mail_item</tt>).
+     * with the name of the database (e.g. <tt>mboxgroup1.mail_item</tt>).
      */
     public static String getMailItemTableName(int mailboxId, int groupId, boolean dumpster) {
         return DbMailbox.qualifyTableName(groupId, !dumpster ? TABLE_MAIL_ITEM : TABLE_MAIL_ITEM_DUMPSTER);

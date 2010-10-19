@@ -83,25 +83,28 @@ public class MetadataDump {
 
     private static final String METADATA_COLUMN = "metadata";
 
-    private static class Row {
+    private static class Row implements Iterable<Entry<String, String>> {
         private Map<String, String> mMap = new LinkedHashMap<String, String>();
 
-        public void addColumn(String colName, String value) {
-            mMap.put(colName.toLowerCase(), value);
+        Row()  { }
+
+        void addColumn(String colName, String data) throws ServiceException {
+            String key = colName.toLowerCase();
+            String value = key.equals(METADATA_COLUMN) ? DbMailItem.decodeMetadata(data) : data;
+            mMap.put(key, value);
         }
 
-        public Iterator<Entry<String, String>> iterator() {
+        @Override public Iterator<Entry<String, String>> iterator() {
             return mMap.entrySet().iterator();
         }
 
-        public String get(String colName) {
+        String get(String colName) {
             return mMap.get(colName.toLowerCase());
         }
 
-        public void print(PrintStream ps) throws ServiceException {
+        void print(PrintStream ps) throws ServiceException {
             ps.println("[Database Columns]");
-            for (Iterator<Entry<String, String>> iter = iterator(); iter.hasNext(); ) {
-                Entry<String, String> entry = iter.next();
+            for (Entry<String, String> entry : this) {
                 String col = entry.getKey();
                 if (!col.equalsIgnoreCase(METADATA_COLUMN)) {
                     String val = entry.getValue();
@@ -254,7 +257,7 @@ public class MetadataDump {
                     throw ServiceException.FAILURE(
                             "Read " + bytesRead + " bytes when expecting " + length +
                             " bytes, from file " + file.getAbsolutePath(), null);
-                return new String(buf, "utf-8");
+                return DbMailItem.decodeMetadata(new String(buf, "utf-8"));
             } finally {
                 if (fis != null)
                     fis.close();
@@ -268,7 +271,7 @@ public class MetadataDump {
         ps.println("********************   " + title + "   ********************");
     }
 
-    private static String getTimestampStr(long time) {
+    static String getTimestampStr(long time) {
         DateFormat fmt = new SimpleDateFormat("EEE yyyy/MM/dd HH:mm:ss z");
         return fmt.format(time);
     }
@@ -313,6 +316,7 @@ public class MetadataDump {
                 if (mboxIdStr == null || itemIdStr == null) {
                     usage(null);
                     System.exit(1);
+                    return;
                 }
                 if (mboxIdStr.matches("\\d+")) {
                     try {

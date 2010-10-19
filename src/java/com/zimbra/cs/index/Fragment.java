@@ -49,8 +49,8 @@ public class Fragment {
         return false;
     }
 
-    private static String skipFragmentHeader(String fragment, boolean calendar) {
-        String backup = fragment, checkpoint = fragment;
+    private static String skipFragmentHeader(String content, boolean calendar) {
+        String fragment = content, checkpoint = content;
 
         // skip all the "From:", "When:", "Organizer:", etc. lines 
         int returnIndex = -1;
@@ -78,11 +78,11 @@ public class Fragment {
             fragment = fragment.substring(returnIndex + 1);
         }
 
-        return (checkpoint.length() > 0 ? checkpoint : backup);
+        return (checkpoint.length() > 0 ? checkpoint : content);
     }
 
-    private static String skipQuotedText(String fragment, boolean twoLineHeader) {
-        String backup = fragment;
+    private static String skipQuotedText(String content, boolean twoLineHeader) {
+        String fragment = content;
 
         // skip the quote header ("On foosday, Herbie wrote:\n")
         int returnIndex = -1;
@@ -117,8 +117,9 @@ public class Fragment {
                 returnIndex = fragment.indexOf('\n');
                 fragment = (returnIndex == -1 ? "" : fragment.substring(returnIndex + 1).trim());
             } while (fragment.startsWith("|"));
-        } else if (fragment != backup)
-            fragment = backup;
+        } else if (fragment != content) {
+            fragment = content;
+        }
 
         return fragment;
     }
@@ -127,7 +128,7 @@ public class Fragment {
     private static String compressLine(String line) {
         StringBuilder sb = new StringBuilder();
         char last = ' ', lastButOne = 0;
-        for (int i = 0; i < line.length() && sb.length() <= MAX_FRAGMENT_LENGTH + 5; i++) {
+        for (int i = 0, len = line.length(); i < len && sb.length() <= MAX_FRAGMENT_LENGTH + 5; i++) {
             char c = line.charAt(i);
             // normalize whitespace
             if (Character.isWhitespace(c))
@@ -136,11 +137,25 @@ public class Fragment {
             if (c == ' ' && last == c)
                 continue;
             // skip non-XML-safe characters
-            if (c < 0x20 || c == 0xFFFE || c == 0xFFFF || (c > 0xD7FF && c < 0xE000))
+            if (c < 0x20 || c == 0xFFFE || c == 0xFFFF)
                 continue;
             // ignore OBJECT REPLACEMENT CHARACTER
             if (c == 0xFFFC)
                 continue;
+            // drop low surrogate without a preceding high surrogate
+            if (c >= 0xDC00 && c <= 0xDFFF)
+                continue;
+            // drop high surrogate without a low surrogate
+            if (c >= 0xD800 && c <= 0xDBFF) {
+                if (i == len - 1)
+                    continue;
+                char c2 = line.charAt(i + 1);
+                if (c2 < 0xDC00 || c2 > 0xDFFF)
+                    continue;
+                sb.append(c);
+                c = c2;
+                i++;
+            }
             // more than 2 "line characters" get reduced to 2
             if ((c == '=' || c == '-') && last == c && lastButOne == c)
                 continue;

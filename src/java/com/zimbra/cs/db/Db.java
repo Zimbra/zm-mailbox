@@ -56,6 +56,7 @@ public abstract class Db {
         FILE_PER_DATABASE,
         LIMIT_CLAUSE,
         MULTITABLE_UPDATE,
+        NON_BMP_CHARACTERS,
         ON_DUPLICATE_KEY,
         ON_UPDATE_CASCADE,
         READ_COMMITTED_ISOLATION,

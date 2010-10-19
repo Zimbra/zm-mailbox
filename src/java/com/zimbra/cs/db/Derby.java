@@ -81,6 +81,7 @@ public class Derby extends Db {
             case FILE_PER_DATABASE:          return false;
             case LIMIT_CLAUSE:               return false;
             case MULTITABLE_UPDATE:          return false;
+            case NON_BMP_CHARACTERS:         return true;
             case ON_DUPLICATE_KEY:           return false;
             case ON_UPDATE_CASCADE:          return false;
             case READ_COMMITTED_ISOLATION:   return true;

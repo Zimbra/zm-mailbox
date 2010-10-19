@@ -67,11 +67,11 @@ public class DbSearch {
         }
 
 
-        public static SearchResult createResult(ResultSet rs, SortBy sort, boolean inDumpster) throws SQLException {
+        public static SearchResult createResult(ResultSet rs, SortBy sort, boolean inDumpster) throws SQLException, ServiceException {
             return createResult(rs, sort, ExtraData.NONE, inDumpster);
         }
 
-        public static SearchResult createResult(ResultSet rs, SortBy sort, ExtraData extra, boolean inDumpster) throws SQLException {
+        public static SearchResult createResult(ResultSet rs, SortBy sort, ExtraData extra, boolean inDumpster) throws SQLException, ServiceException {
             SearchResult result = new SearchResult();
             result.id      = rs.getInt(COLUMN_ID);
             result.indexId = rs.getInt(COLUMN_INDEXID);
@@ -94,9 +94,9 @@ public class DbSearch {
                     break;
             }
 
+            // note that there's no sort column in the result set for SORT_NONE
             int offset = sort.getCriterion() == SortCriterion.NONE ? COLUMN_SORTKEY - 1 : COLUMN_SORTKEY;
             if (extra == ExtraData.MAIL_ITEM) {
-                // note that there's no sort column in the result set for SORT_NONE
                 result.extraData = DbMailItem.constructItem(rs, offset, inDumpster);
             } else if (extra == ExtraData.IMAP_MSG) {
                 int flags = rs.getBoolean(offset + 2) ? Flag.BITMASK_UNREAD | rs.getInt(offset + 3) : rs.getInt(offset + 3);

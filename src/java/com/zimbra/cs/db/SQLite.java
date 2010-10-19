@@ -70,6 +70,7 @@ public class SQLite extends Db {
             case FORCE_INDEX_EVEN_IF_NO_SORT:  return false;
             case LIMIT_CLAUSE:               return true;
             case MULTITABLE_UPDATE:          return false;
+            case NON_BMP_CHARACTERS:         return true;
             case ON_DUPLICATE_KEY:           return false;
             case ON_UPDATE_CASCADE:          return true;
             case READ_COMMITTED_ISOLATION:   return false;
