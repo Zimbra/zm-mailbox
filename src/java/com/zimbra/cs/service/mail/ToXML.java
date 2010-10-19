@@ -316,18 +316,7 @@ public class ToXML {
             if (fields != NOTIFY_FIELDS || !flags.equals(""))
                 elem.addAttribute(MailConstants.A_FLAGS, flags);
         }
-        if (needToOutput(fields, Change.MODIFIED_COLOR)) {
-            MailItem.Color color = folder.getRgbColor();
-            if (color.hasMapping()) {
-                byte mappedColor = color.getMappedColor();
-                if (mappedColor != MailItem.DEFAULT_COLOR || fields != NOTIFY_FIELDS) {
-                    elem.addAttribute(MailConstants.A_COLOR, color.getMappedColor());
-                }
-            }
-            if (color.getValue() != 0) {
-                elem.addAttribute(MailConstants.A_RGB, color.toString());
-            }
-        }
+        encodeColor(elem, folder, fields);
         if (needToOutput(fields, Change.MODIFIED_UNREAD)) {
             int unread = folder.getUnreadCount();
             if (unread > 0 || fields != NOTIFY_FIELDS) {
@@ -558,10 +547,7 @@ public class ToXML {
         recordItemTags(elem, note, fields);
         if (needToOutput(fields, Change.MODIFIED_POSITION))
             elem.addAttribute(MailConstants.A_BOUNDS, note.getBounds().toString());
-        if (needToOutput(fields, Change.MODIFIED_COLOR)) {
-            elem.addAttribute(MailConstants.A_RGB, note.getRgbColor().toString());
-            elem.addAttribute(MailConstants.A_COLOR, note.getColor());
-        }
+        encodeColor(elem, note, fields);
         if (needToOutput(fields, Change.MODIFIED_CONTENT))
             elem.addAttribute(MailConstants.E_CONTENT, note.getText(), Element.Disposition.CONTENT);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
@@ -582,10 +568,7 @@ public class ToXML {
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(tag));
         if (needToOutput(fields, Change.MODIFIED_NAME))
             elem.addAttribute(MailConstants.A_NAME, tag.getName());
-        if (needToOutput(fields, Change.MODIFIED_COLOR)) {
-            elem.addAttribute(MailConstants.A_RGB, tag.getRgbColor().toString());
-            elem.addAttribute(MailConstants.A_COLOR, tag.getColor());
-        }
+        encodeColor(elem, tag, fields);
         if (needToOutput(fields, Change.MODIFIED_UNREAD)) {
             int unreadCount = tag.getUnreadCount();
             if (unreadCount > 0 || fields != NOTIFY_FIELDS) {
@@ -606,6 +589,21 @@ public class ToXML {
         return elem;
     }
 
+    public static Element encodeColor(Element elem, MailItem item, int fields) {
+        if (needToOutput(fields, Change.MODIFIED_COLOR)) {
+            MailItem.Color color = item.getRgbColor();
+            if (color.hasMapping()) {
+                byte mappedColor = color.getMappedColor();
+                if (mappedColor != MailItem.DEFAULT_COLOR || fields != NOTIFY_FIELDS) {
+                    elem.addAttribute(MailConstants.A_COLOR, mappedColor);
+                }
+            }
+            else {
+                elem.addAttribute(MailConstants.A_RGB, color.toString());
+            }
+        }
+        return elem;
+    }
 
     public static Element encodeConversation(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, SearchParams params) throws ServiceException {
         Mailbox mbox = conv.getMailbox();
