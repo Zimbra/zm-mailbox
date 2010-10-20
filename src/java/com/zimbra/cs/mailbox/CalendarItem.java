@@ -2151,7 +2151,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         if (subject == null)
             subject= "";
 
-        mData.subject = subject;
+        mData.subject = DbMailItem.truncateSubjectToMaxAllowedLength(subject);
         saveData(getSender());
     }
 

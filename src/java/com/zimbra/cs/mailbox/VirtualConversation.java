@@ -75,7 +75,7 @@ public class VirtualConversation extends Conversation {
         data.id          = -msg.getId();
         data.type        = TYPE_VIRTUAL_CONVERSATION;
         data.folderId    = Mailbox.ID_FOLDER_CONVERSATIONS;
-        data.subject     = msg.getSubject();
+        data.subject     = DbMailItem.truncateSubjectToMaxAllowedLength(msg.getSubject());
         data.date        = (int) (msg.getDate() / 1000);
         data.modMetadata = msg.getSavedSequence();
         data.modContent  = msg.getSavedSequence();
