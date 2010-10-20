@@ -135,7 +135,7 @@ extends TestCase {
     throws Exception {
         String sender = TestUtil.getAddress(USER_NAME);
         String recipient = TestUtil.getAddress(REMOTE_USER_NAME);
-        String subject = NAME_PREFIX + "Outgoing";
+        String subject = NAME_PREFIX + " outgoing";
 
         List<ZEmailAddress> addrs = new LinkedList<ZEmailAddress>();
         addrs.add(new ZEmailAddress(sender, null, null, ZEmailAddress.EMAIL_TYPE_FROM));
@@ -162,7 +162,7 @@ extends TestCase {
     throws Exception {
         String sender = TestUtil.getAddress(USER_NAME);
         String recipient = TestUtil.getAddress(REMOTE_USER_NAME);
-        String subject = NAME_PREFIX + "Outgoing";
+        String subject = NAME_PREFIX + " outgoing";
         String content = new MessageBuilder().withSubject(subject).withFrom(sender).withToRecipient(recipient).create();
 
         mMbox.addMessage("" + Mailbox.ID_FOLDER_SENT, "s", null, System.currentTimeMillis(), content, false);
@@ -1099,12 +1099,12 @@ extends TestCase {
     throws Exception {
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
 
-        // if subject contains "TestFilterOutgoing", file into folder1 and tag with tag1
+        // if subject contains "outgoing", file into folder1 and tag with tag1
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
         actions = new ArrayList<ZFilterAction>();
-        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "TestFilterOutgoing"));
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "outgoing"));
         actions.add(new ZFileIntoAction(FOLDER1_PATH));
         actions.add(new ZTagAction(TAG1_NAME));
         rules.add(new ZFilterRule("testOutgoingFilters1", true, false, conditions, actions));
