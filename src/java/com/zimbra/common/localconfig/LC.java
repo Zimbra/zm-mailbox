@@ -1784,7 +1784,7 @@ public class LC {
 
 
         antispam_mysql_bind_address = new KnownKey("antispam_mysql_bind_address");
-        antispam_mysql_bind_address.setDefault("localhost");
+        antispam_mysql_bind_address.setDefault("127.0.0.1");
 
         antispam_mysql_directory = new KnownKey("antispam_mysql_directory");
         antispam_mysql_directory.setDefault("${zimbra_home}/mta/mysql");
@@ -1802,7 +1802,7 @@ public class LC {
         antispam_mysql_pidfile.setDefault("${zimbra_home}/data/amavisd/mysql/mysql.pid");
 
         antispam_mysql_host = new KnownKey("antispam_mysql_host");
-        antispam_mysql_host.setDefault("localhost");
+        antispam_mysql_host.setDefault("127.0.0.1");
 
         antispam_mysql_port = new KnownKey("antispam_mysql_port");
         antispam_mysql_port.setDefault("7308");
