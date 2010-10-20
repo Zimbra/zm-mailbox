@@ -705,11 +705,9 @@ public class ParsedMessage {
         return mRecipients;
     }
 
-    /**
-     * Returns the decoded value of the <tt>From</tt> header.  If not available,
-     * returns the value of the <tt>Sender</tt> header.  Returns an empty
-     * <tt>String</tt> if neither header is available.
-     */
+    /** Returns the value of the <tt>From</tt> header.  If not available,
+     *  returns the value of the <tt>Sender</tt> header.  Returns an empty
+     *  {@code String} if neither header is available. */
     public String getSender() {
         if (mSender == null)
             mSender = Mime.getSender(getMimeMessage());
@@ -767,7 +765,6 @@ public class ParsedMessage {
             replyTo = getMimeMessage().getHeader("Reply-To", null);
             if (replyTo == null || replyTo.trim().equals(""))
                 return null;
-            replyTo = MimeUtility.decodeText(replyTo);
         } catch (Exception e) { }
 
         String sender = getSender();
