@@ -56,7 +56,7 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
 
     public ZTag(Element e, ZMailbox mailbox) throws ServiceException {
         mMailbox = mailbox;
-		String rgb = e.getAttribute(MailConstants.A_RGB);
+		String rgb = e.getAttribute(MailConstants.A_RGB, null);
 		mColor = Color.fromString(rgb != null ? rgb : e.getAttribute(MailConstants.A_COLOR, "0"));
         mId = e.getAttribute(MailConstants.A_ID);
         mName = e.getAttribute(MailConstants.A_NAME);
