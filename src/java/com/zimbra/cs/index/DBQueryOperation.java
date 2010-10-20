@@ -16,7 +16,6 @@ package com.zimbra.cs.index;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -765,7 +764,7 @@ public class DBQueryOperation extends QueryOperation {
                 }
             });
         } else {
-            DbSearch.search(mDBHits, conn, mConstraints, context.getMailbox(),
+            DbSearch.search(results, conn, mConstraints, context.getMailbox(),
                     sort, offset, size, mExtra, inDumpster);
         }
     }
@@ -825,21 +824,19 @@ public class DBQueryOperation extends QueryOperation {
 
         do {
             // (1) Get the next chunk of results from the DB
-            List<SearchResult> dbRes = new ArrayList<SearchResult>();
-
             if (context.getParams().getEstimateSize() && mSizeEstimate == -1) {
                 mSizeEstimate = DbSearch.countResults(conn, mConstraints,
                         context.getMailbox(), searchInDumpster());
             }
+            List<SearchResult> dbResults = new ArrayList<SearchResult>();
+            fetch(dbResults, conn, sort, mOffset, MAX_HITS_PER_CHUNK);
 
-            fetch(dbRes, conn, sort, mOffset, MAX_HITS_PER_CHUNK);
-
-            if (dbRes.size() < MAX_HITS_PER_CHUNK) {
+            if (dbResults.size() < MAX_HITS_PER_CHUNK) {
                 mEndOfHits = true;
             }
 
-            if (dbRes.size() > 0) {
-                mOffset += dbRes.size();
+            if (dbResults.size() > 0) {
+                mOffset += dbResults.size();
 
                 // (2) for each of the results returned in (1), do a lucene search
                 //    for "ORIGINAL-LUCENE-PART AND id:(RESULTS-FROM-1-ABOVE)"
@@ -849,44 +846,40 @@ public class DBQueryOperation extends QueryOperation {
                     //    -- add that indexId to our new booleanquery
                     Map<Integer, List<SearchResult>> mailItemToResultsMap = new HashMap<Integer, List<SearchResult>>();
 
-                    for (SearchResult res : dbRes) {
-                        List<SearchResult> l = mailItemToResultsMap.get(res.indexId);
-                        if (l == null) {
-                            l = new LinkedList<SearchResult>();
-                            mailItemToResultsMap.put(res.indexId, l);
+                    for (SearchResult dbResult : dbResults) {
+                        List<SearchResult> results = mailItemToResultsMap.get(dbResult.indexId);
+                        if (results == null) {
+                            results = new LinkedList<SearchResult>();
+                            mailItemToResultsMap.put(dbResult.indexId, results);
                         }
-                        l.add(res);
-
+                        results.add(dbResult);
                         // add the new query to the mLuceneOp's query
-                        mLuceneOp.addFilterClause(new Term(LuceneFields.L_MAILBOX_BLOB_ID, Integer.toString(res.indexId)));
+                        mLuceneOp.addFilterClause(new Term(LuceneFields.L_MAILBOX_BLOB_ID,
+                                String.valueOf(dbResult.indexId)));
                     }
 
                     boolean hasMore = true;
-                    boolean printedQuery = false;
 
                     // we have to get ALL of the lucene hits for these ids.  There can very likely be more
                     // hits from Lucene then there are DB id's, so we just ask for a large number.
-                    while(hasMore) {
+                    while (hasMore) {
                         mLuceneChunk = mLuceneOp.getNextResultsChunk(MAX_HITS_PER_CHUNK);
-
-                        Collection<Integer> indexIds = mLuceneChunk.getIndexIds();
+                        Set<Integer> indexIds = mLuceneChunk.getIndexIds();
                         if (indexIds.size() < MAX_HITS_PER_CHUNK) {
                             hasMore = false;
                         }
                         for (int indexId : indexIds) {
-                            List<SearchResult> l = mailItemToResultsMap.get(indexId);
-
-                            if (l == null) {
-                                if (ZimbraLog.index_search.isDebugEnabled()) {
-                                    if (!printedQuery) {
-                                        ZimbraLog.index_search.debug("DBQueryOperation.dbFirstGetNextChunk: LuceneQuery is \""+mLuceneOp.getCurrentQuery().toString()+"\"");
-                                        printedQuery = true;
-                                    }
+                            List<SearchResult> results = mailItemToResultsMap.get(indexId);
+                            if (results != null) {
+                                for (SearchResult result : results) {
+                                    mDBHits.add(result);
                                 }
-                                ZimbraLog.index_search.warn("DBQueryOperation.dbFirstGetNextChunk: Lucene returned item ID "+indexId+" but wasn't in resultMap");
-                                throw ServiceException.FAILURE("Inconsistent DB/Index query results: Text Index returned item ID "+indexId+" but wasn't in resultMap", null);
-                            } else for (SearchResult sr : l) {
-                                mDBHits.add(sr);
+                            } else {
+                                ZimbraLog.index_search.warn(
+                                        "Lucene returned item ID %d but wasn't in resultMap", indexId);
+                                throw ServiceException.FAILURE(
+                                        "Inconsistent DB/Index query results: Text Index returned item ID " +
+                                        indexId + " but wasn't in resultMap", null);
                             }
                         }
                     }
