@@ -8555,6 +8555,78 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * whether free busy view is enabled in the web UI
+     *
+     * @return zimbraFeatureFreeBusyViewEnabled, or false if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1143)
+    public boolean isFeatureFreeBusyViewEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureFreeBusyViewEnabled, false);
+    }
+
+    /**
+     * whether free busy view is enabled in the web UI
+     *
+     * @param zimbraFeatureFreeBusyViewEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1143)
+    public void setFeatureFreeBusyViewEnabled(boolean zimbraFeatureFreeBusyViewEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureFreeBusyViewEnabled, zimbraFeatureFreeBusyViewEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether free busy view is enabled in the web UI
+     *
+     * @param zimbraFeatureFreeBusyViewEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1143)
+    public Map<String,Object> setFeatureFreeBusyViewEnabled(boolean zimbraFeatureFreeBusyViewEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureFreeBusyViewEnabled, zimbraFeatureFreeBusyViewEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether free busy view is enabled in the web UI
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1143)
+    public void unsetFeatureFreeBusyViewEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureFreeBusyViewEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether free busy view is enabled in the web UI
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1143)
+    public Map<String,Object> unsetFeatureFreeBusyViewEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureFreeBusyViewEnabled, "");
+        return attrs;
+    }
+
+    /**
      * enable auto-completion from the GAL, zimbraFeatureGalEnabled also has
      * to be enabled for the auto-completion feature
      *

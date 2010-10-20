@@ -2899,6 +2899,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureFlaggingEnabled = "zimbraFeatureFlaggingEnabled";
 
     /**
+     * whether free busy view is enabled in the web UI
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1143)
+    public static final String A_zimbraFeatureFreeBusyViewEnabled = "zimbraFeatureFreeBusyViewEnabled";
+
+    /**
      * enable auto-completion from the GAL, zimbraFeatureGalEnabled also has
      * to be enabled for the auto-completion feature
      */

@@ -5158,5 +5158,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
          ".*MSIE.*Windows NT.*" will match IE browsers on Windows.  </desc>
 </attr>
 
+<attr id="1143" name="zimbraFeatureFreeBusyViewEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether free busy view is enabled in the web UI</desc>
+</attr>
+
+
 </attrs>
 
