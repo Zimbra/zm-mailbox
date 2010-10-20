@@ -527,7 +527,11 @@ public class Mime {
 
     public static void repairTransferEncoding(MimePart mp) throws MessagingException {
         String cte = mp.getHeader("Content-Transfer-Encoding", null);
-        if (cte != null && !TRANSFER_ENCODINGS.contains(cte.toLowerCase().trim()))
+        String ct = getContentType(mp);
+        if (cte != null &&
+                (!TRANSFER_ENCODINGS.contains(cte.toLowerCase().trim())
+                        || ct.startsWith(MimeConstants.CT_MULTIPART_PREFIX)
+                        || ct.equals(MimeConstants.CT_MESSAGE_RFC822)))
             mp.removeHeader("Content-Transfer-Encoding");
     }
 

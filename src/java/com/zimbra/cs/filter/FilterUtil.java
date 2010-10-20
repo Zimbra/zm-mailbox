@@ -327,13 +327,14 @@ public class FilterUtil {
         try {
             if (!isMailLoop(sourceMbox, msg)) {
                 outgoingMsg = new Mime.FixedMimeMessage(msg);
+                Mime.recursiveRepairTransferEncoding(outgoingMsg);
                 outgoingMsg.setHeader(HEADER_FORWARDED, sourceMbox.getAccount().getName());
                 outgoingMsg.saveChanges();
             } else {
                 String error = String.format("Detected a mail loop for message %s.", Mime.getMessageID(msg));
                 throw ServiceException.FAILURE(error, null);
             }
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             try {
                 // If MimeMessage.saveChanges fails, create a copy of the message
                 // that doesn't recursively call updateHeaders() upon saveChanges().
