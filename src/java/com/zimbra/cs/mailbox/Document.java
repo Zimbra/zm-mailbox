@@ -127,6 +127,14 @@ public class Document extends MailItem {
 
         ParsedDocument pd = (ParsedDocument) obj;
 
+        // new revision has at least new date.
+        markItemModified(Change.MODIFIED_METADATA);
+        
+        // new revision might have new name.
+        if (!mData.name.equals(pd.getFilename())) {
+            markItemModified(Change.MODIFIED_NAME);
+        }
+        
         mContentType = pd.getContentType();
         mCreator     = pd.getCreator();
         mFragment    = pd.getFragment();
@@ -280,7 +288,7 @@ public class Document extends MailItem {
             throw MailServiceException.CANNOT_LOCK(mId, mLockOwner);
         mLockOwner = authuser.getId();
         mLockTimestamp = System.currentTimeMillis();
-        markItemModified(Change.MODIFIED_METADATA);
+        markItemModified(Change.MODIFIED_LOCK);
         saveMetadata();
     }
     
@@ -292,7 +300,7 @@ public class Document extends MailItem {
             throw MailServiceException.CANNOT_UNLOCK(mId, mLockOwner);
         mLockOwner = null;
         mLockTimestamp = 0;
-        markItemModified(Change.MODIFIED_METADATA);
+        markItemModified(Change.MODIFIED_LOCK);
         saveMetadata();
     }
 

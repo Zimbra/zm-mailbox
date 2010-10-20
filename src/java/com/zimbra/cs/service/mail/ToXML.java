@@ -1996,22 +1996,24 @@ public class ToXML {
     public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields) {
         Element elem = parent.addElement(MailConstants.E_DOC);
         encodeDocumentCommon(elem, ifmt, octxt, doc, fields);
-        elem.addAttribute(MailConstants.A_CONTENT_TYPE, doc.getContentType());
-        String lockOwner = doc.getLockOwner();
-        if (lockOwner != null) {
-            Account a;
-            try {
-                a = Provisioning.getInstance().getAccountById(lockOwner);
-                if (a != null)
-                    elem.addAttribute(MailConstants.A_LOCKOWNER_EMAIL, a.getName());
-                else
-                    ZimbraLog.soap.warn("lock owner not found: %s", lockOwner);
-            } catch (ServiceException e) {
-                ZimbraLog.soap.warn("can't lookup lock owner", e);
+        if (needToOutput(fields, Change.MODIFIED_LOCK)) {
+            String lockOwner = doc.getLockOwner();
+            if (lockOwner == null) {
+                elem.addAttribute(MailConstants.A_LOCKOWNER_ID, "");
+            } else {
+                Account a;
+                try {
+                    a = Provisioning.getInstance().getAccountById(lockOwner);
+                    if (a != null)
+                        elem.addAttribute(MailConstants.A_LOCKOWNER_EMAIL, a.getName());
+                    else
+                        ZimbraLog.soap.warn("lock owner not found: %s", lockOwner);
+                } catch (ServiceException e) {
+                    ZimbraLog.soap.warn("can't lookup lock owner", e);
+                }
+                elem.addAttribute(MailConstants.A_LOCKOWNER_ID, lockOwner);
+                elem.addAttribute(MailConstants.A_LOCKTIMESTAMP, doc.getLockTimestamp());
             }
-                
-            elem.addAttribute(MailConstants.A_LOCKOWNER_ID, lockOwner);
-            elem.addAttribute(MailConstants.A_LOCKTIMESTAMP, doc.getLockTimestamp());
         }
         return elem;
     }
@@ -2037,6 +2039,7 @@ public class ToXML {
             String description = doc.getDescription();
             if (description != null && !description.equals(""))
                 m.addAttribute(MailConstants.A_DESC, description);
+            m.addAttribute(MailConstants.A_CONTENT_TYPE, doc.getContentType());
         }
 
         if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
