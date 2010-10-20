@@ -701,7 +701,7 @@ public class LdapUtil {
                         SearchResult sr = (SearchResult) ne.next();
                         String dn = sr.getNameInNamespace();
                         
-                        GalContact lgc = new GalContact(dn, rules.apply(zlc, sr));
+                        GalContact lgc = new GalContact(dn, rules.apply(zlc, base, sr));
                         String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
                         result.setToken(getLaterTimestamp(result.getToken(), mts));
                         String cts = (String) lgc.getAttrs().get("createTimeStamp");

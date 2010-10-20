@@ -46,7 +46,7 @@ public class ADGalGroupHandler extends GalGroupHandler {
     }
 
     @Override
-    public String[] getMembers(ZimbraLdapContext zlc, SearchResult sr) {
+    public String[] getMembers(ZimbraLdapContext zlc, String searchBase, SearchResult sr) {
         String dn = sr.getNameInNamespace();
         if (ZimbraLog.gal.isDebugEnabled()) {
             try {
@@ -55,15 +55,14 @@ public class ADGalGroupHandler extends GalGroupHandler {
                 ZimbraLog.gal.debug("unable to get email address of group " + dn, e);
             }
         }
-        TreeSet<String> result = searchLdap(zlc, dn);
+        TreeSet<String> result = searchLdap(zlc, searchBase, dn);
         return result.toArray(new String[result.size()]);
     }
     
-    private TreeSet<String> searchLdap(ZimbraLdapContext zlc, String dnOfGroup) {
+    private TreeSet<String> searchLdap(ZimbraLdapContext zlc, String searchBase, String dnOfGroup) {
         TreeSet result = new TreeSet<String>();
         
         int maxResults = 0; // no limit
-        String base = "dc=vmware,dc=com"; //TODO
         String query = "(memberof=" + dnOfGroup + ")";
         String[] returnAttrs = new String[]{MAIL_ATTR};
         
@@ -81,7 +80,7 @@ public class ADGalGroupHandler extends GalGroupHandler {
                 do {
                     zlc.setPagedControl(pageSize, cookie, true);
 
-                    ne = zlc.searchDir(base, query, searchControls);
+                    ne = zlc.searchDir(searchBase, query, searchControls);
                     while (ne != null && ne.hasMore()) {
                         SearchResult sr = (SearchResult) ne.nextElement();
                         // String dn = sr.getNameInNamespace();

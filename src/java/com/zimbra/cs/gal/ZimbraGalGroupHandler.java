@@ -40,7 +40,7 @@ public class ZimbraGalGroupHandler extends GalGroupHandler {
     }
     
     @Override
-    public String[] getMembers(ZimbraLdapContext zlc, SearchResult sr) {
+    public String[] getMembers(ZimbraLdapContext zlc, String searchBase, SearchResult sr) {
         try {
             ZimbraLog.gal.debug("Fetching members for group " + LdapUtil.getAttrString(sr.getAttributes(), LdapProvisioning.A_mail));
             Attributes ldapAttrs = sr.getAttributes();

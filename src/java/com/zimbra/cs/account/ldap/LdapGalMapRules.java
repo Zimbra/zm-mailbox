@@ -89,7 +89,7 @@ public class LdapGalMapRules {
         return mLdapAttrs.toArray(new String[mLdapAttrs.size()]);
     }
     
-    public Map<String, Object> apply(ZimbraLdapContext zlc, SearchResult sr) {
+    public Map<String, Object> apply(ZimbraLdapContext zlc, String searchBase, SearchResult sr) {
         String dn = sr.getNameInNamespace();
         Attributes ldapAttrs = sr.getAttributes();
         
@@ -102,7 +102,7 @@ public class LdapGalMapRules {
             contactAttrs.put(ContactConstants.A_type, ContactConstants.TYPE_GROUP);
             
             if (mFetchGroupMembers)
-                contactAttrs.put(ContactConstants.A_member, mGroupHandler.getMembers(zlc, sr));
+                contactAttrs.put(ContactConstants.A_member, mGroupHandler.getMembers(zlc, searchBase, sr));
             else {
                 // for internal LDAP, all members are on the DL entry and have been fetched/mapped
                 // delete it.

@@ -29,7 +29,7 @@ public abstract class GalGroupHandler {
 
     public abstract boolean isGroup(SearchResult sr);
     
-    public abstract String[] getMembers(ZimbraLdapContext zlc, SearchResult sr);
+    public abstract String[] getMembers(ZimbraLdapContext zlc, String searchBase, SearchResult sr);
     
     
     private static Map<String, HandlerInfo> sHandlers = new ConcurrentHashMap<String,HandlerInfo>();
