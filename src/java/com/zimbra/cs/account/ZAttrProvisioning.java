@@ -3850,7 +3850,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraImapProxyBindPort = "zimbraImapProxyBindPort";
 
     /**
-     * whether POP3 SASL GSSAPI is enabled for a given server
+     * whether IMAP SASL GSSAPI is enabled for a given server
      *
      * @since ZCS 5.0.0
      */
@@ -3858,7 +3858,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraImapSaslGssapiEnabled = "zimbraImapSaslGssapiEnabled";
 
     /**
-     * whether IMAP server is enabled for a given server
+     * whether IMAP is enabled for a server
      */
     @ZAttr(id=176)
     public static final String A_zimbraImapServerEnabled = "zimbraImapServerEnabled";
@@ -5434,7 +5434,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPop3SaslGssapiEnabled = "zimbraPop3SaslGssapiEnabled";
 
     /**
-     * whether IMAP is enabled for a server
+     * whether POP3 is enabled for a server
      */
     @ZAttr(id=177)
     public static final String A_zimbraPop3ServerEnabled = "zimbraPop3ServerEnabled";

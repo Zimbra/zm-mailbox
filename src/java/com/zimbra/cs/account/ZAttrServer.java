@@ -5259,7 +5259,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether POP3 SASL GSSAPI is enabled for a given server
+     * whether IMAP SASL GSSAPI is enabled for a given server
      *
      * @return zimbraImapSaslGssapiEnabled, or false if unset
      *
@@ -5271,7 +5271,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether POP3 SASL GSSAPI is enabled for a given server
+     * whether IMAP SASL GSSAPI is enabled for a given server
      *
      * @param zimbraImapSaslGssapiEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5286,7 +5286,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether POP3 SASL GSSAPI is enabled for a given server
+     * whether IMAP SASL GSSAPI is enabled for a given server
      *
      * @param zimbraImapSaslGssapiEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5302,7 +5302,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether POP3 SASL GSSAPI is enabled for a given server
+     * whether IMAP SASL GSSAPI is enabled for a given server
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -5316,7 +5316,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether POP3 SASL GSSAPI is enabled for a given server
+     * whether IMAP SASL GSSAPI is enabled for a given server
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -5331,7 +5331,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether IMAP server is enabled for a given server
+     * whether IMAP is enabled for a server
      *
      * @return zimbraImapServerEnabled, or true if unset
      */
@@ -5341,7 +5341,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether IMAP server is enabled for a given server
+     * whether IMAP is enabled for a server
      *
      * @param zimbraImapServerEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5354,7 +5354,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether IMAP server is enabled for a given server
+     * whether IMAP is enabled for a server
      *
      * @param zimbraImapServerEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5368,7 +5368,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether IMAP server is enabled for a given server
+     * whether IMAP is enabled for a server
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -5380,7 +5380,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether IMAP server is enabled for a given server
+     * whether IMAP is enabled for a server
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -13194,7 +13194,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether IMAP is enabled for a server
+     * whether POP3 is enabled for a server
      *
      * @return zimbraPop3ServerEnabled, or true if unset
      */
@@ -13204,7 +13204,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether IMAP is enabled for a server
+     * whether POP3 is enabled for a server
      *
      * @param zimbraPop3ServerEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -13217,7 +13217,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether IMAP is enabled for a server
+     * whether POP3 is enabled for a server
      *
      * @param zimbraPop3ServerEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -13231,7 +13231,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether IMAP is enabled for a server
+     * whether POP3 is enabled for a server
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -13243,7 +13243,7 @@ public class ZAttrServer extends NamedEntry {
     }
 
     /**
-     * whether IMAP is enabled for a server
+     * whether POP3 is enabled for a server
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
