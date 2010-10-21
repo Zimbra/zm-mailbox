@@ -840,12 +840,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
             throw new IOException("Caught IOException checking BatchedIndexing flag " + e);
         }
 
-        final LuceneConfigSettings.Config config;
-        if (useBatchIndexing) {
-            config = LuceneConfigSettings.batched;
-        } else {
-            config = LuceneConfigSettings.nonBatched;
-        }
+        LuceneConfig config = new LuceneConfig(useBatchIndexing);
 
         try {
             // From 3.0, IndexWriter will no longer support autoCommit=true.
@@ -1012,6 +1007,41 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
 
     int getMailboxId() {
         return mMbidx.getMailboxId();
+    }
+
+    private static final class LuceneConfig {
+
+        final boolean useDocScheduler;
+        final long minMerge;
+        final long maxMerge;
+        final int mergeFactor;
+        final boolean useCompoundFile;
+        final boolean useSerialMergeScheduler;
+        final int maxBufferedDocs;
+        final int ramBufferSizeKB;
+
+        LuceneConfig(boolean batchIndexing) {
+            if (batchIndexing) {
+                useDocScheduler = LC.zimbra_index_lucene_batch_use_doc_scheduler.booleanValue();
+                minMerge = LC.zimbra_index_lucene_batch_min_merge.longValue();
+                maxMerge = LC.zimbra_index_lucene_batch_max_merge.longValue();
+                mergeFactor = LC.zimbra_index_lucene_batch_merge_factor.intValue();
+                useCompoundFile = LC.zimbra_index_lucene_batch_use_compound_file.booleanValue();
+                useSerialMergeScheduler = LC.zimbra_index_lucene_batch_use_serial_merge_scheduler.booleanValue();
+                maxBufferedDocs = LC.zimbra_index_lucene_batch_max_buffered_docs.intValue();
+                ramBufferSizeKB = LC.zimbra_index_lucene_batch_ram_buffer_size_kb.intValue();
+            } else {
+                useDocScheduler = LC.zimbra_index_lucene_nobatch_use_doc_scheduler.booleanValue();
+                minMerge = LC.zimbra_index_lucene_nobatch_min_merge.longValue();
+                maxMerge = LC.zimbra_index_lucene_nobatch_max_merge.longValue();
+                mergeFactor = LC.zimbra_index_lucene_nobatch_merge_factor.intValue();
+                useCompoundFile = LC.zimbra_index_lucene_nobatch_use_compound_file.booleanValue();
+                useSerialMergeScheduler = LC.zimbra_index_lucene_nobatch_use_serial_merge_scheduler.booleanValue();
+                maxBufferedDocs = LC.zimbra_index_lucene_nobatch_max_buffered_docs.intValue();
+                ramBufferSizeKB = LC.zimbra_index_lucene_nobatch_ram_buffer_size_kb.intValue();
+            }
+        }
+
     }
 
 }
