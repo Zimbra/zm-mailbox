@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -37,7 +37,7 @@ public class HttpUtil {
     }
 
     /**
-     * 
+     *
      * @param ua User-Agent string
      * @return
      */
@@ -70,12 +70,18 @@ public class HttpUtil {
         if (StringUtil.isAsciiString(filename) && filename.indexOf('"') == -1)
             return '"' + filename + '"';
         try {
-            if (browser == Browser.IE)
-                return URLEncoder.encode(filename, "utf-8");
-            else if (browser == Browser.FIREFOX)
-                return '"' + MimeUtility.encodeText(filename, "utf-8", "B") + '"';
-            else
-                return '"' + MimeUtility.encodeText(filename, "utf-8", "B") + '"';
+            switch (browser) {
+                case IE:
+                    return URLEncoder.encode(filename, "utf-8");
+                case SAFARI:
+                    // Safari doesn't support any encoding. The only solution is
+                    // to let Safari use the path-info in URL by returning no
+                    // filename here.
+                    return "";
+                case FIREFOX:
+                default:
+                    return '"' + MimeUtility.encodeText(filename, "utf-8", "B") + '"';
+            }
         } catch (UnsupportedEncodingException uee) {
             return filename;
         }
@@ -129,7 +135,7 @@ public class HttpUtil {
 
     /**
      * URL-encodes the given URL path.
-     * 
+     *
      * @return the encoded path, or the original path if it
      * is malformed
      */
@@ -143,22 +149,22 @@ public class HttpUtil {
         }
         return encoded;
     }
-    
+
     /**
      * bug 32207
-     * 
-     * The apache reverse proxy is re-writing the Host header to be the MBS IP.  It sets 
-     * the original request hostname in the X-Forwarded-Host header.  To work around it, 
+     *
+     * The apache reverse proxy is re-writing the Host header to be the MBS IP.  It sets
+     * the original request hostname in the X-Forwarded-Host header.  To work around it,
      * we first check for X-Forwarded-Host and then fallback to Host.
      *
      * @param req
-     * @return the original request hostname 
+     * @return the original request hostname
      */
     public static String getVirtualHost(HttpServletRequest req) {
         String virtualHost = req.getHeader("X-Forwarded-Host");
         if (virtualHost != null)
             return virtualHost;
-        else 
+        else
             return req.getServerName();
     }
 
