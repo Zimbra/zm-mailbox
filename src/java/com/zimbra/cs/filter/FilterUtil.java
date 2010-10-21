@@ -334,23 +334,19 @@ public class FilterUtil {
                 String error = String.format("Detected a mail loop for message %s.", Mime.getMessageID(msg));
                 throw ServiceException.FAILURE(error, null);
             }
-        } catch (Exception e) {
+        } catch (MessagingException e) {
             try {
-                // If MimeMessage.saveChanges fails, create a copy of the message
-                // that doesn't recursively call updateHeaders() upon saveChanges().
-                // This uses double the memory on malformed messages, but it should
-                // avoid having a deep-buried misparse throw off the whole forward.
-                // TODO: With JavaMail 1.4.3, this workaround might not be needed any more.
-                outgoingMsg = new Mime.FixedMimeMessage(msg) {
-                    @Override
-                    protected void updateHeaders() throws MessagingException {
-                        setHeader("MIME-Version", "1.0");
-                        updateMessageID();
-                    }
-                };
+                outgoingMsg = createRedirectMsgOnError(msg);
                 ZimbraLog.filter.info("Message format error detected.  Wrapper class in use.  %s", e.toString());
             } catch (MessagingException again) {
                 throw ServiceException.FAILURE("Message format error detected.  Workaround failed.", again);
+            }
+        } catch (IOException e) {
+            try {
+                outgoingMsg = createRedirectMsgOnError(msg);
+                ZimbraLog.filter.info("Message format error detected.  Wrapper class in use.  %s", e.toString());
+            } catch (MessagingException me) {
+                throw ServiceException.FAILURE("Message format error detected.  Workaround failed.", me);
             }
         }
 
@@ -372,6 +368,21 @@ public class FilterUtil {
         }
         sender.setRecipients(destinationAddress);
         sender.sendMimeMessage(null, sourceMbox, outgoingMsg);
+    }
+
+    private static MimeMessage createRedirectMsgOnError(final MimeMessage originalMsg) throws MessagingException {
+        // If MimeMessage.saveChanges fails, create a copy of the message
+        // that doesn't recursively call updateHeaders() upon saveChanges().
+        // This uses double the memory on malformed messages, but it should
+        // avoid having a deep-buried misparse throw off the whole forward.
+        // TODO: With JavaMail 1.4.3, this workaround might not be needed any more.
+        return new Mime.FixedMimeMessage(originalMsg) {
+            @Override
+            protected void updateHeaders() throws MessagingException {
+                setHeader("MIME-Version", "1.0");
+                updateMessageID();
+            }
+        };
     }
 
     /**
