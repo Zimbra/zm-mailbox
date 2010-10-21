@@ -1861,6 +1861,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCalendarRecurrenceYearlyMaxYears = "zimbraCalendarRecurrenceYearlyMaxYears";
 
     /**
+     * email address identifying the default device for receiving reminders
+     * for appointments and tasks
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1140)
+    public static final String A_zimbraCalendarReminderDeviceEmail = "zimbraCalendarReminderDeviceEmail";
+
+    /**
      * whether calendar reasources can be double booked
      *
      * @since ZCS 6.0.7
@@ -5667,15 +5676,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=273)
     public static final String A_zimbraPrefCalendarNotifyDelegatedChanges = "zimbraPrefCalendarNotifyDelegatedChanges";
-
-    /**
-     * email address identifying the default device for receiving reminders
-     * for appointments and tasks
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1140)
-    public static final String A_zimbraPrefCalendarReminderDeviceEmail = "zimbraPrefCalendarReminderDeviceEmail";
 
     /**
      * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer

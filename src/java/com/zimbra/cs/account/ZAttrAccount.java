@@ -4106,6 +4106,83 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * email address identifying the default device for receiving reminders
+     * for appointments and tasks
+     *
+     * @return zimbraCalendarReminderDeviceEmail, or null if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1140)
+    public String getCalendarReminderDeviceEmail() {
+        return getAttr(Provisioning.A_zimbraCalendarReminderDeviceEmail, null);
+    }
+
+    /**
+     * email address identifying the default device for receiving reminders
+     * for appointments and tasks
+     *
+     * @param zimbraCalendarReminderDeviceEmail new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1140)
+    public void setCalendarReminderDeviceEmail(String zimbraCalendarReminderDeviceEmail) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarReminderDeviceEmail, zimbraCalendarReminderDeviceEmail);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * email address identifying the default device for receiving reminders
+     * for appointments and tasks
+     *
+     * @param zimbraCalendarReminderDeviceEmail new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1140)
+    public Map<String,Object> setCalendarReminderDeviceEmail(String zimbraCalendarReminderDeviceEmail, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarReminderDeviceEmail, zimbraCalendarReminderDeviceEmail);
+        return attrs;
+    }
+
+    /**
+     * email address identifying the default device for receiving reminders
+     * for appointments and tasks
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1140)
+    public void unsetCalendarReminderDeviceEmail() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarReminderDeviceEmail, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * email address identifying the default device for receiving reminders
+     * for appointments and tasks
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1140)
+    public Map<String,Object> unsetCalendarReminderDeviceEmail(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCalendarReminderDeviceEmail, "");
+        return attrs;
+    }
+
+    /**
      * whether calendar reasources can be double booked
      *
      * @return zimbraCalendarResourceDoubleBookingAllowed, or true if unset
@@ -21895,83 +21972,6 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefCalendarNotifyDelegatedChanges(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, "");
-        return attrs;
-    }
-
-    /**
-     * email address identifying the default device for receiving reminders
-     * for appointments and tasks
-     *
-     * @return zimbraPrefCalendarReminderDeviceEmail, or null if unset
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1140)
-    public String getPrefCalendarReminderDeviceEmail() {
-        return getAttr(Provisioning.A_zimbraPrefCalendarReminderDeviceEmail, null);
-    }
-
-    /**
-     * email address identifying the default device for receiving reminders
-     * for appointments and tasks
-     *
-     * @param zimbraPrefCalendarReminderDeviceEmail new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1140)
-    public void setPrefCalendarReminderDeviceEmail(String zimbraPrefCalendarReminderDeviceEmail) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarReminderDeviceEmail, zimbraPrefCalendarReminderDeviceEmail);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * email address identifying the default device for receiving reminders
-     * for appointments and tasks
-     *
-     * @param zimbraPrefCalendarReminderDeviceEmail new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1140)
-    public Map<String,Object> setPrefCalendarReminderDeviceEmail(String zimbraPrefCalendarReminderDeviceEmail, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarReminderDeviceEmail, zimbraPrefCalendarReminderDeviceEmail);
-        return attrs;
-    }
-
-    /**
-     * email address identifying the default device for receiving reminders
-     * for appointments and tasks
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1140)
-    public void unsetPrefCalendarReminderDeviceEmail() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarReminderDeviceEmail, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * email address identifying the default device for receiving reminders
-     * for appointments and tasks
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1140)
-    public Map<String,Object> unsetPrefCalendarReminderDeviceEmail(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarReminderDeviceEmail, "");
         return attrs;
     }
 
