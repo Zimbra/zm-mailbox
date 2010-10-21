@@ -90,19 +90,8 @@ public final class TextQuery extends Query {
         } catch (IOException ignore) {
         }
 
-        // okay, quite a bit of hackery here....basically, if they're doing a contact:
-        // search AND they haven't manually specified a phrase query (expands to more than one term)
-        // then lets hack their search and make it a * search.
-        // for bug:17232 -- if the search string is ".", don't auto-wildcard it, because . is
-        // supposed to match everything by default.
-        if (LuceneFields.L_CONTACT_DATA.equals(field) &&
-                mTokens.size() <= 1 && text.length() > 0 &&
-                text.charAt(text.length() - 1) != '*' && !text.equals(".")) {
-            text = text + '*';
-        }
-
         // must look at original text here b/c analyzer strips *'s
-        if (text.length() > 0 && text.charAt(text.length() - 1) == '*') {
+        if (text.endsWith("*")) {
             // wildcard query!
             String wcToken;
 
@@ -113,8 +102,8 @@ public final class TextQuery extends Query {
                 wcToken = text;
             }
 
-            if (wcToken.charAt(wcToken.length() - 1) == '*') {
-                wcToken = wcToken.substring(0, wcToken.length()-1);
+            if (wcToken.endsWith("*")) {
+                wcToken = wcToken.substring(0, wcToken.length() - 1);
             }
 
             if (wcToken.length() > 0) {
@@ -214,7 +203,7 @@ public final class TextQuery extends Query {
             out.append(token);
         }
         if (mWildcardTerm != null) {
-            out.append(" WILDCARD=");
+            out.append(" *=");
             out.append(mWildcardTerm);
             out.append(" [");
             out.append(mOredTokens.size());

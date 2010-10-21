@@ -612,7 +612,11 @@ public final class QueryParser {
                   text = field.image.substring(1) + text;
               }
               return new TextQuery(mailbox, analyzer, LuceneFields.L_FIELD, text);
-          default: //TODO reachable?
+          case CONTACT:
+              // always make it wildcard search
+              return new TextQuery(mailbox, analyzer,
+                      LuceneFields.L_CONTACT_DATA, text.replaceFirst("[*]*$", "*"));
+          default:
               return new TextQuery(mailbox, analyzer,
                       JJ2LUCENE.get(field.kind), text);
         }

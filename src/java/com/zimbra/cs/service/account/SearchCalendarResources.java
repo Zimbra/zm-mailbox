@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -39,10 +39,12 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class SearchCalendarResources extends AccountDocumentHandler {
 
+    @Override
     public boolean needsAuth(Map<String, Object> context) {
         return true;
     }
 
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(getZimbraSoapContext(context));
@@ -51,7 +53,7 @@ public class SearchCalendarResources extends AccountDocumentHandler {
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
         */
-        
+
         return searchGal(zsc, account, request);
     }
 
@@ -117,28 +119,27 @@ public class SearchCalendarResources extends AccountDocumentHandler {
         Multi activeOrMaint = new Multi(false, AndOr.or, active, maint);
         sFilterActiveResourcesOnly = new EntrySearchFilter(activeOrMaint);
     }
-    
+
     private static Element searchGal(ZimbraSoapContext zsc, Account account, Element request) throws ServiceException {
-        
-        Element eName = request.getOptionalElement(AccountConstants.E_NAME);
-        String name = eName == null? "." : eName.getText();
-        
+
+        Element name = request.getOptionalElement(AccountConstants.E_NAME);
+
         EntrySearchFilter filter = parseSearchFilter(request);
         GalSearchParams params = new GalSearchParams(account, zsc);
-        params.setQuery(name);
+        params.setQuery(name == null ? null : name.getText());
         params.setType(Provisioning.GalSearchType.resource);
         params.setLimit(1000);
         params.setRequest(request);
         params.setResponseName(AccountConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
-        
+
         String attrsStr = request.getAttribute(AccountConstants.A_ATTRS, null);
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
         Set<String> attrsSet = attrs == null ? null : new HashSet<String>(Arrays.asList(attrs));
-        
+
         params.setResultCallback(new FilteredGalSearchResultCallback(params, filter, attrsSet));
-        
+
         GalSearchControl gal = new GalSearchControl(params);
-        gal.search();  
+        gal.search();
         return params.getResultCallback().getResponse();
     }
 

@@ -663,7 +663,7 @@ public class ContactAutoComplete {
 
         buf.append(") AND contact:\"");
         buf.append(query.replace("\"", "\\\"")); // escape quotes
-        buf.append("*\"");
+        buf.append("\"");
         return buf.toString();
     }
 }

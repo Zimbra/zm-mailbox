@@ -501,9 +501,31 @@ public class QueryParserTest {
     @Test
     public void textLexicalState() throws Exception {
         String src = "from:and or from:or or not from:not";
-        List<Query> result = parser.parse(src);
         Assert.assertEquals("Q(from,and) || Q(from,or) || -Q(from,not)",
-                Query.toString(result));
+                Query.toString(parser.parse(src)));
+    }
+
+    @Test
+    public void contact() throws Exception {
+        String src = "contact:\"Conf -\"";
+        Assert.assertEquals("Q(l.contactData,conf,- *=- [0 terms])",
+                Query.toString(parser.parse(src)));
+
+        src = "contact:\"Conf - Prom\"";
+        Assert.assertEquals("Q(l.contactData,conf,-,prom *=prom [0 terms])",
+                Query.toString(parser.parse(src)));
+
+        src = "contact:\"Conf - Promontory E\"";
+        Assert.assertEquals("Q(l.contactData,conf,-,promontory,e *=e [0 terms])",
+                Query.toString(parser.parse(src)));
+
+        src = "contact:\"Conf - Promontory E*****\"";
+        Assert.assertEquals("Q(l.contactData,conf,-,promontory,e *=e [0 terms])",
+                Query.toString(parser.parse(src)));
+
+        src = "contact:\"Conf - Prom* E*\"";
+        Assert.assertEquals("Q(l.contactData,conf,-,prom*,e *=e [0 terms])",
+                Query.toString(parser.parse(src)));
     }
 
 }

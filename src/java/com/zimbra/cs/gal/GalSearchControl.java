@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.AccountConstants;
@@ -98,12 +99,6 @@ public class GalSearchControl {
 
         checkFeatureEnabled(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled);
 
-        String query = mParams.getQuery();
-        if (query == null)
-            query = "";
-        if (query.endsWith("*"))
-            query = query.substring(0, query.length()-1);
-        mParams.setQuery(query);
         mParams.setOp(GalOp.autocomplete);
         if (mParams.getAccount().isGalSyncAccountBasedAutoCompleteEnabled()) {
             try {
@@ -120,7 +115,8 @@ public class GalSearchControl {
             }
         }
         // fallback to ldap search
-        mParams.setQuery(query+"*");
+        String query = Strings.nullToEmpty(mParams.getQuery());
+        mParams.setQuery(query.replaceFirst("[*]*$", "*"));
         mParams.getResultCallback().reset(mParams);
         mParams.setLimit(100);
         ldapSearch();
@@ -131,9 +127,11 @@ public class GalSearchControl {
         checkFeatureEnabled(null);
 
         String query = mParams.getQuery();
-        if (query == null)
-            query = "";
-        mParams.setQuery(query);
+        // '.' is a special operator that matches everything.
+        // We don't support it in auto-complete.
+        if (".".equals(query)) {
+            mParams.setQuery(null);
+        }
         mParams.setOp(GalOp.search);
         try {
             Account galAcct = mParams.getGalSyncAccount();
@@ -145,11 +143,12 @@ public class GalSearchControl {
                 }
             }
         } catch (GalAccountNotConfiguredException e) {
+            query = Strings.nullToEmpty(query);
             // fallback to ldap search
             if (!query.endsWith("*"))
-                query = query+"*";
+                query = query + "*";
             if (!query.startsWith("*"))
-                query = "*"+query;
+                query = "*" + query;
             mParams.setQuery(query);
             mParams.getResultCallback().reset(mParams);
             mParams.setLimit(100);
@@ -217,10 +216,10 @@ public class GalSearchControl {
         String query = mParams.getQuery();
         Provisioning.GalSearchType type = mParams.getType();
         StringBuilder searchQuery = new StringBuilder();
-        if (query.length() > 0) {
+        if (!Strings.isNullOrEmpty(query)) {
             searchQuery.append("contact:\"");
             searchQuery.append(query.replace("\"", "\\\"")); // escape quotes
-            searchQuery.append("*\" AND");
+            searchQuery.append("\" AND");
         }
         GalMode galMode = mParams.getDomain().getGalMode();
         boolean first = true;
@@ -251,17 +250,17 @@ public class GalSearchControl {
         case all:
             break;
         }
-        ZimbraLog.gal.debug("query: "+searchQuery.toString());
+        ZimbraLog.gal.debug("query: %s", searchQuery);
         mParams.parseSearchParams(mParams.getRequest(), searchQuery.toString());
     }
 
     private boolean generateLocalResourceSearchQuery(Account galAcct) throws ServiceException {
         String query = mParams.getQuery();
         StringBuilder searchQuery = new StringBuilder();
-        if (query.length() > 0) {
+        if (!Strings.isNullOrEmpty(query)) {
             searchQuery.append("contact:\"");
             searchQuery.append(query.replace("\"", "\\\"")); // escape quotes
-            searchQuery.append("*\" AND");
+            searchQuery.append("\" AND");
         }
         searchQuery.append(" #zimbraAccountCalendarUserType:RESOURCE");
         for (DataSource ds : galAcct.getAllDataSources()) {
@@ -621,4 +620,5 @@ public class GalSearchControl {
 
         return true;
     }
+
 }
