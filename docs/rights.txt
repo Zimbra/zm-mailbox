@@ -1247,14 +1247,6 @@ MailQueueFlushRequest
 
     Notes:
 
-------------------------------
-MaintainTablesRequest
-
-    Related rights:
-
-    Notes:
-        Only system admins are allowed.
-
 
 ------------------------------
 ModifyAccountRequest

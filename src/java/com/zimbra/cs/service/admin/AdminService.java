@@ -89,8 +89,6 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.DELETE_MAILBOX_REQUEST, new DeleteMailbox());
         dispatcher.registerHandler(AdminConstants.GET_MAILBOX_REQUEST, new GetMailbox());
 
-        dispatcher.registerHandler(AdminConstants.MAINTAIN_TABLES_REQUEST, new MaintainTables());
-
         dispatcher.registerHandler(AdminConstants.RUN_UNIT_TESTS_REQUEST, new RunUnitTests());
 
         dispatcher.registerHandler(AdminConstants.CHECK_AUTH_CONFIG_REQUEST, new CheckAuthConfig());

@@ -953,15 +953,6 @@ Access: domain admin sufficient
 
 -----------------------------
 
-Runs ANALYZE TABLE or OPTIMIZE TABLE on all tables that have grown
-significantly since the last table maintenance.
-
-<MaintainTablesRequest/>
-
-<MaintainTablesResponse numTables="{number of tables maintained}"/>
-
------------------------------
-
 Runs the server-side unit test suite.
 
 If <test>'s are specified, then run the requested tests (instead of
