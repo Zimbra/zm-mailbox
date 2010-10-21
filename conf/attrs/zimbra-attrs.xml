@@ -5135,7 +5135,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Maximum number of entries for zimbraPrefMailTrustedSenderList.</desc>
 </attr>
 
-<attr id="1140" name="zimbraPrefCalendarReminderDeviceEmail" type="email" max="256" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="7.0.0">
+<attr id="1140" name="zimbraPrefCalendarReminderDeviceEmail" type="email" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="7.0.0">
   <desc>email address identifying the default device for receiving reminders for appointments and tasks</desc>
 </attr>
 
