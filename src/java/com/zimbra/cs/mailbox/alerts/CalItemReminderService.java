@@ -144,7 +144,7 @@ public class CalItemReminderService extends MailboxListener {
                 sendEmail = false;
                 Account acct = calItem.getAccount();
                 String defaultEmailAddress = acct.getAttr(Provisioning.A_zimbraPrefCalendarReminderEmail);
-                String defaultDeviceAddress = acct.getAttr(Provisioning.A_zimbraPrefCalendarReminderDeviceEmail);
+                String defaultDeviceAddress = acct.getAttr(Provisioning.A_zimbraCalendarReminderDeviceEmail);
                 for (ZAttendee recipient : recipients) {
                     if (recipient.getAddress().equals(defaultEmailAddress))
                         sendEmail = true;

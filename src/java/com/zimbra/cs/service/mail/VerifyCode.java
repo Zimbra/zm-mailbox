@@ -22,7 +22,7 @@ public class VerifyCode extends MailDocumentHandler {
             String code = request.getAttribute(MailConstants.A_VERIFICATION_CODE);
             if (SendVerificationCode.emailToCodeMap.get(emailAddr).equals(code)) {
                 Account account = getRequestedAccount(zsc);
-                account.setPrefCalendarReminderDeviceEmail(emailAddr);
+                account.setCalendarReminderDeviceEmail(emailAddr);
                 success = true;
                 SendVerificationCode.emailToCodeMap.remove(emailAddr);
             } else {

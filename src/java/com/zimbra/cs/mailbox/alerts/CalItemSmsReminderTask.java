@@ -40,9 +40,9 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
         Locale locale = account.getLocale();
         TimeZone tz = ICalTimeZone.getAccountTimeZone(account);
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
-        String to = account.getAttr(Provisioning.A_zimbraPrefCalendarReminderDeviceEmail);
+        String to = account.getAttr(Provisioning.A_zimbraCalendarReminderDeviceEmail);
         if (to == null) {
-            ZimbraLog.scheduler.info("Unable to send calendar reminder sms since %s is not set", Provisioning.A_zimbraPrefCalendarReminderDeviceEmail);
+            ZimbraLog.scheduler.info("Unable to send calendar reminder sms since %s is not set", Provisioning.A_zimbraCalendarReminderDeviceEmail);
             return;
         }
         mm.setRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(to));
