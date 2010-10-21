@@ -136,25 +136,43 @@ public class LC {
     public static final KnownKey zimbra_index_max_transaction_items;
     public static final KnownKey zimbra_index_use_reader_reopen;
 
-    public static final KnownKey zimbra_index_lucene_batch_use_doc_scheduler;
-    public static final KnownKey zimbra_index_lucene_batch_min_merge;
-    public static final KnownKey zimbra_index_lucene_batch_max_merge;
-    public static final KnownKey zimbra_index_lucene_batch_merge_factor;
-    public static final KnownKey zimbra_index_lucene_batch_use_compound_file;
-    public static final KnownKey zimbra_index_lucene_batch_use_serial_merge_scheduler;
-    public static final KnownKey zimbra_index_lucene_batch_max_buffered_docs;
-    public static final KnownKey zimbra_index_lucene_batch_ram_buffer_size_kb;
-    public static final KnownKey zimbra_index_lucene_max_terms_per_query;
-    public static final KnownKey zimbra_index_wildcard_max_terms_expanded;
+    public static final KnownKey zimbra_index_lucene_batch_use_doc_scheduler =
+        new KnownKey("zimbra_index_lucene_batch_use_doc_scheduler", "true");
+    public static final KnownKey zimbra_index_lucene_batch_min_merge =
+        new KnownKey("zimbra_index_lucene_batch_min_merge", "1000");
+    public static final KnownKey zimbra_index_lucene_batch_max_merge =
+        new KnownKey("zimbra_index_lucene_batch_max_merge", Integer.toString(Integer.MAX_VALUE));
+    public static final KnownKey zimbra_index_lucene_batch_merge_factor =
+        new KnownKey("zimbra_index_lucene_batch_merge_factor", "10");
+    public static final KnownKey zimbra_index_lucene_batch_use_compound_file =
+        new KnownKey("zimbra_index_lucene_batch_use_compound_file", "true");
+    public static final KnownKey zimbra_index_lucene_batch_use_serial_merge_scheduler =
+        new KnownKey("zimbra_index_lucene_batch_use_serial_merge_scheduler", "true");
+    public static final KnownKey zimbra_index_lucene_batch_max_buffered_docs =
+        new KnownKey("zimbra_index_lucene_batch_max_buffered_docs", "200");
+    public static final KnownKey zimbra_index_lucene_batch_ram_buffer_size_kb =
+        new KnownKey("zimbra_index_lucene_batch_ram_buffer_size_kb", "10240");
+    public static final KnownKey zimbra_index_lucene_max_terms_per_query =
+        new KnownKey("zimbra_index_lucene_max_terms_per_query", "50000");
+    public static final KnownKey zimbra_index_wildcard_max_terms_expanded =
+        new KnownKey("zimbra_index_wildcard_max_terms_expanded", "20000");
 
-    public static final KnownKey zimbra_index_lucene_nobatch_use_doc_scheduler;
-    public static final KnownKey zimbra_index_lucene_nobatch_min_merge;
-    public static final KnownKey zimbra_index_lucene_nobatch_max_merge;
-    public static final KnownKey zimbra_index_lucene_nobatch_merge_factor;
-    public static final KnownKey zimbra_index_lucene_nobatch_use_compound_file;
-    public static final KnownKey zimbra_index_lucene_nobatch_use_serial_merge_scheduler;
-    public static final KnownKey zimbra_index_lucene_nobatch_max_buffered_docs;
-    public static final KnownKey zimbra_index_lucene_nobatch_ram_buffer_size_kb;
+    public static final KnownKey zimbra_index_lucene_nobatch_use_doc_scheduler =
+        new KnownKey("zimbra_index_lucene_nobatch_use_doc_scheduler", "true");
+    public static final KnownKey zimbra_index_lucene_nobatch_min_merge =
+        new KnownKey("zimbra_index_lucene_nobatch_min_merge", "10");
+    public static final KnownKey zimbra_index_lucene_nobatch_max_merge =
+        new KnownKey("zimbra_index_lucene_nobatch_max_merge", Integer.toString(Integer.MAX_VALUE));
+    public static final KnownKey zimbra_index_lucene_nobatch_merge_factor =
+        new KnownKey("zimbra_index_lucene_nobatch_merge_factor", "3");
+    public static final KnownKey zimbra_index_lucene_nobatch_use_compound_file =
+        new KnownKey("zimbra_index_lucene_nobatch_use_compound_file", "true");
+    public static final KnownKey zimbra_index_lucene_nobatch_use_serial_merge_scheduler =
+        new KnownKey("zimbra_index_lucene_nobatch_use_serial_merge_scheduler", "true");
+    public static final KnownKey zimbra_index_lucene_nobatch_max_buffered_docs =
+        new KnownKey("zimbra_index_lucene_nobatch_max_buffered_docs", "200");
+    public static final KnownKey zimbra_index_lucene_nobatch_ram_buffer_size_kb =
+        new KnownKey("zimbra_index_lucene_nobatch_ram_buffer_size_kb", "10240");
 
     public static final KnownKey zimbra_rights_delegated_admin_supported;
 
@@ -827,26 +845,6 @@ public class LC {
 
         zimbra_index_use_reader_reopen = new KnownKey("zimbra_index_use_reader_reopen", "false");
 
-        zimbra_index_lucene_batch_use_doc_scheduler = new KnownKey("zimbra_index_lucene_batch_use_doc_scheduler", "true");
-        zimbra_index_lucene_batch_min_merge = new KnownKey("zimbra_index_lucene_batch_min_merge", "1000");
-        zimbra_index_lucene_batch_max_merge = new KnownKey("zimbra_index_lucene_batch_max_merge", Integer.toString(Integer.MAX_VALUE));
-        zimbra_index_lucene_batch_merge_factor = new KnownKey("zimbra_index_lucene_batch_merge_factor", "10");
-        zimbra_index_lucene_batch_use_compound_file = new KnownKey("zimbra_index_lucene_batch_use_compound_file", "true");
-        zimbra_index_lucene_batch_use_serial_merge_scheduler = new KnownKey("zimbra_index_lucene_batch_use_serial_merge_scheduler", "true");
-        zimbra_index_lucene_batch_max_buffered_docs = new KnownKey("zimbra_index_lucene_batch_max_buffered_docs", "200");
-        zimbra_index_lucene_batch_ram_buffer_size_kb = new KnownKey("zimbra_index_lucene_batch_ram_buffer_size_kb", "10240");
-        zimbra_index_lucene_max_terms_per_query = new KnownKey("zimbra_index_lucene_max_terms_per_query", "50000");
-        zimbra_index_wildcard_max_terms_expanded = new KnownKey("zimbra_index_wildcard_max_terms_expanded", "20000");
-
-        zimbra_index_lucene_nobatch_use_doc_scheduler = new KnownKey("zimbra_index_lucene_nobatch_use_doc_scheduler", "true");
-        zimbra_index_lucene_nobatch_min_merge = new KnownKey("zimbra_index_lucene_nobatch_min_merge", "10");
-        zimbra_index_lucene_nobatch_max_merge = new KnownKey("zimbra_index_lucene_nobatch_max_merge", Integer.toString(Integer.MAX_VALUE));
-        zimbra_index_lucene_nobatch_merge_factor = new KnownKey("zimbra_index_lucene_nobatch_merge_factor", "3");
-        zimbra_index_lucene_nobatch_use_compound_file = new KnownKey("zimbra_index_lucene_nobatch_use_compound_file", "true");
-        zimbra_index_lucene_nobatch_use_serial_merge_scheduler = new KnownKey("zimbra_index_lucene_nobatch_use_serial_merge_scheduler", "true");
-        zimbra_index_lucene_nobatch_max_buffered_docs = new KnownKey("zimbra_index_lucene_nobatch_max_buffered_docs", "200");
-        zimbra_index_lucene_nobatch_ram_buffer_size_kb = new KnownKey("zimbra_index_lucene_nobatch_ram_buffer_size_kb", "10240");
-
         zimbra_rights_delegated_admin_supported = new KnownKey("zimbra_rights_delegated_admin_supported", "true");
 
         zimbra_spam_report_queue_size = new KnownKey("zimbra_spam_report_queue_size");
@@ -1017,7 +1015,7 @@ public class LC {
 
         ldap_starttls_supported = new KnownKey("ldap_starttls_supported");
         ldap_starttls_supported.setDefault("0");
-        
+
         ldap_starttls_required = new KnownKey("ldap_starttls_required", "true",
                 "whether starttls is required for java ldap client when it establishes connections to the Zimbra ldap server");
 
