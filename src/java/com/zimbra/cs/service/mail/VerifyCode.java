@@ -4,6 +4,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.util.Map;
@@ -20,6 +21,8 @@ public class VerifyCode extends MailDocumentHandler {
         if (SendVerificationCode.emailToCodeMap.containsKey(emailAddr)) {
             String code = request.getAttribute(MailConstants.A_VERIFICATION_CODE);
             if (SendVerificationCode.emailToCodeMap.get(emailAddr).equals(code)) {
+                Account account = getRequestedAccount(zsc);
+                account.setPrefCalendarReminderDeviceEmail(emailAddr);
                 success = true;
                 SendVerificationCode.emailToCodeMap.remove(emailAddr);
             } else {

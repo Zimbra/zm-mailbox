@@ -3418,3 +3418,19 @@ When includeOlderRevisions is set to true, the server will purge all the
 old revisions inclusive of the revision specified in the request.
 
 -----------------------------
+
+<SendVerificationCodeRequest a="{device-email-address}"/>
+
+<SendVerificationCodeResponse/>
+
+Notes: SendVerificationCodeRequest results in a random verification code being generated and sent to a device.
+
+
+<VerifyCodeRequest a="{device-email-address}" code="{verification-code}"/>
+
+<VerifyCodeResponse success="0|1">
+
+Notes: Request for validating the verification code sent to a device. After successful validation the server
+sets device email address as the value of zimbraPrefCalendarReminderDeviceEmail account attribute.
+
+-----------------------------
