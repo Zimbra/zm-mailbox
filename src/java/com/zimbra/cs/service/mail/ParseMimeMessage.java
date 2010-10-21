@@ -101,7 +101,9 @@ public class ParseMimeMessage {
      */
     private static class Base64TextMimeBodyPart
     extends MimeBodyPart {
-        protected void updateHeaders() throws MessagingException {
+        public Base64TextMimeBodyPart()  { }
+
+        @Override protected void updateHeaders() throws MessagingException {
             super.updateHeaders();
             if (LC.text_attachments_base64.booleanValue() &&
                 Mime.getContentType(this).startsWith(MimeConstants.CT_TEXT_PREFIX)) {
@@ -598,11 +600,9 @@ public class ParseMimeMessage {
             setContent(mm, mmpNew, elem, null, ctxt);
 
             // add all the alternatives
-            if (alternatives != null) {
-                for (int i = 0; i < alternatives.length; i++) {
-                    ctxt.incrementSize("alternative", alternatives[i].getSize());
-                    mmpNew.addBodyPart(alternatives[i]);
-                }
+            for (int i = 0; i < alternatives.length; i++) {
+                ctxt.incrementSize("alternative", alternatives[i].getSize());
+                mmpNew.addBodyPart(alternatives[i]);
             }
         }
     }
@@ -639,6 +639,8 @@ public class ParseMimeMessage {
         }
         mbp.setHeader("Content-Type", ctype.setCharset(ctxt.defaultCharset).toString());
         mbp.setHeader("Content-Disposition", cdisp.setCharset(ctxt.defaultCharset).toString());
+        if (ctype.getContentType().equals(MimeConstants.CT_APPLICATION_PDF))
+            mbp.setHeader("Content-Transfer-Encoding", "base64");
         mbp.setContentID(contentID);
 
         // add to the parent part
@@ -783,17 +785,21 @@ public class ParseMimeMessage {
 
         MimeBodyPart mbp = new Base64TextMimeBodyPart();
 
-        String type = mp.getContentType();
-        if (type != null) {
+        String ctypeHdr = mp.getContentType();
+        if (ctypeHdr != null) {
             // Clean up the content type and pass it to the new MimeBodyPart via DataSourceWrapper.
             // If we don't do this, JavaMail ignores the Content-Type header.  See bug 42452,
             // JavaMail bug 1650154.
-            String ctype = new ContentType(type, ctxt.use2231).cleanup().setCharset(ctxt.defaultCharset).setParameter("name", filename).toString();
+        	ContentType ctype = (ContentType) new ContentType(ctypeHdr, ctxt.use2231).cleanup().setCharset(ctxt.defaultCharset).setParameter("name", filename);
+            String contentType = ctype.toString();
             DataHandler originalHandler = mp.getDataHandler();
             DataSourceWrapper wrapper = new DataSourceWrapper(originalHandler.getDataSource());
-            wrapper.setContentType(ctype);
+            wrapper.setContentType(contentType);
             mbp.setDataHandler(new DataHandler(wrapper));
-            mbp.setHeader("Content-Type", ctype);
+
+            mbp.setHeader("Content-Type", contentType);
+            if (ctype.getContentType().equals(MimeConstants.CT_APPLICATION_PDF))
+                mbp.setHeader("Content-Transfer-Encoding", "base64");
         } else {
             mbp.setDataHandler(mp.getDataHandler());
         }
