@@ -57,7 +57,14 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
     public ZTag(Element e, ZMailbox mailbox) throws ServiceException {
         mMailbox = mailbox;
 		String rgb = e.getAttribute(MailConstants.A_RGB, null);
-		mColor = Color.fromString(rgb != null ? rgb : e.getAttribute(MailConstants.A_COLOR, "0"));
+        // Server reports color or rgb attribute on mail items but not both. 
+        // If rgb, map the color to the rgb value. If the attr is color, return the value as is.
+        if (rgb != null) {
+            mColor =  Color.fromString(rgb);
+        } else {
+            String s = e.getAttribute(MailConstants.A_COLOR, "0");
+            mColor = Color.values()[(byte)Long.parseLong(s)];
+        }
         mId = e.getAttribute(MailConstants.A_ID);
         mName = e.getAttribute(MailConstants.A_NAME);
         mUnreadCount = (int) e.getAttributeLong(MailConstants.A_UNREAD, 0);
