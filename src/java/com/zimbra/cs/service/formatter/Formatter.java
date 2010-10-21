@@ -260,8 +260,7 @@ public abstract class Formatter {
         ServletException, ServiceException {
         String callback = context.params.get("callback");
         Throwable exception = null;
-        PrintWriter out;
-        ServiceException se = null;
+        PrintWriter out = null;
 
         if (e != null) {
             Throwable cause = e.getCause();
@@ -270,10 +269,7 @@ public abstract class Formatter {
                 cause instanceof ServletException ||
                 cause instanceof IOException ? cause : e;
         }
-        if (exception != null)
-            se = exception instanceof ServiceException ?
-                (ServiceException) exception :
-                FormatterServiceException.UNKNOWN_ERROR(exception);
+
         if (callback == null || callback.equals("")) {
             if (context.params.get(PROGRESS) == null) {
                 if (exception == null)
@@ -287,7 +283,12 @@ public abstract class Formatter {
                 throw ServiceException.FAILURE(
                     getType() + " formatter failure", exception);
             }
-            out = updateClient(context, false);
+            try {
+                out = updateClient(context, false);
+            } catch (IllegalStateException ise) {
+                ZimbraLog.misc.warn("format output has already been written.");
+                return;
+            }
             if (exception == null && w == null) {
                 out.println("<body></body>\n</html>");
             } else {
@@ -303,30 +304,41 @@ public abstract class Formatter {
                 out.println("</pre>\n</body>\n</html>");
             }
         } else if (!"2".equals(context.params.get(PROGRESS))) {
-            out = updateClient(context, false);
+            if (exception == null && (w == null || w.size() == 0)) {
+                return;
+            }
+
+            ZimbraLog.misc.warn(getType() + " formatter exception",
+                    exception);
+            try {
+                out = updateClient(context, false);
+            } catch (IllegalStateException ise) {
+                ZimbraLog.misc.warn("format output has already been written.");
+                return;
+            }
             // mark done no matter what happens next
             context.params.put(PROGRESS, "2");
             out.println("<body onload='onLoad()'>");
             out.println("<script>");
             out.println("function onLoad() {");
-            if (exception == null && (w == null || w.size() == 0)) {
-                out.print("    window.parent." + callback + "('success');");
-            } else {
-                String result = exception != null ? "fail" : "warn";
+            String result = exception != null ? "fail" : "warn";
 
-                out.print("    window.parent." + callback + "('" + result + "'");
-                if (exception != null) {
-                    out.print(",\n\t");
-                    out.print(SoapProtocol.SoapJS.soapFault(se));
-                }
-                if (w != null) {
-                    for (ServiceException warning : w) {
-                        out.print(",\n\t");
-                        out.print(SoapProtocol.SoapJS.soapFault(warning));
-                    }
-                }
-                out.println(");");
+            out.print("    window.parent." + callback + "('" + result + "'");
+            if (exception != null) {
+                ServiceException se = 
+                    exception instanceof ServiceException ?
+                            (ServiceException) exception :
+                                FormatterServiceException.UNKNOWN_ERROR(exception);
+                            out.print(",\n\t");
+                            out.print(SoapProtocol.SoapJS.soapFault(se));
             }
+            if (w != null) {
+                for (ServiceException warning : w) {
+                    out.print(",\n\t");
+                    out.print(SoapProtocol.SoapJS.soapFault(warning));
+                }
+            }
+            out.println(");");
             out.println("}");
             out.println("</script>");
             out.println("</body>");
