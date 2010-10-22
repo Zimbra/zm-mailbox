@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.milter;
 
+import static com.zimbra.cs.account.ZAttrProvisioning.A_zimbraMilterNumThreads;
 import static com.zimbra.cs.account.ZAttrProvisioning.A_zimbraMilterBindAddress;
 import static com.zimbra.cs.account.ZAttrProvisioning.A_zimbraMilterBindPort;
 
@@ -40,15 +41,47 @@ public class MilterConfig extends ServerConfig {
         return addr != null ? addr : getAttr(A_zimbraMilterBindAddress, "127.0.0.1");
     }
     
+    @Override
+    public int getNumThreads() {
+        return getIntAttr(A_zimbraMilterNumThreads, super.getNumThreads());
+    }
+    
     @Override public Log getLog() {
         return ZimbraLog.milter;
     }
 
+    // for now nio tweaks are in LC
+    
     @Override public int getNioMaxSessions() {
         return LC.milter_max_sessions.intValue();
     }
     
     @Override public int getMaxIdleSeconds() {
         return LC.milter_max_idle_seconds.intValue();
+    }
+    
+    @Override
+    public int getNioMaxScheduledWriteBytes() {
+        return LC.milter_max_scheduled_write_bytes.intValue();
+    }
+
+    @Override
+    public int getNioWriteTimeout() {
+        return LC.milter_write_timeout.intValue();
+    }
+
+    @Override
+    public int getNioWriteChunkSize() {
+        return LC.milter_write_chunk_size.intValue();
+    }
+
+    @Override
+    public int getNioMinThreads() {
+        return LC.milter_min_threads.intValue();
+    }
+
+    @Override
+    public int getNioThreadKeepAliveTime() {
+        return LC.milter_thread_keep_alive_time.intValue();
     }
 }

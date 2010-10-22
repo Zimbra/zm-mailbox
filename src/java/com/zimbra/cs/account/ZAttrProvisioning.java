@@ -4741,6 +4741,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMilterBindPort = "zimbraMilterBindPort";
 
     /**
+     * number of milter handler threads
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1144)
+    public static final String A_zimbraMilterNumThreads = "zimbraMilterNumThreads";
+
+    /**
      * whether milter server is enabled for a given server
      *
      * @since ZCS 7.0.0
