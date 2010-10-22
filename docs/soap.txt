@@ -3431,6 +3431,6 @@ Notes: SendVerificationCodeRequest results in a random verification code being g
 <VerifyCodeResponse success="0|1">
 
 Notes: Request for validating the verification code sent to a device. After successful validation the server
-sets device email address as the value of zimbraPrefCalendarReminderDeviceEmail account attribute.
+sets device email address as the value of zimbraCalendarReminderDeviceEmail account attribute.
 
 -----------------------------
