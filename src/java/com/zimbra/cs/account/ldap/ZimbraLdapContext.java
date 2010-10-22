@@ -63,6 +63,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * 
@@ -401,7 +402,7 @@ public class ZimbraLdapContext {
                         ", connpool=" + env.get("com.sun.jndi.ldap.connect.pool"));
             
             mDirContext = new InitialLdapContext(env, null);
-                        
+            
             if (startTLS) {
                 // start TLS
                 mTlsResp = (StartTlsResponse) mDirContext.extendedOperation(new StartTlsRequest());
@@ -413,9 +414,13 @@ public class ZimbraLdapContext {
             }
             
             ZimbraPerf.STOPWATCH_LDAP_DC.stop(start);
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("ZimbraLdapContext", e);
-        } catch (IOException e) {
+        } catch (Throwable e) {
+            ZimbraLog.ldap.debug("GET DIR CTXT FAILED", e);
+            closeContext(mDirContext, mTlsResp);
+            
+            if (e instanceof OutOfMemoryError)
+                Zimbra.halt("out of memory", e);
+            
             throw ServiceException.FAILURE("ZimbraLdapContext", e);
         }
     }
@@ -423,14 +428,16 @@ public class ZimbraLdapContext {
     /*
      * External LDAP
      */
-    public ZimbraLdapContext(String urls[], boolean requireStartTLS, String bindDn, String bindPassword, String note) throws NamingException, IOException {
+    public ZimbraLdapContext(String urls[], boolean requireStartTLS, String bindDn, String bindPassword, String note) 
+        throws ServiceException, NamingException, IOException {
         this(urls, requireStartTLS, null, bindDn, bindPassword, note);
     }
     
     /*
      * External LDAP
      */
-    public ZimbraLdapContext(String urls[], boolean requireStartTLS, LdapGalCredential credential, String note)  throws NamingException, IOException {
+    public ZimbraLdapContext(String urls[], boolean requireStartTLS, LdapGalCredential credential, String note) 
+        throws ServiceException, NamingException, IOException {
         this(urls, requireStartTLS, credential.getAuthMech(), credential.getBindDn(), credential.getBindPassword(), note);
     }
     
@@ -440,7 +447,8 @@ public class ZimbraLdapContext {
      * Naming or IO exceptions are not caught then wrapped in a ServiceException like in the ZimbraLdapContext for Zimbra internal directory, 
      * because callsites of this method need to check for Naming/IOExceptions and log/handle/throw accordingly.  
      */
-    public ZimbraLdapContext(String urls[], boolean requireStartTLS, String authMech, String bindDn, String bindPassword, String note)  throws NamingException, IOException {
+    public ZimbraLdapContext(String urls[], boolean requireStartTLS, String authMech, String bindDn, String bindPassword, String note)  
+        throws ServiceException, NamingException, IOException {
         Hashtable<String, String> env = new Hashtable<String, String>();
         
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
@@ -498,12 +506,19 @@ public class ZimbraLdapContext {
                 if (bindPassword != null)
                     mDirContext.addToEnvironment(Context.SECURITY_CREDENTIALS, bindPassword);
             }
-        } catch (NamingException e) {
-            ZimbraLog.ldap.debug("GET DIR CTXT(" + note + ") failed", e);
-            throw e;
-        } catch (IOException e) {
-            ZimbraLog.ldap.debug("GET DIR CTXT(" + note + ") failed", e);
-            throw e;
+        } catch (Throwable e) {
+            ZimbraLog.ldap.debug("GET DIR CTXT(" + note + ") FAILED", e);
+            closeContext(mDirContext, mTlsResp);
+            
+            if (e instanceof OutOfMemoryError)
+                Zimbra.halt("out of memory", e);
+            
+            if (e instanceof NamingException) 
+                throw (NamingException)e;
+            else if (e instanceof IOException) 
+                throw (IOException)e;
+            else
+                throw ServiceException.FAILURE("ZimbraLdapContext", e);
         }
     }
     

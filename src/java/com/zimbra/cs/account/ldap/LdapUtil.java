@@ -93,7 +93,7 @@ public class LdapUtil {
     }
 
     public static void ldapAuthenticate(String url[], boolean requireStartTLS, String password, String searchBase, String searchFilter, String searchDn, String searchPassword) 
-        throws NamingException, IOException {
+        throws ServiceException, NamingException, IOException {
         
         if (password == null || password.equals("")) 
             throw new AuthenticationException("empty password");
