@@ -22,8 +22,8 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.SetUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.DistributionList;
@@ -32,7 +32,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 
 public class CheckAttrRight extends CheckRight {
-    private static final Log sLog = LogFactory.getLog(CheckAttrRight.class);
+    private static final Log sLog = ZimbraLog.acl;
 
     private Grantee mGrantee;
     private AttrRight mAttrRightNeeded; // just to save a casting from Right to AttrRight

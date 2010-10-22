@@ -18,7 +18,6 @@ import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
@@ -34,7 +33,7 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
  */
 
 public class CrossDomain {
-    private static final Log sLog = LogFactory.getLog(CrossDomain.class);
+    private static final Log sLog = ZimbraLog.acl;
     
     static boolean crossDomainOK(Provisioning prov, Account grantee, Domain granteeDomain, 
             Domain targetDomain, DistributionList grantedOn) throws ServiceException {

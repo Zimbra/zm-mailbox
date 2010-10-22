@@ -20,6 +20,7 @@ import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
@@ -27,7 +28,7 @@ import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 
 public class AllowedAttrs implements AccessManager.AttrRightChecker {
     
-    private static final Log sLog = LogFactory.getLog(AllowedAttrs.class);
+    private static final Log sLog = ZimbraLog.acl;
     
     public enum Result {
         ALLOW_ALL,

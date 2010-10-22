@@ -18,11 +18,12 @@ import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
@@ -33,7 +34,7 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
  */ 
 
 public class CheckPresetRight extends CheckRight {
-    private static final Log sLog = LogFactory.getLog(CheckPresetRight.class);
+    private static final Log sLog = ZimbraLog.acl;
 
     private Account mGranteeAcct;
     private ViaGrant mVia;
@@ -71,7 +72,13 @@ public class CheckPresetRight extends CheckRight {
             Right rightNeeded, boolean canDelegateNeeded, ViaGrant via) throws ServiceException {
         
         CheckPresetRight checker = new CheckPresetRight(grantee, target, rightNeeded, canDelegateNeeded, via);
-        return checker.checkRight();
+        Boolean allowed = checker.checkRight();
+        
+        if (sLog.isDebugEnabled())
+            sLog.debug("check right: " + "target=" + target.getLabel() + ", user=" + grantee.getName() + 
+                    ", right=" + rightNeeded.getName() + " => " + (allowed==null?"no matching ACL" : allowed));
+
+        return allowed;
     }
     
 

@@ -82,11 +82,14 @@ public class Groups {
      * @return
      */
     boolean isGroup(String addr) {
+        boolean isGroup = false;
         try {
-            return getAllDLs().contains(addr.toLowerCase());
+            isGroup = getAllDLs().contains(addr.toLowerCase());
         } catch (ServiceException e) {
-            // ignore
+            // log and ignore
+            ZimbraLog.account.warn("unable to determine if address " + addr + " is a DL", e);
         }
-        return false;
+        ZimbraLog.account.debug("address " + addr + " isGroup=" + isGroup);
+        return isGroup;
     }
 }

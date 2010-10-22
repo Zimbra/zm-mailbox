@@ -5,8 +5,8 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.SetUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
@@ -20,7 +20,7 @@ import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
 
 public class ParticallyDenied {
 
-    private static final Log sLog = LogFactory.getLog(ParticallyDenied.class);
+    private static final Log sLog = ZimbraLog.acl;
     
     private static boolean isSubTarget(Provisioning prov, Entry targetSup, Entry targetSub) throws ServiceException {
        

@@ -21,13 +21,12 @@ import java.util.List;
 import java.util.Set;
 
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.ACL;
 
 public class ZimbraACL {
-    private static final Log sLog = LogFactory.getLog(ZimbraACL.class);
+    private static final Log sLog = ZimbraLog.acl;
 
     // all aces
     private List<ZimbraACE> mAces = new ArrayList<ZimbraACE>();
