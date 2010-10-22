@@ -81,8 +81,10 @@ public class ServerManager {
                 imapSSLServer = startImapServer(true);
             }
         }
+        
+        // run milter service in the same process as mailtoxd. should be used only in dev environment
         if (app.supports(MilterServer.class)) {
-            if (isEnabled(Provisioning.A_zimbraMilterServerEnabled)) {
+            if (LC.milter_in_process_mode.booleanValue()) {
                 milterServer = startMilterServer();
             }
         }
