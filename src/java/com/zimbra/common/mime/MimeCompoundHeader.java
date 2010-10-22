@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,7 +15,6 @@
 package com.zimbra.common.mime;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -23,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.net.URLCodec;
 
 import com.zimbra.common.mime.HeaderUtils.ByteBuilder;
@@ -469,9 +469,9 @@ public class MimeCompoundHeader extends MimeHeader {
                 } else {
                     if (encoded) {
                         try {
-                            pvalue = URLDecoder.decode(pvalue, charset.isEmpty() ? "us-ascii" : charset.toString());
-                        } catch (UnsupportedEncodingException uee) {
-                            System.out.println(uee);
+                            URLCodec codec = new URLCodec(charset.isEmpty() ? "us-ascii" : charset.toString());
+                            pvalue = codec.decode(pvalue);
+                        } catch (DecoderException ignore) {
                         }
                     } else if (pvalue.length() >= 8 && pvalue.indexOf("=?") >= 0 && pvalue.indexOf("?=") > 0) {
                         pvalue = decode(pvalue);
@@ -515,8 +515,9 @@ public class MimeCompoundHeader extends MimeHeader {
                     if (raw != null) {
                         // if we're here, we've reached the end of consecutive encoded parts and can decode them
                         try {
-                            assembled.append(URLDecoder.decode(raw.toString(), paramCharset));
-                        } catch (UnsupportedEncodingException uee) {
+                            URLCodec codec = new URLCodec(paramCharset);
+                            assembled.append(codec.decode(raw.toString()));
+                        } catch (DecoderException e) {
                             assembled.append(raw.toString());
                         }
                         raw = null;

@@ -76,6 +76,9 @@ public class MimeCompoundHeaderTest {
         test(false, "default value, leading spaces, RFC 2231 encoding",
                 "   \n  gropp;\n filename*=UTF-8''%E3%82%BD%E3%83%AB%E3%83%86%E3%82%A3%E3%83%AC%E3%82%A4.rtf\n  \n ",
                 "attachment", new String[] { "filename", "\u30bd\u30eb\u30c6\u30a3\u30ec\u30a4.rtf" });
+        test(false, "ISO-2022-JP",
+                "attachment; filename*=iso-2022-jp'ja'%1B%24B%2327n9f%1B%28B.jpg",
+                "attachment", new String[] { "filename", "\uff12\u6708\u53f7.jpg" });
         test(false, "encoded continuations",
                 "attachment; filename*0*=ISO-8859-1''BASE%20INICIAL%20CAMPANHA%20PROVIS%C3O%20ABAIXO; filename*1*=%20DE%20ZERO%2009_10_06%20SUCHY.xls",
                 "attachment", new String[] { "filename", "BASE INICIAL CAMPANHA PROVIS\u00c3O ABAIXO DE ZERO 09_10_06 SUCHY.xls" });
