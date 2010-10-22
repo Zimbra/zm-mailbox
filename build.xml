@@ -1960,6 +1960,8 @@
 
     <antcall target="server2-war"/>
 
+    <antcall target="spnego-war"/>
+
     <antcall target="dev-dist-jetty">
       <param name="dist.jetty.dir" value="${dist.jetty.alt.dir}"/>
     </antcall>
