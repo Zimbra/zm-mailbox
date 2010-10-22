@@ -79,6 +79,14 @@ log4j.appender.WBXML.File=/opt/zimbra/log/wbxml.log
 log4j.appender.WBXML.layout=com.zimbra.common.util.ZimbraPatternLayout
 log4j.appender.WBXML.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
+# Appender MILTER writes to the file "milter.log".
+log4j.appender.MILTER=org.apache.log4j.rolling.RollingFileAppender
+log4j.appender.MILTER.RollingPolicy=org.apache.log4j.rolling.TimeBasedRollingPolicy
+log4j.appender.MILTER.RollingPolicy.FileNamePattern=/opt/zimbra/log/milter.log.%d{yyyy-MM-dd}.gz
+log4j.appender.MILTER.File=/opt/zimbra/log/milter.log
+log4j.appender.MILTER.layout=com.zimbra.common.util.ZimbraPatternLayout
+log4j.appender.MILTER.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
+
 # HttpMethodBase spews out too many WARN on the badly formatted cookies.
 log4j.logger.org.apache.commons.httpclient.HttpMethodBase=ERROR
 
@@ -93,6 +101,8 @@ log4j.additivity.zimbra.syncstate=false
 log4j.logger.zimbra.syncstate=INFO,SYNCSTATE
 log4j.additivity.zimbra.wbxml=false
 log4j.logger.zimbra.wbxml=INFO,WBXML
+log4j.additivity.zimbra.milter=false
+log4j.logger.zimbra.milter=INFO,MILTER
 
 log4j.logger.zimbra=INFO
 log4j.logger.zimbra.op=WARN
