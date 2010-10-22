@@ -58,7 +58,6 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -936,33 +935,6 @@ public class Invite {
         return mCalItem.getSubpartMessage(mMailItemId);
     }
 
-    /**
-     * The public version updates the metadata in the DB as well
-     * @param flag -- flag to up
-     * @param add TRUE means set bit (OR with value) FALSE means unset bit
-     */
-    void modifyFlag(Mailbox mbx, int flag, boolean add) throws ServiceException {
-        boolean changed = false;
-        if (add) {
-            if ((mFlags & flag) == 0) {
-                mFlags |= flag;
-                changed = true;
-            }
-        } else {
-            if ((mFlags & flag) != 0) {
-                mFlags &= ~flag;
-                changed = true;
-            }
-        }
-        
-        if (changed) {
-            mCalItem.saveMetadata();
-            if (mbx != null) {
-                mCalItem.markItemModified(Change.MODIFIED_INVITE);
-            }
-        }
-    } 
-    
     public void setPartStat(String partStat) { mPartStat = partStat; }
     
     /**
@@ -1488,10 +1460,27 @@ public class Invite {
         return null;
     }
 
+    public ZAttendee getMatchingAttendee(ZAttendee matchAttendee) throws ServiceException {
+        // Look up internal account for the attendee.  For internal users we want to match
+        // on all email addresses of the account.
+        Account matchAcct = null;
+        String matchAddress = matchAttendee.getAddress();
+        if (matchAddress != null)
+            matchAcct = Provisioning.getInstance().get(AccountBy.name, matchAddress);
+        for (ZAttendee at : getAttendees()) {
+            if (matchAttendee.addressesMatch(at) ||
+                (matchAcct != null && CalendarItem.accountMatchesCalendarUser(matchAcct, at))) {
+                return at;
+            }
+        }
+        return null;
+    }
+
     /**
      * Updates the ATTENDEE entries in this invite which match entries in the other one -- presumably 
-     * because the attendee has sent us a reply to change his status.  This function writes the MetaData 
-     * through to SQL and also sends a notification of MailItem change.
+     * because the attendee has sent us a reply to change his status.  The Caller is responsible
+     * for ensuring the changed MetaData is written through to SQL and sending a notification of 
+     * MailItem change.
      * 
      * @param reply
      * @return
@@ -1505,48 +1494,37 @@ public class Invite {
         
         boolean modified = false;
         
-        OUTER: 
-            for (ZAttendee replyAt : reply.getAttendees()) {
-                // Look up internal account for the attendee.  For internal users we want to match
-                // on all email addresses of the account.
-                Account replyAcct = null;
-                String replyAddress = replyAt.getAddress();
-                if (replyAddress != null)
-                    replyAcct = Provisioning.getInstance().get(AccountBy.name, replyAddress);
-                for (ZAttendee at : attendees) {
-                    if (replyAt.addressesMatch(at) ||
-                        (replyAcct != null && CalendarItem.accountMatchesCalendarUser(replyAcct, at))) {
-                    	// BUG:4911  When an invitee responds they include an ATTENDEE record, but
-                    	// it doesn't have to have all fields.  In particular, we don't want to let them
-                    	// change their ROLE...
-//                        if (replyAt.hasRole() && !replyAt.getRole().equals(at.getRole())) {
-//                            at.setRole(replyAt.getRole());
-//                            modified = true;
-//                        }
-                        
-                        if (replyAt.hasPartStat() && !replyAt.getPartStat().equals(at.getPartStat())) {
-                            at.setPartStat(replyAt.getPartStat());
-                            modified = true;
-                        }
+        for (ZAttendee replyAt : reply.getAttendees()) {
+            ZAttendee at = getMatchingAttendee(replyAt);
+            if (at != null) {
+                // BUG:4911  When an invitee responds they include an ATTENDEE record, but
+                // it doesn't have to have all fields.  In particular, we don't want to let them
+                // change their ROLE...
+                //     if (replyAt.hasRole() && !replyAt.getRole().equals(at.getRole())) {
+                //         at.setRole(replyAt.getRole());
+                //         modified = true;
+                //     }
+                // bug 21848: Similar to above comment on bug 4911, we don't want the reply to
+                // update the RSVP.  It seems most CUAs will send ATTENDEE record without setting
+                // RSVP.  Because RSVP=FALSE by default, transferring the RSVP value to the invite
+                // would end up inadvertently clearing the original RSVP value.
+                //     if (replyAt.hasRsvp() && !replyAt.getRsvp().equals(at.getRsvp())) {
+                //         at.setRsvp(replyAt.getRsvp());
+                //         modified = true;
+                //     }
 
-                        // bug 21848: Similar to above comment on bug 4911, we don't want the reply to
-                        // update the RSVP.  It seems most CUAs will send ATTENDEE record without setting
-                        // RSVP.  Because RSVP=FALSE by default, transferring the RSVP value to the invite
-                        // would end up inadvertently clearing the original RSVP value.
-//                        if (replyAt.hasRsvp() && !replyAt.getRsvp().equals(at.getRsvp())) {
-//                            at.setRsvp(replyAt.getRsvp());
-//                            modified = true;
-//                        }
-
-                        continue OUTER;
-                    }
+                if (replyAt.hasPartStat() && !replyAt.getPartStat().equals(at.getPartStat())) {
+                    at.setPartStat(replyAt.getPartStat());
+                    modified = true;
                 }
-
-                // Attendee in the reply was not in the appointment's invite.  Add the new attendee if not
-                // a decline reply.
-                if (!IcalXmlStrMap.PARTSTAT_DECLINED.equalsIgnoreCase(replyAt.getPartStat()))
-                    toAdd.add(replyAt);
+                continue;
             }
+
+            // Attendee in the reply was not in the appointment's invite.  Add the new attendee if not
+            // a decline reply.
+            if (!IcalXmlStrMap.PARTSTAT_DECLINED.equalsIgnoreCase(replyAt.getPartStat()))
+                toAdd.add(replyAt);
+        }
         
         if (toAdd.size() > 0) {
             for (ZAttendee add : toAdd) {
@@ -1554,17 +1532,7 @@ public class Invite {
                 attendees.add(add);
             }
         }
-        
-        if (modified) {
-            mCalItem.saveMetadata();
-            Mailbox mbx = mCalItem.getMailbox();
-            if (mbx != null) {
-                mCalItem.markItemModified(Change.MODIFIED_INVITE);
-            }
-            return true;
-        } else {
-            return false;
-        }
+        return modified;
     }
 
     public List<ZAttendee> getAttendees() {

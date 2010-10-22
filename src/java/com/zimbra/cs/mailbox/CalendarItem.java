@@ -2551,6 +2551,11 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             mReplies.addAll(upgraded);
         }
 
+        /**
+         * If <code>inv</code> is the most up to date response we've received, add this reply to
+         * <code>mReplies</code> and discard any outdated response found.
+         * @return true if decide to store <code>inv</code>
+         */
         boolean maybeStoreNewReply(Invite inv, ZAttendee at) throws ServiceException {
             for (Iterator<ReplyInfo> iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = iter.next();
@@ -2564,16 +2569,15 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                 if (at.addressesMatch(cur.mAttendee) ||
                     (acct != null && accountMatchesCalendarUser(acct, cur.mAttendee))) {
                     if (recurMatches(inv.getRecurId(), cur.mRecurId)) {
-                        if (inv.getSeqNo() >= cur.mSeqNo) {
-                            if (inv.getDTStamp() >= cur.mDtStamp) {
-                                iter.remove();
-                                ReplyInfo toAdd = new ReplyInfo(
-                                        at, inv.getSeqNo(), inv.getDTStamp(), inv.getRecurId());
-                                mReplies.add(toAdd);
-                                return true;
-                            }
-                        }
-                        return false;
+                        if (inv.getSeqNo() < cur.getSeq())
+                            return false; // previously received reply has later sequence than new reply
+                        if ((inv.getSeqNo() == cur.getSeq()) && (inv.getDTStamp() < cur.getDtStamp()))
+                            return false; // sequence is same but previously received reply has later DTSTAMP
+                        // Good.  This new reply is more up to date than the previous one
+                        iter.remove();
+                        ReplyInfo toAdd = new ReplyInfo(at, inv.getSeqNo(), inv.getDTStamp(), inv.getRecurId());
+                        mReplies.add(toAdd);
+                        return true;
                     }
                 } // attendee check
             }
@@ -2928,6 +2932,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions to change this appointment/task's state");
 
         boolean dirty = false;
+        Invite invMatchingRecurId = null;
         // unique ID: UID+RECURRENCE_ID
 
         for (int i = 0; i < numInvites(); i++) {
@@ -2950,19 +2955,25 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
                 // they're replying to this invite!
 
-                if (cur.getSeqNo() >= reply.getSeqNo()
-                        && cur.getDTStamp() > reply.getDTStamp())
-                {
-
-                    sLog.info("Invite-Reply "+reply.toString()+" is outdated, ignoring!");
-                    // this reply is OLD, ignore it
+                // Bug 32573 Meeting replies can be dropped if client PC time is behind server time
+                // Removed check that (cur.getDTStamp() > reply.getDTStamp()) as the following
+                // implies that REPLY DTSTAMP is related to client submission time rather than
+                // the DTSTAMP in the original invite & clock skew can result in it being earlier.
+                // From http://tools.ietf.org/html/rfc5546 (iTIP) 2.1.5. Message Sequencing :
+                //     for each "ATTENDEE" property of a component,
+                //     "Organizer" CUAs will need to persist the "SEQUENCE"
+                //     and "DTSTAMP" property values associated with the "Attendee's" last
+                //     response, so that any earlier responses from an "Attendee" that are
+                //     received out of order (e.g., due to a delay in the transport) can be
+                //     correctly discarded.
+                if (cur.getSeqNo() > reply.getSeqNo()) {
+                    sLog.info("Invite-Reply "+reply.toString()+" is outdated (Calendar entry has higher SEQUENCE), ignoring!");
                     return false;
                 }
 
-                // update the ATTENDEE record in the invite
-                cur.updateMatchingAttendeesFromReply(reply);
-                dirty = true;
-
+                // maybeStoreNewReply does some further checks which might invalidate this reply
+                // so, postpone updating attendee information until after that.
+                invMatchingRecurId = cur;
                 break; // found a match, fall through to below and process it!
             }
         }
@@ -2971,18 +2982,19 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         // OR alternatively we looked and couldn't find one with a matching RecurID (therefore
         // they must be replying to a arbitrary instance)
         for (ZAttendee at : attendees) {
-            if (mReplyList.maybeStoreNewReply(reply, at)) {
+            if (mReplyList.maybeStoreNewReply(reply, at))
                 dirty = true;
-            }
         }
 
-        if (dirty) {
-            saveMetadata();
-            getMailbox().markItemModified(this, Change.MODIFIED_INVITE);
-            return true;
-        } else {
+        if (!dirty) {
+            sLog.info("Invite-Reply "+reply.toString()+" is outdated ignoring!");
             return false;
         }
+        if (invMatchingRecurId != null)
+            invMatchingRecurId.updateMatchingAttendeesFromReply(reply);
+        saveMetadata();
+        getMailbox().markItemModified(this, Change.MODIFIED_INVITE);
+        return true;
     }
 
     public InputStream getRawMessage() throws ServiceException {
