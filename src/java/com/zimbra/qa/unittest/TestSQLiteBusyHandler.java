@@ -82,31 +82,72 @@ public class TestSQLiteBusyHandler extends TestCase {
         return conn;
     }
     
-    public void testUpdate(String name, String dbName, Connection conn) throws Exception {
+    public boolean checkSubject(String subject, String dbName, Connection conn) throws Exception {
+        PreparedStatement stmt = conn.prepareStatement("select subject from "+dbName+".mail_item where subject='"+subject+"'");
+        ResultSet rs = stmt.executeQuery();
+        try {
+            if (!rs.next()) {
+                throw new Exception("no rows returned with subject ["+subject+"]");
+            } else {
+                if(rs.next()) {
+                    throw new Exception("multiple rows returned with subject ["+subject+"]");
+                }
+            }
+            log.debug("check subject OK");
+            return true;
+        } finally {
+            rs.close();
+            stmt.close();
+        }
+    }
+    
+    public void testUpdate(String dbName, Connection conn) throws Exception {
         PreparedStatement stmt = conn.prepareStatement("update "+dbName+".mail_item set subject='msg123' where subject='msg'");
         stmt.executeUpdate();
         stmt.close();
+        checkSubject("msg123",dbName,conn);
         stmt = conn.prepareStatement("update "+dbName+".mail_item set subject='msg' where subject='msg123'");
         stmt.executeUpdate();
         stmt.close();
+        checkSubject("msg",dbName,conn);
         log.debug("updated: %s",dbName);
+        conn.commit();
     }
+    
+    public boolean testEntryName(String name, Connection conn) throws Exception {
+        PreparedStatement stmt = conn.prepareStatement("select entry_name from directory where entry_id=2");
+        ResultSet rs = stmt.executeQuery();
+        try {
+            if (!rs.next()) {
+                throw new Exception("no rows returned for entry_id 2");
+            } else {
+                String checkName = rs.getString(1);
+                if (checkName == null || !checkName.equals(name)) {
+                    throw new Exception("expected ["+name+"] != db ["+checkName+"]");
+                }
+            }
+            log.debug("check entry OK");
+            return true;
+        } finally {
+            rs.close();
+            stmt.close();
+        }
+    }
+    
     
     public void testUpdateZimbra(Connection conn) throws Exception {
         PreparedStatement stmt = conn.prepareStatement("update directory set entry_name='blah' where entry_id=2");
         stmt.executeUpdate();
         stmt.close();
+        testEntryName("blah",conn);
         stmt = conn.prepareStatement("update directory set entry_name='default' where entry_id=2");
         stmt.executeUpdate();
         stmt.close();
+        testEntryName("default",conn);
         log.debug("updated: zimbra");
+        conn.commit();
     }
     
-    public void testSelect(String name, String dbName, Connection conn) throws Exception {
-        ResultSet rs = conn.prepareStatement("select * from "+dbName+".mail_item where subject='msg'").executeQuery();
-        rs.close();
-        log.debug("read: %s",dbName);
-    }
     
     public void testSelectZimbra(Connection conn) throws Exception {
         PreparedStatement ps = conn.prepareStatement("select * from directory"); 
@@ -114,6 +155,28 @@ public class TestSQLiteBusyHandler extends TestCase {
         rs.close();
         ps.close();
         log.debug("read: zimbra");
+    }
+    
+    public void integrityCheck(Connection conn, String dbname) throws Exception {
+        PreparedStatement stmt = null;
+        String prefix = dbname == null || dbname.equals("zimbra") ? "" : dbname + ".";
+        stmt = conn.prepareStatement("PRAGMA " + prefix + "integrity_check");
+        stmt.execute();
+        ResultSet rs = stmt.getResultSet();
+        try {
+            if (rs.next()) {
+                String resp = rs.getString(1);
+                if (resp.equals("ok")) {
+                    log.debug("integrity check ok");
+                    return;
+                }
+            }
+            throw new Exception("Integrity Check Failed");
+        } finally {
+            rs.close();
+            stmt.close();
+        }
+            
     }
 
     public static boolean error = false;
@@ -127,6 +190,7 @@ public class TestSQLiteBusyHandler extends TestCase {
                 public void run() {
                     try {
                         Connection conn1 = createConnect();
+                        conn1.setAutoCommit(false);
                         while (!error && !timedOut) {
                             testUpdateZimbra(conn1);
                         }
@@ -159,8 +223,9 @@ public class TestSQLiteBusyHandler extends TestCase {
                     try {
                         final Connection conn3 = connectAndAttach("test1");
                         attachDatabase(conn3, "test2");
+                        conn3.setAutoCommit(false);
                         while (!error && !timedOut) {
-                            testUpdate("Thread3","test1", conn3);
+                            testUpdate("test1", conn3);
                         }
                     } catch (Exception e) {
                         error = true;
@@ -170,6 +235,41 @@ public class TestSQLiteBusyHandler extends TestCase {
             };
             t3.start();
             
+            //not normally enabled; integrity check doesn't play well with other concurrent operations
+            //uncomment to stress the retry logic; will generally fail eventually with SQLITE_CANTOPEN
+//            Thread t4 = new Thread("Integrity Check") {
+//                public void run() {
+//                    try {
+//                        final Connection conn4 = connectAndAttach("test1");
+//                        attachDatabase(conn4, "test2");
+//                        while (!error && !timedOut) {
+//                            integrityCheck(conn4, "test1");
+//                            integrityCheck(conn4, "test2");
+//                            integrityCheck(conn4, "zimbra");
+//                        }
+//                    } catch (Exception e) {
+//                        error = true;
+//                        log.error("Exception in thread",e);
+//                    }
+//                }
+//            };
+//            t4.start();
+            
+            Thread t5 = new Thread("Connection test") {
+                public void run() {
+                    try {
+                        while (!error && !timedOut) {
+                            final Connection conn5 = createConnect();
+                            conn5.close();
+                        }
+                    } catch (Exception e) {
+                        error = true;
+                        log.error("Exception in thread",e);
+                    }
+                }
+            };
+            t5.start();
+
             Thread timeoutThread = new Thread("Timeout") {
                 public void run() {
                     try {
@@ -182,8 +282,13 @@ public class TestSQLiteBusyHandler extends TestCase {
             };
             
             timeoutThread.start();
-            
-            timeoutThread.join();
+            boolean joined = false;
+            while (!error && !joined) {
+                timeoutThread.join(1000);
+                if (!timeoutThread.isAlive()) {
+                    joined = true;
+                }
+            }
         }
         catch (Exception e) {
             log.error("Exception",e);

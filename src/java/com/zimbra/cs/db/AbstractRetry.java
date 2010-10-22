@@ -14,9 +14,10 @@ public abstract class AbstractRetry<T> {
      */
     public abstract ExecuteResult<T> execute() throws SQLException;
 
-    private boolean retryException(SQLException sqle)
+    protected boolean retryException(SQLException sqle)
     {
-        return (sqle.getMessage() != null && sqle.getMessage().contains("SQLITE_BUSY"));
+        //TODO: add new error codes in Db and consult those instead. Currently tightly coupled to SQLite
+        return (sqle.getMessage() != null && (sqle.getMessage().contains("SQLITE_BUSY") || sqle.getMessage().contains("database is locked")));
     }
 
     private static final int RETRY_LIMIT = 5;
@@ -43,9 +44,9 @@ public abstract class AbstractRetry<T> {
                 return execute();
             } catch (SQLException e) {
                 if (retryException(e)) {
-                    ZimbraLog.dbconn.warn("retrying connection due to possibly recoverable exception: "+e);
                     sqle = e;
                     tries++;
+                    ZimbraLog.dbconn.warn("retrying connection attempt:"+tries+" due to possibly recoverable exception: ",e);
                     incrementTotalRetries();
                     try {
                         Thread.sleep(RETRY_DELAY);
