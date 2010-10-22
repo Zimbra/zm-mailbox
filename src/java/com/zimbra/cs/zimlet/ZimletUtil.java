@@ -242,6 +242,7 @@ public class ZimletUtil {
 					zlist.add(z);
 			} catch (ServiceException se) {
 				// ignore error and continue on
+			    ZimbraLog.zimlet.warn("unable to get zimlet " + zimlets[i], se);
 			}
 		}
 		return orderZimletsByPriority(zlist);
