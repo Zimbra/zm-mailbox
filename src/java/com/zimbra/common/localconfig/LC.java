@@ -448,6 +448,16 @@ public class LC {
         new KnownKey("milter_max_sessions").setDefault(20000);
     public static final KnownKey milter_in_process_mode =
         new KnownKey("milter_in_process_mode").setDefault("false");
+    public static final KnownKey milter_min_threads =
+        new KnownKey("milter_min_threads").setDefault(20);
+    public static final KnownKey milter_max_scheduled_write_bytes =
+        new KnownKey("milter_max_scheduled_write_bytes").setDefault(1024*1024);
+    public static final KnownKey milter_write_timeout =
+        new KnownKey("milter_write_timeout").setDefault(10);
+    public static final KnownKey milter_write_chunk_size =
+        new KnownKey("milter_write_chunk_size").setDefault(1024);
+    public static final KnownKey milter_thread_keep_alive_time =
+        new KnownKey("milter_thread_keep_alive_time").setDefault(60);
     
     public static final KnownKey krb5_keytab;
     public static final KnownKey krb5_service_principal_from_interface_address;
