@@ -41,7 +41,7 @@ public class SyncGal extends AccountDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Account account = getRequestedAccount(getZimbraSoapContext(context));
+        Account account = getAuthenticatedAccount(getZimbraSoapContext(context));
 
         String tokenAttr = request.getAttribute(MailConstants.A_TOKEN, "");
         String galAcctId = request.getAttribute(AccountConstants.A_ID, null);
