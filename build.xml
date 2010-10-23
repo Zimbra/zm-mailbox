@@ -601,7 +601,7 @@
         </war>
     </target>
 	
-    <target name="spnego-deploy" depends="spnego-war">
+    <target name="spnego-dev-deploy" depends="spnego-war">
     	<antcall target="stop-webserver"/>
     	
     	<delete file="${jetty.home.dir}/webapps/spnego.war"/>
@@ -699,22 +699,22 @@
     	<replace file="${jetty.home.dir}/webapps/spnego/WEB-INF/web.xml">
     	    <replacefilter token="%%zimbraSpnegoAuthRealm%%" value="${zimbraSpnegoAuthRealm}"/>
     	</replace>
-    	<replace file="${jetty.home.dir}/webapps/spnego/krb5.ini">
+    	<replace file="${jetty.home.dir}/webapps/spnego/etc/krb5.ini">
             <replacefilter token="%%zimbraSpnegoAuthRealm%%" value="${zimbraSpnegoAuthRealm}"/>
         	<replacefilter token="%%zimbraSpnegoAuthKDC%%" value="${zimbraSpnegoAuthKDC}"/>
         	<replacefilter token="%%zimbraSpnegoAuthAdminServer%%" value="${zimbraSpnegoAuthAdminServer}"/>
         </replace>
-        <replace file="${jetty.home.dir}/webapps/spnego/spnego.conf">
+        <replace file="${jetty.home.dir}/webapps/spnego/etc/spnego.conf">
             <replacefilter token="%%zimbraSpnegoAuthPrincipal%%" value="${zimbraSpnegoAuthPrincipal}"/>
         </replace>
-        <replace file="${jetty.home.dir}/webapps/spnego/spnego.properties">
+        <replace file="${jetty.home.dir}/webapps/spnego/etc/spnego.properties">
             <replacefilter token="%%zimbraSpnegoAuthTargetName%%" value="${zimbraSpnegoAuthTargetName}"/>
         </replace>
     	
         <replace file="${zimbra.home.dir}/bin/jetty">
             <replacefilter token="zimbraSpnegoAuthEnabled: FALSE" value="zimbraSpnegoAuthEnabled: TRUE"/>
         </replace>
-    	<!-- executable permission was remvoed by the above replace, set i back -->
+    	<!-- executable permission was removed by the above replace, set it back -->
     	<chmod file="${zimbra.home.dir}/bin/jetty" perm="+x" />
         	
         <replace file="${jetty.conf.dir}/jetty.xml">
@@ -724,12 +724,15 @@
     	
     	<!-- 
             ==========================
-             move files to jetty/etc 
+             move files under spnego/etc to jetty/etc 
             ==========================
          -->
-    	<move file="${jetty.home.dir}/webapps/spnego/krb5.ini" todir="${jetty.conf.dir}"/>
-    	<move file="${jetty.home.dir}/webapps/spnego/spnego.conf" todir="${jetty.conf.dir}"/>
-    	<move file="${jetty.home.dir}/webapps/spnego/spnego.properties" todir="${jetty.conf.dir}"/>
+    	<move file="${jetty.home.dir}/webapps/spnego/etc/krb5.ini" todir="${jetty.conf.dir}"/>
+    	<move file="${jetty.home.dir}/webapps/spnego/etc/spnego.conf" todir="${jetty.conf.dir}"/>
+    	<move file="${jetty.home.dir}/webapps/spnego/etc/spnego.properties" todir="${jetty.conf.dir}"/>
+    	
+    	<!-- delete the dir, it's not no longer needed-->
+    	<delete dir="${jetty.home.dir}/webapps/spnego/etc"/>
     	
     	<antcall target="start-webserver"/>
     	
