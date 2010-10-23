@@ -11,12 +11,13 @@ I. SPNEGO SSO
      - Firefox 3.0 or later
      
    
-   A high level description of the Authentication Overview
+   A high level description of the Authentication Overview:
    (see http://msdn.microsoft.com/en-us/library/ms995329.aspx for more information)
    
+   - User logon to a Windows domain.
    - The logged-on user must have acquired Kerberos credentials from the domain.
    - The logged-on user then attempts to access Zimbra. 
-   - Zimbra is configured to redirect the request to a resource URL under SPNEGO protection. 
+   - Zimbra is configured to redirect the request to a URL under SPNEGO protection. 
    - The Zimbra server asks for authentication with Kerberos (by using SPNEGO). 
    - The client obtains a ticket for the requested service from the KDC and presents these credentials back to Zimbra server.
    - The Zimbra server extracts the user's credentials and authenticates the request and identifies the user.
@@ -117,8 +118,8 @@ On the windows active domain controller:
 
 (C) Create the keytab file
    
-    ktpass -out {keytab-file-to-produce} -princ {principal-name-in-the-form-user@REALM} -mapUser {AD-user} -mapOp set -pass {AD-user-password} -crypto RC4-HMAC-NT -pType KRB5_NT_PRINCIPAL
-
+    ktpass -out {keytab-file-to-produce} -princ {Service Principal Name}@{the kerberos realm} -mapUser {AD-user} -mapOp set -pass {AD-user-password} -crypto RC4-HMAC-NT -pType KRB5_NT_PRINCIPAL
+    
     e.g.
     C:\>ktpass -out c:\Temp\spnego\jetty.keytab -princ HTTP/server1.spnego.local@SPNEGO.LOCAL -mapUser server1 -mapOp set -pass ca$hc0w -crypto RC4-HMAC-NT -pType KRB5_NT_PRINCIPAL
     Targeting domain controller: jj-dc.spnego.local
@@ -148,7 +149,7 @@ Repeat steps (A) to (D) for each zimbra server.
 =====================
 - For production system, do 2.1, 2.2, 2.3.
 
-- For dev system: do "ant spnego-deploy" under ZimbraServer.
+- For dev system: do "ant spnego-dev-deploy" under ZimbraServer.
 
 
 2.1. Configure Domain
