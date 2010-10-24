@@ -76,6 +76,7 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
 
     private class HeaderIterator implements Iterator<MimeHeader> {
         private final Iterator<MimeHeader> mIterator;
+        private MimeHeader mLastReturned;
 
         HeaderIterator(Iterable<MimeHeader> headers) {
             mIterator = headers.iterator();
@@ -86,10 +87,11 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
         }
 
         @Override public MimeHeader next() {
-            return mIterator.next();
+            return mLastReturned = mIterator.next();
         }
 
         @Override public void remove() {
+            announce(mLastReturned.getName(), null);
             mIterator.remove();
             markDirty();
         }
@@ -100,37 +102,86 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
     }
 
 
+    void announce(String hdrName, MimeHeader header) {
+        if (mParent != null && hdrName.toLowerCase().equals("content-type")) {
+            MimePart container = mParent.getParent();
+            String defaultType = container instanceof MimeMultipart ? ((MimeMultipart) container).getDefaultChildContentType() : "text/plain";
+            mParent.updateContentType(new ContentType(header, defaultType));
+        }
+    }
+
     void markDirty() {
         if (mParent != null) {
             mParent.markDirty(MimePart.Dirty.HEADERS);
         }
     }
 
-    String validateFieldName(String name) {
-        // FIXME: need a sanity-check that more closely parallels the 2822 ABNF
-        if (name != null) {
-            name = name.trim();
-            if (name.equals("")) {
-                return null;
-            }
+    private String validateFieldName(String name) {
+        // FIXME: need a sanity-check that more closely parallels the RFC 5322 ABNF
+        if (name == null) {
+            return name;
         }
-        return name;
+        String trimmed = name.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
-    public void setHeader(String name, MimeHeader header) {
-        if ((name = validateFieldName(name)) != null) {
-            for (Iterator<MimeHeader> it = mHeaders.iterator(); it.hasNext(); ) {
-                if (it.next().getName().equalsIgnoreCase(name)) {
-                    it.remove();
-                    markDirty();
+    public void setHeader(String name, String value) {
+        setHeader(name, value == null ? null : new MimeHeader(name, value));
+    }
+
+    public void setHeader(String name, byte[] bvalue) {
+        setHeader(name, bvalue == null ? null : new MimeHeader(name, bvalue));
+    }
+
+    void setHeader(String name, MimeHeader header) {
+        String key = validateFieldName(name);
+        if (header != null && !header.getName().equals(name)) {
+            throw new IllegalArgumentException("name does not match header.getName()");
+        } else if (key == null) {
+            return;
+        }
+
+        boolean dirty = false, replaced = header == null;
+        for (int index = 0; index < mHeaders.size(); index++) {
+            if (mHeaders.get(index).getName().equalsIgnoreCase(key)) {
+                if (!dirty) {
+                    announce(name, header);
+                    dirty = true;
+                }
+                if (!replaced) {
+                    // replace the first old instance of the header
+                    mHeaders.set(index, header);
+                    replaced = true;
+                } else {
+                    // all other old instances are cleared
+                    mHeaders.remove(index--);
                 }
             }
-            addHeader(name, header);
+        }
+
+        if (dirty) {
+            markDirty();
+        } else {
+            // make sure the new value actually does get added
+            addHeader(header);
         }
     }
 
-    public void addHeader(String name, MimeHeader header) {
-        if ((name = validateFieldName(name)) != null && header != null) {
+    public void addHeader(String name, String value) {
+        if (value != null) {
+            addHeader(new MimeHeader(name, value));
+        }
+    }
+
+    public void addHeader(String name, byte[] bvalue) {
+        if (bvalue != null) {
+            addHeader(new MimeHeader(name, bvalue));
+        }
+    }
+
+    void addHeader(MimeHeader header) {
+        if (header != null && validateFieldName(header.getName()) != null) {
+            announce(header.getName(), header);
             mHeaders.add(header);
             markDirty();
         }

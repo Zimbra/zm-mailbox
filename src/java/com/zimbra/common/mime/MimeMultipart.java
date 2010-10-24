@@ -25,19 +25,19 @@ import java.util.UUID;
 public class MimeMultipart extends MimePart implements Iterable<MimePart> {
     static final String UNSET_BOUNDARY = "";
 
-    private String mBoundary = UNSET_BOUNDARY;
+    private String mBoundary;
     private MimeBodyPart mPreamble, mEpilogue;
     private List<MimePart> mChildren = new ArrayList<MimePart>(3);
 
     public MimeMultipart(String subtype) {
         super(new ContentType("multipart/" + (subtype == null || subtype.trim().equals("") ? "mixed" : subtype) + "; boundary=\"" + generateBoundary() + '"'));
-        mBoundary = getContentType().getParameter("boundary");
     }
 
     MimeMultipart(ContentType ctype, MimePart parent, long start, long body, MimeHeaderBlock headers) {
         super(ctype, parent, start, body, headers);
         setEffectiveBoundary(ctype.getParameter("boundary"));
     }
+
 
     /** Returns the number of child parts of this multipart. */
     public int getCount() {
@@ -131,26 +131,25 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
     }
 
 
-    @Override ContentType checkContentType(ContentType ctype) {
-        if (ctype == null || !ctype.getPrimaryType().equals("multipart")) {
-            throw new UnsupportedOperationException("cannot change a multipart to text");
-        }
-        return ctype;
+    String getDefaultChildContentType() {
+        return getContentType().getSubType().equals("digest") ? "message/rfc822" : "text/plain";
     }
 
-    @Override public MimeMultipart setContentType(ContentType ctypeParam) {
+    @Override ContentType updateContentType(ContentType ctypeParam) {
+        if (ctypeParam != null && !ctypeParam.getPrimaryType().equals("multipart")) {
+            throw new UnsupportedOperationException("cannot change a multipart to text");
+        }
         ContentType ctype = ctypeParam == null ? new ContentType("multipart/mixed") : ctypeParam;
-        super.setContentType(checkContentType(ctype));
 
         // changing the boundary forces a recalc of the content
-        String newBoundary = ctype.getParameter("boundary");
-        if (!mBoundary.equals(newBoundary)) {
+        String newBoundary = normalizeBoundary(ctype.getParameter("boundary"));
+        if (!newBoundary.equals(mBoundary)) {
             markDirty(Dirty.CONTENT);
             mBoundary = newBoundary;
         }
 
         // FIXME: if moving to/from multipart/digest, make sure to recalculate defaults on subparts
-        return this;
+        return super.updateContentType(ctype);
     }
 
     String getBoundary() {
@@ -159,16 +158,21 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
 
     void setEffectiveBoundary(String boundary) {
         // can't change a real boundary
-        if (mBoundary == UNSET_BOUNDARY && boundary != null && !boundary.trim().isEmpty()) {
-            mBoundary = boundary;
-            // RFC 2046 5.1.1: "The only mandatory global parameter for the "multipart" media type is
-            //                  the boundary parameter, which consists of 1 to 70 characters from a
-            //                  set of characters known to be very robust through mail gateways, and
-            //                  NOT ending with white space."
-            while (mBoundary.length() > 0 && Character.isWhitespace(mBoundary.charAt(mBoundary.length() - 1))) {
-                mBoundary = mBoundary.substring(0, mBoundary.length() - 1);
-            }
+        if (mBoundary == UNSET_BOUNDARY || mBoundary == null) {
+            mBoundary = normalizeBoundary(boundary);
         }
+    }
+
+    private static String normalizeBoundary(String bnd) {
+        String boundary = bnd == null ? UNSET_BOUNDARY : bnd;
+        // RFC 2046 5.1.1: "The only mandatory global parameter for the "multipart" media type is
+        //                  the boundary parameter, which consists of 1 to 70 characters from a
+        //                  set of characters known to be very robust through mail gateways, and
+        //                  NOT ending with white space."
+        while (boundary.length() > 0 && Character.isWhitespace(boundary.charAt(boundary.length() - 1))) {
+            boundary = boundary.substring(0, boundary.length() - 1);
+        }
+        return boundary;
     }
 
     private static String generateBoundary() {

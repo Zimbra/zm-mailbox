@@ -62,10 +62,7 @@ public abstract class MimePart {
 
     MimePart(ContentType ctype) {
         mDirty = Dirty.CONTENT;
-        mContentType = new ContentType(ctype);
-        checkContentType(mContentType);
-        mMimeHeaders = new MimeHeaderBlock(this instanceof MimeMessage, this);
-        setMimeHeader("Content-Type", mContentType);
+        setMimeHeader("Content-Type", new ContentType(ctype));
     }
 
     MimePart(ContentType ctype, MimePart parent, long start, long body, MimeHeaderBlock headers) {
@@ -134,11 +131,7 @@ public abstract class MimePart {
     }
 
     public MimePart setMimeHeader(String name, String value) {
-        if (name.equalsIgnoreCase("Content-Type")) {
-            setContentType(new ContentType(value));
-        } else {
-            setMimeHeader(name, value == null ? null : new MimeHeader(name, value));
-        }
+        setMimeHeader(name, value == null ? null : new MimeHeader(name, value));
         return this;
     }
 
@@ -147,7 +140,7 @@ public abstract class MimePart {
     }
 
     void addMimeHeader(String name, MimeHeader header) {
-        getMimeHeaderBlock().addHeader(name, header);
+        getMimeHeaderBlock().addHeader(header);
     }
 
     public MimeHeaderBlock getMimeHeaderBlock() {
@@ -166,12 +159,13 @@ public abstract class MimePart {
     }
 
     public MimePart setContentType(ContentType ctype) {
-        mContentType = new ContentType(ctype);
         setMimeHeader("Content-Type", ctype);
         return this;
     }
 
-    abstract ContentType checkContentType(ContentType ctype);
+    ContentType updateContentType(ContentType ctype) {
+        return mContentType = ctype;
+    }
 
     public ContentDisposition getContentDisposition() {
         return new ContentDisposition(getMimeHeader("Content-Disposition"));

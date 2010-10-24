@@ -45,16 +45,11 @@ public class MimeBodyPart extends MimePart {
     @Override void removeChild(MimePart mp)  {}
 
 
-    @Override ContentType checkContentType(ContentType ctype) {
+    @Override ContentType updateContentType(ContentType ctype) {
         if (ctype != null && (ctype.getPrimaryType().equals("multipart") || ctype.getContentType().equals(ContentType.MESSAGE_RFC822))) {
-            throw new UnsupportedOperationException("cannot change a message to text");
+            throw new UnsupportedOperationException("cannot change a part into a multipart or message");
         }
-        return ctype;
-    }
-
-    @Override public MimeBodyPart setContentType(ContentType ctype) {
-        super.setContentType(checkContentType(ctype == null ? new ContentType(ContentType.TEXT_PLAIN) : ctype));
-        return this;
+        return super.updateContentType(ctype == null ? new ContentType(ContentType.TEXT_PLAIN) : ctype);
     }
 
     public ContentTransferEncoding getTransferEncoding() {
@@ -62,12 +57,8 @@ public class MimeBodyPart extends MimePart {
     }
 
     public MimeBodyPart setTransferEncoding(ContentTransferEncoding cte) {
-        ContentTransferEncoding newEncoding = cte == null ? ContentTransferEncoding.BINARY : cte;
-        if (newEncoding.normalize() != mTargetEncoding.normalize()) {
-            markDirty(Dirty.CTE);
-        }
+        // our markDirty() will take care of updating the target encoding
         setMimeHeader("Content-Transfer-Encoding", cte == null ? null : cte.toString());
-        mTargetEncoding = newEncoding;
         return this;
     }
 
@@ -189,7 +180,8 @@ public class MimeBodyPart extends MimePart {
         ctype.setParameter("charset", cset);
 
         setContent((text == null ? "" : text).getBytes(cset), cte);
-        return setContentType(ctype);
+        setContentType(ctype);
+        return this;
     }
 
     public MimeBodyPart setContent(byte[] content) throws IOException {
@@ -256,5 +248,16 @@ public class MimeBodyPart extends MimePart {
         } else {
             return ContentTransferEncoding.BASE64;
         }
+    }
+
+    @Override void markDirty(Dirty dirty) {
+        ContentTransferEncoding cte = ContentTransferEncoding.forString(getMimeHeader("Content-Transfer-Encoding"));
+        ContentTransferEncoding cteCurrent = mTargetEncoding == null ? ContentTransferEncoding.BINARY : mTargetEncoding;
+        if (cte.normalize() != cteCurrent.normalize()) {
+            super.markDirty(dirty.combine(Dirty.CTE));
+        } else {
+            super.markDirty(dirty);
+        }
+        mTargetEncoding = cte;
     }
 }

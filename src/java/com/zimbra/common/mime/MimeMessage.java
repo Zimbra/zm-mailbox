@@ -215,19 +215,11 @@ public class MimeMessage extends MimePart {
 //        mBody.addMimeHeader(name, value);
 //    }
 
-    @Override public MimePart setContentType(ContentType ctype) {
+    @Override ContentType updateContentType(ContentType ctype) {
         if (ctype != null && !ctype.getContentType().equals(ContentType.MESSAGE_RFC822)) {
-            throw new UnsupportedOperationException("cannot change a message to another type");
-        }
-        super.setContentType(ctype == null ? new ContentType(ContentType.MESSAGE_RFC822) : ctype);
-        return this;
-    }
-
-    @Override ContentType checkContentType(ContentType ctype) {
-        if (ctype == null || !ctype.getContentType().equals(ContentType.MESSAGE_RFC822)) {
             throw new UnsupportedOperationException("cannot change a message to text");
         }
-        return ctype;
+        return super.updateContentType(ctype == null ? new ContentType(ContentType.MESSAGE_RFC822) : ctype);
     }
 
 
@@ -341,10 +333,10 @@ public class MimeMessage extends MimePart {
         multi.addPart(body);
         mm.setBodyPart(multi);
 //        dumpParts(mm);
-//        System.out.write(mm.getRawContent());
+        System.out.write(mm.getRawContent());
 
         mm = MimeMessage.readStructure(new FileInputStream(new File(args[0] + File.separator + "report-attachment-6667")), null);
-//        dumpParts(mm);
+        dumpParts(mm);
 //        ByteUtil.copy(mm.getInputStream(), true, System.out, false);
 
         mm = new MimeMessage(new File(args[0] + File.separator + "report-attachment-6667"));
