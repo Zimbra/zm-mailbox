@@ -686,6 +686,11 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
     private static final int MAX_TERMS_PER_QUERY =
         LC.zimbra_index_lucene_max_terms_per_query.intValue();
 
+    private IndexReader openIndexReader() throws IOException {
+        return IndexReader.open(luceneDirectory, null, true,
+                LC.zimbra_index_lucene_term_index_divisor.intValue());
+    }
+
     /**
      * Caller is responsible for calling {@link IndexReaderRef#dec()} before
      * allowing it to go out of scope (otherwise a RuntimeException will occur).
@@ -706,7 +711,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
 
             IndexReader reader = null;
             try {
-                reader = IndexReader.open(luceneDirectory);
+                reader = openIndexReader();
             } catch (IOException e) {
                 // Handle the special case of trying to open a not-yet-created
                 // index, by opening for write and immediately closing.  Index
@@ -717,7 +722,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
                     endWriteOperation();
                     flush();
                     try {
-                        reader = IndexReader.open(luceneDirectory);
+                        reader = openIndexReader();
                     } catch (IOException e1) {
                         if (reader != null) {
                             reader.close();
