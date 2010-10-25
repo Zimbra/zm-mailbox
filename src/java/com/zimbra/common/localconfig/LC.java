@@ -152,6 +152,8 @@ public class LC {
         new KnownKey("zimbra_index_lucene_batch_max_buffered_docs", "200");
     public static final KnownKey zimbra_index_lucene_batch_ram_buffer_size_kb =
         new KnownKey("zimbra_index_lucene_batch_ram_buffer_size_kb", "10240");
+    public static final KnownKey zimbra_index_lucene_term_index_divisor =
+        new KnownKey("zimbra_index_lucene_term_index_divisor", "1");
     public static final KnownKey zimbra_index_lucene_max_terms_per_query =
         new KnownKey("zimbra_index_lucene_max_terms_per_query", "50000");
     public static final KnownKey zimbra_index_wildcard_max_terms_expanded =
@@ -458,7 +460,7 @@ public class LC {
         new KnownKey("milter_write_chunk_size").setDefault(1024);
     public static final KnownKey milter_thread_keep_alive_time =
         new KnownKey("milter_thread_keep_alive_time").setDefault(60);
-    
+
     public static final KnownKey krb5_keytab;
     public static final KnownKey krb5_service_principal_from_interface_address;
     public static final KnownKey krb5_debug_enabled;
