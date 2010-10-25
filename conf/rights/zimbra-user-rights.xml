@@ -33,6 +33,7 @@
 
 <right name="sendToDistList" userRight="1" targetType="dl">
   <desc>send mails to distribution list</desc>
+  <default>allow</default>
 </right>
 
 <right name="viewDistList" userRight="1" targetType="dl">
