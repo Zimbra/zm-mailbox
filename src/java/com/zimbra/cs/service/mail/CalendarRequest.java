@@ -345,7 +345,6 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
         AddInviteData aid = null;
         ItemId msgId = null;
-        boolean forceSendPartial = true;  // All calendar-related emails are sent in sendpartial mode.
         try {
             if (!csd.mInvite.isCancel()) {
                 // For create/modify requests, we want to first update the local mailbox (organizer's)
@@ -358,9 +357,9 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     aid = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
                 // Next, notify any attendees.
                 if (!csd.mDontNotifyAttendees)
-                    msgId = mbox.getMailSender().sendMimeMessage(
-                            octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
-                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, forceSendPartial, false);
+                    // All calendar-related emails are sent in sendpartial mode.
+                    msgId = CalendarMailSender.sendPartial(octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
+                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, false);
             } else {
                 // But if we're sending a cancel request, send emails first THEN update the local mailbox.
                 // This makes a difference if MTA is not running.  We'll avoid canceling organizer's copy
@@ -374,9 +373,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     calItem.checkCancelPermission(octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), csd.mInvite);
 
                 if (!csd.mDontNotifyAttendees)
-                    msgId = mbox.getMailSender().sendMimeMessage(
-                            octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
-                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, forceSendPartial, false);
+                    msgId = CalendarMailSender.sendPartial(octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
+                            csd.mOrigId, csd.mReplyType, csd.mIdentityId, false);
                 if (updateOwnAppointment)
                     aid = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
             }
@@ -567,8 +565,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     // Compose email using the existing MimeMessage as template and send it.
                     MimeMessage mmInv = calItem.getSubpartMessage(inv.getMailItemId());
                     MimeMessage mmModify = CalendarMailSender.createCalendarMessage(from, sender, rcpts, mmInv, inv, cal, true);
-                    mbox.getMailSender().sendMimeMessage(octxt, mbox, mmModify, null, null,
-                            new ItemId(mbox, inv.getMailItemId()), null, null, true, false);
+                    CalendarMailSender.sendPartial(octxt, mbox, mmModify, null, null,
+                            new ItemId(mbox, inv.getMailItemId()), null, null, false);
                 }
             }
         }

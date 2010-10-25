@@ -35,19 +35,17 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.ZimbraLog;
-
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -188,10 +186,10 @@ public class SendMsg extends MailDocumentHandler {
 
         if (noSaveToSent)
             return mbox.getMailSender().sendMimeMessage(oc, mbox, false, mm, newContacts, uploads,
-                                                        origMsgId, replyType, null, false, false);
+                                                        origMsgId, replyType, null, false);
         else
             return mbox.getMailSender().sendMimeMessage(oc, mbox, mm, newContacts, uploads,
-                                                        origMsgId, replyType, identityId, false, false);
+                                                        origMsgId, replyType, identityId, false);
     }
 
     static MimeMessage parseUploadedMessage(ZimbraSoapContext zsc, String attachId, MimeMessageData mimeData) throws ServiceException {

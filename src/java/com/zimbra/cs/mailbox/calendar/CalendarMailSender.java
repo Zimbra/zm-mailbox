@@ -64,6 +64,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
+import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
@@ -741,8 +742,8 @@ public class CalendarMailSender {
         Runnable r = new Runnable() {
             public void run() {
                 try {
-                    mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null,
-                            origMsgId, MailSender.MSGTYPE_REPLY, null, true, false);
+                    mbox.getMailSender().setSendPartial(true).sendMimeMessage(octxt, mbox, true, mm, null, null,
+                            origMsgId, MailSender.MSGTYPE_REPLY, null, false);
                 } catch (ServiceException e) {
                     ZimbraLog.calendar.warn("Ignoring error while sending permission-denied auto reply", e);
                 } catch (OutOfMemoryError e) {
@@ -764,7 +765,7 @@ public class CalendarMailSender {
                 try {
                     MailSender sender = mbox.getMailSender().setSaveToSent(true)
                         .setOriginalMessageId(origMsgId).setReplyType(MailSender.MSGTYPE_REPLY)
-                        .setForceSendPartial(true).setSkipSendAsCheck(true);
+                        .setSendPartial(true).setSkipSendAsCheck(true);
                     sender.sendMimeMessage(octxt, mbox, mm);
                 } catch (ServiceException e) {
                     ZimbraLog.calendar.warn("Ignoring error while sending permission-denied auto reply", e);
@@ -776,6 +777,29 @@ public class CalendarMailSender {
         Thread senderThread = new Thread(r, "CalendarInviteForwardSender");
         senderThread.setDaemon(true);
         senderThread.start();
+    }
+    
+    /**
+     * Sends a message with partial send enabled.  If a partial send error occurs, logs an info
+     * message.
+     */
+    public static ItemId sendPartial(OperationContext octxt, Mailbox mbox, MimeMessage mm,
+                                     List<InternetAddress> newContacts, List<Upload> uploads,
+                                     ItemId origMsgId, String replyType, String identityId,
+                                     boolean replyToSender)
+    throws ServiceException {
+        ItemId id = null;
+        try {
+            id = mbox.getMailSender().setSendPartial(true).sendMimeMessage(
+                octxt, mbox, mm, newContacts, uploads, origMsgId, replyType, identityId, replyToSender);
+        } catch (MailServiceException e) {
+            if (e.getCode().equals(MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE)) {
+                ZimbraLog.calendar.info("Unable to send to some addresses: " + e);
+            } else {
+                throw e;
+            }
+        }
+        return id;
     }
 
     public static Invite replyToInvite(Account acct, Account authAcct,
@@ -989,8 +1013,8 @@ public class CalendarMailSender {
         Runnable r = new Runnable() {
             public void run() {
                 try {
-                    mbox.getMailSender().sendMimeMessage(octxt, mbox, saveToSent, mm, null, null,
-                            new ItemId(mbox, invId), replyType, null, true, false);
+                    mbox.getMailSender().setSendPartial(true).sendMimeMessage(octxt, mbox, saveToSent, mm, null, null,
+                            new ItemId(mbox, invId), replyType, null, false);
                 } catch (ServiceException e) {
                     ZimbraLog.calendar.warn("Ignoring error while sending auto accept/decline reply", e);
                 } catch (OutOfMemoryError e) {

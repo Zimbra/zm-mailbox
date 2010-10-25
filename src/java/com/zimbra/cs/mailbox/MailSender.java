@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -39,6 +38,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -83,7 +83,7 @@ public class MailSender {
     private ItemId mOriginalMessageId;
     private String mReplyType;
     private Identity mIdentity;
-    private boolean mForceSendPartial = false;
+    private Boolean mSendPartial;
     private boolean mReplyToSender = false;
     private boolean mSkipSendAsCheck = false;
     private List<String> mSmtpHosts = new ArrayList<String>();
@@ -141,11 +141,11 @@ public class MailSender {
     }
 
     /**
-     * @param ignore if <tt>true</tt>, don't throw a {@link SendFailedException}
-     * when a message send fails.  The default is <tt>false</tt>.
+     * @param if {@code true}, overrides the send partial behavior in the
+     * JavaMail session.
      */
-    public MailSender setForceSendPartial(boolean ignore) {
-        mForceSendPartial = ignore;
+    public MailSender setSendPartial(boolean sendPartial) {
+        mSendPartial = sendPartial;
         return this;
     }
 
@@ -290,10 +290,21 @@ public class MailSender {
     }
 
     /**
-     * Getter for force partial send flag - exposed for OfflineMailSender
+     * Returns {@code true} if partial sends are allowed.
      */
-    protected boolean isForceSendPartial() {
-        return mForceSendPartial;
+    protected boolean isSendPartial() {
+        if (mSendPartial != null) {
+            return mSendPartial;
+        }
+        if (mSession != null) {
+            String val = SystemUtil.coalesce(
+                mSession.getProperty(JMSession.SMTP_SEND_PARTIAL_PROPERTY),
+                mSession.getProperty(JMSession.SMTPS_SEND_PARTIAL_PROPERTY));
+            if (val != null) {
+                return Boolean.parseBoolean(val);
+            }
+        }
+        return false;
     }
 
     /**
@@ -329,7 +340,7 @@ public class MailSender {
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm,
                                   List<InternetAddress> newContacts, List<Upload> uploads,
                                   ItemId origMsgId, String replyType, String identityId,
-                                  boolean forceSendPartial, boolean replyToSender)
+                                  boolean replyToSender)
     throws ServiceException {
         Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
         if (authuser == null)
@@ -338,8 +349,7 @@ public class MailSender {
         if (identityId != null)
             identity = Provisioning.getInstance().get(authuser, IdentityBy.id, identityId);
 
-        return sendMimeMessage(octxt, mbox, null, mm, newContacts, uploads, origMsgId, replyType, identity,
-                forceSendPartial, replyToSender);
+        return sendMimeMessage(octxt, mbox, null, mm, newContacts, uploads, origMsgId, replyType, identity, replyToSender);
     }
 
     protected static class RollbackData {
@@ -370,8 +380,7 @@ public class MailSender {
      */
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, Boolean saveToSent, MimeMessage mm,
                                   Collection<InternetAddress> saveContacts, Collection<Upload> uploads,
-                                  ItemId origMsgId, String replyType, Identity identity,
-                                  boolean forceSendPartial, boolean replyToSender)
+                                  ItemId origMsgId, String replyType, Identity identity, boolean replyToSender)
     throws ServiceException {
         mSaveToSent = saveToSent;
         mSaveContacts = saveContacts;
@@ -379,7 +388,6 @@ public class MailSender {
         mOriginalMessageId = origMsgId;
         mReplyType = replyType;
         mIdentity = identity;
-        mForceSendPartial = forceSendPartial;
         mReplyToSender = replyToSender;
         return sendMimeMessage(octxt, mbox, mm);
     }
@@ -504,8 +512,14 @@ public class MailSender {
                 }
             }
 
+            // If send partial behavior was specified, set it in the JavaMail session.
+            if (mSendPartial != null && mSession != null) {
+                mSession.getProperties().setProperty(JMSession.SMTP_SEND_PARTIAL_PROPERTY, mSendPartial.toString());
+                mSession.getProperties().setProperty(JMSession.SMTPS_SEND_PARTIAL_PROPERTY, mSendPartial.toString());
+            }
+            
             // actually send the message via SMTP
-            Collection<Address> sentAddresses = sendMessage(mbox, mm, mForceSendPartial, rollbacks);
+            Collection<Address> sentAddresses = sendMessage(mbox, mm, rollbacks);
 
             // send intercept if save-to-sent didn't do it already
             if (!mSaveToSent) {
@@ -556,7 +570,7 @@ public class MailSender {
                 }
                 msg.append(".  ").append(sfe.toString());
 
-                if (Provisioning.getInstance().getLocalServer().isSmtpSendPartial())
+                if (isSendPartial())
                     throw MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE(msg.toString(), sfe, invalidAddrs, validUnsentAddrs);
                 else
                     throw MailServiceException.SEND_ABORTED_ADDRESS_FAILURE(msg.toString(), sfe, invalidAddrs, validUnsentAddrs);
@@ -756,27 +770,12 @@ public class MailSender {
     }
 
     /** @return a Collection of successfully sent recipient Addresses */
-    protected Collection<Address> sendMessage(Mailbox mbox, final MimeMessage mm, final boolean forceSendPartial, final Collection<RollbackData> rollbacks)
+    protected Collection<Address> sendMessage(Mailbox mbox, final MimeMessage mm, Collection<RollbackData> rollbacks)
     throws SafeMessagingException, IOException {
         // send the message via SMTP
         HashSet<Address> sentAddresses = new HashSet<Address>();
         mCurrentHostIndex = 0;
         String hostname = getNextHost();
-
-        boolean sendPartial;
-        if (mSession != null) {
-            if (forceSendPartial) {
-                sendPartial = true;
-            } else {
-                String prop = mSession.getProperty(JMSession.SMTP_SEND_PARTIAL_PROPERTY);
-                sendPartial = prop != null && Boolean.parseBoolean(prop);
-            }
-        } else {
-            // We can get here when ZDesktop is doing SMTP send for a data source.
-            // We can't safely set sendPartial on the static transport, so just assume we're operating
-            // in sendPartial==false mode always.
-            sendPartial = false;
-        }
 
         try {
             // Initialize recipient addresses from either the member variable
@@ -795,21 +794,14 @@ public class MailSender {
                 try {
                     logMessage(mm, hostname, mOriginalMessageId, mUploads, mReplyType);
                     if (hostname != null) {
-                        sendMessageToHost(hostname, mm, rcptAddresses, sendPartial);
+                        sendMessageToHost(hostname, mm, rcptAddresses);
                     } else {
                         Transport.send(mm, rcptAddresses);
                     }
-                    sentAddresses.addAll(Arrays.asList(rcptAddresses));
+                    Collections.addAll(sentAddresses, rcptAddresses);
                     break;
                 } catch (SendFailedException sfe) {
-                    if (!sendPartial)
-                        throw sfe;
-                    // If we were in sendPartial mode, silently ignore any addresses that failed.
-                    // We did our best to send to all valid and deliverable addresses.
-                    Address[] sent = sfe.getValidSentAddresses();
-                    if (sent != null && sent.length > 0)
-                        sentAddresses.addAll(Arrays.asList(sent));
-                    break;
+                    throw sfe; 
                 } catch (MessagingException e) {
                     Exception chained = e.getNextException();
                     if (chained instanceof ConnectException || chained instanceof UnknownHostException) {
@@ -855,20 +847,11 @@ public class MailSender {
         return null;
     }
 
-    private void sendMessageToHost(String hostname, MimeMessage mm, Address[] rcptAddresses, boolean sendPartial)
+    private void sendMessageToHost(String hostname, MimeMessage mm, Address[] rcptAddresses)
     throws MessagingException {
         mSession.getProperties().setProperty("mail.smtp.host", hostname);
         if (mEnvelopeFrom != null) {
             mSession.getProperties().setProperty("mail.smtp.from", mEnvelopeFrom);
-        }
-        String originalSendPartial = mSession.getProperty(JMSession.SMTP_SEND_PARTIAL_PROPERTY);
-        if (originalSendPartial == null)
-            originalSendPartial = Boolean.FALSE.toString();
-        if (sendPartial) {
-            // If sendPartial is true, set it in the session.  If false, use the session's existing setting,
-            // which may already be set to true based on server configuration.
-            mSession.getProperties().setProperty(JMSession.SMTP_SEND_PARTIAL_PROPERTY, "true");
-            mSession.getProperties().setProperty(JMSession.SMTPS_SEND_PARTIAL_PROPERTY, "true");
         }
         ZimbraLog.smtp.debug("Sending message %s to SMTP host %s with properties: %s",
             mm.getMessageID(), hostname, mSession.getProperties());
@@ -877,13 +860,7 @@ public class MailSender {
             transport.connect();
             transport.sendMessage(mm, rcptAddresses);
         } finally {
-            try {
-                transport.close();
-            } finally {
-                // Restore the session's sendPartial setting to its original value.
-                mSession.getProperties().setProperty(JMSession.SMTP_SEND_PARTIAL_PROPERTY, originalSendPartial);
-                mSession.getProperties().setProperty(JMSession.SMTPS_SEND_PARTIAL_PROPERTY, originalSendPartial);
-            }
+            transport.close();
         }
     }
 

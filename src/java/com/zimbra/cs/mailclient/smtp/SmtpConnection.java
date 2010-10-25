@@ -431,6 +431,8 @@ public class SmtpConnection extends MailConnection {
         throws IOException, MessagingException {
 
         invalidRecipients.clear();
+        validRecipients.clear();
+        Collections.addAll(validRecipients, recipients);
 
         mail(sender);
         rcpt(recipients);
@@ -529,12 +531,10 @@ public class SmtpConnection extends MailConnection {
                 recipient = "";
             }
             String reply = sendCommand(RCPT, "TO:<" + recipient + ">");
-            if (isPositive(reply)) {
-                validRecipients.add(recipient);
-            } else {
-                if (getSmtpConfig().isPartialSendAllowed()) {
-                    invalidRecipients.add(recipient);
-                } else {
+            if (!isPositive(reply)) {
+                validRecipients.remove(recipient);
+                invalidRecipients.add(recipient);
+                if (!getSmtpConfig().isPartialSendAllowed()) {
                     throw new InvalidRecipientException(recipient, reply);
                 }
             }

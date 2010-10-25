@@ -52,8 +52,7 @@ extends TestCase {
         mOriginalAllowAnyFrom = TestUtil.getAccountAttr(SENDER_NAME, Provisioning.A_zimbraAllowAnyFromAddress);
     }
     
-    // XXX bburtin: disabling test until we're back to using our own SMTP client
-    public void disabledTestRejectRecipient()
+    public void testRejectRecipient()
     throws Exception {
         String errorMsg = "Sender address rejected: User unknown in relay recipient table";
         String bogusAddress = TestUtil.getAddress("bogus");
@@ -80,7 +79,7 @@ extends TestCase {
         startDummySmtpServer(bogusAddress, errorMsg);
         sendFailed = false;
         server.setSmtpSendPartial(true);
-        MailSender sender = mbox.getMailSender().setForceSendPartial(false);
+        MailSender sender = mbox.getMailSender().setSendPartial(false);
         
         try {
             sender.sendMimeMessage(null, mbox, msg);
@@ -106,7 +105,7 @@ extends TestCase {
             sendFailed = true;
         }
         assertTrue(sendFailed);
-        
+
         // Test partial send, get value from LDAP.
         startDummySmtpServer(bogusAddress, errorMsg);
         server.setSmtpSendPartial(true);
@@ -114,7 +113,7 @@ extends TestCase {
         try {
             mbox.getMailSender().sendMimeMessage(null, mbox, msg);
         } catch (MailServiceException e) {
-            validateException(e, MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE, bogusAddress, errorMsg);
+            validateException(e, MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE, bogusAddress, null);
             sendFailed = true;
         }
         assertTrue(sendFailed);
@@ -122,19 +121,20 @@ extends TestCase {
         // Test partial send, specify value explicitly.
         server.setSmtpSendPartial(false);
         startDummySmtpServer(bogusAddress, errorMsg);
-        server.setSmtpSendPartial(true);
         sendFailed = false;
-        sender = mbox.getMailSender().setForceSendPartial(true);
+        sender = mbox.getMailSender().setSendPartial(true);
         try {
             sender.sendMimeMessage(null, mbox, msg);
         } catch (MailServiceException e) {
-            validateException(e, MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE, bogusAddress, errorMsg);
+            // Don't check error message.  JavaMail does not give us the SMTP protocol error in the
+            // partial send case.
+            validateException(e, MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE, bogusAddress, null);
             sendFailed = true;
         }
         assertTrue(sendFailed);
     }
     
-    public void testRestrictEnvelopeSender()
+    public void xtestRestrictEnvelopeSender()
     throws Exception {
         Server server = Provisioning.getInstance().getLocalServer();
         server.setSmtpPort(TEST_SMTP_PORT);
@@ -211,6 +211,9 @@ extends TestCase {
     
     private void validateException(MailServiceException e, String expectedCode, String invalidRecipient, String errorSubstring) {
         assertEquals(expectedCode, e.getCode());
+        if (errorSubstring != null) {
+            assertTrue("Error did not contain '" + errorSubstring + "': " + e.getMessage(), e.getMessage().contains(errorSubstring));
+        }
         
         boolean foundRecipient = false;
         for (Argument arg : e.getArgs()) {

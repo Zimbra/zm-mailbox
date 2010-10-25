@@ -167,8 +167,8 @@ public class ForwardCalendarItem extends CalendarRequest {
 
     protected static ItemId sendFwdMsg(OperationContext octxt, Mailbox mbox, MimeMessage mmFwd)
     throws ServiceException {
-        return mbox.getMailSender().sendMimeMessage(octxt, mbox, mmFwd, null, null,
-                null, null, null, true, false);
+        return CalendarMailSender.sendPartial(octxt, mbox, mmFwd, null, null,
+                null, null, null, false);
     }
 
     private static MimeMessage[] getSeriesFwdMsgs(

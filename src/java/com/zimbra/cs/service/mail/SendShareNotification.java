@@ -432,7 +432,7 @@ public class SendShareNotification extends MailDocumentHandler {
             }
         }
         
-        mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null, null, null, null, false, false);
+        mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null, null, null, null, false);
     }
     
     //
