@@ -189,6 +189,7 @@ public class AccountConstants {
     public static final String A_IS_GROUP = "isGroup";
     public static final String A_EXP = "exp";
     public static final String A_NEED_EXP = "needExp";
+    public static final String A_GAL_ACCOUNT_ID = "galAcctId";
     
     // share info
     public static final String A_FOLDER_ID = "folderId";
