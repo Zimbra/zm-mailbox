@@ -60,6 +60,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.soap.ZimbraSoapContext;
 
 public class GalSearchControl {
     private GalSearchParams mParams;
@@ -446,24 +447,32 @@ public class GalSearchControl {
         return true;
     }
 
-    private boolean proxyGalAccountSearch(Account targetAcct) {
+    private boolean proxyGalAccountSearch(Account galSyncAcct) {
         try {
             Provisioning prov = Provisioning.getInstance();
-            String serverUrl = URLUtil.getAdminURL(prov.getServerByName(targetAcct.getMailHost()));
+            String serverUrl = URLUtil.getAdminURL(prov.getServerByName(galSyncAcct.getMailHost()));
             SoapHttpTransport transport = new SoapHttpTransport(serverUrl);
             AuthToken auth = mParams.getAuthToken();
             transport.setAuthToken((auth == null) ? AuthProvider.getAdminAuthToken().toZAuthToken() : auth.toZAuthToken());
-            transport.setTargetAcctId(targetAcct.getId());
-            if (mParams.getSoapContext() != null)
-                transport.setResponseProtocol(mParams.getSoapContext().getResponseProtocol());
-            Element req = mParams.getRequest();
+
+            ZimbraSoapContext zsc = mParams.getSoapContext();
+            if (zsc != null) {
+                transport.setResponseProtocol(zsc.getResponseProtocol());
+            
+                String requestedAcctId = zsc.getRequestedAccountId();
+                String authTokenAcctId = zsc.getAuthtokenAccountId();
+                if (requestedAcctId != null && !requestedAcctId.equalsIgnoreCase(authTokenAcctId))
+                    transport.setTargetAcctId(requestedAcctId);
+            }
+                
+            Element req = mParams.getRequest();    
             if (req == null) {
                 req = Element.create(SoapProtocol.Soap12, AccountConstants.SEARCH_GAL_REQUEST);
                 req.addAttribute(AccountConstants.A_TYPE, mParams.getType().toString());
                 req.addAttribute(AccountConstants.A_LIMIT, mParams.getLimit());
                 req.addAttribute(AccountConstants.A_NAME, mParams.getQuery());
             }
-            req.addAttribute(AccountConstants.A_ID, targetAcct.getId());
+            req.addAttribute(AccountConstants.A_GAL_ACCOUNT_ID, galSyncAcct.getId());
             Element resp = transport.invokeWithoutSession(req.detach());
             GalSearchResultCallback callback = mParams.getResultCallback();
 
@@ -481,7 +490,7 @@ public class GalSearchControl {
             String newTokenStr = resp.getAttribute(MailConstants.A_TOKEN, null);
             if (newTokenStr != null) {
                 GalSyncToken newToken = new GalSyncToken(newTokenStr);
-                ZimbraLog.gal.debug("computing new sync token for proxied account "+targetAcct.getId()+": "+newToken);
+                ZimbraLog.gal.debug("computing new sync token for proxied account "+galSyncAcct.getId()+": "+newToken);
                 callback.setNewToken(newToken);
             }
             boolean hasMore =  resp.getAttributeBool(MailConstants.A_QUERY_MORE, false);
@@ -501,11 +510,11 @@ public class GalSearchControl {
                 // return true so we do *not* fallback to do the ldap search.
                 return true;
             } else {
-                ZimbraLog.gal.warn("remote search on GalSync account failed for"+targetAcct.getName(), e);
+                ZimbraLog.gal.warn("remote search on GalSync account failed for"+galSyncAcct.getName(), e);
                 return false;
             }
         } catch (Exception e) {
-            ZimbraLog.gal.warn("remote search on GalSync account failed for"+targetAcct.getName(), e);
+            ZimbraLog.gal.warn("remote search on GalSync account failed for"+galSyncAcct.getName(), e);
             return false;
         }
 

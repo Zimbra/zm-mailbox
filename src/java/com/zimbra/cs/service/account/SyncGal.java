@@ -37,14 +37,17 @@ import com.zimbra.soap.ZimbraSoapContext;
 /**
  * @author schemers
  */
-public class SyncGal extends AccountDocumentHandler {
+public class SyncGal extends GalDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Account account = getAuthenticatedAccount(getZimbraSoapContext(context));
+        Account account = getRequestedAccount(getZimbraSoapContext(context));
+
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
 
         String tokenAttr = request.getAttribute(MailConstants.A_TOKEN, "");
-        String galAcctId = request.getAttribute(AccountConstants.A_ID, null);
+        String galAcctId = request.getAttribute(AccountConstants.A_GAL_ACCOUNT_ID, null);
         boolean idOnly   = request.getAttributeBool(AccountConstants.A_ID_ONLY, false);
 
         GalSearchParams params = new GalSearchParams(account, zsc);

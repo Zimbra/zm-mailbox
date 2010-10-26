@@ -30,6 +30,7 @@ import com.zimbra.soap.SoapServlet;
 
 public abstract class AccountDocumentHandler extends DocumentHandler {
 
+    @Override
     protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException {
         try {
             // by default, try to execute on the appropriate host

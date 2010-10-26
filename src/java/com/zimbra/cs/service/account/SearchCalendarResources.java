@@ -37,7 +37,7 @@ import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class SearchCalendarResources extends AccountDocumentHandler {
+public class SearchCalendarResources extends GalDocumentHandler {
 
     @Override
     public boolean needsAuth(Map<String, Object> context) {
@@ -49,10 +49,8 @@ public class SearchCalendarResources extends AccountDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(getZimbraSoapContext(context));
 
-        /* TODO: pending bug 50263
         if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
-        */
 
         return searchGal(zsc, account, request);
     }

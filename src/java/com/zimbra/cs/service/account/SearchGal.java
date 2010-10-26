@@ -29,20 +29,23 @@ import com.zimbra.soap.ZimbraSoapContext;
  * @since May 26, 2004
  * @author schemers
  */
-public class SearchGal extends AccountDocumentHandler {
+public class SearchGal extends GalDocumentHandler {
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Account account = getAuthenticatedAccount(getZimbraSoapContext(context));
+        Account account = getRequestedAccount(getZimbraSoapContext(context));
 
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+        
         String name = request.getAttribute(AccountConstants.E_NAME);
         String typeStr = request.getAttribute(AccountConstants.A_TYPE, "all");
         Provisioning.GalSearchType type = Provisioning.GalSearchType.fromString(typeStr);
 
         boolean needCanExpand = request.getAttributeBool(AccountConstants.A_NEED_EXP, false);
 
-        String galAcctId = request.getAttribute(AccountConstants.A_ID, null);
+        String galAcctId = request.getAttribute(AccountConstants.A_GAL_ACCOUNT_ID, null);
 
         GalSearchParams params = new GalSearchParams(account, zsc);
         params.setType(type);

@@ -21,9 +21,14 @@ import com.zimbra.cs.gal.GalSearchResultCallback;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class GetDistributionListMembers extends AccountDocumentHandler {
+public class GetDistributionListMembers extends GalDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account account = getRequestedAccount(getZimbraSoapContext(context));
+        
+        if (!canAccessAccount(zsc, account))
+            throw ServiceException.PERM_DENIED("can not access account");
+        
         Provisioning prov = Provisioning.getInstance();
         
         int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT, 0);
@@ -38,8 +43,6 @@ public class GetDistributionListMembers extends AccountDocumentHandler {
         
         Element d = request.getElement(AdminConstants.E_DL);
         String dlName = d.getText();
-        
-        Account account = getAuthenticatedAccount(getZimbraSoapContext(context));
         
         DLMembersResult dlMembersResult = searchGal(zsc, account, dlName, request);
         

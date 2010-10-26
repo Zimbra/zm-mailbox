@@ -34,7 +34,7 @@ public class AutoComplete extends MailDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Account account = getAuthenticatedAccount(getZimbraSoapContext(context));
+        Account account = getRequestedAccount(getZimbraSoapContext(context));
 
         String name = request.getAttribute(MailConstants.A_NAME);
 
