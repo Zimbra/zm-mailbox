@@ -186,17 +186,29 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
         synchronized (sReceivedMessageIDs) {
             Set<Integer> mboxIds = (Set<Integer>) sReceivedMessageIDs.get(msgid);
+            if (mboxIds != null && mboxIds.contains(mbox.getId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void addToDedupeCache(ParsedMessage pm, Mailbox mbox) {
+        if (sReceivedMessageIDs == null || pm == null || mbox == null)
+            return;
+        String msgid = pm.getMessageID();
+        if (msgid == null || msgid.equals(""))
+            return;
+
+        synchronized (sReceivedMessageIDs) {
+            Set<Integer> mboxIds = (Set<Integer>) sReceivedMessageIDs.get(msgid);
             if (mboxIds == null) {
                 mboxIds = new HashSet<Integer>();
                 sReceivedMessageIDs.put(msgid, mboxIds);
-            } else {
-                if (mboxIds.contains(mbox.getId())) {
-                    return true;
-                }
             }
             mboxIds.add(mbox.getId());
         }
-        return false;
     }
 
     @SuppressWarnings("unchecked")
@@ -474,6 +486,8 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                             success = true;
                             
                             if (addedMessageIds != null && addedMessageIds.size() > 0) {
+                                addToDedupeCache(pm, mbox);
+                                
                                 // Execute callbacks
                                 for (LmtpCallback callback : sCallbacks) {
                                     for (ItemId id : addedMessageIds) {
