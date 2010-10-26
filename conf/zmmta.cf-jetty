@@ -159,6 +159,7 @@ SECTION webxml
 	REWRITE mailboxd/etc/zimlet.web.xml.in mailboxd/webapps/zimlet/WEB-INF/web.xml
 	REWRITE mailboxd/etc/spnego.web.xml.in mailboxd/webapps/spnego/WEB-INF/web.xml
 	REWRITE mailboxd/etc/krb5.ini.in mailboxd/etc/krb5.ini
+	REWRITE mailboxd/etc/spnego_error.jsp.in mailboxd/webapps/spnego/spnego_error.jsp
 	REWRITE mailboxd/etc/spnego.conf.in mailboxd/etc/spnego.conf
 	REWRITE mailboxd/etc/spnego.properties.in mailboxd/etc/spnego.properties
   RESTART mailboxd
