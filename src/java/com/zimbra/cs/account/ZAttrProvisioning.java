@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 jylee 20101026-1134 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101027-1310 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5566,6 +5566,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=131)
     public static final String A_zimbraPrefAutoAddAddressEnabled = "zimbraPrefAutoAddAddressEnabled";
+
+    /**
+     * whether actionable address objects result from autocomplete is enabled
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1146)
+    public static final String A_zimbraPrefAutocompleteAddressBubblesEnabled = "zimbraPrefAutocompleteAddressBubblesEnabled";
 
     /**
      * whether to end auto-complete on comma

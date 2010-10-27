@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 jylee 20101026-1134 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101027-1310 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -20693,6 +20693,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefAutoSaveDraftInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefAutoSaveDraftInterval, "");
+        return attrs;
+    }
+
+    /**
+     * whether actionable address objects result from autocomplete is enabled
+     *
+     * @return zimbraPrefAutocompleteAddressBubblesEnabled, or TRUE if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1146)
+    public int getPrefAutocompleteAddressBubblesEnabled() {
+        return getIntAttr(Provisioning.A_zimbraPrefAutocompleteAddressBubblesEnabled, TRUE);
+    }
+
+    /**
+     * whether actionable address objects result from autocomplete is enabled
+     *
+     * @param zimbraPrefAutocompleteAddressBubblesEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1146)
+    public void setPrefAutocompleteAddressBubblesEnabled(int zimbraPrefAutocompleteAddressBubblesEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAutocompleteAddressBubblesEnabled, Integer.toString(zimbraPrefAutocompleteAddressBubblesEnabled));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether actionable address objects result from autocomplete is enabled
+     *
+     * @param zimbraPrefAutocompleteAddressBubblesEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1146)
+    public Map<String,Object> setPrefAutocompleteAddressBubblesEnabled(int zimbraPrefAutocompleteAddressBubblesEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAutocompleteAddressBubblesEnabled, Integer.toString(zimbraPrefAutocompleteAddressBubblesEnabled));
+        return attrs;
+    }
+
+    /**
+     * whether actionable address objects result from autocomplete is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1146)
+    public void unsetPrefAutocompleteAddressBubblesEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAutocompleteAddressBubblesEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether actionable address objects result from autocomplete is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1146)
+    public Map<String,Object> unsetPrefAutocompleteAddressBubblesEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAutocompleteAddressBubblesEnabled, "");
         return attrs;
     }
 

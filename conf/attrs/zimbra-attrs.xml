@@ -5182,5 +5182,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
+<attr id="1146" name="zimbraPrefAutocompleteAddressBubblesEnabled" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="7.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether actionable address objects result from autocomplete is enabled</desc>
+</attr>
+
 </attrs>
 
