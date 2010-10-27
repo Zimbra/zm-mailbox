@@ -14780,13 +14780,13 @@ public class ZAttrCos extends NamedEntry {
     /**
      * whether actionable address objects result from autocomplete is enabled
      *
-     * @return zimbraPrefAutocompleteAddressBubblesEnabled, or TRUE if unset
+     * @return zimbraPrefAutocompleteAddressBubblesEnabled, or true if unset
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1146)
-    public int getPrefAutocompleteAddressBubblesEnabled() {
-        return getIntAttr(Provisioning.A_zimbraPrefAutocompleteAddressBubblesEnabled, TRUE);
+    public boolean isPrefAutocompleteAddressBubblesEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefAutocompleteAddressBubblesEnabled, true);
     }
 
     /**
@@ -14798,9 +14798,9 @@ public class ZAttrCos extends NamedEntry {
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1146)
-    public void setPrefAutocompleteAddressBubblesEnabled(int zimbraPrefAutocompleteAddressBubblesEnabled) throws com.zimbra.common.service.ServiceException {
+    public void setPrefAutocompleteAddressBubblesEnabled(boolean zimbraPrefAutocompleteAddressBubblesEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefAutocompleteAddressBubblesEnabled, Integer.toString(zimbraPrefAutocompleteAddressBubblesEnabled));
+        attrs.put(Provisioning.A_zimbraPrefAutocompleteAddressBubblesEnabled, zimbraPrefAutocompleteAddressBubblesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -14814,9 +14814,9 @@ public class ZAttrCos extends NamedEntry {
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1146)
-    public Map<String,Object> setPrefAutocompleteAddressBubblesEnabled(int zimbraPrefAutocompleteAddressBubblesEnabled, Map<String,Object> attrs) {
+    public Map<String,Object> setPrefAutocompleteAddressBubblesEnabled(boolean zimbraPrefAutocompleteAddressBubblesEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefAutocompleteAddressBubblesEnabled, Integer.toString(zimbraPrefAutocompleteAddressBubblesEnabled));
+        attrs.put(Provisioning.A_zimbraPrefAutocompleteAddressBubblesEnabled, zimbraPrefAutocompleteAddressBubblesEnabled ? Provisioning.TRUE : Provisioning.FALSE);
         return attrs;
     }
 
