@@ -24,6 +24,7 @@ import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.Provisioning;
@@ -120,6 +121,9 @@ public class SearchCalendarResources extends GalDocumentHandler {
 
     private static Element searchGal(ZimbraSoapContext zsc, Account account, Element request) throws ServiceException {
 
+        // bug 52456
+        request.addAttribute(MailConstants.A_QUERY_LIMIT, 1000);
+        
         Element name = request.getOptionalElement(AccountConstants.E_NAME);
 
         EntrySearchFilter filter = parseSearchFilter(request);
