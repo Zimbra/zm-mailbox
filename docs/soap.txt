@@ -763,7 +763,7 @@ import and export of addressbook.
 ----------------------------
 
  <SearchCalendarResourcesRequest>
-     [attrs="a1,a2,a3"] [sortBy="{sortBy}"] [sortAscending="{sortAscending}"] >
+     [attrs="a1,a2,a3"] [sortBy="{sortBy}"] [sortAscending="{sortAscending}"] [limit="..."]>
 
    [<name>...</name>]
    <searchFilter>

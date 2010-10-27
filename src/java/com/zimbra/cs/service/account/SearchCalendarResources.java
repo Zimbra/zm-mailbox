@@ -126,7 +126,6 @@ public class SearchCalendarResources extends GalDocumentHandler {
         GalSearchParams params = new GalSearchParams(account, zsc);
         params.setQuery(name == null ? null : name.getText());
         params.setType(Provisioning.GalSearchType.resource);
-        params.setLimit(1000);
         params.setRequest(request);
         params.setResponseName(AccountConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
 
