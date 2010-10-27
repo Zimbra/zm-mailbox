@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.Fragment;
@@ -64,7 +65,7 @@ public final class ParsedDocument {
         mSize = (int) blob.getRawSize();
         mDigest = blob.getDigest();
         mContentType = ctype;
-        mFilename = filename;
+        mFilename = StringUtil.sanitizeFilename(filename);
         mCreatedDate = createdDate;
         mCreator = creator;
         mDescription = description;
@@ -184,7 +185,7 @@ public final class ParsedDocument {
     public long getCreatedDate() {
         return mCreatedDate;
     }
-    
+
     public String getDescription() {
         return mDescription;
     }
