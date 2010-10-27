@@ -32,12 +32,13 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.sun.mail.smtp.SMTPMessage;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailConnection;
 import com.zimbra.cs.mailclient.MailException;
@@ -45,7 +46,7 @@ import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailOutputStream;
 import com.zimbra.cs.mailclient.util.Ascii;
 
-public class SmtpConnection extends MailConnection {
+public final class SmtpConnection extends MailConnection {
 
     public static final String EHLO = "EHLO";
     public static final String HELO = "HELO";
@@ -59,8 +60,6 @@ public class SmtpConnection extends MailConnection {
 
     // Same headers that SMTPTransport passes to MimeMessage.writeTo().
     private static final String[] IGNORE_HEADERS = new String[] { "Bcc", "Content-Length" };
-
-    private static final Logger LOGGER = Logger.getLogger(SmtpConnection.class);
 
     private Set<String> invalidRecipients = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
     private Set<String> validRecipients = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
@@ -113,8 +112,8 @@ public class SmtpConnection extends MailConnection {
     }
 
     @Override
-    public Logger getLogger() {
-        return LOGGER;
+    public Log getLogger() {
+        return ZimbraLog.smtp;
     }
 
     @Override
@@ -480,6 +479,11 @@ public class SmtpConnection extends MailConnection {
      * @throws CommandFailedException if the server did not respond
      */
     private String sendCommand(byte[] command, String args) throws IOException {
+        if (ZimbraLog.smtp.isTraceEnabled()) {
+            ZimbraLog.smtp.trace("C: %s %s",
+                    new String(command), Strings.nullToEmpty(args));
+        }
+
         mailOut.write(command);
         if (!Strings.isNullOrEmpty(args)) {
             mailOut.write(' ');
@@ -488,6 +492,7 @@ public class SmtpConnection extends MailConnection {
         mailOut.newLine();
         mailOut.flush();
         String reply = mailIn.readLine();
+        ZimbraLog.smtp.trace("S: %s", reply);
         if (reply == null) {
             throw new CommandFailedException(new String(command),
                     "No response from server");

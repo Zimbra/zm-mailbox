@@ -2,18 +2,20 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.mailclient.imap;
 
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailclient.MailConnection;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailInputStream;
@@ -36,7 +38,6 @@ import java.util.Collection;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.log4j.Logger;
 import org.apache.commons.codec.binary.Base64;
 
 public final class ImapConnection extends MailConnection {
@@ -45,10 +46,8 @@ public final class ImapConnection extends MailConnection {
     private ImapRequest request;
     private DataHandler dataHandler;
     private Character delimiter;
-    
-    private final AtomicInteger tagCount = new AtomicInteger();
 
-    private static final Logger LOGGER = Logger.getLogger(ImapConnection.class);
+    private final AtomicInteger tagCount = new AtomicInteger();
 
     private static final String TAG_FORMAT = "C%02d";
 
@@ -63,7 +62,7 @@ public final class ImapConnection extends MailConnection {
     public DataHandler getDataHandler() {
         return dataHandler;
     }
-    
+
     @Override
     protected MailInputStream newMailInputStream(InputStream is) {
         return new ImapInputStream(is, this);
@@ -75,8 +74,8 @@ public final class ImapConnection extends MailConnection {
     }
 
     @Override
-    public Logger getLogger() {
-        return LOGGER;
+    public Log getLogger() {
+        return ZimbraLog.imap;
     }
 
     @Override
@@ -174,11 +173,11 @@ public final class ImapConnection extends MailConnection {
     public void xatom(String cmd, Object... params) throws IOException {
         newRequest(cmd, params).sendCheckStatus();
     }
-    
+
     public IDInfo id() throws IOException {
         return id(null);
     }
-    
+
     public IDInfo id(IDInfo info) throws IOException {
         ImapRequest req = newRequest(CAtom.ID, info != null ? info : Atom.NIL);
         List<IDInfo> results = new ArrayList<IDInfo>(1);
@@ -190,7 +189,7 @@ public final class ImapConnection extends MailConnection {
     public synchronized boolean isSelected(String name) {
         return mailbox != null && mailbox.getName().equals(name);
     }
-    
+
     public synchronized MailboxInfo select(String name) throws IOException {
         mailbox = doSelectOrExamine(CAtom.SELECT, name);
         setState(State.SELECTED);
@@ -238,7 +237,7 @@ public final class ImapConnection extends MailConnection {
     public AppendResult append(String mbox, AppendMessage... msgs) throws IOException {
         return append(mbox, Arrays.asList(msgs));
     }
-    
+
     public AppendResult append(String mbox, Collection<AppendMessage> msgs)
         throws IOException {
         ImapRequest req = newRequest(CAtom.APPEND, new MailboxName(mbox));
@@ -345,6 +344,7 @@ public final class ImapConnection extends MailConnection {
     public List<Long> getUids(String seq) throws IOException {
         final List<Long> uids = new ArrayList<Long>();
         uidFetch(seq, "UID", new FetchResponseHandler() {
+            @Override
             public void handleFetchResponse(MessageData md) {
                 uids.add(md.getUid());
             }
@@ -356,6 +356,7 @@ public final class ImapConnection extends MailConnection {
         throws IOException {
         final Map<Long, MessageData> results = new HashMap<Long, MessageData>();
         fetch(seq, param, new FetchResponseHandler(false) {
+            @Override
             public void handleFetchResponse(MessageData md) {
                 long msgno = md.getMsgno();
                 if (msgno > 0) {
@@ -374,11 +375,12 @@ public final class ImapConnection extends MailConnection {
     public MessageData fetch(long msgno, Object param) throws IOException {
         return fetch(String.valueOf(msgno), param).get(msgno);
     }
-    
+
     public Map<Long, MessageData> uidFetch(String seq, Object param)
         throws IOException {
         final Map<Long, MessageData> results = new HashMap<Long, MessageData>();
         uidFetch(seq, param, new FetchResponseHandler(false) {
+            @Override
             public void handleFetchResponse(MessageData md) {
                 long uid = md.getUid();
                 if (uid > 0) {
@@ -397,7 +399,7 @@ public final class ImapConnection extends MailConnection {
     public MessageData uidFetch(long uid, Object param) throws IOException {
         return uidFetch(String.valueOf(uid), param).get(uid);
     }
-    
+
     public List<Long> search(Object... params) throws IOException {
         return doSearch(CAtom.SEARCH.name(), params);
     }
@@ -411,6 +413,7 @@ public final class ImapConnection extends MailConnection {
         final List<Long> results = new ArrayList<Long>();
         ImapRequest req = newRequest(cmd, params);
         req.setResponseHandler(new ResponseHandler() {
+            @Override
             public void handleResponse(ImapResponse res) {
                 if (res.getCCode() == CAtom.SEARCH) {
                     results.addAll((List<Long>) res.getData());
@@ -457,9 +460,9 @@ public final class ImapConnection extends MailConnection {
     }
 
     public ImapRequest newUidRequest(CAtom cmd, Object... params) {
-        return newRequest("UID " + cmd.toString(), params); 
+        return newRequest("UID " + cmd.toString(), params);
     }
-    
+
 
     public ImapCapabilities getCapabilities() {
         return capabilities;
@@ -491,7 +494,7 @@ public final class ImapConnection extends MailConnection {
     public boolean hasMechanism(String method) {
         return hasCapability("AUTH=" + method);
     }
-    
+
     public boolean hasUidPlus() {
         return hasCapability(ImapCapabilities.UIDPLUS);
     }
@@ -535,7 +538,7 @@ public final class ImapConnection extends MailConnection {
         return request != null && request.isIdle();
     }
 
-    private ImapResponse sendIdle(ImapRequest req) throws IOException {
+    private ImapResponse sendIdle(ImapRequest req) {
         request = req;
         try {
             req.write(getImapOutputStream());
@@ -545,6 +548,7 @@ public final class ImapConnection extends MailConnection {
             }
             assert res.isContinuation();
             Thread t = new Thread(new Runnable() {
+                @Override
                 public void run() {
                     idleHandler();
                 }
@@ -557,7 +561,7 @@ public final class ImapConnection extends MailConnection {
         }
         return null;
     }
-    
+
     private void idleHandler() {
         try {
             ImapResponse res = waitForResponse();
@@ -639,7 +643,7 @@ public final class ImapConnection extends MailConnection {
             this.res = res;
         }
     }
-    
+
     private boolean isShutdown() {
         return isClosed() || isLogout();
     }

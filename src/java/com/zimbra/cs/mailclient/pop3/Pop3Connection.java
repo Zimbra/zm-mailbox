@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20,9 +20,9 @@ import java.io.OutputStream;
 
 import javax.security.auth.login.LoginException;
 
+import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
 
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailConnection;
@@ -36,8 +36,6 @@ public final class Pop3Connection extends MailConnection {
     private int messageCount;
     private long maildropSize;
 
-    private static final Logger LOGGER = Logger.getLogger(Pop3Connection.class);
-    
     private static final String PASS = "PASS";
     private static final String USER = "USER";
     private static final String AUTH = "AUTH";
@@ -67,8 +65,8 @@ public final class Pop3Connection extends MailConnection {
     }
 
     @Override
-    public Logger getLogger() {
-        return LOGGER;
+    public Log getLogger() {
+        return ZimbraLog.pop;
     }
 
     @Override
@@ -89,14 +87,14 @@ public final class Pop3Connection extends MailConnection {
         capabilities = capa();
         stat();
     }
-    
+
     @Override
     public void authenticate(String pass) throws LoginException, IOException {
         super.authenticate(pass);
         capabilities = capa();
         stat();
     }
-    
+
     @Override
     public void logout() throws IOException {
         quit();
@@ -156,7 +154,7 @@ public final class Pop3Connection extends MailConnection {
     public Pop3Capabilities getCapabilities() {
         return capabilities;
     }
-    
+
     public int getMessageCount() {
         return messageCount;
     }
@@ -164,7 +162,7 @@ public final class Pop3Connection extends MailConnection {
     public long getMaildropSize() {
         return maildropSize;
     }
-    
+
     public int getMessageSize(int msgno) throws IOException {
         Pop3Response res = sendCommand(LIST, msgno);
         if (res.isOK()) {
@@ -256,7 +254,7 @@ public final class Pop3Connection extends MailConnection {
     public ContentInputStream getMessage(int msgno) throws IOException {
         return sendCommandCheckStatus(RETR, msgno).getContentInputStream();
     }
-    
+
     public boolean deleteMessage(int msgno) throws IOException {
         return sendCommand(DELE, msgno).isOK();
     }
@@ -264,7 +262,7 @@ public final class Pop3Connection extends MailConnection {
     public void reset() throws IOException {
         sendCommandCheckStatus(RSET, null);
     }
-    
+
     public void noop() throws IOException {
         sendCommandCheckStatus(NOOP, null);
     }
@@ -274,7 +272,7 @@ public final class Pop3Connection extends MailConnection {
         sendCommandCheckStatus(QUIT, null);
         setState(State.CLOSED);
     }
-    
+
     public boolean hasCapability(String cap) {
         return capabilities != null && capabilities.hasCapability(cap);
     }
@@ -282,7 +280,7 @@ public final class Pop3Connection extends MailConnection {
     public Pop3Config getPop3Config() {
         return (Pop3Config) config;
     }
-    
+
     public Pop3Response sendCommand(String cmd, Object args) throws IOException {
         mailOut.write(cmd);
         if (args != null) {

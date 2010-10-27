@@ -15,8 +15,6 @@
 package com.zimbra.cs.mailclient;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
-import org.apache.log4j.Level;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -33,6 +31,8 @@ import java.net.Socket;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.Log.Level;
 import com.zimbra.cs.mailclient.util.TraceInputStream;
 import com.zimbra.cs.mailclient.util.TraceOutputStream;
 import com.zimbra.cs.mailclient.util.Ascii;
@@ -66,7 +66,7 @@ public abstract class MailConnection {
     protected MailConnection(MailConfig config) {
         this.config = config;
         if (config.isDebug()) {
-            getLogger().setLevel(Level.DEBUG);
+            getLogger().setLevel(Level.debug);
         }
     }
 
@@ -177,10 +177,11 @@ public abstract class MailConnection {
     protected abstract MailOutputStream newMailOutputStream(OutputStream os);
 
     /**
-     * Returns the <tt>Logger</tt> to use for logging mail client errors.
-     * @return the <tt>Logger</tt> for mail client errors
+     * Returns the {@link Log} to use for logging mail client errors.
+     *
+     * @return the {@link Log} for mail client errors
      */
-    public abstract Logger getLogger();
+    public abstract Log getLogger();
 
     /**
      * Logs out current user from server.
@@ -229,8 +230,7 @@ public abstract class MailConnection {
         }
     }
 
-    public synchronized void authenticate(Authenticator auth)
-        throws LoginException, IOException {
+    public synchronized void authenticate(Authenticator auth) throws IOException {
         authenticator = auth;
         checkState(State.NOT_AUTHENTICATED);
         sendAuthenticate(false);

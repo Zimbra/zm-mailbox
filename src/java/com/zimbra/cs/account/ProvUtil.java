@@ -366,12 +366,14 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     static class RightCommandHelp implements CommandHelp {
+        @Override
         public void printHelp() {
             Category.helpRIGHTCommand();
         }
     }
 
     static class ReindexCommandHelp implements CommandHelp {
+        @Override
         public void printHelp() {
             /*
              * copied from soap-admin.txt
@@ -396,6 +398,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     static class CountObjectsHelp implements CommandHelp {
+        @Override
         public void printHelp() {
             System.out.println();
             System.out.println("Valid types:");
@@ -406,7 +409,7 @@ public class ProvUtil implements HttpDebugListener {
 
     public enum Command {
         ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
-        ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "[-s/--server hostname] {name@domain|id} {logging-category} {debug|info|warn|error}", Category.LOG, 3, 5),
+        ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "[-s/--server hostname] {name@domain|id} {logging-category} {trace|debug|info|warn|error}", Category.LOG, 3, 5),
         ADD_DISTRIBUTION_LIST_ALIAS("addDistributionListAlias", "adla", "{list@domain|id} {alias@domain}", Category.LIST, 2, 2),
         ADD_DISTRIBUTION_LIST_MEMBER("addDistributionListMember", "adlm", "{list@domain|id} {member@domain}+", Category.LIST, 2, Integer.MAX_VALUE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{domain} {name}", Category.SEARCH, 2, 2),
@@ -1564,6 +1567,7 @@ public class ProvUtil implements HttpDebugListener {
                               "---------------");                          // grantee display
         }
 
+        @Override
         public void visit(ShareInfoData shareInfoData) throws ServiceException {
             System.out.printf(mFormat,
                     shareInfoData.getOwnerAcctId(),
@@ -1664,6 +1668,7 @@ public class ProvUtil implements HttpDebugListener {
      */
     private void doGetAllAccounts(LdapProvisioning ldapProv, Domain domain, Server server, final boolean verbose, final boolean applyDefault, final Set<String> attrNames) throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
+            @Override
             public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
                 if (verbose)
                     dumpAccount((Account) entry, applyDefault, attrNames);
@@ -2100,7 +2105,7 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
-    private void dumpRight(Right right) throws ServiceException {
+    private void dumpRight(Right right) {
         String indent = "    ";
         String indent2 = "        ";
 
@@ -2243,10 +2248,6 @@ public class ProvUtil implements HttpDebugListener {
             else
                 System.out.println(server.getName());
         }
-    }
-
-    private void dumpServer(Server server, Set<String> attrNames) throws ServiceException {
-        dumpServer(server, true, attrNames);
     }
 
     private void dumpServer(Server server, boolean expandConfig, Set<String> attrNames) throws ServiceException {
@@ -2495,6 +2496,7 @@ public class ProvUtil implements HttpDebugListener {
                                            final boolean verbose, final boolean applyDefault)
     throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
+            @Override
             public void visit(com.zimbra.cs.account.NamedEntry entry)
             throws ServiceException {
                 if (verbose) {
@@ -2726,10 +2728,6 @@ public class ProvUtil implements HttpDebugListener {
         return lookupDistributionList(key, true);
     }
 
-    private String getAllFreebusyProviders(String[] args) throws ServiceException {
-        return "";
-    }
-
     private XMPPComponent lookupXMPPComponent(String value) throws ServiceException {
         if (Provisioning.isUUID(value)) {
             return mProv.get(XMPPComponentBy.id, value);
@@ -2870,7 +2868,7 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
-    public static void main(String args[]) throws IOException, ParseException, ServiceException {
+    public static void main(String args[]) throws IOException, ServiceException {
         CliUtil.setCliSoapHttpTransportTimeout();
         ZimbraLog.toolSetupLog4jConsole("INFO", true, false); // send all logs to stderr
         SocketFactories.registerProtocols();
@@ -3041,14 +3039,6 @@ public class ProvUtil implements HttpDebugListener {
                 return mDesc;
             }
 
-            static Field fromString(String s) throws ServiceException {
-                try {
-                    return Field.valueOf(s);
-                } catch (IllegalArgumentException e) {
-                    throw ServiceException.INVALID_REQUEST("unknown field: " + s, e);
-                }
-            }
-
             static String formatDefaults(AttributeInfo ai) {
                 StringBuilder sb = new StringBuilder();
                 for (String d : ai.getDefaultCosValues())
@@ -3205,14 +3195,6 @@ public class ProvUtil implements HttpDebugListener {
         for (AttributeClass ac : AttributeClass.values()) {
             if (ac.isProvisionable())
                 sb.append(ac.name() + ",");
-        }
-        return sb.substring(0, sb.length()-1); // trim the ending ,
-    }
-
-    private String formatAllFields() {
-        StringBuilder sb = new StringBuilder();
-        for (DescribeArgs.Field field : DescribeArgs.Field.values()) {
-            sb.append(String.format("    %-12.12s : %s", field.name(),field.getDesc()) + "\n");
         }
         return sb.substring(0, sb.length()-1); // trim the ending ,
     }
@@ -4072,7 +4054,7 @@ public class ProvUtil implements HttpDebugListener {
     /*
      * for testing only, not used in production
      */
-    private void doGetCreateObjectAttrs(String[] args) throws ServiceException, ArgException {
+    private void doGetCreateObjectAttrs(String[] args) throws ServiceException {
         String targetType = args[1];
 
         DomainBy domainBy = null;
@@ -4195,7 +4177,7 @@ public class ProvUtil implements HttpDebugListener {
                           ra.mRight, ra.mRightModifier);
     }
 
-    private void doGetAuthTokenInfo(String[] args) throws ServiceException {
+    private void doGetAuthTokenInfo(String[] args) {
         String authToken = args[1];
 
         try {
@@ -4272,6 +4254,7 @@ public class ProvUtil implements HttpDebugListener {
 
     private long mSendStart;
 
+    @Override
     public void receiveSoapMessage(PostMethod postMethod, Element envelope) {
         System.out.printf("======== SOAP RECEIVE =========\n");
 
@@ -4288,6 +4271,7 @@ public class ProvUtil implements HttpDebugListener {
         System.out.printf("=============================== (%d msecs)\n", end-mSendStart);
     }
 
+    @Override
     public void sendSoapMessage(PostMethod postMethod, Element envelope) {
         System.out.println("========== SOAP SEND ==========");
 

@@ -39,6 +39,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.sun.mail.util.PropUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.BuildInfo;
 
 /**
@@ -215,8 +216,10 @@ public class SmtpTransport extends Transport {
                 connection.sendMessage(rcpts, (MimeMessage) msg);
             }
         } catch (MessagingException e) {
+            ZimbraLog.smtp.warn("Failed to send message", e);
             notify(e, msg, rcpts);
         } catch (IOException e) {
+            ZimbraLog.smtp.warn("Failed to send message", e);
             notify(e, msg, rcpts);
         }
         notify(null, msg, rcpts);
