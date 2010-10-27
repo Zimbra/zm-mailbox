@@ -633,7 +633,7 @@
     	<property name="zimbraSpnegoAuthRealm"       value="SPNEGO.LOCAL"/>
     	<property name="zimbraSpnegoAuthKDC"         value="10.114.13.137"/>
     	<property name="zimbraSpnegoAuthAdminServer" value="10.114.13.137"/>
-    	<property name="zimbraSpnegoAuthErrorURL"    value="http://${SERVICE_PRINCIPAL_NAME}:7070/zimbra/?ignoreLoginURL=1"/>
+    	<property name="zimbraSpnegoAuthErrorURL"    value="/zimbra/?ignoreLoginURL=1"/>
     	
     	<!-- server -->
     	<property name="zimbraSpnegoAuthPrincipal"   value="HTTP/${SERVICE_PRINCIPAL_NAME}@SPNEGO.LOCAL"/>

@@ -9,6 +9,7 @@ I. SPNEGO SSO
    Supported browsers:
      - Internet Explorer 6.0 or later
      - Firefox 3.0 or later
+     - Chrome
      
    
    A high level description of the Authentication Overview:
@@ -205,7 +206,7 @@ zimbraSpnegoAuthAdminServer : address of the admin server for the realm
 zimbraSpnegoAuthEnabled     : TRUE
 
 zimbraSpnegoAuthErrorURL    : URL to redirect users to on spnego auth failure 
-                              Setting it to "http://{server}:{port}/zimbra/?ignoreLoginURL=1"
+                              Setting it to "/zimbra/?ignoreLoginURL=1"
                               will redirect user to the regular Zimbra login page, where 
                               zimbra user name and password are prompted.
                               
@@ -231,7 +232,7 @@ Firefox:
 ** set network.negotiate-auth.delegation-uris to http://,https://
 ** set network.negotiate-auth.trusted-uris to http://,https://
 
-IE:
+IE and Chrome:
 * Tools -> Options -> Security -> Local Intranet -> Sites
 ** make sure everything is checked here
 * Tools -> Options -> Security -> Local Intranet -> Sites -> Advanced
