@@ -59,16 +59,17 @@ public class HttpUtil {
     }
 
     public static String encodeFilename(HttpServletRequest req, String filename) {
-        if (StringUtil.isAsciiString(filename) && filename.indexOf('"') == -1)
-            return '"' + filename.replace('\t', ' ') + '"';
+        if (StringUtil.isAsciiString(filename) && filename.indexOf('"') == -1) {
+            return '"' + StringUtil.sanitizeFilename(filename) + '"';
+        }
         return encodeFilename(guessBrowser(req), filename);
     }
 
     public static String encodeFilename(Browser browser, String filename) {
-        // Windows does not allow tabs in filenames - replacing with ' ' is safe
-        filename = filename.replace('\t', ' ');
-        if (StringUtil.isAsciiString(filename) && filename.indexOf('"') == -1)
+        filename = StringUtil.sanitizeFilename(filename);
+        if (StringUtil.isAsciiString(filename) && filename.indexOf('"') == -1) {
             return '"' + filename + '"';
+        }
         try {
             switch (browser) {
                 case IE:

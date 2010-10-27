@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -67,7 +67,7 @@ public class StringUtilTest {
         String expected = "Beginning middle { end }";
         Assert.assertEquals(expected, result);
     }
-    
+
     @Test
     public void testJoin() {
         List<String> list = new ArrayList<String>();
@@ -78,7 +78,7 @@ public class StringUtilTest {
         String[] array = new String[list.size()];
         list.toArray(array);
         Assert.assertEquals("a,b,c", StringUtil.join(",", array));
-        
+
         // Make sure things still work if the first element is empty (bug 29513)
         list.set(0, "");
         Assert.assertEquals(",b,c", StringUtil.join(",", list));
@@ -107,6 +107,11 @@ public class StringUtilTest {
         Assert.assertEquals("misordered surrogates at end", StringUtil.stripControlCharacters("v\u0002x\uDC00\uDBFF"), "vx");
         Assert.assertEquals("surrogates and char, strip, char", StringUtil.stripControlCharacters("\uDBFF\uDC00v\u0002x"), "\uDBFF\uDC00vx");
         Assert.assertEquals("surrogates and BOM", StringUtil.stripControlCharacters("\uDBFF\uDC00\uFFFFvx"), "\uDBFF\uDC00vx");
+    }
+
+    @Test
+    public void sanitizeFilename() {
+        Assert.assertEquals("abc .pdf", StringUtil.sanitizeFilename("abc\t.pdf"));
     }
 
     @Test

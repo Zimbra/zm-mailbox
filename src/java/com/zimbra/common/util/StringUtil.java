@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -18,6 +18,7 @@
  */
 package com.zimbra.common.util;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
@@ -51,7 +52,7 @@ public class StringUtil {
         }
         return s1.equals(s2);
     }
-    
+
     /** A user-friendly version of {@link String#equalsIgnoreCase(String)}
      *  that handles one or both nulls easily. */
     public static boolean equalIgnoreCase(String s1, String s2) {
@@ -93,6 +94,20 @@ public class StringUtil {
             }
         }
         return count;
+    }
+
+    /**
+     * Replaces control characters in the filename with space. Windows has
+     * a problem with downloading such filenames.
+     *
+     * @param filename filename to sanitize
+     * @return sanitized filename
+     */
+    public static String sanitizeFilename(String filename) {
+        if (Strings.isNullOrEmpty(filename)) {
+            return filename;
+        }
+        return filename.replaceAll("\\p{Cntrl}", " ");
     }
 
     /** Returns the passed-in {@code string} with all XML-unsafe characters
@@ -253,14 +268,14 @@ public class StringUtil {
             result.put(name, nv);
         }
     }
-    
+
     /**
      * Convert an array of the form:
-     * 
+     *
      *    a1 v1 a2 v2 a2 v3
-     *    
+     *
      * to a map of the form:
-     * 
+     *
      *    a1 -> v1
      *    a2 -> [v2, v3]
      */
@@ -276,7 +291,7 @@ public class StringUtil {
         }
         return attrs;
     }
-    
+
     /**
      * Converts an old-style multimap to Guava's version.
      */
@@ -296,7 +311,7 @@ public class StringUtil {
         }
         return newMap;
     }
-    
+
     /**
      * Converts a Guava multimap to an old-style version.
      */
@@ -310,8 +325,8 @@ public class StringUtil {
 
     private static final int TERM_WHITESPACE = 1;
     private static final int TERM_SINGLEQUOTE = 2;
-    private static final int TERM_DBLQUOTE = 3;    
-    
+    private static final int TERM_DBLQUOTE = 3;
+
     /**
      * open the specified file and return the first line in the file, without the end of line character(s).
      * @param file
@@ -322,13 +337,13 @@ public class StringUtil {
         InputStream is = null;
         try {
             is = new FileInputStream(file);
-            BufferedReader in = new BufferedReader(new InputStreamReader(is));            
+            BufferedReader in = new BufferedReader(new InputStreamReader(is));
             return in.readLine();
         } finally {
             ByteUtil.closeStream(is);
         }
     }
-    
+
     /**
      * read a line from "in", using readLine(). A trailing '\\' on the line will
      * be treated as continuation and the next line will be read and appended to the line,
@@ -340,7 +355,7 @@ public class StringUtil {
     public static String readLine(BufferedReader in) throws IOException {
         String line;
         StringBuilder sb = null;
-        
+
         while ((line = in.readLine()) != null) {
             if (line.length() == 0) {
                 break;
@@ -353,7 +368,7 @@ public class StringUtil {
                 break;
             }
         }
-        
+
         if (line == null) {
             if (sb == null) {
                 return null;
@@ -369,7 +384,7 @@ public class StringUtil {
             }
         }
     }
-    
+
     public static List<String> parseSieveStringList(String value) throws ServiceException {
         List<String> result = new ArrayList<String>();
         if (value == null) {
@@ -417,15 +432,15 @@ public class StringUtil {
 
     /**
      * split a line into array of Strings, using a shell-style syntax for tokenizing words.
-     * 
+     *
      * @param line
      * @return
      */
     public static String[] parseLine(String line) {
         ArrayList<String> result = new ArrayList<String>();
-        
+
         int i = 0;
-        
+
         StringBuilder sb = new StringBuilder(32);
         int term = TERM_WHITESPACE;
         boolean inStr = false;
@@ -433,7 +448,7 @@ public class StringUtil {
         scan: while (i < line.length()) {
             char ch = line.charAt(i++);
             boolean escapedTerm = false;
-            
+
             if (ch == '\\' && i < line.length()) {
                 ch = line.charAt(i++);
                 switch (ch) {
@@ -446,15 +461,15 @@ public class StringUtil {
                     case 't':
                         ch = '\t';
                         escapedTerm = true;
-                        break;  
+                        break;
                     case 'r':
                         ch = '\r';
                         escapedTerm = true;
-                        break;                        
+                        break;
                     case '\'':
                         ch = '\'';
                         escapedTerm = true;
-                        break;                        
+                        break;
                     case '"':
                         ch = '"';
                         escapedTerm = true;
@@ -464,7 +479,7 @@ public class StringUtil {
                         break;
                 }
             }
-                
+
             if (inStr) {
                 if (!escapedTerm && (
                             (term == TERM_WHITESPACE && Character.isWhitespace(ch)) ||
@@ -476,7 +491,7 @@ public class StringUtil {
                     term = TERM_WHITESPACE;
                     continue scan;
                 }
-                sb.append(ch);                
+                sb.append(ch);
             } else {
                 if (!escapedTerm) {
                     switch (ch) {
@@ -507,7 +522,7 @@ public class StringUtil {
         if (sb.length() > 0) {
             result.add(sb.toString());
         }
-        
+
         return result.toArray(new String[result.size()]);
     }
 
@@ -519,7 +534,7 @@ public class StringUtil {
         }
         System.out.println();
     }
-    
+
     public static void main(String args[]) {
         dump("this is a test");
         dump("this is 'a nother' test");
@@ -540,10 +555,10 @@ public class StringUtil {
     // in it.
     public static Pattern atPattern =
         Pattern.compile("(.*)\\@([^\\@]+)\\@(.*)", Pattern.DOTALL);
-    
+
     public static Pattern varPattern =
         Pattern.compile("(.*)\\$\\{([^\\}]+)\\}(.*)", Pattern.DOTALL);
-    
+
     /**
      * Substitutes all occurrences of the specified values into a template. Keys
      * for the values are specified in the template as <code>${KEY_NAME}</code>.
@@ -554,7 +569,7 @@ public class StringUtil {
     public static String fillTemplate(String template, Map<String, ? extends Object> vars) {
         return fillTemplate(template, vars, varPattern);
     }
-    
+
     /**
      * Substitutes all occurrences of the specified values into a template. Keys
      * for the values are specified in the template as a regex <code>Pattern</code>.
@@ -567,10 +582,10 @@ public class StringUtil {
         if (template == null) {
             return null;
         }
-        
+
         String line = template;
         Matcher matcher = pattern.matcher(line);
-        
+
         // Substitute multiple variables per line
         while (matcher.matches()) {
             String key = matcher.group(2);
@@ -584,7 +599,7 @@ public class StringUtil {
         }
         return line;
     }
-    
+
     /**
      * Joins an array of <code>short</code>s, separated by a delimiter.
      */
@@ -592,9 +607,9 @@ public class StringUtil {
         if (array == null) {
             return null;
         }
-        
+
         StringBuilder buf = new StringBuilder();
-        
+
         for (int i = 0; i < array.length; i++) {
             buf.append(array[i]);
             if (i + 1 < array.length) {
@@ -643,16 +658,16 @@ public class StringUtil {
         }
         return buf.toString();
     }
-    
+
     /**
      * Returns the simple class name (the name after the last dot)
      * from a fully-qualified class name.  Behavior is the same as
-     * {@link FileUtil#getExtension}. 
+     * {@link FileUtil#getExtension}.
      */
     public static String getSimpleClassName(String className) {
         return FileUtil.getExtension(className);
     }
-    
+
     /**
      * Returns the simple class name (the name after the last dot)
      * for the specified object.
@@ -663,7 +678,7 @@ public class StringUtil {
         }
         return FileUtil.getExtension(o.getClass().getName());
     }
-    
+
     /**
      * Returns <code>true</code> if the secified string is <code>null</code> or its
      * length is <code>0</code>.
