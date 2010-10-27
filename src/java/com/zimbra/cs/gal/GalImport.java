@@ -16,12 +16,16 @@ package com.zimbra.cs.gal;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import javax.naming.NamingException;
+
+import org.json.JSONException;
 
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -186,10 +190,10 @@ public class GalImport extends MailItemImport {
 		public void visit(GalContact contact) throws ServiceException {
 			Map<String,Object> attrs = contact.getAttrs();
 			String id = contact.getId();
+            mappings.remove(id);
 			attrs.put("dn", id);
 			ZimbraLog.gal.debug("processing gal contact "+id);
 			DataSourceItem dsItem = DbDataSource.getReverseMapping(getDataSource(), id);
-	        String modifiedDate = (String) contact.getAttrs().get("modifyTimeStamp");
 	        addFileAsStr(attrs);
 	    	if (dsItem.itemId == 0) {
 	    		ZimbraLog.gal.debug("creating new contact "+id);
@@ -198,14 +202,55 @@ public class GalImport extends MailItemImport {
 	            dsItem.itemId = mbox.createContact(octxt, pc, fid, null).getId();
 	    		DbDataSource.addMapping(getDataSource(), dsItem);
 	    	} else {
-	    		String syncDate = mbox.getContactById(octxt, dsItem.itemId).get("modifyTimeStamp");
-	            if (force || syncDate == null || !syncDate.equals(modifiedDate)) {
-	        		ZimbraLog.gal.debug("modifying contact "+id);
-	                ParsedContact pc = new ParsedContact(attrs);
-	                mbox.modifyContact(octxt, dsItem.itemId, pc);
+	    	    Contact mboxContact = mbox.getContactById(octxt, dsItem.itemId);
+	            
+	            // check for update conditions
+                String syncDate = mboxContact.get(MODIFY_TIMESTAMP);
+                String modifiedDate = (String) contact.getAttrs().get(MODIFY_TIMESTAMP);
+	            if (!force && syncDate != null && syncDate.equals(modifiedDate)) {
+	                ZimbraLog.gal.debug("gal contact %s has not been modified", id);
+	                return;
 	            }
+	            if (!force && allFieldsMatch(attrs, mboxContact.getAllFields())) {
+                    ZimbraLog.gal.debug("no field has changed in gal contact %s", id);
+	                return;
+	            }
+
+                ZimbraLog.gal.debug("modifying contact "+id);
+                ParsedContact pc = new ParsedContact(attrs);
+                mbox.modifyContact(octxt, dsItem.itemId, pc);
 	    	}
-	    	mappings.remove(id);
+		}
+		
+		private static final String MODIFY_TIMESTAMP = "modifyTimeStamp";
+		
+		private boolean allFieldsMatch(Map<String,Object> ldapContact, Map<String,String> contact) {
+		    if (ldapContact.size() != contact.size())
+		        return false;
+		    HashSet<String> ignoredKeys = new HashSet<String>();
+		    // always ignore the modified timestamp when comparing attributes.
+		    ignoredKeys.add(MODIFY_TIMESTAMP);
+		    Collections.addAll(ignoredKeys, dataSource.getMultiAttr(Provisioning.A_zimbraGalSyncIgnoredAttributes));
+		    for (Map.Entry<String,Object> entry : ldapContact.entrySet()) {
+		        String key = entry.getKey();
+		        if (ignoredKeys.contains(key))
+		            continue;
+		        Object ldapValue = entry.getValue();
+		        if (ldapValue instanceof String) {
+		            String contactValue = contact.get(key);
+		            if (!((String)ldapValue).equals(contactValue))
+		                return false;
+		        } else if (ldapValue instanceof String[]) {
+		            try {
+                        String encodedValue = Contact.encodeMultiValueAttr(((String[])ldapValue));
+                        if (!encodedValue.equals(contact.get(key)))
+                            return false;
+                    } catch (JSONException e) {
+                        return false;
+                    }
+		        }
+		    }
+		    return true;
 		}
 	}
 }

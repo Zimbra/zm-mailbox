@@ -5168,5 +5168,19 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>number of milter handler threads</desc>
 </attr>
 
+<attr id="1145" name="zimbraGalSyncIgnoredAttributes"  type="string" max="256" cardinality="multi" optionalIn="galDataSource" since="7.0.0">
+  <desc>
+    List of attributes that will be ignored when determining whether 
+    a GAL contact has been modified.  Any change in other attribute 
+    values will make the contact "dirty" and the contact will show as
+    modified in the next GAL sync response.  By default modifyTimeStamp 
+    is always included in ignored attributes.  Then if the only change 
+    in GAL contact is modifyTimeStamp, the contact will not be shown as 
+    modified in the next GAL sync response from the client, thus
+    minimizing the need to download the GAL contact again when none of the
+    meaningful attributes have changed.
+  </desc>
+</attr>
+
 </attrs>
 
