@@ -10,6 +10,7 @@ import org.apache.commons.httpclient.HostConfiguration;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.ProxySelectors;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 public class HttpProxyConfig {
@@ -35,7 +36,9 @@ public class HttpProxyConfig {
                 return null;
             case HTTP:
                 InetSocketAddress addr = (InetSocketAddress)proxy.address();
-                ZimbraLog.net.debug("URI %s to use HTTP proxy %s", uriStr, addr.toString());
+                if (ZimbraLog.net.isDebugEnabled()) {
+                    ZimbraLog.net.debug("URI %s to use HTTP proxy %s", safePrint(uri), addr.toString());
+                }
                 HostConfiguration nhc = new HostConfiguration(hc);
                 nhc.setProxy(addr.getHostName(), addr.getPort());
                 return nhc;
@@ -44,7 +47,16 @@ public class HttpProxyConfig {
                 continue;
             }
         }
-        
         return null;
+    }
+
+    private static String safePrint(URI uri) {
+        String urlStr = null;
+        if (uri.getRawQuery() != null) {
+            urlStr = uri.toString().replace("?"+uri.getRawQuery(), "");
+        } else {
+            urlStr = uri.toString();
+        }
+        return HttpUtil.sanitizeURL(urlStr);
     }
 }

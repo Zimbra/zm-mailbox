@@ -26,6 +26,7 @@ import javax.mail.internet.MimeUtility;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.httpclient.HttpURL;
+import org.apache.commons.httpclient.HttpsURL;
 
 public class HttpUtil {
 
@@ -93,7 +94,7 @@ public class HttpUtil {
     public static String sanitizeURL(String url) {
         if (url != null && url.indexOf('@') != -1) {
             try {
-                HttpURL httpurl = new HttpURL(url);
+                HttpURL httpurl = (url.indexOf("https:") == 0) ? new HttpsURL(url) : new HttpURL(url);
                 if (httpurl.getPassword() != null) {
                     httpurl.setPassword("");
                     return httpurl.toString();
