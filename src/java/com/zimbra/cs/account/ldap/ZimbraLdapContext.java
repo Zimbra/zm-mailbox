@@ -415,7 +415,7 @@ public class ZimbraLdapContext {
             
             ZimbraPerf.STOPWATCH_LDAP_DC.stop(start);
         } catch (Throwable e) {
-            ZimbraLog.ldap.debug("GET DIR CTXT FAILED", e);
+            ZimbraLog.ldap.debug("ZimbraLdapContext FAILED", e);
             closeContext(mDirContext, mTlsResp);
             
             if (e instanceof OutOfMemoryError)
@@ -507,7 +507,7 @@ public class ZimbraLdapContext {
                     mDirContext.addToEnvironment(Context.SECURITY_CREDENTIALS, bindPassword);
             }
         } catch (Throwable e) {
-            ZimbraLog.ldap.debug("GET DIR CTXT(" + note + ") FAILED", e);
+            ZimbraLog.ldap.debug("ZimbraLdapContext(" + note + ") FAILED", e);
             closeContext(mDirContext, mTlsResp);
             
             if (e instanceof OutOfMemoryError)
@@ -592,10 +592,10 @@ public class ZimbraLdapContext {
                 ldapCtxt.reconnect(null);
             }
         } catch (NamingException e) {   
-            ZimbraLog.ldap.debug("GET DIR CTXT(" + note + ") failed", e);
+            ZimbraLog.ldap.debug("ldapAuthenticate(" + note + ") failed", e);
             throw e;
         } catch (IOException e) { 
-            ZimbraLog.ldap.debug("GET DIR CTXT(" + note + ") failed", e);
+            ZimbraLog.ldap.debug("ldapAuthenticate(" + note + ") failed", e);
             throw e;
         } finally {
             closeContext(context, tlsResp);
