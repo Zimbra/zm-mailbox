@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101027-1310 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101027-1629 */
 
     /**
      * RFC2256: descriptive information
@@ -28527,13 +28527,13 @@ public class ZAttrConfig extends Entry {
     /**
      * value for envelope from (MAIL FROM) in spam report
      *
-     * @return zimbraSpamReportEnvelopeFrom, or null if unset
+     * @return zimbraSpamReportEnvelopeFrom, or "<>" if unset
      *
      * @since ZCS 6.0.2
      */
     @ZAttr(id=1049)
     public String getSpamReportEnvelopeFrom() {
-        return getAttr(Provisioning.A_zimbraSpamReportEnvelopeFrom, null);
+        return getAttr(Provisioning.A_zimbraSpamReportEnvelopeFrom, "<>");
     }
 
     /**
