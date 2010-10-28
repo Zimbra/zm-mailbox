@@ -15,6 +15,9 @@
 
 package com.zimbra.common.smtpserver;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -66,10 +69,10 @@ public class SmtpToLmtp {
                 ServerSocket serverSocket = new ServerSocket(smtpPort);
                 while (true) {
                     Socket smtpSocket = serverSocket.accept();
-                    Socket lmtpSocket = new Socket(lmtpHost, lmtpPort);
-                    SmtpHandler handler = new SmtpHandler(smtpSocket.getInputStream(), smtpSocket.getOutputStream(),
-                        lmtpSocket.getInputStream(), lmtpSocket.getOutputStream());
+                    SmtpHandler handler = new SmtpHandler(smtpSocket.getInputStream(), smtpSocket.getOutputStream());
                     Thread thread = new Thread(handler);
+                    thread.setName(SmtpHandler.class.getSimpleName());
+                    thread.setDaemon(true);
                     thread.start();
                 }
             } catch (IOException e) {
@@ -78,75 +81,99 @@ public class SmtpToLmtp {
         }
     }
     
+    /**
+     * Handles an incoming SMTP connection and establishes the outbound
+     * LMTP connection.
+     */
     private class SmtpHandler
     implements Runnable {
         
         private InputStream smtpIn;
         private PrintWriter smtpOut;
-        private InputStream lmtpIn;
-        private PrintWriter lmtpOut;
         private int numRecipients = 0;
         
-        private SmtpHandler(InputStream smtpIn, OutputStream smtpOut, InputStream lmtpIn, OutputStream lmtpOut) {
+        private SmtpHandler(InputStream smtpIn, OutputStream smtpOut) {
             this.smtpIn = smtpIn;
             this.smtpOut = new PrintWriter(smtpOut);
-            this.lmtpIn = lmtpIn;
-            this.lmtpOut = new PrintWriter(lmtpOut);
         }
 
         public void run() {
+            InputStream lmtpIn = null;
+            PrintWriter lmtpOut = null;
+            String ehloSuffix = "";
+            
             try {
-                String response = readLine(lmtpIn);
-                if (!response.startsWith("2")) {
-                    ZimbraLog.smtp.error("Unexpected response from LMTP server: " + response);
-                    close();
-                    return;
-                }
                 send(smtpOut, "220 " + SmtpToLmtp.class.getSimpleName());
                 
                 while (true) {
                     String command = readLine(smtpIn);
                     String uc = command.toUpperCase();
                     
-                    if (uc.startsWith("HELO") || uc.startsWith("EHLO")) {
-                        ehlo(command);
-                    } else if (uc.startsWith("RCPT")) {
-                        rcpt(command);
-                    } else if (uc.startsWith("DATA")) {
-                        data(command);
-                    } else {
-                        send(lmtpOut, command);
-                        response = readLine(lmtpIn);
-                        send(smtpOut, response);
+                    if (uc.startsWith("MAIL FROM")) {
+                        // Establish connection with the LMTP server.
+                        Socket lmtpSocket = new Socket(lmtpHost, lmtpPort);
+                        lmtpIn = lmtpSocket.getInputStream();
+                        lmtpOut = new PrintWriter(lmtpSocket.getOutputStream());
+                        String response = readLine(lmtpIn);
+                        if (!response.startsWith("2")) {
+                            ZimbraLog.smtp.error("Unexpected response from LMTP server: " + response);
+                            return;
+                        }
+
+                        send(lmtpOut, "LHLO" + ehloSuffix);
+                        
+                        // Skip "250-" and wait for "250 ".
+                        String line = "";
+                        while (!line.startsWith("250 ")) {
+                            line = readLine(lmtpIn);
+                        }
                     }
-                    if (uc.startsWith("QUIT")) {
-                        close();
+                    
+                    if (uc.startsWith("HELO") || uc.startsWith("EHLO")) {
+                        if (command.length() >= 6) {
+                            ehloSuffix = command.substring(4);
+                        }
+                        send(smtpOut, "250 " + getClass().getSimpleName());
+                    } else if (uc.startsWith("RCPT")) {
+                        if (!isNull(lmtpIn)) {
+                            rcpt(lmtpIn, lmtpOut, command);
+                        }
+                    } else if (uc.startsWith("DATA")) {
+                        if (!isNull(lmtpIn)) {
+                            data(lmtpIn, lmtpOut, command);
+                            lmtpIn = null;
+                            lmtpOut = null;
+                        }
+                    } else if (uc.startsWith("QUIT")) {
+                        send(smtpOut, "221 2.0.0 Bye");
                         return;
+                    } else {
+                        if (!isNull(lmtpIn)) {
+                            send(lmtpOut, command);
+                            String response = readLine(lmtpIn);
+                            send(smtpOut, response);
+                        }
                     }
                 }
             } catch (IOException e) {
                 ZimbraLog.smtp.info("", e);
-                close();
+            } finally {
+                ByteUtil.closeStream(smtpIn);
+                ByteUtil.closeWriter(smtpOut);
+                ByteUtil.closeStream(lmtpIn);
+                ByteUtil.closeWriter(lmtpOut);
             }
         }
         
-        private void ehlo(String line)
-        throws IOException {
-            String suffix = "";
-            if (line.length() > 4) {
-                suffix = line.substring(4);
+        private boolean isNull(InputStream lmtpIn) {
+            if (lmtpIn == null) {
+                send(smtpOut, "503 need MAIL command");
+                return true;
             }
-            send(lmtpOut, "LHLO" + suffix);
-            while (true) {
-                line = readLine(lmtpIn);
-                send(smtpOut, line);
-                if (line.charAt(3) == ' ') {
-                    break;
-                }
-            }
+            return false;
         }
-        
-        private void rcpt(String line)
+
+        private void rcpt(InputStream lmtpIn, PrintWriter lmtpOut, String line)
         throws IOException {
             send(lmtpOut, line);
             line = readLine(lmtpIn);
@@ -156,7 +183,7 @@ public class SmtpToLmtp {
             send(smtpOut, line);
         }
         
-        private void data(String line)
+        private void data(InputStream lmtpIn, PrintWriter lmtpOut, String line)
         throws IOException {
             // Send DATA line.
             send(lmtpOut, line);
@@ -164,18 +191,80 @@ public class SmtpToLmtp {
             send(smtpOut, line);
             
             if (line.startsWith("3")) {
-                // Send content.
-                while (!line.equals(".")) {
-                    line = readLine(smtpIn);
-                    send(lmtpOut, line);
-                }
-                for (int i = 1; i <= numRecipients; i++) {
-                    String response = readLine(lmtpIn);
-                    if (!response.startsWith("2")) {
-                        ZimbraLog.smtp.warn("Unable to deliver to recpient %d: %s", i, response);
+                // Write content to a temp file.
+                File tempFile = File.createTempFile(getClass().getSimpleName(), ".tmp");
+                FileOutputStream fileOut = null;
+                
+                try {
+                    fileOut = new FileOutputStream(tempFile);                
+                    while (!line.equals(".")) {
+                        line = readLine(smtpIn);
+                        fileOut.write(line.getBytes());
+                        fileOut.write('\r');
+                        fileOut.write('\n');
                     }
+                } finally {
+                    ByteUtil.closeStream(fileOut);
                 }
+                
+                // Start data handler thread to send the data, so that the SMTP connection
+                // doesn't block.
+                LmtpDataHandler handler = new LmtpDataHandler(tempFile, lmtpIn, lmtpOut, numRecipients);
+                Thread thread = new Thread(handler);
+                thread.setName(LmtpDataHandler.class.getSimpleName());
+                thread.setDaemon(true);
+                thread.start();
+
                 send(smtpOut, "250 OK");
+            }
+        }
+        
+        /**
+         * Sends {@code DATA} to the LMTP server in a separate thread, so
+         * that the {@code SmtpHandler} thread doesn't block.  This is necessary for
+         * edge cases in calendar and mail filtering, where mail delivery causes another
+         * message to be sent to the same mailbox.
+         */
+        private class LmtpDataHandler
+        implements Runnable {
+            File tempFile;
+            InputStream lmtpIn;
+            PrintWriter lmtpOut;
+            int numRecipients;
+            
+            LmtpDataHandler(File tempFile, InputStream lmtpIn, PrintWriter lmtpOut, int numRecipients) {
+                this.tempFile = tempFile;
+                this.lmtpIn = lmtpIn;
+                this.lmtpOut = lmtpOut;
+                this.numRecipients = numRecipients;
+            }
+            
+            public void run() {
+                InputStream dataIn = null;
+                
+                try {
+                    dataIn = new FileInputStream(tempFile);
+                    String line = "";
+                    while (line != ".") {
+                        line = readLine(dataIn);
+                        send(lmtpOut, line);
+                    }
+                    for (int i = 1; i <= numRecipients; i++) {
+                        String response = readLine(lmtpIn);
+                        if (!response.startsWith("2")) {
+                            ZimbraLog.smtp.warn("Unable to deliver to recpient %d: %s", i, response);
+                        }
+                    }
+                    send(lmtpOut, "QUIT");
+                    readLine(lmtpIn);
+                } catch (IOException e) {
+                    ZimbraLog.smtp.warn("Error occurred while sending DATA", e);
+                } finally {
+                    ByteUtil.closeStream(dataIn);
+                    tempFile.delete();
+                    ByteUtil.closeStream(lmtpIn);
+                    ByteUtil.closeWriter(lmtpOut);
+                }
             }
         }
         
@@ -203,13 +292,6 @@ public class SmtpToLmtp {
             }
             ZimbraLog.smtp.debug("C: %s", buf);
             return buf.toString();
-        }
-        
-        private void close() {
-            ByteUtil.closeStream(lmtpIn);
-            ByteUtil.closeWriter(lmtpOut);
-            ByteUtil.closeStream(smtpIn);
-            ByteUtil.closeWriter(smtpOut);
         }
     }
 
