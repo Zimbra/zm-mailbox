@@ -20,7 +20,10 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.zimlet.ZimletUserProperties.ZimletProp;
+
 import org.json.JSONException;
 
 import java.util.ArrayList;
@@ -55,6 +58,7 @@ public class ZGetInfoResult implements ToZJSONObject {
     private Date mPrevSession;
     private String mChangePasswordURL;
     private String mPublicURL;
+    private  Map<String, List<String>> mProps;
 
 
     static Map<String, List<String>> getMap(Element e, String root, String elName) throws ServiceException {
@@ -124,7 +128,7 @@ public class ZGetInfoResult implements ToZJSONObject {
                     mSignatures.add(new ZSignature(sig));
             }
         }
-
+        mProps = getZimletPropMap(e);
     }
 
     void setSignatures(List<ZSignature> sigs) {
@@ -153,6 +157,37 @@ public class ZGetInfoResult implements ToZJSONObject {
 
     public Map<String, List<String>> getAttrs() {
         return mAttrs;
+    }
+
+    public  Map<String, List<String>> getProps() {
+        return mProps;
+    }
+    
+    private Map<String, List<String>> getZimletPropMap(Element e) {
+        List<ZimletProp> zimletProps = new ArrayList<ZimletProp>();
+        Element props = e.getOptionalElement(AccountConstants.E_PROPERTIES);
+        if (props != null) {
+            for (Element prop: props.listElements()) {
+                String zimletName = prop.getAttribute(AccountConstants.A_ZIMLET, null);
+                String propKey = prop.getAttribute(AccountConstants.A_NAME, null);
+                String text = prop.getText();
+                ZimletProp zp = new ZimletProp(zimletName, propKey, text);
+                zimletProps.add(zp);
+            }
+        } else {
+            return null;
+        }
+        Map<String, List<String>> result = new HashMap<String, List<String>>();
+        String name = Provisioning.A_zimbraZimletUserProperties;
+        List<String> list = result.get(name);
+        for (ZimletProp zimletProp : zimletProps) {
+            if (list == null) {
+                list = new ArrayList<String>();
+                result.put(name, list);
+            }
+            list.add(zimletProp.prop);
+        }
+        return result;
     }
 
     /***
