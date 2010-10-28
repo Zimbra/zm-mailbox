@@ -302,6 +302,54 @@ public class SmtpTransportTest {
     }
 
     @Test(timeout = 3000)
+    public void endOfData() throws Exception {
+        server = MockTcpServer.scenario()
+        .sendLine("220 test ready")
+        .recvLine() // EHLO
+        .sendLine("250 OK")
+        .recvLine() // MAIL FROM
+        .sendLine("250 OK")
+        .recvLine() // RCPT TO
+        .sendLine("250 OK")
+        .recvLine() // DATA
+        .sendLine("354 OK")
+        .recvUntil("\r\n.\r\n")
+        .sendLine("250 OK")
+        .recvLine() // QUIT
+        .sendLine("221 bye")
+        .build().start(PORT);
+
+        Session session = JMSession.getSession();
+        Transport transport = session.getTransport("smtp");
+        transport.connect("localhost", PORT, null, null);
+        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
+            "Subject: test\n\n" +
+            ".\n" +
+            "..\n" +
+            ".\n";
+        MimeMessage msg = new MimeMessage(session,
+                new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        transport.sendMessage(msg, msg.getAllRecipients());
+        transport.close();
+
+        server.shutdown(1000);
+        Assert.assertEquals("EHLO localhost\r\n", server.replay());
+        Assert.assertEquals("MAIL FROM:<sender@zimbra.com>\r\n", server.replay());
+        Assert.assertEquals("RCPT TO:<rcpt@zimbra.com>\r\n", server.replay());
+        Assert.assertEquals("DATA\r\n", server.replay());
+        Assert.assertEquals("From: sender@zimbra.com\r\n" +
+                "To: rcpt@zimbra.com\r\n" +
+                "Subject: test\r\n\r\n" +
+                "..\r\n" +
+                "...\r\n" +
+                "..\r\n" +
+                ".\r\n",
+                server.replay());
+        Assert.assertEquals("QUIT\r\n", server.replay());
+        Assert.assertNull(server.replay());
+    }
+
+    @Test(timeout = 3000)
     public void dataError() throws Exception {
         server = MockTcpServer.scenario()
         .sendLine("220 test ready")

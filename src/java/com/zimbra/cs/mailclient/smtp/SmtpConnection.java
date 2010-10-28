@@ -80,9 +80,19 @@ public final class SmtpConnection extends MailConnection {
         return Collections.unmodifiableSet(invalidRecipients);
     }
 
-    private class SmtpDataOutputStream extends FilterOutputStream {
+    /**
+     * Transform message data transmission.
+     * <ul>
+     *  <li>Bare CR or LF characters are converted to {@code <CRLF>}.
+     *  See RFC 2821 2.3.7 Lines.
+     *  <li>If the first character of the line is a period, one additional
+     *  period is inserted at the beginning of the line.
+     *  See RFC 2821 4.5.2 Transparency.
+     * </ul>
+     */
+    private static final class SmtpDataOutputStream extends FilterOutputStream {
 
-        private byte[] lastTwoBytes = new byte[2];
+        private int last = -1;
 
         private SmtpDataOutputStream(OutputStream out) {
             super(out);
@@ -90,14 +100,78 @@ public final class SmtpConnection extends MailConnection {
 
         @Override
         public void write(int b) throws IOException {
-            if (b == '.' && lastTwoBytes[0] == '\r' && lastTwoBytes[1] == '\n') {
-                // SMTP transparency per RFC 2821 4.5.2.  Add a dot prefix to
-                // lines that start with a dot.
-                super.write('.');
+            switch (b) {
+                case '\r':
+                    crlf();
+                    break;
+                case '\n':
+                    if (last != '\r') {
+                        crlf();
+                    }
+                    break;
+                case '.':
+                    switch (last) {
+                        case '\r':
+                        case '\n':
+                        case -1:
+                            dot();
+                            break;
+                    }
+                    dot();
+                    break;
+                default:
+                    super.write(b);
+                    break;
             }
-            super.write(b);
-            lastTwoBytes[0] = lastTwoBytes[1];
-            lastTwoBytes[1] = (byte) (b & 0xFF);
+            last = b;
+        }
+
+        /**
+         * End of data.
+         * <p>
+         * RFC 2822 4.1.1.4 DATA (DATA)
+         * <p>
+         * The mail data is terminated by a line containing only a period, that
+         * is, the character sequence {@code <CRLF>.<CRLF>}. This is the end of
+         * mail data indication. Note that the first {@code <CRLF>} of this
+         * terminating sequence is also the {@code <CRLF>} that ends the final
+         * line of the data (message text) or, if there was no data, ends the
+         * DATA command itself. An extra {@code <CRLF>} MUST NOT be added, as
+         * that would cause an empty line to be added to the message. The only
+         * exception to this rule would arise if the message body were passed to
+         * the originating SMTP-sender with a final "line" that did not end in
+         * {@code <CRLF>}; in that case, the originating SMTP system MUST either
+         * reject the message as invalid or add {@code <CRLF>} in order to have
+         * the receiving SMTP server recognize the "end of data" condition.
+         */
+        public void end() throws IOException {
+            switch (last) {
+                case '\r':
+                case '\n':
+                case -1:
+                    break;
+                default:
+                    crlf();
+                    break;
+            }
+            dot();
+            crlf();
+        }
+
+        private void dot() throws IOException {
+            super.write('.');
+        }
+
+        private void crlf() throws IOException {
+            super.write('\r');
+            super.write('\n');
+        }
+
+        /**
+         * For efficiency, don't flush until the last {@code <CRLF>.<CRLF>}.
+         */
+        @Override
+        public void flush() {
         }
     }
 
@@ -123,6 +197,7 @@ public final class SmtpConnection extends MailConnection {
         if (reply == null) {
             throw new MailException("Did not receive greeting from server");
         }
+        ZimbraLog.smtp.trace("S: %s", reply);
         if (getReplyCode(reply) != 220) {
             throw new IOException("Expected greeting, but got: " + reply);
         }
@@ -234,6 +309,7 @@ public final class SmtpConnection extends MailConnection {
             if (fourthChar == '-') {
                 // Multiple response lines.
                 reply = mailIn.readLine();
+                ZimbraLog.smtp.trace("S: %s", reply);
             } else if (fourthChar == ' ') {
                 // Last 250 response.
                 return 250;
@@ -446,21 +522,17 @@ public final class SmtpConnection extends MailConnection {
         } else {
             smtpData.write(messageString.getBytes());
         }
-        if (smtpData.lastTwoBytes[0] != '\r' && smtpData.lastTwoBytes[1] != '\n') {
-            // Message data doesn't end with <CRLF>.
-            mailOut.write('\r');
-            mailOut.write('\n');
-        }
-        mailOut.writeLine(".");
+        smtpData.end();
         mailOut.flush();
         reply = mailIn.readLine();
-        quit();
         if (reply == null) {
             throw new CommandFailedException(DATA, "No response");
         }
+        ZimbraLog.smtp.trace("S: %s", reply);
         if (!isPositive(reply)) {
             throw new CommandFailedException(DATA, reply);
         }
+        quit();
         close();
     }
 
@@ -513,6 +585,7 @@ public final class SmtpConnection extends MailConnection {
         }
         String reply = sendCommand(MAIL, "FROM:<" + from + ">");
         if (!isPositive(reply)) {
+            validRecipients.clear();
             throw new CommandFailedException(MAIL, reply);
         }
     }
