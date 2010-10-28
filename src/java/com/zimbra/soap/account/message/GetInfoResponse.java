@@ -34,6 +34,7 @@ import com.zimbra.soap.account.type.AccountCalDataSource;
 import com.zimbra.soap.account.type.AccountDataSource;
 import com.zimbra.soap.account.type.AccountImapDataSource;
 import com.zimbra.soap.account.type.AccountPop3DataSource;
+import com.zimbra.soap.account.type.Prop;
 import com.zimbra.soap.account.type.AccountRssDataSource;
 import com.zimbra.soap.account.type.Attr;
 import com.zimbra.soap.account.type.Cos;
@@ -158,6 +159,12 @@ public class GetInfoResponse {
     
     @XmlElement(name=AccountConstants.E_CHANGE_PASSWORD_URL) private String changePasswordURL;
     
+    @XmlElementWrapper(name=AccountConstants.E_PROPERTIES)
+    @XmlElements({
+        @XmlElement(name=AccountConstants.E_PROPERTY, type=Prop.class)
+    })
+    private List<Prop> props = new ArrayList<Prop>();
+
     public Long getAttachmentSizeLimit() { return attachmentSizeLimit; }
     public Long getDocumentSizeLimit() { return documentSizeLimit; }
     public String getVersion() { return version; }
@@ -260,6 +267,10 @@ public class GetInfoResponse {
     
     public Multimap<String, String> getAttrsMultimap() {
         return Attr.toMultimap(attrs);
+    }
+    
+    public List<Prop> getProps() {
+        return props; 
     }
     
     // TODO: zimlets, etc.
