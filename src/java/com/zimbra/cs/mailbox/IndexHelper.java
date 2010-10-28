@@ -969,31 +969,37 @@ public class IndexHelper {
     }
 
     void indexingPartOfEndTransaction(List<IndexItemEntry> itemsToIndex, List<Integer> itemsToDelete) {
-        try {
-            if (getMailboxIndex() != null && (itemsToDelete != null && !itemsToDelete.isEmpty()))
+        if (getMailboxIndex() != null && (itemsToDelete != null && !itemsToDelete.isEmpty())) {
+            try {
                 getMailboxIndex().deleteDocuments(itemsToDelete);
+            } catch (IOException e) {
+                ZimbraLog.index_add.warn("Failed to delete index entries", e);
+            }
+        }
+
+        try {
+            getMailboxIndex().beginWriteOperation();
         } catch (IOException e) {
-            if (ZimbraLog.index_add.isDebugEnabled())
-                ZimbraLog.index_add.debug("Caught IOException attempting to delete index entries in EndTransaction", e);
+            ZimbraLog.index_add.warn("Failed to open IndexWriter", e);
+            mLastIndexingFailureTimestamp = System.currentTimeMillis();
+            return;
         }
 
         int lastMailItemId = 0;
         try {
-            getMailboxIndex().beginWriteOperation();
-
             for (IndexItemEntry entry : itemsToIndex) {
                 MailItem item = entry.mMailItem;
                 lastMailItemId = item.getId();
                 if (entry.mDocuments == null) {
-                    ZimbraLog.index_add.warn("Got NULL index data in endTransaction.  Item "+item.getId()+" will not be indexed.");
+                    ZimbraLog.index_add.warn("Got NULL index data. Item %d will not be indexed.",
+                            item.getId());
                     continue;
                 }
 
                 // 2. Index the item before committing the main transaction.
                 if (ZimbraLog.mailbox.isDebugEnabled()) {
-                    ZimbraLog.mailbox.debug("indexMailItem(changeId="+getMailbox().getLastChangeID()+", "
-                                            +"token="+entry.mModContent+"-"
-                                            +entry.mMailItem.getId()+")");
+                    ZimbraLog.mailbox.debug("indexMailItem(changeId=" + getMailbox().getLastChangeID() + ", "
+                            + "token=" + entry.mModContent + "-" + entry.mMailItem.getId() + ")");
                 }
                 if (getMailboxIndex() != null) {
                     SyncToken old = mHighestSubmittedToIndex;
@@ -1006,10 +1012,7 @@ public class IndexHelper {
                             mHighestSubmittedToIndex = new SyncToken(entry.mModContent, item.getId());
                         }
                         getMailboxIndex().indexMailItem(getMailbox(),
-                                                        entry.mDeleteFirst,
-                                                        entry.mDocuments,
-                                                        item,
-                                                        entry.mModContent);
+                                entry.mDeleteFirst, entry.mDocuments, item, entry.mModContent);
                     } catch (ServiceException e) {
                         if (entry.mModContent != NO_CHANGE) {
                             // backout!
@@ -1024,16 +1027,12 @@ public class IndexHelper {
                 // failure timestamp so that indexItemList can use the full transaction size
                 mLastIndexingFailureTimestamp = 0;
             }
-        } catch (Exception e) {
-            ZimbraLog.index_add.warn("Caught exception while indexing message id "+lastMailItemId+" - indexing blocked.  Possibly corrupt index?", e);
+        } catch (ServiceException e) {
+            ZimbraLog.index_add.warn("Failed to index message-id %d - indexing blocked. Possibly corrupt index?",
+                    lastMailItemId, e);
             mLastIndexingFailureTimestamp = System.currentTimeMillis();
         } finally {
-            try {
-                getMailboxIndex().endWriteOperation();
-            } catch (Exception e) {
-                ZimbraLog.index_add.warn("Caught exception while flushing index - indexing blocked.  Possibly corrupt index?", e);
-                mLastIndexingFailureTimestamp = System.currentTimeMillis();
-            }
+            getMailboxIndex().endWriteOperation();
         }
     }
 

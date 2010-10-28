@@ -798,21 +798,14 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
 
     public void endWriteOperation() {
         assert(Thread.holdsLock(getLock()));
-        assert(beginWritingNestLevel > 0);
 
-        /*
-         * assertion is by default off in production
-         *
-         * If beginWritingNestLevel is 0 before the decrement, the corresponding
-         * beginWriting probably got an IOException so beginWritingNestLevel didn't
-         * get incremented.
-         *
-         * If assertion is off, we really don't want to proceed here, otherwise the
-         * beginWritingNestLevel will become negative, which is a situation that
-         * cannot be recovered until a server restart.
-         */
-        if (beginWritingNestLevel == 0) {
-            ZimbraLog.index.warn("beginWritingNestLevel is 0 in LuceneIndex.doneWriting, flushing skipped.");
+        // If nestLevel is 0 before the decrement, the corresponding begin()
+        // probably got an IOException so nestLevel didn't get incremented. We
+        // really don't want to proceed here, otherwise the nestLevel will
+        // become negative, which is a situation that cannot be recovered until
+        // a server restart.
+        if (beginWritingNestLevel <= 0) {
+            ZimbraLog.index.warn("nestLevel=%d, flushing skipped.", beginWritingNestLevel);
             return;
         }
 
