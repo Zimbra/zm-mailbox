@@ -2042,7 +2042,7 @@ public class ToXML {
             m.addAttribute(MailConstants.A_CONTENT_TYPE, doc.getContentType());
         }
 
-        if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
+        if (needToOutput(fields, Change.MODIFIED_CONTENT) || needToOutput(fields, Change.MODIFIED_NAME)) {
             try {
                 m.addAttribute(MailConstants.A_VERSION, doc.getVersion());
                 m.addAttribute(MailConstants.A_LAST_EDITED_BY, doc.getCreator());

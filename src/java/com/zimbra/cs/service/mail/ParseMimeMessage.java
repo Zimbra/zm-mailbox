@@ -468,7 +468,8 @@ public class ParseMimeMessage {
                         attachDocument(mmp, path, contentID, ctxt);
                     } else {
                         ItemId iid = new ItemId(elem.getAttribute(MailConstants.A_ID), ctxt.zsc);
-                        attachDocument(mmp, iid, contentID, ctxt);
+                        int version = (int)elem.getAttributeLong(MailConstants.A_VERSION, 0);
+                        attachDocument(mmp, iid, version, contentID, ctxt);
                     }
                 }
             } catch (NoSuchItemException nsie) {
@@ -708,15 +709,24 @@ public class ParseMimeMessage {
     }
 
     @SuppressWarnings("unchecked")
-    private static void attachDocument(MimeMultipart mmp, ItemId iid, String contentID, ParseMessageContext ctxt) 
+    private static void attachDocument(MimeMultipart mmp, ItemId iid, int version, String contentID, ParseMessageContext ctxt) 
     throws MessagingException, ServiceException {
         if (!iid.isLocal()) {
-            attachRemoteItem(mmp, iid, contentID, ctxt, Collections.EMPTY_MAP, null);
+            Map<String,String> params = Collections.EMPTY_MAP;
+            if (version > 0) {
+                params = new HashMap<String,String>();
+                params.put("ver", Integer.toString(version));
+            }
+            attachRemoteItem(mmp, iid, contentID, ctxt, params, null);
             return;
         }
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
-        Document doc = mbox.getDocumentById(ctxt.octxt, iid.getId());
+        Document doc;
+        if (version > 0)
+            doc = (Document)mbox.getItemRevision(ctxt.octxt, iid.getId(), MailItem.TYPE_DOCUMENT, version);
+        else
+            doc = mbox.getDocumentById(ctxt.octxt, iid.getId());
         attachDocument(mmp, doc, contentID, ctxt);
     }
 
