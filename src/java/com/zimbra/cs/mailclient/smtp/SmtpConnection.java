@@ -639,7 +639,11 @@ public final class SmtpConnection extends MailConnection {
     }
 
     private void quit() throws IOException {
-        sendCommand(QUIT, null);
+        try {
+            sendCommand(QUIT, null);
+        } catch (CommandFailedException e) { // no reason to make it an error
+            ZimbraLog.smtp.warn(e.getMessage());
+        }
     }
 
     private static int getReplyCode(String line) throws IOException {
