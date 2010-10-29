@@ -80,7 +80,7 @@ extends FilterHandler {
     public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
         ItemId id = FilterUtil.addMessage(mContext, mMailbox, mParsedMessage, mRecipientAddress, folderPath,
-                                          false, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mMailbox),
+                                          false, getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mMailbox),
                                           tags, Mailbox.ID_AUTO_INCREMENT, null);
         
         // Do spam training if the user explicitly filed the message into
@@ -111,7 +111,7 @@ extends FilterHandler {
     throws ServiceException {
         try {
             return mMailbox.addMessage(null, mParsedMessage, folderId,
-                false, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mMailbox), tags, mRecipientAddress, mContext);
+                false, getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mMailbox), tags, mRecipientAddress, mContext);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add incoming message", e);
         }

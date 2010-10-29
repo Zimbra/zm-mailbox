@@ -26,7 +26,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.filter.jsieve.ActionFlag;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -43,7 +42,6 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
-import org.apache.jsieve.mail.Action;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -51,7 +49,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Map;
 
 public class FilterUtil {
@@ -399,24 +396,6 @@ public class FilterUtil {
             }
         }
         return false;
-    }
-
-    public static int getFlagBitmask(Collection<ActionFlag> flagActions, int startingBitMask, Mailbox mailbox) {
-        int flagBits = startingBitMask;
-        for (Action action : flagActions) {
-            ActionFlag flagAction = (ActionFlag) action;
-            int flagId = flagAction.getFlagId();
-            try {
-                com.zimbra.cs.mailbox.Flag flag = mailbox.getFlagById(flagId);
-                if (flagAction.isSetFlag())
-                    flagBits |= flag.getBitmask();
-                else
-                    flagBits &= (~flag.getBitmask());
-            } catch (ServiceException e) {
-                ZimbraLog.filter.warn("Unable to flag message", e);
-            }
-        }
-        return flagBits;
     }
 
     public static String getTagsUnion(String tags1, String tags2) {

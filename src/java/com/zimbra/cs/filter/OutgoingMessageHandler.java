@@ -9,7 +9,6 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 
-import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.util.Collection;
@@ -67,7 +66,7 @@ public class OutgoingMessageHandler extends FilterHandler {
     throws ServiceException {
         try {
             return mMailbox.addMessage(mOctxt, mParsedMessage, mDefaultFolderId, mNoICal,
-                                       FilterUtil.getFlagBitmask(flagActions, mDefaultFlags, mMailbox),
+                                       getFlagBitmask(flagActions, mDefaultFlags, mMailbox),
                                        FilterUtil.getTagsUnion(tags, mDefaultTags), mConvId);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add sent message", e);
@@ -88,7 +87,7 @@ public class OutgoingMessageHandler extends FilterHandler {
     @Override
     public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String tags) throws ServiceException {
         return FilterUtil.addMessage(null, mMailbox, mParsedMessage, null, folderPath, mNoICal,
-                                     FilterUtil.getFlagBitmask(flagActions, mDefaultFlags, mMailbox),
+                                     getFlagBitmask(flagActions, mDefaultFlags, mMailbox),
                                      FilterUtil.getTagsUnion(tags, mDefaultTags), mConvId, mOctxt);
     }
 }
