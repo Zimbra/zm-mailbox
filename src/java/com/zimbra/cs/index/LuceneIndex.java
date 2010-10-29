@@ -687,8 +687,35 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
         LC.zimbra_index_lucene_max_terms_per_query.intValue();
 
     private IndexReader openIndexReader() throws IOException {
-        return IndexReader.open(luceneDirectory, null, true,
-                LC.zimbra_index_lucene_term_index_divisor.intValue());
+        return openIndexReader(true);
+    }
+
+    private IndexReader openIndexReader(boolean tryRepair) throws IOException {
+        try {
+            return IndexReader.open(luceneDirectory, null, true,
+                    LC.zimbra_index_lucene_term_index_divisor.intValue());
+        } catch (AssertionError ae) {
+            if (!tryRepair) {
+                throw ae;
+            }
+            ZimbraLog.index_lucene.error("Index corrupted", ae);
+            LuceneIndexRepair repair;
+            try {
+                repair = new LuceneIndexRepair(luceneDirectory, ae);
+            } catch (Throwable unfixable) {
+                ZimbraLog.index_lucene.warn("Unable to repair, re-indexing is required.");
+                throw ae;
+            }
+            flush();
+            try {
+                repair.repair();
+            } catch (IOException e) {
+                ZimbraLog.index_lucene.error("Failed to repair, re-indexing is required.", e);
+                throw e;
+            }
+            ZimbraLog.index_lucene.info("Index repaird, re-indexing is recommended.");
+            return openIndexReader(false);
+        }
     }
 
     /**
