@@ -286,11 +286,7 @@ public class GalSearchControl {
             throw new GalAccountNotConfiguredException();
         }
         if (Provisioning.onLocalServer(galAcct)) {
-            // bug 46608
-            // include local resource in the search result if galMode is set to ldap.
-            Domain domain = mParams.getDomain();
-            if (domain.getGalMode() == GalMode.ldap &&
-                    domain.isGalAlwaysIncludeLocalCalendarResources()) {
+            if (needResources()) {
                 if (generateLocalResourceSearchQuery(galAcct) &&
                         !doLocalGalAccountSearch(galAcct))
                     throw new GalAccountNotConfiguredException();
@@ -526,13 +522,7 @@ public class GalSearchControl {
         GalMode galMode = domain.getGalMode();
         Provisioning.GalSearchType stype = mParams.getType();
 
-        // bug 46608
-        // first do local resources search if galMode == ldap
-        // and operation is search or sync.
-        if (mParams.getOp() != GalOp.autocomplete &&
-                stype != GalSearchType.account &&
-                galMode == GalMode.ldap &&
-                domain.isGalAlwaysIncludeLocalCalendarResources()) {
+        if (needResources()) {
             mParams.setType(GalSearchType.resource);
             mParams.createSearchConfig(GalType.zimbra);
             try {
@@ -580,6 +570,16 @@ public class GalSearchControl {
         if (mParams.getOp() == GalOp.sync)
             mParams.getResultCallback().setNewToken(newToken);
         mParams.getResultCallback().setHasMoreResult(hadMore);
+    }
+    
+    
+    // bug 46608
+    // do local resources search if galMode == ldap
+    private boolean needResources() throws ServiceException {
+        Domain domain = mParams.getDomain();
+        return (domain.getGalMode() == GalMode.ldap &&
+                (Provisioning.GalSearchType.all == mParams.getType() || Provisioning.GalSearchType.resource == mParams.getType()) &&
+                domain.isGalAlwaysIncludeLocalCalendarResources());
     }
 
     private static class GalAccountNotConfiguredException extends Exception {
