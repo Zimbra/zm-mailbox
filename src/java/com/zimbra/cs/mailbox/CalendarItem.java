@@ -1611,9 +1611,7 @@ public abstract class CalendarItem extends MailItem {
                 } else {
                     // Appointment already has a newer version of the Invite.  The passed-in one is outdated,
                     // perhaps delivered out of order.  Ignore it.
-                    modifiedCalItem = false;
-                    addNewOne = false;
-                    break;
+                    return false;
                 }
             } else if (!isCancel) {
                 modifiedCalItem = true;
