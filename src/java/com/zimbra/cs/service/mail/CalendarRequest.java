@@ -421,7 +421,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                             csd.mMm = CalendarMailSender.createOrganizerChangeMessage(
                                     acct, authAccount, zsc.isUsingAdminPrivileges(), calItem, csd.mInvite, rcpts);
                             sendCalendarMessageInternal(zsc, octxt, calItem.getFolderId(), acct, mbox, csd,
-                                                        null, true);
+                                                        null, false);
                         }
                     }
                 } catch (ServiceException e) {
