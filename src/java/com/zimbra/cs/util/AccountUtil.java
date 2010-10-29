@@ -16,6 +16,8 @@
 package com.zimbra.cs.util;
 
 import java.io.UnsupportedEncodingException;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -199,6 +201,29 @@ public class AccountUtil {
         String[] accountAliases = acct.getMailAlias();
         String[] allowedFromAddrs = acct.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
         return addressMatchesAccount(accountAddress, canonicalAddress, accountAliases, allowedFromAddrs, givenAddress);
+    }
+    
+    /**
+     * Returns all account email addresses in lower case in a hash set.
+     * @param acct user's account
+     * @return Set containing all account email addresses in lower case or, empty if no email address is found
+     * @throws ServiceException
+     */
+    public static Set<String> getEmailAddresses(Account acct) throws ServiceException {
+        Set<String> addrs = new HashSet<String> ();
+        
+        addrs.add(acct.getName().toLowerCase());
+        addrs.add(AccountUtil.getCanonicalAddress(acct).toLowerCase());
+
+        String[] accountAliases = acct.getMailAlias();
+        for (String addr : accountAliases)
+            addrs.add(addr.toLowerCase());
+        
+        String[] allowedFromAddrs = acct.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
+        for (String addr : allowedFromAddrs)
+            addrs.add(addr.toLowerCase());
+        
+        return addrs;
     }
 
     private static boolean addressMatchesAccount(
