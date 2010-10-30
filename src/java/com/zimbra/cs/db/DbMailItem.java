@@ -146,31 +146,36 @@ public class DbMailItem {
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, data.id);
             stmt.setByte(pos++, data.type);
-            if (data.parentId <= 0)
+            if (data.parentId <= 0) {
                 // Messages in virtual conversations are stored with a null parent_id
                 stmt.setNull(pos++, Types.INTEGER);
-            else
+            } else {
                 stmt.setInt(pos++, data.parentId);
+            }
             stmt.setInt(pos++, data.folderId);
-            if (data.indexId == -1)
+            if (data.indexId == -1) {
                 stmt.setNull(pos++, Types.INTEGER);
-            else
+            } else {
                 stmt.setInt(pos++, data.indexId);
-            if (data.imapId <= 0)
+            }
+            if (data.imapId <= 0) {
                 stmt.setNull(pos++, Types.INTEGER);
-            else
+            } else {
                 stmt.setInt(pos++, data.imapId);
+            }
             stmt.setInt(pos++, data.date);
             stmt.setLong(pos++, data.size);
-            if (data.locator != null)
+            if (data.locator != null) {
                 stmt.setString(pos++, data.locator);
-            else
+            } else {
                 stmt.setNull(pos++, Types.VARCHAR);
+            }
             stmt.setString(pos++, data.getBlobDigest());
-            if (data.type == MailItem.TYPE_MESSAGE || data.type == MailItem.TYPE_CHAT || data.type == MailItem.TYPE_FOLDER)
+            if (data.type == MailItem.TYPE_MESSAGE || data.type == MailItem.TYPE_CHAT || data.type == MailItem.TYPE_FOLDER) {
                 stmt.setInt(pos++, data.unreadCount);
-            else
-                stmt.setNull(pos++, Types.BOOLEAN);
+            } else {
+                stmt.setNull(pos++, Types.INTEGER);
+            }
             stmt.setInt(pos++, data.flags);
             stmt.setLong(pos++, data.tags);
             stmt.setString(pos++, checkSenderLength(sender));
@@ -178,26 +183,31 @@ public class DbMailItem {
             stmt.setString(pos++, data.name);
             stmt.setString(pos++, checkMetadataLength(data.metadata));
             stmt.setInt(pos++, data.modMetadata);
-            if (data.dateChanged > 0)
+            if (data.dateChanged > 0) {
                 stmt.setInt(pos++, data.dateChanged);
-            else
+            } else {
                 stmt.setNull(pos++, Types.INTEGER);
+            }
             stmt.setInt(pos++, data.modContent);
             int num = stmt.executeUpdate();
-            if (num != 1)
+            if (num != 1) {
                 throw ServiceException.FAILURE("failed to create object", null);
+            }
 
             // Track the tags and flags for fast lookup later
-            if (areTagsetsLoaded(mbox))
+            if (areTagsetsLoaded(mbox)) {
                 getTagsetCache(conn, mbox).addTagset(data.tags);
-            if (areFlagsetsLoaded(mbox))
+            }
+            if (areFlagsetsLoaded(mbox)) {
                 getFlagsetCache(conn, mbox).addTagset(data.flags);
+            }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
-            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 throw MailServiceException.ALREADY_EXISTS(data.id, e);
-            else
+            } else {
                 throw ServiceException.FAILURE("writing new object of type " + data.type, e);
+            }
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -1922,10 +1932,13 @@ public class DbMailItem {
             return "type = " + type;
     }
 
+    @SuppressWarnings("serial")
     public static class FolderTagMap extends HashMap<UnderlyingData, FolderTagCounts> { }
 
     public static class FolderTagCounts {
-        public int totalSize, deletedCount, deletedUnreadCount;
+        public long totalSize;
+        public int deletedCount, deletedUnreadCount;
+
         @Override public String toString()  { return totalSize + "/" + deletedCount + "/" + deletedUnreadCount; }
     }
 
@@ -2007,8 +2020,9 @@ public class DbMailItem {
                 int unread = rs.getInt(6);
                 long size  = rs.getLong(7);
 
-                if (type == MailItem.TYPE_CONTACT)
+                if (type == MailItem.TYPE_CONTACT) {
                     mbd.contacts += count;
+                }
                 mbd.size += size;
 
                 UnderlyingData data = lookup.get(folderId);
@@ -2032,8 +2046,9 @@ public class DbMailItem {
                         if (data != null) {
                             // not keeping track of item counts on tags, just unread counts
                             data.unreadCount += unread;
-                            if (deleted)
+                            if (deleted) {
                                 tagData.get(data).deletedUnreadCount += unread;
+                            }
                         } else {
                             ZimbraLog.mailbox.warn("inconsistent DB state: items with no corresponding tag (tag ID " + (i + MailItem.TAG_ID_OFFSET) + ")");
                         }
@@ -2061,10 +2076,11 @@ public class DbMailItem {
                 mbd.size += size;
 
                 UnderlyingData data = lookup.get(folderId);
-                if (data != null)
+                if (data != null) {
                     folderData.get(data).totalSize += size;
-                else
+                } else {
                     ZimbraLog.mailbox.warn("inconsistent DB state: revisions with no corresponding folder (folder ID " + folderId + ")");
+                }
             }
 
             return mbd;
