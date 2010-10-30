@@ -20,13 +20,10 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
-import org.apache.jsieve.mail.Action;
 
 /**
  * Interface implemented by classes that handle filter rule actions. 
@@ -101,22 +98,4 @@ public abstract class FilterHandler {
      */
     @SuppressWarnings("unused")
     public void afterFiltering() throws ServiceException { }
-
-    public static int getFlagBitmask(Collection<ActionFlag> flagActions, int startingBitMask, Mailbox mailbox) {
-        int flagBits = startingBitMask;
-        for (Action action : flagActions) {
-            ActionFlag flagAction = (ActionFlag) action;
-            int flagId = flagAction.getFlagId();
-            try {
-                com.zimbra.cs.mailbox.Flag flag = mailbox.getFlagById(flagId);
-                if (flagAction.isSetFlag())
-                    flagBits |= flag.getBitmask();
-                else
-                    flagBits &= (~flag.getBitmask());
-            } catch (ServiceException e) {
-                ZimbraLog.filter.warn("Unable to flag message", e);
-            }
-        }
-        return flagBits;
-    }
 }
