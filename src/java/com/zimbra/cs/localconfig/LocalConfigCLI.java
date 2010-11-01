@@ -40,6 +40,7 @@ import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.RandomPassword;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.ReloadLocalConfigRequest;
@@ -200,7 +201,7 @@ public final class LocalConfigCLI {
                 reload();
             } catch (ServiceException e) {
                 if (e.getCause() instanceof ConnectException) {
-                    error("server is not running", null);
+                    error("'" + Provisioning.SERVICE_MAILBOX + "' service is not running", null);
                 } else {
                     error(e.getMessage(), e);
                 }
