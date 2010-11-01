@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.LogByteSizeMergePolicy;
@@ -686,35 +687,64 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
     private static final int MAX_TERMS_PER_QUERY =
         LC.zimbra_index_lucene_max_terms_per_query.intValue();
 
-    private IndexReader openIndexReader() throws IOException {
-        return openIndexReader(true);
-    }
-
     private IndexReader openIndexReader(boolean tryRepair) throws IOException {
         try {
             return IndexReader.open(luceneDirectory, null, true,
                     LC.zimbra_index_lucene_term_index_divisor.intValue());
-        } catch (AssertionError ae) {
+        } catch (CorruptIndexException e) {
             if (!tryRepair) {
-                throw ae;
-            }
-            ZimbraLog.index_lucene.error("Index corrupted", ae);
-            LuceneIndexRepair repair;
-            try {
-                repair = new LuceneIndexRepair(luceneDirectory, ae);
-            } catch (Throwable unfixable) {
-                ZimbraLog.index_lucene.warn("Unable to repair, re-indexing is required.");
-                throw ae;
-            }
-            flush();
-            try {
-                repair.repair();
-            } catch (IOException e) {
-                ZimbraLog.index_lucene.error("Failed to repair, re-indexing is required.", e);
                 throw e;
             }
-            ZimbraLog.index_lucene.info("Index repaird, re-indexing is recommended.");
+            flush(); // close IndexWriter
+            repair(e);
             return openIndexReader(false);
+        } catch (AssertionError e) {
+            if (!tryRepair) {
+                throw e;
+            }
+            flush(); // close IndexWriter
+            repair(e);
+            return openIndexReader(false);
+        }
+    }
+
+    private IndexWriter openIndexWriter(boolean tryRepair) throws IOException {
+        try {
+            IndexWriter writer = new IndexWriter(luceneDirectory, mMbidx.getAnalyzer(),
+                    false, IndexWriter.MaxFieldLength.LIMITED);
+            if (ZimbraLog.index_lucene.isDebugEnabled()) {
+                writer.setInfoStream(new PrintStream(new LoggingOutputStream(
+                        ZimbraLog.index_lucene, Log.Level.debug)));
+            }
+            return writer;
+        } catch (AssertionError e) {
+            if (!tryRepair) {
+                throw e;
+            }
+            repair(e);
+            return openIndexWriter(false);
+        } catch (CorruptIndexException e) {
+            if (!tryRepair) {
+                throw e;
+            }
+            repair(e);
+            return openIndexWriter(false);
+        }
+    }
+
+    private <T extends Throwable> void repair(T ex) throws T {
+        ZimbraLog.index_lucene.error("Index corrupted", ex);
+        LuceneIndexRepair repair = new LuceneIndexRepair(luceneDirectory);
+        try {
+            if (repair.repair() > 0) {
+                ZimbraLog.index_lucene.info("Index repaird, re-indexing is recommended.");
+            } else {
+                ZimbraLog.index_lucene.warn("Unable to repair, re-indexing is required.");
+                throw ex;
+            }
+        } catch (IOException e) {
+            ZimbraLog.index_lucene.warn("Failed to repair, re-indexing is required.", e);
+            throw ex;
         }
     }
 
@@ -738,7 +768,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
 
             IndexReader reader = null;
             try {
-                reader = openIndexReader();
+                reader = openIndexReader(true);
             } catch (IOException e) {
                 // Handle the special case of trying to open a not-yet-created
                 // index, by opening for write and immediately closing.  Index
@@ -749,7 +779,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
                     endWriteOperation();
                     flush();
                     try {
-                        reader = openIndexReader();
+                        reader = openIndexReader(false);
                     } catch (IOException e1) {
                         if (reader != null) {
                             reader.close();
@@ -868,48 +898,17 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
         LuceneConfig config = new LuceneConfig(useBatchIndexing);
 
         try {
-            // From 3.0, IndexWriter will no longer support autoCommit=true.
-            // We need to call commit() when needed.
-            mIndexWriter = new IndexWriter(luceneDirectory, mMbidx.getAnalyzer(),
-                    false, IndexWriter.MaxFieldLength.LIMITED);
-            if (ZimbraLog.index_lucene.isDebugEnabled()) {
-                mIndexWriter.setInfoStream(new PrintStream(
-                        new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
-            }
+            mIndexWriter = openIndexWriter(true);
         } catch (IOException e) {
-            //
-            // the index (the segments* file in particular) probably didn't exist when new IndexWriter
-            // was called in the try block, we would get a FileNotFoundException for that case.
-            // If the directory is empty, this is the very first index write for this this mailbox
-            // (or the index might be deleted), the FileNotFoundException is benign.
-            //
-            // If the directory is empty, try again with the create flag set to true.
-            //
-            // If e1 is other IOException, our second try will likely throw another IOException.
-            // If the directory is not empty, we throw an IOException and set e1 as the cause.
-            // For both case, the IOException will be logged at outer code.
-            //
-            // Log it as at DEBUG level instead of ERROR here.
-            //
-            ZimbraLog.index_add.debug("Caught exception trying to open index: " + e, e);
-            File indexDir  = luceneDirectory.getFile();
-            if (indexDirIsEmpty(indexDir)) {
-                mIndexWriter = new IndexWriter(luceneDirectory, mMbidx.getAnalyzer(),
-                        true, IndexWriter.MaxFieldLength.LIMITED);
-                if (ZimbraLog.index_lucene.isDebugEnabled()) {
-                    mIndexWriter.setInfoStream(new PrintStream(
-                            new LoggingOutputStream(ZimbraLog.index_lucene, Log.Level.debug)));
-                }
-                if (mIndexWriter == null) {
-                    throw new IOException("Failed to open IndexWriter in directory " +
-                            indexDir.getAbsolutePath());
-                }
+            // the index (the segments* file in particular) probably didn't exist
+            // when new IndexWriter was called in the try block, we would get a
+            // FileNotFoundException for that case. If the directory is empty,
+            // this is the very first index write for this this mailbox (or the
+            // index might be deleted), the FileNotFoundException is benign.
+            if (indexDirIsEmpty(luceneDirectory.getFile())) {
+                mIndexWriter = openIndexWriter(false);
             } else {
-                mIndexWriter = null;
-                IOException ioe = new IOException("Could not create index " +
-                        luceneDirectory + " (directory already exists)");
-                ioe.initCause(e);
-                throw ioe;
+                throw e;
             }
         }
 

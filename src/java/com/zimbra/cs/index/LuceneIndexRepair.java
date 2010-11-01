@@ -14,14 +14,19 @@
  */
 package com.zimbra.cs.index;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 
+import org.apache.lucene.document.DateTools;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.SegmentInfos;
 import org.apache.lucene.store.ChecksumIndexInput;
 import org.apache.lucene.store.ChecksumIndexOutput;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.IndexOutput;
+import org.apache.lucene.util.BitVector;
 
 /**
  * Try to fix a corrupted Lucene index data.
@@ -40,38 +45,39 @@ final class LuceneIndexRepair {
     private static final int FORMAT = SegmentInfos.FORMAT_DIAGNOSTICS;
     // need to sync with IndexFileNames#SEGMENTS_GEN
     private static final String SEGMENTS_GEN = "segments.gen";
+    // need to sync with IndexFileNames#SEGMENTS
+    private static final String SEGMENTS = "segments";
+    // need to sync with IndexFileNames#DELETES_EXTENSION
+    private static final String DELETES_EXTENSION = "del";
 
     private final Directory directory;
-    private boolean clearDeleteCount = false;
+    private int repaired = 0;
 
     /**
      * Constructs a new {@link LuceneIndexRepair}.
      *
      * @param dir index data to repair
-     * @param ex exception thrown by Lucene
-     * @throws Throwable the same exception if it's not repairable
      */
-    LuceneIndexRepair(Directory dir, Throwable ex) throws Throwable {
+    LuceneIndexRepair(Directory dir) {
         directory = dir;
-        if (ex instanceof AssertionError &&
-                ex.getMessage().startsWith("delete count mismatch:")) {
-            // https://issues.apache.org/jira/browse/LUCENE-1474
-            clearDeleteCount = true;
-        } else { // unable to fix
-            throw ex;
-        }
     }
 
-    void repair() throws IOException {
-        SegmentInfos seg = new SegmentInfos();
-        seg.read(directory);
+    /**
+     * Repair the index data.
+     *
+     * @return number of repairs conducted, or 0 if nothing was repaired
+     * @throws IOException error on accessing the index data
+     */
+    int repair() throws IOException {
+        String segsFilename = SegmentInfos.getCurrentSegmentFileName(directory);
+        long gen = SegmentInfos.generationFromSegmentsFileName(segsFilename);
+        String nextSegsFilename = getSegmentsFilename(++gen);
 
         ChecksumIndexInput input = new ChecksumIndexInput(
-                directory.openInput(seg.getCurrentSegmentFileName()));
-        String nextSegFilename = seg.getNextSegmentFileName();
+                directory.openInput(segsFilename));
         try {
             ChecksumIndexOutput output = new ChecksumIndexOutput(
-                    directory.createOutput(nextSegFilename));
+                    directory.createOutput(nextSegsFilename));
             try {
                 convert(input, output);
             } finally {
@@ -81,21 +87,24 @@ final class LuceneIndexRepair {
             input.close();
         }
 
-        directory.sync(nextSegFilename);
-
-        // verify
-        SegmentInfos nextSeg = new SegmentInfos();
-        nextSeg.read(directory, nextSegFilename);
-        if (seg.size() != nextSeg.size()) {
-            throw new CorruptIndexException("Failed to verify");
+        if (repaired == 0) {
+            directory.deleteFile(nextSegsFilename);
+            return repaired;
         }
 
+        directory.sync(nextSegsFilename);
         try {
-            commit(SegmentInfos.generationFromSegmentsFileName(nextSegFilename));
+            commit(gen);
         } catch (IOException e) {
-            directory.deleteFile(nextSegFilename);
+            directory.deleteFile(nextSegsFilename);
             throw e;
         }
+
+        String backupFilename = "REPAIR_" +
+            DateTools.dateToString(new Date(), DateTools.Resolution.SECOND) +
+            "." + segsFilename;
+        rename(segsFilename, backupFilename);
+        return repaired;
     }
 
     private void commit(long gen) throws IOException {
@@ -131,10 +140,14 @@ final class LuceneIndexRepair {
         int num = input.readInt();
         output.writeInt(num);
         for (int i = 0; i < num; i++) {
-            output.writeString(input.readString()); // name
-            output.writeInt(input.readInt()); // count
+            String name = input.readString();
+            output.writeString(name);
+            int count = input.readInt();
+            output.writeInt(count);
+            long delGen = -1;
             if (format <= SegmentInfos.FORMAT_LOCKLESS) {
-                output.writeLong(input.readLong()); // generation
+                delGen = input.readLong();
+                output.writeLong(delGen);
                 if (format <= SegmentInfos.FORMAT_SHARED_DOC_STORE) {
                     int docStoreOffset = input.readInt();
                     output.writeInt(docStoreOffset);
@@ -157,7 +170,13 @@ final class LuceneIndexRepair {
             output.writeByte(input.readByte()); // isCompoundFile
             if (format <= SegmentInfos.FORMAT_DEL_COUNT) {
                 int delCount = input.readInt();
-                output.writeInt(clearDeleteCount ? -1 : delCount);
+                if (delCount <= count && delCount == getDelCount(name, delGen)) {
+                    output.writeInt(delCount);
+                } else { // del count mismatch
+                    // https://issues.apache.org/jira/browse/LUCENE-1474
+                    repaired++;
+                    output.writeInt(-1); // clear
+                }
             }
             if (format <= SegmentInfos.FORMAT_HAS_PROX) {
                 output.writeByte(input.readByte()); // hasProx
@@ -191,6 +210,50 @@ final class LuceneIndexRepair {
         }
 
         output.finishCommit();
+    }
+
+    private int getDelCount(String name, long gen) throws IOException {
+        if (gen < 0) { // no del file
+            return 0;
+        } else if (gen == 0) { // no gen
+            String filename = name + "." + DELETES_EXTENSION;
+            if (directory.fileExists(filename)) {
+                BitVector del = new BitVector(directory, filename);
+                return del.count();
+            } else {
+                return 0;
+            }
+        } else {
+            String filename = name + "_" + Long.toString(gen, Character.MAX_RADIX) +
+                "." + DELETES_EXTENSION;
+            if (directory.fileExists(filename)) {
+                BitVector del = new BitVector(directory, filename);
+                return del.count();
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    private String getSegmentsFilename(long gen) {
+        return SEGMENTS + "_" + Long.toString(gen, Character.MAX_RADIX);
+    }
+
+    private void rename(String from, String to) {
+        File dir;
+        if (directory instanceof LuceneDirectory) {
+            dir = ((LuceneDirectory) directory).getFile();
+        } else if (directory instanceof FSDirectory) {
+            dir = ((FSDirectory) directory).getFile();
+        } else {
+            return;
+        }
+        File renameFrom = new File(dir, from);
+        File renameTo = new File(dir, to);
+        if (renameTo.exists()) {
+            renameTo.delete();
+        }
+        renameFrom.renameTo(renameTo);
     }
 
 }
