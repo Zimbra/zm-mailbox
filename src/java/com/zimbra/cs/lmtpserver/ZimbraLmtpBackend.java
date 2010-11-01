@@ -15,27 +15,16 @@
 
 package com.zimbra.cs.lmtpserver;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-
+import com.google.common.base.Function;
+import com.google.common.collect.MapMaker;
 import com.google.common.collect.Multimap;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.MapUtil;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BufferStream;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CopyInputStream;
+import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -64,10 +53,23 @@ import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.Zimbra;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 public class ZimbraLmtpBackend implements LmtpBackend {
 
     private static List<LmtpCallback> sCallbacks = new CopyOnWriteArrayList<LmtpCallback>(); 
-    private static Map sReceivedMessageIDs = null;
+    private static Map<String, Set<Integer>> sReceivedMessageIDs = null;
+    private static final Map<Integer, Object> sMailboxDeliveryLocks;
 
     private LmtpConfig mConfig;
 
@@ -96,8 +98,19 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         } catch (ServiceException e) {
             ZimbraLog.lmtp.error("could not read zimbraMessageIdDedupeCacheSize; no deduping will be performed", e);
         }
+        sMailboxDeliveryLocks = createMailboxDeliveryLocks();
         addCallback(Notification.getInstance());
         addCallback(QuotaWarning.getInstance());
+    }
+
+    private static Map<Integer, Object> createMailboxDeliveryLocks() {
+        Function<Integer, Object> objCreator = new Function<Integer,  Object>() {
+            @Override
+            public Object apply(Integer from) {
+                return new Object();
+            }
+        };
+        return new MapMaker().makeComputingMap(objCreator);        
     }
 
     @Override public LmtpReply getAddressStatus(LmtpAddress address) {
@@ -176,7 +189,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private boolean dedupe(ParsedMessage pm, Mailbox mbox) {
         if (sReceivedMessageIDs == null || pm == null || mbox == null)
             return false;
@@ -185,7 +197,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             return false;
 
         synchronized (sReceivedMessageIDs) {
-            Set<Integer> mboxIds = (Set<Integer>) sReceivedMessageIDs.get(msgid);
+            Set<Integer> mboxIds = sReceivedMessageIDs.get(msgid);
             if (mboxIds != null && mboxIds.contains(mbox.getId())) {
                 return true;
             }
@@ -193,7 +205,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         return false;
     }
 
-    @SuppressWarnings("unchecked")
     private void addToDedupeCache(ParsedMessage pm, Mailbox mbox) {
         if (sReceivedMessageIDs == null || pm == null || mbox == null)
             return;
@@ -202,7 +213,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             return;
 
         synchronized (sReceivedMessageIDs) {
-            Set<Integer> mboxIds = (Set<Integer>) sReceivedMessageIDs.get(msgid);
+            Set<Integer> mboxIds = sReceivedMessageIDs.get(msgid);
             if (mboxIds == null) {
                 mboxIds = new HashSet<Integer>();
                 sReceivedMessageIDs.put(msgid, mboxIds);
@@ -211,7 +222,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void removeFromDedupeCache(String msgid, Mailbox mbox) {
         if (sReceivedMessageIDs == null || msgid == null || mbox == null)
             return;
@@ -219,7 +229,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             return;
 
         synchronized (sReceivedMessageIDs) {
-            Set<Integer> mboxIds = (Set<Integer>) sReceivedMessageIDs.get(msgid);
+            Set<Integer> mboxIds = sReceivedMessageIDs.get(msgid);
             if (mboxIds != null) {
                 mboxIds.remove(mbox.getId());
             }
@@ -336,8 +346,8 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             for (LmtpAddress recipient : recipients) {
                 String rcptEmail = recipient.getEmailAddress();
 
-                Account account = null;
-                Mailbox mbox = null;
+                Account account;
+                Mailbox mbox;
                 boolean attachmentsIndexingEnabled = true;
                 try {
                     account = Provisioning.getInstance().get(AccountBy.name, rcptEmail);
@@ -443,51 +453,53 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                             Account account = rd.account;
                             Mailbox mbox = rd.mbox;
                             ParsedMessage pm = rd.pm;
-                            List<ItemId> addedMessageIds = null; 
-                            if (dedupe(pm, mbox)) {
-                                // message was already delivered to this mailbox
-                                ZimbraLog.lmtp.info("Not delivering message with duplicate Message-ID %s", pm.getMessageID());
-                            } else if (recipient.getSkipFilters()) {
-                                msgId = pm.getMessageID();
-                                int folderId = Mailbox.ID_FOLDER_INBOX;
-                                if (recipient.getFolder() != null) {
-                                    try {
-                                        Folder folder = mbox.getFolderByPath(null, recipient.getFolder());
-                                        folderId = folder.getId();
-                                    } catch (ServiceException se) {
-                                        if (se.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
-                                            Folder folder = mbox.createFolder(null, recipient.getFolder(), (byte) 0, MailItem.TYPE_MESSAGE);
+                            List<ItemId> addedMessageIds = null;
+                            synchronized (sMailboxDeliveryLocks.get(mbox.getId())) {
+                                if (dedupe(pm, mbox)) {
+                                    // message was already delivered to this mailbox
+                                    ZimbraLog.lmtp.info("Not delivering message with duplicate Message-ID %s", pm.getMessageID());
+                                } else if (recipient.getSkipFilters()) {
+                                    msgId = pm.getMessageID();
+                                    int folderId = Mailbox.ID_FOLDER_INBOX;
+                                    if (recipient.getFolder() != null) {
+                                        try {
+                                            Folder folder = mbox.getFolderByPath(null, recipient.getFolder());
                                             folderId = folder.getId();
-                                        } else {
-                                            throw se;
+                                        } catch (ServiceException se) {
+                                            if (se.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
+                                                Folder folder = mbox.createFolder(null, recipient.getFolder(), (byte) 0, MailItem.TYPE_MESSAGE);
+                                                folderId = folder.getId();
+                                            } else {
+                                                throw se;
+                                            }
                                         }
                                     }
+                                    int flags = Flag.BITMASK_UNREAD;
+                                    if (recipient.getFlags() != null) {
+                                        flags = Flag.flagsToBitmask(recipient.getFlags());
+                                    }
+                                    Message msg = mbox.addMessage(null, pm, folderId, false, flags, recipient.getTags(), rcptEmail, sharedDeliveryCtxt);
+                                    addedMessageIds = new ArrayList<ItemId>(1);
+                                    addedMessageIds.add(new ItemId(msg));
+                                } else if (!DebugConfig.disableIncomingFilter) {
+                                    // Get msgid first, to avoid having to reopen and reparse the blob
+                                    // file if Mailbox.addMessageInternal() closes it.
+                                    pm.getMessageID();
+                                    addedMessageIds = RuleManager.applyRulesToIncomingMessage(mbox, pm, (int) blob.getRawSize(),
+                                                                                              rcptEmail, sharedDeliveryCtxt, Mailbox.ID_FOLDER_INBOX);
+                                } else {
+                                    pm.getMessageID();
+                                    Message msg = mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false, Flag.BITMASK_UNREAD, null,
+                                                                  rcptEmail, sharedDeliveryCtxt);
+                                    addedMessageIds = new ArrayList<ItemId>(1);
+                                    addedMessageIds.add(new ItemId(msg));
                                 }
-                                int flags = Flag.BITMASK_UNREAD;
-                                if (recipient.getFlags() != null) {
-                                    flags = Flag.flagsToBitmask(recipient.getFlags());
-                                }
-                                Message msg = mbox.addMessage(null, pm, folderId, false, flags, recipient.getTags(), rcptEmail, sharedDeliveryCtxt);
-                                addedMessageIds = new ArrayList<ItemId>(1);
-                                addedMessageIds.add(new ItemId(msg));
-                            } else if (!DebugConfig.disableIncomingFilter) {
-                                // Get msgid first, to avoid having to reopen and reparse the blob
-                                // file if Mailbox.addMessageInternal() closes it.
-                                pm.getMessageID();
-                                addedMessageIds = RuleManager.applyRulesToIncomingMessage(mbox, pm, (int) blob.getRawSize(),
-                                    rcptEmail, sharedDeliveryCtxt, Mailbox.ID_FOLDER_INBOX);
-                            } else {
-                                pm.getMessageID();
-                                Message msg = mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false, Flag.BITMASK_UNREAD, null,
-                                    rcptEmail, sharedDeliveryCtxt);
-                                addedMessageIds = new ArrayList<ItemId>(1);
-                                addedMessageIds.add(new ItemId(msg));
+                                success = true;
+                                if (addedMessageIds != null && addedMessageIds.size() > 0)
+                                    addToDedupeCache(pm, mbox);
                             }
-                            success = true;
-                            
-                            if (addedMessageIds != null && addedMessageIds.size() > 0) {
-                                addToDedupeCache(pm, mbox);
                                 
+                            if (addedMessageIds != null && addedMessageIds.size() > 0) {
                                 // Execute callbacks
                                 for (LmtpCallback callback : sCallbacks) {
                                     for (ItemId id : addedMessageIds) {
