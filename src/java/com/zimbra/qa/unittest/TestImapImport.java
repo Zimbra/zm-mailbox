@@ -227,17 +227,29 @@ extends TestCase {
         
         // Add message to a local folder and delete the same folder in remote mailbox
         ZimbraLog.test.info("Testing simultaneous message add and folder delete 2.");
-        ZFolder localFolder = mLocalMbox.getFolderByPath(LOCAL_PATH_F2);
-        TestUtil.addMessage(mLocalMbox, NAME_PREFIX + " msg4", localFolder.getId());
+
+        // preconditions: 1 synced message in each folder
+        checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_F1, 1);
+        checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_F2, 1);
+        checkMsgCount(mRemoteMbox, "in:" + REMOTE_PATH_F1, 1);
+        checkMsgCount(mRemoteMbox, "in:" + REMOTE_PATH_F2, 1);
+
+        ZFolder localFolder2 = mLocalMbox.getFolderByPath(LOCAL_PATH_F2);
+        TestUtil.addMessage(mLocalMbox, NAME_PREFIX + " msg4", localFolder2.getId());
+        checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_F2, 2); // one of which is new since last sync
+
         remoteFolder1 = mRemoteMbox.getFolderByPath(REMOTE_PATH_F1);
         mRemoteMbox.deleteFolder(remoteFolder1.getId());
-        importImap();
-        
-        // Make sure the folders were deleted locally and remotely
-        assertNull("Local folder 1", mLocalMbox.getFolderByPath(LOCAL_PATH_F1));
-        assertNull("Local folder 2", mLocalMbox.getFolderByPath(LOCAL_PATH_F2));
-        assertNull("Remote folder 1", mRemoteMbox.getFolderByPath(REMOTE_PATH_F1));
-        assertNull("Remote folder 2", mRemoteMbox.getFolderByPath(REMOTE_PATH_F2));
+        importImap();       
+
+        // The remotely deleted folders should be resurrected by the sync,
+        // F2 because it contains a new message, and F1 because it's the parent of F2.
+        // Both should contain only messages added locally since the last sync.
+        assertNotNull("Local folder 1", mLocalMbox.getFolderByPath(LOCAL_PATH_F1));
+        assertNotNull("Local folder 2", mLocalMbox.getFolderByPath(LOCAL_PATH_F2));
+        checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_F1, 0);
+        checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_F2, 1);
+        checkMsgCount(mLocalMbox, "in:" + LOCAL_PATH_F2 + " subject:msg4", 1);
         compare();
 
         
