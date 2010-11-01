@@ -115,6 +115,7 @@ class IndexWritersCache {
 
     IndexWritersCache() {
         Runnable sweeper = new Runnable() {
+            @Override
             public void run() {
                 doSweep(mSweeperTimeout);
             }
@@ -245,6 +246,12 @@ class IndexWritersCache {
             // at this point we have a slot, and we're in the active list
             writer.doWriterOpen();
         } catch (IOException e) {
+            openFailed(writer);
+            throw e;
+        } catch (RuntimeException e) {
+            openFailed(writer);
+            throw e;
+        } catch (Error e) {
             openFailed(writer);
             throw e;
         }
@@ -389,6 +396,7 @@ class IndexWritersCache {
             mWriter = writer;
         }
 
+        @Override
         public void run() {
             try {
                 flushInternal(mWriter);
