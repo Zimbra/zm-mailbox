@@ -708,10 +708,10 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
         }
     }
 
-    private IndexWriter openIndexWriter(boolean tryRepair) throws IOException {
+    private IndexWriter openIndexWriter(boolean create, boolean tryRepair) throws IOException {
         try {
             IndexWriter writer = new IndexWriter(luceneDirectory, mMbidx.getAnalyzer(),
-                    false, IndexWriter.MaxFieldLength.LIMITED);
+                    create, IndexWriter.MaxFieldLength.LIMITED);
             if (ZimbraLog.index_lucene.isDebugEnabled()) {
                 writer.setInfoStream(new PrintStream(new LoggingOutputStream(
                         ZimbraLog.index_lucene, Log.Level.debug)));
@@ -723,14 +723,14 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
                 throw e;
             }
             repair(e);
-            return openIndexWriter(false);
+            return openIndexWriter(false, false);
         } catch (CorruptIndexException e) {
             unlock();
             if (!tryRepair) {
                 throw e;
             }
             repair(e);
-            return openIndexWriter(false);
+            return openIndexWriter(false, false);
         }
     }
 
@@ -908,7 +908,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
         LuceneConfig config = new LuceneConfig(useBatchIndexing);
 
         try {
-            mIndexWriter = openIndexWriter(true);
+            mIndexWriter = openIndexWriter(false, true);
         } catch (IOException e) {
             // the index (the segments* file in particular) probably didn't exist
             // when new IndexWriter was called in the try block, we would get a
@@ -916,7 +916,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
             // this is the very first index write for this this mailbox (or the
             // index might be deleted), the FileNotFoundException is benign.
             if (indexDirIsEmpty(luceneDirectory.getFile())) {
-                mIndexWriter = openIndexWriter(false);
+                mIndexWriter = openIndexWriter(true, false);
             } else {
                 throw e;
             }
