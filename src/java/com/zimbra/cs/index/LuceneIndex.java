@@ -718,12 +718,14 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
             }
             return writer;
         } catch (AssertionError e) {
+            unlock();
             if (!tryRepair) {
                 throw e;
             }
             repair(e);
             return openIndexWriter(false);
         } catch (CorruptIndexException e) {
+            unlock();
             if (!tryRepair) {
                 throw e;
             }
@@ -745,6 +747,14 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
         } catch (IOException e) {
             ZimbraLog.index_lucene.warn("Failed to repair, re-indexing is required.", e);
             throw ex;
+        }
+    }
+
+    private void unlock() {
+        try {
+            IndexWriter.unlock(luceneDirectory);
+        } catch (IOException e) {
+            ZimbraLog.index_lucene.warn("Failed to unlock", e);
         }
     }
 
@@ -953,18 +963,17 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
             ZimbraLog.index_add.debug("Closing IndexWriter " + mIndexWriter + " for " + this);
         }
 
-        IndexWriter writer = mIndexWriter;
-        mIndexWriter = null;
-
         boolean success = false;
         try {
             // Flush all changes to file system before committing redos.
-            writer.close();
+            mIndexWriter.close();
             success = true;
         } catch (IOException e) {
-            ZimbraLog.index_add.error("Caught Exception " + e + " in LuceneIndex.closeIndexWriter", e);
+            ZimbraLog.index_lucene.error("Failed to close IndexWriter", e);
             // fall through to finally here with success=false
         } finally {
+            mIndexWriter = null;
+            unlock();
             if (mNumUncommittedItems > 0) {
                 assert(mHighestUncomittedModContent.getChangeId() > 0);
                 mMbidx.indexingCompleted(mNumUncommittedItems, mHighestUncomittedModContent, success);
