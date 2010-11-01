@@ -40,8 +40,7 @@ II. Zimbra UI Flow
 
 6. if spnego auth succeeds, goto 7, if failed goto step 13
    Windows local user will fail.
-   Windows domain user will pass, in the rare case spnego auth can fail for a domain user,
-   (e.g. jetty can't contact the KDC), the flow goes to step 13.
+   Windows domain user will pass, in the rare case when spnego auth fails for a domain user, the flow goes to step 13.
 
 7. user is redirected to the Zimbra preauth servlet
 
@@ -169,6 +168,8 @@ Repeat steps (A) to (D) for each zimbra server.
       edit the spnego_preauth.jsp
       replace the text REPLACE-ME-WITH-THE-PREAUTH-KEY with the real preauth key.  
 
+    Note: spnego_preauth.jsp will be over written after each upgrade.  So this step has to be performed 
+          after each upgrade. 
 
 (B) Setup virtual host for the domain
     zmprov md {domain} +zimbraVirtualHostname {virtual-hostname-1} +zimbraVirtualHostname {virtual-hostname-2}
@@ -197,11 +198,9 @@ Repeat steps (A) to (D) for each zimbra server.
 2.2. Configure Global Config
 ----------------------------
 
-We support only one REALM/KDC per Zimbra installation.
+We support only one REALM per Zimbra installation.
 
 Modify the following global config keys with zmprov mcf
-
-zimbraSpnegoAuthAdminServer : address of the admin server for the realm
 
 zimbraSpnegoAuthEnabled     : TRUE
 
@@ -209,8 +208,6 @@ zimbraSpnegoAuthErrorURL    : URL to redirect users to on spnego auth failure
                               Setting it to "/zimbra/?ignoreLoginURL=1"
                               will redirect user to the regular Zimbra login page, where 
                               zimbra user name and password are prompted.
-                              
-zimbraSpnegoAuthKDC         : address of the KDC for the realm
 
 zimbraSpnegoAuthRealm       : the kerberos realm
 
@@ -242,34 +239,40 @@ IE and Chrome:
 * Tools -> Options -> Advanced -> Security (in the checkbox list)
 ** locate and check 'Enable Integrated Windows Authentication'
 * Tools -> Options -> Advanced -> Security -> Ok
-* close IE then reopen and browse to your spengo protected resource
+* close IE
 
 
 ================
 4. Test it out
 ================
-- On a Windows box, loging to the domain as a domain user
+- On a Windows box, login to the domain as a domain user
   
   Your ticket as a domain user will be saved on the computer.
   Ths token will be picked up by the spnego aware browser and send in 
   the Authorization header to zimbra server.
   
-- browse to the regualr WEB UI initial page:
-  e.g. http://myserver:7070
+- Browse to the regualr WEB UI initial page:
+  e.g. http://myserver.com:7070
   
-  What should happen behind the scene:
-  - a domain get resolved by the virtual host name setting
+- You should be redirected to your inbox, without being prompted for user/pass.
+
   
-  - the request get redirected to the login URL on the domain
+What happens behind the scene in ZCS server:
+  - A domain gets resolved by the virtual host name setting.
+    (zimbraVirtualHostname on domain)
   
-  - the login URL points to a spnego protected URL (/spnego/spnego_preauth.jsp)
+  - The request gets redirected to the login URL on the domain.
+    (zimbraWebClientLoginURL on domain)
+  
+  - The login URL points to a spnego protected URL.
+    (/spnego/spnego_preauth.jsp)
   
   - spnego auth happens
   
-  - if the spnego auth fails, user will be redirected to an error URL, 
-    confogured in the global config key zimbraSpnegoAuthErrorURL.
+  - if spnego auth fails, user will be redirected to an error URL.
+    (zimbraSpnegoAuthErrorURL on global config)
     
-  - if the spnego auth succeeds, zimbra preauth sequence will happen, 
+  - if spnego auth succeeds, zimbra preauth sequence will happen, 
     user will be redirected to the preauth servlet and then finally landed 
     on the mail app.
     

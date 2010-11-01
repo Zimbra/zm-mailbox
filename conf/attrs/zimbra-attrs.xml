@@ -5045,6 +5045,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>spnego auth realm</desc>
 </attr>
 
+<!--
+No longer need KDC/admin server, jetty does not consult them during spnego auth
+TODO: delete them permerntly from here
+
 <attr id="1120" name="zimbraSpnegoAuthKDC" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="7.0.0">
   <desc>ip or hostname for spnego auth KDC</desc>
 </attr>
@@ -5052,6 +5056,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="1121" name="zimbraSpnegoAuthAdminServer" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="7.0.0">
   <desc>ip or hostname for spnego auth admin server</desc>
 </attr>
+-->
 
 <attr id="1122" name="zimbraSpnegoAuthPrincipal" type="string" cardinality="single" optionalIn="server" requiresRestart="mailbox" since="7.0.0">
   <desc>spnego auth principal</desc>

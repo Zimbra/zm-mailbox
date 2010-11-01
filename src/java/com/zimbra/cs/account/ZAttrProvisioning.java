@@ -7754,14 +7754,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSpellCheckURL = "zimbraSpellCheckURL";
 
     /**
-     * ip or hostname for spnego auth admin server
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1121)
-    public static final String A_zimbraSpnegoAuthAdminServer = "zimbraSpnegoAuthAdminServer";
-
-    /**
      * whether spnego SSO is enabled
      *
      * @since ZCS 7.0.0
@@ -7776,14 +7768,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1124)
     public static final String A_zimbraSpnegoAuthErrorURL = "zimbraSpnegoAuthErrorURL";
-
-    /**
-     * ip or hostname for spnego auth KDC
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1120)
-    public static final String A_zimbraSpnegoAuthKDC = "zimbraSpnegoAuthKDC";
 
     /**
      * spnego auth principal
