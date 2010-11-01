@@ -624,6 +624,14 @@
   <desc>get stats of server</desc>
 </right>
 
+<right name="getHSMStatus" type="preset" targetType="server">
+  <desc>get HSM process status for a server</desc>
+</right>
+
+<right name="moveBlobs" type="preset" targetType="server">
+  <desc>move blobs, start and abort HSM thread on a server</desc>
+</right>
+
 <!-- 
   TODO:
           - deployAdminExtension             : deploy admin extensions
@@ -638,7 +646,6 @@
           - configureIMAP                    : configure IMAP
           - configurePOPProxy                : configure POP3 proxy
           - configureIMAPProxy               : configure IMAP proxy
-          - configureVolumes                 : configure volumes
           - configureServiceEnabled          : configure services enabled
 -->
 
