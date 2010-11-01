@@ -626,8 +626,11 @@
     	-->
     	<!-- <property name="SERVICE_PRINCIPAL_NAME"     value="jj-server.spnego.local"/> -->
     	<!-- <property name="SERVICE_PRINCIPAL_NAME"     value="prome-2s-dhcp141.eng.vmware.com"/> -->
-    	<echo>===== hostname for spnego: ${exec.hostname} =====</echo>
-    	<property name="SERVICE_PRINCIPAL_NAME"     value="${exec.hostname}"/>
+    	<exec executable="hostname" outputproperty="hostname-FQDN">
+    		<arg value="-f"/>
+        </exec>
+    	<property name="SERVICE_PRINCIPAL_NAME"     value="${hostname-FQDN}"/>
+    	<echo>===== hostname for spnego: ${SERVICE_PRINCIPAL_NAME} =====</echo>
     	
     	<property name="zimbraSpnegoAuthEnabled"     value="TRUE"/>
     	<property name="zimbraSpnegoAuthRealm"       value="SPNEGO.LOCAL"/>
@@ -690,9 +693,9 @@
         <echo/>
         <echo>----- copying files -----</echo>
         <echo/>
-    	<copy file="${spnego.dir}/etc/krb5.ini" todir="${jetty.conf.dir}" verbose="true"/>
-        <copy file="${spnego.dir}/etc/spnego.conf" todir="${jetty.conf.dir}" verbose="true"/>
-        <copy file="${spnego.dir}/etc/spnego.properties" todir="${jetty.conf.dir}" verbose="true"/>
+    	<copy file="${spnego.dir}/etc/krb5.ini" todir="${jetty.conf.dir}" overwrite="true"/>
+        <copy file="${spnego.dir}/etc/spnego.conf" todir="${jetty.conf.dir}" overwrite="true"/>
+        <copy file="${spnego.dir}/etc/spnego.properties" todir="${jetty.conf.dir}" overwrite="true"/>
     	
     	<echo/>
     	<echo>----- rewriting files -----</echo>
