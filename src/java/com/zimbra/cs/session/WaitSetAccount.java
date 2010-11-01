@@ -52,7 +52,6 @@ public class WaitSetAccount {
      * @return
      */
     public WaitSetError createSession(Mailbox mbox, SomeAccountsWaitSet ws) {
-        assert(sessionId == null);
         // The session is not already initialized....therefore it's OK to lock in the reverse order 
         // (waitset then mailbox) because we know the session isn't added as a listener and therefore 
         // we won't get an upcall from the Mailbox
