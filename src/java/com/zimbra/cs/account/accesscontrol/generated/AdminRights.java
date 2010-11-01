@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 7.0.0_BETA1_1111 gsolovyev 20101101-1318 */
 
 
     public static AdminRight R_accessGAL;
@@ -212,6 +212,7 @@ public class AdminRights {
     public static AdminRight R_getDomainAdminCalendarResourceAttrs;
     public static AdminRight R_getDomainQuotaUsage;
     public static AdminRight R_getGlobalConfig;
+    public static AdminRight R_getHSMStatus;
     public static AdminRight R_getMailboxInfo;
     public static AdminRight R_getMailboxStats;
     public static AdminRight R_getServer;
@@ -248,6 +249,7 @@ public class AdminRights {
     public static AdminRight R_modifyXMPPComponent;
     public static AdminRight R_modifyZimlet;
     public static AdminRight R_moveAccountMailbox;
+    public static AdminRight R_moveBlobs;
     public static AdminRight R_moveCalendarResourceMailbox;
     public static AdminRight R_moveMailboxFromServer;
     public static AdminRight R_moveMailboxToServer;
@@ -612,6 +614,7 @@ public class AdminRights {
         R_getDomainAdminCalendarResourceAttrs  = rm.getAdminRight(Right.RT_getDomainAdminCalendarResourceAttrs);
         R_getDomainQuotaUsage                  = rm.getAdminRight(Right.RT_getDomainQuotaUsage);
         R_getGlobalConfig                      = rm.getAdminRight(Right.RT_getGlobalConfig);
+        R_getHSMStatus                         = rm.getAdminRight(Right.RT_getHSMStatus);
         R_getMailboxInfo                       = rm.getAdminRight(Right.RT_getMailboxInfo);
         R_getMailboxStats                      = rm.getAdminRight(Right.RT_getMailboxStats);
         R_getServer                            = rm.getAdminRight(Right.RT_getServer);
@@ -648,6 +651,7 @@ public class AdminRights {
         R_modifyXMPPComponent                  = rm.getAdminRight(Right.RT_modifyXMPPComponent);
         R_modifyZimlet                         = rm.getAdminRight(Right.RT_modifyZimlet);
         R_moveAccountMailbox                   = rm.getAdminRight(Right.RT_moveAccountMailbox);
+        R_moveBlobs                            = rm.getAdminRight(Right.RT_moveBlobs);
         R_moveCalendarResourceMailbox          = rm.getAdminRight(Right.RT_moveCalendarResourceMailbox);
         R_moveMailboxFromServer                = rm.getAdminRight(Right.RT_moveMailboxFromServer);
         R_moveMailboxToServer                  = rm.getAdminRight(Right.RT_moveMailboxToServer);

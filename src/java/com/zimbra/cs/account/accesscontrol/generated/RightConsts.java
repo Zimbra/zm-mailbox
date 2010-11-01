@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 7.0.0_BETA1_1111 gsolovyev 20101101-1318 */
 
 
     /*
@@ -985,6 +985,11 @@ public class RightConsts {
     public static final String RT_getGlobalConfig = "getGlobalConfig";
 
     /**
+     * get HSM process status for a server
+     */
+    public static final String RT_getHSMStatus = "getHSMStatus";
+
+    /**
      * get mailbox id and size(quota) of an account
      */
     public static final String RT_getMailboxInfo = "getMailboxInfo";
@@ -1164,6 +1169,11 @@ public class RightConsts {
      * move account mailbox
      */
     public static final String RT_moveAccountMailbox = "moveAccountMailbox";
+
+    /**
+     * move blobs, start and abort HSM thread on a server
+     */
+    public static final String RT_moveBlobs = "moveBlobs";
 
     /**
      * move calendar resource mailbox
