@@ -29,7 +29,6 @@ import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.Version;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.util.BuildInfo;
 
 public class AttributeInfo {
 
@@ -393,16 +392,16 @@ public class AttributeInfo {
 
     public static void validEmailAddress(String addr, boolean personal) throws ServiceException {
         if (addr.indexOf('@') == -1)
-            throw AccountServiceException.INVALID_ATTR_VALUE("must include domain", null);
+            throw AccountServiceException.INVALID_ATTR_VALUE("address '" + addr + "' does not include domain", null);
 
         try {
             InternetAddress ia = new InternetAddress(addr, true);
             // is this even needed?
             ia.validate();
             if (!personal && ia.getPersonal() != null && !ia.getPersonal().equals(""))
-                throw AccountServiceException.INVALID_ATTR_VALUE("invalid email address", null);
+                throw AccountServiceException.INVALID_ATTR_VALUE("invalid email address: " + addr, null);
         } catch (AddressException e) {
-            throw AccountServiceException.INVALID_ATTR_VALUE("invalid email address", e);
+            throw AccountServiceException.INVALID_ATTR_VALUE("invalid email address: " + addr, e);
         }
     }
 
