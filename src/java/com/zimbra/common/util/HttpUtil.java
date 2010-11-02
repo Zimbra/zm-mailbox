@@ -14,10 +14,10 @@
  */
 package com.zimbra.common.util;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
@@ -127,14 +127,12 @@ public class HttpUtil {
 
         for (String pair : queryString.split("&")) {
             String[] keyVal = pair.split("=");
-            try {
-                String value = keyVal.length > 1 ? URLDecoder.decode(keyVal[1], "utf-8") : "";
-                params.put(URLDecoder.decode(keyVal[0], "utf-8"), value);
-            } catch (UnsupportedEncodingException uee) { }
+            String value = keyVal.length > 1 ? urlUnescape(keyVal[1]) : "";
+            params.put(urlUnescape(keyVal[0]), value);
         }
         return params;
     }
-
+    
     /**
      * URL-encodes the given URL path.
      *
@@ -168,6 +166,114 @@ public class HttpUtil {
             return virtualHost;
         else
             return req.getServerName();
+    }
+
+    private static final Map<Character,String> sUrlEscapeMap = new HashMap<Character,String>();
+    
+    static {
+        sUrlEscapeMap.put(' ', "%20");
+        sUrlEscapeMap.put('"', "%22");
+        sUrlEscapeMap.put('#', "%23");
+        sUrlEscapeMap.put('%', "%25");
+        sUrlEscapeMap.put('&', "%26");
+        sUrlEscapeMap.put('?', "%3F");
+        sUrlEscapeMap.put('[', "%5B");
+        sUrlEscapeMap.put('\\', "%5C");
+        sUrlEscapeMap.put(']', "%5D");
+        sUrlEscapeMap.put('^', "%5E");
+        sUrlEscapeMap.put('`', "%60");
+        sUrlEscapeMap.put('{', "%7B");
+        sUrlEscapeMap.put('|', "%7C");
+        sUrlEscapeMap.put('}', "%7D");
+    }
+    
+    /**
+     * urlEscape method will encode '?' and '&', so make sure
+     * the passed in String does not have query string in it.
+     * Or call urlEscape on each segment and append query
+     * String afterwards.
+     * 
+     * from RFC 3986:
+     * 
+     * pchar       = unreserved / pct-encoded / sub-delims / ":" / "@"
+     *
+     * sub-delims  = "!" / "$" / "&" / "'" / "(" / ")"
+     *                   / "*" / "+" / "," / ";" / "="
+     *
+     * unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
+     *
+     */
+    public static String urlEscape(String str) {
+    	// rfc 2396 url escape.
+    	StringBuilder buf = null;
+    	for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+            String escaped = null;
+            if (c < 0x7F)
+            	escaped = sUrlEscapeMap.get(c);
+            
+            if (escaped != null || c >= 0x7F) {
+                if (buf == null) {
+                    buf = new StringBuilder();
+                    buf.append(str.substring(0, i));
+                }
+                if (escaped != null)
+                	buf.append(escaped);
+                else {
+                	try {
+                        byte[] raw = Character.valueOf(c).toString().getBytes("UTF-8");
+                    	for (byte b : raw) {
+                    		int unsignedB = b & 0xFF;  // byte is signed
+                    		buf.append("%").append(Integer.toHexString(unsignedB).toUpperCase());
+                    	}
+                	} catch (IOException e) {
+                		buf.append(c);
+                	}
+                }
+            } else if (buf != null) {
+                buf.append(c);
+            }
+    	}
+        if (buf != null)
+            return buf.toString();
+        return str;
+    }
+
+    /**
+     * The main difference between java.net.URLDecoder.decode()
+     * and this method is the handling of "+" sign.  URLDecoder
+     * will turn + into ' ' (space), and not suitable for
+     * decoding URL used in HTTP request.
+     */
+    public static String urlUnescape(String escaped) {
+        StringBuilder buf = null;
+        for (int i = 0; i < escaped.length(); i++) {
+            char c = escaped.charAt(i);
+            if (c == '%' && i < (escaped.length() - 2)) {
+                String bytes = escaped.substring(i+1, i+3);
+                String character = null;
+                try {
+                    Byte b = Byte.parseByte(bytes, 16);
+                    character = new String(new byte[] { b }, "UTF-8");
+                } catch (NumberFormatException e) {
+                } catch (UnsupportedEncodingException e) {
+                }
+                if (character != null) {
+                    if (buf == null) {
+                        buf = new StringBuilder(escaped.substring(0, i));
+                    }
+                    buf.append(character);
+                    i += 2;
+                    continue;
+                }
+            }
+            if (buf != null) {
+                buf.append(c);
+            }
+        }
+        if (buf != null)
+            return buf.toString();
+        return escaped;
     }
 
     public static void main(String[] args) {
