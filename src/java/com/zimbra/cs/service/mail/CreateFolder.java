@@ -54,6 +54,7 @@ public class CreateFolder extends MailDocumentHandler {
         String view      = t.getAttribute(MailConstants.A_DEFAULT_VIEW, null);
         String flags     = t.getAttribute(MailConstants.A_FLAGS, null);
         byte color       = (byte) t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR);
+        String rgb       = t.getAttribute(MailConstants.A_RGB, null);
         String url       = t.getAttribute(MailConstants.A_URL, null);
         String folderId  = t.getAttribute(MailConstants.A_FOLDER, null);
         ItemId iidParent = folderId != null ? new ItemId(folderId, zsc) : null;
@@ -65,10 +66,11 @@ public class CreateFolder extends MailDocumentHandler {
         boolean alreadyExisted = false;
 
         try {
+            MailItem.Color itemColor = rgb != null ? new MailItem.Color(rgb) : new MailItem.Color(color);
             if (iidParent != null)
-                folder = mbox.createFolder(octxt, name, iidParent.getId(), MailItem.getTypeForName(view), Flag.flagsToBitmask(flags), color, url);
+                folder = mbox.createFolder(octxt, name, iidParent.getId(), (byte)0, MailItem.getTypeForName(view), Flag.flagsToBitmask(flags), itemColor, url);
             else
-                folder = mbox.createFolder(octxt, name, (byte) 0, MailItem.getTypeForName(view), Flag.flagsToBitmask(flags), color, url);
+                folder = mbox.createFolder(octxt, name, (byte) 0, MailItem.getTypeForName(view), Flag.flagsToBitmask(flags), itemColor, url);
 
             if (!folder.getUrl().equals("") && syncToUrl) {
                 try {
