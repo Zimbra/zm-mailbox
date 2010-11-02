@@ -38,7 +38,6 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavException;
 import com.zimbra.cs.dav.service.DavServlet;
-import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
@@ -256,7 +255,7 @@ public class UrlNamespace {
 	/* Returns URL to the resource. */
 	public static String getResourceUrl(DavResource rs) {
 	    //return urlEscape(DavServlet.getDavUrl(user) + resourcePath);
-        return URLUtil.urlEscape(getRawResourceUrl(rs));
+        return HttpUtil.urlEscape(getRawResourceUrl(rs));
 	}
     
 	public static String getPrincipalUrl(Account account) {
@@ -289,11 +288,11 @@ public class UrlNamespace {
         return url;
 	}
     public static String getPrincipalUrl(String user) {
-        return URLUtil.urlEscape(PRINCIPALS_PATH + user + "/");
+        return HttpUtil.urlEscape(PRINCIPALS_PATH + user + "/");
     }
 	
     public static String getPrincipalCollectionUrl(Account acct) throws ServiceException {
-    	return URLUtil.urlEscape(PRINCIPALS_PATH);
+    	return HttpUtil.urlEscape(PRINCIPALS_PATH);
     }
     
     public static String getResourceUrl(Account user, String path) throws ServiceException {

@@ -21,12 +21,6 @@
  */
 package com.zimbra.cs.httpclient;
 
-import java.io.IOException;
-import java.util.Map;
-
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.MailMode;
@@ -43,9 +37,6 @@ import com.zimbra.common.soap.AdminConstants;
  * Window - Preferences - Java - Code Style - Code Templates
  */
 public class URLUtil {
-
-    private static Log mLog = LogFactory.getLog(URLUtil.class);
-    
 
     /**
      * Return the URL where SOAP service is available for given store server.
@@ -214,76 +205,4 @@ public class URLUtil {
         String referMode = server.getAttr(Provisioning.A_zimbraMailReferMode, "wronghost");
         return Provisioning.MAIL_REFER_MODE_REVERSE_PROXIED.equals(referMode);
     }
-
-    private static final Map<Character,String> sUrlEscapeMap = new java.util.HashMap<Character,String>();
-    
-    static {
-        sUrlEscapeMap.put(' ', "%20");
-        sUrlEscapeMap.put('"', "%22");
-        sUrlEscapeMap.put('#', "%23");
-        sUrlEscapeMap.put('%', "%25");
-        sUrlEscapeMap.put('&', "%26");
-        sUrlEscapeMap.put('?', "%3F");
-        sUrlEscapeMap.put('[', "%5B");
-        sUrlEscapeMap.put('\\', "%5C");
-        sUrlEscapeMap.put(']', "%5D");
-        sUrlEscapeMap.put('^', "%5E");
-        sUrlEscapeMap.put('`', "%60");
-        sUrlEscapeMap.put('{', "%7B");
-        sUrlEscapeMap.put('|', "%7C");
-        sUrlEscapeMap.put('}', "%7D");
-    }
-    
-    /**
-     * urlEscape method will encode '?' and '&', so make sure
-     * the passed in String does not have query string in it.
-     * Or call urlEscape on each segment and append query
-     * String afterwards.
-     * 
-     * from RFC 3986:
-     * 
-     * pchar       = unreserved / pct-encoded / sub-delims / ":" / "@"
-     *
-     * sub-delims  = "!" / "$" / "&" / "'" / "(" / ")"
-     *                   / "*" / "+" / "," / ";" / "="
-     *
-     * unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
-     *
-     */
-	public static String urlEscape(String str) {
-		// rfc 2396 url escape.
-		StringBuilder buf = null;
-		for (int i = 0; i < str.length(); i++) {
-            char c = str.charAt(i);
-            String escaped = null;
-            if (c < 0x7F)
-            	escaped = sUrlEscapeMap.get(c);
-            
-            if (escaped != null || c >= 0x7F) {
-                if (buf == null) {
-                    buf = new StringBuilder();
-                    buf.append(str.substring(0, i));
-                }
-                if (escaped != null)
-                	buf.append(escaped);
-                else {
-                	try {
-                        byte[] raw = Character.valueOf(c).toString().getBytes("UTF-8");
-                    	for (byte b : raw) {
-                    		int unsignedB = b & 0xFF;  // byte is signed
-                    		buf.append("%").append(Integer.toHexString(unsignedB).toUpperCase());
-                    	}
-                	} catch (IOException e) {
-                		mLog.info("can't decode character "+c, e);
-                		buf.append(c);
-                	}
-                }
-            } else if (buf != null) {
-                buf.append(c);
-            }
-		}
-        if (buf != null)
-            return buf.toString();
-        return str;
-	}
 }

@@ -22,9 +22,9 @@ import org.dom4j.Element;
 import org.dom4j.QName;
 import org.dom4j.tree.DefaultElement;
 
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.cs.dav.DavContext;
 import com.zimbra.cs.dav.DavElements;
-import com.zimbra.cs.httpclient.URLUtil;
 
 /**
  * RFC 2518bis section 4
@@ -133,7 +133,7 @@ public class ResourceProperty {
 	
 	protected Element createHref(String path) {
 		Element e = org.dom4j.DocumentHelper.createElement(DavElements.E_HREF);
-		e.setText(URLUtil.urlEscape(path));
+		e.setText(HttpUtil.urlEscape(path));
 		return e;
 	}
 	

@@ -39,7 +39,6 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZimbraAuthTokenEncoded;
 import com.zimbra.cs.fb.FreeBusyQuery;
-import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -274,7 +273,7 @@ public class UserServlet extends ZimbraServlet {
     /** Returns the REST URL for the mail item. */
     public static String getRestUrl(MailItem item) throws ServiceException {
         Account acct = item.getMailbox().getAccount();
-        return getRestUrl(acct) + URLUtil.urlEscape(item.getPath());
+        return getRestUrl(acct) + HttpUtil.urlEscape(item.getPath());
     }
 
     public synchronized static void addFormatter(Formatter f) {
@@ -775,15 +774,15 @@ public class UserServlet extends ZimbraServlet {
             return false;
         Mountpoint mpt = (Mountpoint) item;
 
-        String uri = SERVLET_PATH + "/~/?" + QP_ID + '=' + URLUtil.urlEscape(mpt.getOwnerId()) + "%3A" + mpt.getRemoteId();
+        String uri = SERVLET_PATH + "/~/?" + QP_ID + '=' + HttpUtil.urlEscape(mpt.getOwnerId()) + "%3A" + mpt.getRemoteId();
         if (context.format != null)
-            uri += '&' + QP_FMT + '=' + URLUtil.urlEscape(context.format);
+            uri += '&' + QP_FMT + '=' + HttpUtil.urlEscape(context.format);
         if (context.extraPath != null)
-            uri += '&' + QP_NAME + '=' + URLUtil.urlEscape(context.extraPath);
+            uri += '&' + QP_NAME + '=' + HttpUtil.urlEscape(context.extraPath);
         for (Map.Entry<String, String> entry : HttpUtil.getURIParams(req).entrySet()) {
             String qp = entry.getKey();
             if (!qp.equals(QP_ID) && !qp.equals(QP_FMT))
-                uri += '&' + URLUtil.urlEscape(qp) + '=' + URLUtil.urlEscape(entry.getValue());
+                uri += '&' + HttpUtil.urlEscape(qp) + '=' + HttpUtil.urlEscape(entry.getValue());
         }
 
         Provisioning prov = Provisioning.getInstance();
@@ -1326,7 +1325,7 @@ public class UserServlet extends ZimbraServlet {
         url.append("/?").append(QP_AUTH).append('=').append(AUTH_COOKIE);
         if (params != null) {
             for (Map.Entry<String, String> param : params.entrySet())
-                url.append('&').append(URLUtil.urlEscape(param.getKey())).append('=').append(URLUtil.urlEscape(param.getValue()));
+                url.append('&').append(HttpUtil.urlEscape(param.getKey())).append('=').append(HttpUtil.urlEscape(param.getValue()));
         }
         return url.toString();
     }

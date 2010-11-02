@@ -40,6 +40,7 @@ import org.dom4j.Element;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
@@ -56,7 +57,6 @@ import com.zimbra.cs.dav.DavProtocol;
 import com.zimbra.cs.dav.DomUtil;
 import com.zimbra.cs.dav.DavContext.KnownUserAgent;
 import com.zimbra.cs.dav.service.method.*;
-import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -526,7 +526,7 @@ public class DavServlet extends ZimbraServlet {
 		String prefix = ctxt.getPath();
 		if (extraPath != null)
 			prefix = prefix.substring(0, prefix.indexOf(extraPath));
-		prefix = URLUtil.urlEscape(DAV_PATH + "/" + ctxt.getUser() + prefix);
+		prefix = HttpUtil.urlEscape(DAV_PATH + "/" + ctxt.getUser() + prefix);
 		
 		// make sure the target account exists.
 		Account acct = prov.getAccountById(target.getAccountId());
@@ -547,7 +547,7 @@ public class DavServlet extends ZimbraServlet {
         if (f == null)
             return false;
         String path = f.getPath();
-    	String newPrefix = URLUtil.urlEscape(DAV_PATH + "/" + acct.getName() + f.getPath());
+    	String newPrefix = HttpUtil.urlEscape(DAV_PATH + "/" + acct.getName() + f.getPath());
 
         if (ctxt.hasRequestMessage()) {
             // replace the path in <href> of the request with the path to the target mail item.
@@ -563,7 +563,7 @@ public class DavServlet extends ZimbraServlet {
         }
         
         // build proxy request
-		String url = getProxyUrl(ctxt.getRequest(), server, DAV_PATH) + URLUtil.urlEscape("/" + acct.getName() + path + "/" + (extraPath == null ? "" : extraPath));
+		String url = getProxyUrl(ctxt.getRequest(), server, DAV_PATH) + HttpUtil.urlEscape("/" + acct.getName() + path + "/" + (extraPath == null ? "" : extraPath));
 		HttpState state = new HttpState();
         authToken.encode(state, false, server.getAttr(Provisioning.A_zimbraServiceHostname));
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
