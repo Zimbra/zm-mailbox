@@ -738,7 +738,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
     private QResyncInfo parseQResyncInfo(ImapRequest req) throws ImapParseException {
         QResyncInfo qri = new QResyncInfo();
-        req.skipSpace();  req.skipChar('(');
+        req.skipChar('(');
         qri.uvv = req.parseInteger(req.readNumber());  req.skipSpace();
         qri.modseq = req.parseInteger(req.readNumber());
         if (req.peekChar() == ' ') {
