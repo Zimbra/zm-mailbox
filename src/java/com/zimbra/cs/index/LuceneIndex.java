@@ -739,7 +739,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
         LuceneIndexRepair repair = new LuceneIndexRepair(luceneDirectory);
         try {
             if (repair.repair() > 0) {
-                ZimbraLog.index_lucene.info("Index repaird, re-indexing is recommended.");
+                ZimbraLog.index_lucene.info("Index repaired, re-indexing is recommended.");
             } else {
                 ZimbraLog.index_lucene.warn("Unable to repair, re-indexing is required.");
                 throw ex;
