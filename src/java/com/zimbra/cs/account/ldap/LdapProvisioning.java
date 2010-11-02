@@ -4911,15 +4911,17 @@ public class LdapProvisioning extends Provisioning {
 
         String queryExpr = getFilterDef(filterName);
         String query = null;
+        
+        String tokenize = GalUtil.tokenizeKey(galParams, galOp);
         if (queryExpr != null) {
             if (token != null)
                 n = "";
 
-            query = GalUtil.expandFilter(null, queryExpr, n, token, true);
+            query = GalUtil.expandFilter(tokenize, queryExpr, n, token, true);
         }
 
         SearchGalResult result = SearchGalResult.newSearchGalResult(visitor);
-        result.setTokenizeKey(GalUtil.tokenizeKey(galParams, galOp));
+        result.setTokenizeKey(tokenize);
         if (query == null) {
             ZimbraLog.gal.warn("searchZimbraWithNamedFilter query is null");
             return result;
