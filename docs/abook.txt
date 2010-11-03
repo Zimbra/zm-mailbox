@@ -3,13 +3,14 @@ initial set of field names...
 
 id/modified-date present in the data model but not listed here
 
---------
+--------------------------------------------------------------------------------
 general
---------
+--------------------------------------------------------------------------------
 assistantPhone
 callbackPhone
 carPhone
 company
+phoneticCompany
 companyPhone
 email
 email2
@@ -21,9 +22,14 @@ fileAs (1 is default)
   4 = Last, First (Company)
   5 = First Last (Company)
   6 = Company (Last, First)
-  7 = Company (First Last)  
- 
+  7 = Company (First Last)
+
 firstName
+phoneticFirstName
+lastName
+phoneticLastName
+fullName
+phoneticFullName
 homeCity
 homeCountry
 homeFax
@@ -34,7 +40,6 @@ homeState
 homeStreet
 homeURL
 jobTitle
-lastName
 middleName
 mobilePhone
 namePrefix
@@ -59,9 +64,9 @@ workState
 workStreet
 workURL
 
------------------------------------
+--------------------------------------------------------------------------------
 other details (may-or-may-not-implement all or some)
------------------------------------
+--------------------------------------------------------------------------------
 anniversary
 assistantName
 birthday

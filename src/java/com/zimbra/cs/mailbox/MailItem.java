@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -1708,7 +1709,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
         return null;
     }
-    
+
     void purgeRevision(int version, boolean includeOlderRevisions) throws ServiceException {
         if (!canAccess(ACL.RIGHT_WRITE))
             throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
@@ -2573,7 +2574,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                     MailItem unread = mbox.getItem(data);
                     unread.updateUnread(-data.unreadCount, unread.isTagged(Flag.ID_FLAG_DELETED) ? -data.unreadCount : 0);
                 }
-    
+
                 for (Map.Entry<Integer, DbMailItem.LocationCount> entry : info.messages.entrySet()) {
                     int folderID = entry.getKey();
                     DbMailItem.LocationCount lcount = entry.getValue();
@@ -2699,7 +2700,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (!inDumpster()) {
             if (mData.unreadCount != 0 && mMailbox.getFlagById(Flag.ID_FLAG_UNREAD).canTag(this))
                 info.unreadIds.add(id);
-    
+
             boolean isDeleted = isTagged(Flag.ID_FLAG_DELETED);
             info.messages.put(getFolderId(), new DbMailItem.LocationCount(1, isDeleted ? 1 : 0, getTotalSize()));
         }
@@ -2952,9 +2953,9 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     /**
      * Locks this MailItem with exclusive write lock.
-     * When a MailItem is locked, only the user who locked the item 
+     * When a MailItem is locked, only the user who locked the item
      * can move the item or change the content.
-     * 
+     *
      * @param authuser
      * @throws ServiceException
      */
@@ -2966,14 +2967,14 @@ public abstract class MailItem implements Comparable<MailItem> {
      * Unlocks this MailItem.  The user who previously locked
      * the item, or anyone who has admin privilige to this
      * MailItem can perform unlock operation.
-     * 
+     *
      * @param authuser
      * @throws ServiceException
      */
     void unlock(Account authuser) throws ServiceException {
         throw MailServiceException.CANNOT_UNLOCK(mId);
     }
-    
+
     private static final String CN_ID           = "id";
     private static final String CN_TYPE         = "type";
     private static final String CN_PARENT_ID    = "parent_id";
@@ -2991,33 +2992,42 @@ public abstract class MailItem implements Comparable<MailItem> {
     private static final String CN_VERSION      = "version";
     private static final String CN_IMAP_ID      = "imap_id";
 
-    protected StringBuffer appendCommonMembers(StringBuffer sb) {
-        sb.append(CN_ID).append(": ").append(mId).append(", ");
-        sb.append(CN_TYPE).append(": ").append(mData.type).append(", ");
-        if (mData.name != null)
-            sb.append(CN_NAME).append(": ").append(mData.name).append(", ");
-        sb.append(CN_UNREAD_COUNT).append(": ").append(mData.unreadCount).append(", ");
-        if (mData.flags != 0)
-            sb.append(CN_FLAGS).append(": ").append(getFlagString()).append(", ");
-        if (mData.tags != 0)
-            sb.append(CN_TAGS).append(": [").append(getTagString()).append("], ");
-        sb.append(CN_FOLDER_ID).append(": ").append(mData.folderId).append(", ");
-        sb.append(CN_SIZE).append(": ").append(mData.size).append(", ");
-        if (mVersion > 1)
-            sb.append(CN_VERSION).append(": ").append(mVersion).append(", ");
-        if (mData.parentId > 0)
-            sb.append(CN_PARENT_ID).append(": ").append(mData.parentId).append(", ");
-        if (mRGBColor != null)
-            sb.append(CN_COLOR).append(": ").append(mRGBColor.getMappedColor()).append(", ");
-        if (mData.subject != null)
-            sb.append(CN_SUBJECT).append(": ").append(mData.subject).append(", ");
-        if (getDigest() != null)
-            sb.append(CN_BLOB_DIGEST).append(": ").append(getDigest()).append(", ");
-        if (mData.imapId > 0)
-            sb.append(CN_IMAP_ID).append(": ").append(mData.imapId).append(", ");
-        sb.append(CN_DATE).append(": ").append(mData.date).append(", ");
-        sb.append(CN_REVISION).append(": ").append(mData.modContent).append(", ");
-        return sb;
+    protected Objects.ToStringHelper appendCommonMembers(Objects.ToStringHelper helper) {
+        helper.add(CN_ID, mId);
+        helper.add(CN_TYPE, mData.type);
+        if (mData.name != null) {
+            helper.add(CN_NAME, mData.name);
+        }
+        helper.add(CN_UNREAD_COUNT, mData.unreadCount);
+        if (mData.flags != 0) {
+            helper.add(CN_FLAGS, getFlagString());
+        }
+        if (mData.tags != 0) {
+            helper.add(CN_TAGS, getTagString());
+        }
+        helper.add(CN_FOLDER_ID, mData.folderId);
+        helper.add(CN_SIZE, mData.size);
+        if (mVersion > 1) {
+            helper.add(CN_VERSION, mVersion);
+        }
+        if (mData.parentId > 0) {
+            helper.add(CN_PARENT_ID, mData.parentId);
+        }
+        if (mRGBColor != null) {
+            helper.add(CN_COLOR, mRGBColor.getMappedColor());
+        }
+        if (mData.subject != null) {
+            helper.add(CN_SUBJECT, mData.subject);
+        }
+        if (getDigest() != null) {
+            helper.add(CN_BLOB_DIGEST, getDigest());
+        }
+        if (mData.imapId > 0) {
+            helper.add(CN_IMAP_ID, mData.imapId);
+        }
+        helper.add(CN_DATE, mData.date);
+        helper.add(CN_REVISION, mData.modContent);
+        return helper;
     }
 
     Metadata serializeUnderlyingData() {

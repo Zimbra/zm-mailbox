@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 
 
+import com.google.common.base.Objects;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.LuceneFields;
@@ -243,11 +244,9 @@ public class Note extends MailItem {
 
     @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append("note: {");
-        appendCommonMembers(sb).append(", ");
-        sb.append(CN_BOUNDS).append(": ").append(mBounds);
-        sb.append("}");
-        return sb.toString();
+        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        appendCommonMembers(helper);
+        helper.add(CN_BOUNDS, mBounds);
+        return helper.toString();
     }
 }

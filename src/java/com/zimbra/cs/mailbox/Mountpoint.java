@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,6 +17,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbMailItem;
@@ -34,7 +35,7 @@ public class Mountpoint extends Folder {
 
     /** Returns the <code>zimbraId</code> of the remote shared item's
      *  mailbox's owner.
-     * 
+     *
      * @see Mailbox#getAccountId() */
     public String getOwnerId() {
         return mOwnerId;
@@ -42,7 +43,7 @@ public class Mountpoint extends Folder {
 
     /** Returns the numeric item id of the remote shared item pointed to by
      *  this <code>Mountpoint</code>.
-     * 
+     *
      * @see MailItem#getId() */
     public int getRemoteId() {
         return mRemoteId;
@@ -50,7 +51,7 @@ public class Mountpoint extends Folder {
 
     /** Returns the {@link ItemId} of the remote shared item referenced by
      *  this <code>Mountpoint</code>.
-     * 
+     *
      * @see Mountpoint#getOwnerId()
      * @see Mountpoint#getRemoteId() */
     public ItemId getTarget() {
@@ -63,7 +64,7 @@ public class Mountpoint extends Folder {
     }
 
     /** Grants the specified set of rights to the target and persists them
-     *  to the database.  <i>Note: This function will always throw the 
+     *  to the database.  <i>Note: This function will always throw the
      *  <code>service.PERM_DENIED</code> {@link ServiceException} because
      *  <code>Mountpoint</code>s may not be re-shared.</i> */
     void grantAccess(String liquidId, byte type, short rights, boolean inherit) throws ServiceException {
@@ -74,7 +75,7 @@ public class Mountpoint extends Folder {
      *  and updates the database accordingly.  <i>Note: This function does
      *  nothing, as you cannot re-share a <code>Mountpoint</code> in the
      *  first place.</i>
-     * 
+     *
      * @see #grantAccess(String, byte, short, boolean) */
     @Override void revokeAccess(String liquidId) {
         return;
@@ -89,7 +90,7 @@ public class Mountpoint extends Folder {
     /** Creates a new Mountpoint pointing at a remote item and persists it
      *  to the database.  A real nonnegative item ID must be supplied from
      *  a previous call to {@link Mailbox#getNextItemId(int)}.
-     * 
+     *
      * @param id        The id for the new mountpoint.
      * @param parent    The folder to place the new mountpoint in.
      * @param name      The new mountpoint's name.
@@ -152,7 +153,7 @@ public class Mountpoint extends Folder {
     @Override void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
         if (!getFolder().canAccess(ACL.RIGHT_DELETE))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
-    	deleteSingleFolder(writeTombstones);
+        deleteSingleFolder(writeTombstones);
     }
 
 
@@ -177,13 +178,12 @@ public class Mountpoint extends Folder {
         return Folder.encodeMetadata(meta, color, version, extended, attrs, view, null, null, 0, 0, 0, 0, 0, 0, 0);
     }
 
-    @Override public String toString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append("mountpoint: {");
-        sb.append("n:\"").append(getName()).append("\", ");
-        appendCommonMembers(sb).append(", ");
-        sb.append(CN_ATTRIBUTES).append(": ").append(mAttributes);
-        sb.append("}");
-        return sb.toString();
+    @Override
+    public String toString() {
+        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        helper.add(CN_NAME, getName());
+        appendCommonMembers(helper);
+        helper.add(CN_ATTRIBUTES, mAttributes);
+        return helper.toString();
     }
 }

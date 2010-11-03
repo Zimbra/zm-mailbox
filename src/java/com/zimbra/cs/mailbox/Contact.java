@@ -33,6 +33,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -196,7 +198,6 @@ public class Contact extends MailItem {
 
     private String[] mEmailFields;
 
-
     /**
      * Returns the email fields in contact for the account.
      *
@@ -301,25 +302,45 @@ public class Contact extends MailItem {
         return MessageCache.getMimeMessage(this, runConverters);
     }
 
-    /** Returns the "file as" string used for sort and listing purposes.
-     *  This value is derived by using the "<tt>fileAs</tt>" contact field
-     *  value to select a standard or custom formatting to apply to the
-     *  contact's fields.  Supported <tt>fileAs</tt> values are:<ul>
-     *    <li><tt>1</tt> - Last, First
-     *    <li><tt>2</tt> - First Last
-     *    <li><tt>3</tt> - Company
-     *    <li><tt>4</tt> - Last, First (Company)
-     *    <li><tt>5</tt> - First Last (Company)
-     *    <li><tt>6</tt> - Company (Last, First)
-     *    <li><tt>7</tt> - Company (First Last)
-     *    <li><tt>8:your name here</tt> - The string "your name here"</ul>
-     *  When a <tt>fileAs</tt> value is not specified, <tt>1</tt> is used as
-     *  the default. */
+    /**
+     * Returns the contact name used for sorting.
+     *
+     * @return file-as string honoring phonetic fields
+     */
+    public String getSortName() throws ServiceException {
+        return getFileAsString(mFields, true);
+    }
+
+    /**
+     * Returns the "file as" string used for listing purposes.
+     * <p>
+     * This value is derived by using the {@code fileAs} contact field value to
+     * select a standard or custom formatting to apply to the contact's fields.
+     * Supported {@code fileAs} values are:
+     * <ul>
+     *  <li>{@code 1} - Last, First
+     *  <li>{@code 2} - First Last
+     *  <li>{@code 3} - Company
+     *  <li>{@code 4} - Last, First (Company)
+     *  <li>{@code 5} - First Last (Company)
+     *  <li>{@code 6} - Company (Last, First)
+     *  <li>{@code 7} - Company (First Last)
+     *  <li>{@code 8:your name here} - The string "your name here"
+     * </ul>
+     * When a {@code fileAs} value is not specified, {@code 1} is used as the
+     * default.
+     */
     public String getFileAsString() throws ServiceException {
-        return getFileAsString(mFields);
+        return getFileAsString(mFields, false);
     }
 
     public static String getFileAsString(Map<String, String> fields) throws ServiceException {
+        return getFileAsString(fields, false);
+    }
+
+    private static String getFileAsString(Map<String, String> fields,
+            boolean phonetic) throws ServiceException {
+
         String fileAs = fields.get(ContactConstants.A_fileAs);
         String[] fileParts = (fileAs == null ? null : fileAs.split(":", 2));
         int fileAsInt = ContactConstants.FA_DEFAULT;
@@ -333,15 +354,32 @@ public class Contact extends MailItem {
             }
         }
 
-        String company = fields.get(ContactConstants.A_company);
-        if (company == null)
-            company = "";
-        String first = fields.get(ContactConstants.A_firstName);
-        if (first == null)
-            first = "";
-        String last = fields.get(ContactConstants.A_lastName);
-        if (last == null)
-            last = "";
+        String company = null;
+        if (phonetic) {
+            company = fields.get(ContactConstants.A_phoneticCompany);
+        }
+        if (Strings.isNullOrEmpty(company)) {
+            company = fields.get(ContactConstants.A_company);
+        }
+        company = Strings.nullToEmpty(company);
+
+        String first = null;
+        if (phonetic) {
+            first = fields.get(ContactConstants.A_phoneticFirstName);
+        }
+        if (Strings.isNullOrEmpty(first)) {
+            first = fields.get(ContactConstants.A_firstName);
+        }
+        first = Strings.nullToEmpty(first);
+
+        String last = null;
+        if (phonetic) {
+            last = fields.get(ContactConstants.A_phoneticLastName);
+        }
+        if (Strings.isNullOrEmpty(last)) {
+            last = fields.get(ContactConstants.A_lastName);
+        }
+        last = Strings.nullToEmpty(last);
 
         StringBuilder result = new StringBuilder();
         switch (fileAsInt) {
@@ -724,14 +762,14 @@ public class Contact extends MailItem {
     }
 
 
-    @Override public String toString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append("contact: {");
-        appendCommonMembers(sb);
-        for (Map.Entry<String, String> entry : mFields.entrySet())
-            sb.append(", ").append(entry.getKey()).append(": ").append(entry.getValue());
-        sb.append("}");
-        return sb.toString();
+    @Override
+    public String toString() {
+        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        appendCommonMembers(helper);
+        for (Map.Entry<String, String> entry : mFields.entrySet()) {
+            helper.add(entry.getKey(), entry.getValue());
+        }
+        return helper.toString();
     }
 
     public String getVCardUID() {

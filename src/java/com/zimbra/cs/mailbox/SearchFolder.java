@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -18,6 +18,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import com.google.common.base.Objects;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
@@ -83,7 +84,7 @@ public class SearchFolder extends Folder {
     /** Creates a new SearchFolder and persists it to the database.  A
      *  real nonnegative item ID must be supplied from a previous call to
      *  {@link Mailbox#getNextItemId(int)}.
-     * 
+     *
      * @param id      The id for the new search folder.
      * @param parent  The parent folder to place the new folder in.
      * @param name    The new folder's name.
@@ -138,7 +139,7 @@ public class SearchFolder extends Folder {
         ZimbraLog.mailop.info("Adding SearchFolder %s: id=%d, parentId=%d, parentName=%s.",
             name, data.id, parent.getId(), parent.getName());
         DbMailItem.create(mbox, data, null);
-        
+
         SearchFolder search = new SearchFolder(mbox, data);
         search.finishCreation(parent);
         return search;
@@ -148,7 +149,7 @@ public class SearchFolder extends Folder {
      *  Persists the updated version to the cache and to the database.
      *  Omitting the query is not permitted; omitting attributes causes the
      *  search to use the default <code>types</code> and <code>sort</code>.
-     * 
+     *
      * @param query   The new query associated with the search folder.
      * @param types   The new (optional) set of item types the search returns.
      * @param sort    The new (optional) order the results are returned in.
@@ -180,7 +181,7 @@ public class SearchFolder extends Folder {
     /** Cleans up the provided query string and verifies that it's not blank.
      *  Removes all non-XML-safe control characters and trims leading and
      *  trailing whitespace.
-     * 
+     *
      * @param query  The query string.
      * @return The cleaned-up query string.
      * @throws ServiceException   The following error codes are possible:<ul>
@@ -223,13 +224,12 @@ public class SearchFolder extends Folder {
     private static final String CN_NAME  = "name";
     private static final String CN_QUERY = "query";
 
-    @Override public String toString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append("search: {");
-        appendCommonMembers(sb).append(", ");
-        sb.append(CN_NAME).append(": ").append(getName()).append(", ");
-        sb.append(CN_QUERY).append(": ").append(getQuery());
-        sb.append("}");
-        return sb.toString();
+    @Override
+    public String toString() {
+        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        appendCommonMembers(helper);
+        helper.add(CN_NAME, getName());
+        helper.add(CN_QUERY, getQuery());
+        return helper.toString();
     }
 }

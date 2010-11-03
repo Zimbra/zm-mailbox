@@ -95,7 +95,7 @@ public final class ContactHit extends ZimbraHit {
     @Override
     public String getName() throws ServiceException {
         if (mCachedName == null) {
-            mCachedName = getContact().getFileAsString();
+            mCachedName = getContact().getSortName();
         }
         return mCachedName;
     }

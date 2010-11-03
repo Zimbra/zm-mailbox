@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ListUtil;
@@ -92,7 +93,7 @@ public class Folder extends MailItem {
         return "";
     }
 
-    /** Returns the folder's absolute path.  Paths are UNIX-style with 
+    /** Returns the folder's absolute path.  Paths are UNIX-style with
      *  <tt>'/'</tt> as the path delimiter.  Paths are relative to the user
      *  root folder ({@link Mailbox#ID_FOLDER_USER_ROOT}), which has the path
      *  <tt>"/"</tt>.  So the Inbox's path is <tt>"/Inbox"</tt>, etc. */
@@ -237,7 +238,7 @@ public class Folder extends MailItem {
     /** Returns whether the folder is client-visible.  Folders below
      *  the user root folder ({@link Mailbox#ID_FOLDER_USER_ROOT}) are
      *  visible; all others are hidden.
-     * 
+     *
      * @see Mailbox#initialize() */
     public boolean isHidden() {
         switch (mId) {
@@ -269,7 +270,7 @@ public class Folder extends MailItem {
      *  been granted on this folder.  The owner of the {@link Mailbox} has
      *  all rights on all items in the Mailbox, as do all admin accounts.
      *  All other users must be explicitly granted access.<p>
-     * 
+     *
      *  The set of rights that apply to a given folder is derived by starting
      *  at that folder and going up the folder hierarchy.  If we hit a folder
      *  that has a set of rights explicitly set on it, we stop and use those.
@@ -283,7 +284,7 @@ public class Folder extends MailItem {
      *    <li>...
      *    <li>the set of inherited rights granted on the mailbox's root folder
      *    <li>no rights at all</ul><p>
-     * 
+     *
      *  So if the folder hierarchy looks like this:<pre>
      *                   root  <- "read+write" granted to user A
      *                   /  \
@@ -293,7 +294,7 @@ public class Folder extends MailItem {
      *  then user A has "write" rights on folders V and X, but not W, Y, and Z,
      *  user A has "read" rights on folders V, X, and Z but not W or Y, and
      *  user B has "read" rights on folder Z but not V, X, W, or Y.
-     * 
+     *
      * @param rightsNeeded  A set of rights (e.g. {@link ACL#RIGHT_READ}
      *                      and {@link ACL#RIGHT_DELETE}).
      * @param authuser      The user whose rights we need to query.
@@ -322,10 +323,10 @@ public class Folder extends MailItem {
             return 0;
         return mParent.checkACL(rightsNeeded, authuser, asAdmin);
     }
-    
+
     /** Grants the specified set of rights to the target and persists them
      *  to the database.
-     * 
+     *
      * @param zimbraId  The zimbraId of the entry being granted rights.
      * @param type      The type of principal the grantee's ID refers to.
      * @param rights    A bitmask of the rights being granted.
@@ -339,7 +340,7 @@ public class Folder extends MailItem {
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
         if (type == ACL.GRANTEE_USER && zimbraId.equalsIgnoreCase(getMailbox().getAccountId()))
             throw ServiceException.PERM_DENIED("cannot grant access to the owner of the folder");
-        
+
         // if there's an ACL on the folder, the folder does not inherit from its parent
         alterTag(mMailbox.getFlagById(Flag.ID_FLAG_NO_INHERIT), true);
 
@@ -353,7 +354,7 @@ public class Folder extends MailItem {
 
     /** Removes the set of rights granted to the specified (id, type) pair
      *  and updates the database accordingly.
-     * 
+     *
      * @param zimbraId  The zimbraId of the entry being revoked rights.
      * @perms {@link ACL#RIGHT_ADMIN} on the folder
      * @throws ServiceException The following error codes are possible:<ul>
@@ -369,7 +370,7 @@ public class Folder extends MailItem {
         ACL acl = getEffectiveACL();
         if (acl == null || !acl.revokeAccess(zimbraId))
             return;
-        
+
         // if there's an ACL on the folder, the folder does not inherit from its parent
         alterTag(mMailbox.getFlagById(Flag.ID_FLAG_NO_INHERIT), true);
 
@@ -382,7 +383,7 @@ public class Folder extends MailItem {
 
     /** Replaces the folder's {@link ACL} with the supplied one and updates
      *  the database accordingly.
-     * 
+     *
      * @param acl  The new ACL being applied (<tt>null</tt> is OK).
      * @perms {@link ACL#RIGHT_ADMIN} on the folder
      * @throws ServiceException The following error codes are possible:<ul>
@@ -444,7 +445,7 @@ public class Folder extends MailItem {
 
     /** Returns the subfolder with the given name.  Name comparisons are
      *  case-insensitive.
-     * 
+     *
      * @param name  The folder name to search for.
      * @return The matching subfolder, or <tt>null</tt> if no such folder
      *         exists. */
@@ -505,7 +506,7 @@ public class Folder extends MailItem {
      *  "leaf node" items in the folder are summed; items in subfolders are
      *  included only in the size of the subfolder.
      * @param countDelta    The change in item count, negative or positive.
-     * @param deletedDelta  The change in number of IMAP \Deleted items. 
+     * @param deletedDelta  The change in number of IMAP \Deleted items.
      * @param sizeDelta     The change in total size, negative or positive.*/
     void updateSize(int countDelta, int deletedDelta, long sizeDelta) throws ServiceException {
         if (!trackSize())
@@ -628,7 +629,7 @@ public class Folder extends MailItem {
     /** Returns whether the folder can contain the given item.  We make
      *  the same checks as in {@link #canContain(byte)}, and we also make
      *  sure to avoid any cycles of folders.
-     * 
+     *
      * @param child  The {@link MailItem} object to check. */
     boolean canContain(MailItem child) {
         if (!canContain(child.getType())) {
@@ -646,7 +647,7 @@ public class Folder extends MailItem {
      *  that the Tags folder can only contain {@link Tag}s (and vice versa),
      *  the Conversations folder can only contain {@link Conversation}s
      *  (and vice versa), and the Spam folder can't have subfolders.
-     * 
+     *
      * @param type  The type of object, e.g. {@link MailItem#TYPE_TAG}. */
     boolean canContain(byte type) {
         if ((type == TYPE_TAG) != (mId == Mailbox.ID_FOLDER_TAGS))
@@ -662,7 +663,7 @@ public class Folder extends MailItem {
     /** Creates a new Folder and persists it to the database.  A real
      *  nonnegative item ID must be supplied from a previous call to
      *  {@link Mailbox#getNextItemId(int)}.
-     * 
+     *
      * @param id      The id for the new folder.
      * @param mbox    The {@link Mailbox} to create the folder in.
      * @param parent  The parent folder to place the new folder in.
@@ -686,7 +687,7 @@ public class Folder extends MailItem {
     /** Creates a new Folder with optional attributes and persists it
      *  to the database.  A real nonnegative item ID must be supplied
      *  from a previous call to {@link Mailbox#getNextItemId(int)}.
-     * 
+     *
      * @param id          The id for the new folder.
      * @param mbox        The {@link Mailbox} to create the folder in.
      * @param parent      The parent folder to place the new folder in.
@@ -744,11 +745,11 @@ public class Folder extends MailItem {
         folder.finishCreation(parent);
         return folder;
     }
-    
+
     /**
      * Change the default view of this Folder.  Currently this call is only used during migration to correct a
      * folder created with wrong view.
-     * 
+     *
      * @param view the new default view of this folder
      * @throws ServiceException
      */
@@ -768,10 +769,10 @@ public class Folder extends MailItem {
      *  calendar (<tt>.ics</tt> file), an RSS feed, etc.  Note that you
      *  cannot add a remote data source to an existing folder, as refreshing
      *  the linked content empties the folder.<p>
-     * 
+     *
      *  This is <i>not</i> used to mount other Zimbra users' folders; to do
      *  that, use a {@link Mountpoint}.
-     * 
+     *
      * @param url  The new URL for the folder, or <tt>null</tt> to remove the
      *             association with a remote object.
      * @perms {@link ACL#RIGHT_WRITE} on the folder
@@ -802,7 +803,7 @@ public class Folder extends MailItem {
     /** Records the last-synced information for a subscribed folder.  If the
      *  folder does not have an associated URL, no action is taken and no
      *  exception is thrown.
-     * 
+     *
      * @param guid  The last synchronized remote item's GUID.
      * @param date  The last synchronized remote item's timestamp.
      * @perms {@link ACL#RIGHT_WRITE} on the folder
@@ -830,12 +831,12 @@ public class Folder extends MailItem {
 
         markItemModified(Change.MODIFIED_URL);
         if (mSyncData == null)
-        	mSyncData = new SyncData(null, null, date);
+            mSyncData = new SyncData(null, null, date);
         else
-        	mSyncData.lastDate = date;
+            mSyncData.lastDate = date;
         saveMetadata();
     }
-    
+
     private void recursiveAlterUnread(boolean unread) throws ServiceException {
         alterUnread(unread);
         if (mSubfolders != null) {
@@ -843,13 +844,13 @@ public class Folder extends MailItem {
                 subfolder.recursiveAlterUnread(unread);
         }
     }
-    
+
     /** Updates the unread state of all items in the folder.  Persists the
      *  change to the database and cache, and also updates the unread counts
      *  for the folder and the affected items' parents and {@link Tag}s
      *  appropriately.  <i>Note: Folders may only be marked read, not
      *  unread.</i>
-     * 
+     *
      * @perms {@link ACL#RIGHT_READ} on the folder,
      *        {@link ACL#RIGHT_WRITE} on all affected messages. */
     @Override void alterUnread(boolean unread) throws ServiceException {
@@ -910,12 +911,12 @@ public class Folder extends MailItem {
      *  or removed on a folder.</i>  For folder-specific flags like
      *  {@link Mailbox#mSubscribedFlag}, the tagging or untagging applies to
      *  the <tt>Folder</tt> itself.<p>
-     * 
+     *
      *  You must use {@link #alterUnread} to change a folder's unread state.<p>
-     *  
+     *
      *  Note that clearing the "no inherit" flag on a folder enables permission
      *  inheritance and hence clears the folder's ACL as a side-effect.
-     * 
+     *
      * @perms {@link ACL#RIGHT_WRITE} on the folder */
     @Override void alterTag(Tag tag, boolean newValue) throws ServiceException {
         // folder flags are applied to the folder, not the contents
@@ -963,7 +964,7 @@ public class Folder extends MailItem {
      *  (e.g. from <tt>foo</tt> to <tt>FOO</tt>) is allowed.  Trailing
      *  whitespace is stripped from the name.  If you don't want the item to be
      *  moved, you must pass <tt>folder.getFolder()</tt> as the second parameter.
-     * 
+     *
      * @perms {@link ACL#RIGHT_WRITE} on the folder to rename it,
      *        {@link ACL#RIGHT_DELETE} on the folder and
      *        {@link ACL#RIGHT_INSERT} on the target folder to move it */
@@ -977,7 +978,7 @@ public class Folder extends MailItem {
     }
 
     /** Moves this folder so that it is a subfolder of <tt>target</tt>.
-     * 
+     *
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_DELETE} on the folder being moved */
     @Override boolean move(Folder target) throws ServiceException {
@@ -996,7 +997,7 @@ public class Folder extends MailItem {
         // moving a folder to the Trash marks its contents as read
         if (!inTrash() && target.inTrash())
             recursiveAlterUnread(false);
-        
+
         // tell the folder's old and new parents
         mParent.removeChild(this);
         target.addChild(this);
@@ -1008,7 +1009,7 @@ public class Folder extends MailItem {
         mData.parentId = target.getId();
         mData.metadataChanged(mMailbox);
         DbMailItem.setFolder(this, target);
-        
+
         return true;
     }
 
@@ -1096,7 +1097,7 @@ public class Folder extends MailItem {
      *  maximum change number they know about, this set will also exclude
      *  any item for which the (modification/content) change number is
      *  greater.
-     * 
+     *
      * @perms {@link ACL#RIGHT_DELETE} on the folder
      * @throws ServiceException The following error codes are possible:<ul>
      *    <li><tt>mail.MODIFY_CONFLICT</tt> - if the caller specified a
@@ -1145,7 +1146,7 @@ public class Folder extends MailItem {
         delete(mbox, info, null, MailItem.DeleteScope.ENTIRE_ITEM, false);
 
         if (deleteEmptySubfolders) {
-            // Iterate folder list in order of decreasing depth. 
+            // Iterate folder list in order of decreasing depth.
             for (int i = folders.size() - 1; i >= 1; i--) {
                 Folder f = folders.get(i);
                 long date = (useChangeDate ? f.getChangeDate() : f.getDate()) / 1000;
@@ -1154,7 +1155,7 @@ public class Folder extends MailItem {
                 }
             }
         }
-        
+
         List<Integer> ids = info.itemIds.getIds(MailItem.TYPE_MESSAGE);
         return (ids == null ? 0 : ids.size());
     }
@@ -1256,15 +1257,14 @@ public class Folder extends MailItem {
     private static final String CN_DELETED        = "deleted";
     private static final String CN_DELETED_UNREAD = "del_unread";
 
-    @Override public String toString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append("folder: {");
-        sb.append(CN_NAME).append(": \"").append(getName()).append("\", ");
-        appendCommonMembers(sb).append(", ");
-        sb.append(CN_DELETED).append(": ").append(mDeletedCount).append(", ");
-        sb.append(CN_DELETED_UNREAD).append(": ").append(mDeletedUnreadCount).append(", ");
-        sb.append(CN_ATTRIBUTES).append(": ").append(mAttributes);
-        sb.append("}");
-        return sb.toString();
+    @Override
+    public String toString() {
+        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        helper.add(CN_NAME, getName());
+        appendCommonMembers(helper);
+        helper.add(CN_DELETED, mDeletedCount);
+        helper.add(CN_DELETED_UNREAD, mDeletedUnreadCount);
+        helper.add(CN_ATTRIBUTES, mAttributes);
+        return helper.toString();
     }
 }

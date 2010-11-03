@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Objects;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
@@ -61,17 +62,17 @@ public class Document extends MailItem {
     }
 
     public String getFragment() {
-    	return mFragment == null ? "" : mFragment;
+        return mFragment == null ? "" : mFragment;
     }
-    
+
     public String getLockOwner() {
         return mLockOwner;
     }
-    
+
     public long getLockTimestamp() {
         return mLockTimestamp;
     }
-    
+
     public String getDescription() {
         return mDescription == null ? "" : mDescription;
     }
@@ -92,7 +93,7 @@ public class Document extends MailItem {
         try {
             MailboxBlob mblob = getBlob();
             if (mblob == null) {
-                ZimbraLog.index.warn("Unable to fetch blob for Document id "+mId+" version "+mVersion+" on volume "+getLocator());  
+                ZimbraLog.index.warn("Unable to fetch blob for Document id "+mId+" version "+mVersion+" on volume "+getLocator());
                 throw new MailItem.TemporaryIndexingException();
             }
 
@@ -129,12 +130,12 @@ public class Document extends MailItem {
 
         // new revision has at least new date.
         markItemModified(Change.MODIFIED_METADATA);
-        
+
         // new revision might have new name.
         if (!mData.name.equals(pd.getFilename())) {
             markItemModified(Change.MODIFIED_NAME);
         }
-        
+
         mContentType = pd.getContentType();
         mCreator     = pd.getCreator();
         mFragment    = pd.getFragment();
@@ -155,7 +156,7 @@ public class Document extends MailItem {
     }
 
     protected static UnderlyingData prepareCreate(byte type, int id, Folder folder, String name, String mimeType,
-                                                  ParsedDocument pd, Metadata meta, CustomMetadata custom) 
+                                                  ParsedDocument pd, Metadata meta, CustomMetadata custom)
     throws ServiceException {
         if (folder == null || !folder.canContain(TYPE_DOCUMENT))
             throw MailServiceException.CANNOT_CONTAIN();
@@ -199,7 +200,7 @@ public class Document extends MailItem {
         pd.setVersion(doc.getVersion());
         return doc;
     }
-    
+
     @Override void decodeMetadata(Metadata meta) throws ServiceException {
         // roll forward from the old versioning mechanism (old revisions are lost)
         MetadataList revlist = meta.getList(Metadata.FN_REVISIONS, true);
@@ -250,22 +251,25 @@ public class Document extends MailItem {
     private static final String CN_LOCKTIMESTAMP = "locked_at";
     private static final String CN_DESCRIPTION = "description";
 
-    @Override public String toString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append(getNameForType(this)).append(": {");
-        sb.append(CN_FILE_NAME).append(": ").append(getName()).append(", ");
-        sb.append(CN_EDITOR).append(": ").append(getCreator()).append(", ");
-        sb.append(CN_MIME_TYPE).append(": ").append(mContentType).append(", ");
-        appendCommonMembers(sb).append(", ");
-        sb.append(CN_FRAGMENT).append(": ").append(mFragment);
-        if (mDescription != null)
-            sb.append(CN_DESCRIPTION).append(": ").append(mDescription);
-        if (mLockOwner != null)
-            sb.append(CN_LOCKOWNER).append(": ").append(mLockOwner);
-        if (mLockTimestamp > 0)
-            sb.append(CN_LOCKTIMESTAMP).append(": ").append(mLockTimestamp);
-        sb.append("}");
-        return sb.toString();
+    @Override
+    public String toString() {
+        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        helper.add("type", getNameForType(this));
+        helper.add(CN_FILE_NAME, getName());
+        helper.add(CN_EDITOR, getCreator());
+        helper.add(CN_MIME_TYPE, mContentType);
+        appendCommonMembers(helper);
+        helper.add(CN_FRAGMENT, mFragment);
+        if (mDescription != null) {
+            helper.add(CN_DESCRIPTION, mDescription);
+        }
+        if (mLockOwner != null) {
+            helper.add(CN_LOCKOWNER, mLockOwner);
+        }
+        if (mLockTimestamp > 0) {
+            helper.add(CN_LOCKTIMESTAMP, mLockTimestamp);
+        }
+        return helper.toString();
     }
 
     @Override protected boolean trackUserAgentInMetadata() {
@@ -276,14 +280,14 @@ public class Document extends MailItem {
         checkLock();
         return super.setContent(staged, content);
     }
-    
+
     @Override boolean move(Folder target) throws ServiceException {
         checkLock();
         return super.move(target);
     }
-    
+
     @Override void lock(Account authuser) throws ServiceException {
-        if (mLockOwner != null && 
+        if (mLockOwner != null &&
                 !mLockOwner.equalsIgnoreCase(authuser.getId()))
             throw MailServiceException.CANNOT_LOCK(mId, mLockOwner);
         mLockOwner = authuser.getId();
@@ -291,7 +295,7 @@ public class Document extends MailItem {
         markItemModified(Change.MODIFIED_LOCK);
         saveMetadata();
     }
-    
+
     @Override void unlock(Account authuser) throws ServiceException {
         if (mLockOwner == null)
             return;
@@ -308,7 +312,7 @@ public class Document extends MailItem {
         Account authenticatedAccount = mMailbox.getAuthenticatedAccount();
         if (authenticatedAccount == null)
             authenticatedAccount = mMailbox.getAccount();
-        if (mLockOwner != null && 
+        if (mLockOwner != null &&
                 !authenticatedAccount.getId().equalsIgnoreCase(mLockOwner))
             throw MailServiceException.LOCKED(mId, mLockOwner);
     }

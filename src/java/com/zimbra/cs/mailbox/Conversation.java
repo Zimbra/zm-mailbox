@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.base.Objects;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.SortBy;
@@ -48,7 +49,7 @@ public class Conversation extends MailItem {
      *  taking the <tt>Subject:</tt> header of the first message and removing
      *  prefixes (e.g. <tt>"Re:"</tt>) and suffixes (e.g. <tt>"(fwd)"</tt>)
      *  and the like.
-     * 
+     *
      * @see ParsedMessage#normalizeSubject */
     public String getNormalizedSubject() {
         return ParsedMessage.normalize(getSubject());
@@ -101,7 +102,7 @@ public class Conversation extends MailItem {
      *  metadata.  If that's either missing or invalid, recalculates the
      *  Conversation's metadata from its constituent messages and rewrites
      *  the database row.
-     *  
+     *
      * @return <tt>true</tt> if the metadata was recalculated, <tt>false</tt>
      *         if the SenderList was generated from existing data */
     boolean loadSenderList() throws ServiceException {
@@ -134,7 +135,7 @@ public class Conversation extends MailItem {
 
     SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
         Collections.sort(msgs, new Message.SortDateAscending());
-        
+
         markItemModified(RECALCULATE_CHANGE_MASK);
 
         mEncodedSenders = null;
@@ -169,7 +170,7 @@ public class Conversation extends MailItem {
     /** Returns all the {@link Message}s in this conversation.  The messages
      *  are fetched from the {@link Mailbox}'s cache, if possible; if not,
      *  they're fetched from the database.
-     * 
+     *
      * @param sort  The sort order for the messages, specified by one of the
      *              <code>SORT_XXX</code> constants from {@link DbMailItem}. */
     List<Message> getMessages(SortBy sort) throws ServiceException {
@@ -266,7 +267,7 @@ public class Conversation extends MailItem {
      *  Persists the change to the database and cache, and also updates
      *  the unread counts for the affected items' {@link Folder}s and
      *  {@link Tag}s appropriately.<p>
-     * 
+     *
      *  Messages in the conversation are omitted from this operation if
      *  one or more of the following applies:<ul>
      *     <li>The caller lacks {@link ACL#RIGHT_WRITE} permission on
@@ -278,7 +279,7 @@ public class Conversation extends MailItem {
      *         the <code>Message</code> is greater.</ul>
      *  As a result of all these constraints, no messages may actually be
      *  marked read/unread.
-     * 
+     *
      * @perms {@link ACL#RIGHT_WRITE} on all the messages */
     @Override void alterUnread(boolean unread) throws ServiceException {
         markItemModified(Change.MODIFIED_UNREAD);
@@ -317,9 +318,9 @@ public class Conversation extends MailItem {
 
     /** Tags or untags all messages in the conversation.  Persists the change
      *  to the database and cache.  If the conversation includes at least one
-     *  unread {@link Message} whose tagged state is changing, updates the 
+     *  unread {@link Message} whose tagged state is changing, updates the
      *  {@link Tag}'s unread count appropriately.<p>
-     * 
+     *
      *  Messages in the conversation are omitted from this operation if
      *  one or more of the following applies:<ul>
      *     <li>The caller lacks {@link ACL#RIGHT_WRITE} permission on
@@ -331,7 +332,7 @@ public class Conversation extends MailItem {
      *         the <code>Message</code> is greater.</ul>
      *  As a result of all these constraints, no messages may actually be
      *  tagged/untagged.
-     * 
+     *
      * @perms {@link ACL#RIGHT_WRITE} on all the messages */
     @Override void alterTag(Tag tag, boolean add) throws ServiceException {
         if (tag == null)
@@ -421,11 +422,11 @@ public class Conversation extends MailItem {
     /** Moves all the conversation's {@link Message}s to a different
      *  {@link Folder}.  Persists the change to the database and the in-memory
      *  cache.  Updates all relevant unread counts, folder sizes, etc.<p>
-     * 
+     *
      *  Messages moved to the Trash folder are automatically marked read.
      *  Conversations moved to the Junk folder will not receive newly-delivered
      *  messages.<p>
-     * 
+     *
      *  Messages in the conversation are omitted from this operation if
      *  one or more of the following applies:<ul>
      *     <li>The caller lacks {@link ACL#RIGHT_WRITE} permission on
@@ -437,7 +438,7 @@ public class Conversation extends MailItem {
      *         the <code>Message</code> is greater.</ul>
      *  As a result of all these constraints, no messages may actually be
      *  moved.
-     * 
+     *
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_DELETE} on the messages' source folders */
     @Override boolean move(Folder target) throws ServiceException {
@@ -460,7 +461,7 @@ public class Conversation extends MailItem {
         List<Integer> markedRead = new ArrayList<Integer>();
         List<Message> moved = new ArrayList<Message>();
         List<Message> indexUpdated = new ArrayList<Message>();
-        
+
         for (Message msg : msgs) {
             Folder source = msg.getFolder();
 
@@ -488,7 +489,7 @@ public class Conversation extends MailItem {
                     markedRead.add(msg.getId());
                 }
             }
-            
+
             // moved an item out of the spam folder, need to index it
             if (msg.inSpam() && !target.inSpam()) {
                 if (msg.isIndexed() && msg.getIndexId() != -1) {
@@ -528,8 +529,8 @@ public class Conversation extends MailItem {
                     getMailopContext(this), getMailopContext(target), ids);
             }
             DbMailItem.setFolder(moved, target);
-            
-            if (!indexUpdated.isEmpty()) { 
+
+            if (!indexUpdated.isEmpty()) {
                 DbMailItem.setIndexIds(mMailbox, indexUpdated);
                 for (Message msg : indexUpdated) {
                     mMailbox.queueForIndexing(msg, false, null);
@@ -687,7 +688,7 @@ public class Conversation extends MailItem {
     /** Determines the set of {@link Message}s to be deleted from this
      *  <code>Conversation</code>.  Assembles a new {@link PendingDelete}
      *  object encapsulating the data on the items to be deleted.<p>
-     * 
+     *
      *  A message will be deleted unless:<ul>
      *     <li>The caller lacks {@link ACL#RIGHT_DELETE} permission on
      *         the <code>Message</code>.
@@ -698,7 +699,7 @@ public class Conversation extends MailItem {
      *         the <code>Message</code> is greater.</ul>
      *  As a result of all these constraints, no messages may actually be
      *  deleted.
-     * 
+     *
      * @throws ServiceException The following error codes are possible:<ul>
      *    <li><code>mail.MODIFY_CONFLICT</code> - if the caller specified a
      *        max change number and a modification check, and the modified
@@ -773,7 +774,7 @@ public class Conversation extends MailItem {
         String encoded = mEncodedSenders;
         if (encoded == null && mSenderList != null)
             encoded = mSenderList.toString();
-    	return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, encoded);
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, encoded);
     }
 
     static String encodeMetadata(Color color, int version, CustomMetadataList extended, SenderList senders) {
@@ -784,17 +785,14 @@ public class Conversation extends MailItem {
         meta.put(Metadata.FN_PARTICIPANTS, encodedSenders);
         return MailItem.encodeMetadata(meta, color, version, extended);
     }
-    
+
     @Override public String getSortSubject() {
         // not actually used since Conversations aren't indexed...but here for correctness/completeness
         return getNormalizedSubject().toUpperCase();
     }
 
-    @Override public String toString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append("conversation: {");
-        appendCommonMembers(sb);
-        sb.append("}");
-        return sb.toString();
+    @Override
+    public String toString() {
+        return appendCommonMembers(Objects.toStringHelper(this)).toString();
     }
 }

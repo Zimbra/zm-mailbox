@@ -32,6 +32,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.json.JSONException;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.MimeConstants;
@@ -451,9 +452,9 @@ public class ParsedContact {
     }
 
     private static void appendContactField(StringBuilder sb, ParsedContact contact, String fieldName) {
-        String s = contact.getFields().get(fieldName);
-        if (s!= null) {
-            sb.append(s).append(' ');
+        String value = contact.getFields().get(fieldName);
+        if (!Strings.isNullOrEmpty(value)) {
+            sb.append(value).append(' ');
         }
     }
 
@@ -490,10 +491,14 @@ public class ParsedContact {
 
         StringBuilder searchText = new StringBuilder(emailStrTokens).append(' ');
         appendContactField(searchText, this, ContactConstants.A_company);
+        appendContactField(searchText, this, ContactConstants.A_phoneticCompany);
         appendContactField(searchText, this, ContactConstants.A_firstName);
+        appendContactField(searchText, this, ContactConstants.A_phoneticFirstName);
         appendContactField(searchText, this, ContactConstants.A_lastName);
+        appendContactField(searchText, this, ContactConstants.A_phoneticLastName);
         appendContactField(searchText, this, ContactConstants.A_nickname);
         appendContactField(searchText, this, ContactConstants.A_fullName);
+        appendContactField(searchText, this, ContactConstants.A_phoneticFullName);
 
         // rebuild contentText here with the emailStr FIRST, then the other text.
         // The email addresses should be first so that they have a higher search score than the other

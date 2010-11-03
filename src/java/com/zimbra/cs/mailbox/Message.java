@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,6 +29,7 @@ import java.util.Set;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -146,7 +147,7 @@ public class Message extends MailItem {
                 meta.put(FN_INV_CHANGES, mInviteChanges.toString());
             if (mInvite != null)
                 meta.put(FN_INV, Invite.encodeMetadata(mInvite));
-            return meta; 
+            return meta;
         }
 
         static CalendarItemInfo decodeMetadata(Metadata meta, Mailbox mbox) throws ServiceException {
@@ -180,7 +181,7 @@ public class Message extends MailItem {
 
     /**
      * this one will call back into decodeMetadata() to do our initialization
-     * 
+     *
      * @param mbox
      * @param ud
      * @throws ServiceException
@@ -192,7 +193,7 @@ public class Message extends MailItem {
         if (mData.parentId < 0)
             mData.parentId = -mId;
     }
-    
+
     /** Returns whether the Message was created as a draft.  Note that this
      *  can only be set when the Message is created; it cannot be altered
      *  thereafter. */
@@ -219,7 +220,7 @@ public class Message extends MailItem {
      *  taking the <code>Subject:</code> header and removing prefixes (e.g.
      *  <code>"Re:"</code>) and suffixes (e.g. <code>"(fwd)"</code>) and
      *  the like.
-     * 
+     *
      * @see ParsedMessage#normalizeSubject */
     public String getNormalizedSubject() {
         return super.getSubject();
@@ -262,7 +263,7 @@ public class Message extends MailItem {
     }
 
     /** Returns the ID of the Message that this draft message is in reply to.
-     * 
+     *
      * @return The ID of the Message that this draft message is in reply to,
      *         or -1 for Messages that are not drafts or not replies/forwards.
      * @see #getDraftReplyType */
@@ -271,7 +272,7 @@ public class Message extends MailItem {
     }
 
     /** Returns the "reply type" for a draft message.
-     * 
+     *
      * @return <code>"f"</code> if this draft message is a forward,
      *         <code>"r"</code> if this draft message is a reply, or
      *         <code>""</code> for Messages that are not drafts or not
@@ -285,7 +286,7 @@ public class Message extends MailItem {
 
 
     /** Returns the ID of the account that was used to compose this draft message.
-     * 
+     *
      * @return The ID of the account used to compose this draft message, or ""
      *         for Messages that are not drafts.
      * @see #getDraftReplyType
@@ -296,7 +297,7 @@ public class Message extends MailItem {
 
     /** Returns the ID of the {@link com.zimbra.cs.account.Identity} that was
      *  used to compose this draft message.
-     * 
+     *
      * @return The ID of the Identity used to compose this draft message, or ""
      *         for Messages that are not drafts or did not specify an identity.
      * @see #getDraftReplyType
@@ -328,7 +329,7 @@ public class Message extends MailItem {
     public boolean isInvite() {
         return (mData.flags & Flag.BITMASK_INVITE) != 0;
     }
-    
+
     public boolean hasCalendarItemInfos() {
         return mCalendarItemInfos != null && !mCalendarItemInfos.isEmpty();
     }
@@ -357,7 +358,7 @@ public class Message extends MailItem {
      *  attachments are expanded and their components are presented as
      *  standard MIME attachments.  If TNEF or uuencode decoding fails, the
      *  MimeMessage wraps the raw message content.
-     * 
+     *
      * @return A MimeMessage wrapping the RFC822 content of the Message.
      * @throws ServiceException when errors occur opening, reading,
      *                          uncompressing, or parsing the message file,
@@ -376,7 +377,7 @@ public class Message extends MailItem {
      *  components are presented as standard MIME attachments.  If
      *  <tt>runConverters</tt> is <tt>false</tt> or if TNEF or uuencode
      *  decoding fails, the MimeMessage wraps the raw message content.
-     * 
+     *
      * @return A MimeMessage wrapping the RFC822 content of the Message.
      * @throws ServiceException when errors occur opening, reading,
      *                          uncompressing, or parsing the message file,
@@ -402,20 +403,20 @@ public class Message extends MailItem {
         Message create(Mailbox mbox, UnderlyingData data) throws ServiceException {
             return new Message(mbox, data);
         }
-        
+
         byte getType() {
             return TYPE_MESSAGE;
         }
     }
-    
+
     static Message create(int id, Folder folder, Conversation conv, ParsedMessage pm, StagedBlob staged,
                           boolean unread, int flags, long tags, DraftInfo dinfo,
-                          boolean noICal, ZVCalendar cal, CustomMetadataList extended)  
+                          boolean noICal, ZVCalendar cal, CustomMetadataList extended)
     throws ServiceException {
         return createInternal(id, folder, conv, pm, staged, unread, flags, tags,
                               dinfo, noICal, cal, extended, new MessageCreateFactory());
     }
-    
+
     protected static Message createInternal(int id, Folder folder, Conversation conv, ParsedMessage pm, StagedBlob staged,
                                             boolean unread, int flags, long tags, DraftInfo dinfo,
                                             boolean noICal, ZVCalendar cal, CustomMetadataList extended, MessageCreateFactory fact)
@@ -479,7 +480,7 @@ public class Message extends MailItem {
         data.tags        = tags;
         data.subject     = pm.getNormalizedSubject();
         data.metadata    = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, pm, flags, dinfo, null, null);
-        data.unreadCount = unread ? 1 : 0; 
+        data.unreadCount = unread ? 1 : 0;
         data.contentChanged(mbox);
 
         ZimbraLog.mailop.info("Adding Message: id=%d, Message-ID=%s, parentId=%d, folderId=%d, folderName=%s.",
@@ -799,11 +800,11 @@ public class Message extends MailItem {
                                 boolean discardExistingInvites = false;
                                 int calFolderId = calItem.getFolderId();
                                 if (!cur.isCancel() && calFolderId == Mailbox.ID_FOLDER_TRASH) {
-                                	discardExistingInvites = true;
+                                    discardExistingInvites = true;
                                     if (calItem.getType() == MailItem.TYPE_TASK)
-                                    	calFolderId = Mailbox.ID_FOLDER_TASKS;
+                                        calFolderId = Mailbox.ID_FOLDER_TASKS;
                                     else
-                                    	calFolderId = Mailbox.ID_FOLDER_CALENDAR;
+                                        calFolderId = Mailbox.ID_FOLDER_CALENDAR;
                                 }
 
                                 // If organizer didn't provide X-ZIMBRA-CHANGES, calculate what changed by comparing
@@ -852,7 +853,7 @@ public class Message extends MailItem {
             if (firstCalItem == null)
                 firstCalItem = calItem;
         }
-        
+
         if (updatedMetadata)
             saveMetadata();
 
@@ -977,13 +978,13 @@ public class Message extends MailItem {
      *  item's folder, its tag, and its parent.  Note that the parent is not
      *  fetched from the database, so notifications may be off in the case of
      *  uncached {@link Conversation}s when a {@link Message} changes state.
-     * 
+     *
      * @param delta  The change in unread count for this item. */
     @Override protected void updateUnread(int delta, int deletedDelta) throws ServiceException {
         if ((delta == 0 && deletedDelta == 0) || !trackUnread())
             return;
         markItemModified(Change.MODIFIED_UNREAD);
-        
+
         // grab the parent *before* we make any other changes
         MailItem parent = getParent();
 
@@ -1029,7 +1030,7 @@ public class Message extends MailItem {
                     .setDigest(getDigest());
                 pm = new ParsedMessage(opt);
             }
-            
+
             if (doConsistencyCheck) {
                 // because of bug 8263, we sometimes have fragments that are incorrect;
                 //   check them here and correct them if necessary
@@ -1044,13 +1045,13 @@ public class Message extends MailItem {
                 if (fragmentChanged || subjectChanged)
                     getMailbox().reanalyze(getId(), getType(), pm, getSize());
             }
-            
+
             // don't hold the lock while extracting text!
             pm.analyzeFully();
-            
+
             if (pm.hasTemporaryAnalysisFailure())
                 throw new MailItem.TemporaryIndexingException();
-            
+
             return pm.getLuceneDocuments();
         } catch (ServiceException e) {
             ZimbraLog.index.warn("Unable to generate index data for Message "+getId()+". Item will not be indexed", e);
@@ -1207,7 +1208,7 @@ public class Message extends MailItem {
         meta.put(Metadata.FN_FRAGMENT,   fragment);
         meta.put(Metadata.FN_PREFIX,     prefix);
         meta.put(Metadata.FN_RAW_SUBJ,   rawSubject);
-        
+
         if (calItemInfos != null) {
             MetadataList mdList = new MetadataList();
             for (CalendarItemInfo info : calItemInfos)
@@ -1244,15 +1245,15 @@ public class Message extends MailItem {
     private static final String CN_RECIPIENTS = "to";
     private static final String CN_FRAGMENT   = "fragment";
 
-    @Override public String toString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append("message: {");
-        appendCommonMembers(sb);
-        sb.append(CN_SENDER).append(": ").append(mSender).append(", ");
-        if (mRecipients != null)
-            sb.append(CN_RECIPIENTS).append(": ").append(mRecipients).append(", ");
-        sb.append(CN_FRAGMENT).append(": ").append(mFragment);
-        sb.append("}");
-        return sb.toString();
+    @Override
+    public String toString() {
+        Objects.ToStringHelper helper = Objects.toStringHelper(this);
+        appendCommonMembers(helper);
+        helper.add(CN_SENDER, mSender);
+        if (mRecipients != null) {
+            helper.add(CN_RECIPIENTS, mRecipients);
+        }
+        helper.add(CN_FRAGMENT, mFragment);
+        return helper.toString();
     }
 }
