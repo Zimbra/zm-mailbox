@@ -1303,11 +1303,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>compatibility mode for calendar server</desc>
 </attr>
 
-<attr id="244" name="zimbraSpamIsSpamAccount" type="email" max="256" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox">
+<attr id="244" name="zimbraSpamIsSpamAccount" type="email" max="256" cardinality="single" optionalIn="globalConfig">
   <desc>When user classifies a message as spam forward message via SMTP to this account</desc>
 </attr>
 
-<attr id="245" name="zimbraSpamIsNotSpamAccount" type="email" max="256" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox">
+<attr id="245" name="zimbraSpamIsNotSpamAccount" type="email" max="256" cardinality="single" optionalIn="globalConfig">
   <desc>When user classifies a message as not spam forward message via SMTP to this account</desc>
 </attr>
 
@@ -2310,22 +2310,22 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Notify for status change</desc>
 </attr>
 
-<attr id="465" name="zimbraSpamReportSenderHeader" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox">
+<attr id="465" name="zimbraSpamReportSenderHeader" type="string" cardinality="single" optionalIn="globalConfig">
   <globalConfigValue>X-Zimbra-Spam-Report-Sender</globalConfigValue>
   <desc>mail header name for sender in spam report</desc>
 </attr>
 
-<attr id="466" name="zimbraSpamReportTypeHeader" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox">
+<attr id="466" name="zimbraSpamReportTypeHeader" type="string" cardinality="single" optionalIn="globalConfig">
   <globalConfigValue>X-Zimbra-Spam-Report-Type</globalConfigValue>
   <desc>mail header name for report type in spam report</desc>
 </attr>
 
-<attr id="467" name="zimbraSpamReportTypeSpam" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox">
+<attr id="467" name="zimbraSpamReportTypeSpam" type="string" cardinality="single" optionalIn="globalConfig">
   <globalConfigValue>spam</globalConfigValue>
   <desc>spam report type value for spam</desc>
 </attr>
 
-<attr id="468" name="zimbraSpamReportTypeHam" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox">
+<attr id="468" name="zimbraSpamReportTypeHam" type="string" cardinality="single" optionalIn="globalConfig">
   <globalConfigValue>ham</globalConfigValue>
   <desc>spam report type value for ham</desc>
 </attr>
