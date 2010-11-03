@@ -47,6 +47,7 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.service.util.SpamHandler;
+import com.zimbra.cs.service.util.SpamHandler.SpamReport;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
@@ -506,8 +507,12 @@ public class ItemActionHelper {
             boolean fromSpam = item.inSpam();
             if ((fromSpam && toMailbox) || (!fromSpam && toSpam)) {
                 try {
-                    SpamHandler.getInstance().handle(mOpCtxt, mMailbox, item.getId(), item.getType(), toSpam);
-                    ZimbraLog.mailop.info("sent to spam filter for training (marked as " + (toSpam ? "" : "not ") + "spam): " + new ItemId(item).toString());
+                    Folder dest = mMailbox.getFolderById(mOpCtxt, mIidFolder.getId());
+                    SpamReport report = new SpamReport(toSpam, "remote " + mOperation, dest.getPath());
+                    Folder source = mMailbox.getFolderById(mOpCtxt, item.getFolderId());
+                    report.setSourceFolderPath(source.getPath());
+                    report.setDestAccountName(target.getName());
+                    SpamHandler.getInstance().handle(mOpCtxt, mMailbox, item.getId(), item.getType(), report);
                 } catch (OutOfMemoryError e) {
                     Zimbra.halt("out of memory", e);
                 } catch (Throwable t) {

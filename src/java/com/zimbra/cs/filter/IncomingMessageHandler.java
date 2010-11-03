@@ -27,6 +27,7 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
+import com.zimbra.cs.service.util.SpamHandler.SpamReport;
 
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
@@ -88,7 +89,8 @@ extends FilterHandler {
         try {
             Folder folder = mMailbox.getFolderByPath(null, folderPath);
             if (folder.getId() == Mailbox.ID_FOLDER_SPAM && id.isLocal()) {
-                SpamHandler.getInstance().handle(null, mMailbox, id.getId(), MailItem.TYPE_MESSAGE, true);
+                SpamReport report = new SpamReport(true, "filter", folderPath);
+                SpamHandler.getInstance().handle(null, mMailbox, id.getId(), MailItem.TYPE_MESSAGE, report);
             }
         } catch (NoSuchItemException e) {
             ZimbraLog.filter.debug("Unable to do spam training for message %s because folder path %s does not exist.",

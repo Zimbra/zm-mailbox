@@ -128,6 +128,7 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FeedManager;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
+import com.zimbra.cs.service.util.SpamHandler.SpamReport;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.session.AllAccountsRedoCommitCallback;
 import com.zimbra.cs.session.PendingModifications;
@@ -5360,7 +5361,7 @@ public class Mailbox {
                 int srcId = item.getId();
                 int newId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getDestId(srcId));
 
-                trainSpamFilter(octxt, item, target);
+                trainSpamFilter(octxt, item, target, "imap copy");
 
                 MailItem copy = item.icopy(target, newId);
                 result.add(copy);
@@ -5374,7 +5375,7 @@ public class Mailbox {
         }
     }
 
-    private <T extends MailItem> T trainSpamFilter(OperationContext octxt, T item, Folder target) {
+    private <T extends MailItem> T trainSpamFilter(OperationContext octxt, T item, Folder target, String opDescription) {
         // don't re-train filter on replayed operation
         if (mCurrentChange.getRedoPlayer() != null)
             return item;
@@ -5402,8 +5403,12 @@ public class Mailbox {
                     continue;
 
                 try {
-                    SpamHandler.getInstance().handle(octxt, this, candidate.getId(), candidate.getType(), toSpam);
-                    ZimbraLog.mailop.info(MailItem.getMailopContext(candidate) + " sent to spam filter for training (marked as " + (toSpam ? "" : "not ") + "spam)");
+                    SpamReport report = new SpamReport(toSpam, opDescription, target.getPath());
+                    Folder source = item.getFolder();
+                    if (!source.equals(target)) {
+                        report.setSourceFolderPath(source.getPath());
+                    }
+                    SpamHandler.getInstance().handle(octxt, this, candidate.getId(), candidate.getType(), report);
                 } catch (Exception e) {
                     ZimbraLog.mailop.info("could not train spam filter: " + MailItem.getMailopContext(candidate), e);
                 }
@@ -5519,7 +5524,7 @@ public class Mailbox {
                     oldFolderPaths.put(item.getId(), ((Folder) item).getPath());
 
                 // train the spam filter if necessary...
-                trainSpamFilter(octxt, item, target);
+                trainSpamFilter(octxt, item, target, "move");
 
                 // ...do the move...
                 boolean moved = item.move(target);
@@ -5572,7 +5577,7 @@ public class Mailbox {
                 folderId = item.getFolderId();
 
             Folder target = getFolderById(folderId);
-            trainSpamFilter(octxt, item, target);
+            trainSpamFilter(octxt, item, target, "rename");
 
             String oldName = item.getName();
             item.rename(name, target);
@@ -5638,7 +5643,7 @@ public class Mailbox {
             }
             redoRecorder.setParentIds(recorderParentIds);
 
-            trainSpamFilter(octxt, item, parent);
+            trainSpamFilter(octxt, item, parent, "rename");
 
             String name = parts[parts.length - 1];
             if (item instanceof Folder && !oldFolderPaths.containsKey(item.getId())) {
