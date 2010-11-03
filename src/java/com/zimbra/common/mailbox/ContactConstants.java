@@ -62,7 +62,6 @@ public final class ContactConstants {
     public static final String A_firstName = Attr.firstName.name();
     public static final String A_phoneticFirstName = Attr.phoneticFirstName.name();
     public static final String A_fullName = Attr.fullName.name();
-    public static final String A_phoneticFullName = Attr.phoneticFullName.name();
     public static final String A_homeCity = Attr.homeCity.name();
     public static final String A_homeCountry = Attr.homeCountry.name();
     public static final String A_homeFax = Attr.homeFax.name();
@@ -162,7 +161,6 @@ public final class ContactConstants {
         firstName,
         phoneticFirstName,
         fullName,
-        phoneticFullName,
         homeCity,
         homeCountry,
         homeFax,
