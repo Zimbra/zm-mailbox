@@ -51,6 +51,7 @@ public final class ContactConstants {
     public static final String A_canExpand = Attr.canExpand.name();
     public static final String A_carPhone = Attr.callbackPhone.name();
     public static final String A_company = Attr.company.name();
+    public static final String A_phoneticCompany = Attr.phoneticCompany.name();
     public static final String A_companyPhone = Attr.companyPhone.name();
     public static final String A_department = Attr.department.name();
     public static final String A_dlist = Attr.dlist.name();
@@ -59,7 +60,9 @@ public final class ContactConstants {
     public static final String A_email3 = Attr.email3.name();
     public static final String A_fileAs = Attr.fileAs.name();
     public static final String A_firstName = Attr.firstName.name();
+    public static final String A_phoneticFirstName = Attr.phoneticFirstName.name();
     public static final String A_fullName = Attr.fullName.name();
+    public static final String A_phoneticFullName = Attr.phoneticFullName.name();
     public static final String A_homeCity = Attr.homeCity.name();
     public static final String A_homeCountry = Attr.homeCountry.name();
     public static final String A_homeFax = Attr.homeFax.name();
@@ -74,6 +77,7 @@ public final class ContactConstants {
     public static final String A_isMyCard = "isMyCard";
     public static final String A_jobTitle = Attr.jobTitle.name();
     public static final String A_lastName = Attr.lastName.name();
+    public static final String A_phoneticLastName = Attr.phoneticLastName.name();
     public static final String A_member = Attr.member.name();
     public static final String A_middleName = Attr.middleName.name();
     public static final String A_mobilePhone = Attr.mobilePhone.name();
@@ -146,6 +150,7 @@ public final class ContactConstants {
         canExpand,
         carPhone,
         company,
+        phoneticCompany,
         companyPhone,
         description,
         department,
@@ -155,7 +160,9 @@ public final class ContactConstants {
         email3,
         fileAs,
         firstName,
+        phoneticFirstName,
         fullName,
+        phoneticFullName,
         homeCity,
         homeCountry,
         homeFax,
@@ -169,6 +176,7 @@ public final class ContactConstants {
         initials,
         jobTitle,
         lastName,
+        phoneticLastName,
         member,
         middleName,
         mobilePhone,
