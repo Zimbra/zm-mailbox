@@ -1686,7 +1686,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>phone number of contact in charge of resource</desc>
 </attr>
 
-<attr id="334" name="zimbraMessageIdDedupeCacheSize" type="integer" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox">
+<attr id="334" name="zimbraMessageIdDedupeCacheSize" type="integer" cardinality="single" optionalIn="globalConfig" min="0">
   <globalConfigValue>3000</globalConfigValue>
   <desc>Size of cache for delivery time dedupe based on Message-Id header.  Set to 0 to disable this type of deduping.</desc>
 </attr>
