@@ -391,7 +391,7 @@ public class UserServlet extends ZimbraServlet {
             resp.addHeader(WWW_AUTHENTICATE_HEADER, getRealmHeader(req, null));
             resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
         } else {
-            resp.sendError(HttpServletResponse.SC_FORBIDDEN, message);
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, message);
         }
     }
 
