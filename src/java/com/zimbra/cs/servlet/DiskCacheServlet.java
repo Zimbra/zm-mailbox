@@ -52,6 +52,7 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
     private String cacheDirName;
     private File cacheDir;
     private int cacheSize;
+    protected String cacheKeyPrefix;
 
     protected static final String EXT_COMPRESSED = ".gz";
     protected static final String P_CACHE_DIR = "resource-cache-dir";
@@ -63,6 +64,7 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
 
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
+        cacheKeyPrefix = getServletContext().getServletContextName().replaceAll("[^a-zA-Z0-9_]","");
         createCache();
         createCacheDir();
     }
@@ -114,7 +116,7 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
      * Returns the key used to create a file from a cacheId
      */
     protected String getCacheKey(String cacheId) {
-        return ByteUtil.getMD5Digest(cacheId.getBytes(), false);
+        return cacheKeyPrefix+'-'+ByteUtil.getMD5Digest(cacheId.getBytes(), false);
     }
     
     // cache management
