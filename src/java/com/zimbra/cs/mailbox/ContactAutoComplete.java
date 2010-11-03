@@ -486,7 +486,9 @@ public class ContactAutoComplete {
         }
 
         String firstName = (String) attrs.get(ContactConstants.A_firstName);
+        String phoneticFirstName = (String) attrs.get(ContactConstants.A_phoneticFirstName);
         String lastName = (String) attrs.get(ContactConstants.A_lastName);
+        String phoneticLastName = (String) attrs.get(ContactConstants.A_phoneticLastName);
         String middleName = (String) attrs.get(ContactConstants.A_middleName);
         String fullName = (String) attrs.get(ContactConstants.A_fullName);
         String nickname = (String) attrs.get(ContactConstants.A_nickname);
@@ -499,7 +501,9 @@ public class ContactAutoComplete {
         if (attrs.get(ContactConstants.A_dlist) == null) {
             boolean nameMatches =
                 matches(query, firstName) ||
+                matches(query, phoneticFirstName) ||
                 matches(query, lastName) ||
+                matches(query, phoneticLastName) ||
                 matches(query, fullName) ||
                 matches(query, firstLastName) ||
                 matches(query, nickname);

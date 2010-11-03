@@ -498,7 +498,6 @@ public class ParsedContact {
         appendContactField(searchText, this, ContactConstants.A_phoneticLastName);
         appendContactField(searchText, this, ContactConstants.A_nickname);
         appendContactField(searchText, this, ContactConstants.A_fullName);
-        appendContactField(searchText, this, ContactConstants.A_phoneticFullName);
 
         // rebuild contentText here with the emailStr FIRST, then the other text.
         // The email addresses should be first so that they have a higher search score than the other

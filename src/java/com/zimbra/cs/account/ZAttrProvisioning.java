@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101027-1629 */
+    /* build: 7.0.0_BETA1_1111 ysasaki 20101103-1516 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5398,6 +5398,30 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=41)
     public static final String A_zimbraPasswordMustChange = "zimbraPasswordMustChange";
+
+    /**
+     * phonetic company name
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1149)
+    public static final String A_zimbraPhoneticCompany = "zimbraPhoneticCompany";
+
+    /**
+     * phonetic first name
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1147)
+    public static final String A_zimbraPhoneticFirstName = "zimbraPhoneticFirstName";
+
+    /**
+     * phonetic last name
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1148)
+    public static final String A_zimbraPhoneticLastName = "zimbraPhoneticLastName";
 
     /**
      * name to use in greeting and sign-off; if empty, uses hostname

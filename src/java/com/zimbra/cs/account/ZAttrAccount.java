@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101027-1629 */
+    /* build: 7.0.0_BETA1_1111 ysasaki 20101103-1516 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -20039,6 +20039,222 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPasswordMustChange(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPasswordMustChange, "");
+        return attrs;
+    }
+
+    /**
+     * phonetic company name
+     *
+     * @return zimbraPhoneticCompany, or null if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1149)
+    public String getPhoneticCompany() {
+        return getAttr(Provisioning.A_zimbraPhoneticCompany, null);
+    }
+
+    /**
+     * phonetic company name
+     *
+     * @param zimbraPhoneticCompany new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1149)
+    public void setPhoneticCompany(String zimbraPhoneticCompany) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPhoneticCompany, zimbraPhoneticCompany);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * phonetic company name
+     *
+     * @param zimbraPhoneticCompany new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1149)
+    public Map<String,Object> setPhoneticCompany(String zimbraPhoneticCompany, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPhoneticCompany, zimbraPhoneticCompany);
+        return attrs;
+    }
+
+    /**
+     * phonetic company name
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1149)
+    public void unsetPhoneticCompany() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPhoneticCompany, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * phonetic company name
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1149)
+    public Map<String,Object> unsetPhoneticCompany(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPhoneticCompany, "");
+        return attrs;
+    }
+
+    /**
+     * phonetic first name
+     *
+     * @return zimbraPhoneticFirstName, or null if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1147)
+    public String getPhoneticFirstName() {
+        return getAttr(Provisioning.A_zimbraPhoneticFirstName, null);
+    }
+
+    /**
+     * phonetic first name
+     *
+     * @param zimbraPhoneticFirstName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1147)
+    public void setPhoneticFirstName(String zimbraPhoneticFirstName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPhoneticFirstName, zimbraPhoneticFirstName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * phonetic first name
+     *
+     * @param zimbraPhoneticFirstName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1147)
+    public Map<String,Object> setPhoneticFirstName(String zimbraPhoneticFirstName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPhoneticFirstName, zimbraPhoneticFirstName);
+        return attrs;
+    }
+
+    /**
+     * phonetic first name
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1147)
+    public void unsetPhoneticFirstName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPhoneticFirstName, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * phonetic first name
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1147)
+    public Map<String,Object> unsetPhoneticFirstName(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPhoneticFirstName, "");
+        return attrs;
+    }
+
+    /**
+     * phonetic last name
+     *
+     * @return zimbraPhoneticLastName, or null if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1148)
+    public String getPhoneticLastName() {
+        return getAttr(Provisioning.A_zimbraPhoneticLastName, null);
+    }
+
+    /**
+     * phonetic last name
+     *
+     * @param zimbraPhoneticLastName new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1148)
+    public void setPhoneticLastName(String zimbraPhoneticLastName) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPhoneticLastName, zimbraPhoneticLastName);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * phonetic last name
+     *
+     * @param zimbraPhoneticLastName new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1148)
+    public Map<String,Object> setPhoneticLastName(String zimbraPhoneticLastName, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPhoneticLastName, zimbraPhoneticLastName);
+        return attrs;
+    }
+
+    /**
+     * phonetic last name
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1148)
+    public void unsetPhoneticLastName() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPhoneticLastName, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * phonetic last name
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1148)
+    public Map<String,Object> unsetPhoneticLastName(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPhoneticLastName, "");
         return attrs;
     }
 

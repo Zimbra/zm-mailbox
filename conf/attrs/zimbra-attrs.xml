@@ -483,17 +483,17 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="52" name="zimbraGalLdapFilterDef" type="string" max="4096" cardinality="multi" optionalIn="globalConfig">
-  <globalConfigValue>zimbraAccounts:(&amp;(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(objectclass=zimbraCalendarResource)))</globalConfigValue>
-  <globalConfigValue>zimbraAccountAutoComplete:(&amp;(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(objectclass=zimbraCalendarResource)))</globalConfigValue>
-  <globalConfigValue>zimbraAccountSync:(&amp;(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(objectclass=zimbraCalendarResource)))</globalConfigValue>
+  <globalConfigValue>zimbraAccounts:(&amp;(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(zimbraPhoneticFirstName=*%s*)(zimbraPhoneticLastName=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(objectclass=zimbraCalendarResource)))</globalConfigValue>
+  <globalConfigValue>zimbraAccountAutoComplete:(&amp;(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(zimbraPhoneticFirstName=%s*)(zimbraPhoneticLastName=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(objectclass=zimbraCalendarResource)))</globalConfigValue>
+  <globalConfigValue>zimbraAccountSync:(&amp;(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(zimbraPhoneticFirstName=*%s*)(zimbraPhoneticLastName=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(objectclass=zimbraCalendarResource)))</globalConfigValue>
   <globalConfigValue>zimbraResources:(&amp;(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(objectclass=zimbraCalendarResource))</globalConfigValue>
   <globalConfigValue>zimbraResourceAutoComplete:(&amp;(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(objectclass=zimbraCalendarResource))</globalConfigValue>
   <globalConfigValue>zimbraResourceSync:(&amp;(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(objectclass=zimbraCalendarResource))</globalConfigValue>
   <globalConfigValue>zimbraGroups:(&amp;(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(objectclass=zimbraDistributionList))</globalConfigValue>
   <globalConfigValue>zimbraGroupAutoComplete:(&amp;(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(objectclass=zimbraDistributionList))</globalConfigValue>
   <globalConfigValue>zimbraGroupSync:(&amp;(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(objectclass=zimbraDistributionList))</globalConfigValue>
-  <globalConfigValue>zimbraAutoComplete:(&amp;(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)))</globalConfigValue>
-  <globalConfigValue>zimbraSearch:(&amp;(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)))</globalConfigValue>
+  <globalConfigValue>zimbraAutoComplete:(&amp;(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(zimbraPhoneticFirstName=%s*)(zimbraPhoneticLastName=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)))</globalConfigValue>
+  <globalConfigValue>zimbraSearch:(&amp;(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(zimbraPhoneticFirstName=*%s*)(zimbraPhoneticLastName=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList)))</globalConfigValue>
   <globalConfigValue>zimbraSync:(&amp;(|(displayName=*)(cn=*)(sn=*)(gn=*)(mail=*)(zimbraMailDeliveryAddress=*)(zimbraMailAlias=*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))</globalConfigValue>
   <globalConfigValue>ad:(&amp;(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(givenName=*%s*)(mail=*%s*))(!(msExchHideFromAddressLists=TRUE))(mailnickname=*)(|(&amp;(objectCategory=person)(objectClass=user)(!(homeMDB=*))(!(msExchHomeServerName=*)))(&amp;(objectCategory=person)(objectClass=user)(|(homeMDB=*)(msExchHomeServerName=*)))(&amp;(objectCategory=person)(objectClass=contact))(objectCategory=group)(objectCategory=publicFolder)(objectCategory=msExchDynamicDistributionList)))</globalConfigValue>
   <globalConfigValue>adAutoComplete:(&amp;(|(displayName=%s*)(cn=%s*)(sn=%s*)(givenName=%s*)(mail=%s*))(!(msExchHideFromAddressLists=TRUE))(mailnickname=*)(|(&amp;(objectCategory=person)(objectClass=user)(!(homeMDB=*))(!(msExchHomeServerName=*)))(&amp;(objectCategory=person)(objectClass=user)(|(homeMDB=*)(msExchHomeServerName=*)))(&amp;(objectCategory=person)(objectClass=contact))(objectCategory=group)(objectCategory=publicFolder)(objectCategory=msExchDynamicDistributionList)))</globalConfigValue>
@@ -841,8 +841,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="153" name="zimbraGalLdapAttrMap" type="string" max="4096" cardinality="multi" optionalIn="globalConfig,domain,galDataSource" flags="domainInherited">
   <globalConfigValue>co=workCountry</globalConfigValue>
   <globalConfigValue>company=company</globalConfigValue>
+  <globalConfigValue>zimbraPhoneticCompany,ms-DS-Phonetic-Company-Name=phoneticCompany</globalConfigValue>
   <globalConfigValue>givenName,gn=firstName</globalConfigValue>
+  <globalConfigValue>zimbraPhoneticFirstName,ms-DS-Phonetic-First-Name=phoneticFirstName</globalConfigValue>
   <globalConfigValue>sn=lastName</globalConfigValue>
+  <globalConfigValue>zimbraPhoneticLastName,ms-DS-Phonetic-Last-Name=phoneticLastName</globalConfigValue>
   <globalConfigValue>displayName,cn=fullName,fullName2,fullName3,fullName4,fullName5,fullName6,fullName7,fullName8,fullName9,fullName10</globalConfigValue>
   <globalConfigValue>initials=initials</globalConfigValue>
   <globalConfigValue>description=notes</globalConfigValue>
@@ -5191,6 +5194,18 @@ TODO: delete them permerntly from here
 <attr id="1146" name="zimbraPrefAutocompleteAddressBubblesEnabled" type="boolean" min="0" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="7.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether actionable address objects result from autocomplete is enabled</desc>
+</attr>
+
+<attr id="1147" name="zimbraPhoneticFirstName" type="string" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="7.0.0">
+  <desc>phonetic first name</desc>
+</attr>
+
+<attr id="1148" name="zimbraPhoneticLastName" type="string" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="7.0.0">
+  <desc>phonetic last name</desc>
+</attr>
+
+<attr id="1149" name="zimbraPhoneticCompany" type="string" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable" since="7.0.0">
+  <desc>phonetic company name</desc>
 </attr>
 
 </attrs>
