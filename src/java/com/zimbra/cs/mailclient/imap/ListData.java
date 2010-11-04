@@ -74,6 +74,11 @@ public final class ListData {
         is.skipChar(' ');
         is.skipSpaces();
         String s = is.peekChar() == '"' ? readQuoted(is) : is.readAString();
+        //bug 52019
+        //if we did a list-extended there should be a space here; not ( or )
+        if (is.peek() == '(' || is.peek() == ')') {
+            s += is.readText("\r\n");
+        }
         mailbox = MailboxName.decode(s).toString();
     }
 
