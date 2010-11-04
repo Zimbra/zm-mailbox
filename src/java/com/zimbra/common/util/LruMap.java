@@ -35,6 +35,10 @@ extends LinkedHashMap<K, V> {
         super(16, 0.75f, true);
         this.maxSize = maxSize;
     }
+    
+    public int getMaxSize() {
+        return maxSize;
+    }
 
     @Override
     protected boolean removeEldestEntry(Entry<K, V> eldest) {

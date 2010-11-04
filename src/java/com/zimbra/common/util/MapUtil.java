@@ -28,7 +28,7 @@ import com.google.common.collect.Multimap;
 
 public class MapUtil {
 
-    public static <K, V> Map<K, V> newLruMap(int maxSize) {
+    public static <K, V> LruMap<K, V> newLruMap(int maxSize) {
         return new LruMap<K, V>(maxSize);
     }
     
