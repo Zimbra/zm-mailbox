@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20101103-1516 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101103-2007 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4147,6 +4147,78 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetFeatureCalendarEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureCalendarEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * whether receiving SMS reminders for appointments and tasks is enabled
+     *
+     * @return zimbraFeatureCalendarReminderSMSEnabled, or false if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1150)
+    public boolean isFeatureCalendarReminderSMSEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureCalendarReminderSMSEnabled, false);
+    }
+
+    /**
+     * whether receiving SMS reminders for appointments and tasks is enabled
+     *
+     * @param zimbraFeatureCalendarReminderSMSEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1150)
+    public void setFeatureCalendarReminderSMSEnabled(boolean zimbraFeatureCalendarReminderSMSEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCalendarReminderSMSEnabled, zimbraFeatureCalendarReminderSMSEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether receiving SMS reminders for appointments and tasks is enabled
+     *
+     * @param zimbraFeatureCalendarReminderSMSEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1150)
+    public Map<String,Object> setFeatureCalendarReminderSMSEnabled(boolean zimbraFeatureCalendarReminderSMSEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCalendarReminderSMSEnabled, zimbraFeatureCalendarReminderSMSEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether receiving SMS reminders for appointments and tasks is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1150)
+    public void unsetFeatureCalendarReminderSMSEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCalendarReminderSMSEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether receiving SMS reminders for appointments and tasks is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1150)
+    public Map<String,Object> unsetFeatureCalendarReminderSMSEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureCalendarReminderSMSEnabled, "");
         return attrs;
     }
 

@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20101103-1516 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101103-2007 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2811,6 +2811,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=136)
     public static final String A_zimbraFeatureCalendarEnabled = "zimbraFeatureCalendarEnabled";
+
+    /**
+     * whether receiving SMS reminders for appointments and tasks is enabled
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1150)
+    public static final String A_zimbraFeatureCalendarReminderSMSEnabled = "zimbraFeatureCalendarReminderSMSEnabled";
 
     /**
      * calendar upsell enabled
