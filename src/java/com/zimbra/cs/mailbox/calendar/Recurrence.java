@@ -893,10 +893,8 @@ public class Recurrence
                 boolean allDay = !mDtStart.hasTime() || (mDtStart.hasZeroTime() && mDuration != null && mDuration.isMultipleOfDays());
                 CalendarItem.Instance dtstartInst = new CalendarItem.Instance(
                         calItemId, mInvId, false, firstStart, firstEnd, allDay, mDtStart.getOffset(), false, true);
-                if (first == null || first.compareTo(dtstartInst) != 0) {
-                    assert(first == null || first.compareTo(dtstartInst) > 0); // first MUST be after dtstart!
+                if (first == null || first.compareTo(dtstartInst) != 0)
                     toAdd.add(0,dtstartInst);
-                }
             }
 
             // -(EXRULEs + EXDATEs)
