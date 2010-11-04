@@ -14,6 +14,11 @@
  */
 package com.zimbra.cs.server;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -23,22 +28,16 @@ import com.zimbra.cs.imap.MinaImapServer;
 import com.zimbra.cs.imap.TcpImapServer;
 import com.zimbra.cs.lmtpserver.LmtpConfig;
 import com.zimbra.cs.lmtpserver.LmtpServer;
-import com.zimbra.cs.lmtpserver.MinaLmtpServer;
 import com.zimbra.cs.lmtpserver.TcpLmtpServer;
+import com.zimbra.cs.milter.MilterConfig;
+import com.zimbra.cs.milter.MilterServer;
+import com.zimbra.cs.milter.MinaMilterServer;
 import com.zimbra.cs.nio.NioThreadFactory;
 import com.zimbra.cs.pop3.MinaPop3Server;
 import com.zimbra.cs.pop3.Pop3Config;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.pop3.TcpPop3Server;
-import com.zimbra.cs.milter.MilterServer;
-import com.zimbra.cs.milter.MinaMilterServer;
-import com.zimbra.cs.milter.MilterConfig;
 import com.zimbra.cs.util.ZimbraApplication;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class ServerManager {
     private LmtpServer lmtpServer;
@@ -96,8 +95,7 @@ public class ServerManager {
 
     private LmtpServer startLmtpServer() throws ServiceException {
         LmtpConfig config = LmtpConfig.getInstance();
-        LmtpServer server = NIO_ENABLED || LC.nio_lmtp_enabled.booleanValue() ?
-            new MinaLmtpServer(config, newNioHandlerPool(config)) : new TcpLmtpServer(config);
+        LmtpServer server = new TcpLmtpServer(config);
         server.start();
         return server;
     }
