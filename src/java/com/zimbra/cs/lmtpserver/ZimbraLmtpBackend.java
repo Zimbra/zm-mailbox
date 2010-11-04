@@ -16,6 +16,7 @@
 package com.zimbra.cs.lmtpserver;
 
 import com.google.common.base.Function;
+import com.google.common.base.Strings;
 import com.google.common.collect.MapMaker;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.localconfig.LC;
@@ -24,6 +25,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CopyInputStream;
+import com.zimbra.common.util.LruMap;
 import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -65,11 +67,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.mail.MessagingException;
+
 public class ZimbraLmtpBackend implements LmtpBackend {
 
     private static List<LmtpCallback> sCallbacks = new CopyOnWriteArrayList<LmtpCallback>(); 
-    private static Map<String, Set<Integer>> sReceivedMessageIDs = null;
-    private static final Map<Integer, Object> sMailboxDeliveryLocks;
+    private static LruMap<String, Set<Integer>> sReceivedMessageIDs = MapUtil.newLruMap(0);
+    private static final Map<Integer, Object> sMailboxDeliveryLocks = createMailboxDeliveryLocks();
 
     private LmtpConfig mConfig;
 
@@ -91,14 +95,6 @@ public class ZimbraLmtpBackend implements LmtpBackend {
     }
 
     static {
-        try {
-            int cacheSize = Provisioning.getInstance().getConfig().getIntAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize, 0);
-            if (cacheSize > 0)
-                sReceivedMessageIDs = MapUtil.newLruMap(cacheSize);
-        } catch (ServiceException e) {
-            ZimbraLog.lmtp.error("could not read zimbraMessageIdDedupeCacheSize; no deduping will be performed", e);
-        }
-        sMailboxDeliveryLocks = createMailboxDeliveryLocks();
         addCallback(Notification.getInstance());
         addCallback(QuotaWarning.getInstance());
     }
@@ -190,9 +186,10 @@ public class ZimbraLmtpBackend implements LmtpBackend {
     }
 
     private boolean dedupe(ParsedMessage pm, Mailbox mbox) {
-        if (sReceivedMessageIDs == null || pm == null || mbox == null)
+        if (pm == null || mbox == null)
             return false;
-        String msgid = pm.getMessageID();
+        checkDedupeCacheSize();
+        String msgid = getMessageID(pm);
         if (msgid == null || msgid.equals(""))
             return false;
 
@@ -204,9 +201,47 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
         return false;
     }
+    
+    /**
+     * Returns the value of the {@code Message-ID} header, or the most
+     * recent {@code Resent-Message-ID} header, if set. 
+     */
+    private String getMessageID(ParsedMessage pm) {
+        try {
+            String id = pm.getMimeMessage().getHeader("Resent-Message-ID", null);
+            if (!Strings.isNullOrEmpty(id)) {
+                return id;
+            }
+        } catch (MessagingException e) {
+            ZimbraLog.lmtp.warn("Unable to determine Resent-Message-ID header value", e);
+        }
+        return pm.getMessageID();
+    }
+    
+    /**
+     * If the configured Message-ID cache size has changed, create a new cache and copy
+     * values from the old one.
+     */
+    private void checkDedupeCacheSize() {
+        try {
+            int cacheSize = Provisioning.getInstance().getConfig().getMessageIdDedupeCacheSize();
+            synchronized (sReceivedMessageIDs) {
+                if (sReceivedMessageIDs.getMaxSize() != cacheSize) {
+                    // Copy entries from the old map to the new one.  The old map
+                    // is iterated in order from least-recently accessed to last accessed.
+                    // If the new map size is smaller, we'll get the latest entries.
+                    LruMap<String, Set<Integer>> newMap = MapUtil.newLruMap(cacheSize);
+                    newMap.putAll(sReceivedMessageIDs);
+                    sReceivedMessageIDs = newMap;
+                }
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.lmtp.warn("Unable to update dedupe cache size.", e);
+        }
+    }
 
     private void addToDedupeCache(ParsedMessage pm, Mailbox mbox) {
-        if (sReceivedMessageIDs == null || pm == null || mbox == null)
+        if (pm == null || mbox == null)
             return;
         String msgid = pm.getMessageID();
         if (msgid == null || msgid.equals(""))
@@ -223,9 +258,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
     }
 
     private void removeFromDedupeCache(String msgid, Mailbox mbox) {
-        if (sReceivedMessageIDs == null || msgid == null || mbox == null)
-            return;
-        if (msgid.equals(""))
+        if (mbox == null || Strings.isNullOrEmpty(msgid))
             return;
 
         synchronized (sReceivedMessageIDs) {
@@ -597,7 +630,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
-    private void deliverMessageToRemoteMailboxes(Blob blob, byte[] data, LmtpEnvelope env) throws IOException {
+    private void deliverMessageToRemoteMailboxes(Blob blob, byte[] data, LmtpEnvelope env) {
         Multimap<String, LmtpAddress> serverToRecipientsMap = env.getRemoteServerToRecipientsMap();
         for (String server : serverToRecipientsMap.keySet()) {
             LmtpClient lmtpClient = null;

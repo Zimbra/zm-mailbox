@@ -60,6 +60,7 @@ extends TestCase {
     private String mOriginalConfigDiskThreshold;
     private String mOriginalQuota;
     private String mOriginalAllowReceiveButNotSendWhenOverQuota;
+    private String mOriginalDedupeCacheSize;
     
     private class LmtpClientThread
     implements Runnable {
@@ -94,6 +95,7 @@ extends TestCase {
         mOriginalQuota = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota);
         mOriginalAllowReceiveButNotSendWhenOverQuota =
             TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota);
+        mOriginalDedupeCacheSize = TestUtil.getConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize);
         cleanUp();
     }
     
@@ -535,6 +537,35 @@ extends TestCase {
         mbox.saveDraft(outgoingDraft, draftMsg.getId(), Integer.toString(Mailbox.ID_FOLDER_DRAFTS)); // Set content of existing message
     }
     
+    /**
+     * Verifies that duplicate suppression recognizes the {@code Resent-Message-ID} header
+     * (bug 36297).
+     */
+    public void testResentMessageId()
+    throws Exception {
+        Provisioning.getInstance().getConfig().setMessageIdDedupeCacheSize(1000);
+        
+        // Deliver first message.
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String subject = NAME_PREFIX + " testResentMessageId";
+        String content = TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null);
+        content = "Message-ID: " + System.currentTimeMillis() + "\r\n" + content;
+        String[] recipients = new String[] { USER_NAME };
+        TestUtil.addMessageLmtp(recipients, USER_NAME, content);
+        String query = "in:inbox subject:\"" + subject + "\"";
+        assertEquals(1, TestUtil.search(mbox, query).size());
+        
+        // Set Resent-Message-ID header and redeliver.
+        content = "Resent-Message-ID: " + System.currentTimeMillis() + "\r\n" + content;
+        TestUtil.addMessageLmtp(recipients, USER_NAME, content);
+        assertEquals(2, TestUtil.search(mbox, query).size());
+        
+        // Prepend a second Resent-Message-ID header and redeliver.
+        content = "Resent-Message-ID: " + System.currentTimeMillis() + "\r\n" + content;
+        TestUtil.addMessageLmtp(recipients, USER_NAME, content);
+        assertEquals(3, TestUtil.search(mbox, query).size());
+    }
+    
     public void tearDown()
     throws Exception {
         setQuotaWarnPercent(mOriginalWarnPercent);
@@ -544,6 +575,7 @@ extends TestCase {
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota, mOriginalQuota);
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota,
             mOriginalAllowReceiveButNotSendWhenOverQuota);
+        TestUtil.setConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize, mOriginalDedupeCacheSize);
         cleanUp();
     }
     
