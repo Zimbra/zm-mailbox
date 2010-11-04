@@ -67,6 +67,11 @@ public final class MailboxInfo implements ResponseHandler {
 
     private void parseStatus(ImapInputStream is) throws IOException {
         name = MailboxName.decode(is.readAString()).toString();
+        //bug 52019 Exchange IMAP doesn't quote folders w/ ()
+        if (is.peek() == '(' || is.peek() == ')') {
+            //read until we get to space. if there happens to be spaces in the name it should already be quoted..
+            name += is.readText(" ");
+        }
         is.skipChar(' ');
         is.skipSpaces();
         is.skipChar('(');
