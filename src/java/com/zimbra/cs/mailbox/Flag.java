@@ -60,6 +60,8 @@ public class Flag extends Tag {
     public static final int ID_FLAG_SYNCFOLDER    = -25;
     public static final int ID_FLAG_SYNC          = -26;
     public static final int ID_FLAG_NO_INFERIORS  = -27;
+    @Deprecated //support for ZD 1.x local data migration
+    public static final int ID_FLAG_ARCHIVED      = -28;
     public static final int ID_FLAG_GLOBAL        = -29;
     public static final int ID_FLAG_IN_DUMPSTER   = -30;
     public static final int ID_FLAG_UNCACHED      = -31;
@@ -94,6 +96,8 @@ public class Flag extends Tag {
             new FlagInfo("\\SyncFolder",  'y',    FLAG_FOLDER_ONLY,  false, ID_FLAG_SYNCFOLDER);
             new FlagInfo("\\Sync",        '~',    FLAG_FOLDER_ONLY,  false, ID_FLAG_SYNC);
             new FlagInfo("\\Noinferiors", 'o',    FLAG_FOLDER_ONLY,  false, ID_FLAG_NO_INFERIORS);
+            //deprecated flag; needed to support ZD 1.x local data migration
+            new FlagInfo("\\Archived",    '@',    FLAG_GENERIC,      true,  ID_FLAG_ARCHIVED);
             new FlagInfo("\\Global",      'g',    FLAG_FOLDER_ONLY,  true,  ID_FLAG_GLOBAL);
             new FlagInfo("\\InDumpster",  HIDDEN, FLAG_GENERIC,      true,  ID_FLAG_IN_DUMPSTER);
             new FlagInfo("\\Uncached",    HIDDEN, FLAG_GENERIC,      true,  ID_FLAG_UNCACHED);
@@ -255,6 +259,8 @@ public class Flag extends Tag {
     public static final int BITMASK_SYNCFOLDER    = FlagInfo.getBitmask(ID_FLAG_SYNCFOLDER);    // 16777216
     public static final int BITMASK_SYNC          = FlagInfo.getBitmask(ID_FLAG_SYNC);          // 33554432
     public static final int BITMASK_NO_INFERIORS  = FlagInfo.getBitmask(ID_FLAG_NO_INFERIORS);  // 67108864
+    @Deprecated //support for ZD 1.x local data migration
+    public static final int BITMASK_ARCHIVED      = FlagInfo.getBitmask(ID_FLAG_ARCHIVED);      // 134217728
     public static final int BITMASK_GLOBAL        = FlagInfo.getBitmask(ID_FLAG_GLOBAL);        // 268435456
     public static final int BITMASK_IN_DUMPSTER   = FlagInfo.getBitmask(ID_FLAG_IN_DUMPSTER);   // 536870912
     public static final int BITMASK_UNCACHED      = FlagInfo.getBitmask(ID_FLAG_UNCACHED);
