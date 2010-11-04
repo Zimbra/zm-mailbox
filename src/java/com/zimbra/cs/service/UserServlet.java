@@ -1509,7 +1509,7 @@ public class UserServlet extends ZimbraServlet {
 
         try {
             int statusCode = HttpClientUtil.executeMethod(client, method);
-            if (statusCode == HttpStatus.SC_NOT_FOUND)
+            if (statusCode == HttpStatus.SC_NOT_FOUND || statusCode == HttpStatus.SC_FORBIDDEN)
                 throw MailServiceException.NO_SUCH_ITEM(-1);
             else if (statusCode != HttpStatus.SC_OK &&
                     statusCode != HttpStatus.SC_CREATED &&
