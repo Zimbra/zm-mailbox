@@ -416,9 +416,6 @@ public class LC {
     public static final KnownKey nio_pop3_enabled =
         new KnownKey("nio_pop3_enabled", "false");
 
-    public static final KnownKey nio_lmtp_enabled =
-        new KnownKey("nio_lmtp_enabled", "false");
-
     public static final KnownKey imap_max_request_size =
         new KnownKey("imap_max_request_size").setDefault(10 * 1024);
 
