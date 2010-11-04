@@ -2813,12 +2813,13 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureCalendarEnabled = "zimbraFeatureCalendarEnabled";
 
     /**
-     * whether receiving SMS reminders for appointments and tasks is enabled
+     * whether receiving reminders on the designated device for appointments
+     * and tasks is enabled
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1150)
-    public static final String A_zimbraFeatureCalendarReminderSMSEnabled = "zimbraFeatureCalendarReminderSMSEnabled";
+    public static final String A_zimbraFeatureCalendarReminderDeviceEmailEnabled = "zimbraFeatureCalendarReminderDeviceEmailEnabled";
 
     /**
      * calendar upsell enabled

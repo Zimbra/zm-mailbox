@@ -5208,9 +5208,9 @@ TODO: delete them permerntly from here
   <desc>phonetic company name</desc>
 </attr>
 
-<attr id="1150" name="zimbraFeatureCalendarReminderSMSEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.0.0">
+<attr id="1150" name="zimbraFeatureCalendarReminderDeviceEmailEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>whether receiving SMS reminders for appointments and tasks is enabled</desc>
+  <desc>whether receiving reminders on the designated device for appointments and tasks is enabled</desc>
 </attr>
 
 zimbraCalendarReminder
