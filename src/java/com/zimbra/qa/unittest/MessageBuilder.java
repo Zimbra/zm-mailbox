@@ -55,7 +55,7 @@ public class MessageBuilder {
      */
     private class MimeMessageWithNoId
     extends MimeMessage {
-        private MimeMessageWithNoId() throws MessagingException {
+        private MimeMessageWithNoId() {
             super(JMSession.getSession());
         }
 
