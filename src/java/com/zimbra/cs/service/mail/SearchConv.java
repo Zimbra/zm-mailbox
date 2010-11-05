@@ -18,42 +18,36 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-
-import com.zimbra.cs.index.queryparser.ParseException;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.MessageHit;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.SearchParams.ExpandResults;
+import com.zimbra.cs.index.queryparser.ParseException;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class SearchConv extends Search {
@@ -127,55 +121,42 @@ public class SearchConv extends Search {
                 results.doneWithSearchResults();
             }
         } else {
-            try {
-                Element proxyRequest = zsc.createElement(MailConstants.SEARCH_CONV_REQUEST);
+            Element proxyRequest = zsc.createElement(MailConstants.SEARCH_CONV_REQUEST);
 
-                params.encodeParams(proxyRequest);
-                proxyRequest.addAttribute(MailConstants.A_NEST_MESSAGES, nest);
-                proxyRequest.addAttribute(MailConstants.A_CONV_ID, cid.toString());
+            params.encodeParams(proxyRequest);
+            proxyRequest.addAttribute(MailConstants.A_NEST_MESSAGES, nest);
+            proxyRequest.addAttribute(MailConstants.A_CONV_ID, cid.toString());
                 
-                try {
-                    // okay, lets run the search through the query parser -- this has the side-effect of
-                    // re-writing the query in a format that is OK to proxy to the other server -- since the
-                    // query has an "AND conv:remote-conv-id" part, the query parser will figure out the right
-                    // format for us.  TODO somehow make this functionality a bit more exposed in the
-                    // ZimbraQuery APIs...
-                    String rewrittenQueryString = mbox.getRewrittenQueryString(octxt, params);
-                    proxyRequest.addAttribute(MailConstants.E_QUERY, rewrittenQueryString, Element.Disposition.CONTENT);
+            try {
+                // okay, lets run the search through the query parser -- this has the side-effect of
+                // re-writing the query in a format that is OK to proxy to the other server -- since the
+                // query has an "AND conv:remote-conv-id" part, the query parser will figure out the right
+                // format for us.  TODO somehow make this functionality a bit more exposed in the
+                // ZimbraQuery APIs...
+                String rewrittenQueryString = mbox.getRewrittenQueryString(octxt, params);
+                proxyRequest.addAttribute(MailConstants.E_QUERY, rewrittenQueryString, Element.Disposition.CONTENT);
                     
-                    // now create a soap transport to talk to the remote account
-                    Account target = Provisioning.getInstance().get(AccountBy.id, cid.getAccountId(), zsc.getAuthToken());
-                    SoapHttpTransport soapTransp = new SoapHttpTransport(AccountUtil.getSoapUri(target));                    
-                    String pxyAuthToken = Provisioning.onLocalServer(target) ? null : zsc.getAuthToken().getProxyAuthToken();                                        
-                    soapTransp.setAuthToken(pxyAuthToken == null ? AuthProvider.getAuthToken(acct).getEncoded() : pxyAuthToken);
-                    soapTransp.setTargetAcctId(target.getId());
-                    soapTransp.setRequestProtocol(zsc.getResponseProtocol());
-
-                    // and just pass the response on through!
-                    Element response = soapTransp.invokeWithoutSession(proxyRequest);
-                    return response.detach();
-                } catch (ParseException e) {
-                    MailServiceException me = null;
-                    String message = e.getMessage();
-                    if (e.code != null)
-                        message = e.code;
-                    if (e.expectedTokenSequences != null) {
-                        // this is a direct ParseException from JavaCC - don't return their long message as the code
-                        message = "PARSER_ERROR";
-                    }
-                    if (e.currentToken != null)
-                        me = MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, e.currentToken.image, e.currentToken.beginColumn, message);
-                    else 
-                        me = MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, "", -1, message);
-                    throw me;
-                } catch (IOException ex) {
-                    throw ServiceException.FAILURE("IOException: ", ex);
-                } catch (SoapFaultException ex) {
-                    throw ServiceException.FAILURE("SoapFaultException: ", ex);
-                }                    
-            } catch (AuthTokenException e) {
-                throw ServiceException.FAILURE("AuthTokenException: ", e);
-            }
+                // proxy to remote account
+                Account target = Provisioning.getInstance().get(AccountBy.id, cid.getAccountId(), zsc.getAuthToken());
+                Element response = proxyRequest(proxyRequest, context, target.getId());
+                return response.detach();
+            } catch (ParseException e) {
+                MailServiceException me = null;
+                String message = e.getMessage();
+                if (e.code != null)
+                    message = e.code;
+                if (e.expectedTokenSequences != null) {
+                    // this is a direct ParseException from JavaCC - don't return their long message as the code
+                    message = "PARSER_ERROR";
+                }
+                if (e.currentToken != null)
+                    me = MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, e.currentToken.image, e.currentToken.beginColumn, message);
+                else 
+                    me = MailServiceException.QUERY_PARSE_ERROR(params.getQueryStr(), e, "", -1, message);
+                throw me;
+            } catch (SoapFaultException ex) {
+                throw ServiceException.FAILURE("SoapFaultException: ", ex);
+            }                    
         }
     }
 
