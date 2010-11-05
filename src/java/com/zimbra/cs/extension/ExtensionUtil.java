@@ -56,7 +56,7 @@ public class ExtensionUtil {
     private static ClassLoader sExtParentClassLoader;
 
     static {
-        File extCommonDir = new File(LC.zimbra_extensions_common_directory.value());
+        File extCommonDir = new File(LC.zimbra_extension_common_directory.value());
         URL[] extCommonURLs = dirListToURLs(extCommonDir);
         if (extCommonURLs == null) {
             // No ext-common libraries are present.
@@ -72,12 +72,12 @@ public class ExtensionUtil {
     }
 
     private static synchronized void loadAll() {
-        if (LC.zimbra_extensions_directory.value() == null) {
-            ZimbraLog.extensions.info(LC.zimbra_extensions_directory.key() +
+        if (LC.zimbra_extension_directory.value() == null) {
+            ZimbraLog.extensions.info(LC.zimbra_extension_directory.key() +
                     " is null, no extensions loaded");
             return;
         }
-        File extDir = new File(LC.zimbra_extensions_directory.value());
+        File extDir = new File(LC.zimbra_extension_directory.value());
         ZimbraLog.extensions.info("Loading extensions from " + extDir.getPath());
 
         File[] extDirs = extDir.listFiles();

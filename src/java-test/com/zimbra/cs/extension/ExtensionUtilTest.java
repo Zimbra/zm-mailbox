@@ -34,8 +34,8 @@ public class ExtensionUtilTest {
     @BeforeClass
     public static void init() throws Exception {
         classpath = new File("build/test-classes").toURI().toURL();
-        LC.zimbra_extensions_common_directory.setDefault(null);
-        LC.zimbra_extensions_directory.setDefault(null);
+        LC.zimbra_extension_common_directory.setDefault(null);
+        LC.zimbra_extension_directory.setDefault(null);
     }
 
     @Test
