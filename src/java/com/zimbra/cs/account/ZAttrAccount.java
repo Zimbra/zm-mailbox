@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101103-2007 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101105-1432 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -32756,6 +32756,137 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefTagTreeOpen(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefTagTreeOpen, "");
+        return attrs;
+    }
+
+    /**
+     * where the task reading pane is displayed in list views
+     *
+     * <p>Valid values: [off, bottom, right]
+     *
+     * @return zimbraPrefTasksReadingPaneLocation, or ZAttrProvisioning.PrefTasksReadingPaneLocation.bottom if unset and/or has invalid value
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1151)
+    public ZAttrProvisioning.PrefTasksReadingPaneLocation getPrefTasksReadingPaneLocation() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefTasksReadingPaneLocation); return v == null ? ZAttrProvisioning.PrefTasksReadingPaneLocation.bottom : ZAttrProvisioning.PrefTasksReadingPaneLocation.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefTasksReadingPaneLocation.bottom; }
+    }
+
+    /**
+     * where the task reading pane is displayed in list views
+     *
+     * <p>Valid values: [off, bottom, right]
+     *
+     * @return zimbraPrefTasksReadingPaneLocation, or "bottom" if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1151)
+    public String getPrefTasksReadingPaneLocationAsString() {
+        return getAttr(Provisioning.A_zimbraPrefTasksReadingPaneLocation, "bottom");
+    }
+
+    /**
+     * where the task reading pane is displayed in list views
+     *
+     * <p>Valid values: [off, bottom, right]
+     *
+     * @param zimbraPrefTasksReadingPaneLocation new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1151)
+    public void setPrefTasksReadingPaneLocation(ZAttrProvisioning.PrefTasksReadingPaneLocation zimbraPrefTasksReadingPaneLocation) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTasksReadingPaneLocation, zimbraPrefTasksReadingPaneLocation.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * where the task reading pane is displayed in list views
+     *
+     * <p>Valid values: [off, bottom, right]
+     *
+     * @param zimbraPrefTasksReadingPaneLocation new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1151)
+    public Map<String,Object> setPrefTasksReadingPaneLocation(ZAttrProvisioning.PrefTasksReadingPaneLocation zimbraPrefTasksReadingPaneLocation, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTasksReadingPaneLocation, zimbraPrefTasksReadingPaneLocation.toString());
+        return attrs;
+    }
+
+    /**
+     * where the task reading pane is displayed in list views
+     *
+     * <p>Valid values: [off, bottom, right]
+     *
+     * @param zimbraPrefTasksReadingPaneLocation new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1151)
+    public void setPrefTasksReadingPaneLocationAsString(String zimbraPrefTasksReadingPaneLocation) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTasksReadingPaneLocation, zimbraPrefTasksReadingPaneLocation);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * where the task reading pane is displayed in list views
+     *
+     * <p>Valid values: [off, bottom, right]
+     *
+     * @param zimbraPrefTasksReadingPaneLocation new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1151)
+    public Map<String,Object> setPrefTasksReadingPaneLocationAsString(String zimbraPrefTasksReadingPaneLocation, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTasksReadingPaneLocation, zimbraPrefTasksReadingPaneLocation);
+        return attrs;
+    }
+
+    /**
+     * where the task reading pane is displayed in list views
+     *
+     * <p>Valid values: [off, bottom, right]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1151)
+    public void unsetPrefTasksReadingPaneLocation() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTasksReadingPaneLocation, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * where the task reading pane is displayed in list views
+     *
+     * <p>Valid values: [off, bottom, right]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1151)
+    public Map<String,Object> unsetPrefTasksReadingPaneLocation(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTasksReadingPaneLocation, "");
         return attrs;
     }
 

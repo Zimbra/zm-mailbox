@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101103-2007 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101105-1432 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -804,6 +804,24 @@ public class ZAttrProvisioning {
         public boolean isIncludeSmartAndHeaders() { return this == includeSmartAndHeaders;}
         public boolean isIncludeNone() { return this == includeNone;}
         public boolean isIncludeBodyAndHeadersWithPrefix() { return this == includeBodyAndHeadersWithPrefix;}
+    }
+
+    public static enum PrefTasksReadingPaneLocation {
+        bottom("bottom"),
+        off("off"),
+        right("right");
+        private String mValue;
+        private PrefTasksReadingPaneLocation(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefTasksReadingPaneLocation fromString(String s) throws ServiceException {
+            for (PrefTasksReadingPaneLocation value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isBottom() { return this == bottom;}
+        public boolean isOff() { return this == off;}
+        public boolean isRight() { return this == right;}
     }
 
     public static enum ReverseProxyImapStartTlsMode {
@@ -6703,6 +6721,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=633)
     public static final String A_zimbraPrefTagTreeOpen = "zimbraPrefTagTreeOpen";
+
+    /**
+     * where the task reading pane is displayed in list views
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1151)
+    public static final String A_zimbraPrefTasksReadingPaneLocation = "zimbraPrefTasksReadingPaneLocation";
 
     /**
      * time zone of user or COS
