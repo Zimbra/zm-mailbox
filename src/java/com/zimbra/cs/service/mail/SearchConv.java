@@ -20,23 +20,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
-import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -45,7 +43,6 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -134,6 +131,7 @@ public class SearchConv extends Search {
             proxyRequest.addAttribute(MailConstants.A_NEST_MESSAGES, nest);
             proxyRequest.addAttribute(MailConstants.A_CONV_ID, cid.toString());
 
+
             try {
                 // okay, lets run the search through the query parser -- this has the side-effect of
                 // re-writing the query in a format that is OK to proxy to the other server -- since the
@@ -142,22 +140,11 @@ public class SearchConv extends Search {
                 // ZimbraQuery APIs...
                 String rewrittenQueryString = mbox.getRewrittenQueryString(octxt, params);
                 proxyRequest.addAttribute(MailConstants.E_QUERY, rewrittenQueryString, Element.Disposition.CONTENT);
-
-                // now create a soap transport to talk to the remote account
+                    
+                // proxy to remote account
                 Account target = Provisioning.getInstance().get(AccountBy.id, cid.getAccountId(), zsc.getAuthToken());
-                SoapHttpTransport soapTransp = new SoapHttpTransport(AccountUtil.getSoapUri(target));
-
-                String proxyAuthToken = zsc.getAuthToken().getProxyAuthToken();
-                soapTransp.setAuthToken(proxyAuthToken != null ?
-                        proxyAuthToken : zsc.getRawAuthToken().getValue());
-                soapTransp.setTargetAcctId(target.getId());
-                soapTransp.setRequestProtocol(zsc.getResponseProtocol());
-
-                // and just pass the response on through!
-                Element response = soapTransp.invokeWithoutSession(proxyRequest);
+                Element response = proxyRequest(proxyRequest, context, target.getId());
                 return response.detach();
-            } catch (IOException e) {
-                throw ServiceException.FAILURE("IOException: ", e);
             } catch (SoapFaultException e) {
                 throw ServiceException.FAILURE("SoapFaultException: ", e);
             }
