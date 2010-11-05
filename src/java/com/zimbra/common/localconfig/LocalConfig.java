@@ -205,12 +205,19 @@ public class LocalConfig {
             if (i > 0) {
                 ps.println();
             }
-            String doc = KnownKey.getDoc(keys[i]);
-            if (doc == null) {
-                Logging.warn("'" + keys[i] + "' is not a known key");;
-            } else {
-                fmt(ps, keys[i] + ": " + doc, 60);
+            KnownKey key = KnownKey.get(keys[i]);
+            if (key != null) {
+                String doc = key.doc();
+                if (doc != null) {
+                    ps.println(keys[i] + ':');
+                    fmt(ps, doc, 80);
+                    if (!key.isReloadable()) {
+                        ps.println("* Changes are in effect after server restart.");
+                    }
+                    continue;
+                }
             }
+            Logging.warn("'" + keys[i] + "' is not a known key");
         }
     }
 
