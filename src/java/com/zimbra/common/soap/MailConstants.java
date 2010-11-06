@@ -636,6 +636,7 @@ public class MailConstants {
     public static final String A_CAL_ALL = "all";
     public static final String A_CAL_ALLDAY = "allDay";
     public static final String A_CAL_DRAFT = "draft";
+    public static final String A_CAL_NEVER_SENT = "neverSent";
     public static final String A_CAL_NO_BLOB = "noBlob";
     public static final String A_CAL_LOCATION = "loc";
     public static final String A_CAL_NEEDS_REPLY = "needsReply";
