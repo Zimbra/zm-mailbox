@@ -126,13 +126,10 @@ public final class SoapEngine {
             mLog.warn(msg, e);
     }
 
-    private void logDebugSoapRequest(Map<String, Object> context, Element envelope) {
-        if (ZimbraLog.soap.isDebugEnabled()) {
-            Boolean logged = (Boolean)context.get(SoapEngine.SOAP_REQUEST_LOGGED);
-            if (logged == null || !logged) {
-                ZimbraLog.soap.debug("SOAP request:\n" + envelope.prettyPrint());
-                context.put(SOAP_REQUEST_LOGGED, Boolean.TRUE);
-            }
+    private void logRequest(Map<String, Object> context, Element envelope) {
+        if (ZimbraLog.soap.isTraceEnabled() && !context.containsKey(SoapEngine.SOAP_REQUEST_LOGGED)) {
+            ZimbraLog.soap.trace("C:\n%s", envelope.prettyPrint());
+            context.put(SOAP_REQUEST_LOGGED, Boolean.TRUE);
         }
     }
 
@@ -163,14 +160,14 @@ public final class SoapEngine {
          * For requests(e.g. AuthRequest) that don't have account info in time when they
          * are normally added to the logging context in dispatch after zsc is established
          * from the SOAP request header.  Thus account logging for zimbra.soap won't be
-         * effective when the SOAP request is logged in DEBUG level normally.
+         * effective when the SOAP request is logged in TRACE level normally.
          *
          * For AuthRequest, we call Account.addAccountToLogContext from the handler as
          * soon as the account, which is only available in the SOAP body, is discovered.
          * Account info should be available after dispatch() so account logger can be
          * triggered.
          */
-        logDebugSoapRequest(context, document);
+        logRequest(context, document);
 
         return resp;
     }
@@ -242,7 +239,7 @@ public final class SoapEngine {
             ZimbraLog.addViaToContext(zsc.getVia());
         }
 
-        logDebugSoapRequest(context, envelope);
+        logRequest(context, envelope);
 
         context.put(ZIMBRA_CONTEXT, zsc);
         context.put(ZIMBRA_ENGINE, this);

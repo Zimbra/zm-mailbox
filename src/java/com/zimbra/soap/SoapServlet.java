@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,6 +31,7 @@ import org.apache.commons.httpclient.HttpVersion;
 import org.apache.commons.httpclient.ProtocolException;
 import org.apache.log4j.PropertyConfigurator;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.collect.MapMaker;
 import com.zimbra.common.localconfig.LC;
@@ -59,7 +60,7 @@ public class SoapServlet extends ZimbraServlet {
     private static final String PARAM_ENGINE_HANDLER = "engine.handler.";
 
     /** context name of auth token extracted from cookie */
-    public static final String ZIMBRA_AUTH_TOKEN = "zimbra.authToken";    
+    public static final String ZIMBRA_AUTH_TOKEN = "zimbra.authToken";
     /** context name of servlet context */
     public static final String SERVLET_CONTEXT = "servlet.context";
     /** context name of servlet HTTP request */
@@ -70,19 +71,19 @@ public class SoapServlet extends ZimbraServlet {
     public static final String IS_RESUMED_REQUEST = "zimbra.resumedRequest";
 
     // Used by sExtraServices
-    private static class ArrayListFactory
-    implements Function<String, List<DocumentService>> {
+    private static class ArrayListFactory implements Function<String, List<DocumentService>> {
+        @Override
         public List<DocumentService> apply(String from) {
             return new ArrayList<DocumentService>();
         }
-    };
-    
+    }
+
     /**
      * Keeps track of extra services added by extensions.
      */
     private static Map<String, List<DocumentService>> sExtraServices =
         new MapMaker().makeComputingMap(new ArrayListFactory());
-    
+
     private static Log sLog = LogFactory.getLog(SoapServlet.class);
     private SoapEngine mEngine;
 
@@ -90,7 +91,7 @@ public class SoapServlet extends ZimbraServlet {
         // TODO we should have a ReloadConfig soap command that will reload
         // on demand, instead of modifying and waiting for some time.
         long watch = LC.zimbra_log4j_properties_watch.longValue();
-        
+
         if (watch > 0)
             PropertyConfigurator.configureAndWatch(LC.zimbra_log4j_properties.value(), watch);
         else
@@ -108,8 +109,8 @@ public class SoapServlet extends ZimbraServlet {
             loadHandler(cname);
             i++;
         }
-        
-        // See if any extra services were perviously added by extensions 
+
+        // See if any extra services were perviously added by extensions
         synchronized (sExtraServices) {
             List<DocumentService> services = sExtraServices.get(getServletName());
             for (DocumentService service : services) {
@@ -117,9 +118,9 @@ public class SoapServlet extends ZimbraServlet {
                 i++;
             }
         }
-        
+
         mEngine.getDocumentDispatcher().clearSoapWhiteList();
-        
+
         if (i == 0)
             throw new ServletException("Must specify at least one handler "+PARAM_ENGINE_HANDLER+i);
 
@@ -129,7 +130,7 @@ public class SoapServlet extends ZimbraServlet {
             Zimbra.halt("out of memory", e);
         } catch (Throwable t) {
             ZimbraLog.soap.fatal("Unable to start servlet", t);
-        	throw new UnavailableException(t.getMessage());
+            throw new UnavailableException(t.getMessage());
         }
     }
 
@@ -181,7 +182,7 @@ public class SoapServlet extends ZimbraServlet {
         DocumentService hi = (DocumentService) dispatcher;
         addService(hi);
     }
-    
+
     /**
      * Adds a service to the instance of <code>SoapServlet</code> with the given
      * name.  If the servlet has not been loaded, stores the service for later
@@ -200,7 +201,7 @@ public class SoapServlet extends ZimbraServlet {
             }
         }
     }
-    
+
     private void addService(DocumentService service) {
         ZimbraLog.soap.info("Adding service " + StringUtil.getSimpleClassName(service) + " to " + getServletName());
         service.registerHandlers(mEngine.getDocumentDispatcher());
@@ -209,7 +210,7 @@ public class SoapServlet extends ZimbraServlet {
     @Override public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ZimbraLog.clearContext();
         long startTime = ZimbraPerf.STOPWATCH_SOAP.start();
-        
+
         try {
             doWork(req, resp);
         } finally {
@@ -217,7 +218,7 @@ public class SoapServlet extends ZimbraServlet {
             ZimbraPerf.STOPWATCH_SOAP.stop(startTime);
         }
     }
-    
+
     private void doWork(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         int len = req.getContentLength();
         byte[] buffer;
@@ -229,7 +230,7 @@ public class SoapServlet extends ZimbraServlet {
         buffer = (byte[])req.getAttribute("com.zimbra.request.buffer");
         if (buffer == null) {
             isResumed = false;
-            
+
             // Look up max request size
             int maxSize = 0;
             try {
@@ -240,7 +241,7 @@ public class SoapServlet extends ZimbraServlet {
             if (maxSize <= 0) {
                 maxSize = Integer.MAX_VALUE;
             }
-            
+
             // Read the request
             boolean success;
             if (len > maxSize) {
@@ -249,13 +250,13 @@ public class SoapServlet extends ZimbraServlet {
                 BufferStream bs = new BufferStream(len, maxSize, maxSize);
                 int in = (int)bs.readFrom(req.getInputStream(), len >= 0 ? len :
                     Integer.MAX_VALUE);
-                
+
                 if (len > 0 && in < len)
                     throw new EOFException("SOAP content truncated " + in + "!=" + len);
                 success = in <= maxSize;
                 buffer = bs.toByteArray();
             }
-            
+
             // Handle requests that exceed the size limit
             if (!success) {
                 String sizeString = (len < 0 ? "" : " size " + len);
@@ -268,7 +269,7 @@ public class SoapServlet extends ZimbraServlet {
                 sendResponse(req, resp, envelope);
                 return;
             }
-            
+
             req.setAttribute("com.zimbra.request.buffer", buffer);
         }
 
@@ -276,16 +277,16 @@ public class SoapServlet extends ZimbraServlet {
         context.put(SERVLET_CONTEXT, getServletContext());
         context.put(SERVLET_REQUEST, req);
         context.put(SERVLET_RESPONSE, resp);
-        
+
         // setup IPs in the context and add to logging context
         RemoteIP remoteIp = new RemoteIP(req, ZimbraServlet.getTrustedIPs());
         context.put(SoapEngine.SOAP_REQUEST_IP, remoteIp.getClientIP());
         context.put(SoapEngine.ORIG_REQUEST_IP, remoteIp.getOrigIP());
-        context.put(SoapEngine.REQUEST_IP, remoteIp.getRequestIP()); 
+        context.put(SoapEngine.REQUEST_IP, remoteIp.getRequestIP());
         remoteIp.addToLoggingContext();
-        
+
         //checkAuthToken(req.getCookies(), context);
-        if (isResumed) 
+        if (isResumed)
             context.put(IS_RESUMED_REQUEST, "1");
 
         Element envelope = null;
@@ -296,10 +297,8 @@ public class SoapServlet extends ZimbraServlet {
                 Zimbra.halt("handler exception", e);
             }
 
-            if (ZimbraLog.soap.isDebugEnabled()) {
-                Boolean logged = (Boolean)context.get(SoapEngine.SOAP_REQUEST_LOGGED);
-                if (logged == null || !logged)
-                    ZimbraLog.soap.debug("SOAP request:\n" + new String(buffer, "utf8"));
+            if (ZimbraLog.soap.isTraceEnabled() && !context.containsKey(SoapEngine.SOAP_REQUEST_LOGGED)) {
+                ZimbraLog.soap.trace("C:\n%s", new String(buffer, Charsets.UTF_8));
             }
 
             // don't interfere with Jetty Continuations -- pass the exception right up
@@ -311,12 +310,12 @@ public class SoapServlet extends ZimbraServlet {
             envelope = SoapProtocol.Soap12.soapEnvelope(fault);
         }
 
-        if (ZimbraLog.soap.isDebugEnabled()) {
-            ZimbraLog.soap.debug("SOAP response: \n" + envelope.prettyPrint());
+        if (ZimbraLog.soap.isTraceEnabled()) {
+            ZimbraLog.soap.trace("S:\n%s", envelope.prettyPrint());
         }
         sendResponse(req, resp, envelope);
     }
-    
+
     private int soapResponseBufferSize() {
         String val = LC.soap_response_buffer_size.value();
         if (val == null || val.length() == 0)
@@ -324,13 +323,13 @@ public class SoapServlet extends ZimbraServlet {
         else
             return LC.soap_response_buffer_size.intValue();
     }
-    
+
     private void sendResponse(HttpServletRequest req, HttpServletResponse resp, Element envelope)
     throws IOException {
         SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
         int statusCode = soapProto.hasFault(envelope) ?
             HttpServletResponse.SC_INTERNAL_SERVER_ERROR : HttpServletResponse.SC_OK;
-        
+
         boolean chunkingDisabled = LC.soap_response_chunked_transfer_encoding_disabled.booleanValue();
 
         if (!chunkingDisabled) {
@@ -344,15 +343,15 @@ public class SoapServlet extends ZimbraServlet {
                 chunkingDisabled = true;
             }
         }
-        
+
         // use jetty default if the LC key is not set
         int responseBufferSize = soapResponseBufferSize();
-        if (responseBufferSize != -1) 
+        if (responseBufferSize != -1)
             resp.setBufferSize(responseBufferSize);
-        
-        resp.setContentType(soapProto.getContentType());  
+
+        resp.setContentType(soapProto.getContentType());
         resp.setStatus(statusCode);
-        
+
         if (chunkingDisabled) {
             /*
              * serialize the envelope to a byte array and send the response with Content-Length header.
