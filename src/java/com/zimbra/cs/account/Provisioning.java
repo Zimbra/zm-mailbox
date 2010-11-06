@@ -1845,6 +1845,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         // on ldap entries
         locale,
         skin,
+        uistrings,
         license,
 
         // ldap entries
@@ -1862,6 +1863,16 @@ public abstract class Provisioning extends ZAttrProvisioning {
             } catch (IllegalArgumentException e) {
                 throw ServiceException.INVALID_REQUEST("unknown cache type: "+s, e);
             }
+        }
+
+        public static String names() {
+            StringBuilder str = new StringBuilder();
+            int i = 0;
+            for (CacheEntryType type : CacheEntryType.values()) {
+                if (i++ > 0) str.append('|');
+                str.append(type.name());
+            }
+            return str.toString();
         }
     }
 

@@ -148,9 +148,20 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
     protected synchronized void clearCache(boolean deleteFiles) {
         if (deleteFiles) {
             for (File file : cache.values()) {
-                file.delete();
-                // attempt to delete compressed version of file
-                File gzfile = new File(file.getParentFile(), file.getName()+EXT_COMPRESSED);
+                File dir = file.getParentFile();
+                String filename = file.getName();
+                if (filename.endsWith(EXT_COMPRESSED)) {
+                    filename = filename.substring(0, filename.length() - EXT_COMPRESSED.length());
+                }
+
+                // delete uncompressed version of file
+                file = new File(dir, filename);
+                if (file.exists()) {
+                    file.delete();
+                }
+
+                // delete compressed version of file
+                File gzfile = new File(dir, filename+EXT_COMPRESSED);
                 if (gzfile.exists()) {
                     gzfile.delete();
                 }
@@ -367,6 +378,17 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
         }
         dest.flush();
         in.close();
+    }
+
+    /** Copy bytes to file. */
+    protected void copy(byte[] src, File dest) throws IOException {
+        OutputStream out = new FileOutputStream(dest);
+        try {
+            out.write(src);
+        }
+        finally {
+            out.close();
+        }
     }
 
     /** Copy a string to file in specified encoding. */
