@@ -83,16 +83,20 @@ public class CreateCalendarItem extends CalendarRequest {
 
         Element response = getResponseElement(zsc);
 
-        // If we are sending this update to other people, then we MUST be the organizer!
+        boolean hasRecipients;
+        try {
+            Address[] rcpts = dat.mMm.getAllRecipients();
+            hasRecipients = rcpts != null && rcpts.length > 0;
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
+        }
         if (!dat.mInvite.isOrganizer()) {
-            try {
-                Address[] rcpts = dat.mMm.getAllRecipients();
-                if (rcpts != null && rcpts.length > 0) {
-                    throw MailServiceException.MUST_BE_ORGANIZER("CreateCalendarItem");
-                }
-            } catch (MessagingException e) {
-                throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
-            }
+            // If we are sending this to other people, then we MUST be the organizer!
+            if (hasRecipients)
+                throw MailServiceException.MUST_BE_ORGANIZER("CreateCalendarItem");
+        } else {
+            // If there are attendees but no one is being notified, set the neverSent flag on the invite.
+            dat.mInvite.setNeverSent(dat.mInvite.hasOtherAttendees() && !hasRecipients);
         }
 
         return sendCalendarMessage(zsc, octxt, iidFolder.getId(), acct, mbox, dat, response);

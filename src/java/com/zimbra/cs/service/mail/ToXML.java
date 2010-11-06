@@ -1545,6 +1545,8 @@ public class ToXML {
 
             if (invite.isDraft())
                 e.addAttribute(MailConstants.A_CAL_DRAFT, true);
+            if (invite.isNeverSent())
+                e.addAttribute(MailConstants.A_CAL_NEVER_SENT, true);
         }
 
         return e;

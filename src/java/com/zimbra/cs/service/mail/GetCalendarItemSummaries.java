@@ -303,6 +303,8 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                                 instElt.addAttribute(MailConstants.A_CAL_ALLDAY, inv.isAllDayEvent());
                             if (defaultInvite.isDraft() != inv.isDraft())
                                 instElt.addAttribute(MailConstants.A_CAL_DRAFT, inv.isDraft());
+                            if (defaultInvite.isNeverSent() != inv.isNeverSent())
+                                instElt.addAttribute(MailConstants.A_CAL_NEVER_SENT, inv.isNeverSent());
                             if (defaultInvite.isRecurrence() != inv.isRecurrence())
                                 instElt.addAttribute(MailConstants.A_CAL_RECUR, inv.isRecurrence());
                         } else {
@@ -405,6 +407,8 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                     calItemElem.addAttribute(MailConstants.A_CAL_ALLDAY, defaultInvite.isAllDayEvent());
                 if (defaultInvite.isDraft())
                     calItemElem.addAttribute(MailConstants.A_CAL_DRAFT, defaultInvite.isDraft());
+                if (defaultInvite.isNeverSent())
+                    calItemElem.addAttribute(MailConstants.A_CAL_NEVER_SENT, defaultInvite.isNeverSent());
                 if (defaultInvite.isRecurrence())
                     calItemElem.addAttribute(MailConstants.A_CAL_RECUR, defaultInvite.isRecurrence());
                 

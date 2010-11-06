@@ -158,15 +158,29 @@ public class ModifyCalendarItem extends CalendarRequest {
                     calItem.getId(), folderId, dat.mInvite.isPublic() ? dat.mInvite.getName() : "(private)",
                     dat.mInvite.getUid(), dat.mInvite.getRecurId().getDtZ());
 
-        // If we are sending this update to other people, then we MUST be the organizer!
-        if (!inv.isOrganizer()) {
-            try {
-                Address[] rcpts = dat.mMm.getAllRecipients();
-                if (rcpts != null && rcpts.length > 0) {
-                    throw MailServiceException.MUST_BE_ORGANIZER("ModifyCalendarItem");
+        boolean hasRecipients;
+        try {
+            Address[] rcpts = dat.mMm.getAllRecipients();
+            hasRecipients = rcpts != null && rcpts.length > 0;
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
+        }
+        if (!dat.mInvite.isOrganizer()) {
+            // If we are sending this to other people, then we MUST be the organizer!
+            if (hasRecipients)
+                throw MailServiceException.MUST_BE_ORGANIZER("ModifyCalendarItem");
+        } else {
+            if (!dat.mInvite.hasOtherAttendees() || hasRecipients) {
+                dat.mInvite.setNeverSent(false);
+            } else {  // There are attendees but no one is being notified.
+                if (inv.hasOtherAttendees()) {
+                    // Set neverSent flag only if previous version had it set.  Once cleared, never set it again.
+                    dat.mInvite.setNeverSent(inv.isNeverSent());
+                } else {  // Older version had no attendees, but new version does.
+                    // Appointment is being modified to have attendees for the first time, and they are not being
+                    // notified.  This is similar to CreateCalendarItem case as far as neverSent flag is concerned.
+                    dat.mInvite.setNeverSent(true);
                 }
-            } catch (MessagingException e) {
-                throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
             }
         }
 

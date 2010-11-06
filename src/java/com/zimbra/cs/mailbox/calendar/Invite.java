@@ -1187,6 +1187,15 @@ public class Invite {
         }
     }
 
+    public boolean isNeverSent() { return ((mFlags & APPT_FLAG_NEVER_SENT)!=0); }
+    public void setNeverSent(boolean neverSent) {
+        if (neverSent) {
+            mFlags |= APPT_FLAG_NEVER_SENT;
+        } else {
+            mFlags &= ~APPT_FLAG_NEVER_SENT;
+        }
+    }
+
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("{ ");
@@ -1221,6 +1230,8 @@ public class Invite {
         sb.append(", mSeqNo ").append(mSeqNo);
         if (isDraft())
             sb.append(", draft: ").append(true);
+        if (isNeverSent())
+            sb.append(", neverSent: ").append(true);
 
         for (Alarm alarm : mAlarms) {
             sb.append(", alarm: ").append(alarm.toString());
@@ -1246,7 +1257,8 @@ public class Invite {
     public static final int APPT_FLAG_ISRECUR         = 0x20;
     public static final int APPT_FLAG_NEEDS_REPLY     = 0x40;  // obsolete
     public static final int APPT_FLAG_HAS_ATTACHMENT  = 0x80;
-    public static final int APPT_FLAG_DRAFT           = 0x100;  // save-not-send; attendees haven't been notified
+    public static final int APPT_FLAG_DRAFT           = 0x100;
+    public static final int APPT_FLAG_NEVER_SENT      = 0x200;  // true means attendees have never been notified
     
     protected CalendarItem mCalItem = null;
     

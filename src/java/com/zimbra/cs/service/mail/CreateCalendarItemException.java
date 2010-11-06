@@ -137,16 +137,20 @@ public class CreateCalendarItemException extends CalendarRequest {
                         iid.getId(), folderId, dat.mInvite.isPublic() ? dat.mInvite.getName() : "(private)",
                         dat.mInvite.getUid(), dat.mInvite.getRecurId().getDtZ());
 
-            // If we are sending this to other people, then we MUST be the organizer!
-            if (!inv.isOrganizer()) {
-                try {
-                    Address[] rcpts = dat.mMm.getAllRecipients();
-                    if (rcpts != null && rcpts.length > 0) {
-                        throw MailServiceException.MUST_BE_ORGANIZER("CreateCalendarItemException");
-                    }
-                } catch (MessagingException e) {
-                    throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
-                }
+            boolean hasRecipients;
+            try {
+                Address[] rcpts = dat.mMm.getAllRecipients();
+                hasRecipients = rcpts != null && rcpts.length > 0;
+            } catch (MessagingException e) {
+                throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
+            }
+            if (!dat.mInvite.isOrganizer()) {
+                // If we are sending this to other people, then we MUST be the organizer!
+                if (hasRecipients)
+                    throw MailServiceException.MUST_BE_ORGANIZER("CreateCalendarItemException");
+            } else {
+                // Inherit the neverSent flag from the series.
+                dat.mInvite.setNeverSent(inv.isNeverSent());
             }
 
             sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response);

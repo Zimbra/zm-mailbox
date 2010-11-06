@@ -119,6 +119,7 @@
             [changes="comma-separated list of changed data in an updated invite"]
                 // Possible values are "subject", "location", "time" (start time, end time, or duration), and "recurrence".
             [draft="0|1"]       // set to 1 if invite has changes that haven't been sent to attendees; for organizer only
+            [neverSent="0|1"]   // set to 1 if attendees have never been notified for this invite; for organizer only, used in SetAppointmentRequest only
         >
 
            <s DATETIME> // Start date-time (required)
@@ -587,6 +588,7 @@ OR
 //      ptst="NE|TE|AC|DE|DG"
 //      [allDay="1"]             // if set, this is an "all day" appointment
 //      [draft="1"]              // set if invite has changes that haven't been sent to attendees; for organizer only
+//      [neverSent="0|1"]        // set if attendees were never notified of this invite; for organizer only
 //      [otherAtt="1"]           // if set, this appointment has other attendees
 //      [alarm="1"] [recur="1"]
 //      [name="NAME"] [loc="LOCATION"]
@@ -775,6 +777,7 @@ OR
             [changes="comma-separated list of changed data in an updated invite"]
                 // Possible values are "subject", "location", "time" (start time, end time, or duration), and "recurrence".
             [draft="0|1"]  // set to 1 if invite has changes that haven't been sent to attendees; for organizer only
+            [neverSent="0|1"]  // set if attendees were never notified of this invite; for organizer only
            >
 
            <s DATETIME
