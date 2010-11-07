@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101105-1432 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101106-0144 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -14927,6 +14927,137 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * where the reading pane is displayed for briefcase
+     *
+     * <p>Valid values: [off, bottom, right]
+     *
+     * @return zimbraPrefBriefcaseReadingPaneLocation, or ZAttrProvisioning.PrefBriefcaseReadingPaneLocation.bottom if unset and/or has invalid value
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1152)
+    public ZAttrProvisioning.PrefBriefcaseReadingPaneLocation getPrefBriefcaseReadingPaneLocation() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefBriefcaseReadingPaneLocation); return v == null ? ZAttrProvisioning.PrefBriefcaseReadingPaneLocation.bottom : ZAttrProvisioning.PrefBriefcaseReadingPaneLocation.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefBriefcaseReadingPaneLocation.bottom; }
+    }
+
+    /**
+     * where the reading pane is displayed for briefcase
+     *
+     * <p>Valid values: [off, bottom, right]
+     *
+     * @return zimbraPrefBriefcaseReadingPaneLocation, or "bottom" if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1152)
+    public String getPrefBriefcaseReadingPaneLocationAsString() {
+        return getAttr(Provisioning.A_zimbraPrefBriefcaseReadingPaneLocation, "bottom");
+    }
+
+    /**
+     * where the reading pane is displayed for briefcase
+     *
+     * <p>Valid values: [off, bottom, right]
+     *
+     * @param zimbraPrefBriefcaseReadingPaneLocation new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1152)
+    public void setPrefBriefcaseReadingPaneLocation(ZAttrProvisioning.PrefBriefcaseReadingPaneLocation zimbraPrefBriefcaseReadingPaneLocation) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefBriefcaseReadingPaneLocation, zimbraPrefBriefcaseReadingPaneLocation.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * where the reading pane is displayed for briefcase
+     *
+     * <p>Valid values: [off, bottom, right]
+     *
+     * @param zimbraPrefBriefcaseReadingPaneLocation new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1152)
+    public Map<String,Object> setPrefBriefcaseReadingPaneLocation(ZAttrProvisioning.PrefBriefcaseReadingPaneLocation zimbraPrefBriefcaseReadingPaneLocation, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefBriefcaseReadingPaneLocation, zimbraPrefBriefcaseReadingPaneLocation.toString());
+        return attrs;
+    }
+
+    /**
+     * where the reading pane is displayed for briefcase
+     *
+     * <p>Valid values: [off, bottom, right]
+     *
+     * @param zimbraPrefBriefcaseReadingPaneLocation new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1152)
+    public void setPrefBriefcaseReadingPaneLocationAsString(String zimbraPrefBriefcaseReadingPaneLocation) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefBriefcaseReadingPaneLocation, zimbraPrefBriefcaseReadingPaneLocation);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * where the reading pane is displayed for briefcase
+     *
+     * <p>Valid values: [off, bottom, right]
+     *
+     * @param zimbraPrefBriefcaseReadingPaneLocation new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1152)
+    public Map<String,Object> setPrefBriefcaseReadingPaneLocationAsString(String zimbraPrefBriefcaseReadingPaneLocation, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefBriefcaseReadingPaneLocation, zimbraPrefBriefcaseReadingPaneLocation);
+        return attrs;
+    }
+
+    /**
+     * where the reading pane is displayed for briefcase
+     *
+     * <p>Valid values: [off, bottom, right]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1152)
+    public void unsetPrefBriefcaseReadingPaneLocation() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefBriefcaseReadingPaneLocation, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * where the reading pane is displayed for briefcase
+     *
+     * <p>Valid values: [off, bottom, right]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1152)
+    public Map<String,Object> unsetPrefBriefcaseReadingPaneLocation(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefBriefcaseReadingPaneLocation, "");
+        return attrs;
+    }
+
+    /**
      * whether to allow a cancel email sent to organizer of appointment
      *
      * @return zimbraPrefCalendarAllowCancelEmailToSelf, or false if unset
@@ -24258,7 +24389,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * where the task reading pane is displayed in list views
+     * where the reading pane is displayed for tasks
      *
      * <p>Valid values: [off, bottom, right]
      *
@@ -24272,7 +24403,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * where the task reading pane is displayed in list views
+     * where the reading pane is displayed for tasks
      *
      * <p>Valid values: [off, bottom, right]
      *
@@ -24286,7 +24417,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * where the task reading pane is displayed in list views
+     * where the reading pane is displayed for tasks
      *
      * <p>Valid values: [off, bottom, right]
      *
@@ -24303,7 +24434,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * where the task reading pane is displayed in list views
+     * where the reading pane is displayed for tasks
      *
      * <p>Valid values: [off, bottom, right]
      *
@@ -24321,7 +24452,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * where the task reading pane is displayed in list views
+     * where the reading pane is displayed for tasks
      *
      * <p>Valid values: [off, bottom, right]
      *
@@ -24338,7 +24469,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * where the task reading pane is displayed in list views
+     * where the reading pane is displayed for tasks
      *
      * <p>Valid values: [off, bottom, right]
      *
@@ -24356,7 +24487,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * where the task reading pane is displayed in list views
+     * where the reading pane is displayed for tasks
      *
      * <p>Valid values: [off, bottom, right]
      *
@@ -24372,7 +24503,7 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * where the task reading pane is displayed in list views
+     * where the reading pane is displayed for tasks
      *
      * <p>Valid values: [off, bottom, right]
      *

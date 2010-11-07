@@ -5215,8 +5215,14 @@ TODO: delete them permerntly from here
 
 <attr id="1151" name="zimbraPrefTasksReadingPaneLocation" type="enum" value="bottom,right,off" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="7.0.0">
   <defaultCOSValue>bottom</defaultCOSValue>
-  <desc>where the task reading pane is displayed in list views</desc>
+  <desc>where the reading pane is displayed for tasks</desc>
 </attr>
+
+<attr id="1152" name="zimbraPrefBriefcaseReadingPaneLocation" type="enum" value="bottom,right,off" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="7.0.0">
+  <defaultCOSValue>bottom</defaultCOSValue>
+  <desc>where the reading pane is displayed for briefcase</desc>
+</attr>
+
 
 </attrs>
 

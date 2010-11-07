@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101105-1432 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101106-0144 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -466,6 +466,24 @@ public class ZAttrProvisioning {
         }
         public boolean isMay() { return this == may;}
         public boolean isNone() { return this == none;}
+    }
+
+    public static enum PrefBriefcaseReadingPaneLocation {
+        bottom("bottom"),
+        off("off"),
+        right("right");
+        private String mValue;
+        private PrefBriefcaseReadingPaneLocation(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefBriefcaseReadingPaneLocation fromString(String s) throws ServiceException {
+            for (PrefBriefcaseReadingPaneLocation value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isBottom() { return this == bottom;}
+        public boolean isOff() { return this == off;}
+        public boolean isRight() { return this == right;}
     }
 
     public static enum PrefCalendarApptVisibility {
@@ -5650,6 +5668,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefBccAddress = "zimbraPrefBccAddress";
 
     /**
+     * where the reading pane is displayed for briefcase
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1152)
+    public static final String A_zimbraPrefBriefcaseReadingPaneLocation = "zimbraPrefBriefcaseReadingPaneLocation";
+
+    /**
      * whether to allow a cancel email sent to organizer of appointment
      *
      * @since ZCS 5.0.9
@@ -6723,7 +6749,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefTagTreeOpen = "zimbraPrefTagTreeOpen";
 
     /**
-     * where the task reading pane is displayed in list views
+     * where the reading pane is displayed for tasks
      *
      * @since ZCS 7.0.0
      */
