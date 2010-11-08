@@ -38,10 +38,6 @@ public class MailConstants {
     public static final QName BROWSE_REQUEST = QName.get("BrowseRequest", NAMESPACE);
     public static final QName BROWSE_RESPONSE = QName.get("BrowseResponse", NAMESPACE);
 
-    // dumpster
-    public static final QName EMPTY_DUMPSTER_REQUEST = QName.get("EmptyDumpsterRequest", NAMESPACE);
-    public static final QName EMPTY_DUMPSTER_RESPONSE = QName.get("EmptyDumpsterResponse", NAMESPACE);
-
     // generic items
     public static final QName GET_ITEM_REQUEST = QName.get("GetItemRequest", NAMESPACE);
     public static final QName GET_ITEM_RESPONSE = QName.get("GetItemResponse", NAMESPACE);
@@ -144,12 +140,6 @@ public class MailConstants {
     public static final QName MODIFY_FILTER_RULES_RESPONSE = QName.get("ModifyFilterRulesResponse", NAMESPACE);
     public static final QName APPLY_FILTER_RULES_REQUEST = QName.get("ApplyFilterRulesRequest", NAMESPACE);
     public static final QName APPLY_FILTER_RULES_RESPONSE = QName.get("ApplyFilterRulesResponse", NAMESPACE);
-    public static final QName GET_OUTGOING_FILTER_RULES_REQUEST = QName.get("GetOutgoingFilterRulesRequest", NAMESPACE);
-    public static final QName GET_OUTGOING_FILTER_RULES_RESPONSE = QName.get("GetOutgoingFilterRulesResponse", NAMESPACE);
-    public static final QName MODIFY_OUTGOING_FILTER_RULES_REQUEST = QName.get("ModifyOutgoingFilterRulesRequest", NAMESPACE);
-    public static final QName MODIFY_OUTGOING_FILTER_RULES_RESPONSE = QName.get("ModifyOutgoingFilterRulesResponse", NAMESPACE);
-    public static final QName APPLY_OUTGOING_FILTER_RULES_REQUEST = QName.get("ApplyOutgoingFilterRulesRequest", NAMESPACE);
-    public static final QName APPLY_OUTGOING_FILTER_RULES_RESPONSE = QName.get("ApplyOutgoingFilterRulesResponse", NAMESPACE);
 
     // Calendar
     public static final QName GET_APPT_SUMMARIES_REQUEST = QName.get("GetApptSummariesRequest", NAMESPACE);
@@ -192,7 +182,6 @@ public class MailConstants {
     public static final QName SEND_INVITE_REPLY_REQUEST = QName.get("SendInviteReplyRequest", NAMESPACE);
     public static final QName ICAL_REPLY_REQUEST = QName.get("ICalReplyRequest", NAMESPACE);
     public static final QName GET_FREE_BUSY_REQUEST = QName.get("GetFreeBusyRequest", NAMESPACE);
-    public static final QName GET_WORKING_HOURS_REQUEST = QName.get("GetWorkingHoursRequest", NAMESPACE);
     public static final QName GET_ICAL_REQUEST = QName.get("GetICalRequest", NAMESPACE);
     public static final QName ANNOUNCE_ORGANIZER_CHANGE_REQUEST = QName.get("AnnounceOrganizerChangeRequest", NAMESPACE);
     public static final QName DISMISS_CALITEM_ALARM_REQUEST = QName.get("DismissCalendarItemAlarmRequest", NAMESPACE);
@@ -224,8 +213,6 @@ public class MailConstants {
     public static final QName DIFF_DOCUMENT_RESPONSE = QName.get("DiffDocumentResponse", NAMESPACE);
     public static final QName LIST_DOCUMENT_REVISIONS_REQUEST = QName.get("ListDocumentRevisionsRequest", NAMESPACE);
     public static final QName LIST_DOCUMENT_REVISIONS_RESPONSE = QName.get("ListDocumentRevisionsResponse", NAMESPACE);
-    public static final QName PURGE_REVISION_REQUEST = QName.get("PurgeRevisionRequest", NAMESPACE);
-    public static final QName PURGE_REVISION_RESPONSE = QName.get("PurgeRevisionResponse", NAMESPACE);
 
     // data sources
     public static final QName CREATE_DATA_SOURCE_REQUEST = QName.get("CreateDataSourceRequest", NAMESPACE);
@@ -277,13 +264,7 @@ public class MailConstants {
     // contact ranking mgmt
     public static final QName RANKING_ACTION_REQUEST  = QName.get("RankingActionRequest", NAMESPACE);
     public static final QName RANKING_ACTION_RESPONSE = QName.get("RankingActionResponse", NAMESPACE);
-
-    // device verification for sms reminders
-    public static final QName SEND_VERIFICATION_CODE_REQUEST = QName.get("SendVerificationCodeRequest", NAMESPACE);
-    public static final QName SEND_VERIFICATION_CODE_RESPONSE = QName.get("SendVerificationCodeResponse", NAMESPACE);
-    public static final QName VERIFY_CODE_REQUEST = QName.get("VerifyCodeRequest", NAMESPACE);
-    public static final QName VERIFY_CODE_RESPONSE = QName.get("VerifyCodeResponse", NAMESPACE);
-
+    
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
     public static final String E_MSG = "m";
@@ -426,8 +407,6 @@ public class MailConstants {
     public static final String A_PREFETCH = "prefetch";
     public static final String A_VERBOSE = "verbose";
     public static final String A_CSVFORMAT = "csvfmt";
-    public static final String A_CSVLOCALE = "csvlocale";
-    public static final String A_CSVSEPARATOR = "csvsep";
     public static final String A_NEED_GRANTEE_NAME = "needGranteeName";
     public static final String A_INVALID = "invalid";
     
@@ -468,7 +447,6 @@ public class MailConstants {
     public static final String A_NO_SAVE_TO_SENT = "noSave";
     public static final String A_SEND_UID = "suid";
     public static final String A_FOR_ACCOUNT = "forAcct";
-    public static final String A_AUTO_SEND_TIME = "autoSendTime";
 
     // mountpoints
     public static final String A_REMOTE_ID = "rid";
@@ -501,7 +479,6 @@ public class MailConstants {
     public static final String A_FIELD = "field";
     public static final String A_INCLUDE_TAG_DELETED = "includeTagDeleted"; //
     public static final String A_ALLOWABLE_TASK_STATUS = "allowableTaskStatus";
-    public static final String A_IN_DUMPSTER = "inDumpster";
 
     // search-result paging
     public static final String E_CURSOR = "cursor";
@@ -621,7 +598,6 @@ public class MailConstants {
     public static final String A_CAL_DURATION = "d";
     public static final String A_CAL_NEW_DURATION = "dur";
     public static final String A_CAL_DATETIME = "d";
-    public static final String A_CAL_DATETIME_UTC = "u";
     public static final String A_CAL_TZ_OFFSET = "tzo";
     public static final String A_CAL_SUB_ID = "subId";
     public static final String A_CAL_INV_ID = "invId";
@@ -635,8 +611,6 @@ public class MailConstants {
     public static final String A_CAL_CLASS = "class";
     public static final String A_CAL_ALL = "all";
     public static final String A_CAL_ALLDAY = "allDay";
-    public static final String A_CAL_DRAFT = "draft";
-    public static final String A_CAL_NEVER_SENT = "neverSent";
     public static final String A_CAL_NO_BLOB = "noBlob";
     public static final String A_CAL_LOCATION = "loc";
     public static final String A_CAL_NEEDS_REPLY = "needsReply";
@@ -716,7 +690,6 @@ public class MailConstants {
     public static final String E_CAL_MINICAL_DATE = "date";
 
     public static final String A_CAL_INTENDED_FOR = "cif";
-    public static final String A_CAL_CHANGES = "changes";
 
     // spell checking
     public static final String A_AVAILABLE = "available";
@@ -739,7 +712,6 @@ public class MailConstants {
     public static final String E_DS_UNKNOWN = "unknown";
     public static final String E_DS_LAST_ERROR = "lastError"; 
     public static final String A_DS_IS_ENABLED = "isEnabled";
-    public static final String A_DS_IS_IMPORTONLY = "importOnly";
     public static final String A_DS_HOST = "host";
     public static final String A_DS_PORT = "port";
     public static final String A_DS_CONNECTION_TYPE = "connectionType";
@@ -781,12 +753,6 @@ public class MailConstants {
     public static final String A_V2 = "v2";
     public static final String E_CHUNK = "chunk";
     public static final String A_DISP = "disp";
-    public static final String A_DESC = "desc";
-    public static final String A_LOCKOWNER_ID = "loid";
-    public static final String A_LOCKOWNER_EMAIL = "loe";
-    public static final String A_LOCKTIMESTAMP = "lt";
-    public static final String E_REVISION = "revision";
-    public static final String A_INCLUDE_OLDER_REVISIONS = "includeOlderRevisions";
     
     // WaitSet
     public static final String E_WAITSET_ADD = "add";
@@ -813,8 +779,4 @@ public class MailConstants {
     public static final String A_CANBECACHED = "canBeCached";
     public static final String A_DISPLAYNAME = "display";
     public static final String A_MATCH_TYPE = "type";
-
-    // device verification for reminders
-    public static final String A_VERIFICATION_CODE = "code";
-    public static final String A_VERIFICATION_SUCCESS = "success";
 }

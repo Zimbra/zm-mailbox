@@ -22,11 +22,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-import javax.activation.DataSource;
 
 import com.zimbra.common.util.ByteUtil;
 
@@ -35,66 +34,73 @@ public abstract class MimePart {
      *  and encoding 8-bit headers and message content. */
     public static final String PROP_CHARSET_DEFAULT = "charset.default";
 
-    enum Dirty {
-        NONE, HEADERS, CTE, CONTENT;
-
-        Dirty combine(Dirty other) {
-            if (other == CONTENT || this == CONTENT) {
-                return CONTENT;
-            } else if (other == CTE || this == CTE) {
-                return CTE;
-            } else if (other == HEADERS || this == HEADERS) {
-                return HEADERS;
-            } else {
-                return NONE;
-            }
-        }
-    }
-
     private MimePart mParent;
     private MimeHeaderBlock mMimeHeaders;
     private ContentType mContentType;
-    private long mStartOffset = -1, mBodyOffset = -1, mEndOffset = -1;
-    private long mSize = -1;
-    private int mLineCount = -1;
+    private long mStartOffset = -1L, mBodyOffset = -1L, mEndOffset = -1L;
     private PartSource mPartSource;
-    private Dirty mDirty;
+    private boolean mDirty;
 
     MimePart(ContentType ctype) {
-        mDirty = Dirty.CONTENT;
-        setMimeHeader("Content-Type", new ContentType(ctype));
+        mContentType = new ContentType(ctype);
+        checkContentType(mContentType);
+        mMimeHeaders = new MimeHeaderBlock(this instanceof MimeMessage);
+        setMimeHeader("Content-Type", new MimeHeader("Content-Type", mContentType));
+        mDirty = true;
     }
 
     MimePart(ContentType ctype, MimePart parent, long start, long body, MimeHeaderBlock headers) {
-        mDirty = Dirty.NONE;
         mParent = parent;
         mContentType = ctype;
-        mMimeHeaders = headers == null ? null : headers.setParent(this);
+        mMimeHeaders = headers;
         mStartOffset = start;
         mBodyOffset = body;
     }
 
+    static MimePart parse(ParseState pstate, MimePart parent, String defaultContentType) throws IOException {
+        long start = pstate.getPosition();
+
+        MimeHeaderBlock headers = new MimeHeaderBlock(parent instanceof MimeMessage).parse(pstate, parent == null ? null : parent.getActiveBoundaries());
+        String defaultCharset = parent == null ? null : parent.getDefaultCharset();
+        ContentType ctype = new ContentType(headers.getHeader("Content-Type", defaultCharset), defaultContentType);
+
+        MimePart mp;
+        if (ctype.getValue().equals(ContentType.MESSAGE_RFC822))
+            mp = new MimeMessage(ctype, parent, start, pstate.getPosition(), headers);
+        else if (ctype.getPrimaryType().equals("multipart"))
+            mp = new MimeMultipart(ctype, parent, start, pstate.getPosition(), headers);
+        else
+            mp = new MimeBodyPart(ctype, parent, start, pstate.getPosition(), headers);
+
+        ParseState.BoundaryTerminator bterm = pstate.getBoundaryTerminator();
+        if (bterm == null)
+            mp.readContent(pstate);
+        else
+            mp.recordEndpoint(bterm.mBoundaryStart);
+        return mp;
+    }
 
     MimePart getParent() {
         return mParent;
     }
 
     void setParent(MimePart mp) {
-        if (mParent != mp) {
-            detach();
-            mParent = mp;
-        }
+        detach();
+        mParent = mp;
     }
 
     public MimePart detach() {
         mPartSource = getPartSource();
-        if (mParent != null) {
+        if (mParent != null)
             mParent.removeChild(this);
-        }
         return this;
     }
 
     abstract void removeChild(MimePart mp);
+
+    private PartSource getPartSource() {
+        return mPartSource != null || mParent == null ? mPartSource : mParent.getPartSource();
+    }
 
     /** Fetches a subpart of this part, specified via the IMAP part naming
      *  convention (see {@see http://tools.ietf.org/html/rfc3501#page-56}).
@@ -104,8 +110,24 @@ public abstract class MimePart {
         return part == null || part.equals("") ? this : null;
     }
 
-    Map<String, MimePart> listMimeParts(Map<String, MimePart> parts, String parentName) {
+    Map<String, MimePart> listMimeParts(Map<String, MimePart> parts, String prefix) {
         return parts;
+    }
+
+    long getStartOffset() {
+        return mStartOffset;
+    }
+
+    long getBodyOffset() {
+        return mBodyOffset;
+    }
+
+    long getEndOffset() {
+        return mEndOffset;
+    }
+
+    long getSize() {
+        return mEndOffset - mBodyOffset;
     }
 
     Properties getProperties() {
@@ -115,6 +137,10 @@ public abstract class MimePart {
     String getDefaultCharset() {
         Properties props = getProperties();
         return props == null ? null : props.getProperty(PROP_CHARSET_DEFAULT);
+    }
+
+    List<String> getActiveBoundaries() {
+        return mParent == null ? null : mParent.getActiveBoundaries();
     }
 
 
@@ -131,23 +157,35 @@ public abstract class MimePart {
     }
 
     public MimePart setMimeHeader(String name, String value) {
-        setMimeHeader(name, value == null ? null : new MimeHeader(name, value));
+        if (name.equalsIgnoreCase("Content-Type"))
+            setContentType(new ContentType(value));
+        else
+            setMimeHeader(name, value == null ? null : new MimeHeader(name, value));
         return this;
     }
 
-    public void setMimeHeader(String name, MimeHeader header) {
-        getMimeHeaderBlock().setHeader(name, header);
+    void setMimeHeader(String name, MimeHeader header) {
+        if (mMimeHeaders == null)
+            mMimeHeaders = new MimeHeaderBlock(false);
+        mMimeHeaders.setHeader(name, header);
+        if (mParent != null)
+            mParent.markDirty(true);
+        mStartOffset = -1;
     }
 
     void addMimeHeader(String name, MimeHeader header) {
-        getMimeHeaderBlock().addHeader(header);
+        if (mMimeHeaders == null)
+            mMimeHeaders = new MimeHeaderBlock(false);
+        mMimeHeaders.addHeader(name, header);
+        if (mParent != null)
+            mParent.markDirty(true);
+        mStartOffset = -1;
     }
 
-    public MimeHeaderBlock getMimeHeaderBlock() {
-        if (mMimeHeaders == null) {
-            mMimeHeaders = new MimeHeaderBlock(false, this);
-        }
-        return mMimeHeaders;
+    Iterator<MimeHeader> mimeHeaderIterator() {
+        if (mMimeHeaders == null)
+            mMimeHeaders = new MimeHeaderBlock(false);
+        return mMimeHeaders.iterator();
     }
 
     /** Returns the effective Content-Type for this part.  Note that this should
@@ -158,14 +196,12 @@ public abstract class MimePart {
         return new ContentType(mContentType);
     }
 
-    public MimePart setContentType(ContentType ctype) {
-        setMimeHeader("Content-Type", ctype);
-        return this;
+    public void setContentType(ContentType ctype) {
+        mContentType = new ContentType(ctype);
+        setMimeHeader("Content-Type", ctype == null ? null : new MimeHeader("Content-Type", ctype));
     }
 
-    ContentType updateContentType(ContentType ctype) {
-        return mContentType = ctype;
-    }
+    abstract void checkContentType(ContentType ctype);
 
     public ContentDisposition getContentDisposition() {
         return new ContentDisposition(getMimeHeader("Content-Disposition"));
@@ -173,77 +209,33 @@ public abstract class MimePart {
 
     public String getFilename() {
         String filename = mContentType.getParameter("name");
-        if (filename == null || filename.equals("")) {
+        if (filename == null || filename.equals(""))
             filename = getContentDisposition().getParameter("filename");
-        }
         return filename;
     }
 
-    public MimePart setFilename(String name) {
-        String filename = getFilename();
-        if (filename != name && (filename == null || !filename.equals(name))) {
-            setContentType(getContentType().setParameter("name", name));
-            setMimeHeader("Content-Disposition", getContentDisposition().setParameter("filename", name));
-        }
-        return this;
-    }
-
-
-    protected MimePart recordEndpoint(long position, int lineCount) {
-        mEndOffset = position;
-        mSize      = position - mBodyOffset;
-        mLineCount = lineCount;
-        mDirty     = Dirty.NONE;
-        return this;
-    }
-
-    protected long recordSize(long size) {
-        mSize = size;
-        return size;
-    }
-
-    long getStartOffset() {
-        return mDirty == Dirty.NONE ? mStartOffset : -1;
-    }
-
-    long getBodyOffset() {
-        return mDirty != Dirty.CONTENT ? mBodyOffset : -1;
-    }
-
-    long getEndOffset() {
-        return mDirty != Dirty.CONTENT ? mEndOffset : -1;
-    }
-
-    @SuppressWarnings("unused")
-    public long getSize() throws IOException {
-        return mSize;
-    }
-
-    public int getLineCount() {
-        return mLineCount;
-    }
-
-    private PartSource getPartSource() {
-        return mPartSource != null || mParent == null ? mPartSource : mParent.getPartSource();
-    }
 
     /** Returns an <code>InputStream</code> whose content is the <u>entire</u>
      *  part, MIME headers and all.  If you only want the part body, try
      *  {@see #getContentStream()}. */
     public InputStream getInputStream() throws IOException {
-        if (!isDirty() && getStartOffset() != -1) {
-            return getRawContentStream(getStartOffset(), getEndOffset());
-        } else {
-            byte[] header = mMimeHeaders != null ? mMimeHeaders.toByteArray() : new byte[] { '\r', '\n' };
-            return new VectorInputStream(header, getRawContentStream());
-        }
+        if (!isDirty() && mStartOffset >= 0)
+            return getRawContentStream(mStartOffset, mEndOffset);
+
+        List<Object> sources = new ArrayList<Object>(2);
+        if (mStartOffset != -1 && getPartSource() != null)
+            sources.add(getRawContentStream(mStartOffset, mBodyOffset));
+        else if (mMimeHeaders != null)
+            sources.add(mMimeHeaders.toByteArray());
+        sources.add(getRawContentStream());
+        return new VectorInputStream(sources);
     }
 
     /** Returns an <code>InputStream</code> whose content is the raw, undecoded
      *  body of the part.  If you want the body with the content transfer
      *  encoding removed, try {@see #getContentStream()}. */
     public InputStream getRawContentStream() throws IOException {
-        return getRawContentStream(getBodyOffset(), getEndOffset());
+        return getRawContentStream(mBodyOffset, mEndOffset);
     }
 
     private InputStream getRawContentStream(long start, long end) throws IOException {
@@ -255,13 +247,11 @@ public abstract class MimePart {
      *  body of the part.  If you want the body with the content transfer
      *  encoding removed, try {@see #getContent()}. */
     public byte[] getRawContent() throws IOException {
-        if (!isDirty()) {
-            return getPartSource().getContent(getBodyOffset(), getEndOffset());
-        } else {
-            InputStream is = getRawContentStream();
-            int length = getEndOffset() == -1 ? -1 : (int) (getEndOffset() - getBodyOffset());
-            return is == null ? null : ByteUtil.getContent(is, length);
-        }
+        if (!isDirty())
+            return getPartSource().getContent(mBodyOffset, mEndOffset);
+
+        InputStream is = getRawContentStream();
+        return is == null ? null : ByteUtil.getContent(is, (int) (mEndOffset - mBodyOffset));
     }
 
     /** Returns an <code>InputStream</code> whose content is the body of the
@@ -278,99 +268,84 @@ public abstract class MimePart {
         return getRawContent();
     }
 
+    public MimePart setContent(byte[] content) {
+        return setContent(content, true);
+    }
 
-    MimePart attachSource(PartSource psource) {
-        if (mBodyOffset != -1) {
-            mPartSource = psource;
-        }
+    MimePart setContent(byte[] content, boolean markDirty) {
+        if (markDirty && mParent != null)
+            mParent.markDirty(true);
+
+        mPartSource  = new PartSource(content);
+        mStartOffset = -1;
+        mBodyOffset  = content == null ? -1 : 0;
+        mEndOffset   = content == null ? -1 : content.length;
         return this;
     }
 
-    MimePart setContent(PartSource psource) {
-        // switch to "headers dirty" and propagate upwards, regardless of previous dirty state
-        mDirty = Dirty.NONE;
-        markDirty(Dirty.HEADERS);
+    public MimePart setContent(File file) {
+        return setContent(file, true);
+    }
 
-        mPartSource  = psource;
+    MimePart setContent(File file, boolean markDirty) {
+        if (markDirty && mParent != null)
+            mParent.markDirty(true);
+        if (!file.exists())
+            file = null;
+
+        mPartSource  = new PartSource(file);
         mStartOffset = -1;
-        mBodyOffset  = psource == null ? -1 : 0;
-        mEndOffset   = psource == null ? -1 : psource.getLength();
-        mSize        = mEndOffset;
+        mBodyOffset  = file == null ? -1 : 0;
+        mEndOffset   = file == null ? -1 : file.length();
         return this;
     }
 
     /** Marks the item as "dirty" so that we regenerate the part when
      *  serializing. */
-    void markDirty(Dirty dirty) {
-        if (dirty != Dirty.NONE) {
-            mDirty = mDirty.combine(dirty);
-            // changing anything in the part effectively changes the body of the parent
-            if (mParent != null) {
-                mParent.markDirty(Dirty.CONTENT);
-            }
-            if (dirty == Dirty.CONTENT || dirty == Dirty.CTE) {
-                // don't reset the offsets to -1, as recordEndpoint clears dirty state
-                mSize = mLineCount = -1;
-            }
-        }
+    void markDirty(boolean dirtyBody) {
+        if (isDirty())
+            return;
+        mDirty |= dirtyBody;
+        // changing anything in the part effectively changes the body of the parent
+        if (mParent != null)
+            mParent.markDirty(true);
     }
 
     boolean isDirty() {
-        return mDirty != Dirty.NONE || getPartSource() == null;
+        return mDirty || getPartSource() == null;
+    }
+
+    abstract MimePart readContent(ParseState pstate) throws IOException;
+
+    protected void recordEndpoint(long position) {
+        mEndOffset = position;
     }
 
 
-    static class PartSource {
+    private static class PartSource {
         private final byte[] mBodyContent;
         private final File mBodyFile;
-        private final DataSource mBodySource;
-        private final long mLength;
 
-        PartSource(byte[] content) {
-            mBodyContent = content;
-            mBodyFile    = null;
-            mBodySource  = null;
-            mLength      = mBodyContent.length;
-        }
-
-        PartSource(File file) {
-            mBodyContent = null;
-            mBodyFile    = file;
-            mBodySource  = null;
-            mLength      = mBodyFile.length();
-        }
-
-        PartSource(DataSource ds) {
-            mBodyContent = null;
-            mBodyFile    = null;
-            mBodySource  = ds;
-            mLength      = -1;
-        }
-
-        long getLength() {
-            return mLength;
-        }
+        PartSource(byte[] content)  { mBodyContent = content;  mBodyFile = null; }
+        PartSource(File file)       { mBodyContent = null;     mBodyFile = file; }
 
         InputStream getContentStream(long start, long end) throws IOException {
-            long sbound = mLength == -1 ? Long.MAX_VALUE : mLength;
-            long sstart = Math.max(0, Math.min(start, sbound));
-            long send = end < 0 ? mLength : Math.max(sstart, Math.min(end, sbound));
-
-            if (sstart == send) {
-                return new ByteArrayInputStream(new byte[0]);
-            } else if (mBodyContent != null) {
-                return new ByteArrayInputStream(mBodyContent, (int) sstart, (int) (send - sstart));
-            } else if (mBodyFile != null || mBodySource != null) {
-                InputStream is = mBodyFile != null ? new FileInputStream(mBodyFile) : mBodySource.getInputStream();
+            if (mBodyContent != null) {
+                start = Math.max(0, Math.min(start, mBodyContent.length));
+                end = end < 0 ? mBodyContent.length : Math.max(start, Math.min(end, mBodyContent.length));
+                return new ByteArrayInputStream(mBodyContent, (int) start, (int) (end - start));
+            } else if (mBodyFile != null) {
+                if (!mBodyFile.exists())
+                    return null;
+                // FIXME: check for GZIPped content
+                int fileLength = (int) mBodyFile.length();
+                start = Math.max(0, Math.min(start, fileLength));
+                end = end < 0 ? fileLength : Math.max(start, Math.min(end, fileLength));
+                FileInputStream fis = new FileInputStream(mBodyFile);
                 try {
-                    if (send == -1 || send == mLength) {
-                        is.skip(sstart);
-                        return is;
-                    } else {
-                        return ByteUtil.SegmentInputStream.create(is, sstart, send);
-                    }
+                    return start == 0 && end == fileLength ? fis : ByteUtil.SegmentInputStream.create(fis, start, end);
                 } catch (IOException ioe) {
-                    ByteUtil.closeStream(is);
+                    ByteUtil.closeStream(fis);
                     throw ioe;
                 }
             } else {
@@ -379,44 +354,30 @@ public abstract class MimePart {
         }
 
         byte[] getContent(long start, long end) throws IOException {
-            long sstart = Math.max(0, Math.min(start, mLength));
-            long send = end < 0 ? mLength : Math.max(sstart, Math.min(end, mLength));
-
-            int size = (int) (send - sstart);
-            if (mBodyContent != null && size == mBodyContent.length) {
-                return mBodyContent;
-            }
-            byte[] content = new byte[size];
-
-            if (size == 0) {
-                return content;
-            } else if (mBodyContent != null) {
-                System.arraycopy(mBodyContent, (int) sstart, content, 0, size);
+            if (mBodyContent != null) {
+                start = Math.max(0, Math.min(start, mBodyContent.length));
+                end = end < 0 ? mBodyContent.length : Math.max(start, Math.min(end, mBodyContent.length));
+                int size = (int) (end - start);
+                if (size == mBodyContent.length)
+                    return mBodyContent;
+                byte[] content = new byte[size];
+                System.arraycopy(mBodyContent, (int) start, content, 0, size);
                 return content;
             } else if (mBodyFile != null) {
+                RandomAccessFile raf;
                 try {
-                    RandomAccessFile raf = new RandomAccessFile(mBodyFile, "r");
-                    raf.seek(sstart);
-                    raf.readFully(content);
-                    return content;
+                    raf = new RandomAccessFile(mBodyFile, "r");
                 } catch (FileNotFoundException fnfe) {
                     return null;
                 }
-            } else if (mBodySource != null) {
-                InputStream is = getContentStream(sstart, send);
-                try {
-                    int remaining = size;
-                    while (remaining > 0) {
-                        int read = is.read(content, size - remaining, remaining);
-                        if (read < 0) {
-                            break;
-                        }
-                        remaining -= read;
-                    }
-                    return content;
-                } finally {
-                    ByteUtil.closeStream(is);
-                }
+                // FIXME: check for GZIPped content
+                int fileLength = (int) raf.length();
+                start = Math.max(0, Math.min(start, fileLength));
+                end = end < 0 ? fileLength : Math.max(start, Math.min(end, fileLength));
+                raf.seek(start);
+                byte[] content = new byte[(int) (end - start)];
+                raf.readFully(content);
+                return content;
             } else {
                 return null;
             }
@@ -424,7 +385,7 @@ public abstract class MimePart {
     }
 
 
-    public static class VectorInputStream extends InputStream {
+    static class VectorInputStream extends InputStream {
         private final List<Object> mItems;
         private int mNextIndex;
         private InputStream mCurrentStream;
@@ -436,37 +397,24 @@ public abstract class MimePart {
             getNextStream();
         }
 
-        public VectorInputStream(Object... items) throws IOException {
-            mItems = new ArrayList<Object>(items.length);
-            for (Object item : items) {
-                if (item != null) {
-                    mItems.add(item);
-                }
-            }
-            getNextStream();
-        }
-
         @Override public int read() throws IOException {
             int c = mCurrentStream == null ? -1 : mCurrentStream.read();
-            while (c == -1 && mCurrentStream != null) {
+            while (c == -1 && mCurrentStream != null)
                 c = getNextStream() == null ? -1 : mCurrentStream.read();
-            }
             return c;
         }
 
         @Override public int read(byte[] b, int off, int len) throws IOException {
             int num = mCurrentStream == null ? -1 : mCurrentStream.read(b, off, len);
-            while (num == -1 && mCurrentStream != null) {
+            while (num == -1 && mCurrentStream != null)
                 num = getNextStream() == null ? -1 : mCurrentStream.read(b, off, len);
-            }
             return num;
         }
 
         @Override public long skip(long n) throws IOException {
             long remaining = n - (mCurrentStream == null ? 0 : mCurrentStream.skip(n));
-            while (remaining > 0 && mCurrentStream != null) {
+            while (remaining > 0 && mCurrentStream != null)
                 remaining -= getNextStream() == null ? 0 : mCurrentStream.skip(remaining);
-            }
             return n - remaining;
         }
 
@@ -477,28 +425,76 @@ public abstract class MimePart {
 
             while (mNextIndex < mItems.size()) {
                 Object next = mItems.get(mNextIndex++);
-                if (next instanceof InputStream) {
+                if (next instanceof InputStream)
                     ByteUtil.closeStream((InputStream) next);
-                }
             }
         }
 
         private InputStream getNextStream() throws IOException {
             ByteUtil.closeStream(mCurrentStream);
             Object next = mNextIndex >= mItems.size() ? null : mItems.get(mNextIndex);
-            if (next == null) {
+            if (next == null)
                 mCurrentStream = null;
-            } else if (next instanceof byte[]) {
+            else if (next instanceof byte[])
                 mCurrentStream = new ByteArrayInputStream((byte[]) next);
-            } else if (next instanceof InputStream) {
+            else if (next instanceof InputStream)
                 mCurrentStream = (InputStream) next;
-            } else if (next instanceof MimePart) {
+            else if (next instanceof MimePart)
                 mCurrentStream = ((MimePart) next).getInputStream();
-            } else {
+            else
                 mCurrentStream = new ByteArrayInputStream(next.toString().getBytes());
-            }
             mNextIndex++;
             return mCurrentStream;
+        }
+    }
+
+    static class ParseState {
+        static class BoundaryTerminator {
+            String mBoundary;
+            boolean mWasEndBoundary;
+            long mBoundaryStart = -1;
+        }
+
+        private final PeekAheadInputStream mInputStream;
+        private BoundaryTerminator mLastBoundary;
+
+        ParseState(PeekAheadInputStream pais) {
+            mInputStream = pais;
+        }
+
+        PeekAheadInputStream getInputStream() {
+            return mInputStream;
+        }
+
+        long getPosition() {
+            return mInputStream.getPosition();
+        }
+
+        void recordBoundary(String boundary, boolean isEndBoundary, long linestart) {
+            mLastBoundary = new BoundaryTerminator();
+            mLastBoundary.mBoundary = boundary;
+            mLastBoundary.mWasEndBoundary = isEndBoundary;
+            mLastBoundary.mBoundaryStart = linestart;
+        }
+
+        void clearBoundary() {
+            mLastBoundary = null;
+        }
+
+        BoundaryTerminator getBoundaryTerminator() {
+            return mLastBoundary;
+        }
+    }
+
+    static class PeekAheadInputStream extends ByteUtil.PositionInputStream {
+        PeekAheadInputStream(InputStream is)  { super(is); }
+
+        int peek() throws IOException {
+            super.mark(1);
+            int peekChar = super.read();
+            if (peekChar != -1)
+                super.reset();
+            return peekChar;
         }
     }
 }
