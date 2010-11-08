@@ -84,7 +84,7 @@ TCPSocket 3310
 # Enable the following to provide some degree of protection
 # from the outside world.
 # Default: no
-#TCPAddr 127.0.0.1
+TCPAddr 127.0.0.1
 
 # Maximum length the queue of pending connections may grow to.
 # Default: 15
