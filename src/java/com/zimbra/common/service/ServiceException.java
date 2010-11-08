@@ -278,8 +278,12 @@ public class ServiceException extends Exception {
         return new ServiceException("permission denied: "+message, PERM_DENIED, SENDERS_FAULT);
     }
 
+    public static ServiceException AUTH_EXPIRED(String message) {
+        return new ServiceException("auth credentials have expired" + (message==null ? "" : ": "+message), AUTH_EXPIRED, SENDERS_FAULT);
+    }
+    
     public static ServiceException AUTH_EXPIRED() {
-        return new ServiceException("auth credentials have expired", AUTH_EXPIRED, SENDERS_FAULT);
+        return AUTH_EXPIRED(null);
     }
     
     // to defend against harvest attacks throw PERM_DENIED instead of NO_SUCH_ACCOUNT
