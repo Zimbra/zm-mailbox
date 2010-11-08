@@ -137,7 +137,6 @@
         <Call name="addRewriteRule"><Arg>/zimbra/user/*</Arg><Arg>/service/user</Arg></Call>
         <!-- stop if we've hit the proper webapps -->
         <Call name="addRewriteRule"><Arg>/service/*</Arg><Arg></Arg></Call>
-        <Call name="addRewriteRule"><Arg>/spnego/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>/zimlet/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>/zimbraAdmin/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>/zimbra/*</Arg><Arg></Arg></Call>
@@ -223,19 +222,6 @@
         </New>
       </Set>
     </New>
-    
-    <!-- uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE -->
-    <!-- zimbraSpnegoAuthEnabled
-    <New id="spnego" class="org.mortbay.jetty.webapp.WebAppContext">
-      <Arg><Ref id="Contexts"/></Arg>
-      <Arg><SystemProperty name="jetty.home" default="."/>/webapps/spnego</Arg>
-      <Arg>/spnego</Arg>
-      <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
-      <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
-      <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/spnego</Set>
-    </New>
-    zimbraSpnegoAuthEnabled -->
-    <!-- end uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE -->
 
     <!-- =========================================================== -->
     <!-- Configure the context deployer                              -->
@@ -295,16 +281,14 @@
     <!-- =========================================================== -->
     <Set name="UserRealms">
       <Array type="org.mortbay.jetty.security.UserRealm">
-        <!-- uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE -->
-        <!-- zimbraSpnegoAuthEnabled
+        <!--
         <Item>
-          <New class="org.mortbay.jetty.security.SpnegoUserRealm">
-            <Set name="name">Spnego Authentication Realm</Set>
-            <Set name="config"><SystemProperty name="jetty.home" default="."/>/etc/spnego.properties</Set>
+          <New class="org.mortbay.jetty.security.HashUserRealm">
+            <Set name="name">Test Realm</Set>
+            <Set name="config"><SystemProperty name="jetty.home" default="."/>/etc/realm.properties</Set>
           </New>
         </Item>
-        zimbraSpnegoAuthEnabled -->
-        <!-- end uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE -->
+	-->
       </Array>
     </Set>
 
