@@ -210,30 +210,26 @@ public class ZimbraServlet extends HttpServlet {
 
     public static AuthToken getAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp)
     throws IOException {
-        return getAuthTokenFromCookieImpl(req, resp, false, false);
+        return getAuthTokenFromHttpReq(req, resp, false, false);
     }
 
     public static AuthToken getAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError)
     throws IOException {
-        return getAuthTokenFromCookieImpl(req, resp, false, doNotSendHttpError);
+        return getAuthTokenFromHttpReq(req, resp, false, doNotSendHttpError);
     }
 
     public static AuthToken getAdminAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp)
     throws IOException {
-        return getAuthTokenFromCookieImpl(req, resp, true, false);
+        return getAuthTokenFromHttpReq(req, resp, true, false);
     }
 
     public static AuthToken getAdminAuthTokenFromCookie(HttpServletRequest req, HttpServletResponse resp, boolean doNotSendHttpError)
     throws IOException {
-        return getAuthTokenFromCookieImpl(req, resp, true, doNotSendHttpError);
+        return getAuthTokenFromHttpReq(req, resp, true, doNotSendHttpError);
     }
-
-    private static AuthToken getAuthTokenFromCookieImpl(HttpServletRequest req,
-            HttpServletResponse resp,
-            boolean isAdminReq,
-            boolean doNotSendHttpError)
-    throws IOException {
-        return getAuthTokenFromHttpReq(req, resp, isAdminReq,  doNotSendHttpError);
+    
+    public static AuthToken getAdminAuthTokenFromCookie(HttpServletRequest req) {
+        return getAuthTokenFromHttpReq(req, true);
     }
     
     public static AuthToken getAuthTokenFromHttpReq(HttpServletRequest req,
@@ -262,6 +258,21 @@ public class ZimbraServlet extends HttpServlet {
         }
     }
 
+    public static AuthToken getAuthTokenFromHttpReq(HttpServletRequest req, boolean isAdminReq) {
+        AuthToken authToken = null;
+        try {
+            authToken = AuthProvider.getAuthToken(req, isAdminReq);
+            if (authToken == null)
+                return null;
+            
+            if (authToken.isExpired())
+                return null;
+
+            return authToken;
+        } catch (AuthTokenException e) {
+            return null;
+        }
+    }
 
     protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, String accountId)
     throws IOException, ServiceException {
@@ -378,13 +389,13 @@ public class ZimbraServlet extends HttpServlet {
         ByteUtil.copy(method.getResponseBodyAsStream(), false, resp.getOutputStream(), false);
     }
 
-    protected boolean isAdminRequest(HttpServletRequest req) throws ServiceException, IOException {
+    protected boolean isAdminRequest(HttpServletRequest req) throws ServiceException {
         int adminPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraAdminPort, -1);
         if (req.getLocalPort() == adminPort) {
             //can still be in offline server where port=adminPort
             int mailPort = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailPort, -1);
             if (mailPort == adminPort) //we are in offline, so check cookie
-                return getAdminAuthTokenFromCookie(req, null, true) != null;
+                return getAdminAuthTokenFromCookie(req) != null;
             else
                 return true;
         }

@@ -31,6 +31,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.GuestAccount;
@@ -48,6 +49,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.service.formatter.AtomFormatter;
 import com.zimbra.cs.service.formatter.ContactFolderFormatter;
 import com.zimbra.cs.service.formatter.CsvFormatter;
@@ -406,6 +408,8 @@ public class UserServlet extends ZimbraServlet {
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
                 return;
             }
+            
+            checkTargetAccountStatus(context);
 
             if (proxyIfNecessary(req, resp, context))
                 return;
@@ -425,6 +429,9 @@ public class UserServlet extends ZimbraServlet {
             if (se.getCode() == ServiceException.PERM_DENIED ||
                 se instanceof NoSuchItemException)
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errNoSuchItem, req));
+            else if (se.getCode() == AccountServiceException.MAINTENANCE_MODE ||
+                     se.getCode() == AccountServiceException.ACCOUNT_INACTIVE)
+                sendError(context, req, resp, se.getMessage());
             else
                 throw new ServletException(se);
         } catch (UserServletException e) {
@@ -452,6 +459,23 @@ public class UserServlet extends ZimbraServlet {
             context.setAnonymousRequest();
 
         return true;
+    }
+    
+    private void checkTargetAccountStatus(Context context) throws ServiceException {
+        if (context.targetAccount != null) {
+            String acctStatus = context.targetAccount.getAccountStatus(Provisioning.getInstance());
+            
+            // no one can touch an account if it in maintenance mode
+            if (Provisioning.ACCOUNT_STATUS_MAINTENANCE.equals(acctStatus))
+                throw AccountServiceException.MAINTENANCE_MODE();
+            
+            // allow only admin access if the account is not active
+            if (!Provisioning.ACCOUNT_STATUS_ACTIVE.equals(acctStatus) && 
+                !(isAdminRequest(context.req) && 
+                  context.authToken != null && 
+                  (context.authToken.isDelegatedAuth() || AdminAccessControl.isAdequateAdminAccount(context.authAccount))))
+                throw AccountServiceException.ACCOUNT_INACTIVE(context.targetAccount.getName());
+        }
     }
 
     private AuthToken getProxyAuthToken(Context context) throws ServiceException {
@@ -541,6 +565,8 @@ public class UserServlet extends ZimbraServlet {
                 return;
             }
 
+            checkTargetAccountStatus(context);
+            
             if (proxyIfNecessary(req, resp, context))
                 return;
 
@@ -618,6 +644,9 @@ public class UserServlet extends ZimbraServlet {
             if (se.getCode() == ServiceException.PERM_DENIED ||
                 se instanceof NoSuchItemException)
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errNoSuchItem, req));
+            else if (se.getCode() == AccountServiceException.MAINTENANCE_MODE ||
+                     se.getCode() == AccountServiceException.ACCOUNT_INACTIVE)
+               sendError(context, req, resp, se.getMessage());
             else
                 throw new ServletException(se);
         } catch (UserServletException e) {

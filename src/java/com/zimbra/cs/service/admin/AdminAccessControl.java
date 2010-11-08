@@ -131,14 +131,14 @@ public abstract class AdminAccessControl {
     
     
     /**
-     * Returns if the specified account is sufficient for delegated auth.
+     * Returns if the specified account is an adequate admin account
      * 
      * Note: this method is static and it checks the specified account.
      *
-     * @param USER_ACCOUNT
-     * @return
+     * @param acct
+     * @return if the specified account is an adequate admin account
      */
-    public static boolean isSufficientAdminForSoapDelegatedAuth(Account acct) {
+    public static boolean isAdequateAdminAccount(Account acct) {
         AccessManager accessMgr = AccessManager.getInstance();
         boolean isAdmin;
         
@@ -151,6 +151,7 @@ public abstract class AdminAccessControl {
         
         return isAdmin;
     }
+    
     
     /**
      *  only called for domain based access manager

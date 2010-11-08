@@ -29,11 +29,11 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
 public abstract class AuthProvider {
@@ -118,7 +118,8 @@ public abstract class AuthProvider {
      * @return
      * @throws AuthTokenException
      */
-    protected abstract AuthToken authToken(HttpServletRequest req, boolean isAdminReq) throws AuthProviderException, AuthTokenException;
+    protected abstract AuthToken authToken(HttpServletRequest req, boolean isAdminReq) 
+    throws AuthProviderException, AuthTokenException;
 
     /**
      * Returns an AuthToken by auth data in http request
@@ -133,7 +134,8 @@ public abstract class AuthProvider {
      * @return 
      * @throws AuthTokenException
      */
-    protected abstract AuthToken authToken(Element soapCtxt, Map engineCtxt) throws AuthProviderException, AuthTokenException;
+    protected abstract AuthToken authToken(Element soapCtxt, Map engineCtxt) 
+    throws AuthProviderException, AuthTokenException;
     
     /**
      *
@@ -220,7 +222,8 @@ public abstract class AuthProvider {
      * @return
      * @throws AuthProviderException
      */
-    protected AuthToken authToken(Account acct, long expires, boolean isAdmin, Account adminAcct) throws AuthProviderException {
+    protected AuthToken authToken(Account acct, long expires, boolean isAdmin, Account adminAcct) 
+    throws AuthProviderException {
         throw AuthProviderException.NOT_SUPPORTED();
     }
     
@@ -248,7 +251,8 @@ public abstract class AuthProvider {
      * Throw AuthTokenException if any provider in the chain throws an AuthTokenException.
      * 
      * Note: 1. we proceed to try the next provider if the provider throws an AuthProviderException that is ignorable
-     * (AuthProviderException.canIgnore()).  for example: AuthProviderException.NO_AUTH_TOKEN, AuthProviderException.NOT_SUPPORTED.
+     *          (AuthProviderException.canIgnore()).  
+     *          for example: AuthProviderException.NO_AUTH_TOKEN, AuthProviderException.NOT_SUPPORTED.
      *
      *       2. in all other cases, we stop processing and throws an AuthTokenException to our caller.
      *             In particular, when a provider:
@@ -445,7 +449,8 @@ public abstract class AuthProvider {
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
     
-    public static AuthToken getAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct) throws AuthProviderException {
+    public static AuthToken getAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct) 
+    throws AuthProviderException {
         List<AuthProvider> providers = getProviders();
         for (AuthProvider ap : providers) {
             try {
@@ -484,45 +489,70 @@ public abstract class AuthProvider {
         return false;
     }
     
-    public static Account validateAuthToken(Provisioning prov, AuthToken at, boolean addToLoggingContext) throws ServiceException {
+    public static Account validateAuthToken(Provisioning prov, AuthToken at, boolean addToLoggingContext) 
+    throws ServiceException {
+        try {
+            return validateAuthTokenInternal(prov, at, addToLoggingContext);
+        } catch (ServiceException e) {
+            if (ServiceException.AUTH_EXPIRED.equals(e.getCode())) {
+                // we may not want to expose the details to malicious caller
+                // debug log the message and throw a vanilla AUTH_EXPIRED 
+                ZimbraLog.account.debug("auth token validation failed", e);
+                throw ServiceException.AUTH_EXPIRED();
+            } else {
+                // rethrow the same exception
+                throw e;
+            }
+        }
+    }
+    
+    private static Account validateAuthTokenInternal(Provisioning prov, AuthToken at, boolean addToLoggingContext) 
+    throws ServiceException {
         if (prov == null)
             prov = Provisioning.getInstance();
         
         if (at.isExpired())
             throw ServiceException.AUTH_EXPIRED();
-        // make sure that the authenticated account is active and has not been deleted/disabled since the last request
-        Account acct = prov.get(AccountBy.id, at.getAccountId(), at);
         
-        if (addToLoggingContext && acct != null) {
+        // make sure that the authenticated account is still active and has not been deleted since the last request
+        String acctId = at.getAccountId();
+        Account acct = prov.get(AccountBy.id, acctId, at);
+        
+        if (acct == null)
+            throw ServiceException.AUTH_EXPIRED("account " + acctId + " not found");
+        
+        if (addToLoggingContext)
             ZimbraLog.addAccountNameToContext(acct.getName());
+        
+        if (!acct.checkAuthTokenValidityValue(at))
+            throw ServiceException.AUTH_EXPIRED("invalid validity value");
+        
+        boolean delegatedAuth = at.isDelegatedAuth();
+        String acctStatus = acct.getAccountStatus(prov);
+        
+        if (!delegatedAuth && !Provisioning.ACCOUNT_STATUS_ACTIVE.equals(acctStatus))
+            throw ServiceException.AUTH_EXPIRED("account not active");
+
+        // if using delegated auth, make sure the "admin" is really an active admin account
+        if (delegatedAuth) {
+            
+            // note that delegated auth allows access unless the account's in maintenance mode
+            if (Provisioning.ACCOUNT_STATUS_MAINTENANCE.equals(acctStatus))
+                throw ServiceException.AUTH_EXPIRED("delegated account in MAINTENANCE mode");
+            
+            Account admin = prov.get(AccountBy.id, at.getAdminAccountId());
+            if (admin == null)
+                throw ServiceException.AUTH_EXPIRED("delegating account " + at.getAdminAccountId() + " not found");
+            
+            boolean isAdmin = AdminAccessControl.isAdequateAdminAccount(admin);
+            if (!isAdmin)
+                throw ServiceException.PERM_DENIED("not an admin for delegated auth");
+            
+            if (!Provisioning.ACCOUNT_STATUS_ACTIVE.equals(admin.getAccountStatus(prov)))
+                throw ServiceException.AUTH_EXPIRED("delegating account is not active");
         }
         
-        /*
-         * should we throw more specific exception?  Before this consolidation,
-         * FileUploadServlet did, but other places didn't.
-         
-           if (acct == null)
-               throw AccountServiceException.NO_SUCH_ACCOUNT(at.getAccountId());
-               
-           if (acct.getAuthTokenValidityValue() != at.getValidityValue())
-               throw AccountServiceException.AUTH_EXPIRED()     
-                     
-           if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
-               throw AccountServiceException.MAINTENANCE_MODE();
-           else if (!acctStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
-               throw AccountServiceException.ACCOUNT_INACTIVE(acct.getName());
-         */
-        if (acct == null || 
-            !acct.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
-            !acct.checkAuthTokenValidityValue(at))
-            throw ServiceException.AUTH_EXPIRED();
-        
         return acct;
-    }
-    
-    
-    public static void main(String[] args) throws Exception {
-        AuthToken at = getAuthToken(null, null);
     }
 
 }

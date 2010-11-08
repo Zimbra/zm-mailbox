@@ -39,6 +39,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogProvider;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.session.Session;
@@ -120,7 +121,7 @@ public final class SoapEngine {
             StackTraceElement[] s = Thread.currentThread().getStackTrace();
             StackTraceElement callSite = s[4]; // third frame from top is the caller
             e.setIdLabel(callSite);
-            mLog.warn(e.getMessage() + ": " + msg);     // do not log stack
+            mLog.warn(e.getMessage() + (msg == null ? "" : ": "+msg));     // do not log stack
             mLog.debug(msg, e); // log stack
         } else
             mLog.warn(msg, e);
@@ -366,33 +367,12 @@ public final class SoapEngine {
 
             if (!isGuestAccount) {
                 if (needsAuth || needsAdminAuth) {
-                    // make sure that the authenticated account is still active and has not been deleted since the last request
-                    //   note that delegated auth allows access unless the account's in maintenance mode
-                    Account account = prov.get(AccountBy.id, acctId, at);
-                    if (account == null)
-                        return soapFault(soapProto, "acount " + acctId + " not found", ServiceException.AUTH_EXPIRED());
-
-                    if (!account.checkAuthTokenValidityValue(at))
-                        return soapFault(soapProto, "invalid validity value", ServiceException.AUTH_EXPIRED());
-
-                    if (delegatedAuth && account.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_MAINTENANCE))
-                        return soapFault(soapProto, "delegated account in MAINTENANCE mode", ServiceException.AUTH_EXPIRED());
-
-                    if (!delegatedAuth && !account.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
-                        return soapFault(soapProto, "account not active", ServiceException.AUTH_EXPIRED());
-
-                    // if using delegated auth, make sure the "admin" is really an active admin account
-                    if (delegatedAuth) {
-                        Account admin = prov.get(AccountBy.id, at.getAdminAccountId());
-                        if (admin == null)
-                            return soapFault(soapProto, "delegating account " + at.getAdminAccountId() + " not found", ServiceException.AUTH_EXPIRED());
-                        boolean isAdmin = AdminAccessControl.isSufficientAdminForSoapDelegatedAuth(admin);
-                        if (!isAdmin)
-                            return soapFault(soapProto, "delegating account is not an admin account", ServiceException.PERM_DENIED("not an admin for delegated auth"));
-                        if (!admin.getAccountStatus(prov).equals(Provisioning.ACCOUNT_STATUS_ACTIVE))
-                            return soapFault(soapProto, "delegating account is not active", ServiceException.AUTH_EXPIRED());
+                    try {
+                        AuthProvider.validateAuthToken(prov, at, false);
+                    } catch (ServiceException e) {
+                        return soapFault(soapProto, null, e);
                     }
-
+                   
                     // also, make sure that the target account (if any) is active
                     if (zsc.isDelegatedRequest() && !handler.isAdminCommand()) {
                         Account target = DocumentHandler.getRequestedAccount(zsc);
