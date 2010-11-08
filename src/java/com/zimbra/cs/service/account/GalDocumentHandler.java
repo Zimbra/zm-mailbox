@@ -26,6 +26,12 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class GalDocumentHandler extends AccountDocumentHandler {
 
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AccountConstants.A_GAL_ACCOUNT_ID };
+    
+    protected String[] getProxiedAccountPath() { 
+        return TARGET_ACCOUNT_PATH;
+    }
+    
     @Override
     protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException {
         try {
@@ -33,7 +39,7 @@ public abstract class GalDocumentHandler extends AccountDocumentHandler {
             
             Provisioning prov = Provisioning.getInstance();
             
-            // check whether we need to proxy to the home server of the GAL sync acount
+            // check whether we need to proxy to the home server of the GAL sync account
             String[] xpath = getProxiedAccountPath();
             String acctId = (xpath != null ? getXPath(request, xpath) : null);
             if (acctId != null) {
@@ -56,7 +62,4 @@ public abstract class GalDocumentHandler extends AccountDocumentHandler {
         }
     }
 
-    protected String[] getProxiedAccountPath() { 
-        return new String[] { AccountConstants.A_GAL_ACCOUNT_ID };
-    }
 }

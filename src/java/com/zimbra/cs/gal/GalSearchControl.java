@@ -101,7 +101,13 @@ public class GalSearchControl {
         checkFeatureEnabled(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled);
 
         mParams.setOp(GalOp.autocomplete);
-        if (mParams.getAccount().isGalSyncAccountBasedAutoCompleteEnabled()) {
+        
+        Account requestedAcct = mParams.getAccount();
+        
+        boolean useGalSyncAcct = requestedAcct == null ? true :
+            requestedAcct.isGalSyncAccountBasedAutoCompleteEnabled();
+
+        if (useGalSyncAcct) {
             try {
                 Account galAcct = mParams.getGalSyncAccount();
                 if (galAcct != null) {
@@ -119,7 +125,6 @@ public class GalSearchControl {
         String query = Strings.nullToEmpty(mParams.getQuery());
         mParams.setQuery(query.replaceFirst("[*]*$", "*"));
         mParams.getResultCallback().reset(mParams);
-        mParams.setLimit(100);
         ldapSearch();
     }
 
@@ -152,7 +157,6 @@ public class GalSearchControl {
                 query = "*" + query;
             mParams.setQuery(query);
             mParams.getResultCallback().reset(mParams);
-            mParams.setLimit(100);
             ldapSearch();
         }
     }
@@ -533,6 +537,9 @@ public class GalSearchControl {
             mParams.setType(stype);
         }
         int limit = mParams.getLimit();
+        if (limit == 0)
+            limit = domain.getGalMaxResults();
+        
         if (galMode == GalMode.both) {
             // make two gal searches for 1/2 results each
             mParams.setLimit(limit / 2);
@@ -574,7 +581,7 @@ public class GalSearchControl {
     
     
     // bug 46608
-    // do local resources search if galMode == ldap
+    // do zimbra resources search if galMode == ldap
     private boolean needResources() throws ServiceException {
         Domain domain = mParams.getDomain();
         return (domain.getGalMode() == GalMode.ldap &&

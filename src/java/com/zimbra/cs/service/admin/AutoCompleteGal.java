@@ -21,23 +21,22 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.FileBufferedWriter;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.gal.GalSearchControl;
+import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.cs.gal.GalSearchResultCallback;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -45,6 +44,12 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class AutoCompleteGal extends AdminDocumentHandler {
 
+    private static final String[] TARGET_ACCOUNT_PATH = new String[] { AccountConstants.A_GAL_ACCOUNT_ID };
+    
+    protected String[] getProxiedAccountPath() { 
+        return TARGET_ACCOUNT_PATH;
+    }
+    
     /**
      * must be careful and only return accounts a domain admin can see
      */
@@ -53,35 +58,40 @@ public class AutoCompleteGal extends AdminDocumentHandler {
     }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        String n = request.getAttribute(AdminConstants.E_NAME);
-
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Account acct = getRequestedAccount(getZimbraSoapContext(context));
-
-        while (n.endsWith("*"))
-            n = n.substring(0, n.length() - 1);
-
-        String domain = request.getAttribute(AdminConstants.A_DOMAIN);
-        String typeStr = request.getAttribute(AdminConstants.A_TYPE, "account");
-
-        int max = (int) request.getAttributeLong(AdminConstants.A_LIMIT);
-        Provisioning.GalSearchType type = Provisioning.GalSearchType.fromString(typeStr);
-                
-        Provisioning prov = Provisioning.getInstance();
-        Domain d = prov.get(DomainBy.name, domain);
-        if (d == null)
-            throw AccountServiceException.NO_SUCH_DOMAIN(domain);
         
-        checkDomainRight(zsc, d, Admin.R_accessGAL); 
+        String domainName = request.getAttribute(AdminConstants.A_DOMAIN);
+        Provisioning prov = Provisioning.getInstance();
+        Domain domain = prov.get(DomainBy.name, domainName);
+        if (domain == null)
+            throw AccountServiceException.NO_SUCH_DOMAIN(domainName);
+        
+        checkDomainRight(zsc, domain, Admin.R_accessGAL); 
+        
+        String name = request.getAttribute(AccountConstants.E_NAME);
+        int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT, 0);
+        String typeStr = request.getAttribute(AccountConstants.A_TYPE, GalSearchType.account.name());
+        GalSearchType type = GalSearchType.fromString(typeStr);
 
-        Element response = zsc.createElement(AdminConstants.AUTO_COMPLETE_GAL_RESPONSE);
+        String galAcctId = request.getAttribute(AccountConstants.A_GAL_ACCOUNT_ID, null);
+        
+        GalSearchParams params = new GalSearchParams(domain, zsc);
+        params.setType(type);
+        params.setRequest(request);
+        params.setQuery(name);
+        params.setLimit(limit);
+        params.setResponseName(AdminConstants.AUTO_COMPLETE_GAL_RESPONSE);
+        if (galAcctId != null)
+            params.setGalSyncAccount(Provisioning.getInstance().getAccountById(galAcctId));
+        
+        params.setResultCallback(new SearchGal.AdminGalCallback(params));
+        
+        GalSearchControl gal = new GalSearchControl(params);
+        gal.autocomplete();
+        return params.getResultCallback().getResponse();
 
-        SearchGalResult result = prov.autoCompleteGal(d, n, type, max);
-        toXML(response, result);
-
-        return response;
     }
-
+    
     public boolean needsAuth(Map<String, Object> context) {
         return true;
     }
@@ -89,39 +99,6 @@ public class AutoCompleteGal extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_accessGAL);
-    }
-
-    public static void toXML(Element response, SearchGalResult result) throws ServiceException {
-        response.addAttribute(AccountConstants.A_MORE, result.getHadMore());
-        response.addAttribute(AccountConstants.A_TOKENIZE_KEY, result.getTokenizeKey());
-        
-        addContacts(response, result);
-    }
-    
-    public static void addContacts(Element response, SearchGalResult result) throws ServiceException {
-        
-        ZimbraLog.gal.debug("GAL result total entries:" + result.getNumMatches());
-        
-        if (!(result instanceof Provisioning.VisitorSearchGalResult)) {
-            for (GalContact contact : result.getMatches())
-                addContact(response, contact);
-        }
-    }
-    
-    public static void addContact(Element response, GalContact contact) {
-        Element cn = response.addElement(MailConstants.E_CONTACT);
-        cn.addAttribute(MailConstants.A_ID, contact.getId());
-        Map<String, Object> attrs = contact.getAttrs();
-        for (Map.Entry<String, Object> entry : attrs.entrySet()) {
-            Object value = entry.getValue();
-            if (value instanceof String[]) {
-                String sa[] = (String[]) value;
-                for (int i = 0; i < sa.length; i++)
-                    cn.addKeyValuePair(entry.getKey(), sa[i], MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
-            } else {
-                cn.addKeyValuePair(entry.getKey(), (String) value, MailConstants.E_ATTRIBUTE, MailConstants.A_ATTRIBUTE_NAME);
-            }
-        }
     }
 
 }
