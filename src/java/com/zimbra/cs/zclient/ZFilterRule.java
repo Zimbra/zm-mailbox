@@ -17,8 +17,8 @@ package com.zimbra.cs.zclient;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.zclient.ZFilterAction.MarkOp;
 import com.zimbra.cs.zclient.ZFilterAction.ZDiscardAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
@@ -96,8 +96,8 @@ public class ZFilterRule implements ToZJSONObject {
         mAllConditions = testsEl.getAttribute(MailConstants.A_CONDITION, "allof").equalsIgnoreCase("allof");
         for (Element condEl : testsEl.listElements()) {
             ZFilterCondition condition = ZFilterCondition.getCondition(condEl);
-            int index = FilterUtil.getIndex(condEl);
-            FilterUtil.addToMap(conditions, index, condition);
+            int index = getIndex(condEl);
+            addToMap(conditions, index, condition);
         }
         mConditions = new ArrayList<ZFilterCondition>();
         mConditions.addAll(conditions.values());
@@ -107,11 +107,41 @@ public class ZFilterRule implements ToZJSONObject {
         Map<Integer, ZFilterAction> actions = new TreeMap<Integer, ZFilterAction>(); // Orders by index
         for (Element actionEl : actionsEl.listElements()) {
             ZFilterAction action = ZFilterAction.getAction(actionEl);
-            int index = FilterUtil.getIndex(actionEl);
-            FilterUtil.addToMap(actions, index, action);
+            int index = getIndex(actionEl);
+            addToMap(actions, index, action);
         }
         mActions = new ArrayList<ZFilterAction>();
         mActions.addAll(actions.values());
+    }
+
+    /**
+     * Adds a value to the given <tt>Map</tt>.  If <tt>initialKey</tt> already
+     * exists in the map, uses the next available index instead.  This way we
+     * guarantee that we don't lose data if the client sends two elements with
+     * the same index, or doesn't specify the index at all.
+     *
+     * @return the index used to insert the value
+     */
+    static <T> int addToMap(Map<Integer, T> map, int initialKey, T value) {
+        int i = initialKey;
+        while (true) {
+            if (!map.containsKey(i)) {
+                map.put(i, value);
+                return i;
+            }
+            i++;
+        }
+    }
+
+    static int getIndex(Element actionElement) {
+        String s = actionElement.getAttribute(MailConstants.A_INDEX, "0");
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            ZimbraLog.soap.warn("Unable to parse index value %s for element %s.  Ignoring order.",
+                s, actionElement.getName());
+            return 0;
+        }
     }
 
     Element toElement(Element parent) {
