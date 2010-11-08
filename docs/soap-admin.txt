@@ -2251,6 +2251,16 @@ e.g.
 
 ----------------------------------------
 
+# purges the queue for the given freebusy provider on the current host.
+
+<PurgeFreeBusyQueueRequest>
+  [<provider name="{provider-name}"/>]
+</PurgeFreeBusyQueueRequest>
+
+<PurgeFreeBusyQueueResponse/>
+
+----------------------------------------
+
 <CheckExchangeAuthRequest>
   <auth url="{url-to-exchange-server}" user="{exchange-user-name}" pass="{exchange-password}" scheme="basic|form" />
 </CheckExchangeAuthRequest>

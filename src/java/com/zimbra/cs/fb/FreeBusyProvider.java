@@ -158,6 +158,9 @@ public abstract class FreeBusyProvider {
 	}
 	
 	protected FreeBusy getFreeBusy(String accountId, int folderId) throws ServiceException {
+	    Account account = Provisioning.getInstance().getAccountById(accountId);
+	    if (account == null || !Provisioning.onLocalServer(account))
+	        return null;
 		Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId);
 		if (mbox == null)
 			return null;
@@ -273,7 +276,7 @@ public abstract class FreeBusyProvider {
 		private boolean mShutdown;
 		private long mLastFailed;
 		private static final int DEFAULT_RETRY_INTERVAL = 60 * 1000; // 1m
-		private static final int MAX_FILE_SIZE = 10240;  // for sanity check
+		private static final int MAX_FILE_SIZE = 1024000;  // for sanity check
 		private String mFilename;
 		private FreeBusyProvider mProvider;
 		
