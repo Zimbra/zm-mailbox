@@ -8,6 +8,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
@@ -48,7 +49,10 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
         mm.setRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(to));
         mm.setText(getText(calItem, invite, locale, tz), MimeConstants.P_CHARSET_UTF8);
         mm.saveChanges();
-        calItem.getMailbox().getMailSender().sendMimeMessage(null, calItem.getMailbox(), mm);
+        MailSender mailSender = calItem.getMailbox().getMailSender();
+        mailSender.setSaveToSent(false);
+        mailSender.setSkipSendAsCheck(true);
+        mailSender.sendMimeMessage(null, calItem.getMailbox(), mm);
     }
 
     private String getText(CalendarItem calItem, Invite invite, Locale locale, TimeZone tz) throws ServiceException {

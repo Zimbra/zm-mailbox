@@ -50,8 +50,8 @@ public class SendVerificationCode extends MailDocumentHandler {
                    MimeConstants.P_CHARSET_UTF8);
         mm.saveChanges();
         MailSender mailSender = mbox.getMailSender();
-        // we don't want this email to be saved
         mailSender.setSaveToSent(false);
+        mailSender.setSkipSendAsCheck(true);
         mailSender.sendMimeMessage(null, mbox, mm);
     }
 
