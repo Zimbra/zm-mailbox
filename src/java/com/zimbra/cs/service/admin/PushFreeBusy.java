@@ -83,7 +83,7 @@ public class PushFreeBusy extends AdminDocumentHandler {
         }
         
         public void visit(NamedEntry entry) throws ServiceException {
-            if (entry instanceof Account) {
+            if (entry instanceof Account && Provisioning.onLocalServer((Account)entry)) {
             	Account acct = (Account) entry;
                 String[] fps = acct.getForeignPrincipal();
 				if (fps != null && fps.length > 0) {

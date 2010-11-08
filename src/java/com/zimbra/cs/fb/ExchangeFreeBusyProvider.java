@@ -278,7 +278,7 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 			return !se.isReceiversFault();
 		}
 		if (email == null || fb == null) {
-			ZimbraLog.fb.warn("can't get freebusy for account "+accountId);
+			ZimbraLog.fb.warn("account not found / incorrect / wrong host: "+accountId);
 			return true;  // no retry
 		}
 		ServerInfo serverInfo = getServerInfo(email);
