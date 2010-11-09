@@ -3591,22 +3591,6 @@ public class ZMailbox implements ToZJSONObject {
                 result.add(new ZRssDataSource((RssDataSource) ds));
             }
         }
-        /*
-        Element req = newRequestElement(MailConstants.GET_DATA_SOURCES_REQUEST);
-        Element response = invoke(req);
-        List<ZDataSource> result = new ArrayList<ZDataSource>();
-        for (Element ds : response.listElements()) {
-            if (ds.getName().equals(MailConstants.E_DS_POP3)) {
-                result.add(new ZPop3DataSource(ds));
-            } else if (ds.getName().equals(MailConstants.E_DS_IMAP)) {
-                result.add(new ZImapDataSource(ds));
-            } else if (ds.getName().equals(MailConstants.E_DS_RSS)) {
-                result.add(new ZRssDataSource(ds));
-            } else if (ds.getName().equals(MailConstants.E_DS_CAL)) {
-                result.add(new ZCalDataSource(ds));
-            }
-        }
-        */
         return result;
     }
     
