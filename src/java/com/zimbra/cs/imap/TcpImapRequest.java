@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -61,9 +61,10 @@ public class TcpImapRequest extends ImapRequest {
                 logline = line.substring(0, line.indexOf(' ') + 7) + "...";
             }
         }
-        
-        if (ZimbraLog.imap.isDebugEnabled())
-            ZimbraLog.imap.debug("C: " + logline);
+
+        if (ZimbraLog.imap_server.isTraceEnabled()) {
+            ZimbraLog.imap_server.trace("C: %s", logline);
+        }
 
         // if the line ends in a LITERAL+ non-blocking literal, keep reading
         if (line.endsWith("+}") && extensionEnabled("LITERAL+")) {
@@ -110,8 +111,9 @@ public class TcpImapRequest extends ImapRequest {
             if (read == -1)
                 throw new ImapTerminatedException();
             // TODO How to log literal data now...
-            if (!mUnlogged && ZimbraLog.imap.isDebugEnabled())
-                ZimbraLog.imap.debug("C: {" + read + "}");
+            if (!mUnlogged && ZimbraLog.imap_server.isTraceEnabled()) {
+                ZimbraLog.imap_server.trace("C: {%s}", read);
+            }
             mLiteral -= read;
         }
         if (mLiteral > 0)

@@ -2,18 +2,20 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.mailclient;
 
+import com.google.common.base.Preconditions;
+import com.zimbra.common.util.Log;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.util.Config;
 
@@ -21,7 +23,6 @@ import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 import java.util.Map;
 import java.util.Properties;
-import java.io.PrintStream;
 import java.io.File;
 import java.io.IOException;
 
@@ -37,9 +38,7 @@ public abstract class MailConfig {
     private String mechanism;
     private String realm;
     private Map<String, String> saslProperties;
-    private boolean debug;
-    private boolean trace;
-    private PrintStream traceOut;
+    private Log logger;
     private SocketFactory socketFactory;
     private SSLSocketFactory sslSocketFactory;
     private AuthenticatorFactory authenticatorFactory;
@@ -49,24 +48,27 @@ public abstract class MailConfig {
     public static enum Security {
         NONE, SSL, TLS, TLS_IF_AVAILABLE
     }
-    
-    /**                                                                 
-     * Creates a new <tt>MailConfig</tt> instance.
+
+    /**
+     * Creates a new {@link MailConfig} instance.
+     *
+     * @param log default logger
      */
-    protected MailConfig() {
-        traceOut = System.out;
+    protected MailConfig(Log log) {
+        logger = Preconditions.checkNotNull(log);
         authenticationId = System.getProperty("user.name");
         security = Security.NONE;
     }
 
     /**
-     * Creates a new <tt>MailConfig</tt> instance for the specified mail
+     * Creates a new {@link MailConfig} instance for the specified mail
      * server host.
      *
+     * @param log default logger
      * @param host the mail server host
      */
-    protected MailConfig(String host) {
-        this();
+    protected MailConfig(Log log, String host) {
+        this(log);
         this.host = host;
     }
 
@@ -165,7 +167,7 @@ public abstract class MailConfig {
     public String getAuthenticationId() {
         return authenticationId;
     }
-    
+
     /**
      * Sets the authentication id. This is the identify that must be
      * authenticated when accessing the mail server and is usually required
@@ -212,7 +214,7 @@ public abstract class MailConfig {
     public String getMechanism() {
         return mechanism;
     }
-    
+
     /**
      * Sets the SASL authentication mechanism.
      *
@@ -319,66 +321,23 @@ public abstract class MailConfig {
     public void setConnectTimeout(int secs) {
         connectTimeout = secs;
     }
-    
+
     /**
-     * Returns true if debug output is enabled. The default is for debug
-     * output to be disabled.
+     * Returns the logger.
      *
-     * @return true if debug output enabled, false if disabled
+     * @return logger
      */
-    public boolean isDebug() {
-        return debug;
-    }
-    
-    /**
-     * Enables debug output.
-     *
-     * @param enabled if true then enable debug output
-     */
-    public void setDebug(boolean enabled) {
-        debug = enabled;
+    public Log getLogger() {
+        return logger;
     }
 
     /**
-     * Returns true if trace output is enabled. The default is for trace
-     * output to be disabled.
+     * Sets the logger.
      *
-     * @return true if trace enabled, false if disabled
+     * @param log logger
      */
-    public boolean isTrace() {
-        return trace;
-    }
-
-    /**
-     * Enables protocol trace output to the trace log.
-     * 
-     * @param enabled if true then enable trace logging
-     */
-    public void setTrace(boolean enabled) {
-        trace = enabled;
-    }
-
-    /**
-     * Returns the <tt>PrintStream</tt> to use for logging trace output if
-     * enabled. The default is to use <tt>System.out</tt>.
-     *
-     * @return the trace output stream
-     */
-    public PrintStream getTraceOut() {
-        return traceOut;
-    }
-
-    /**
-     * Sets the <tt>PrintStream</tt> to use for logging trace output if
-     * enabled.
-     *
-     * @param ps the trace output stream
-     */
-    public void setTraceStream(PrintStream ps) {
-        if (ps == null) {
-            throw new NullPointerException();
-        }
-        traceOut = ps;
+    public void setLogger(Log log) {
+        logger = Preconditions.checkNotNull(log);
     }
 
     /**

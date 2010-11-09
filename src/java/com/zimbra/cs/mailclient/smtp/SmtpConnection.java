@@ -37,8 +37,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.sun.mail.smtp.SMTPMessage;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailConnection;
 import com.zimbra.cs.mailclient.MailException;
@@ -177,27 +175,30 @@ public final class SmtpConnection extends MailConnection {
 
     @Override
     protected MailInputStream newMailInputStream(InputStream is) {
-        return new MailInputStream(is);
+        if (getLogger().isTraceEnabled()) {
+            return new MailInputStream(is, getLogger());
+        } else {
+            return new MailInputStream(is);
+        }
     }
 
     @Override
     protected MailOutputStream newMailOutputStream(OutputStream os) {
-        return new MailOutputStream(os);
-    }
-
-    @Override
-    public Log getLogger() {
-        return ZimbraLog.smtp;
+        if (getLogger().isTraceEnabled()) {
+            return new MailOutputStream(os, getLogger());
+        } else {
+            return new MailOutputStream(os);
+        }
     }
 
     @Override
     protected void processGreeting() throws IOException {
         // Server greeting.
         String reply = mailIn.readLine();
+        mailIn.trace();
         if (reply == null) {
             throw new MailException("Did not receive greeting from server");
         }
-        ZimbraLog.smtp.trace("S: %s", reply);
         if (getReplyCode(reply) != 220) {
             throw new IOException("Expected greeting, but got: " + reply);
         }
@@ -309,8 +310,8 @@ public final class SmtpConnection extends MailConnection {
             if (fourthChar == '-') {
                 // Multiple response lines.
                 reply = mailIn.readLine();
-                ZimbraLog.smtp.trace("S: %s", reply);
             } else if (fourthChar == ' ') {
+                mailIn.trace();
                 // Last 250 response.
                 return 250;
             } else {
@@ -524,11 +525,12 @@ public final class SmtpConnection extends MailConnection {
         }
         smtpData.end();
         mailOut.flush();
+        mailOut.trace();
         reply = mailIn.readLine();
+        mailIn.trace();
         if (reply == null) {
             throw new CommandFailedException(DATA, "No response");
         }
-        ZimbraLog.smtp.trace("S: %s", reply);
         if (!isPositive(reply)) {
             throw new CommandFailedException(DATA, reply);
         }
@@ -551,11 +553,6 @@ public final class SmtpConnection extends MailConnection {
      * @throws CommandFailedException if the server did not respond
      */
     private String sendCommand(byte[] command, String args) throws IOException {
-        if (ZimbraLog.smtp.isTraceEnabled()) {
-            ZimbraLog.smtp.trace("C: %s %s",
-                    new String(command), Strings.nullToEmpty(args));
-        }
-
         mailOut.write(command);
         if (!Strings.isNullOrEmpty(args)) {
             mailOut.write(' ');
@@ -563,11 +560,11 @@ public final class SmtpConnection extends MailConnection {
         }
         mailOut.newLine();
         mailOut.flush();
+        mailOut.trace();
         String reply = mailIn.readLine();
-        ZimbraLog.smtp.trace("S: %s", reply);
+        mailIn.trace();
         if (reply == null) {
-            throw new CommandFailedException(new String(command),
-                    "No response from server");
+            throw new CommandFailedException(new String(command), "No response from server");
         }
         return reply;
     }
@@ -642,7 +639,7 @@ public final class SmtpConnection extends MailConnection {
         try {
             sendCommand(QUIT, null);
         } catch (CommandFailedException e) { // no reason to make it an error
-            ZimbraLog.smtp.warn(e.getMessage());
+            getLogger().warn(e.getMessage());
         }
     }
 

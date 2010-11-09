@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -51,7 +51,7 @@ public class ImapPath implements Comparable<ImapPath> {
             try {
                 FOLDER_ENCODING_CHARSET = Charset.forName("imap-utf-7");
             } catch (Exception e) {
-                ZimbraLog.imap.error("could not load imap-utf-7 charset (perhaps zimbra-charset.jar is not in the jetty endorsed directory)", e);
+                ZimbraLog.imap_server.error("could not load imap-utf-7 charset (perhaps zimbra-charset.jar is not in the jetty endorsed directory)", e);
                 FOLDER_ENCODING_CHARSET = Charset.forName("utf-8");
             }
         }
@@ -71,7 +71,7 @@ public class ImapPath implements Comparable<ImapPath> {
      *  folder pathname.  Applies all special, hack-specific folder mappings.
      *  Does <b>not</b> do IMAP-UTF-7 decoding; this is assumed to have been
      *  already done by the appropriate method in {@link ImapRequest}.
-     *  
+     *
      * @param imapPath   The client-provided logical IMAP pathname.
      * @param creds      The authenticated user's login credentials.
      * @see #exportPath(String, ImapCredentials) */
@@ -353,7 +353,7 @@ public class ImapPath implements Comparable<ImapPath> {
         if (mReferent != null)
             return mReferent;
 
-        // while calculating, use the base 
+        // while calculating, use the base
         mReferent = this;
 
         // only follow the authenticated user's own mountpoints
@@ -396,7 +396,7 @@ public class ImapPath implements Comparable<ImapPath> {
                         ZFolder zfolder = zmbx.getFolderByPath(path.substring(0, index));
                         if (zfolder != null) {
                             subpathRemote = path.substring(Math.min(path.length(), index + 1));
-    
+
                             if (zfolder instanceof ZMountpoint || subpathRemote.isEmpty()) {
                                 mFolder = zfolder;
                                 mItemId = new ItemId(zfolder.getId(), accountId);

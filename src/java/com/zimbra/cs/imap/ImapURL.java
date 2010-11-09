@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -204,11 +204,11 @@ class ImapURL {
         try {
             return ByteUtil.getContent(content.getSecond(), (int) Math.min(content.getFirst(), Integer.MAX_VALUE));
         } catch (IOException e) {
-            ZimbraLog.imap.info("error reading content from IMAP URL", e);
+            ZimbraLog.imap_server.info("error reading content from IMAP URL", e);
         }
         throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
     }
-    
+
     public Pair<Long, InputStream> getContentAsStream(ImapHandler handler, ImapCredentials creds, String tag) throws ImapParseException {
         ImapHandler.State state = handler.getState();
         if (state == ImapHandler.State.NOT_AUTHENTICATED)
@@ -268,15 +268,15 @@ class ImapURL {
             return part;
 
         } catch (NoSuchItemException e) {
-            ZimbraLog.imap.info("no such message", e);
+            ZimbraLog.imap_server.info("no such message", e);
         } catch (ServiceException e) {
-            ZimbraLog.imap.info("can't fetch content from IMAP URL", e);
+            ZimbraLog.imap_server.info("can't fetch content from IMAP URL", e);
         } catch (MessagingException e) {
-            ZimbraLog.imap.info("can't fetch content from IMAP URL", e);
+            ZimbraLog.imap_server.info("can't fetch content from IMAP URL", e);
         } catch (IOException e) {
-            ZimbraLog.imap.info("error reading content from IMAP URL", e);
+            ZimbraLog.imap_server.info("error reading content from IMAP URL", e);
         } catch (BinaryDecodingException e) {
-            ZimbraLog.imap.info("can't fetch content from IMAP URL", e);
+            ZimbraLog.imap_server.info("can't fetch content from IMAP URL", e);
         }
         throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
     }

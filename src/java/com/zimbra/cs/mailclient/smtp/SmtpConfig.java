@@ -15,6 +15,7 @@
 package com.zimbra.cs.mailclient.smtp;
 
 import com.google.common.base.Objects;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailclient.MailConfig;
 
 /**
@@ -29,17 +30,18 @@ public final class SmtpConfig extends MailConfig {
     private boolean allowPartialSend;
 
     public SmtpConfig(String host, int port, String domain) {
-        super(host);
+        super(ZimbraLog.smtp, host);
         setPort(port);
         setDomain(domain);
     }
 
     public SmtpConfig(String host) {
-        super(host);
+        super(ZimbraLog.smtp, host);
         setPort(DEFAULT_PORT);
     }
 
     public SmtpConfig() {
+        super(ZimbraLog.smtp);
     }
 
     @Override

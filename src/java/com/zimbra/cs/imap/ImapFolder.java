@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -65,7 +65,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
 
     private String mQuery;
     private byte[] mTypeConstraint = ImapHandler.ITEM_TYPES;
-    
+
     private List<ImapMessage>                   mSequence;
     private transient Map<Integer, ImapMessage> mMessageIds;
 
@@ -554,7 +554,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         if (sdata != null)
             sdata.mNotificationsSuspended = true;
     }
-    
+
     void enableNotifications() {
         SessionData sdata = mSessionData;
         if (sdata != null)
@@ -826,8 +826,9 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         if (getSize() == 0)
             return Collections.emptyList();
 
-        boolean debug = ZimbraLog.imap.isDebugEnabled();
-        if (debug)  ZimbraLog.imap.debug("  ** iterating (collapseExpunged)");
+        if (ZimbraLog.imap_server.isDebugEnabled()) {
+            ZimbraLog.imap_server.debug("  ** iterating (collapseExpunged)");
+        }
 
         // FIXME: need synchronization
         boolean trimmed = false;
@@ -836,7 +837,9 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         for (ListIterator<ImapMessage> lit = mSequence.listIterator(); lit.hasNext(); seq++) {
             ImapMessage i4msg = lit.next();
             if (i4msg.isExpunged()) {
-                if (debug)  ZimbraLog.imap.debug("  ** removing: " + i4msg.msgId);
+                if (ZimbraLog.imap_server.isDebugEnabled()) {
+                    ZimbraLog.imap_server.debug("  ** removing: " + i4msg.msgId);
+                }
                 // uncache() removes pointers to the message from mMessageIds;
                 //   if the message appears again in mSequence, it *must* be later and the
                 //   subsequent call to setIndex() will correctly update the mMessageIds mapping
@@ -886,8 +889,8 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         ImapMessage i4msg = getById(itemId);
         if (i4msg != null) {
             markMessageExpunged(i4msg);
-            if (ZimbraLog.imap.isDebugEnabled())
-                ZimbraLog.imap.debug("  ** deleted (ntfn): " + i4msg.msgId);
+            if (ZimbraLog.imap_server.isDebugEnabled())
+                ZimbraLog.imap_server.debug("  ** deleted (ntfn): " + i4msg.msgId);
         }
     }
 
@@ -900,8 +903,8 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         if (i4msg == null)
             added.add(item);
 
-        if (ZimbraLog.imap.isDebugEnabled())
-            ZimbraLog.imap.debug("  ** created (ntfn): " + msgId);
+        if (ZimbraLog.imap_server.isDebugEnabled())
+            ZimbraLog.imap_server.debug("  ** created (ntfn): " + msgId);
     }
 
     @Override public void handleFolderRename(int changeId, Folder folder, Change chg) {
@@ -920,8 +923,8 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         if (i4msg == null) {
             if (inFolder && !isVirtual()) {
                 added.add(item);
-                if (ZimbraLog.imap.isDebugEnabled())
-                    ZimbraLog.imap.debug("  ** moved (ntfn): " + item.getId());
+                if (ZimbraLog.imap_server.isDebugEnabled())
+                    ZimbraLog.imap_server.debug("  ** moved (ntfn): " + item.getId());
             }
         } else if (!inFolder && !isVirtual()) {
             markMessageExpunged(i4msg);
@@ -930,15 +933,15 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
             markMessageExpunged(i4msg);
             if (!isVirtual())
                 added.add(item);
-            if (ZimbraLog.imap.isDebugEnabled())
-                ZimbraLog.imap.debug("  ** imap uid changed (ntfn): " + item.getId());
+            if (ZimbraLog.imap_server.isDebugEnabled())
+                ZimbraLog.imap_server.debug("  ** imap uid changed (ntfn): " + item.getId());
         } else if ((chg.why & (Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) != 0) {
             i4msg.setPermanentFlags(item.getFlagBitmask(), item.getTagBitmask(), changeId, this);
         }
     }
 
     @Override public void handleAddedMessages(int changeId, ImapSession.AddedItems added) {
-        boolean debug = ZimbraLog.imap.isDebugEnabled();
+        boolean debug = ZimbraLog.imap_server.isDebugEnabled();
 
         added.sort();
         boolean recent = true;
@@ -961,7 +964,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
                 i4msg.setAdded(true);
                 dirtyMessage(i4msg, changeId);
             }
-            if (debug)  ZimbraLog.imap.debug(addlog);
+            if (debug)  ZimbraLog.imap_server.debug(addlog);
         }
 
         if (added.unnumbered != null) {
@@ -975,11 +978,11 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
                 if (debug)  chglog.append(' ').append(i4msg.msgId);
             }
             try {
-                if (debug)  ZimbraLog.imap.debug(chglog);
+                if (debug)  ZimbraLog.imap_server.debug(chglog);
                 // notification will take care of adding to mailbox
                 getMailbox().resetImapUid(null, renumber);
             } catch (ServiceException e) {
-                if (debug)  ZimbraLog.imap.debug("  ** moved; imap uid change failed; msg hidden (ntfn): " + renumber);
+                if (debug)  ZimbraLog.imap_server.debug("  ** moved; imap uid change failed; msg hidden (ntfn): " + renumber);
             }
         }
     }

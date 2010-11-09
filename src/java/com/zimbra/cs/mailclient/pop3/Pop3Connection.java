@@ -20,8 +20,6 @@ import java.io.OutputStream;
 
 import javax.security.auth.login.LoginException;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.ZimbraLog;
 import org.apache.commons.codec.binary.Base64;
 
 import com.zimbra.cs.mailclient.CommandFailedException;
@@ -56,17 +54,20 @@ public final class Pop3Connection extends MailConnection {
 
     @Override
     protected MailInputStream newMailInputStream(InputStream is) {
-        return new MailInputStream(is);
+        if (getLogger().isTraceEnabled()) {
+            return new MailInputStream(is, getLogger());
+        } else {
+            return new MailInputStream(is);
+        }
     }
 
     @Override
     protected MailOutputStream newMailOutputStream(OutputStream os) {
-        return new MailOutputStream(os);
-    }
-
-    @Override
-    public Log getLogger() {
-        return ZimbraLog.pop;
+        if (getLogger().isTraceEnabled()) {
+            return new MailOutputStream(os, getLogger());
+        } else {
+            return new MailOutputStream(os);
+        }
     }
 
     @Override
@@ -143,7 +144,7 @@ public final class Pop3Connection extends MailConnection {
                 maildropSize = Long.parseLong(parts[1]);
                 return;
             } catch (NumberFormatException e) {
-                ZimbraLog.pop.error("Invalid STAT response: " + res.getMessage(), e);
+                getLogger().error("Invalid STAT response: " + res.getMessage(), e);
                 // Fall through...
             }
         }
@@ -293,6 +294,7 @@ public final class Pop3Connection extends MailConnection {
         }
         mailOut.newLine();
         mailOut.flush();
+        mailOut.trace();
         while (true) {
             Pop3Response res = Pop3Response.read(cmd, mailIn);
             if (!res.isContinuation()) {
@@ -303,15 +305,9 @@ public final class Pop3Connection extends MailConnection {
     }
 
     private void writePass(String pass) throws IOException {
-        if (traceOut != null && traceOut.suspendTrace("<password>")) {
-            try {
-                mailOut.write(pass);
-            } finally {
-                traceOut.resumeTrace();
-            }
-        } else {
-            mailOut.write(pass);
-        }
+        mailOut.setPrivacy(true);
+        mailOut.write(pass);
+        mailOut.setPrivacy(false);
     }
 
     public Pop3Response sendCommandCheckStatus(String cmd, Object args)

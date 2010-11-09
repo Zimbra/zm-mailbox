@@ -2,18 +2,19 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.mailclient.imap;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.util.ZimbraLog;
 
 import java.io.IOException;
@@ -47,9 +48,9 @@ public final class MailboxInfo implements ResponseHandler {
         unseen = mb.unseen;
         access = mb.access;
     }
-    
+
     private MailboxInfo() {}
-    
+
     // IMAP mailbox STATUS response:
     //
     // status-response = "STATUS" SP mailbox SP "(" [status-att-list] ")"
@@ -95,12 +96,13 @@ public final class MailboxInfo implements ResponseHandler {
                 unseen = is.readNumber();
                 break;
             default:
-                ZimbraLog.imap.debug("Ignoring invalid STATUS response attribute: %s", attr);
+                ZimbraLog.imap_client.debug("Ignoring invalid STATUS response attribute: %s", attr);
             }
             is.skipSpaces();
         }
     }
 
+    @Override
     public void handleResponse(ImapResponse res) {
         switch (res.getCCode()) {
         case EXISTS:
@@ -156,18 +158,23 @@ public final class MailboxInfo implements ResponseHandler {
     public boolean isReadWrite() { return access == CAtom.READ_WRITE; }
 
     public void setName(String name) { this.name = name; }
-    
+
     public void setUidValidity(long uidValidity) {
         this.uidValidity = uidValidity;
     }
 
+    @Override
     public String toString() {
-        String encoded = name != null ? new MailboxName(name).encode() : null;
-        return String.format(
-            "{name=%s, exists=%d, recent=%d, unseen=%d, flags=%s, " +
-            "permanent_flags=%s, uid_next=%d, uid_validity=%d, access=%s}",
-            encoded, exists, recent, unseen, flags, permanentFlags, uidNext,
-            uidValidity, access
-        );
+        return Objects.toStringHelper(this)
+            .add("name", name != null ? new MailboxName(name).encode() : null)
+            .add("exists", exists)
+            .add("recent", recent)
+            .add("unseen", unseen)
+            .add("flags", flags)
+            .add("permanent_flags", permanentFlags)
+            .add("uid_next", uidNext)
+            .add("uid_validity", uidValidity)
+            .add("access", access)
+            .toString();
     }
 }

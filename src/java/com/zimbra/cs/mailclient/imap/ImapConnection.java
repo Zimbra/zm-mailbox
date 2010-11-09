@@ -14,14 +14,11 @@
  */
 package com.zimbra.cs.mailclient.imap;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailclient.MailConnection;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailOutputStream;
 import com.zimbra.cs.mailclient.CommandFailedException;
-import com.zimbra.cs.mailclient.util.TraceOutputStream;
 import com.zimbra.cs.mailclient.util.Ascii;
 
 import java.io.IOException;
@@ -65,17 +62,20 @@ public final class ImapConnection extends MailConnection {
 
     @Override
     protected MailInputStream newMailInputStream(InputStream is) {
-        return new ImapInputStream(is, this);
+        if (getLogger().isTraceEnabled()) {
+            return new ImapInputStream(is, this, getLogger());
+        } else {
+            return new ImapInputStream(is, this);
+        }
     }
 
     @Override
     protected MailOutputStream newMailOutputStream(OutputStream os) {
-        return new ImapOutputStream(os);
-    }
-
-    @Override
-    public Log getLogger() {
-        return ZimbraLog.imap;
+        if (getLogger().isTraceEnabled()) {
+            return new ImapOutputStream(os, getLogger());
+        } else {
+            return new ImapOutputStream(os);
+        }
     }
 
     @Override
@@ -475,10 +475,6 @@ public final class ImapConnection extends MailConnection {
         return mailbox != null ? new MailboxInfo(mailbox) : null;
     }
 
-    public TraceOutputStream getTraceOutputStream() {
-        return traceOut;
-    }
-
     public boolean hasCapability(String cap) {
         return capabilities != null && capabilities.hasCapability(cap);
     }
@@ -613,20 +609,6 @@ public final class ImapConnection extends MailConnection {
             if (!res.isContinuation()) {
                 assert res.isTagged();
                 throw new LiteralException(res);
-            }
-        }
-        if (traceOut != null && traceOut.isEnabled()) {
-            int size = lit.getSize();
-            int maxSize = getImapConfig().getMaxLiteralTraceSize();
-            if (maxSize >= 0 && size > maxSize) {
-                String msg = String.format("<literal %d bytes>", size);
-                traceOut.suspendTrace(msg);
-                try {
-                    lit.writeData(out);
-                } finally {
-                    traceOut.resumeTrace();
-                }
-                return;
             }
         }
         lit.writeData(out);

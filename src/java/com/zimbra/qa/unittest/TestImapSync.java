@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -35,13 +35,11 @@ import java.util.List;
 public class TestImapSync {
     private static final String LOCAL_USER = "TestImapSync";
     private static final String TEST_FOLDER_1 = "TestOne";
-    private static final String TEST_FOLDER_2 = "TestTwo";
     private static final Log LOG = ZimbraLog.test;
-    
+
     private final ImapConfig config;
     private final String pass;
     private final ImapFolder imapFolder1 = new ImapFolder(TEST_FOLDER_1);
-    private final ImapFolder imapFolder2 = new ImapFolder(TEST_FOLDER_2);
     private ZMailbox localMailbox;
     private ImapConnection imapConnection;
     private ZDataSource dataSource;
@@ -49,8 +47,7 @@ public class TestImapSync {
     public TestImapSync(ImapConfig config, String pass) {
         this.config = config;
         this.pass = pass;
-        config.setTrace(true);
-        config.setDebug(true);
+        config.getLogger().setLevel(Log.Level.trace);
     }
 
     public TestImapSync() {
@@ -120,13 +117,13 @@ public class TestImapSync {
         Assert.fail("Could not find data source");
         return null;
     }
-    
+
     private void connect() throws IOException {
         imapConnection = new ImapConnection(config);
         imapConnection.connect();
         imapConnection.login(pass);
     }
-    
+
     private void deleteImapFolders() throws IOException {
         if (imapConnection.isAuthenticated()) {
             if (imapFolder1.exists()) {
@@ -144,9 +141,9 @@ public class TestImapSync {
         ImapFolder(String name) {
             this.name = name;
         }
-        
+
         String name() { return name; }
-        
+
         boolean exists() throws IOException {
             return getListData() != null;
         }
@@ -155,21 +152,13 @@ public class TestImapSync {
             List<ListData> lds = imapConnection.list("", name);
             return lds.isEmpty() ? null : lds.get(0);
         }
-        
+
         MailboxInfo select() throws IOException {
             return imapConnection.select(name());
         }
 
-        void create() throws IOException {
-            imapConnection.create(name());
-        }
-
         void delete() throws IOException {
             imapConnection.delete(name());
-        }
-
-        void renameTo(String newName) throws IOException {
-            imapConnection.rename(name(), newName);
         }
     }
 }

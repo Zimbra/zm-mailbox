@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -36,11 +36,12 @@ public final class ImapResponse {
     public static ImapResponse read(ImapInputStream is) throws IOException {
         ImapResponse res = new ImapResponse();
         res.readResponse(is);
+        is.trace();
         return res;
     }
 
     private ImapResponse() {}
-    
+
     private void readResponse(ImapInputStream is) throws IOException {
         tag = is.readText(' ');
         is.skipChar(' ');
@@ -81,7 +82,7 @@ public final class ImapResponse {
             is.skipChar(' ');
             data = Flags.read(is);
             break;
-        case LIST: case LSUB:                       
+        case LIST: case LSUB:
             // "LIST" SP mailbox-list / "LSUB" SP mailbox-list
             // mailbox-list    = "(" [mbx-list-flags] ")" SP
             //                   (DQUOTE QUOTED-CHAR DQUOTE / nil) SP mailbox
@@ -125,7 +126,7 @@ public final class ImapResponse {
         }
         return ids;
     }
-    
+
     private void readTagged(ImapInputStream is) throws IOException {
         code = is.readAtom();
         is.skipChar(' ');
@@ -166,7 +167,7 @@ public final class ImapResponse {
     public CAtom getCCode() {
         return ccode;
     }
-    
+
     public Object getData() {
         return data;
     }
@@ -175,7 +176,7 @@ public final class ImapResponse {
     public boolean isBAD() { return ccode == CAtom.BAD; }
     public boolean isNO()  { return ccode == CAtom.NO; }
     public boolean isBYE() { return ccode == CAtom.BYE; }
-    
+
     public boolean isStatus() {
         switch (ccode) {
         case OK: case BAD: case NO: case BYE:
@@ -199,13 +200,14 @@ public final class ImapResponse {
     public String getContinuation() {
         return isContinuation() ? getResponseText().getText() : null;
     }
-    
+
     public void dispose() {
         if (data instanceof MessageData) {
             ((MessageData) data).dispose();
         }
     }
 
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(tag);
         sb.append(' ');

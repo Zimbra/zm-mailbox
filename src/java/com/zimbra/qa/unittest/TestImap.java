@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -16,10 +16,10 @@
 package com.zimbra.qa.unittest;
 
 import org.junit.*;
-import org.junit.Test;
 import org.junit.runner.*;
 import static org.junit.Assert.*;
 
+import com.zimbra.common.util.Log;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.AppendResult;
@@ -45,7 +45,7 @@ public class TestImap {
     private static final String PASS = "test123";
 
     private static ImapConnection connection;
-    
+
     @BeforeClass
     public static void setUp() throws Exception {
         connection = connect();
@@ -77,6 +77,7 @@ public class TestImap {
     @Test
     public void testAppendNoLiteralPlus() throws Exception {
         withLiteralPlus(false, new RunnableTest() {
+            @Override
             public void run() throws Exception {
                 testAppend();
             }
@@ -101,6 +102,7 @@ public class TestImap {
     @Test
     public void testCatenateSimpleNoLiteralPlus() throws Exception {
         withLiteralPlus(false, new RunnableTest() {
+            @Override
             public void run() throws Exception {
                 testCatenateSimple();
             }
@@ -138,6 +140,7 @@ public class TestImap {
     @Test
     public void testMultiappendNoLiteralPlus() throws Exception {
         withLiteralPlus(false, new RunnableTest() {
+            @Override
             public void run() throws Exception {
                 testMultiappend();
             }
@@ -148,11 +151,11 @@ public class TestImap {
         return String.format("/%s;UIDVALIDITY=%d/;UID=%d",
                              mbox, res.getUidValidity(), res.getUid());
     }
-    
+
     private static Literal literal(String s) {
         return new Literal(bytes(s));
     }
-    
+
     private static byte[] bytes(String s) {
         try {
             return s.getBytes("UTF8");
@@ -189,7 +192,7 @@ public class TestImap {
         }
         return new Literal(file, true);
     }
-    
+
     private static String simpleMessage(String text) {
         return "Return-Path: dac@zimbra.com\r\n" +
             "Date: Fri, 27 Feb 2004 15:24:43 -0800 (PST)\r\n" +
@@ -212,12 +215,12 @@ public class TestImap {
     private static interface RunnableTest {
         void run() throws Exception;
     }
-    
+
     private static ImapConnection connect() throws IOException {
         ImapConfig config = new ImapConfig(HOST);
         config.setPort(PORT);
         config.setAuthenticationId(USER);
-        config.setTrace(true);
+        config.getLogger().setLevel(Log.Level.trace);
         ImapConnection connection = new ImapConnection(config);
         connection.connect();
         connection.login(PASS);

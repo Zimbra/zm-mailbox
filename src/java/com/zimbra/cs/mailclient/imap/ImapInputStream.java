@@ -2,22 +2,22 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.mailclient.imap;
 
+import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailclient.util.Io;
 import com.zimbra.cs.mailclient.util.Ascii;
-import com.zimbra.cs.mailclient.util.TraceInputStream;
 import com.zimbra.cs.mailclient.util.LimitInputStream;
 import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.mailclient.MailInputStream;
@@ -48,13 +48,20 @@ public final class ImapInputStream extends MailInputStream {
         baos = new ByteArrayOutputStream();
     }
 
+    public ImapInputStream(InputStream is, ImapConnection connection, Log log) {
+        super(is, log);
+        this.connection = connection;
+        config = connection.getImapConfig();
+        baos = new ByteArrayOutputStream();
+    }
+
     public ImapInputStream(InputStream is, ImapConfig config) {
         super(is);
         connection = null;
         this.config = config;
         baos = new ByteArrayOutputStream();
     }
-    
+
     public Atom readAtom() throws IOException {
         skipSpaces();
         String s = readChars(Chars.ATOM_CHARS);
@@ -85,11 +92,11 @@ public final class ImapInputStream extends MailInputStream {
         }
         return new Atom(sbuf.toString());
     }
-    
+
     public String readString() throws IOException {
         return readStringData().toString();
     }
-    
+
     public ImapData readStringData() throws IOException {
         ImapData as = readAStringData();
         if (!as.isString()) {
@@ -117,18 +124,13 @@ public final class ImapInputStream extends MailInputStream {
             return readNStringData();
         }
         ImapData as = peek() == '{' ? readLiteral(false) : readNStringData();
-        boolean st = as.isLiteral() && suspendTrace(as.getSize());
         try {
             return handler.handleData(as);
         } catch (Throwable e) {
             throw new MailException("Exception in data handler", e);
         } finally {
             if (as.isLiteral()) {
-                try {
-                    skipRemaining(as.getInputStream());
-                } finally {
-                    if (st) resumeTrace();
-                }
+                skipRemaining(as.getInputStream());
             }
         }
     }
@@ -136,11 +138,11 @@ public final class ImapInputStream extends MailInputStream {
     private void skipRemaining(InputStream is) throws IOException {
         while (is.skip(8191) > 0) ;
     }
-    
+
     private DataHandler getDataHandler() {
         return connection != null ? connection.getDataHandler() : null;
     }
-    
+
     public String readAString() throws IOException {
         return readAStringData().toString();
     }
@@ -170,7 +172,7 @@ public final class ImapInputStream extends MailInputStream {
     public boolean isNumber() throws IOException {
         return !isEOF() && Chars.isNumber(peekChar());
     }
-    
+
     public long readNZNumber() throws IOException {
         return readNumber(true);
     }
@@ -227,12 +229,7 @@ public final class ImapInputStream extends MailInputStream {
         skipChar('}');
         skipCRLF();
         // If data not cached, then caller handles suspend/resume trace
-        boolean st = cache && suspendTrace((int) len);
-        try {
-            return readLiteral((int) len, cache);
-        } finally {
-            if (st) resumeTrace();
-        }
+        return readLiteral((int) len, cache);
     }
 
     private Literal readLiteral(int len, boolean cache) throws IOException {
@@ -258,22 +255,6 @@ public final class ImapInputStream extends MailInputStream {
         return new Literal(f, true);
     }
 
-    private boolean suspendTrace(int len) {
-        if (in instanceof TraceInputStream) {
-            TraceInputStream is = (TraceInputStream) in;
-            if (is.isEnabled()) {
-                int maxSize = config.getMaxLiteralTraceSize();
-                return maxSize >= 0 && len > maxSize &&
-                       is.suspendTrace("<<< literal data not shown >>>");
-            }
-        }
-        return false;
-    }
-
-    private void resumeTrace() {
-        ((TraceInputStream) in).resumeTrace();
-    }
-
     public String readText() throws IOException {
         if (isEOL()) {
             return "";
@@ -289,7 +270,7 @@ public final class ImapInputStream extends MailInputStream {
     public String readText(char delim) throws IOException {
         return readText(String.valueOf(delim));
     }
-    
+
     public String readText(String delims) throws IOException {
         sbuf.setLength(0);
         char c = 0;
@@ -331,7 +312,7 @@ public final class ImapInputStream extends MailInputStream {
             throw new ParseException("Expecting NIL but got " + atom);
         }
     }
-    
+
     public void skipCRLF() throws IOException {
         try {
             skipSpaces();
@@ -339,10 +320,9 @@ public final class ImapInputStream extends MailInputStream {
             skipChar('\n');
         } catch (ParseException pe) {
             //parse exception; read until the end of line so we can get meaningful debug
-            ZimbraLog.datasource.error("ParseException reading EOL",pe);
-            char c;
+            ZimbraLog.imap_client.error("ParseException reading EOL", pe);
             //do nothing, just advancing to EOL. If we never find a \n then stream is prematurely closed or server is noncompliant
-            while ((c = readChar()) != '\n') {
+            while (readChar() != '\n') {
             }
         }
     }
@@ -350,7 +330,7 @@ public final class ImapInputStream extends MailInputStream {
     /**
      * If next character in stream matches specified character then read it
      * and return true. Otherwise, return false.
-     * 
+     *
      * @param c the expected character
      * @return true if next character matches, false otherwise
      * @throws IOException an an I/O error occurs

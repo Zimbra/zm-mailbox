@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,7 +15,6 @@
 package com.zimbra.cs.datasource;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.List;
 import java.util.Set;
 import java.util.Date;
@@ -51,7 +50,7 @@ public class Pop3Sync extends MailItemImport {
     private final boolean indexAttachments;
 
     private static final Log LOG = ZimbraLog.datasource;
-    
+
     // Zimbra UID format is: item_id "." blob_digest
     private static final Pattern PATTERN_ZIMBRA_UID =
         Pattern.compile("(\\d+)\\.([^\\.]+)");
@@ -69,8 +68,7 @@ public class Pop3Sync extends MailItemImport {
         config.setAuthenticationId(ds.getUsername());
         config.setSecurity(getSecurity(ds.getConnectionType()));
         if (ds.isDebugTraceEnabled()) {
-            config.setDebug(true);
-            enableTrace(config);
+            config.setLogger(SyncUtil.getTraceLogger(ZimbraLog.pop_client, ds.getId()));
         }
         config.setSocketFactory(SocketFactories.defaultSocketFactory());
         config.setSSLSocketFactory(SocketFactories.defaultSSLSocketFactory());
@@ -104,9 +102,9 @@ public class Pop3Sync extends MailItemImport {
         }
     }
 
+    @Override
     public synchronized void test() throws ServiceException {
         validateDataSource();
-        enableTrace(connection.getPop3Config());
         try {
             connect();
             if (dataSource.leaveOnServer() && !hasUIDL()) {
@@ -121,18 +119,8 @@ public class Pop3Sync extends MailItemImport {
         }
     }
 
-    private void enableTrace(Pop3Config config) {
-        config.setTrace(true);
-        if (dataSource.isOffline()) {
-            config.setTraceStream(
-                new PrintStream(new LogOutputStream(ZimbraLog.pop), true));
-        } else {
-            config.setTraceStream(System.out);
-        }
-    }
-
-    public synchronized void importData(List<Integer> folderIds, boolean fullSync)
-        throws ServiceException {
+    @Override
+    public synchronized void importData(List<Integer> folderIds, boolean fullSync) throws ServiceException {
         validateDataSource();
         connect();
         try {
@@ -188,11 +176,11 @@ public class Pop3Sync extends MailItemImport {
         }
         return true;
     }
-    
+
     private void fetchAndDeleteMessages()
         throws ServiceException, IOException {
         Integer sizes[] = connection.getMessageSizes();
-        
+
         LOG.info("Found %d new message(s) on remote server", sizes.length);
         for (int msgno = sizes.length; msgno > 0; --msgno) {
             LOG.debug("Fetching message number %d", msgno);
@@ -206,7 +194,7 @@ public class Pop3Sync extends MailItemImport {
         String[] uids = connection.getMessageUids();
         Set<String> existingUids = PopMessage.getMatchingUids(dataSource, uids);
         int count = uids.length - existingUids.size();
-        
+
         LOG.info("Found %d new message(s) on remote server", count);
         if (count == 0) {
             return; // No new messages
@@ -217,7 +205,7 @@ public class Pop3Sync extends MailItemImport {
         }
         for (int msgno = uids.length; msgno > 0; --msgno) {
             String uid = uids[msgno - 1];
-            
+
             if (!existingUids.contains(uid)) {
                 LOG.debug("Fetching message with uid %s", uid);
                 // Don't allow filtering to a mountpoint when retaining the
@@ -237,7 +225,7 @@ public class Pop3Sync extends MailItemImport {
             mc = MessageContent.read(cis, size);
             ParsedMessage pm = mc.getParsedMessage(null, indexAttachments);
             Message msg = null;
-	    // bug 47796: Set received date to sent date if available otherwise use current time
+        // bug 47796: Set received date to sent date if available otherwise use current time
             try {
                 Date sentDate = pm.getMimeMessage().getSentDate();
                 pm.setReceivedDate(sentDate != null ? sentDate.getTime() : System.currentTimeMillis());

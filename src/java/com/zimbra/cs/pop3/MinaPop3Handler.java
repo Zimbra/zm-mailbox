@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20,7 +20,6 @@ import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaSession;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 
 public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
@@ -35,19 +34,23 @@ public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
         mSession.setMaxIdleSeconds(mConfig.getMaxIdleSeconds());
     }
 
+    @Override
     public void connectionOpened() throws IOException {
-        startConnection(((InetSocketAddress) mSession.getRemoteAddress()).getAddress());
+        startConnection(mSession.getRemoteAddress().getAddress());
     }
 
+    @Override
     public void connectionClosed() throws IOException {
         mSession.close();
     }
 
+    @Override
     public void connectionIdle() {
-        ZimbraLog.pop.debug("idle connection");
+        ZimbraLog.pop_server.debug("idle connection");
         dropConnection();
     }
-    
+
+    @Override
     public void messageReceived(Object msg) throws IOException {
         try {
             processCommand((String) msg);
@@ -61,12 +64,13 @@ public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
         mSession.startTls();
         sendOK("Begin TLS negotiation");
     }
-    
+
     @Override
     protected void dropConnection() {
         dropConnection(WRITE_TIMEOUT);
     }
-    
+
+    @Override
     public void dropConnection(long timeout) {
         if (mSession.isClosed())
             return;
@@ -78,7 +82,7 @@ public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
         if (timeout >= 0) {
             // Wait for all remaining bytes to be written
             if (!mSession.drainWriteQueue(timeout)) {
-                ZimbraLog.pop.warn("Force closing session because write timed out: " + mSession);
+                ZimbraLog.pop_server.warn("Force closing session because write timed out: %s", mSession);
             }
         }
         mSession.close();

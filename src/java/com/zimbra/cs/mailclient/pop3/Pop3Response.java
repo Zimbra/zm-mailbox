@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,18 +27,17 @@ public class Pop3Response {
     private String status;
     private String message;
     private ContentInputStream cis;
-    
+
     private static final String OK = "+OK";
     private static final String ERR = "-ERR";
     private static final String CONTINUATION = "+";
-    
+
     private static final String CAPA = "CAPA";
     private static final String LIST = "LIST";
     private static final String RETR = "RETR";
     private static final String UIDL = "UIDL";
 
-    public static Pop3Response read(String cmd, MailInputStream is)
-            throws IOException {
+    public static Pop3Response read(String cmd, MailInputStream is) throws IOException {
         Pop3Response res = new Pop3Response(cmd);
         res.readResponse(is);
         return res;
@@ -53,6 +52,7 @@ public class Pop3Response {
         if (line == null) {
             throw new EOFException("Unexpected end of stream");
         }
+        is.trace();
         int i = line.indexOf(' ');
         if (i == -1) {
             status = line;
@@ -70,13 +70,13 @@ public class Pop3Response {
         return LIST.equalsIgnoreCase(cmd) || RETR.equalsIgnoreCase(cmd) ||
                UIDL.equalsIgnoreCase(cmd) || CAPA.equalsIgnoreCase(cmd);
     }
-    
+
     public boolean isOK() { return status.equals(OK); }
     public boolean isERR() { return status.equals(ERR); }
     public boolean isContinuation() { return status.equals(CONTINUATION); }
 
     public String getMessage() { return message; }
-        
+
     public ContentInputStream getContentInputStream() {
         return cis;
     }

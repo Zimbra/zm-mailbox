@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,6 +22,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 
 import javax.mail.internet.MimeMessage;
 import javax.mail.MessagingException;
@@ -34,7 +36,10 @@ public final class SyncUtil {
     private static int IMAP_FLAGS_BITMASK =
          Flag.BITMASK_REPLIED | Flag.BITMASK_DELETED |
          Flag.BITMASK_DRAFT | Flag.BITMASK_FLAGGED | Flag.BITMASK_UNREAD;
-    
+
+    private SyncUtil() {
+    }
+
     public static int imapToZimbraFlags(Flags flags) {
         int zflags = 0;
         if (flags.isAnswered()) zflags |= Flag.BITMASK_REPLIED;
@@ -52,7 +57,7 @@ public final class SyncUtil {
     public static int imapFlagsOnly(int zflags) {
         return zflags & IMAP_FLAGS_BITMASK;
     }
-    
+
     public static Flags getFlagsToAdd(Flags flags, int zflags) {
         Flags toAdd = new Flags();
         if (!flags.isAnswered() && (zflags & Flag.BITMASK_REPLIED) != 0) {
@@ -92,7 +97,7 @@ public final class SyncUtil {
         }
         return toRemove;
     }
-    
+
     public static Date getInternalDate(Message msg, MimeMessage mm) {
         Date date = null;
         try {
@@ -108,4 +113,12 @@ public final class SyncUtil {
         mbox.alterTag(new OperationContext(mbox), folderId,
                       MailItem.TYPE_FOLDER, Flag.ID_FLAG_SYNC, enabled);
     }
+
+    public static Log getTraceLogger(Log parent, String id) {
+        String category = parent.getCategory();
+        Log log = LogFactory.getLog(category + '.' + id + '.' + category);
+        log.setLevel(Log.Level.trace);
+        return log;
+    }
+
 }

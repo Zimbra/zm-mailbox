@@ -21,8 +21,8 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DataSource.ConnectionType;
-import com.zimbra.cs.datasource.LogOutputStream;
 import com.zimbra.cs.datasource.MessageContent;
+import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.mailclient.MailConfig.Security;
@@ -41,7 +41,6 @@ import com.zimbra.cs.util.Zimbra;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,11 +57,11 @@ final class ConnectionManager {
     private static final int IDLE_READ_TIMEOUT = 30 * 60; // 30 minutes
 
     private static final Log LOG = ZimbraLog.datasource;
-    
+
     public static ConnectionManager getInstance() {
         return INSTANCE;
     }
-    
+
     private ConnectionManager() {}
 
     /**
@@ -84,7 +83,6 @@ final class ConnectionManager {
             ic = newConnection(ds, auth);
         }
         ic.getImapConfig().setMaxLiteralMemSize(ds.getMaxTraceSize());
-        ic.setTraceEnabled(ds.isDebugTraceEnabled());
         return ic;
     }
 
@@ -134,18 +132,18 @@ final class ConnectionManager {
     private boolean isReuseConnections(DataSource ds) {
         return ds.isOffline() && REUSE_CONNECTIONS;
     }
-    
+
     private static ImapConnection newConnection(DataSource ds, Authenticator auth)
         throws ServiceException {
-    	ImapConfig config = newImapConfig(ds);
+        ImapConfig config = newImapConfig(ds);
         ImapConnection ic = new ImapConnection(config);
         ic.setDataHandler(new FetchDataHandler());
         try {
             ic.connect();
             try {
-            	if(config.getMechanism() != null) {
-            	    auth = AuthenticatorFactory.getDefault().newAuthenticator(config, ds.getDecryptedPassword());
-            	}
+                if(config.getMechanism() != null) {
+                    auth = AuthenticatorFactory.getDefault().newAuthenticator(config, ds.getDecryptedPassword());
+                }
                 if (auth == null) {
                     ic.login(ds.getDecryptedPassword());
                 } else {
@@ -189,6 +187,7 @@ final class ConnectionManager {
     // Handler for fetched message data which uses ParsedMessage to stream
     // the message data to disk if necessary.
     private static class FetchDataHandler implements DataHandler {
+        @Override
         public Object handleData(ImapData data) throws Exception {
             try {
                 return MessageContent.read(data.getInputStream(), data.getSize());
@@ -198,7 +197,7 @@ final class ConnectionManager {
             }
         }
     }
-    
+
     public static ImapConfig newImapConfig(DataSource ds) {
         ImapConfig config = new ImapConfig();
         config.setHost(ds.getHost());
@@ -213,9 +212,9 @@ final class ConnectionManager {
         // response before the literal data can be sent.
         config.setUseLiteralPlus(false);
         // Enable support for trace output
-        config.setTrace(true);
-        config.setTraceStream(ds.isOffline() ?
-            new PrintStream(new LogOutputStream(ZimbraLog.imap), true) : System.out);
+        if (ds.isDebugTraceEnabled()) {
+            config.setLogger(SyncUtil.getTraceLogger(ZimbraLog.imap_client, ds.getId()));
+        }
         config.setSocketFactory(SocketFactories.defaultSocketFactory());
         config.setSSLSocketFactory(SocketFactories.defaultSSLSocketFactory());
         config.setConnectTimeout(ds.getConnectTimeout(LC.javamail_imap_timeout.intValue()));
@@ -272,11 +271,12 @@ final class ConnectionManager {
         } catch (IOException e) {
             LOG.warn("Error suspending connection", e);
         }
-        return true;     
+        return true;
     }
 
     private static ResponseHandler idleHandler(final DataSource ds) {
         return new ResponseHandler() {
+            @Override
             public void handleResponse(ImapResponse res) throws Exception {
                 if (res.getCCode() == CAtom.EXISTS) {
                     SyncState ss = SyncStateManager.getInstance().getOrCreateSyncState(ds);
@@ -306,5 +306,5 @@ final class ConnectionManager {
         }
         return true;
     }
-    
+
 }

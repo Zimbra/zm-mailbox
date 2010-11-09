@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -159,7 +159,7 @@ class AppendMessage {
         if (msg != null && sflags != 0 && handler.getState() == ImapHandler.State.SELECTED) {
             ImapFolder selectedFolder = handler.getSelectedFolder();
             // remember, selected folder may be on another host (i.e. mProxy != null)
-            //   (note that this leaves session flags unset on remote appended messages) 
+            //   (note that this leaves session flags unset on remote appended messages)
             if (selectedFolder != null) {
                 ImapMessage i4msg = selectedFolder.getById(msg.getId());
                 if (i4msg != null)
@@ -226,7 +226,7 @@ class AppendMessage {
         // server uses UNIX time, so range-check specified date (is there a better place for this?)
         // FIXME: Why is this different from INTERNALDATE range check?
         if (date != null && date.getTime() > Integer.MAX_VALUE * 1000L) {
-            ZimbraLog.imap.info("APPEND failed: date out of range");
+            ZimbraLog.imap_server.info("APPEND failed: date out of range");
             throw ServiceException.FAILURE("APPEND failed (date out of range)", null);
         }
     }

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,7 +17,6 @@ package com.zimbra.cs.mailclient.imap;
 import com.zimbra.cs.mailclient.CommandFailedException;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.ParseException;
-import com.zimbra.cs.mailclient.util.TraceOutputStream;
 import com.zimbra.cs.mailclient.util.DateUtil;
 
 import java.util.List;
@@ -59,7 +58,7 @@ public class ImapRequest {
         }
         params.add(param);
     }
-    
+
     public void setResponseHandler(ResponseHandler handler) {
         this.responseHandler = handler;
     }
@@ -67,13 +66,13 @@ public class ImapRequest {
     public void setDataHandler(DataHandler handler) {
         this.dataHandler = handler;
     }
-    
+
     public String getTag() { return tag; }
     public Atom getCommand() { return cmd; }
     public List<Object> getParams() { return params; }
     public ResponseHandler getResponseHandler() { return responseHandler; }
     public DataHandler getDataHandler() { return dataHandler; }
-    
+
     public boolean isAuthenticate() {
         return CAtom.AUTHENTICATE.atom().equals(cmd);
     }
@@ -90,7 +89,7 @@ public class ImapRequest {
             return false;
         }
     }
-    
+
     public ImapResponse send() throws IOException {
         try {
             return connection.sendRequest(this);
@@ -137,30 +136,22 @@ public class ImapRequest {
             if (cmd.getCAtom() == CAtom.LOGIN && params.size() > 1) {
                 writeData(out, params.get(0));
                 out.write(' ');
-                writeUntracedList(
-                    out, params.subList(1, params.size()), "<password>");
+                writeUntracedList(out, params.subList(1, params.size()));
             } else {
                 writeList(out, params);
             }
         }
         out.newLine();
         out.flush();
+        out.trace();
     }
 
-    private void writeUntracedList(ImapOutputStream out, List<Object> data,
-                                   String msg) throws IOException {
-        TraceOutputStream os = connection.getTraceOutputStream();
-        if (os != null && os.suspendTrace(msg)) {
-            try {
-                writeList(out, data);
-            } finally {
-                os.resumeTrace();
-            }
-        } else {
-            writeList(out, data);
-        }
+    private void writeUntracedList(ImapOutputStream out, List<Object> data) throws IOException {
+        out.setPrivacy(true);
+        writeList(out, data);
+        out.setPrivacy(false);
     }
-    
+
     private void writeData(ImapOutputStream out, Object data)
         throws IOException {
         if (data instanceof String) {
@@ -185,7 +176,7 @@ public class ImapRequest {
             writeData(out, Arrays.asList((Object[]) data));
         } else if (data instanceof List) {
             out.write('(');
-            writeList(out, (List) data);
+            writeList(out, (List<?>) data);
             out.write(')');
         } else if (data instanceof AppendMessage) {
             writeList(out, ((AppendMessage) data).getData());
@@ -198,10 +189,10 @@ public class ImapRequest {
     private static String toInternalDate(Date date) {
         return DateUtil.toImapDateTime(date);
     }
-    
-    private void writeList(ImapOutputStream out, List list)
+
+    private void writeList(ImapOutputStream out, List<?> list)
         throws IOException {
-        Iterator it = list.iterator();
+        Iterator<?> it = list.iterator();
         if (it.hasNext()) {
             writeData(out, it.next());
             while (it.hasNext()) {
@@ -214,7 +205,7 @@ public class ImapRequest {
     public CommandFailedException failed(String error) {
         return failed(error, null);
     }
-    
+
     public CommandFailedException failed(String error, Throwable cause) {
         CommandFailedException cfe = new CommandFailedException(cmd.getName(), error);
         try {
@@ -224,7 +215,8 @@ public class ImapRequest {
         cfe.initCause(cause);
         return cfe;
     }
-    
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(tag).append(' ').append(cmd);
@@ -247,7 +239,7 @@ public class ImapRequest {
         if (param instanceof String) {
             String s = (String) param;
             sb.append(s.length() > 0 ? s : "\"\"");
-        } else if (param instanceof Quoted) { 
+        } else if (param instanceof Quoted) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             try {
                 ((Quoted) param).write(baos);
@@ -270,7 +262,7 @@ public class ImapRequest {
             append(sb, Arrays.asList((Object[]) param));
         } else if (param instanceof List) {
             sb.append('(');
-            Iterator it = ((List) param).iterator();
+            Iterator<?> it = ((List<?>) param).iterator();
             if (it.hasNext()) {
                 append(sb, it.next());
                 while (it.hasNext()) {
@@ -279,7 +271,7 @@ public class ImapRequest {
                 }
             }
             sb.append(')');
-        } else { // Atom, Flags, Object 
+        } else { // Atom, Flags, Object
             sb.append(param.toString());
         }
     }

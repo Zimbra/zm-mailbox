@@ -2,18 +2,19 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.mailclient.pop3;
 
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.mailclient.util.Config;
 
@@ -47,19 +48,22 @@ public class Pop3Config extends MailConfig {
         config.applyProperties(props);
         return config;
     }
-    
-    /**
-     * Creates a new <tt>Pop3Config</tt>.
-     */
-    public Pop3Config() {}
 
     /**
-     * Creates a new <tt>Pop3Config</tt> for the specified server host.
-     *  
+     * Creates a new {@link Pop3Config}.
+     */
+    public Pop3Config() {
+        super(ZimbraLog.pop_client);
+    }
+
+    /**
+     * Creates a new {@link Pop3Config} for the specified server host.
+     *
      * @param host the server host name
      */
     public Pop3Config(String host) {
-        super(host);
+        super(ZimbraLog.pop_client, host);
+        setLogger(ZimbraLog.pop_client);
     }
 
     /**

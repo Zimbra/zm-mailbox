@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -32,7 +32,7 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
 
     private static final long WRITE_TIMEOUT = LC.nio_imap_write_timeout.longValue() * 1000;
     private static final int MAX_SESSIONS = LC.nio_imap_max_sessions.intValue();
-    
+
     MinaImapHandler(MinaImapServer server, MinaSession session) {
         super(server);
         this.mServer = server;
@@ -56,10 +56,10 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
 
     @Override public void connectionOpened() throws IOException {
         if (!Config.userServicesEnabled()) {
-            ZimbraLog.imap.debug("Dropping connection (user services are disabled)");
+            ZimbraLog.imap_server.debug("Dropping connection (user services are disabled)");
             dropConnection();
         } else if (mServer.getStats().getActiveSessions() >= MAX_SESSIONS) {
-            ZimbraLog.imap.debug("Dropping connection (max sessions exceeded)");
+            ZimbraLog.imap_server.debug("Dropping connection (max sessions exceeded)");
             sendBYE("Server too busy");
             dropConnection();
         } else {
@@ -74,7 +74,7 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
     @Override public void messageReceived(Object msg) throws IOException {
         if (mRequest == null)
             mRequest = new MinaImapRequest(this);
-        
+
         if (mRequest.parse(msg)) {
             // Request is complete
             setUpLogContext(mSession.getRemoteAddress().toString());
@@ -142,24 +142,24 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         } catch (Exception e) { }
 
         if (mCredentials != null && !mGoodbyeSent)
-        	ZimbraLog.imap.info("dropping connection for user " + mCredentials.getUsername() + " (server-initiated)");
+            ZimbraLog.imap_server.info("dropping connection for user " + mCredentials.getUsername() + " (server-initiated)");
 
         if (mSession.isClosed())
             return; // No longer connected
-        ZimbraLog.imap.debug("dropConnection: sendBanner = %s\n", sendBanner);
+        ZimbraLog.imap_server.debug("dropConnection: sendBanner = %s\n", sendBanner);
         cleanup();
 
         if (sendBanner && !mGoodbyeSent)
             sendBYE();
         if (!mSession.drainWriteQueue(timeout))
-            ZimbraLog.imap.warn("Force closing connection with unsent data");
+            ZimbraLog.imap_server.warn("Force closing connection with unsent data");
         mSession.close();
     }
 
     @Override public void dropConnection(long timeout) {
         dropConnection(true, timeout);
     }
-    
+
     @Override public void connectionClosed() {
         cleanup();
         mSession.close();
@@ -174,21 +174,21 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
             unsetSelectedFolder(false);
         } catch (Exception e) {}
     }
-    
+
     @Override public void connectionIdle() {
         notifyIdleConnection();
     }
-    
+
     @Override protected boolean setupConnection(Socket connection) {
         throw new UnsupportedOperationException();
     }
-    
+
     @Override protected boolean authenticate() {
         throw new UnsupportedOperationException();
     }
 
     @Override protected void notifyIdleConnection() {
-        ZimbraLog.imap.debug("dropping connection for inactivity");
+        ZimbraLog.imap_server.debug("dropping connection for inactivity");
         dropConnection();
     }
 

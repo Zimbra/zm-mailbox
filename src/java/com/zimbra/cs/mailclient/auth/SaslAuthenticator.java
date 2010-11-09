@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -55,11 +55,11 @@ public class SaslAuthenticator extends Authenticator {
     public static final String QOP_AUTH = "auth";
     public static final String QOP_AUTH_CONF = "auth-conf";
     public static final String QOP_AUTH_INT = "auth-int";
-    
+
     public SaslAuthenticator() {}
 
-    public void init(MailConfig config, String password)
-        throws LoginException, SaslException {
+    @Override
+    public void init(MailConfig config, String password) throws LoginException, SaslException {
         this.config = config;
         this.password = password;
         String mechanism = config.getMechanism();
@@ -77,10 +77,11 @@ public class SaslAuthenticator extends Authenticator {
         debug("Requested QOP is %s", qop != null ? qop : "auth");
     }
 
+    @Override
     public String getMechanism() {
         return config.getMechanism();
     }
-    
+
     private static void checkRequired(String name, String value) {
         if (value == null) {
             throw new IllegalArgumentException("Missing required " + name);
@@ -93,12 +94,12 @@ public class SaslAuthenticator extends Authenticator {
         subject = loginContext.getSubject();
         debug("GSS subject = %s", subject);
         try {
-            return (SaslClient) Subject.doAs(subject,
-                new PrivilegedExceptionAction() {
-                    public Object run() throws SaslException {
-                        return createSaslClient();
-                    }
-                });
+            return Subject.doAs(subject, new PrivilegedExceptionAction<SaslClient>() {
+                @Override
+                public SaslClient run() throws SaslException {
+                    return createSaslClient();
+                }
+            });
         } catch (PrivilegedActionException e) {
             dispose();
             Exception cause = e.getException();
@@ -118,7 +119,7 @@ public class SaslAuthenticator extends Authenticator {
 
     private LoginContext getLoginContext() throws LoginException {
         Map<String, String> options = new HashMap<String, String>();
-        options.put("debug", Boolean.toString(config.isDebug()));
+        options.put("debug", Boolean.toString(config.getLogger().isDebugEnabled()));
         options.put("principal", getPrincipal());
         // options.put("useTicketCache", "true");
         // options.put("storeKey", "true");
@@ -127,10 +128,13 @@ public class SaslAuthenticator extends Authenticator {
             AppConfigurationEntry.LoginModuleControlFlag.REQUIRED,
             options);
         Configuration config = new Configuration() {
+            @Override
             public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
                 return new AppConfigurationEntry[] { ace };
             }
-            public void refresh() {}
+            @Override
+            public void refresh() {
+            }
         };
         return new LoginContext("krb5", null, new SaslCallbackHandler(), config);
     }
@@ -152,6 +156,7 @@ public class SaslAuthenticator extends Authenticator {
             new SaslCallbackHandler());
     }
 
+    @Override
     public byte[] evaluateChallenge(final byte[] challenge) throws SaslException {
         if (isComplete()) {
             throw new IllegalStateException("Authentication already completed");
@@ -162,12 +167,12 @@ public class SaslAuthenticator extends Authenticator {
 
     private byte[] evaluateGssChallenge(final byte[] challenge) throws SaslException {
         try {
-            return (byte[]) Subject.doAs(subject,
-                new PrivilegedExceptionAction() {
-                    public Object run() throws SaslException {
-                        return saslClient.evaluateChallenge(challenge);
-                    }
-                });
+            return Subject.doAs(subject, new PrivilegedExceptionAction<byte[]>() {
+                @Override
+                public byte[] run() throws SaslException {
+                    return saslClient.evaluateChallenge(challenge);
+                }
+            });
         } catch (PrivilegedActionException e) {
             dispose();
             Throwable cause = e.getCause();
@@ -178,7 +183,8 @@ public class SaslAuthenticator extends Authenticator {
             }
         }
     }
-    
+
+    @Override
     public byte[] getInitialResponse() throws SaslException {
         if (!hasInitialResponse()) {
             throw new IllegalStateException(
@@ -186,18 +192,20 @@ public class SaslAuthenticator extends Authenticator {
         }
         return saslClient.evaluateChallenge(new byte[0]);
     }
-   
+
+    @Override
     public boolean hasInitialResponse() {
         return saslClient.hasInitialResponse();
     }
 
+    @Override
     public boolean isComplete() {
         return saslClient.isComplete();
     }
 
     private class SaslCallbackHandler implements CallbackHandler {
-        public void handle(Callback[] cbs)
-            throws IOException, UnsupportedCallbackException {
+        @Override
+        public void handle(Callback[] cbs) throws IOException, UnsupportedCallbackException {
             for (Callback cb : cbs) {
                 if (cb instanceof NameCallback) {
                     ((NameCallback) cb).setName(config.getAuthenticationId());
@@ -222,24 +230,29 @@ public class SaslAuthenticator extends Authenticator {
         }
     }
 
+    @Override
     public boolean isEncryptionEnabled() {
         return SaslSecurityLayer.getInstance(saslClient).isEnabled();
     }
 
+    @Override
     public OutputStream wrap(OutputStream os) {
         return isEncryptionEnabled() ?
             new SaslOutputStream(os, saslClient) : os;
     }
 
+    @Override
     public InputStream unwrap(InputStream is) {
         return isEncryptionEnabled() ?
             new SaslInputStream(is, saslClient) : is;
     }
-    
+
+    @Override
     public String getNegotiatedProperty(String name) {
         return (String) saslClient.getNegotiatedProperty(name);
     }
-    
+
+    @Override
     public void dispose() throws SaslException {
         saslClient.dispose();
         if (loginContext != null) {
@@ -253,8 +266,8 @@ public class SaslAuthenticator extends Authenticator {
     }
 
     private void debug(String format, Object... args) {
-        if (config.isDebug()) {
-            System.out.printf("[SaslAuthenticator] " + format + "\n", args);
+        if (config.getLogger().isDebugEnabled()) {
+            config.getLogger().debug("[SaslAuthenticator] " + format + "\n", args);
         }
     }
 }

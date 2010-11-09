@@ -32,9 +32,6 @@ import java.net.InetSocketAddress;
 import java.net.SocketException;
 
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.Log.Level;
-import com.zimbra.cs.mailclient.util.TraceInputStream;
-import com.zimbra.cs.mailclient.util.TraceOutputStream;
 import com.zimbra.cs.mailclient.util.Ascii;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.auth.Authenticator;
@@ -46,8 +43,6 @@ public abstract class MailConnection {
     protected MailConfig config;
     protected Socket socket;
     protected Authenticator authenticator;
-    protected TraceInputStream traceIn;
-    protected TraceOutputStream traceOut;
     protected MailInputStream mailIn;
     protected MailOutputStream mailOut;
     protected State state = State.CLOSED;
@@ -65,9 +60,6 @@ public abstract class MailConnection {
      */
     protected MailConnection(MailConfig config) {
         this.config = config;
-        if (config.isDebug()) {
-            getLogger().setLevel(Level.debug);
-        }
     }
 
     /**
@@ -110,10 +102,6 @@ public abstract class MailConnection {
     }
 
     private void initStreams(InputStream is, OutputStream os) {
-        if (config.isTrace()) {
-            is = traceIn = new TraceInputStream(is, config.getTraceOut());
-            os = traceOut = new TraceOutputStream(os, config.getTraceOut());
-        }
         mailIn = newMailInputStream(is);
         mailOut = newMailOutputStream(os);
     }
@@ -181,7 +169,9 @@ public abstract class MailConnection {
      *
      * @return the {@link Log} for mail client errors
      */
-    public abstract Log getLogger();
+    public final Log getLogger() {
+        return config.getLogger();
+    }
 
     /**
      * Logs out current user from server.
@@ -271,15 +261,7 @@ public abstract class MailConnection {
         byte[] decoded = Base64.decodeBase64(Ascii.getBytes(s));
         byte[] request = authenticator.evaluateChallenge(decoded);
         String data = Ascii.toString(Base64.encodeBase64(request));
-        if (traceOut != null && traceOut.suspendTrace("<authentication data>\n")) {
-            try {
-                mailOut.writeLine(data);
-            } finally {
-                traceOut.resumeTrace();
-            }
-        } else {
-            mailOut.writeLine(data);
-        }
+        mailOut.writeLine(data);
         mailOut.flush();
     }
 
@@ -293,20 +275,6 @@ public abstract class MailConnection {
     public String getNegotiatedQop() {
         return authenticator != null ?
             authenticator.getNegotiatedProperty(Sasl.QOP) : null;
-    }
-
-    /**
-     * Optionally enables protocol tracing for the connection.
-     *
-     * @param enabled tracing enabled if <tt>true</tt>, disabled if <tt>false</tt>
-     */
-    public void setTraceEnabled(boolean enabled) {
-        if (traceIn != null) {
-            traceIn.setEnabled(enabled);
-        }
-        if (traceOut != null) {
-            traceOut.setEnabled(enabled);
-        }
     }
 
     /**

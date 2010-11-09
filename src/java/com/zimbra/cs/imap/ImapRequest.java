@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -179,7 +179,7 @@ abstract class ImapRequest {
         }
         addPart(new StringPart(line));
     }
-        
+
     private void addPart(Part part) {
         // Do not add any more parts if we have exceeded the maximum request
         // size. The exception is if this is the first part (request line) so
@@ -213,7 +213,7 @@ abstract class ImapRequest {
         }
         return null;
     }
-    
+
     String getCurrentLine() throws ImapParseException {
         return mParts.get(mIndex).getString();
     }
@@ -312,7 +312,7 @@ abstract class ImapRequest {
         char got = str.charAt(mOffset);
         if (got == c) mOffset++;
         else throw new ImapParseException(mTag, "wrong character; expected '" + c + "' but got '" + got + "'");
-    }                                       
+    }
 
     void skipNIL() throws ImapParseException  { skipAtom("NIL"); }
 
@@ -516,7 +516,7 @@ abstract class ImapRequest {
         try {
             return ImapPath.FOLDER_ENCODING_CHARSET.decode(ByteBuffer.wrap(raw.getBytes("US-ASCII"))).toString();
         } catch (Exception e) {
-            ZimbraLog.imap.debug("ignoring error while decoding folder name: " + raw, e);
+            ZimbraLog.imap_server.debug("ignoring error while decoding folder name: " + raw, e);
             return raw;
         }
     }

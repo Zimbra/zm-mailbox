@@ -13,12 +13,6 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on Nov 26, 2004
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 package com.zimbra.cs.pop3;
 
 import java.io.IOException;
@@ -41,6 +35,9 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 
+/**
+ * @since Nov 26, 2004
+ */
 class Pop3Mailbox {
     private int mId; // id of the mailbox
     private int mNumDeleted; // number of messages deleted
@@ -245,11 +242,11 @@ class Pop3Mailbox {
             try {
                 mbox.resetRecentMessageCount(mOpContext);
             } catch (ServiceException e) {
-                ZimbraLog.pop.info("error resetting mailbox recent message count", e);
+                ZimbraLog.pop_server.info("error resetting mailbox recent message count", e);
             }
         }
         if (failed > 0) {
-            throw new Pop3CmdException("deleted "+count+"/"+(count+failed)+" message(s)");
+            throw new Pop3CmdException("deleted " + count + "/" + (count + failed) + " message(s)");
         }
         return count;
     }

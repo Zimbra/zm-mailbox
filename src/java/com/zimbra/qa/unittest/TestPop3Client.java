@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,6 +21,7 @@ import junit.framework.TestCase;
 
 import org.apache.log4j.BasicConfigurator;
 
+import com.zimbra.common.util.Log;
 import com.zimbra.cs.mailclient.pop3.Pop3Capabilities;
 import com.zimbra.cs.mailclient.pop3.Pop3Config;
 import com.zimbra.cs.mailclient.pop3.Pop3Connection;
@@ -37,8 +38,6 @@ public class TestPop3Client extends TestCase {
     private static final String USER = "user1";
     private static final String PASS = "test123";
 
-    private static final boolean DEBUG = true;
-    
     static {
         BasicConfigurator.configure();
     }
@@ -50,7 +49,7 @@ public class TestPop3Client extends TestCase {
         config = null;
         connection = null;
     }
-    
+
     public void testLogin() throws Exception {
         login();
     }
@@ -66,7 +65,7 @@ public class TestPop3Client extends TestCase {
         connect();
         login();
     }
-    
+
     public void testCapabilities() throws Exception {
         connect();
         Pop3Capabilities caps = connection.getCapabilities();
@@ -133,10 +132,10 @@ public class TestPop3Client extends TestCase {
         }
         return count;
     }
-    
+
     private void login() throws IOException {
         connect();
-        connection.login(PASS);               
+        connection.login(PASS);
     }
 
     private void connect() throws IOException {
@@ -152,13 +151,12 @@ public class TestPop3Client extends TestCase {
         connection.connect();
     }
 
-    private static Pop3Config getConfig(boolean ssl) throws IOException {
+    private static Pop3Config getConfig(boolean ssl) {
         Pop3Config config = new Pop3Config(HOST);
         if (ssl) config.setSecurity(MailConfig.Security.SSL);
         config.setPort(ssl ? SSL_PORT : PORT);
         config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
-        config.setDebug(DEBUG);
-        config.setTrace(true);
+        config.getLogger().setLevel(Log.Level.trace);
         config.setMechanism("PLAIN");
         config.setAuthenticationId(USER);
         return config;

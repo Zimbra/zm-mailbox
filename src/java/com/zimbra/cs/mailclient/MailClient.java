@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,6 +15,8 @@
 package com.zimbra.cs.mailclient;
 
 import static com.zimbra.cs.mailclient.auth.SaslAuthenticator.*;
+
+import com.zimbra.common.util.Log;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
 import com.zimbra.cs.mailclient.smtp.SmtpConfig;
 import com.zimbra.cs.mailclient.smtp.SmtpConnection;
@@ -55,7 +57,7 @@ public abstract class MailClient {
     public void run(String[] args) throws LoginException, IOException {
         BasicConfigurator.configure();
         Logger.getRootLogger().setLevel(Level.INFO);
-        config.setTrace(true);
+        config.getLogger().setLevel(Log.Level.trace);
         parseArguments(args);
         connect();
         authenticate();
@@ -63,10 +65,9 @@ public abstract class MailClient {
     }
 
     protected abstract void printUsage(PrintStream ps);
-    
+
     protected void connect() throws IOException {
         config.setConnectTimeout(30);
-        config.setTraceStream(System.out);
         config.setSSLSocketFactory(SSLUtil.getDummySSLContext().getSocketFactory());
         connection = newConnection(config);
         connection.connect();
@@ -93,7 +94,7 @@ public abstract class MailClient {
         AuthenticatorFactory af = config.getAuthenticatorFactory();
         return af != null && af.isPasswordRequired(mech);
     }
-    
+
     private static MailConnection newConnection(MailConfig config) {
         if (config instanceof ImapConfig) {
             return new ImapConnection((ImapConfig) config);
@@ -108,7 +109,6 @@ public abstract class MailClient {
     }
 
     private void startCommandLoop() {
-        connection.setTraceEnabled(false);
         Thread t = new ReaderThread();
         t.setDaemon(true);
         t.start();
@@ -124,6 +124,7 @@ public abstract class MailClient {
     }
 
     private class ReaderThread extends Thread {
+        @Override
         public void run() {
             try {
                 MailOutputStream os = connection.getOutputStream();
@@ -218,10 +219,10 @@ public abstract class MailClient {
                 config.setSecurity(MailConfig.Security.TLS_IF_AVAILABLE);
                 break;
             case 'd':
-                config.setDebug(true);
+                config.getLogger().setLevel(Log.Level.trace);
                 break;
             case 'q':
-                config.setTrace(false);
+                config.getLogger().setLevel(Log.Level.error);
                 break;
             case 'h':
                 printUsage(System.out);
@@ -294,7 +295,7 @@ public abstract class MailClient {
     protected boolean processShow(String[] cmdLine) throws IOException {
         return false;
     }
-    
+
     protected boolean processSet(String[] cmdLine) throws IOException {
         return false;
     }

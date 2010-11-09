@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,29 +28,36 @@ class Pop3AuthenticatorUser implements AuthenticatorUser {
     Pop3AuthenticatorUser(Pop3Handler handler) {
         mHandler = handler;
     }
-    
+
+    @Override
     public String getProtocol()  { return "pop"; }
 
+    @Override
     public void sendBadRequest(String s) throws IOException {
         mHandler.sendERR(s);
     }
 
+    @Override
     public void sendFailed() throws IOException {
         mHandler.sendERR("authentication failed");
     }
 
+    @Override
     public void sendFailed(String msg) throws IOException {
         mHandler.sendERR("authentication failed: " + msg);
     }
 
+    @Override
     public void sendSuccessful() throws IOException {
         mHandler.sendOK("authentication successful");
     }
 
+    @Override
     public void sendContinuation(String s) throws IOException {
         mHandler.sendContinuation(s);
     }
 
+    @Override
     public boolean authenticate(String authorizationId, String authenticationId, String password, Authenticator auth)
     throws IOException {
         try {
@@ -62,18 +69,22 @@ class Pop3AuthenticatorUser implements AuthenticatorUser {
         return true;
     }
 
+    @Override
     public Log getLog() {
-        return ZimbraLog.pop;
+        return ZimbraLog.pop_server;
     }
 
+    @Override
     public boolean isSSLEnabled() {
         return mHandler.isSSLEnabled();
     }
 
+    @Override
     public boolean allowCleartextLogin() {
         return mHandler.mConfig.isCleartextLoginsEnabled();
     }
 
+    @Override
     public boolean isGssapiAvailable() {
         return mHandler.mConfig.isSaslGssapiEnabled();
     }
