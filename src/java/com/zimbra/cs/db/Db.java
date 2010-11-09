@@ -227,12 +227,12 @@ public abstract class Db {
 
     /** Generates a WHERE-type clause that evaluates to true when the given
      *  column equals a string later specified by <tt>stmt.setString()</tt>
-     *  under a case-insensitive comparison.  Note that the caller should
+     *  under a case-insensitive comparison.  Note that the caller *MUST NOT*
      *  pass an upcased version of the comparison string in the subsequent
      *  call to <tt>stmt.setString()</tt>. */
     static String equalsSTRING(String column) {
         if (supports(Capability.CASE_SENSITIVE_COMPARISON))
-            return "UPPER(" + column + ") = ?";
+            return "UPPER(" + column + ") = UPPER(?)";
         else
             return column + " = ?";
     }
@@ -240,11 +240,11 @@ public abstract class Db {
     /** Generates a WHERE-type clause that evaluates to true when the given
      *  column is a case-insensitive match to a SQL pattern string later
      *  specified by <tt>stmt.setString()</tt> under a  comparison.  Note that
-     *  the caller should pass an upcased version of the comparison string in
+     *  the caller *MUST NOT* pass an upcased version of the comparison string in
      *  the subsequent call to <tt>stmt.setString()</tt>. */
     static String likeSTRING(String column) {
         if (supports(Capability.CASE_SENSITIVE_COMPARISON))
-            return "UPPER(" + column + ") LIKE ?";
+            return "UPPER(" + column + ") LIKE UPPER(?)";
         else
             return column + " LIKE ?";
     }
