@@ -632,6 +632,9 @@
   <desc>move blobs, start and abort HSM thread on a server</desc>
 </right>
 
+<right name="createMigrationTask" type="preset" targetType="server">
+    <desc>create bulk migration task on a server</desc>
+</right>
 <!-- 
   TODO:
           - deployAdminExtension             : deploy admin extensions
@@ -721,7 +724,6 @@
 <right name="createZimlet" type="preset" targetType="global">
   <desc>create zimlet</desc>
 </right>
-
 
 <!-- 
 ========================================================

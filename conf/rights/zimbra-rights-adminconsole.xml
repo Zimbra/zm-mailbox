@@ -2602,8 +2602,17 @@
   </attrs>
 </right>
 
+<right type="combo" name="adminConsoleMigrationRights">
+  <desc>Rights for running migration tasks on a server through Admin Console</desc>
+  <rights>
+   <r n="listServer" />
+   <r n="getServer" />
+   <r n="createMigrationTask"/>   
+  </rights>
+</right>
+
 <right type="combo" name="adminConsoleSoftwareUpdatesRights">
-  <desc>Rights for configuring SSL certificate on a server through Admin Console</desc>
+  <desc>Rights for configuring software updates component a server through Admin Console</desc>
   <rights>
    <r n="listServer" />
    <r n="listAccount" />
@@ -2635,6 +2644,7 @@
     <r n="adminConsoleCrossMailboxSearchRights"/>
     <r n="adminConsoleSavedSearchRights"/>
     <r n="adminConsoleSoftwareUpdatesRights"/>
+    <r n="adminConsoleMigrationRights"/>
   </rights>
 </right>
 
