@@ -62,8 +62,8 @@ public class TcpImapRequest extends ImapRequest {
             }
         }
 
-        if (ZimbraLog.imap_server.isTraceEnabled()) {
-            ZimbraLog.imap_server.trace("C: %s", logline);
+        if (ZimbraLog.imap.isTraceEnabled()) {
+            ZimbraLog.imap.trace("C: %s", logline);
         }
 
         // if the line ends in a LITERAL+ non-blocking literal, keep reading
@@ -111,8 +111,8 @@ public class TcpImapRequest extends ImapRequest {
             if (read == -1)
                 throw new ImapTerminatedException();
             // TODO How to log literal data now...
-            if (!mUnlogged && ZimbraLog.imap_server.isTraceEnabled()) {
-                ZimbraLog.imap_server.trace("C: {%s}", read);
+            if (!mUnlogged && ZimbraLog.imap.isTraceEnabled()) {
+                ZimbraLog.imap.trace("C: {%s}", read);
             }
             mLiteral -= read;
         }

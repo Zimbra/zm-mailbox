@@ -286,7 +286,7 @@ class ImapPartSpecifier {
                         is = ((MimeMessage) mp).getRawInputStream();  length = Math.max(0, mp.getSize());
                     }
                 } else {
-                    ZimbraLog.imap_server.debug("getting content of part; not MimeBodyPart: " + this);
+                    ZimbraLog.imap.debug("getting content of part; not MimeBodyPart: " + this);
                     return ImapMessage.EMPTY_CONTENT;
                 }
             } else if (mModifier.startsWith("HEADER")) {

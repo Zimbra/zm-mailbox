@@ -56,10 +56,10 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
 
     @Override public void connectionOpened() throws IOException {
         if (!Config.userServicesEnabled()) {
-            ZimbraLog.imap_server.debug("Dropping connection (user services are disabled)");
+            ZimbraLog.imap.debug("Dropping connection (user services are disabled)");
             dropConnection();
         } else if (mServer.getStats().getActiveSessions() >= MAX_SESSIONS) {
-            ZimbraLog.imap_server.debug("Dropping connection (max sessions exceeded)");
+            ZimbraLog.imap.debug("Dropping connection (max sessions exceeded)");
             sendBYE("Server too busy");
             dropConnection();
         } else {
@@ -142,17 +142,17 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         } catch (Exception e) { }
 
         if (mCredentials != null && !mGoodbyeSent)
-            ZimbraLog.imap_server.info("dropping connection for user " + mCredentials.getUsername() + " (server-initiated)");
+            ZimbraLog.imap.info("dropping connection for user " + mCredentials.getUsername() + " (server-initiated)");
 
         if (mSession.isClosed())
             return; // No longer connected
-        ZimbraLog.imap_server.debug("dropConnection: sendBanner = %s\n", sendBanner);
+        ZimbraLog.imap.debug("dropConnection: sendBanner = %s\n", sendBanner);
         cleanup();
 
         if (sendBanner && !mGoodbyeSent)
             sendBYE();
         if (!mSession.drainWriteQueue(timeout))
-            ZimbraLog.imap_server.warn("Force closing connection with unsent data");
+            ZimbraLog.imap.warn("Force closing connection with unsent data");
         mSession.close();
     }
 
@@ -188,7 +188,7 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
     }
 
     @Override protected void notifyIdleConnection() {
-        ZimbraLog.imap_server.debug("dropping connection for inactivity");
+        ZimbraLog.imap.debug("dropping connection for inactivity");
         dropConnection();
     }
 

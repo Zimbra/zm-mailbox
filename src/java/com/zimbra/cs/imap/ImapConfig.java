@@ -88,7 +88,7 @@ public class ImapConfig extends ServerConfig {
 
     @Override
     public Log getLog() {
-        return ZimbraLog.imap_server;
+        return ZimbraLog.imap;
     }
 
     @Override

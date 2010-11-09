@@ -102,7 +102,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
         mClientAddress = remoteAddr.getHostAddress();
         ZimbraLog.addIpToContext(mClientAddress);
 
-        ZimbraLog.pop_server.info("connected");
+        ZimbraLog.pop.info("connected");
         if (!Config.userServicesEnabled()) {
             dropConnection();
             return false;
@@ -142,11 +142,11 @@ public abstract class Pop3Handler extends ProtocolHandler {
             return result;
         } catch (Pop3CmdException e) {
             sendERR(e.getResponse());
-            ZimbraLog.pop_server.debug(e.getMessage(), e);
+            ZimbraLog.pop.debug(e.getMessage(), e);
             return !dropConnection;
         } catch (ServiceException e) {
             sendERR(Pop3CmdException.getResponse(e.getMessage()));
-            ZimbraLog.pop_server.debug(e.getMessage(), e);
+            ZimbraLog.pop.debug(e.getMessage(), e);
             return !dropConnection;
         } finally {
             ZimbraLog.clearContext();
@@ -160,16 +160,16 @@ public abstract class Pop3Handler extends ProtocolHandler {
 
         if (mCommand == null) {
             dropConnection = true;
-            ZimbraLog.pop_server.info("disconnected without quit");
+            ZimbraLog.pop.info("disconnected without quit");
             //dropConnection();
             return false;
         }
 
-        if (ZimbraLog.pop_server.isTraceEnabled()) {
+        if (ZimbraLog.pop.isTraceEnabled()) {
             if ("PASS ".regionMatches(true, 0, mCommand, 0, 5)) {
-                ZimbraLog.pop_server.trace("C: PASS ****");
+                ZimbraLog.pop.trace("C: PASS ****");
             } else {
-                ZimbraLog.pop_server.trace("C: %s", mCommand);
+                ZimbraLog.pop.trace("C: %s", mCommand);
             }
         }
 
@@ -312,7 +312,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
     @Override
     protected void notifyIdleConnection() {
         // according to RFC 1939 we aren't supposed to snd a response on idle timeout
-        ZimbraLog.pop_server.debug("idle connection");
+        ZimbraLog.pop.debug("idle connection");
 
     }
 
@@ -335,15 +335,15 @@ public abstract class Pop3Handler extends ProtocolHandler {
     private void sendResponse(String status, String msg, boolean flush) throws IOException {
         String cl = mCurrentCommandLine != null ? mCurrentCommandLine : "<none>";
         String response = (msg == null || msg.length() == 0) ? status : status + " " + msg;
-        if (ZimbraLog.pop_server.isTraceEnabled()) {
-            ZimbraLog.pop_server.trace("S: %s (%s)", response, cl);
+        if (ZimbraLog.pop.isTraceEnabled()) {
+            ZimbraLog.pop.trace("S: %s (%s)", response, cl);
         } else {
             // only log errors if not debugging...
             if (status.charAt(0) == '-') {
                 if (cl.toUpperCase().startsWith("PASS")) {
                     cl = "PASS ****";
                 }
-                ZimbraLog.pop_server.info("%s (%s)", response, cl);
+                ZimbraLog.pop.info("%s (%s)", response, cl);
             }
         }
         sendLine(response, flush);
@@ -421,7 +421,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
         } else {
             sendOK(mConfig.getGoodbye());
         }
-        ZimbraLog.pop_server.info("quit from client");
+        ZimbraLog.pop.info("quit from client");
         //dropConnection();
     }
 
@@ -557,7 +557,7 @@ public abstract class Pop3Handler extends ProtocolHandler {
             mAccountName = acct.getName();
 
             ZimbraLog.addAccountNameToContext(mAccountName);
-            ZimbraLog.pop_server.info("user %s authenticated, mechanism=%s %s",
+            ZimbraLog.pop.info("user %s authenticated, mechanism=%s %s",
                     mAccountName, mechanism, mStartedTLS ? "[TLS]" : "");
 
             Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccount(acct);
@@ -741,12 +741,12 @@ public abstract class Pop3Handler extends ProtocolHandler {
         if (curOrigRemoteIp == null) {
             setOrigRemoteIpAddr(origIp);
             ZimbraLog.addOrigIpToContext(origIp);
-            ZimbraLog.pop_server.info("POP3 client identified as: %s", origIp);
+            ZimbraLog.pop.info("POP3 client identified as: %s", origIp);
         } else {
             if (curOrigRemoteIp.equals(origIp)) {
-                ZimbraLog.pop_server.warn("POP3 XOIP is allowed only once per session, command ignored");
+                ZimbraLog.pop.warn("POP3 XOIP is allowed only once per session, command ignored");
             } else {
-                ZimbraLog.pop_server.error("POP3 XOIP is allowed only once per session, received different IP: %s, command ignored",
+                ZimbraLog.pop.error("POP3 XOIP is allowed only once per session, received different IP: %s, command ignored",
                         origIp);
             }
         }

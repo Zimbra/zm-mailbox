@@ -64,10 +64,10 @@ public class TcpPop3Handler extends Pop3Handler {
                 mOutputStream = null;
             }
         } catch (IOException e) {
-            if (ZimbraLog.pop_server.isDebugEnabled()) {
-                ZimbraLog.pop_server.debug("I/O error while closing connection", e);
+            if (ZimbraLog.pop.isDebugEnabled()) {
+                ZimbraLog.pop.debug("I/O error while closing connection", e);
             } else {
-                ZimbraLog.pop_server.debug("I/O error while closing connection: " + e);
+                ZimbraLog.pop.debug("I/O error while closing connection: " + e);
             }
         } finally {
             ZimbraLog.clearContext();
@@ -83,7 +83,7 @@ public class TcpPop3Handler extends Pop3Handler {
         NetUtil.setSSLEnabledCipherSuites(sock, mConfig.getSslExcludedCiphers());
         sock.setUseClientMode(false);
         startHandshake(sock);
-        ZimbraLog.pop_server.debug("suite: %s", sock.getSession().getCipherSuite());
+        ZimbraLog.pop.debug("suite: %s", sock.getSession().getCipherSuite());
         mInputStream = new TcpServerInputStream(sock.getInputStream());
         mOutputStream = new BufferedOutputStream(sock.getOutputStream());
     }

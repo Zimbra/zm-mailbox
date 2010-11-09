@@ -50,6 +50,6 @@ public class MinaImapServer extends MinaServer implements ImapServer {
     }
 
     @Override public Log getLog() {
-        return ZimbraLog.imap_server;
+        return ZimbraLog.imap;
     }
 }

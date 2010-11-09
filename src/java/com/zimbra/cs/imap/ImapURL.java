@@ -204,7 +204,7 @@ class ImapURL {
         try {
             return ByteUtil.getContent(content.getSecond(), (int) Math.min(content.getFirst(), Integer.MAX_VALUE));
         } catch (IOException e) {
-            ZimbraLog.imap_server.info("error reading content from IMAP URL", e);
+            ZimbraLog.imap.info("error reading content from IMAP URL", e);
         }
         throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
     }
@@ -268,15 +268,15 @@ class ImapURL {
             return part;
 
         } catch (NoSuchItemException e) {
-            ZimbraLog.imap_server.info("no such message", e);
+            ZimbraLog.imap.info("no such message", e);
         } catch (ServiceException e) {
-            ZimbraLog.imap_server.info("can't fetch content from IMAP URL", e);
+            ZimbraLog.imap.info("can't fetch content from IMAP URL", e);
         } catch (MessagingException e) {
-            ZimbraLog.imap_server.info("can't fetch content from IMAP URL", e);
+            ZimbraLog.imap.info("can't fetch content from IMAP URL", e);
         } catch (IOException e) {
-            ZimbraLog.imap_server.info("error reading content from IMAP URL", e);
+            ZimbraLog.imap.info("error reading content from IMAP URL", e);
         } catch (BinaryDecodingException e) {
-            ZimbraLog.imap_server.info("can't fetch content from IMAP URL", e);
+            ZimbraLog.imap.info("can't fetch content from IMAP URL", e);
         }
         throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
     }

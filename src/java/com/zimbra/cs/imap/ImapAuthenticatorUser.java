@@ -68,7 +68,7 @@ class ImapAuthenticatorUser implements AuthenticatorUser {
     }
 
     @Override public Log getLog() {
-        return ZimbraLog.imap_server;
+        return ZimbraLog.imap;
     }
 
     @Override public boolean isSSLEnabled() {

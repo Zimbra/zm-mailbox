@@ -73,7 +73,7 @@ public class Pop3Config extends ServerConfig {
 
     @Override
     public Log getLog() {
-        return ZimbraLog.pop_server;
+        return ZimbraLog.pop;
     }
 
     public boolean isCleartextLoginsEnabled() {

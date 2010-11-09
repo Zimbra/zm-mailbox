@@ -242,7 +242,7 @@ class Pop3Mailbox {
             try {
                 mbox.resetRecentMessageCount(mOpContext);
             } catch (ServiceException e) {
-                ZimbraLog.pop_server.info("error resetting mailbox recent message count", e);
+                ZimbraLog.pop.info("error resetting mailbox recent message count", e);
             }
         }
         if (failed > 0) {

@@ -48,7 +48,7 @@ class TcpImapHandler extends ImapHandler {
         mOutputStream = new BufferedOutputStream(connection.getOutputStream());
 
         if (!Config.userServicesEnabled()) {
-            ZimbraLog.imap_server.debug("dropping connection because user services are disabled");
+            ZimbraLog.imap.debug("dropping connection because user services are disabled");
             dropConnection();
             return false;
         }
@@ -142,7 +142,7 @@ class TcpImapHandler extends ImapHandler {
         NetUtil.setSSLEnabledCipherSuites(tlsconn, mConfig.getSslExcludedCiphers());
         tlsconn.setUseClientMode(false);
         startHandshake(tlsconn);
-        ZimbraLog.imap_server.debug("suite: " + tlsconn.getSession().getCipherSuite());
+        ZimbraLog.imap.debug("suite: " + tlsconn.getSession().getCipherSuite());
         mInputStream = new TcpServerInputStream(tlsconn.getInputStream());
         mOutputStream = new BufferedOutputStream(tlsconn.getOutputStream());
         mStartedTLS = true;
@@ -176,7 +176,7 @@ class TcpImapHandler extends ImapHandler {
         }.start();
 
         if (mCredentials != null && !mGoodbyeSent)
-            ZimbraLog.imap_server.info("dropping connection for user " + mCredentials.getUsername() + " (server-initiated)");
+            ZimbraLog.imap.info("dropping connection for user " + mCredentials.getUsername() + " (server-initiated)");
 
         ZimbraLog.addIpToContext(mRemoteAddress);
         try {
@@ -196,10 +196,10 @@ class TcpImapHandler extends ImapHandler {
                 mAuthenticator = null;
             }
         } catch (IOException e) {
-            if (ZimbraLog.imap_server.isDebugEnabled()) {
-                ZimbraLog.imap_server.debug("I/O error while closing connection", e);
+            if (ZimbraLog.imap.isDebugEnabled()) {
+                ZimbraLog.imap.debug("I/O error while closing connection", e);
             } else {
-                ZimbraLog.imap_server.debug("I/O error while closing connection: " + e);
+                ZimbraLog.imap.debug("I/O error while closing connection: " + e);
             }
         } finally {
             ZimbraLog.clearContext();
@@ -211,7 +211,7 @@ class TcpImapHandler extends ImapHandler {
 
         // TODO in the TcpServer case, is this duplicated effort with
         // session timeout code that also drops connections?
-        ZimbraLog.imap_server.debug("dropping connection for inactivity");
+        ZimbraLog.imap.debug("dropping connection for inactivity");
         dropConnection();
     }
 
@@ -243,13 +243,13 @@ class TcpImapHandler extends ImapHandler {
     }
 
     void INFO(String message, Throwable e) {
-        if (ZimbraLog.imap_server.isInfoEnabled())
-            ZimbraLog.imap_server.info(withClientInfo(message), e);
+        if (ZimbraLog.imap.isInfoEnabled())
+            ZimbraLog.imap.info(withClientInfo(message), e);
     }
 
     void INFO(String message) {
-        if (ZimbraLog.imap_server.isInfoEnabled())
-            ZimbraLog.imap_server.info(withClientInfo(message));
+        if (ZimbraLog.imap.isInfoEnabled())
+            ZimbraLog.imap.info(withClientInfo(message));
     }
 
     private StringBuilder withClientInfo(String message) {

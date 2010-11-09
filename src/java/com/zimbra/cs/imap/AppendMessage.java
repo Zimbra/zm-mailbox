@@ -226,7 +226,7 @@ class AppendMessage {
         // server uses UNIX time, so range-check specified date (is there a better place for this?)
         // FIXME: Why is this different from INTERNALDATE range check?
         if (date != null && date.getTime() > Integer.MAX_VALUE * 1000L) {
-            ZimbraLog.imap_server.info("APPEND failed: date out of range");
+            ZimbraLog.imap.info("APPEND failed: date out of range");
             throw ServiceException.FAILURE("APPEND failed (date out of range)", null);
         }
     }

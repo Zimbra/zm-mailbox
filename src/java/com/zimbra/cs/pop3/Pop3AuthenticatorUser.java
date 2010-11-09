@@ -71,7 +71,7 @@ class Pop3AuthenticatorUser implements AuthenticatorUser {
 
     @Override
     public Log getLog() {
-        return ZimbraLog.pop_server;
+        return ZimbraLog.pop;
     }
 
     @Override

@@ -74,7 +74,7 @@ class ImapProxy {
             throw ServiceException.PROXY_ERROR(new Exception("no open IMAP port for server " + host), path.asImapPath());
         }
 
-        ZimbraLog.imap_server.info("opening proxy connection (user=" + acct.getName() + ", host=" + host + ", path=" + path.getReferent().asImapPath() + ')');
+        ZimbraLog.imap.info("opening proxy connection (user=" + acct.getName() + ", host=" + host + ", path=" + path.getReferent().asImapPath() + ')');
 
         ImapConnection conn = mConnection = new ImapConnection(config);
         try {
@@ -97,7 +97,7 @@ class ImapProxy {
             return;
 
         // FIXME: should close cleanly (i.e. with tagged LOGOUT)
-        ZimbraLog.imap_server.info("closing proxy connection");
+        ZimbraLog.imap.info("closing proxy connection");
         conn.close();
     }
 
@@ -175,7 +175,7 @@ class ImapProxy {
                         // don't set <code>success</code> until we're past things that can throw IOExceptions
                         success = ok;
                     } catch (IOException e) {
-                        ZimbraLog.imap_server.warn("error encountered during IDLE; dropping connection", e);
+                        ZimbraLog.imap.warn("error encountered during IDLE; dropping connection", e);
                     }
                     if (!success)
                         handler.dropConnection();
@@ -248,7 +248,7 @@ class ImapProxy {
             boolean proxy = (first != '+' || isIdle) && (!tagged || includeTaggedResponse);
 
             ByteArrayOutputStream line = proxy ? new ByteArrayOutputStream() : null;
-            StringBuilder debug = proxy && ZimbraLog.imap_server.isDebugEnabled() ? new StringBuilder("  pxy: ") : null;
+            StringBuilder debug = proxy && ZimbraLog.imap.isDebugEnabled() ? new StringBuilder("  pxy: ") : null;
             StringBuilder condition = new StringBuilder(10);
 
             boolean quoted = false, escaped = false, space1 = false, space2 = false;
@@ -317,7 +317,7 @@ class ImapProxy {
             }
 
             if (debug != null)
-                ZimbraLog.imap_server.debug(debug.toString());
+                ZimbraLog.imap.debug(debug.toString());
 
             if (tagged)
                 break;

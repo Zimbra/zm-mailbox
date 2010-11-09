@@ -46,7 +46,7 @@ public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
 
     @Override
     public void connectionIdle() {
-        ZimbraLog.pop_server.debug("idle connection");
+        ZimbraLog.pop.debug("idle connection");
         dropConnection();
     }
 
@@ -82,7 +82,7 @@ public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
         if (timeout >= 0) {
             // Wait for all remaining bytes to be written
             if (!mSession.drainWriteQueue(timeout)) {
-                ZimbraLog.pop_server.warn("Force closing session because write timed out: %s", mSession);
+                ZimbraLog.pop.warn("Force closing session because write timed out: %s", mSession);
             }
         }
         mSession.close();
