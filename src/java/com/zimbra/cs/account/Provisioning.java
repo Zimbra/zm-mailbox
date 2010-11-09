@@ -1845,7 +1845,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         // on ldap entries
         locale,
         skin,
-        uistrings,
+//        uistrings,
         license,
 
         // ldap entries
