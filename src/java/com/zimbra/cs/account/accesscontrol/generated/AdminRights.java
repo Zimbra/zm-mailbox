@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 gsolovyev 20101101-1318 */
+    /* build: 7.0.0_BETA1_1111 gsolovyev 20101108-1555 */
 
 
     public static AdminRight R_accessGAL;
@@ -144,6 +144,7 @@ public class AdminRights {
     public static AdminRight R_createCalendarResource;
     public static AdminRight R_createCos;
     public static AdminRight R_createDistributionList;
+    public static AdminRight R_createMigrationTask;
     public static AdminRight R_createServer;
     public static AdminRight R_createSubDomain;
     public static AdminRight R_createTopDomain;
@@ -546,6 +547,7 @@ public class AdminRights {
         R_createCalendarResource               = rm.getAdminRight(Right.RT_createCalendarResource);
         R_createCos                            = rm.getAdminRight(Right.RT_createCos);
         R_createDistributionList               = rm.getAdminRight(Right.RT_createDistributionList);
+        R_createMigrationTask                  = rm.getAdminRight(Right.RT_createMigrationTask);
         R_createServer                         = rm.getAdminRight(Right.RT_createServer);
         R_createSubDomain                      = rm.getAdminRight(Right.RT_createSubDomain);
         R_createTopDomain                      = rm.getAdminRight(Right.RT_createTopDomain);

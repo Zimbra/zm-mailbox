@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 gsolovyev 20101101-1318 */
+    /* build: 7.0.0_BETA1_1111 gsolovyev 20101108-1555 */
 
 
     /*
@@ -642,6 +642,11 @@ public class RightConsts {
      * create distribution list in the domain
      */
     public static final String RT_createDistributionList = "createDistributionList";
+
+    /**
+     * create bulk migration task on a server
+     */
+    public static final String RT_createMigrationTask = "createMigrationTask";
 
     /**
      * create server
