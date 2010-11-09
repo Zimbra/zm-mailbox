@@ -222,7 +222,7 @@ public class DbMailItem {
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, folderId);
             stmt.setInt(pos++, modifiedItemId);
-            stmt.setString(pos++, StringUtil.trimTrailingSpaces(name.toUpperCase()));
+            stmt.setString(pos++, StringUtil.trimTrailingSpaces(name));
             rs = stmt.executeQuery();
             if (!rs.next() || rs.getInt(1) > 0)
                 throw MailServiceException.ALREADY_EXISTS(name);
@@ -2176,7 +2176,7 @@ public class DbMailItem {
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, folderId);
-            stmt.setString(pos++, name.toUpperCase());
+            stmt.setString(pos++, name);
             rs = stmt.executeQuery();
 
             if (!rs.next())

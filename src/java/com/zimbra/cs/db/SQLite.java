@@ -51,7 +51,7 @@ public class SQLite extends Db {
 
     SQLite() {
         mErrorCodes = new HashMap<Db.Error, String>(6);
-        mErrorCodes.put(Db.Error.DUPLICATE_ROW, "column id is not unique");
+        mErrorCodes.put(Db.Error.DUPLICATE_ROW, "not unique");
         mErrorCodes.put(Db.Error.NO_SUCH_TABLE, "no such table");
         mErrorCodes.put(Db.Error.FOREIGN_KEY_CHILD_EXISTS, "foreign key");
         mErrorCodes.put(Db.Error.FOREIGN_KEY_NO_PARENT, "foreign key");
