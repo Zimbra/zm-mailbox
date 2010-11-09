@@ -171,9 +171,9 @@ public final class ZimbraLog {
     public static final Log imap_client = LogFactory.getLog("zimbra.imap-client");
 
     /**
-     * the "zimbra.imap.server" logger. For IMAP server related events.
+     * the "zimbra.imap" logger. For IMAP server related events.
      */
-    public static final Log imap_server = LogFactory.getLog("zimbra.imap-server");
+    public static final Log imap = LogFactory.getLog("zimbra.imap");
 
     /**
      * the "zimbra.pop.client" logger. For POP3 client related events.
@@ -181,9 +181,9 @@ public final class ZimbraLog {
     public static final Log pop_client = LogFactory.getLog("zimbra.pop-client");
 
     /**
-     * the "zimbra.pop.server" logger. For POP3 server related events.
+     * the "zimbra.pop" logger. For POP3 server related events.
      */
-    public static final Log pop_server = LogFactory.getLog("zimbra.pop-server");
+    public static final Log pop = LogFactory.getLog("zimbra.pop");
 
     /**
      * the "zimbra.milter" logger. For MILTER-related events
@@ -450,10 +450,10 @@ public final class ZimbraLog {
         descriptions.put(lmtp.getCategory(), "LMTP server (incoming mail)");
         descriptions.put(smtp.getCategory(), "SMTP client (outgoing mail)");
         descriptions.put(imap_client.getCategory(), "IMAP client");
-        descriptions.put(imap_server.getCategory(), "IMAP server");
+        descriptions.put(imap.getCategory(), "IMAP server");
         descriptions.put(milter.getCategory(), "MILTER protocol operations");
         descriptions.put(pop_client.getCategory(), "POP client");
-        descriptions.put(pop_server.getCategory(), "POP server");
+        descriptions.put(pop.getCategory(), "POP server");
         descriptions.put(mailbox.getCategory(), "General mailbox operations");
         descriptions.put(calendar.getCategory(), "Calendar operations");
         descriptions.put(im.getCategory(), "Instant messaging operations");
