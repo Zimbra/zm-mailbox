@@ -239,6 +239,10 @@ public final class LC {
     public static final KnownKey ldap_cache_reverseproxylookup_domain_maxage = KnownKey.newKey(15);
     public static final KnownKey ldap_cache_reverseproxylookup_server_maxsize = KnownKey.newKey(100);
     public static final KnownKey ldap_cache_reverseproxylookup_server_maxage = KnownKey.newKey(15);
+    
+    public static final KnownKey acl_cache_maxsize = KnownKey.newKey(100);
+    public static final KnownKey acl_cache_account_maxsize = KnownKey.newKey(100);
+    public static final KnownKey acl_cache_group_maxsize = KnownKey.newKey(1000);
 
     // This value is stored here for use by zmmycnf program. Changing this
     // setting does not immediately reflect in MySQL server. You will have to,
