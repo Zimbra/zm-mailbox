@@ -6557,17 +6557,16 @@ public class Mailbox {
             }
         }
 
+        // Make sure that the user has the delete permission for all folders in
+        // the hierarchy.
         for (int id : folderIds) {
-            Folder folder = getFolderById(octxt, id);
-            if (!folder.canAccess(ACL.RIGHT_DELETE)) {
-                throw ServiceException.PERM_DENIED("not authorized to empty " + folder.getPath());
+            if ((getEffectivePermissions(octxt, id, MailItem.TYPE_FOLDER) & ACL.RIGHT_DELETE) == 0) {
+               throw ServiceException.PERM_DENIED("not authorized to empty folder " +
+                   getFolderById(octxt, id).getPath());
             }
         }
-
-        int lastChangeID;
-        synchronized (this) {
-            lastChangeID = getLastChangeID();
-        }
+        int lastChangeID = octxt != null && octxt.change != -1 ? octxt.change : getLastChangeID();
+        
         QueryParams params = new QueryParams();
         params.setFolderIds(folderIds).setModifiedSequenceBefore(lastChangeID + 1).setRowLimit(batchSize);
         params.setExcludedTypes(MailItem.TYPE_FOLDER, MailItem.TYPE_MOUNTPOINT, MailItem.TYPE_SEARCHFOLDER);
