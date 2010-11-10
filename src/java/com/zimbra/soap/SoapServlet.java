@@ -324,23 +324,23 @@ public class SoapServlet extends ZimbraServlet {
             return LC.soap_response_buffer_size.intValue();
     }
 
-    private void sendResponse(HttpServletRequest req, HttpServletResponse resp, Element envelope)
-    throws IOException {
+    private void sendResponse(HttpServletRequest req, HttpServletResponse resp, Element envelope) throws IOException {
         SoapProtocol soapProto = SoapProtocol.determineProtocol(envelope);
         int statusCode = soapProto.hasFault(envelope) ?
-            HttpServletResponse.SC_INTERNAL_SERVER_ERROR : HttpServletResponse.SC_OK;
+                HttpServletResponse.SC_INTERNAL_SERVER_ERROR : HttpServletResponse.SC_OK;
 
-        boolean chunkingDisabled = LC.soap_response_chunked_transfer_encoding_disabled.booleanValue();
+        boolean chunkingEnabled = LC.soap_response_chunked_transfer_encoding_enabled.booleanValue();
 
-        if (!chunkingDisabled) {
+        if (chunkingEnabled) {
             // disable chunking if proto < HTTP 1.1
             String proto = req.getProtocol();
             try {
                 HttpVersion httpVer = HttpVersion.parse(proto);
-                chunkingDisabled = httpVer.lessEquals(HttpVersion.HTTP_1_0);
+                chunkingEnabled = !httpVer.lessEquals(HttpVersion.HTTP_1_0);
             } catch (ProtocolException e) {
-                ZimbraLog.soap.warn("cannot parse http version in request: " + proto + ", http chunked transfer encoding disabled", e);
-                chunkingDisabled = true;
+                ZimbraLog.soap.warn("cannot parse http version in request: %s, http chunked transfer encoding disabled",
+                        proto, e);
+                chunkingEnabled = false;
             }
         }
 
@@ -352,21 +352,16 @@ public class SoapServlet extends ZimbraServlet {
         resp.setContentType(soapProto.getContentType());
         resp.setStatus(statusCode);
 
-        if (chunkingDisabled) {
-            /*
-             * serialize the envelope to a byte array and send the response with Content-Length header.
-             */
-            byte[] soapBytes = envelope.toUTF8();
-            resp.setContentLength(soapBytes.length);
-            resp.getOutputStream().write(soapBytes);
-        } else {
-            /*
-             * Let jetty chunk the response if applicable.
-             */
+        if (chunkingEnabled) {
+            // Let jetty chunk the response if applicable.
             ZimbraServletOutputStream out = new ZimbraServletOutputStream(resp.getOutputStream());
             envelope.output(out);
             out.flush();
+        } else {
+            // serialize the envelope to a byte array and send the response with Content-Length header.
+            byte[] soapBytes = envelope.toUTF8();
+            resp.setContentLength(soapBytes.length);
+            resp.getOutputStream().write(soapBytes);
         }
     }
 }
-
