@@ -31,7 +31,7 @@ implements DataSource {
 
     @XmlAttribute private String id;
     @XmlAttribute private String name;
-    @XmlAttribute private String folderId;
+    @XmlAttribute(name=MailConstants.A_FOLDER) private String folderId;
     @XmlAttribute private Boolean enabled = false;
     @XmlAttribute private Boolean importOnly = false;
     @XmlAttribute private String host;

@@ -26,8 +26,10 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.collect.Iterables;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.mail.type.MailCalDataSource;
 import com.zimbra.soap.mail.type.MailImapDataSource;
 import com.zimbra.soap.mail.type.MailPop3DataSource;
+import com.zimbra.soap.mail.type.MailRssDataSource;
 import com.zimbra.soap.type.DataSource;
 
 @XmlRootElement(name="GetDataSourcesResponse")
@@ -36,7 +38,9 @@ public class GetDataSourcesResponse {
     
     @XmlElements({
         @XmlElement(name=MailConstants.E_DS_POP3, type=MailPop3DataSource.class),
-        @XmlElement(name=MailConstants.E_DS_IMAP, type=MailImapDataSource.class)
+        @XmlElement(name=MailConstants.E_DS_IMAP, type=MailImapDataSource.class),
+        @XmlElement(name=MailConstants.E_DS_RSS, type=MailRssDataSource.class),
+        @XmlElement(name=MailConstants.E_DS_CAL, type=MailCalDataSource.class)
     })
     private List<DataSource> dataSources = new ArrayList<DataSource>();
     
@@ -48,13 +52,4 @@ public class GetDataSourcesResponse {
             Iterables.addAll(this.dataSources, dataSources);
         }
     }
-
-    /*
-    @SuppressWarnings("unchecked")
-    public List<DataSource> getAllDataSources() {
-        List<DataSource> list = new ArrayList<DataSource>();
-        list.addAll(pop3DataSources);
-        return list;
-    }
-    */
 }
