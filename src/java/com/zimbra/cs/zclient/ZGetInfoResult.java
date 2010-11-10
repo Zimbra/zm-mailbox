@@ -138,6 +138,7 @@ public class ZGetInfoResult implements ToZJSONObject {
     public Set<String> getEmailAddresses() {
         Multimap<String, String> attrs = data.getAttrsMultimap();
         Set<String> addresses = new HashSet<String>();
+        addresses.add(getName().toLowerCase());
         for (String alias : attrs.get(Provisioning.A_zimbraMailAlias)) {
             addresses.add(alias.toLowerCase());
         }
