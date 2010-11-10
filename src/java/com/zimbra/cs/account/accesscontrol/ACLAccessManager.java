@@ -46,6 +46,12 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         RightManager.getInstance();
     }
     
+    @Override
+    public boolean isAdequateAdminAccount(Account acct) {
+        return acct.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false) ||
+               acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+    }
+    
     private Account actualTargetForAdminLoginAs(Account target) throws ServiceException {
         if (target.isCalendarResource())
             // need a CalendarResource instance for RightChecker
@@ -439,16 +445,20 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
                 CheckRightFallback fallback = rightNeeded.getFallback();
                 if (fallback != null) {
                     Boolean fallbackResult = fallback.checkRight(grantee, target, asAdmin);
-                    if (fallbackResult != null)
+                    if (fallbackResult != null) {
+                        ZimbraLog.acl.debug("checkPresetRight fallback to: " + fallbackResult.booleanValue());
                         return fallbackResult.booleanValue();
+                    }
                 }
                 
                 if (result == null) {
                     // no matching ACL for the right, and no fallback (or no fallback result), 
                     // see if there is a configured default 
                     Boolean defaultValue = rightNeeded.getDefault();
-                    if (defaultValue != null)
+                    if (defaultValue != null) {
+                        ZimbraLog.acl.debug("checkPresetRight default to: " + defaultValue.booleanValue());
                         return defaultValue.booleanValue();
+                    }
                 }
             }
                 

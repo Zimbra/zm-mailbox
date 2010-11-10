@@ -16,7 +16,6 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Server;
@@ -24,10 +23,11 @@ import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.CheckRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.RightManager;
-import com.zimbra.cs.account.accesscontrol.RightCommand.Grants;
-import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
+import com.zimbra.cs.account.accesscontrol.RightCommand.Grants;
+import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 
 public class TestAC extends TestProv {
@@ -35,6 +35,7 @@ public class TestAC extends TestProv {
     protected static final AccessManager sAM = AccessManager.getInstance();
     
     protected static Right USER_RIGHT;
+    protected static Right USER_RIGHT_DISTRIBUTION_LIST;
     protected static Right ADMIN_RIGHT_ACCOUNT;
     protected static Right ADMIN_RIGHT_CALENDAR_RESOURCE;
     protected static Right ADMIN_RIGHT_CONFIG;
@@ -53,7 +54,8 @@ public class TestAC extends TestProv {
     static {
         try {
             // setup rights
-            USER_RIGHT                    = getRight("test-user"); // User.R_loginAs;
+            USER_RIGHT                    = getRight("test-user");
+            USER_RIGHT_DISTRIBUTION_LIST  = getRight("test-user-distributionlist");
             ADMIN_RIGHT_ACCOUNT           = getRight("test-preset-account");
             ADMIN_RIGHT_CALENDAR_RESOURCE = getRight("test-preset-calendarresource");
             ADMIN_RIGHT_CONFIG            = getRight("test-preset-globalconfig");
@@ -67,7 +69,10 @@ public class TestAC extends TestProv {
             
             sRights = new ArrayList<Right>();
             sRights.add(USER_RIGHT);
+            sRights.add(USER_RIGHT_DISTRIBUTION_LIST);
+            sRights.add(User.R_loginAs);
             sRights.add(ADMIN_RIGHT_ACCOUNT);
+            sRights.add(Admin.R_adminLoginAs);
             sRights.add(ADMIN_RIGHT_CALENDAR_RESOURCE);
             sRights.add(ADMIN_RIGHT_CONFIG);
             sRights.add(ADMIN_RIGHT_COS);
@@ -115,9 +120,10 @@ public class TestAC extends TestProv {
         }
     }
     
-    private Account getGlobalAdminAcct() throws Exception {
+    @Override
+    protected Account getGlobalAdminAcct() throws ServiceException {
         if (mGlobalAdminAcct == null)
-            mGlobalAdminAcct = mProv.get(AccountBy.name, TestUtil.getAddress("admin"));
+            mGlobalAdminAcct = super.getGlobalAdminAcct();
         return mGlobalAdminAcct;
     }
     
@@ -132,14 +138,34 @@ public class TestAC extends TestProv {
         if (targetType == TargetType.dl && !CheckRight.allowGroupTarget(right))
             return false;
         
+        TargetType rightTarget = right.getTargetType();
+        
         if (right.isUserRight()) {
-            return targetType == TargetType.account ||
-                   targetType == TargetType.calresource ||
-                   targetType == TargetType.dl ||
-                   targetType == TargetType.domain ||
-                   targetType == TargetType.global;
+            switch (rightTarget) {
+            case account:
+                return targetType == TargetType.account ||
+                targetType == TargetType.calresource ||
+                targetType == TargetType.dl ||
+                targetType == TargetType.domain ||
+                targetType == TargetType.global;
+            case calresource:
+                fail();
+            case cos:
+                fail();
+            case dl:
+                return targetType == TargetType.dl ||
+                       targetType == TargetType.domain ||
+                       targetType == TargetType.global;
+            case domain:
+            case server:
+            case xmppcomponent:
+            case zimlet:
+            case config:
+            case global:
+            default:
+                fail();
+            }
         } else {
-            TargetType rightTarget = right.getTargetType();
             switch (rightTarget) {
             case account:
                 return targetType == TargetType.account ||
@@ -177,9 +203,9 @@ public class TestAC extends TestProv {
                 return targetType == TargetType.global;
             default:
                 fail();
-                return false; // just to get the compiler happy
             }
         }
+        return false; // just to get the compiler happy
     }
     
     private void doTest(String note, TargetType grantedOnTargetType, GranteeType granteeType, Right right) throws Exception {
@@ -403,7 +429,11 @@ public class TestAC extends TestProv {
             } else if (grantedOnTargetType == TargetType.dl) {
                 if (CheckRight.allowGroupTarget(right)) {
                     goodTarget = createUserAccount("target-acct", domain);
-                    mProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)goodTarget).getName()});
+                    
+                    // create a subgroup of the group on which the right is granted (testing multi levels of dl)
+                    DistributionList subGroup = createUserGroup("target-subgroup", domain);
+                    mProv.addMembers((DistributionList)grantedOnTarget, new String[]{subGroup.getName()});
+                    mProv.addMembers(subGroup, new String[]{((Account)goodTarget).getName()});
                 } else {
                     badTarget = createUserAccount("target-acct", domain);
                     mProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)badTarget).getName()});
@@ -462,7 +492,11 @@ public class TestAC extends TestProv {
             break;
         case dl:
             if (grantedOnTargetType == TargetType.dl) {
-                goodTarget = grantedOnTarget;
+                // create a subgroup of the group on which the right is granted (testing multi levels of dl)
+                DistributionList subGroup = createUserGroup("target-subgroup", domain);
+                mProv.addMembers((DistributionList)grantedOnTarget, new String[]{subGroup.getName()});
+                
+                goodTarget = subGroup;
                 badTarget = createUserGroup("bad-target-dl", domain);
             } else if (grantedOnTargetType == TargetType.domain) {
                 goodTarget = createUserGroup("target-dl", domain);
@@ -571,11 +605,69 @@ public class TestAC extends TestProv {
             }
         }
         
-
+        /*
+        if (goodTarget != null)
+            permissionCacheTest(grantedOnTarget, goodTarget, allowedAccts, deniedAccts, right);
+        */
+        
         //
         // finally, clean up
         //
         cleanup();
+    }
+    
+    private void permissionCacheTest(Entry grantedOnTarget, Entry target, 
+            List<Account> allowedAccts, List<Account> deniedAccts, Right right) throws Exception {
+        
+        boolean targetInheritanceRelationBroken = false;
+        
+        if (grantedOnTarget != target) {
+            // break the relationship between target and grantedOnTarget that gives the inheritance 
+            switch (TargetType.getTargetType(grantedOnTarget)) {
+            case account:
+                break;
+            case calresource:
+                break;
+            case cos:
+                break;
+            case dl:
+                mProv.removeMembers((DistributionList)grantedOnTarget, new String[]{target.getLabel()});
+                targetInheritanceRelationBroken = true;
+                break;
+            case domain:
+                // move the target out of the domain
+                Domain newDomain = createDomain();
+                if (target instanceof Account) {
+                    Account targetAcct = (Account) target;
+                    String newName = getEmailLocalpart(targetAcct) + "@" + newDomain.getName();
+                    mProv.renameAccount(targetAcct.getId(), newName);
+                    String targetId = targetAcct.getId();
+                    target = mProv.get(Provisioning.AccountBy.id, targetId);
+                    targetInheritanceRelationBroken = true;
+                } else if (target instanceof DistributionList) {
+                    DistributionList targetDl = (DistributionList) target;
+                    String newName = getEmailLocalpart(targetDl) + "@" + newDomain.getName();
+                    mProv.renameDistributionList(targetDl.getId(), newName);
+                    String targetId = targetDl.getId();
+                    target = mProv.get(Provisioning.DistributionListBy.id, targetId);
+                    targetInheritanceRelationBroken = true;
+                }
+                break;
+            case server:
+            case xmppcomponent:
+            case zimlet:
+            case config:
+            case global:
+            }
+        }
+        
+        if (targetInheritanceRelationBroken) {
+            boolean allow;
+            for (Account allowedAcct : allowedAccts) {
+                allow = sAM.canDo(allowedAcct, target, right, asAdmin(allowedAcct), null);
+                assertFalse(allow);  
+            }
+        }
     }
     
     private void cleanup() throws Exception {
@@ -591,6 +683,7 @@ public class TestAC extends TestProv {
     public void testBasic() throws Exception {
 
         // full test
+        /*
         int totalTests = TargetType.values().length * GranteeType.values().length * sRights.size();
         int curTest = 1;
         for (TargetType targetType : TargetType.values()) {
@@ -600,7 +693,7 @@ public class TestAC extends TestProv {
                 }
             }
         }
-
+        */
         
         /*
          *  account 
@@ -618,7 +711,7 @@ public class TestAC extends TestProv {
         /*
         int totalTests = GranteeType.values().length * sRights.size();
         int curTest = 1;
-        TargetType targetType = TargetType.zimlet;
+        TargetType targetType = TargetType.dl;
         for (GranteeType granteeType : GranteeType.values()) {
             for (Right right : sRights) {
                 doTest((curTest++) + "/" + totalTests, targetType, granteeType, right);
@@ -628,6 +721,9 @@ public class TestAC extends TestProv {
         
         // test a particular grant target and grantee type and right
         // doTest("1/1", TargetType.dl, GranteeType.GT_USER, ADMIN_RIGHT_ACCOUNT);
+        // doTest("1/1", TargetType.account, GranteeType.GT_GUEST, USER_RIGHT);
+        // doTest("1/1", TargetType.account, GranteeType.GT_KEY, USER_RIGHT);
+        // doTest("1/1", TargetType.dl, GranteeType.GT_USER, USER_RIGHT_DISTRIBUTION_LIST);
     }
     
 
@@ -635,7 +731,7 @@ public class TestAC extends TestProv {
      *  Note: do *not* copy it to /Users/pshao/p4/main/ZimbraServer/conf
      *  that could accidently generate a RightDef.java with our test rights.
      *  
-     *  cp /Users/pshao/p4/main/ZimbraServer/data/unittest/*.xml /opt/zimbra/conf/rights
+     *  cp -f /Users/pshao/p4/main/ZimbraServer/data/unittest/*.xml /opt/zimbra/conf/rights
      *  and
      *  uncomment sCoreRightDefFiles.add("rights-unittest.xml"); in RightManager
      *  

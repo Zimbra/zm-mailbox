@@ -28,6 +28,7 @@ import java.util.TreeSet;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
@@ -36,7 +37,8 @@ import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
-import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.accesscontrol.PermissionCache;
+
 
 class LdapDistributionList extends DistributionList implements LdapEntry {
     private String mDn;
@@ -92,6 +94,8 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
         	// nothing to do...
         	return;
         }
+
+        PermissionCache.invalidateCache();
         
         Map<String,String[]> modmap = new HashMap<String,String[]>();
         modmap.put("+" + Provisioning.A_zimbraMailForwardingAddress, (String[])mods.toArray(new String[0]));
@@ -176,6 +180,8 @@ class LdapDistributionList extends DistributionList implements LdapEntry {
         if (mods.isEmpty()) {
             throw ServiceException.INVALID_REQUEST("empty remove set", null);
         }
+        
+        PermissionCache.invalidateCache();
         
         Map<String,String[]> modmap = new HashMap<String,String[]>();
         modmap.put("-" + Provisioning.A_zimbraMailForwardingAddress, (String[])mods.toArray(new String[0]));

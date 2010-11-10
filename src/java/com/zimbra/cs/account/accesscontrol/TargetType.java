@@ -197,6 +197,11 @@ public enum TargetType {
         return mInheritFromTargetTypes;
     }
     
+    public static boolean canBeInheritedFrom(Entry target) throws ServiceException {
+        TargetType targetType = TargetType.getTargetType(target);
+        return !targetType.subTargetTypes().isEmpty();
+    }
+    
     public static TargetType fromCode(String s) throws ServiceException {
         try {
             return TargetType.valueOf(s);

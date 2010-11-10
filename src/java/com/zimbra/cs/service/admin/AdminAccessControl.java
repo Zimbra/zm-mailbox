@@ -139,17 +139,7 @@ public abstract class AdminAccessControl {
      * @return if the specified account is an adequate admin account
      */
     public static boolean isAdequateAdminAccount(Account acct) {
-        AccessManager accessMgr = AccessManager.getInstance();
-        boolean isAdmin;
-        
-        if (isDomainBasedAccessManager(accessMgr))
-            isAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false) ||
-                      acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
-        else
-            isAdmin = acct.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false) ||
-                      acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
-        
-        return isAdmin;
+        return AccessManager.getInstance().isAdequateAdminAccount(acct);
     }
     
     

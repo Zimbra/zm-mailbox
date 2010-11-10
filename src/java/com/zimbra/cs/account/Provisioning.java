@@ -1842,11 +1842,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
 
     public static enum CacheEntryType {
-        // on ldap entries
+        // non ldap entries
         locale,
         skin,
 //        uistrings,
         license,
+        permission,
 
         // ldap entries
         account,

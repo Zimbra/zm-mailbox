@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -913,7 +912,10 @@ public class RightCommand {
         }
         
         AccessManager am = AccessManager.getInstance();
-        return am.canPerform((Account)granteeEntry, targetEntry, r, false, attrs, true, via);
+        
+        // as admin if the grantee under testing is an admin account
+        boolean asAdmin = am.isAdequateAdminAccount((Account)granteeEntry);
+        return am.canPerform((Account)granteeEntry, targetEntry, r, false, attrs, asAdmin, via);
     }
     
     public static AllEffectiveRights getAllEffectiveRights(Provisioning prov,

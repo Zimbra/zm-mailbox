@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.util.L10nUtil;
@@ -108,6 +109,9 @@ public class FlushCache extends AdminDocumentHandler {
         case license:
             flushLdapCache(CacheEntryType.config, eCache); // refresh global config for parsed license
             Provisioning.getInstance().refreshValidators(); // refresh other bits of cached license data
+            break;
+        case permission:
+            PermissionCache.invalidateCache();
             break;
         case zimlet:
             FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");

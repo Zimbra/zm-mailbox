@@ -23,10 +23,10 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.accesscontrol.PermissionCache.CachedPermission;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 
 /**
@@ -71,16 +71,26 @@ public class CheckPresetRight extends CheckRight {
     public static Boolean check(Account grantee, Entry target, 
             Right rightNeeded, boolean canDelegateNeeded, ViaGrant via) throws ServiceException {
         
-        CheckPresetRight checker = new CheckPresetRight(grantee, target, rightNeeded, canDelegateNeeded, via);
-        Boolean allowed = checker.checkRight();
+        CachedPermission cached = PermissionCache.checkCache(grantee, target, rightNeeded, canDelegateNeeded);
         
-        if (sLog.isDebugEnabled())
-            sLog.debug("check right: " + "target=" + target.getLabel() + ", user=" + grantee.getName() + 
-                    ", right=" + rightNeeded.getName() + " => " + (allowed==null?"no matching ACL" : allowed));
-
+        Boolean allowed;
+        
+        if (cached == CachedPermission.NOT_CACHED) {
+            CheckPresetRight checker = new CheckPresetRight(grantee, target, rightNeeded, canDelegateNeeded, via);
+            allowed = checker.checkRight();
+            PermissionCache.cacheResult(grantee, target, rightNeeded, canDelegateNeeded, allowed);
+        } else {
+            allowed = cached.getResult();
+        }
+        
+        if (sLog.isDebugEnabled()) {
+            sLog.debug("check ACL: " + (allowed==null ? "no matching ACL" : allowed) + 
+                    "(target=" + target.getLabel() + ", grantee=" + grantee.getName() + 
+                    ", right=" + rightNeeded.getName() + ", canDelegateNeeded=" + canDelegateNeeded + ")");
+        }
+        
         return allowed;
     }
-    
 
     private CheckPresetRight(Account grantee, Entry target, 
             Right rightNeeded, boolean canDelegateNeeded, ViaGrant via) throws ServiceException {

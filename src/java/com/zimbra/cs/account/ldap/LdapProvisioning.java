@@ -59,6 +59,7 @@ import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
@@ -3052,6 +3053,8 @@ public class LdapProvisioning extends Provisioning {
         } finally {
             ZimbraLdapContext.closeContext(zlc);
         }
+        
+        PermissionCache.invalidateCache();
     }
 
     private DistributionList getDistributionListByNameInternal(String listAddress) throws ServiceException {

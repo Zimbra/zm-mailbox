@@ -8,6 +8,12 @@ package com.zimbra.cs.account;
 public enum EntryCacheDataKey {
     
     /*
+     * all
+     */
+    PERMISSION,
+    
+    
+    /*
      * account
      */
     ACCOUNT_COS,

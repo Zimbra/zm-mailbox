@@ -112,6 +112,9 @@ public class ACLUtil {
         }
         
         serialize(prov, target, acl);
+        
+        PermissionCache.invalidateCache(target);
+        
         return granted;
     }
     
@@ -138,6 +141,9 @@ public class ACLUtil {
         acl = acl.clone();
         List<ZimbraACE> revoked = acl.revokeAccess(aces);
         serialize(prov, target, acl);
+        
+        PermissionCache.invalidateCache(target);
+        
         return revoked;
     }
     
@@ -152,7 +158,7 @@ public class ACLUtil {
     private static void serialize(Provisioning prov, Entry entry, ZimbraACL acl) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraACE, acl.serialize());
-        // modifyAttrs will erase cached ACL on the target
+        // modifyAttrs will erase cached ACL and permission cache on the target
         prov.modifyAttrs(entry, attrs);
     }
     

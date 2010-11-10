@@ -2,14 +2,13 @@ package com.zimbra.qa.unittest;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import junit.framework.TestCase;
 
 import com.zimbra.common.net.SocketFactories;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.CalendarResource;
@@ -19,6 +18,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
@@ -90,6 +90,23 @@ public abstract class TestProv extends TestCase {
     
     private String genZimletName() {
         return "zimlet-" + nextSeq() + "." + BASE_DOMAIN_NAME;
+    }
+    
+    protected String getEmailLocalpart(Account acct) {
+        return getEmailLocalpart(acct.getName());
+    }
+    
+    protected String getEmailLocalpart(DistributionList dl) {
+        return getEmailLocalpart(dl.getName());
+    }
+    
+    protected String getEmailLocalpart(String email) {
+        String[] parts = email.split("@");
+        return parts[0];
+    }
+    
+    protected Account getGlobalAdminAcct() throws ServiceException {
+        return mProv.get(AccountBy.name, TestUtil.getAddress("admin"));
     }
     
     protected Domain createDomain() throws Exception {

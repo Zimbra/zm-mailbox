@@ -29,6 +29,11 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
             ZimbraLog.acl.warn("unable to instaintiate ACLAccessManager, user rights will not be honored", e);
         }
     }
+    
+    @Override
+    public boolean isAdequateAdminAccount(Account acct) {
+        return acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+    }
 
     @Override
     public boolean canAccessAccount(AuthToken at, Account target,

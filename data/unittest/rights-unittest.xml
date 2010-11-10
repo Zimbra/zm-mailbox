@@ -20,6 +20,10 @@
   <desc>a user right</desc>
 </right>
 
+<right name="test-user-distributionlist" userRight="1" targetType="dl">
+  <desc>a user right on distribution list</desc>
+</right>
+
 <!--  
       =============
       preset rights 

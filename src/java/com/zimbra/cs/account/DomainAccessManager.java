@@ -28,6 +28,12 @@ public class DomainAccessManager extends AccessManager {
         return at.isDomainAdmin() && !at.isAdmin();
     }
 
+    @Override
+    public boolean isAdequateAdminAccount(Account acct) {
+        return acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false) ||
+               acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false);
+    }
+    
     public boolean canAccessAccount(AuthToken at, Account target, boolean asAdmin) throws ServiceException {
         if (!at.isZimbraUser())
             return false;
