@@ -165,23 +165,24 @@ public class ModifyCalendarItem extends CalendarRequest {
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
         }
+        // If we are sending this to other people, then we MUST be the organizer!
+        if (!dat.mInvite.isOrganizer() && hasRecipients)
+            throw MailServiceException.MUST_BE_ORGANIZER("ModifyCalendarItem");
+
         if (!dat.mInvite.isOrganizer()) {
-            // If we are sending this to other people, then we MUST be the organizer!
-            if (hasRecipients)
-                throw MailServiceException.MUST_BE_ORGANIZER("ModifyCalendarItem");
+            // neverSent is always false for attendee users.
+            dat.mInvite.setNeverSent(false);
+        } else if (!dat.mInvite.hasOtherAttendees()) {
+            // neverSent is always false for appointments without attendees.
+            dat.mInvite.setNeverSent(false);
+        } else if (hasRecipients) {
+            // neverSent is set to false when attendees are notified.
+            dat.mInvite.setNeverSent(false);
         } else {
-            if (!dat.mInvite.hasOtherAttendees() || hasRecipients) {
-                dat.mInvite.setNeverSent(false);
-            } else {  // There are attendees but no one is being notified.
-                if (inv.hasOtherAttendees()) {
-                    // Set neverSent flag only if previous version had it set.  Once cleared, never set it again.
-                    dat.mInvite.setNeverSent(inv.isNeverSent());
-                } else {  // Older version had no attendees, but new version does.
-                    // Appointment is being modified to have attendees for the first time, and they are not being
-                    // notified.  This is similar to CreateCalendarItem case as far as neverSent flag is concerned.
-                    dat.mInvite.setNeverSent(true);
-                }
-            }
+            // This is the case of organizer saving an invite with attendees, but without sending the notification.
+            // Set neverSent to false, but only if it wasn't already set to true before.
+            // !inv.isNeverSent() ? false : true ==> inv.isNeverSent()
+            dat.mInvite.setNeverSent(inv.isNeverSent());
         }
 
         // If updating recurrence series, remove newly added attendees from the email

@@ -90,13 +90,22 @@ public class CreateCalendarItem extends CalendarRequest {
         } catch (MessagingException e) {
             throw ServiceException.FAILURE("Checking recipients of outgoing msg ", e);
         }
+        // If we are sending this to other people, then we MUST be the organizer!
+        if (!dat.mInvite.isOrganizer() && hasRecipients)
+            throw MailServiceException.MUST_BE_ORGANIZER("CreateCalendarItem");
+
         if (!dat.mInvite.isOrganizer()) {
-            // If we are sending this to other people, then we MUST be the organizer!
-            if (hasRecipients)
-                throw MailServiceException.MUST_BE_ORGANIZER("CreateCalendarItem");
+            // neverSent is always false for attendee users.
+            dat.mInvite.setNeverSent(false);
+        } else if (!dat.mInvite.hasOtherAttendees()) {
+            // neverSent is always false for appointments without attendees.
+            dat.mInvite.setNeverSent(false);
+        } else if (hasRecipients) {
+            // neverSent is set to false when attendees are notified.
+            dat.mInvite.setNeverSent(false);
         } else {
-            // If there are attendees but no one is being notified, set the neverSent flag on the invite.
-            dat.mInvite.setNeverSent(dat.mInvite.hasOtherAttendees() && !hasRecipients);
+            // This is the case of organizer saving an invite with attendees, but without sending the notification.
+            dat.mInvite.setNeverSent(true);
         }
 
         return sendCalendarMessage(zsc, octxt, iidFolder.getId(), acct, mbox, dat, response);
