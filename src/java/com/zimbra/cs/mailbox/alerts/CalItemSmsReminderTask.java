@@ -51,7 +51,6 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
         mm.saveChanges();
         MailSender mailSender = calItem.getMailbox().getMailSender();
         mailSender.setSaveToSent(false);
-        mailSender.setSkipSendAsCheck(true);
         mailSender.sendMimeMessage(null, calItem.getMailbox(), mm);
     }
 

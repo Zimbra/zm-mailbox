@@ -51,7 +51,6 @@ public class SendVerificationCode extends MailDocumentHandler {
         mm.saveChanges();
         MailSender mailSender = mbox.getMailSender();
         mailSender.setSaveToSent(false);
-        mailSender.setSkipSendAsCheck(true);
         mailSender.sendMimeMessage(null, mbox, mm);
     }
 
