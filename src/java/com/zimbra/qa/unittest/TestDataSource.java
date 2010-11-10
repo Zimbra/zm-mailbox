@@ -22,21 +22,23 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import org.testng.TestNG;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.zimbra.common.service.RemoteServiceException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.DataSource.ConnectionType;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.DataSource.ConnectionType;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -44,8 +46,10 @@ import com.zimbra.cs.mailbox.ScheduledTask;
 import com.zimbra.cs.zclient.ZCalDataSource;
 import com.zimbra.cs.zclient.ZDataSource;
 import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZImapDataSource;
 import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZRssDataSource;
 
 public class TestDataSource extends TestCase {
@@ -63,6 +67,7 @@ public class TestDataSource extends TestCase {
     private String mOriginalCosPop3PollingInterval;
     private String mOriginalCosImapPollingInterval;
     
+    @BeforeTest
     public void setUp()
     throws Exception {
         cleanUp();
@@ -302,49 +307,50 @@ public class TestDataSource extends TestCase {
         assertEquals("2h", cos.getAttr(Provisioning.A_zimbraDataSourceImapPollingInterval));
     }
     
-    // XXX bburtin: Disabled this test because it can cause a 10-minute timeout
-    // if the HTTP proxy is not configured.  We can look into reenabling it when
-    // the timeout delay is shortened for bug 45019.
-    public void disabledTestRss()
+    /**
+     * Creates a folder that syncs to another folder via RSS, and verifies that an
+     * RSS data source was implicitly created. 
+     */
+    @Test
+    public void testRss()
     throws Exception {
-        // Create folder.
+        // Create source folder, make it publically readable, and add a message to it.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String parentId = Integer.toString(Mailbox.ID_FOLDER_USER_ROOT);
-        String urlString = "http://feeds.theonion.com/theonion/weekly";
-        ZFolder folder;
-        try {
-            folder = mbox.createFolder(parentId, NAME_PREFIX + " testRss", null, null, null, urlString);
-        } catch (ServiceException e) {
-            assertTrue(e.getCode(),
-                e.getCode().equals(ServiceException.RESOURCE_UNREACHABLE) ||
-                e.getCode().equals(RemoteServiceException.TIMEOUT));
-            ZimbraLog.test.info("Unable to test RSS data source for %s: %s.", urlString, e.toString());
-            return;
-        }
+        ZFolder sourceFolder = TestUtil.createFolder(mbox, "/" + NAME_PREFIX + " testRss source");
+        mbox.modifyFolderGrant(sourceFolder.getId(), GranteeType.pub, null, "r", null);
+        String subject = NAME_PREFIX + " testRss";
+        TestUtil.addMessage(mbox, subject, sourceFolder.getId());
+        
+        // Create destination folder that syncs to the source folder via RSS.
+        String urlString = String.format("%s/home/%s%s.rss", TestUtil.getBaseUrl(), USER_NAME, sourceFolder.getPath());
+        urlString = HttpUtil.encodePath(urlString);
+        ZFolder rssFolder = mbox.createFolder(parentId, NAME_PREFIX + " testRss destination", null, null, null, urlString);
 
         // Get the data source that was implicitly created.
-        ZRssDataSource ds = (ZRssDataSource) getDataSource(mbox, folder.getId());
+        ZRssDataSource ds = (ZRssDataSource) getDataSource(mbox, rssFolder.getId());
         assertNotNull(ds);
+        assertNull(mbox.testDataSource(ds));
         
-        // Test data source.  If the test fails, skip validation so we don't
-        // get false positives when the feed is down or the test
-        // is running on a box that's not connected to the internet.
-        String error = mbox.testDataSource(ds);
-        if (error != null) {
-            ZimbraLog.test.info("Unable to test RSS data source for %s: %s.", urlString, error);
-            return;
-        }
-        
-        // Import data and confirm that the folder is not empty.
+        // Import data and validate the synced message.
         List<ZDataSource> list = new ArrayList<ZDataSource>();
         list.add(ds);
         mbox.importData(list);
-        waitForData(mbox, folder);
+        waitForData(mbox, rssFolder);
+        ZMessage syncedMsg = TestUtil.getMessage(mbox, "in:\"" + rssFolder.getPath() + "\"");
+        assertEquals(subject, syncedMsg.getSubject());
         
         // Delete folder, import data, and make sure that the data source was deleted.
-        mbox.deleteFolder(folder.getId());
+        // Data source import runs asynchronously, so poll until the data source is gone.
+        mbox.deleteFolder(rssFolder.getId());
         mbox.importData(list);
-        ds = (ZRssDataSource) getDataSource(mbox, folder.getId());
+        for (int i = 1; i <= 10; i++) {
+            ds = (ZRssDataSource) getDataSource(mbox, rssFolder.getId());
+            if (ds == null) {
+                break;
+            }
+            Thread.sleep(500);
+        }
         assertNull(ds);
     }
 
@@ -394,8 +400,7 @@ public class TestDataSource extends TestCase {
     throws Exception {
         for (int i = 1; i <= 10; i++) {
             mbox.noOp();
-            long folderSize = folder.getSize();
-            if (folderSize > 0) {
+            if (folder.getSize() > 0) {
                 return;
             }
             Thread.sleep(500);
@@ -465,6 +470,7 @@ public class TestDataSource extends TestCase {
         }
     }
     
+    @AfterTest
     public void tearDown()
     throws Exception {
         // Reset original polling intervals.

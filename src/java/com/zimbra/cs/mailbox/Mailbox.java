@@ -6363,21 +6363,27 @@ public class Mailbox {
         }
     }
 
-    public synchronized void synchronizeFolder(OperationContext octxt, int folderId) throws ServiceException {
-        Folder folder = getFolderById(octxt, folderId);
-        if (!folder.getUrl().equals(""))
-            importFeed(octxt, folderId, folder.getUrl(), true);
+    public void synchronizeFolder(OperationContext octxt, int folderId) throws ServiceException {
+        String url = getFolderById(octxt, folderId).getUrl();
+        if (!url.equals(""))
+            importFeed(octxt, folderId, url, true);
     }
 
-    public synchronized void importFeed(OperationContext octxt, int folderId, String url, boolean subscription) throws ServiceException {
+    public void importFeed(OperationContext octxt, int folderId, String url, boolean subscription) throws ServiceException {
         if (url == null || url.equals(""))
             return;
 
         // get the remote data, skipping anything we've already seen (if applicable)
         Folder folder = getFolderById(octxt, folderId);
         Folder.SyncData fsd = subscription ? folder.getSyncData() : null;
-        FeedManager.SubscriptionData sdata = FeedManager.retrieveRemoteDatasource(getAccount(), url, fsd);
-
+        FeedManager.SubscriptionData<?> sdata = FeedManager.retrieveRemoteDatasource(getAccount(), url, fsd);
+        importFeedInternal(octxt, folder, url, subscription, fsd, sdata);
+    }
+    
+    private synchronized void importFeedInternal(OperationContext octxt, Folder folder,
+                                                 String url, boolean subscription, Folder.SyncData fsd,
+                                                 FeedManager.SubscriptionData<?> sdata)
+    throws ServiceException {
         // If syncing a folder with calendar items, remember the current items.  After applying the new
         // appointments/tasks, we need to remove ones that were not updated because they are apparently
         // deleted from the source feed.
@@ -6385,14 +6391,14 @@ public class Mailbox {
                              folder.getDefaultView() == MailItem.TYPE_TASK;
         Set<Integer> existingCalItems = new HashSet<Integer>();
         if (subscription && isCalendar) {
-            for (int i : listItemIds(octxt, MailItem.TYPE_UNKNOWN, folderId))
+            for (int i : listItemIds(octxt, MailItem.TYPE_UNKNOWN, folder.getId()))
                 existingCalItems.add(i);
         }
 
         // if there's nothing to add, we can short-circuit here
         if (sdata.items.isEmpty()) {
             if (subscription && isCalendar)
-                emptyFolder(octxt, folderId, false);
+                emptyFolder(octxt, folder.getId(), false);
             updateRssDataSource(folder);
             return;
         }
@@ -6440,7 +6446,7 @@ public class Mailbox {
                             }
                         }
                         if (!skip) {
-                            AddInviteData aid = addInvite(octxtNoConflicts, inv, folderId, true, addRevision);
+                            AddInviteData aid = addInvite(octxtNoConflicts, inv, folder.getId(), true, addRevision);
                             if (aid != null)
                                 existingCalItems.remove(aid.calItemId);
                         }
@@ -6448,7 +6454,7 @@ public class Mailbox {
                         ZimbraLog.calendar.warn("Skipping bad iCalendar object during import: uid=" + inv.getUid(), e);
                     }
                 } else if (obj instanceof ParsedMessage) {
-                    addMessage(octxtNoConflicts, (ParsedMessage) obj, folderId, true, Flag.BITMASK_UNREAD, null);
+                    addMessage(octxtNoConflicts, (ParsedMessage) obj, folder.getId(), true, Flag.BITMASK_UNREAD, null);
                 }
             } catch (IOException e) {
                 throw ServiceException.FAILURE("IOException", e);
@@ -6463,7 +6469,7 @@ public class Mailbox {
         // update the subscription to avoid downloading items twice
         if (subscription && sdata.lastDate > 0) {
             try {
-                setSubscriptionData(octxt, folderId, sdata.lastDate, sdata.lastGuid);
+                setSubscriptionData(octxt, folder.getId(), sdata.lastDate, sdata.lastGuid);
             } catch (Exception e) {
                 ZimbraLog.mailbox.warn("could not update feed metadata", e);
             }
@@ -6535,7 +6541,7 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-
+    
     private void emptyLargeFolder(OperationContext octxt, int folderId, boolean removeSubfolders, int batchSize)
     throws ServiceException {
         ZimbraLog.mailbox.debug("Emptying large folder %s, removeSubfolders=%b, batchSize=%d",

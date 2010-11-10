@@ -160,24 +160,28 @@ extends Assert {
     }
 
     public static String getSoapUrl() {
+        try {
+            return getBaseUrl() + AccountConstants.USER_SERVICE_URI;
+        } catch (ServiceException e) {
+            ZimbraLog.test.error("Unable to determine SOAP URL", e);
+        }
+        return null;
+    }
+    
+    public static String getBaseUrl()
+    throws ServiceException {
         String scheme;
         int port;
-        try {
-            port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailPort, 0);
-            if (port > 0) {
-                scheme = "http";
-            } else {
-                port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
-                scheme = "https";
-            }
-        } catch (ServiceException e) {
-            ZimbraLog.test.error("Unable to get user SOAP port", e);
-            port = 80;
+        port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailPort, 0);
+        if (port > 0) {
             scheme = "http";
+        } else {
+            port = Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraMailSSLPort, 0);
+            scheme = "https";
         }
-        return scheme + "://localhost:" + port + AccountConstants.USER_SERVICE_URI;
+        return scheme + "://localhost:" + port;
     }
-
+    
     public static String getAdminSoapUrl() {
         int port;
         try {
