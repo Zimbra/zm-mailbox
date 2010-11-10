@@ -197,14 +197,25 @@ public class ZimletResources extends DiskCacheServlet {
 
             // store buffer
             if (!debug) {
-                file = createCacheFile(cacheId, type);
-                if (ZimbraLog.zimlet.isDebugEnabled())
-                    ZimbraLog.zimlet.debug("DEBUG: buffer file: " + file);
+                // NOTE: This assumes that the cacheId will *end* with the compressed
+                // NOTE: extension. Therefore, make sure to keep getCacheId in sync.
+                String uncompressedCacheId = compress ?
+                    cacheId.substring(0, cacheId.length() - COMPRESSED_EXT.length()) : cacheId;
+
+                // store uncompressed file in cache
+                file = createCacheFile(uncompressedCacheId, type);
+                if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: buffer file: " + file);
                 copy(text, file);
+                putCacheFile(uncompressedCacheId, file);
+
+                // store compressed file in cache
                 if (compress) {
-                    file = compress(file);
+                    String compressedCacheId = cacheId;
+                    File gzfile = createCacheFile(compressedCacheId, type+DiskCacheServlet.EXT_COMPRESSED);
+                    if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: buffer file: " + gzfile);
+                    file = compress(file, gzfile);
+                    putCacheFile(compressedCacheId, file);
                 }
-                putCacheFile(cacheId, file);
             }
         } else {
             if (ZimbraLog.zimlet.isDebugEnabled()) ZimbraLog.zimlet.debug("DEBUG: using previous buffer");
@@ -400,18 +411,18 @@ public class ZimletResources extends DiskCacheServlet {
 
         str.append(getLocale(req).toString());
         str.append(":");
-        str.append(type);
-        if (req.getRequestURI().endsWith(COMPRESSED_EXT)) {
-            str.append(COMPRESSED_EXT);
-        }
-        str.append(":");
-
         Iterator<String> iter = zimletNames.iterator();
         for (int i = 0; iter.hasNext(); i++) {
             if (i > 0) {
                 str.append(",");
             }
             str.append(iter.next());
+        }
+        str.append(":");
+        str.append(type);
+        // NOTE: Keep compressed extension at end of cacheId.
+        if (req.getRequestURI().endsWith(COMPRESSED_EXT)) {
+            str.append(COMPRESSED_EXT);
         }
         return str.toString();
     }
