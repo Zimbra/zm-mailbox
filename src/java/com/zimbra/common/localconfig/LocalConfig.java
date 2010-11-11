@@ -196,28 +196,32 @@ public class LocalConfig {
     //
     // Print
     //
-    public static void printDoc(PrintStream ps, String[] keys) {
+    public static void printDoc(PrintStream ps, String[] keys, boolean printUnsupported) {
         if (keys.length == 0) {
             keys = KnownKey.getAll();
             Arrays.sort(keys);
         }
         for (int i = 0; i < keys.length; i++) {
-            if (i > 0) {
-                ps.println();
-            }
             KnownKey key = KnownKey.get(keys[i]);
-            if (key != null) {
-                String doc = key.doc();
-                if (doc != null) {
-                    ps.println(keys[i] + ':');
-                    fmt(ps, doc, 80);
-                    if (!key.isReloadable()) {
-                        ps.println("* Changes are in effect after server restart.");
-                    }
-                    continue;
-                }
+            if (key == null) {
+                Logging.warn("'" + keys[i] + "' is not a known key");
+                continue;
             }
-            Logging.warn("'" + keys[i] + "' is not a known key");
+
+            String doc = key.doc();
+            if (doc != null && (key.isSupported() || printUnsupported)) {
+                if (i > 0) {
+                    ps.println();
+                }
+                ps.println(keys[i] + ':');
+                fmt(ps, doc, 80);
+                if (!key.isReloadable()) {
+                    ps.println("* Changes are in effect after server restart.");
+                }
+                
+            }
+
+            
         }
     }
 
@@ -346,7 +350,7 @@ public class LocalConfig {
     private void expandAll() throws ConfigException {
         String minimize = mConfiguredKeys.get(LC.zimbra_minimize_resources.key());
 
-        KnownKey.expandAll(this, minimize == null ? false : Boolean.valueOf(minimize));
+        KnownKey.expandAll(this);
         for (String key : mConfiguredKeys.keySet()) {
             mExpanded.put(key, expand(key, mConfiguredKeys.get(key)));
         }
