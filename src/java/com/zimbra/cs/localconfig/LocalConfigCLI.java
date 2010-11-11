@@ -17,6 +17,7 @@ package com.zimbra.cs.localconfig;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.util.Collection;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -25,7 +26,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-
 import org.dom4j.DocumentException;
 
 import com.zimbra.common.localconfig.ConfigException;
@@ -44,7 +44,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.admin.message.ReloadLocalConfigRequest;
-
 /**
  * zmlocalconfig CLI.
  */
@@ -67,6 +66,8 @@ public final class LocalConfigCLI {
                 "Show values for only those keys listed in [args] that have been changed from their defaults.");
         mOptions.addOption("i", "info", false,
                 "Show documentation for keys listed in [args].");
+        mOptions.addOption(null, "all", false, 
+                "Shows documentation for all keys, including unsupported ones");
         mOptions.addOption("x", "expand", false,
                 "Expand values.");
         mOptions.addOption("s", "show", false,
@@ -83,12 +84,27 @@ public final class LocalConfigCLI {
                 "Send a SOAP request to the server to reload its local config.");
         mOptions.addOption("h", "help", false,
                 "Show this usage information.");
+        
     }
 
+    /**
+     * Prints supported usage to stdout. Removes hidden options from the list to be printed
+     *
+     */
     private void usage() {
+        Collection<Object> options = mOptions.getOptions();
+        Options displayOptions = new Options();
+        for (Object obj:options){
+            // copy over the supported options
+            Option opt = (Option) obj; // should be a safe cast, this api REALLY needs generics
+            if (!"all".equals(opt.getLongOpt()))
+            {
+                displayOptions.addOption(opt);
+            }
+        }
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("zmlocalconfig [options] [args]",
-                "where [options] are:", mOptions, "");
+                "where [options] are:", displayOptions, "");
         System.exit(0);
     }
 
@@ -115,10 +131,16 @@ public final class LocalConfigCLI {
             usage();
         }
 
-        // info/docs
+        // info/docs for supported keys
         if (cl.hasOption("i")) {
             checkCompatibleOptions("i", "q", cl);
-            LocalConfig.printDoc(System.out, cl.getArgs());
+            LocalConfig.printDoc(System.out, cl.getArgs(), false);
+            return;
+        }
+        // info/docs for all keys (hidden option) 
+        if (cl.hasOption("all")) {
+            checkCompatibleOptions("all", "q", cl);
+            LocalConfig.printDoc(System.out, cl.getArgs(), true);
             return;
         }
 
@@ -244,7 +266,7 @@ public final class LocalConfigCLI {
     private void checkCompatibleOptions(String mainOption, String compatibleOptions, CommandLine cl) {
         Option[] opts = cl.getOptions();
         for (int i = 0; i < opts.length; i++) {
-            String clOption = opts[i].getOpt();
+            String clOption = opts[i].getOpt() == null ? opts[i].getLongOpt() : opts[i].getOpt();
             if (!mainOption.equals(clOption) && compatibleOptions.indexOf(clOption) == -1) {
                 if (mainOption.equals("")) {
                     error("invalid option '" + clOption + "'", null);
