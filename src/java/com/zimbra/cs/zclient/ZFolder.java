@@ -267,7 +267,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mImapMODSEQ = SystemUtil.coalesce(f.getImapModifiedSequence(), -1);
         mRemoteURL = f.getUrl();
         mEffectivePerms = f.getPerm();
-        mSize = SystemUtil.coalesce(f.getItemCount(), 0);
+        mSize = SystemUtil.coalesce(f.getTotalSize(), 0L);
         
         mGrants = new ArrayList<ZGrant>();
         mSubFolders = new ArrayList<ZFolder>();
