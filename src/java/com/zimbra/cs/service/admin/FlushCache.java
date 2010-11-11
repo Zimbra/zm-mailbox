@@ -95,10 +95,10 @@ public class FlushCache extends AdminDocumentHandler {
     private void doFlush(Map<String, Object> context, CacheEntryType cacheType, Element eCache) throws ServiceException {
 
         switch (cacheType) {
-//        case uistrings:
-//            FlushCache.sendFlushRequest(context, "/zimbra", "/res/AjxMsg.js");
-//            FlushCache.sendFlushRequest(context, "/zimbraAdmin", "/res/AjxMsg.js");
-//            break;
+        case uistrings:
+            FlushCache.sendFlushRequest(context, "/zimbra", "/res/AjxMsg.js");
+            FlushCache.sendFlushRequest(context, "/zimbraAdmin", "/res/AjxMsg.js");
+            break;
         case skin:
             SkinUtil.flushSkinCache();
             FlushCache.sendFlushRequest(context, "/zimbra", "/js/skin.js");
