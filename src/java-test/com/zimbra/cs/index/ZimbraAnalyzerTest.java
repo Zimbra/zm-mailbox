@@ -85,20 +85,6 @@ public class ZimbraAnalyzerTest {
     }
 
     @Test
-    public void field() throws Exception {
-        String src = "test1:val1 val2 val3    val4-test\t  val5\r\n" +
-                "#test2:2val1 2val2:_123 2val3\ntest3:zzz\n" +
-                "#calendarItemClass:public";
-        TokenStream stream = ZimbraAnalyzer.getInstance().tokenStream(
-                LuceneFields.L_FIELD, new StringReader(src));
-        Assert.assertEquals(Arrays.asList("test1:val1", "test1:val2",
-                "test1:val3", "test1:val4", "test1:test", "test1:val5",
-                "#test2:2val1", "#test2:2val2:_123", "#test2:2val3", "test3:zzz",
-                "#calendaritemclass:public"),
-                toTokens(stream));
-    }
-
-    @Test
     public void filename() throws Exception {
         String src = "This is my-filename.test.pdf";
         TokenStream stream = ZimbraAnalyzer.getInstance().tokenStream(

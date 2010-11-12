@@ -45,6 +45,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.analysis.FieldTokenStream;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Contact;
@@ -460,33 +461,26 @@ public class ParsedContact {
 
     private IndexDocument getPrimaryDocument(Account acct, String contentStrIn) throws ServiceException {
 
-        StringBuilder fieldText = new StringBuilder();
         StringBuilder contentText = new StringBuilder();
 
         String emailFields[] = Contact.getEmailFields(acct);
 
-        Map<String, String> m = getFields();
-        for (Map.Entry<String, String> entry : m.entrySet()) {
+        FieldTokenStream fields = new FieldTokenStream();
+        for (Map.Entry<String, String> entry : getFields().entrySet()) {
             if (!Contact.isEmailField(emailFields, entry.getKey())) { // skip email addrs, they're added to CONTENT below
                 if (!ContactConstants.A_fileAs.equalsIgnoreCase(entry.getKey()))
                     contentText.append(entry.getValue()).append(' ');
             }
-
-            String fieldTextToAdd = entry.getKey() + ":" + entry.getValue() + "\n";
-            fieldText.append(fieldTextToAdd);
+            fields.add(entry.getKey(), entry.getValue());
         }
 
         // fetch all the 'email' addresses for this contact into a single concatenated string
-        String emailStr;
-        {
-            StringBuilder emailSb  = new StringBuilder();
-            for (String email : Contact.getEmailAddresses(emailFields, getFields())) {
-                emailSb.append(email).append(',');
-            }
-            emailStr = emailSb.toString();
+        StringBuilder emails  = new StringBuilder();
+        for (String email : Contact.getEmailAddresses(emailFields, getFields())) {
+            emails.append(email).append(',');
         }
 
-        RFC822AddressTokenStream to = new RFC822AddressTokenStream(emailStr);
+        RFC822AddressTokenStream to = new RFC822AddressTokenStream(emails.toString());
         String emailStrTokens = StringUtil.join(" ", to.getAllTokens());
 
         StringBuilder searchText = new StringBuilder(emailStrTokens).append(' ');
@@ -516,8 +510,8 @@ public class ParsedContact {
         doc.addContent(contentText.toString());
         doc.addPartName(LuceneFields.L_PARTNAME_CONTACT);
 
-        /* add key:value pairs to the structured FIELD lucene field */
-        doc.addField(fieldText.toString());
+        // add key:value pairs to the structured FIELD Lucene field
+        doc.addField(fields);
 
         return doc;
     }

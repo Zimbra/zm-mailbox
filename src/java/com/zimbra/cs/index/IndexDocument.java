@@ -18,6 +18,7 @@ import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
+import com.zimbra.cs.index.analysis.FieldTokenStream;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 
 /**
@@ -101,9 +102,8 @@ public final class IndexDocument {
             Field.Store.NO, Field.Index.NOT_ANALYZED));
     }
 
-    public void addField(String value) {
-        document.add(new Field(LuceneFields.L_FIELD, value,
-            Field.Store.NO, Field.Index.ANALYZED));
+    public void addField(FieldTokenStream stream) {
+        document.add(new Field(LuceneFields.L_FIELD, stream));
     }
 
     public void addSortName(String value) {

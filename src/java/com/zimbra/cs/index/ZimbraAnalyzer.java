@@ -30,7 +30,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.analysis.AddrCharTokenizer;
 import com.zimbra.cs.index.analysis.CSVTokenizer;
 import com.zimbra.cs.index.analysis.ContactTokenFilter;
-import com.zimbra.cs.index.analysis.FieldTokenizer;
 import com.zimbra.cs.index.analysis.FilenameTokenizer;
 import com.zimbra.cs.index.analysis.MimeTypeTokenFilter;
 import com.zimbra.cs.index.analysis.NumberTokenizer;
@@ -150,10 +149,7 @@ public class ZimbraAnalyzer extends Analyzer {
     public TokenStream tokenStream(String field, Reader reader) {
         if (field.equals(LuceneFields.L_H_MESSAGE_ID)) {
             return new KeywordTokenizer(reader);
-        } else if (field.equals(LuceneFields.L_FIELD)) {
-            return new FieldTokenizer(reader);
-        } else if (field.equals(LuceneFields.L_ATTACHMENTS) ||
-                field.equals(LuceneFields.L_MIMETYPE)) {
+        } else if (field.equals(LuceneFields.L_ATTACHMENTS) || field.equals(LuceneFields.L_MIMETYPE)) {
             return new MimeTypeTokenFilter(new CSVTokenizer(reader));
         } else if (field.equals(LuceneFields.L_SORT_SIZE)) {
             return new NumberTokenizer(reader);

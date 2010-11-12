@@ -47,43 +47,42 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author tim
  * @author ysasaki
  */
-public final class TextQuery extends Query {
-    private List<String> mTokens;
-    private int mSlop;  // sloppiness for PhraseQuery
+public class TextQuery extends Query {
+    private List<String> tokens;
+    private int slop;  // sloppiness for PhraseQuery
     private final String field;
     private final String term;
-    private List<String> mOredTokens;
-    private String mWildcardTerm;
-    private List<QueryInfo> mQueryInfo = new ArrayList<QueryInfo>();
-    private Mailbox mMailbox;
+    private List<String> oredTokens;
+    private String wildcardTerm;
+    private List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
+    private Mailbox mailbox;
 
     private static final int MAX_WILDCARD_TERMS =
         LC.zimbra_index_wildcard_max_terms_expanded.intValue();
 
     /**
-     * A single search term. If text has multiple words, it is treated as a
-     * phrase (full exact match required) text may end in a *, which wildcards
-     * the last term.
+     * A single search term. If text has multiple words, it is treated as a phrase (full exact match required) text may
+     * end in a *, which wildcards the last term.
      */
-    public TextQuery(Mailbox mbox, Analyzer analyzer, String field, String text)
-        throws ServiceException {
+    public TextQuery(Mailbox mbox, Analyzer analyzer, String field, String text) throws ServiceException {
+        this(mbox, analyzer.tokenStream(field, new StringReader(text)), field, text);
+    }
 
-        mMailbox = Preconditions.checkNotNull(mbox);
+    protected TextQuery(Mailbox mbox, TokenStream stream, String field, String text) throws ServiceException {
+        mailbox = Preconditions.checkNotNull(mbox);
         this.field = field;
         this.term = text;
-        mOredTokens = new LinkedList<String>();
+        oredTokens = new LinkedList<String>();
 
         // The set of tokens from the user's query. The way the parser
         // works, the token set should generally only be one element.
-        mTokens = new ArrayList<String>(1);
-        mWildcardTerm = null;
+        tokens = new ArrayList<String>(1);
+        wildcardTerm = null;
 
-        TokenStream stream = analyzer.tokenStream(field, new StringReader(text));
         try {
-            TermAttribute termAttr = stream.addAttribute(
-                    TermAttribute.class);
+            TermAttribute termAttr = stream.addAttribute(TermAttribute.class);
             while (stream.incrementToken()) {
-                mTokens.add(termAttr.term());
+                tokens.add(termAttr.term());
             }
             stream.end();
             stream.close();
@@ -96,8 +95,8 @@ public final class TextQuery extends Query {
             String wcToken;
 
             // only the last token is allowed to have a wildcard in it
-            if (mTokens.size() > 0) {
-                wcToken = mTokens.remove(mTokens.size() - 1);
+            if (tokens.size() > 0) {
+                wcToken = tokens.remove(tokens.size() - 1);
             } else {
                 wcToken = text;
             }
@@ -107,7 +106,7 @@ public final class TextQuery extends Query {
             }
 
             if (wcToken.length() > 0) {
-                mWildcardTerm = wcToken;
+                wildcardTerm = wcToken;
                 MailboxIndex mbidx = mbox.getMailboxIndex();
                 List<String> expandedTokens = new ArrayList<String>(100);
                 boolean expandedAllTokens = false;
@@ -116,7 +115,7 @@ public final class TextQuery extends Query {
                             expandedTokens, field, wcToken, MAX_WILDCARD_TERMS);
                 }
 
-                mQueryInfo.add(new WildcardExpansionQueryInfo(wcToken + "*",
+                queryInfo.add(new WildcardExpansionQueryInfo(wcToken + "*",
                         expandedTokens.size(), expandedAllTokens));
                 //
                 // By design, we interpret *zero* tokens to mean "ignore this search term"
@@ -125,10 +124,10 @@ public final class TextQuery extends Query {
                 // query later
                 //
                 if (expandedTokens.size() == 0 || !expandedAllTokens) {
-                    mTokens.add(wcToken);
+                    tokens.add(wcToken);
                 } else {
                     for (String token : expandedTokens) {
-                        mOredTokens.add(token);
+                        oredTokens.add(token);
                     }
                 }
             }
@@ -147,7 +146,7 @@ public final class TextQuery extends Query {
 
     @Override
     public QueryOperation getQueryOperation(boolean bool) {
-        if (mTokens.size() <= 0 && mOredTokens.size() <= 0) {
+        if (tokens.size() <= 0 && oredTokens.size() <= 0) {
             // if we have no tokens, that is usually because the analyzer removed them
             // -- the user probably queried for a stop word like "a" or "an" or "the"
             //
@@ -159,33 +158,33 @@ public final class TextQuery extends Query {
             return new NoTermQueryOperation();
         } else {
             // indexing is disabled
-            if (mMailbox.getMailboxIndex() == null)
+            if (mailbox.getMailboxIndex() == null)
                 return new NoTermQueryOperation();
 
             LuceneQueryOperation op = new LuceneQueryOperation();
 
-            for (QueryInfo inf : mQueryInfo) {
+            for (QueryInfo inf : queryInfo) {
                 op.addQueryInfo(inf);
             }
 
-            if (mTokens.size() == 0) {
+            if (tokens.size() == 0) {
                 op.setQueryString(toQueryString(field, term));
-            } else if (mTokens.size() == 1) {
-                TermQuery query = new TermQuery(new Term(field, mTokens.get(0)));
+            } else if (tokens.size() == 1) {
+                TermQuery query = new TermQuery(new Term(field, tokens.get(0)));
                 op.addClause(toQueryString(field, term), query, evalBool(bool));
-            } else if (mTokens.size() > 1) {
+            } else if (tokens.size() > 1) {
                 PhraseQuery phrase = new PhraseQuery();
-                phrase.setSlop(mSlop); // TODO configurable?
-                for (String token : mTokens) {
+                phrase.setSlop(slop); // TODO configurable?
+                for (String token : tokens) {
                     phrase.add(new Term(field, token));
                 }
                 op.addClause(toQueryString(field, term), phrase, evalBool(bool));
             }
 
-            if (mOredTokens.size() > 0) {
+            if (oredTokens.size() > 0) {
                 // probably don't need to do this here...can probably just call addClause
                 BooleanQuery orQuery = new BooleanQuery();
-                for (String token : mOredTokens) {
+                for (String token : oredTokens) {
                     orQuery.add(new TermQuery(new Term(field, token)), Occur.SHOULD);
                 }
                 op.addClause("", orQuery, evalBool(bool));
@@ -198,15 +197,15 @@ public final class TextQuery extends Query {
     @Override
     public void dump(StringBuilder out) {
         out.append(field);
-        for (String token : mTokens) {
+        for (String token : tokens) {
             out.append(',');
             out.append(token);
         }
-        if (mWildcardTerm != null) {
+        if (wildcardTerm != null) {
             out.append(" *=");
-            out.append(mWildcardTerm);
+            out.append(wildcardTerm);
             out.append(" [");
-            out.append(mOredTokens.size());
+            out.append(oredTokens.size());
             out.append(" terms]");
         }
     }

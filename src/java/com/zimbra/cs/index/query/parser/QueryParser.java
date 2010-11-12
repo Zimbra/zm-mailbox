@@ -21,9 +21,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Analyzer;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.service.ServiceException;
@@ -37,6 +40,7 @@ import com.zimbra.cs.index.query.ConvCountQuery;
 import com.zimbra.cs.index.query.ConvQuery;
 import com.zimbra.cs.index.query.DateQuery;
 import com.zimbra.cs.index.query.DomainQuery;
+import com.zimbra.cs.index.query.FieldQuery;
 import com.zimbra.cs.index.query.HasQuery;
 import com.zimbra.cs.index.query.InQuery;
 import com.zimbra.cs.index.query.ItemQuery;
@@ -129,6 +133,8 @@ public final class QueryParser {
         .put(METADATA, "METADATA")
         .put(ITEM, "ITEMID")
         .build();
+
+    private static Pattern FIELD_REGEX = Pattern.compile("field\\[(.+)\\]:|#(.+):", Pattern.CASE_INSENSITIVE);
 
     private final Mailbox mailbox;
     private final Analyzer analyzer;
@@ -602,16 +608,7 @@ public final class QueryParser {
           case SUBJECT:
               return SubjectQuery.create(mailbox, analyzer, text);
           case FIELD:
-              int open = field.image.indexOf('[');
-              if (open >= 0) {
-                  int close = field.image.indexOf(']');
-                  if (close >= 0 && close > open) {
-                      text = field.image.substring(open + 1, close) + ":" + text;
-                  }
-              } else if (field.image.charAt(0) == '#') {
-                  text = field.image.substring(1) + text;
-              }
-              return new TextQuery(mailbox, analyzer, LuceneFields.L_FIELD, text);
+              return createFieldQuery(field.image, term, text);
           case CONTACT:
               // always make it wildcard search
               return new TextQuery(mailbox, analyzer,
@@ -649,6 +646,16 @@ public final class QueryParser {
             return new DomainQuery(field, term);
         } else {
             return new TextQuery(mailbox, analyzer, field, term);
+        }
+    }
+
+    private Query createFieldQuery(String field, Token term, String text) throws ServiceException, ParseException {
+        Matcher matcher = FIELD_REGEX.matcher(field);
+        if (matcher.matches()) {
+            String name = Objects.firstNonNull(matcher.group(1), matcher.group(2));
+            return FieldQuery.newQuery(mailbox, name, text);
+        } else {
+            throw exception("INVALID_FIELD_FORMAT", term);
         }
     }
 

@@ -54,8 +54,8 @@ Query Syntax
   company:(TEXT)
   metadata:(TEXT)
   item:(all|none|[0-9]+|{[0-9]+(,[0-9]+)*})
-  field[FIELDNAME]:(TEXT)
-  #FIELDNAME:(TEXT)
+  field[FIELDNAME]:(TEXT)|[>,<,>=,<=](NUMBER)
+  #FIELDNAME:(TEXT)|[>,<,>=,<=](NUMBER)
 
   sort:(score|dateasc|datedesc|subjasc|subjdesc|nameasc|namedesc)
   // overrides the sort field specified in the <SearchRequest>

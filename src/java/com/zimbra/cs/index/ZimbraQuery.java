@@ -831,12 +831,11 @@ public final class ZimbraQuery {
      *             text data from searches in private appointments
      */
     private static final class excludePrivateCalendarItems implements QueryOperation.RecurseCallback {
-
         @Override
         public void recurseCallback(QueryOperation op) {
             if (op instanceof LuceneQueryOperation) {
                 ((LuceneQueryOperation) op).addAndedClause(new TermQuery(new Term(
-                        LuceneFields.L_FIELD, CalendarItem.INDEX_FIELD_ITEM_CLASS_PRIVATE)), false);
+                        LuceneFields.L_FIELD, CalendarItem.INDEX_FIELD_ITEM_CLASS + ":private")), false);
             }
         }
     }

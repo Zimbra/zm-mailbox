@@ -64,6 +64,7 @@ import com.zimbra.cs.index.Fragment;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.ZimbraAnalyzer;
+import com.zimbra.cs.index.analysis.FieldTokenStream;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
@@ -864,7 +865,7 @@ public class ParsedMessage {
         }
 
         // iterate all the message headers, add them to the structured-field data in the index
-        StringBuilder fieldText = new StringBuilder();
+        FieldTokenStream fields = new FieldTokenStream();
         Enumeration<?> en = getMimeMessage().getAllHeaders();
         while (en.hasMoreElements()) {
             Header h = (Header) en.nextElement();
@@ -881,16 +882,14 @@ public class ParsedMessage {
                     // some dummy value just so the header appears in the index.
                     // Users can query for the existence of the header with a query
                     // like #headername:*
-                    fieldText.append(key).append(':').append("_blank_").append('\n');
+                    fields.add(key, "_blank_");
                 } else {
-                    fieldText.append(key).append(':').append(value).append('\n');
+                    fields.add(key, value);
                 }
             }
         }
-        if (fieldText.length() > 0) {
-            // add key:value pairs to the structured FIELD lucene field
-            doc.addField(fieldText.toString());
-        }
+        // add key:value pairs to the structured FIELD lucene field
+        doc.addField(fields);
 
         String subject = getSubject();
         doc.addSubject(subject);

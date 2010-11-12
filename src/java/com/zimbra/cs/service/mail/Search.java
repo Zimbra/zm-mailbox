@@ -34,7 +34,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
-import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -125,9 +124,6 @@ public class Search extends MailDocumentHandler  {
             response.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
             putHits(zsc, octxt, response, results, params);
             return response;
-        } catch (ServiceException x) {
-            ZimbraLog.misc.warn(x.getMessage(), x);
-            throw x;
         } finally {
             if (results != null)
                 results.doneWithSearchResults();
@@ -297,7 +293,7 @@ public class Search extends MailDocumentHandler  {
                             if (result != null) {
                                 // Found data in cache.
                                 iterFolderId.remove();
-                                addCalendarDataToResponse(parent, octxt, zsc, authAcct, ifmt, result.data, result.allowPrivateAccess);
+                                addCalendarDataToResponse(parent, zsc, ifmt, result.data, result.allowPrivateAccess);
                             }
                         } catch (ServiceException e) {
                             String ecode = e.getCode();
@@ -347,10 +343,8 @@ public class Search extends MailDocumentHandler  {
         }
     }
 
-    private static void addCalendarDataToResponse(Element parent, OperationContext octxt, ZimbraSoapContext zsc,
-                                                  Account authAcct, ItemIdFormatter ifmt,
-                                                  CalendarData calData, boolean allowPrivateAccess)
-    throws ServiceException {
+    private static void addCalendarDataToResponse(Element parent, ZimbraSoapContext zsc, ItemIdFormatter ifmt,
+            CalendarData calData, boolean allowPrivateAccess) throws ServiceException {
         for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
             CalendarItemData calItemData = itemIter.next();
             int numInstances = calItemData.getNumInstances();
@@ -373,7 +367,7 @@ public class Search extends MailDocumentHandler  {
             try {
                 CalendarDataResult result = targetMbox.getCalendarSummaryForRange(octxt, folderId, itemType, rangeStart, rangeEnd);
                 if (result != null)
-                    addCalendarDataToResponse(parent, octxt, zsc, authAcct, ifmt, result.data, result.allowPrivateAccess);
+                    addCalendarDataToResponse(parent, zsc, ifmt, result.data, result.allowPrivateAccess);
             } catch (ServiceException e) {
                 String ecode = e.getCode();
                 if (ecode.equals(ServiceException.PERM_DENIED)) {

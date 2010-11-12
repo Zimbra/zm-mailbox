@@ -45,6 +45,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.analysis.FieldTokenStream;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
@@ -106,8 +107,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     //
     // the constants should be all-lowercase if possible, saves us doing a toLower if we need to
     // manually build a query to search for them w/o using our custom FieldTokenStream
-    public static final String INDEX_FIELD_ITEM_CLASS_PUBLIC = "_calendaritemclass:public";
-    public static final String INDEX_FIELD_ITEM_CLASS_PRIVATE = "_calendaritemclass:private";
+    public static final String INDEX_FIELD_ITEM_CLASS = "_calendaritemclass";
 
     // special values for next alarm trigger time
     public static final long NEXT_ALARM_KEEP_CURRENT  = 0;   // keep current value
@@ -393,15 +393,10 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             }
         }
 
-        // set the "public" flag in the index for this appointment
-        String itemClass;
-        if (this.isPublic()) {
-            itemClass = INDEX_FIELD_ITEM_CLASS_PUBLIC;
-        } else {
-            itemClass = INDEX_FIELD_ITEM_CLASS_PRIVATE;
-        }
+        // set the "public"/"private" flag in the index for this appointment
+        FieldTokenStream fields = new FieldTokenStream(INDEX_FIELD_ITEM_CLASS, isPublic() ? "public" : "private");
         for (IndexDocument doc : toRet) {
-            doc.addField(itemClass);
+            doc.addField(fields);
         }
 
         return toRet;
@@ -678,7 +673,8 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
     public static final String FN_CALITEM_RECURRENCE = "apptRecur";
 
-    @Override void decodeMetadata(Metadata meta) throws ServiceException {
+    @Override
+    void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
 
         int mdVersion = meta.getVersion();
@@ -913,6 +909,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             mFromRdate = fromRdate;
         }
 
+        @Override
         public int compareTo(Instance other) {
             long toRet = mCalItemId - other.mCalItemId;
             if (toRet == 0) {
@@ -1012,7 +1009,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         public InviteInfo getInviteInfo() { return mInvId; }
 
         public static class StartTimeComparator implements Comparator<Instance> {
-
+            @Override
             public int compare(Instance a, Instance b) {
                 long as = a.getStart();
                 long bs = b.getStart();
@@ -2090,11 +2087,13 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             mPm = pm;
         }
 
+        @Override
         public String getName() {
             // TODO should we just return null?
             return mPm != null ? mPm.getMessageID() : null;
         }
 
+        @Override
         public String getContentType() {
             return "message/rfc822";
         }
@@ -2106,6 +2105,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
          * the constructor.
          * @throws IOException
          */
+        @Override
         public InputStream getInputStream() throws IOException {
             InputStream is = null;
             if (mPm != null)
@@ -2115,6 +2115,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             return is;
         }
 
+        @Override
         public OutputStream getOutputStream() {
             throw new UnsupportedOperationException();
         }
@@ -3070,7 +3071,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             MimeBodyPart mbp = findBodyBySubId(subId);
             if (mbp == null)
                 return null;
-            return new Pair<MimeMessage,Integer>((MimeMessage) Mime.getMessageContent(mbp), mbp.getSize());
+            return new Pair<MimeMessage,Integer>(Mime.getMessageContent(mbp), mbp.getSize());
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOException while getting MimeMessage for item " + mId, e);
         } catch (MessagingException e) {
@@ -3617,7 +3618,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     // access private data.  If we're adding a public invite but the appointment currently has
     // some private data, private access permission is not needed as long as the instance(s) being
     // updated aren't currently private.
-    private boolean requirePrivateCheck(Invite newInvite) throws ServiceException {
+    private boolean requirePrivateCheck(Invite newInvite) {
         if (!newInvite.isPublic()) {
             // adding a private invite
             return true;
@@ -3695,15 +3696,15 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         return map;
     }
 
-    public static boolean isAcceptableInvite(Account acct, CalendarPartInfo cpi)
-    throws ServiceException {
+    public static boolean isAcceptableInvite(Account acct, CalendarPartInfo cpi) {
         if (cpi.wasForwarded &&
             !acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarAllowForwardedInvite, true))
             return false;
         return true;
     }
 
-    @Override int getMaxRevisions() throws ServiceException {
+    @Override
+    int getMaxRevisions() throws ServiceException {
         return getAccount().getIntAttr(Provisioning.A_zimbraCalendarMaxRevisions, 1);
     }
 
@@ -3711,7 +3712,8 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         addRevision(false);
     }
 
-    @Override protected boolean trackUserAgentInMetadata() {
+    @Override
+    protected boolean trackUserAgentInMetadata() {
         return true;
     }
 }
