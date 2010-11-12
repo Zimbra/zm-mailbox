@@ -67,32 +67,6 @@ public class CustomLdapDIT extends LdapDIT {
         super(prov);
     }
     
-    /*
-     * We do not, yet, want to put the following keys in LC.  
-     * We put them here to suppress WARMs spit out by LC.get if the key is not a KnownKey nor is it set in localconfig.xml.
-     */
-    static class CustomLdapDITLC {
-        public static final KnownKey ldap_dit_base_dn_admin         = new KnownKey("ldap_dit_base_dn_admin",         "", "LDAP Custom DIT base DN for LDAP admin entries");
-        public static final KnownKey ldap_dit_base_dn_appadmin      = new KnownKey("ldap_dit_base_dn_appadmin",      "", "LDAP Custom DIT base DN for LDAP app admin entries");
-        public static final KnownKey ldap_dit_base_dn_config        = new KnownKey("ldap_dit_base_dn_config",        "", "LDAP Custom DIT base DN for config branch");
-        public static final KnownKey ldap_dit_base_dn_cos           = new KnownKey("ldap_dit_base_dn_cos",           "", "LDAP Custom DIT base DN for cos entries");
-        public static final KnownKey ldap_dit_base_dn_domain        = new KnownKey("ldap_dit_base_dn_domain",        "", "LDAP Custom DIT base DN for domain entries");
-        public static final KnownKey ldap_dit_base_dn_mail          = new KnownKey("ldap_dit_base_dn_mail",          "", "LDAP Custom DIT base DN for mail(accounts, aliases, DLs, resources) entries");
-        public static final KnownKey ldap_dit_base_dn_mime          = new KnownKey("ldap_dit_base_dn_mime",          "", "LDAP Custom DIT base DN for mime entries");
-        public static final KnownKey ldap_dit_base_dn_server        = new KnownKey("ldap_dit_base_dn_server",        "", "LDAP Custom DIT base DN for server entries");
-        public static final KnownKey ldap_dit_base_dn_xmppcomponent = new KnownKey("ldap_dit_base_dn_xmppcomponent", "", "LDAP Custom DIT base DN for xmpp component entries");
-        public static final KnownKey ldap_dit_base_dn_zimlet        = new KnownKey("ldap_dit_base_dn_zimlet",        "", "LDAP Custom DIT base DN for zimlet entries");
-        
-        public static final KnownKey ldap_dit_naming_rdn_attr_cos          = new KnownKey("ldap_dit_naming_rdn_attr_cos",          "", "LDAP Custom DIT RDN attr for cos entries");
-        public static final KnownKey ldap_dit_naming_rdn_attr_globalconfig = new KnownKey("ldap_dit_naming_rdn_attr_globalconfig", "", "LDAP Custom DIT RDN attr for globalconfig entry");
-        public static final KnownKey ldap_dit_naming_rdn_attr_globalgrant  = new KnownKey("ldap_dit_naming_rdn_attr_globalgrant",  "", "LDAP Custom DIT RDN attr for globalgrant entry");
-        public static final KnownKey ldap_dit_naming_rdn_attr_mime         = new KnownKey("ldap_dit_naming_rdn_attr_mime",         "", "LDAP Custom DIT RDN attr for mime entries");
-        public static final KnownKey ldap_dit_naming_rdn_attr_server       = new KnownKey("ldap_dit_naming_rdn_attr_server",       "", "LDAP Custom DIT RDN attr for server entries");
-        public static final KnownKey ldap_dit_naming_rdn_attr_user         = new KnownKey("ldap_dit_naming_rdn_attr_user",         "", "LDAP Custom DIT RDN attr for account, calendar resource, and distribution list entries");
-        public static final KnownKey ldap_dit_naming_rdn_attr_xmppcomponent= new KnownKey("ldap_dit_naming_rdn_attr_xmppcomponent","", "LDAP Custom DIT RDN attr for xmpp component entries");
-        public static final KnownKey ldap_dit_naming_rdn_attr_zimlet       = new KnownKey("ldap_dit_naming_rdn_attr_zimlet",       "", "LDAP Custom DIT RDN attr for zimlet entries");
-    }
-    
     private String getLC(KnownKey key, String defaultValue) {
         String lcValue = key.value();
         
@@ -115,32 +89,32 @@ public class CustomLdapDIT extends LdapDIT {
     
     protected void init() {
        
-        BASE_DN_CONFIG_BRANCH = getLC(CustomLdapDITLC.ldap_dit_base_dn_config, DEFAULT_CONFIG_BASE_DN);
-        BASE_DN_MAIL_BRANCH   = getLC(CustomLdapDITLC.ldap_dit_base_dn_mail, DEFAULT_MAIL_BASE_DN).toLowerCase();
+        BASE_DN_CONFIG_BRANCH = getLC(LC.ldap_dit_base_dn_config, DEFAULT_CONFIG_BASE_DN);
+        BASE_DN_MAIL_BRANCH   = getLC(LC.ldap_dit_base_dn_mail, DEFAULT_MAIL_BASE_DN).toLowerCase();
 
         BASE_RDN_ACCOUNT  = "";
 
-        NAMING_RDN_ATTR_USER          = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_user,         DEFAULT_NAMING_RDN_ATTR_USER);
-        NAMING_RDN_ATTR_COS           = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_cos,          DEFAULT_NAMING_RDN_ATTR_COS);
-        NAMING_RDN_ATTR_GLOBALCONFIG  = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_globalconfig, DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG);
-        NAMING_RDN_ATTR_GLOBALGRANT   = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_globalgrant,  DEFAULT_NAMING_RDN_ATTR_GLOBALGRANT);
-        NAMING_RDN_ATTR_MIME          = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_mime,         DEFAULT_NAMING_RDN_ATTR_MIME);
-        NAMING_RDN_ATTR_SERVER        = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_server,       DEFAULT_NAMING_RDN_ATTR_SERVER);
-        NAMING_RDN_ATTR_XMPPCOMPONENT = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_xmppcomponent,DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT);
-        NAMING_RDN_ATTR_ZIMLET        = getLC(CustomLdapDITLC.ldap_dit_naming_rdn_attr_zimlet,       DEFAULT_NAMING_RDN_ATTR_ZIMLET);
+        NAMING_RDN_ATTR_USER          = getLC(LC.ldap_dit_naming_rdn_attr_user,         DEFAULT_NAMING_RDN_ATTR_USER);
+        NAMING_RDN_ATTR_COS           = getLC(LC.ldap_dit_naming_rdn_attr_cos,          DEFAULT_NAMING_RDN_ATTR_COS);
+        NAMING_RDN_ATTR_GLOBALCONFIG  = getLC(LC.ldap_dit_naming_rdn_attr_globalconfig, DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG);
+        NAMING_RDN_ATTR_GLOBALGRANT   = getLC(LC.ldap_dit_naming_rdn_attr_globalgrant,  DEFAULT_NAMING_RDN_ATTR_GLOBALGRANT);
+        NAMING_RDN_ATTR_MIME          = getLC(LC.ldap_dit_naming_rdn_attr_mime,         DEFAULT_NAMING_RDN_ATTR_MIME);
+        NAMING_RDN_ATTR_SERVER        = getLC(LC.ldap_dit_naming_rdn_attr_server,       DEFAULT_NAMING_RDN_ATTR_SERVER);
+        NAMING_RDN_ATTR_XMPPCOMPONENT = getLC(LC.ldap_dit_naming_rdn_attr_xmppcomponent,DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT);
+        NAMING_RDN_ATTR_ZIMLET        = getLC(LC.ldap_dit_naming_rdn_attr_zimlet,       DEFAULT_NAMING_RDN_ATTR_ZIMLET);
        
         DN_GLOBALCONFIG    = NAMING_RDN_ATTR_GLOBALCONFIG + "=config" + "," + BASE_DN_CONFIG_BRANCH;
         DN_GLOBALGRANT     = NAMING_RDN_ATTR_GLOBALGRANT  + "=globalgrant" + "," + BASE_DN_CONFIG_BRANCH;
 
-        BASE_DN_ADMIN         = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_admin,         DEFAULT_BASE_RDN_ADMIN         + "," + BASE_DN_CONFIG_BRANCH);
-        BASE_DN_APPADMIN      = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_appadmin,      DEFAULT_BASE_RDN_APPADMIN      + "," + BASE_DN_CONFIG_BRANCH);
-        BASE_DN_COS           = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_cos,           DEFAULT_BASE_RDN_COS           + "," + BASE_DN_CONFIG_BRANCH); 
-        BASE_DN_MIME          = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_mime,          DEFAULT_BASE_RDN_MIME          + "," + DN_GLOBALCONFIG);
-        BASE_DN_SERVER        = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_server,        DEFAULT_BASE_RDN_SERVER        + "," + BASE_DN_CONFIG_BRANCH);
-        BASE_DN_XMPPCOMPONENT = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_xmppcomponent, DEFAULT_BASE_RDN_XMPPCOMPONENT + "," + BASE_DN_CONFIG_BRANCH);
-        BASE_DN_ZIMLET        = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_zimlet,        DEFAULT_BASE_RDN_ZIMLET        + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_ADMIN         = getLCAndValidateUnderConfigBranchDN(LC.ldap_dit_base_dn_admin,         DEFAULT_BASE_RDN_ADMIN         + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_APPADMIN      = getLCAndValidateUnderConfigBranchDN(LC.ldap_dit_base_dn_appadmin,      DEFAULT_BASE_RDN_APPADMIN      + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_COS           = getLCAndValidateUnderConfigBranchDN(LC.ldap_dit_base_dn_cos,           DEFAULT_BASE_RDN_COS           + "," + BASE_DN_CONFIG_BRANCH); 
+        BASE_DN_MIME          = getLCAndValidateUnderConfigBranchDN(LC.ldap_dit_base_dn_mime,          DEFAULT_BASE_RDN_MIME          + "," + DN_GLOBALCONFIG);
+        BASE_DN_SERVER        = getLCAndValidateUnderConfigBranchDN(LC.ldap_dit_base_dn_server,        DEFAULT_BASE_RDN_SERVER        + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_XMPPCOMPONENT = getLCAndValidateUnderConfigBranchDN(LC.ldap_dit_base_dn_xmppcomponent, DEFAULT_BASE_RDN_XMPPCOMPONENT + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_ZIMLET        = getLCAndValidateUnderConfigBranchDN(LC.ldap_dit_base_dn_zimlet,        DEFAULT_BASE_RDN_ZIMLET        + "," + BASE_DN_CONFIG_BRANCH);
     
-        BASE_DN_DOMAIN        = getLCAndValidateUnderConfigBranchDN(CustomLdapDITLC.ldap_dit_base_dn_domain, DEFAULT_BASE_RDN_DOMAIN + "," + BASE_DN_CONFIG_BRANCH);
+        BASE_DN_DOMAIN        = getLCAndValidateUnderConfigBranchDN(LC.ldap_dit_base_dn_domain, DEFAULT_BASE_RDN_DOMAIN + "," + BASE_DN_CONFIG_BRANCH);
     
         BASE_DN_ZIMBRA        = computeZimbraBaseDN();
     }
