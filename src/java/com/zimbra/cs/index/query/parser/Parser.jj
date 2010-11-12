@@ -31,8 +31,8 @@ final class Parser/*@bgen(jjtree)*/implements ParserTreeConstants/*@egen*/ {/*@b
 }
 
 <*> TOKEN : {
-    <LPAREN: "(">
-|   <RPAREN: ")">
+    <LPAREN: "("> : DEFAULT
+|   <RPAREN: ")"> : DEFAULT
 }
 
 <DEFAULT> TOKEN : {

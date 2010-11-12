@@ -63,16 +63,19 @@ public class QueryParserTest {
     @Test
     public void modifier() throws Exception {
         String src = "+content:zimbra";
-        Assert.assertEquals("+Q(l.content,zimbra)",
-                Query.toString(parser.parse(src)));
+        Assert.assertEquals("+Q(l.content,zimbra)", Query.toString(parser.parse(src)));
 
         src = "-content:zimbra";
-        Assert.assertEquals("-Q(l.content,zimbra)",
-                Query.toString(parser.parse(src)));
+        Assert.assertEquals("-Q(l.content,zimbra)", Query.toString(parser.parse(src)));
 
         src = "not content:zimbra";
-        Assert.assertEquals("-Q(l.content,zimbra)",
-                Query.toString(parser.parse(src)));
+        Assert.assertEquals("-Q(l.content,zimbra)", Query.toString(parser.parse(src)));
+
+        src = "from:(+@zimbra.com)";
+        Assert.assertEquals("(+Q(from,@zimbra.com))", Query.toString(parser.parse(src)));
+
+        src = "from:(-@zimbra.com)";
+        Assert.assertEquals("(-Q(from,@zimbra.com))", Query.toString(parser.parse(src)));
     }
 
     @Test

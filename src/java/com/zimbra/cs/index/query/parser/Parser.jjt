@@ -27,8 +27,8 @@ final class Parser {
 }
 
 <*> TOKEN : {
-    <LPAREN: "(">
-|   <RPAREN: ")">
+    <LPAREN: "("> : DEFAULT
+|   <RPAREN: ")"> : DEFAULT
 }
 
 <DEFAULT> TOKEN : {
