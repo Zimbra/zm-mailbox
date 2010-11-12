@@ -359,8 +359,7 @@ class IndexWritersCache {
                     }
                 }
 
-                // submit outside the global lock, so we don't deadlock if the
-                // work queue fills up
+                // submit outside the global lock, so we don't deadlock if the work queue fills up
                 for (CacheEntry writer : toFlush) {
                     AsyncFlush af = new AsyncFlush(writer);
                     try {
@@ -371,8 +370,8 @@ class IndexWritersCache {
                         ZimbraLog.index.debug("Sweeper hit interruptedException attempting to async flush " +
                                 writer + ". Flushing synchronously.");
                         flushInternal(writer);
-                    } catch (Throwable t) {
-                        System.err.println("Error! "+t);
+                    } catch (Throwable e) {
+                        ZimbraLog.index.error("Failed to dispatch AsyncFlush %s", writer, e);
                         synchronized (this) {
                             mNumFlushing--;
                             writer.setState(WriterState.IDLE);
@@ -389,21 +388,21 @@ class IndexWritersCache {
         }
     }
 
-    class AsyncFlush implements Runnable {
-        private CacheEntry mWriter;
+    private class AsyncFlush implements Runnable {
+        private CacheEntry writer;
 
         AsyncFlush(CacheEntry writer) {
-            mWriter = writer;
+            this.writer = writer;
         }
 
         @Override
         public void run() {
             try {
-                flushInternal(mWriter);
+                flushInternal(writer);
             } catch (OutOfMemoryError e) {
-                Zimbra.halt("OutOfMemory in IndexWritersCache.AsyncFlush", e);
-            } catch (Throwable t) {
-                ZimbraLog.index.warn("Caught exception in Async Index Flush: ", t);
+                Zimbra.halt("OutOfMemory during IndexWriter AsyncFlush " + writer, e);
+            } catch (Throwable e) {
+                ZimbraLog.index.warn("AsyncFlush failed %s", writer, e);
             }
         }
     }

@@ -39,6 +39,7 @@ import org.apache.lucene.store.NoSuchDirectoryException;
 import org.apache.lucene.store.SingleInstanceLockFactory;
 import org.apache.lucene.util.Version;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
@@ -84,7 +85,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
 
     private Sort mLatestSort = null;
     private SortBy mLatestSortBy = null;
-    private MailboxIndex mMbidx;
+    private MailboxIndex mailboxIndex;
     private int mNumUncommittedItems = 0;
     private SyncToken mHighestUncomittedModContent = new SyncToken(0);
     private int beginWritingNestLevel = 0;
@@ -159,7 +160,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
     }
 
     LuceneIndex(MailboxIndex mbidx, String idxParentDir, int mailboxId) throws ServiceException {
-        mMbidx = mbidx;
+        mailboxIndex = mbidx;
         mIndexWriter = null;
 
         // this must be different from the idxParentDir (see the IMPORTANT comment below)
@@ -529,7 +530,10 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
 
     @Override
     public String toString() {
-        return "LuceneIndex at " + luceneDirectory;
+        return Objects.toStringHelper(this)
+            .add("mbox", mailboxIndex.getMailboxId())
+            .add("dir", luceneDirectory)
+            .toString();
     }
 
     @Override
@@ -538,7 +542,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
     }
 
     private final Object getLock() {
-        return mMbidx.getLock();
+        return mailboxIndex.getLock();
     }
 
     public Sort getSort(SortBy searchOrder) {
@@ -710,7 +714,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
 
     private IndexWriter openIndexWriter(boolean create, boolean tryRepair) throws IOException {
         try {
-            IndexWriter writer = new IndexWriter(luceneDirectory, mMbidx.getAnalyzer(),
+            IndexWriter writer = new IndexWriter(luceneDirectory, mailboxIndex.getAnalyzer(),
                     create, IndexWriter.MaxFieldLength.LIMITED);
             if (ZimbraLog.index_lucene.isDebugEnabled()) {
                 writer.setInfoStream(new PrintStream(new LoggingOutputStream(
@@ -900,7 +904,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
 
         boolean useBatchIndexing;
         try {
-            useBatchIndexing = mMbidx.useBatchedIndexing();
+            useBatchIndexing = mailboxIndex.useBatchedIndexing();
         } catch (ServiceException e) {
             throw new IOException("Caught IOException checking BatchedIndexing flag " + e);
         }
@@ -959,9 +963,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
             return;
         }
 
-        if (ZimbraLog.index_add.isDebugEnabled()) {
-            ZimbraLog.index_add.debug("Closing IndexWriter " + mIndexWriter + " for " + this);
-        }
+        ZimbraLog.index_add.debug("Closing IndexWriter %s", this);
 
         boolean success = false;
         try {
@@ -969,14 +971,14 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
             mIndexWriter.close();
             success = true;
         } catch (IOException e) {
-            ZimbraLog.index_lucene.error("Failed to close IndexWriter", e);
+            ZimbraLog.index_lucene.error("Failed to close IndexWriter %s", this, e);
             // fall through to finally here with success=false
         } finally {
             mIndexWriter = null;
             unlock();
             if (mNumUncommittedItems > 0) {
                 assert(mHighestUncomittedModContent.getChangeId() > 0);
-                mMbidx.indexingCompleted(mNumUncommittedItems, mHighestUncomittedModContent, success);
+                mailboxIndex.indexingCompleted(mNumUncommittedItems, mHighestUncomittedModContent, success);
             }
             mNumUncommittedItems = 0;
             mHighestUncomittedModContent = new SyncToken(0);
@@ -1039,7 +1041,7 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
     }
 
     int getMailboxId() {
-        return mMbidx.getMailboxId();
+        return mailboxIndex.getMailboxId();
     }
 
     private static final class LuceneConfig {
