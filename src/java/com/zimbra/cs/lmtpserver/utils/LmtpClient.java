@@ -73,10 +73,20 @@ public class LmtpClient {
 		}
 		mConnection = null;
 	}
-	
+
+    // This method is used only for testing
+	public void abruptClose() {
+		try {
+			mConnection.close();
+		} catch (IOException ioe) {
+			info("IOException closing connection: " + ioe.getMessage());
+		}
+		mConnection = null;
+	}
+
 	private static final byte[] lineSeparator = { '\r', '\n' };
 	
-	private void sendLine(String line, boolean flush) throws IOException {
+	public void sendLine(String line, boolean flush) throws IOException {
 		if (mTrace) {
 			trace("CLI: " + line);
 		}
@@ -85,11 +95,11 @@ public class LmtpClient {
 		if (flush) mOut.flush();
 	}
 
-	private void sendLine(String line) throws IOException {
+	public void sendLine(String line) throws IOException {
 		sendLine(line, true);
 	}
 	
-	private boolean replyOk() throws LmtpProtocolException, IOException {
+	public boolean replyOk() throws LmtpProtocolException, IOException {
 		boolean positiveReplyCode = false;
 		StringBuffer sb = new StringBuffer();
 		

@@ -565,6 +565,29 @@ extends TestCase {
         TestUtil.addMessageLmtp(recipients, USER_NAME, content);
         assertEquals(3, TestUtil.search(mbox, query).size());
     }
+
+    // bug 53058
+    public void testFinalDotNotSent() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        LmtpClient lmtpClient =
+                new LmtpClient("localhost",
+                               Provisioning.getInstance().getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
+        lmtpClient.sendLine("LHLO " + LC.zimbra_server_hostname.value());
+        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        lmtpClient.sendLine("MAIL FROM:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
+        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        lmtpClient.sendLine("RCPT TO:<" + TestUtil.addDomainIfNecessary(USER_NAME) + ">");
+        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        lmtpClient.sendLine("DATA");
+        assertTrue(lmtpClient.getResponse(), lmtpClient.replyOk());
+        String subject = NAME_PREFIX + " testFinalDotNotSent";
+        lmtpClient.sendLine("Subject: " + subject);
+        lmtpClient.abruptClose();
+        // wait for some time
+        Thread.sleep(1000);
+        List<ZMessage> msgs = TestUtil.search(mbox, "in:inbox " + subject);
+        assertTrue("msg got delivered via LMTP even though <CRLF>.<CRLF> was not received", msgs.isEmpty());        
+    }
     
     public void tearDown()
     throws Exception {
