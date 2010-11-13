@@ -457,6 +457,7 @@ public class MailConstants {
     public static final String A_NEUTER = "neuter";
     public static final String A_MAX_INLINED_LENGTH = "max";
     public static final String A_TRUNCATED_CONTENT = "truncated";
+    public static final String A_FILTER_SENT = "filterSent";
 
     // send/save draft
     public static final String E_ATTACH = "attach";
