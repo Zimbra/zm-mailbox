@@ -1970,8 +1970,30 @@ public class ZMailbox implements ToZJSONObject {
      * @return ID of newly created message
      * @throws com.zimbra.common.service.ServiceException on error
      */
-    public String addMessage(String folderId, String flags, String tags, long receivedDate, String content, boolean noICal) throws ServiceException {
+    public String addMessage(String folderId, String flags, String tags, long receivedDate, String content, boolean noICal)
+            throws ServiceException {
+        return addMessage(folderId, flags, tags, receivedDate, content, noICal, false);
+    }
+
+    /**
+     * @param folderId (required) folderId of folder to add message to
+     * @param flags non-comma-separated list of flags, e.g. "sf" for "sent by me and flagged",
+     *        or <tt>null</tt>
+     * @param tags coma-spearated list of tags, or null for no tags, or <tt>null</tt>
+     * @param receivedDate time the message was originally received, in MILLISECONDS since the epoch,
+     *        or <tt>0</tt> for the current time
+     * @param content message content
+     * @param noICal if TRUE, then don't process iCal attachments.
+     * @param filterSent if TRUE, then do outgoing message filtering
+     * @return ID of newly created message
+     * @throws com.zimbra.common.service.ServiceException on error
+     */
+    public String addMessage(
+            String folderId, String flags, String tags, long receivedDate, String content, boolean noICal, boolean filterSent)
+            throws ServiceException {
         Element req = newRequestElement(MailConstants.ADD_MSG_REQUEST);
+        if (filterSent)
+            req.addAttribute(MailConstants.A_FILTER_SENT, filterSent);
         Element m = req.addUniqueElement(MailConstants.E_MSG);
         m.addAttribute(MailConstants.A_FOLDER, folderId);
         if (flags != null && flags.length() > 0)

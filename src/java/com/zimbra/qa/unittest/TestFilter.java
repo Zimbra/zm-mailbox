@@ -165,15 +165,22 @@ extends TestCase {
         String subject = NAME_PREFIX + " outgoing";
         String content = new MessageBuilder().withSubject(subject).withFrom(sender).withToRecipient(recipient).create();
 
-        mMbox.addMessage("" + Mailbox.ID_FOLDER_SENT, "s", null, System.currentTimeMillis(), content, false);
+        // add a msg flagged as sent; filterSent=TRUE
+        mMbox.addMessage("" + Mailbox.ID_FOLDER_SENT, "s", null, System.currentTimeMillis(), content, false, true);
 
         // make sure that the message has been correctly tagged and filed into the correct folder
         ZMessage msg = TestUtil.getMessage(mMbox, "in:" + FOLDER1_NAME + " " + subject);
         TestUtil.verifyTag(mMbox, msg, TAG1_NAME);
 
-        //make sure that sent message has not been filed into the (default) Sent folder
+        // make sure that the message has not been filed into the (default) Sent folder
         List msgs = TestUtil.search(mMbox, "in:Sent" + " " + subject);
         assertTrue(msgs.isEmpty());
+
+        // add another msg flagged as sent; this time filterSent=FALSE
+        mMbox.addMessage("" + Mailbox.ID_FOLDER_SENT, "s", null, System.currentTimeMillis(), content, false, false);
+
+        // make sure that the message has been added to the (default) Sent folder
+        TestUtil.getMessage(mMbox, "in:Sent" + " " + subject);
     }
 
     public void testQuoteEscape()

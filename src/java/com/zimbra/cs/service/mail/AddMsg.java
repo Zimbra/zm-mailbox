@@ -72,7 +72,8 @@ public class AddMsg extends MailDocumentHandler {
         String folderStr = msgElem.getAttribute(MailConstants.A_FOLDER);
         boolean noICal = msgElem.getAttributeBool(MailConstants.A_NO_ICAL, false);
         long date = msgElem.getAttributeLong(MailConstants.A_DATE, System.currentTimeMillis());
-        
+        boolean filterSent = request.getAttributeBool(MailConstants.A_FILTER_SENT, false);
+
         if (mLog.isDebugEnabled()) {
             StringBuffer toPrint = new StringBuffer("<AddMsg ");
             if (tagsStr != null)
@@ -124,9 +125,11 @@ public class AddMsg extends MailDocumentHandler {
         int flagsBitMask = Flag.flagsToBitmask(flagsStr);
         try {
             ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
-            if (!DebugConfig.disableOutgoingFilter && folderId == MailSender.getSentFolderId(mbox) && (flagsBitMask & Flag.BITMASK_FROM_ME) != 0) {
+            if (filterSent && !DebugConfig.disableOutgoingFilter && folderId == MailSender.getSentFolderId(mbox) &&
+                    (flagsBitMask & Flag.BITMASK_FROM_ME) != 0) {
                 List<ItemId> addedItemIds =
-                        RuleManager.applyRulesToOutgoingMessage(octxt, mbox, pm, folderId, noICal, flagsBitMask, tagsStr, Mailbox.ID_AUTO_INCREMENT);
+                        RuleManager.applyRulesToOutgoingMessage(
+                            octxt, mbox, pm, folderId, noICal, flagsBitMask, tagsStr, Mailbox.ID_AUTO_INCREMENT);
                 msg = addedItemIds.isEmpty() ? null : mbox.getMessageById(octxt, addedItemIds.get(0).getId());
             } else {
                 msg = mbox.addMessage(octxt, pm, folderId, noICal, flagsBitMask, tagsStr);
