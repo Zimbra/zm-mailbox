@@ -537,7 +537,7 @@ public class GalSearchControl {
             mParams.setType(stype);
         }
         int limit = mParams.getLimit();
-        if (limit == 0)
+        if (limit == 0 && GalOp.sync != mParams.getOp())
             limit = domain.getGalMaxResults();
         
         if (galMode == GalMode.both) {
