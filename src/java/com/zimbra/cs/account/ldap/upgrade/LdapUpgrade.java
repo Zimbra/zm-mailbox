@@ -30,6 +30,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.ldap.LdapEntry;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -81,6 +82,26 @@ abstract class LdapUpgrade {
                 ZimbraLdapContext.closeContext(zlc);
         }
     }  
+    
+    protected void modifyAttrs(Entry entry, Map<String, Object> attrs) throws ServiceException {
+        System.out.println();
+        System.out.println("Modifying " + TargetType.getTargetType(entry).getPrettyName() + " " + entry.getLabel());
+        
+        for (Map.Entry<String, Object> attr : attrs.entrySet()) {
+            String key = attr.getKey();
+            Object value = attr.getValue();
+            
+            if (value instanceof String) {
+                System.out.println("  " + key + ": " + (String)value);
+            } else if (value instanceof String[]) {
+                for (String v : (String[])value) {
+                    System.out.println("  " + key + ": " + v);
+                }
+            }
+        }
+        
+        mProv.modifyAttrs(entry, attrs);
+    }
     
     abstract static class UpgradeVisitor {
         boolean mVerbose;
