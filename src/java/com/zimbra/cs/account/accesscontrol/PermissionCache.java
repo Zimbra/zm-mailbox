@@ -14,169 +14,61 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.LruMap;
-import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 
 public class PermissionCache {
     
+    private static boolean cacheEnabled = LC.acl_cache_enabled.booleanValue();
+    
     enum CachedPermission {
-        NOT_CACHED(null),
-        ALLOWED(Boolean.TRUE),
-        DENIED(Boolean.FALSE),
-        NO_MATCHING_ACL(null);
+        NOT_CACHED(null, (short)0),
+        NO_MATCHING_ACL(null, PermCacheManager.CachedPerms.MASK_NO_MATCHING_ACL),
+        ALLOWED(Boolean.TRUE, PermCacheManager.CachedPerms.MASK_ALLOWED),
+        DENIED(Boolean.FALSE, PermCacheManager.CachedPerms.MASK_DENIED);
         
-        Boolean result;
+        private Boolean result;
+        private short cacheMask;
         
-        private CachedPermission(Boolean result) {
+        private CachedPermission(Boolean result, short cacheMask) {
             this.result = result;
+            this.cacheMask = cacheMask;
         }
         
         Boolean getResult() {
             assert(this != NOT_CACHED);
             return result;
         }
+        
+        short getCacheMask() {
+            return cacheMask;
+        }
+    }        
+    
+    public static void invalidateCache() {
+        PermCacheManager.getInstance().invalidateCache();
     }
     
-    private static class PermCache {
-        private long resetAt;
-        Map<String, CachedPermission> cache;
-        Entry target;
-        
-        /*
-         * returns a PermCache for the entry
-         */
-        private static PermCache getPermCache(Entry target, boolean createIfNotExist) {
-            String permCacheKey = EntryCacheDataKey.PERMISSION.getKeyName();
-            PermCache permCache = (PermCache) target.getCachedData(permCacheKey);
-            
-            if (permCache == null && createIfNotExist) {
-                permCache = new PermCache(target);
-                target.setCachedData(permCacheKey, permCache);
-            }
-            return permCache;
-        }
-        
-        private PermCache(Entry target) {
-            this.target = target;
-            reset();
-        }
-        
-        private void reset() {
-            resetAt = System.currentTimeMillis();
-            if (cache == null)
-                cache = MapUtil.newLruMap(getCacheSize(target)); 
-            else
-                cache.clear();
-        }
-        
-        private static int getCacheSize(Entry target) {
-            if (target instanceof Account)
-                return LC.acl_cache_account_maxsize.intValue();
-            else if (target instanceof DistributionList)
-                return LC.acl_cache_group_maxsize.intValue();
-            else 
-                return LC.acl_cache_maxsize.intValue();
-        }
-        
-        private boolean isExpired() {
-            return resetAt <= invalidatedAt;
-        }
-        
-        private synchronized void invalidate() {
-            reset();
-        }
-        
-        private synchronized CachedPermission get(String key) {
-            if (isExpired()) {
-                reset();
-                return CachedPermission.NOT_CACHED;
-            }
-            
-            CachedPermission perm = cache.get(key);
-            return (perm == null) ? CachedPermission.NOT_CACHED : perm;
-        }
-        
-        private synchronized void put(String key, CachedPermission perm) {
-            cache.put(key, perm);
-        }
-    }
-
-    // timestamp at which permission cache is invalidated
-    // any permission cached prior to this time should be thrown away 
-    private static long invalidatedAt;  
-    
-    /**
-     * invalidate permission cache on all entries
-     * 
-     * Note: permission cache is invalidated only on the server on which the event is executed.
-     *       The effect(how soon the event will actually change ACL checking result) is the same 
-     *       with or without the permission cache. 
-     */
-    public static synchronized void invalidateCache() {
-        invalidatedAt = System.currentTimeMillis();
-    }
-    
-    /**
-     * invalidate permission cache when a permission changing event happens on a target
-     *   - invalidate permission cache on the specified entry if it is an entry from 
-     *     which no right can be inherited
-     *   - invalidate all permission cache otherwise
-     * 
-     * possible permission changing event:
-     *   - granting/revoking rights 
-     *   - adding/removing members on dl
-     *   - renaming account/dl in/out a domain
-     *   - that target is deleted
-     *
-     * Note: permission cache is invalidated only on the server on which the event is executed.
-     *       This does not cause any behavior change 
-     * @param target
-     */
     public static void invalidateCache(Entry target) {
-        boolean invalidateAll = true; 
-        
-        try {
-            invalidateAll = TargetType.canBeInheritedFrom(target);
-        } catch (ServiceException e) {
-            ZimbraLog.acl.debug("unable to determine if all permission cache should be invalidated, " + 
-                    "invalidating permission cache on all entries", e);
-        }
-        
-        if (invalidateAll) {
-            invalidateCache();
-        } else {
-            String permCacheKey = EntryCacheDataKey.PERMISSION.getKeyName();
-            PermCache permCache = (PermCache) target.getCachedData(permCacheKey);
-            
-            if (permCache != null)
-                permCache.invalidate();
-        }
+        PermCacheManager.getInstance().invalidateCache(target);
     }
     
-    static CachedPermission checkCache(Account grantee, Entry target, Right rightNeeded, boolean canDelegateNeeded) {
-        CachedPermission perm = CachedPermission.NOT_CACHED;
-        
-        PermCache permCache = PermCache.getPermCache(target, false);
-        
-        if (permCache != null) {
-            String cacheKey = buildCacheKey(grantee, rightNeeded, canDelegateNeeded);
-            if (cacheKey != null) {
-                perm = permCache.get(cacheKey);
-            }
+    static CachedPermission cacheGet(Account grantee, Entry target, Right rightNeeded, boolean canDelegateNeeded) {
+        if (!cacheEnabled) {
+            return CachedPermission.NOT_CACHED;
         }
+            
+        String cacheKey = buildCacheKey(grantee, rightNeeded, canDelegateNeeded);
+        if (cacheKey == null) {
+            // not cachable
+            return CachedPermission.NOT_CACHED;
+        }
+        
+        CachedPermission perm = PermCacheManager.getInstance().get(target, cacheKey, rightNeeded);
         
         if (ZimbraLog.acl.isDebugEnabled()) {
             ZimbraLog.acl.debug("PermissionCache get: " + perm.toString() + 
@@ -187,19 +79,22 @@ public class PermissionCache {
         return perm;
     }
 
-    static void cacheResult(Account grantee, Entry target, Right rightNeeded, boolean canDelegateNeeded, 
+    static void cachePut(Account grantee, Entry target, Right rightNeeded, boolean canDelegateNeeded, 
             Boolean allowed) {
-        String cacheKey = buildCacheKey(grantee, rightNeeded, canDelegateNeeded);
-        if (cacheKey == null) {
-            // not cachable
+        
+        if (!cacheEnabled) {
             return;
         }
         
-        PermCache permCache = PermCache.getPermCache(target, true);
+        String cacheKey = buildCacheKey(grantee, rightNeeded, canDelegateNeeded);
+        if (cacheKey == null) {
+            return;  // not cacheable
+        }
+        
         CachedPermission perm = (allowed == null) ? CachedPermission.NO_MATCHING_ACL :
             allowed.booleanValue() ? CachedPermission.ALLOWED : CachedPermission.DENIED;
 
-        permCache.put(cacheKey, perm);
+        PermCacheManager.getInstance().put(target, cacheKey, rightNeeded, perm);
        
         if (ZimbraLog.acl.isDebugEnabled()) {
             ZimbraLog.acl.debug("PermissionCache put: " + perm.toString() + 
@@ -213,13 +108,13 @@ public class PermissionCache {
      * returns cache key for entries on the map cached on the entry
      * cache key is in the format of
      * 
-     * <GRANTEE-IDENTIFIER><ADMIN-FLAG><right-name><CAN-DELEDATE-NEEDED>
+     * <GRANTEE-IDENTIFIER><ADMIN-FLAG><CAN-DELEDATE-NEEDED>
      * 
      * GRANTEE-IDENTIFIER         := <GUEST-ACCOUNT-BY-USER-PASS>|<GUEST-ACCOUNT-BY-ACCESSKEY>|<zimra-account-id>
      * 
-     * GUEST-ACCOUNT-BY-USER-PASS := G<user-pass-digest>
+     * GUEST-ACCOUNT-BY-USER-PASS := <user-pass-digest>G
      * 
-     * GUEST-ACCOUNT-BY-ACCESSKEY := K<accesskey>
+     * GUEST-ACCOUNT-BY-ACCESSKEY := <accesskey>K
      * 
      * ADMIN-FLAG                 := <USER-FLAG>|<DELEGATED-ADMIN-FLAG>|<GLOABL-ADMIN-FLAG>
      * 
@@ -233,12 +128,17 @@ public class PermissionCache {
      * 
      * e.g.
      * (no space in between segments in the actual key)
-     * d3a5c239-bac9-45ca-87b3-441a990c931b 0 invite 0 
-     * Gcv30B19SfmLg1HYQd2CX4qZp908= 0 loginAs 0
+     * d3a5c239-bac9-45ca-87b3-441a990c931b 0 0 
+     * cv30B19SfmLg1HYQd2CX4qZp908=G 0 0
      */
-    private static String buildCacheKey(Account grantee, Right rightNeeded, boolean canDelegateNeeded) {
+    static String buildCacheKey(Account grantee, Right rightNeeded, boolean canDelegateNeeded) {
+
+        if (!rightNeeded.isCacheable())
+            return null;
+        
         //
         // to conserve caching slots, cache only user rights and the adminLoginAs admin right
+        // sanity check in case someone marks arbitrary admin rights cacheable in right xml files
         //
         if (!rightNeeded.isUserRight() && Admin.R_adminLoginAs != rightNeeded)
             return null;
@@ -247,13 +147,14 @@ public class PermissionCache {
         if (grantee instanceof GuestAccount) {
             // note: do NOT use account id as part of the cache key for GuestAccount, 
             //       the account id is always 999...
+            // put "G"/"K" at the end (instead of the beginning) for better key distribution for the hash
             id = ((GuestAccount) grantee).getDigest();
             if (id != null) {
-                id = "G" + id;
+                id = id + "G";
             } else {
                 id = ((GuestAccount) grantee).getAccessKey();
                 if (id != null) {
-                    id = "K" + id;
+                    id = id + "K";
                 }
             }
         } else {
@@ -268,7 +169,7 @@ public class PermissionCache {
         
         char adminFlag = grantee.isIsAdminAccount() ? '2' : grantee.isIsDelegatedAdminAccount() ? '1' : '0';
         char canDelegate = canDelegateNeeded ? '1' : '0';
-        return id + adminFlag + rightNeeded.getName() + canDelegate;
+        return id + adminFlag + canDelegate;
     }
     
 }

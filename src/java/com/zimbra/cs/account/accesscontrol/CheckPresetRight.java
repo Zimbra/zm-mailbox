@@ -71,14 +71,14 @@ public class CheckPresetRight extends CheckRight {
     public static Boolean check(Account grantee, Entry target, 
             Right rightNeeded, boolean canDelegateNeeded, ViaGrant via) throws ServiceException {
         
-        CachedPermission cached = PermissionCache.checkCache(grantee, target, rightNeeded, canDelegateNeeded);
+        CachedPermission cached = PermissionCache.cacheGet(grantee, target, rightNeeded, canDelegateNeeded);
         
         Boolean allowed;
         
         if (cached == CachedPermission.NOT_CACHED) {
             CheckPresetRight checker = new CheckPresetRight(grantee, target, rightNeeded, canDelegateNeeded, via);
             allowed = checker.checkRight();
-            PermissionCache.cacheResult(grantee, target, rightNeeded, canDelegateNeeded, allowed);
+            PermissionCache.cachePut(grantee, target, rightNeeded, canDelegateNeeded, allowed);
         } else {
             allowed = cached.getResult();
         }

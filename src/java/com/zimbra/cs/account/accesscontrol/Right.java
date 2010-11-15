@@ -39,6 +39,9 @@ public abstract class Right extends RightConsts {
         }
     }
     
+    private static final int NOT_CACHEABLE = -1;
+    private static int sMaxCacheIndex = 0;
+    
     private final String mName;
     protected RightType mRightType;
     private String mDesc;  // a brief description
@@ -46,7 +49,7 @@ public abstract class Right extends RightConsts {
     private Boolean mDefault;
     protected TargetType mTargetType;
     private CheckRightFallback mFallback;
-    
+    int mCacheIndex = NOT_CACHEABLE;
     
     static void init(RightManager rm) throws ServiceException {
         UserRight.init(rm);
@@ -215,6 +218,27 @@ public abstract class Right extends RightConsts {
         if (getDesc() == null)
             throw ServiceException.PARSE_ERROR("missing description", null);
         verifyTargetType();
+    }
+    
+    void setCacheable() {
+        mCacheIndex = getNextCacheIndex();
+    }
+    
+    boolean isCacheable() {
+        return mCacheIndex != NOT_CACHEABLE;
+    }
+    
+    public int getCacheIndex() {
+        return mCacheIndex;
+    }
+    
+    private static synchronized int getNextCacheIndex() {
+        sMaxCacheIndex++;
+        return sMaxCacheIndex - 1;
+    }
+    
+    public static int getMaxCacheIndex() {
+        return sMaxCacheIndex;
     }
 
     public static void main(String[] args) throws ServiceException {

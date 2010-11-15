@@ -2312,6 +2312,7 @@ public class LdapProvisioning extends Provisioning {
             throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
         String oldEmail = acct.getName();
 
+        boolean domainChanged = false;
         try {
             zlc = new ZimbraLdapContext(true);
 
@@ -2329,7 +2330,7 @@ public class LdapProvisioning extends Provisioning {
             if (domain == null)
                 throw AccountServiceException.NO_SUCH_DOMAIN(newDomain);
             
-            boolean domainChanged = !oldDomain.equals(newDomain);
+            domainChanged = !oldDomain.equals(newDomain);
             
             if (domainChanged) {
                 validate(ProvisioningValidator.RENAME_ACCOUNT, newName, acct.getMultiAttr(Provisioning.A_objectClass, false), acct.getAttrs(false));
@@ -2415,8 +2416,10 @@ public class LdapProvisioning extends Provisioning {
         }
 
         // reload it to cache using the master, bug 45736
-        getAccountById(zimbraId, null, true);
-
+        Account renamedAcct = getAccountById(zimbraId, null, true);
+        
+        if (domainChanged)
+            PermissionCache.invalidateCache(renamedAcct);
     }
 
     @Override
@@ -2897,6 +2900,7 @@ public class LdapProvisioning extends Provisioning {
         newEmail = IDNUtil.toAsciiEmail(newEmail);
         validEmailAddress(newEmail);
 
+        boolean domainChanged = false;
         ZimbraLdapContext zlc = null;
         try {
             zlc = new ZimbraLdapContext(true);
@@ -2915,7 +2919,7 @@ public class LdapProvisioning extends Provisioning {
             String newLocal = parts[0];
             String newDomain = parts[1];
 
-            boolean domainChanged = !oldDomain.equals(newDomain);
+            domainChanged = !oldDomain.equals(newDomain);
 
             Domain domain = getDomainByAsciiName(newDomain, zlc);
             if (domain == null)
@@ -2985,6 +2989,9 @@ public class LdapProvisioning extends Provisioning {
         } finally {
             ZimbraLdapContext.closeContext(zlc);
         }
+        
+        if (domainChanged)
+            PermissionCache.invalidateCache();
     }
 
     @Override

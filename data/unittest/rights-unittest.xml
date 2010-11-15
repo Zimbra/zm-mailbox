@@ -16,11 +16,11 @@
       =============
 -->
 
-<right name="test-user" userRight="1">
+<right name="test-user" userRight="1" cache="1">
   <desc>a user right</desc>
 </right>
 
-<right name="test-user-distributionlist" userRight="1" targetType="dl">
+<right name="test-user-distributionlist" userRight="1" targetType="dl" cache="1">
   <desc>a user right on distribution list</desc>
 </right>
 

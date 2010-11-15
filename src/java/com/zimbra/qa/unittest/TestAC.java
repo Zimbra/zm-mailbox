@@ -605,71 +605,12 @@ public class TestAC extends TestProv {
             }
         }
         
-        /*
-        if (goodTarget != null)
-            permissionCacheTest(grantedOnTarget, goodTarget, allowedAccts, deniedAccts, right);
-        */
-        
         //
         // finally, clean up
         //
         cleanup();
     }
-    
-    private void permissionCacheTest(Entry grantedOnTarget, Entry target, 
-            List<Account> allowedAccts, List<Account> deniedAccts, Right right) throws Exception {
-        
-        boolean targetInheritanceRelationBroken = false;
-        
-        if (grantedOnTarget != target) {
-            // break the relationship between target and grantedOnTarget that gives the inheritance 
-            switch (TargetType.getTargetType(grantedOnTarget)) {
-            case account:
-                break;
-            case calresource:
-                break;
-            case cos:
-                break;
-            case dl:
-                mProv.removeMembers((DistributionList)grantedOnTarget, new String[]{target.getLabel()});
-                targetInheritanceRelationBroken = true;
-                break;
-            case domain:
-                // move the target out of the domain
-                Domain newDomain = createDomain();
-                if (target instanceof Account) {
-                    Account targetAcct = (Account) target;
-                    String newName = getEmailLocalpart(targetAcct) + "@" + newDomain.getName();
-                    mProv.renameAccount(targetAcct.getId(), newName);
-                    String targetId = targetAcct.getId();
-                    target = mProv.get(Provisioning.AccountBy.id, targetId);
-                    targetInheritanceRelationBroken = true;
-                } else if (target instanceof DistributionList) {
-                    DistributionList targetDl = (DistributionList) target;
-                    String newName = getEmailLocalpart(targetDl) + "@" + newDomain.getName();
-                    mProv.renameDistributionList(targetDl.getId(), newName);
-                    String targetId = targetDl.getId();
-                    target = mProv.get(Provisioning.DistributionListBy.id, targetId);
-                    targetInheritanceRelationBroken = true;
-                }
-                break;
-            case server:
-            case xmppcomponent:
-            case zimlet:
-            case config:
-            case global:
-            }
-        }
-        
-        if (targetInheritanceRelationBroken) {
-            boolean allow;
-            for (Account allowedAcct : allowedAccts) {
-                allow = sAM.canDo(allowedAcct, target, right, asAdmin(allowedAcct), null);
-                assertFalse(allow);  
-            }
-        }
-    }
-    
+   
     private void cleanup() throws Exception {
         // remove all grants on global grant so it will not interfere with later tests
         revokeAllGrantsOnGlobalGrant();
@@ -683,7 +624,6 @@ public class TestAC extends TestProv {
     public void testBasic() throws Exception {
 
         // full test
-        /*
         int totalTests = TargetType.values().length * GranteeType.values().length * sRights.size();
         int curTest = 1;
         for (TargetType targetType : TargetType.values()) {
@@ -693,7 +633,7 @@ public class TestAC extends TestProv {
                 }
             }
         }
-        */
+
         
         /*
          *  account 

@@ -68,6 +68,7 @@ public class RightManager {
     private static final String E_RIGHTS       = "rights";
     private static final String E_RIGHT        = "right";
     
+    private static final String A_CACHE        = "cache";
     private static final String A_FALLBACK     = "fallback";
     private static final String A_FILE         = "file";
     private static final String A_LIMIT        = "l";
@@ -91,7 +92,7 @@ public class RightManager {
         static {
             sCoreRightDefFiles.add("zimbra-rights.xml");
             sCoreRightDefFiles.add("zimbra-user-rights.xml");
-            // sCoreRightDefFiles.add("rights-unittest.xml");
+            sCoreRightDefFiles.add("rights-unittest.xml");
         }
         
         static boolean isCoreRightFile(File file) {
@@ -311,6 +312,10 @@ public class RightManager {
                 }
             }
         }
+        
+        boolean cache = getBooleanAttr(eRight, A_CACHE, false);
+        if (cache)
+            right.setCacheable();
 
         for (Iterator elemIter = eRight.elementIterator(); elemIter.hasNext();) {
             Element elem = (Element)elemIter.next();
