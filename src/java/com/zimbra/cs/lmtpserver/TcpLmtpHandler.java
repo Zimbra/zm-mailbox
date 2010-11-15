@@ -63,7 +63,9 @@ public class TcpLmtpHandler extends LmtpHandler {
 
     @Override
     protected boolean processCommand() throws IOException {
-        return processCommand(mInputStream.readLine());
+        if (mInputStream != null)
+            return processCommand(mInputStream.readLine());
+        return false;
     }
 
     @Override
