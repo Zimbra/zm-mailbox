@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 6.0.2_BETA1_1111 pshao 20101005-2010 */
+    /* build: 6.0.2_BETA1_1111 jylee 20100929-1424 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3342,6 +3342,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1027)
     public static final String A_zimbraGalSyncAccountBasedAutoCompleteEnabled = "zimbraGalSyncAccountBasedAutoCompleteEnabled";
+
+    /**
+     * List of attributes that will be ignored when determining whether a GAL
+     * contact has been modified. Any change in other attribute values will
+     * make the contact &quot;dirty&quot; and the contact will show as
+     * modified in the next GAL sync response. By default modifyTimeStamp is
+     * always included in ignored attributes. Then if the only change in GAL
+     * contact is modifyTimeStamp, the contact will not be shown as modified
+     * in the next GAL sync response from the client, thus minimizing the
+     * need to download the GAL contact again when none of the meaningful
+     * attributes have changed.
+     *
+     * @since ZCS 6.0.10
+     */
+    @ZAttr(id=1145)
+    public static final String A_zimbraGalSyncIgnoredAttributes = "zimbraGalSyncIgnoredAttributes";
 
     /**
      * LDAP search base for internal GAL sync (special values:
