@@ -218,7 +218,7 @@ public class FullInstanceData extends InstanceData {
                 mHasAttachment = null;
             if (Util.sameValues(mDraft, other.isDraft()))
                 mDraft = null;
-            if (Util.sameValues(mNeverSent, other.isDraft()))
+            if (Util.sameValues(mNeverSent, other.isNeverSent()))
                 mNeverSent = null;
             if (Util.sameValues(mSummary, other.getSummary()))
                  mSummary = null;
