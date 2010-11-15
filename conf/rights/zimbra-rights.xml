@@ -50,7 +50,7 @@
   <desc>get all groups the account is a member of</desc>
 </right>
 
-<right name="adminLoginAs" type="preset" targetType="account">
+<right name="adminLoginAs" type="preset" targetType="account" cache="1">
   <desc>login as the user as an admin.
         This is different from the loginAs user right as follows:
             - loginAs is effective only when login as an user
