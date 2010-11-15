@@ -5177,7 +5177,7 @@ TODO: delete them permerntly from here
   <desc>number of milter handler threads</desc>
 </attr>
 
-<attr id="1145" name="zimbraGalSyncIgnoredAttributes"  type="string" max="256" cardinality="multi" optionalIn="galDataSource" since="7.0.0">
+<attr id="1145" name="zimbraGalSyncIgnoredAttributes"  type="string" max="256" cardinality="multi" optionalIn="galDataSource" since="6.0.10">
   <desc>
     List of attributes that will be ignored when determining whether 
     a GAL contact has been modified.  Any change in other attribute 
