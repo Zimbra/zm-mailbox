@@ -92,7 +92,7 @@ public class RightManager {
         static {
             sCoreRightDefFiles.add("zimbra-rights.xml");
             sCoreRightDefFiles.add("zimbra-user-rights.xml");
-            sCoreRightDefFiles.add("rights-unittest.xml");
+            // sCoreRightDefFiles.add("rights-unittest.xml");
         }
         
         static boolean isCoreRightFile(File file) {
