@@ -227,7 +227,7 @@ public class PermCacheManagerTest {
     }
 
     
-    @Test
+    // @Test
     public void testPermCacheManager() throws Exception {
         
         int acl_cache_max_targets = 10;
