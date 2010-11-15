@@ -98,6 +98,7 @@ public class FullInstanceData extends InstanceData {
     public Boolean hasAlarm()             { return mHasAlarm; }
     public Boolean hasAttachment()        { return mHasAttachment; }
     public Boolean isDraft()              { return mDraft; }
+    public Boolean isNeverSent()          { return mNeverSent; }
 
     public String getSummary()     { return mSummary; }
     public String getLocation()    { return mLocation; }
@@ -217,6 +218,8 @@ public class FullInstanceData extends InstanceData {
                 mHasAttachment = null;
             if (Util.sameValues(mDraft, other.isDraft()))
                 mDraft = null;
+            if (Util.sameValues(mNeverSent, other.isDraft()))
+                mNeverSent = null;
             if (Util.sameValues(mSummary, other.getSummary()))
                  mSummary = null;
             if (Util.sameValues(mLocation, other.getLocation()))

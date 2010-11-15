@@ -233,6 +233,8 @@ public class CacheToXML {
             parent.addAttribute(MailConstants.A_CAL_ALLDAY, fullInstance.isAllDay().booleanValue());
         if (fullInstance.isDraft() != null)
             parent.addAttribute(MailConstants.A_CAL_DRAFT, fullInstance.isDraft().booleanValue());
+        if (fullInstance.isNeverSent() != null)
+            parent.addAttribute(MailConstants.A_CAL_NEVER_SENT, fullInstance.isNeverSent().booleanValue());
     }
 
     private static void encodeAlarmData(Element parent, AlarmData alarmData, boolean showAll) {
