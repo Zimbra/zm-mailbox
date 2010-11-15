@@ -171,4 +171,42 @@ public class LmtpMessageInputStream extends InputStream {
         mDone = true;
         return -1;
     }
+
+    /**
+     * Does what {@link super#read(byte[], int, int)} does except that IOException thrown by
+     * {@link super#read()} is never caught.
+     *
+     * @param b
+     * @param off
+     * @param len
+     * @return
+     * @throws IOException
+     * @see super#read(byte[], int, int)
+     */
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+        if (b == null) {
+            throw new NullPointerException();
+        } else if (off < 0 || len < 0 || len > b.length - off) {
+            throw new IndexOutOfBoundsException();
+        } else if (len == 0) {
+            return 0;
+        }
+
+        int c = read();
+        if (c == -1) {
+            return -1;
+        }
+        b[off] = (byte) c;
+
+        int i = 1;
+        for (; i < len; i++) {
+            c = read();
+            if (c == -1) {
+                break;
+            }
+            b[off + i] = (byte) c;
+        }
+        return i;
+    }
 }
