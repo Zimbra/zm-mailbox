@@ -281,4 +281,9 @@ public class PermCacheManagerTest {
         Thread.currentThread().join();
     }
     
+
+    @Test
+    public void noOp() throws Exception {
+    }
+
 }
