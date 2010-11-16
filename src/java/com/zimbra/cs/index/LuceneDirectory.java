@@ -122,7 +122,8 @@ public final class LuceneDirectory extends Directory {
 
     @Override
     public IndexOutput createOutput(String name) throws IOException {
-        return new LuceneIndexOutput(directory.createOutput(name));
+        //return new LuceneIndexOutput(directory.createOutput(name));
+        return directory.createOutput(name);
     }
 
     @Override
@@ -132,12 +133,14 @@ public final class LuceneDirectory extends Directory {
 
     @Override
     public IndexInput openInput(String name) throws IOException {
-        return new LuceneIndexInput(directory.openInput(name));
+        //return new LuceneIndexInput(directory.openInput(name));
+        return directory.openInput(name);
     }
 
     @Override
     public IndexInput openInput(String name, int bufferSize) throws IOException {
-        return new LuceneIndexInput(directory.openInput(name, bufferSize));
+        //return new LuceneIndexInput(directory.openInput(name, bufferSize));
+        return directory.openInput(name, bufferSize);
     }
 
     @Override
