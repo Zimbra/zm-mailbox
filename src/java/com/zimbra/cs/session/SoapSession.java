@@ -39,6 +39,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
@@ -73,6 +74,7 @@ public class SoapSession extends Session {
     public class DelegateSession extends Session {
         private long mNextFolderCheck;
         private Set<Integer> mVisibleFolderIds;
+        private boolean mParentHasFullAccess = false;
 
         DelegateSession(String authId, String targetId) {
             super(authId, targetId, Type.SOAP);
@@ -124,10 +126,30 @@ public class SoapSession extends Session {
             }
         }
 
+        /**
+         * Returns true if the MailItem should be excluded from notification serialization
+         * @throws ServiceException 
+         */
+        protected boolean skipChangeSerialization(Mailbox mbox, MailItem item) throws ServiceException {
+            // don't serialize out changes on too-large delegated conversation
+            return (mbox != item.getMailbox() && item instanceof Conversation && ((Conversation) item).getMessageCount() > DELEGATED_CONVERSATION_SIZE_LIMIT && !mParentHasFullAccess);
+        }
+        
+        /**
+         * Fetch account level access and store it in cache to be used in skipChangeSerialization
+         * We assume here that ACL will never change between this call and the call to skipChangeSerialization()
+         * We also assume that it *might* change between invocations of calculateVisibileFolders (i.e. check accessmgr each time)
+         * @throws ServiceException
+         */
+        protected void cacheAccountAccess(Account authed, Account target) throws ServiceException {
+            mParentHasFullAccess = AccessManager.getInstance().canAccessAccount(authed, target); 
+        }
+
         private boolean calculateVisibleFolders(boolean force) throws ServiceException {
             long now = System.currentTimeMillis();
 
             Mailbox mbox = mMailbox;
+            cacheAccountAccess(getParentSession().getMailbox().getAccount(), mMailbox.getAccount());
             if (mbox == null) {
                 mVisibleFolderIds = Collections.emptySet();
                 return true;
@@ -194,6 +216,12 @@ public class SoapSession extends Session {
                 for (Change chg : pms.modified.values()) {
                     if (chg.what instanceof MailItem) {
                         MailItem item = (MailItem) chg.what;
+                        if (skipChangeSerialization(getParentSession().getMailbox(), item)) {
+                            if (ZimbraLog.session.isDebugEnabled()) {
+                                ZimbraLog.session.debug("skipping serialization of too-large remote conversation: " + new ItemId(item));
+                            }
+                            continue;
+                        }
                         boolean isVisible = visible.contains(item instanceof Folder ? item.getId() : item.getFolderId());
                         boolean moved = (chg.why & Change.MODIFIED_FOLDER) != 0;
                         if (item instanceof Conversation) {
@@ -1327,12 +1355,6 @@ public class SoapSession extends Session {
                 for (Change chg : pms.modified.values()) {
                     if (chg.why != 0 && chg.what instanceof MailItem) {
                         MailItem item = (MailItem) chg.what;
-                        // don't serialize out changes on too-large delegated conversation
-                        if (mbox != item.getMailbox() && item instanceof Conversation && ((Conversation) item).getMessageCount() > DELEGATED_CONVERSATION_SIZE_LIMIT) {
-                            if (debug)
-                                ZimbraLog.session.debug("skipping serialization of too-large remote conversation: " + new ItemId(item));
-                            continue;
-                        }
     
                         ItemIdFormatter ifmt = new ItemIdFormatter(mAuthenticatedAccountId, item.getMailbox(), false);
                         try {

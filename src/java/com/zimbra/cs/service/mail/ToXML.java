@@ -34,6 +34,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeDetect;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.GalContact;
@@ -667,7 +668,11 @@ public class ToXML {
         // if the caller might not be able to see all the messages (due to rights or \Deleted),
         //   need to calculate some fields from the visible messages
         List<Message> msgs = null;
-        if ((octxt != null && octxt.isDelegatedRequest(mbox)) || conv.isTagged(Flag.ID_FLAG_DELETED))
+        boolean isDelegatedNonAccessible = false;
+        if (octxt != null && octxt.isDelegatedRequest(mbox)) {
+            isDelegatedNonAccessible = !AccessManager.getInstance().canAccessAccount(octxt.getAuthenticatedUser(), conv.getAccount());
+        }
+        if (isDelegatedNonAccessible || conv.isTagged(Flag.ID_FLAG_DELETED))
             msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASCENDING);
 
         boolean noneVisible = msgs != null && msgs.isEmpty();
