@@ -62,6 +62,7 @@ public class TcpLmtpHandler extends LmtpHandler {
 
     @Override
     protected boolean processCommand() throws IOException {
+        // make sure that the connection wasn't dropped during a preceding command processing
         if (mInputStream != null)
             return processCommand(mInputStream.readLine());
         return false;
