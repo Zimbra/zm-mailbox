@@ -23,7 +23,7 @@ public class ZimbraConnectionFactory extends DriverManagerConnectionFactory {
             String className = LC.zimbra_class_dbconnfactory.value();
             if (className != null && !className.equals("")) {
                 try {
-                    ZimbraLog.dbconn.info("instantiating DB connection factory class "+className);
+                    ZimbraLog.dbconn.debug("instantiating DB connection factory class "+className);
                     Class clazz = Class.forName(className);
                     Constructor constructor = clazz.getDeclaredConstructor(String.class, Properties.class);
                     sConnFactory = (ConnectionFactory) constructor.newInstance(pconfig.mConnectionUrl, pconfig.mDatabaseProperties);
