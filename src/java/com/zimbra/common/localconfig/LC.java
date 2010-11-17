@@ -453,6 +453,7 @@ public final class LC {
     
     @Supported
     public static final KnownKey ldap_cache_zimlet_maxage = KnownKey.newKey(15);
+    
     public static final KnownKey ldap_cache_reverseproxylookup_domain_maxsize = KnownKey.newKey(100);
     public static final KnownKey ldap_cache_reverseproxylookup_domain_maxage = KnownKey.newKey(15);
     public static final KnownKey ldap_cache_reverseproxylookup_server_maxsize = KnownKey.newKey(100);
@@ -462,6 +463,8 @@ public final class LC {
     public static final KnownKey acl_cache_max_targets = KnownKey.newKey(1024);
     public static final KnownKey acl_cache_max_entries_per_target = KnownKey.newKey(512);
     public static final KnownKey acl_cache_enabled = KnownKey.newKey(true);
+    
+    public static final KnownKey calendar_resource_ldap_search_maxsize = KnownKey.newKey(1000);
 
     // This value is stored here for use by zmmycnf program. Changing this
     // setting does not immediately reflect in MySQL server. You will have to,

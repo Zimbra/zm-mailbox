@@ -190,6 +190,7 @@ public class AccountConstants {
     public static final String A_EXP = "exp";
     public static final String A_NEED_EXP = "needExp";
     public static final String A_GAL_ACCOUNT_ID = "galAcctId";
+    public static final String A_PAGINATION_SUPPORTED = "paginationSupported";
     
     // share info
     public static final String A_FOLDER_ID = "folderId";
