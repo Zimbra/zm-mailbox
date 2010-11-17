@@ -11,6 +11,10 @@
   <property name="test.src.dir" location="src/java-test"/>
   <property name="test.classes.dir" location="${build.dir}/test-classes"/>
 
+  <property name="wsdl.test.dir" location="${build.dir}/wsdl-test"/>
+  <property name="wsdl.test.src.dir" location="src/wsdl-test"/>
+  <property name="wsdl.test.classes.dir" location="${build.dir}/wsdl-test-classes"/>
+
   <property name="common.dir" location="../ZimbraCommon"/>
   <property name="common.classes.dir" location="${common.dir}/build/classes"/>
   <property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar"/>
@@ -38,6 +42,10 @@
   </path>
 
   <path id="test.class.path">
+    <path refid="class.path"/>
+  </path>
+
+  <path id="wsdl.test.class.path">
     <path refid="jaxws.classpath"/>
     <path refid="class.path"/>
   </path>
@@ -67,9 +75,9 @@
   </target>
 
   <target name="clean" description="Removes build files">
-    <delete dir="${test.src.dir}/com/zimbra/soap/mail/wsimport" />
-    <delete dir="${test.src.dir}/com/zimbra/soap/admin/wsimport" />
-    <delete dir="${test.src.dir}/com/zimbra/soap/account/wsimport" />
+    <delete dir="${wsdl.test.src.dir}/com/zimbra/soap/mail/wsimport" />
+    <delete dir="${wsdl.test.src.dir}/com/zimbra/soap/admin/wsimport" />
+    <delete dir="${wsdl.test.src.dir}/com/zimbra/soap/account/wsimport" />
     <delete dir="${build.dir}" />
   </target>
 
@@ -93,22 +101,22 @@
   </target>
 
   <target name="account-service-client-support" depends="wsdl-files,generate-schema">
-    <mkdir dir="${test.classes.dir}"/>
+    <mkdir dir="${wsdl.test.classes.dir}"/>
     <!-- extension="true|false" - allow vendor extensions -->
     <wsimport   wsdl="${xml.schema.dir}/AccountService.wsdl"
-                destdir="${test.classes.dir}"
-                sourcedestdir="${test.src.dir}"
+                destdir="${wsdl.test.classes.dir}"
+                sourcedestdir="${wsdl.test.src.dir}"
                 keep="true"
                 package="com.zimbra.soap.account.wsimport">
     </wsimport>
   </target>
 
   <target name="mail-service-client-support" depends="wsdl-files,generate-schema">
-    <mkdir dir="${test.classes.dir}"/>
+    <mkdir dir="${wsdl.test.classes.dir}"/>
     <!-- extension="true|false" - allow vendor extensions -->
     <wsimport   wsdl="${xml.schema.dir}/MailService.wsdl"
-                destdir="${test.classes.dir}"
-                sourcedestdir="${test.src.dir}"
+                destdir="${wsdl.test.classes.dir}"
+                sourcedestdir="${wsdl.test.src.dir}"
                 keep="true"
                 package="com.zimbra.soap.mail.wsimport">
     </wsimport>
@@ -118,7 +126,38 @@
       depends="account-service-client-support,mail-service-client-support">
   </target>
 
-  <target name="test-compile" depends="compile,wsdl-client-support">
+  <target name="wsdl-test-compile" depends="compile,wsdl-client-support">
+    <mkdir dir="${wsdl.test.classes.dir}"/>
+    <javac srcdir="${wsdl.test.src.dir}" destdir="${wsdl.test.classes.dir}"
+      debug="true" classpathref="wsdl.test.class.path" target="${javac.target}"/>
+    <copy todir="${wsdl.test.classes.dir}">
+      <fileset dir="${wsdl.test.src.dir}" excludes="**/*.java"/>
+    </copy>
+  </target>
+
+  <!-- WSDL client tests that require ZimbraServer installed and some setup in place -->
+  <target name="wsdl-test" depends="wsdl-test-compile" description="Run unit tests">
+    <delete dir="${wsdl.test.dir}" quiet="true"/>
+    <mkdir dir="${wsdl.test.dir}/output"/>
+    <mkdir dir="${wsdl.test.dir}/report"/>
+    <junit printsummary="on" haltonfailure="on" tempdir="${wsdl.test.dir}">
+      <classpath refid="wsdl.test.class.path"/>
+      <classpath path="${wsdl.test.classes.dir}"/>
+      <formatter type="xml"/>
+      <batchtest todir="${wsdl.test.dir}/output">
+        <fileset dir="${wsdl.test.src.dir}">
+          <include name="**/*Test.java"/>
+        </fileset>
+      </batchtest>
+    </junit>
+    <junitreport todir="${wsdl.test.dir}/report">
+      <fileset dir="${wsdl.test.dir}/output"/>
+      <report todir="${wsdl.test.dir}/report"/>
+    </junitreport>
+    <echo>WSDL Test Report: ${wsdl.test.dir}/report/index.html</echo>
+  </target>
+
+  <target name="test-compile" depends="compile">
     <mkdir dir="${test.classes.dir}"/>
     <javac srcdir="${test.src.dir}" destdir="${test.classes.dir}"
       debug="true" classpathref="test.class.path" target="${javac.target}"/>
@@ -127,6 +166,7 @@
     </copy>
   </target>
 
+  <!-- tests that do not require ZimbraServer installed -->
   <target name="test" depends="test-compile" description="Run unit tests">
     <delete dir="${test.dir}" quiet="true"/>
     <mkdir dir="${test.dir}/output"/>
