@@ -1728,7 +1728,7 @@ if <header>s are requested, any matching headers are inlined into the response
 
 <GetMsgRequest>
   <m id="{msg-id}" [read="1"] [raw="1"] [max="{max-inlined-length}"] [html="1"] [neuter="0"] [part="{part}"]
-     [ridZ="YYYYMMDD[ThhmmssZ]"]
+     [ridZ="YYYYMMDD[ThhmmssZ]"] [needExp="1|0"]
   >
     *(<header n="{header-name}/>)
   </m>
@@ -1755,6 +1755,9 @@ supply a "part" and the retrieved data will be on the specified message/rfc822 s
 ridZ="YYYYMMDD[ThhmmssZ]" is used only when making GetMsg call to open an instance of a recurring appointment.
     the value specified is the date/time data of the RECURRENCE-ID of the instance being requested
 
+needExp="1" to return group info (isGroup and exp flags) on <e> elements in the response
+       (default is 0.)
+           
 if <header>s are requested, any matching headers are inlined into the response
     (not available when raw="1")
 
@@ -1762,7 +1765,7 @@ if <header>s are requested, any matching headers are inlined into the response
   <m id="{message-id}" [origid="..." rt="r|w"] [part="{part}"] f="{flags}" t="{tags}" s="{size}" [d="{received-date}"] sd="{date-header}" l="{folder}" (cid="{conv}")
      (cif="{X-Zimbra-Calendar-Intended-For header}")
   >
-    <e .../>*
+    <e ... [isGroup="1|0"] [exp="1|0"]/>*
     <su>{subject}</su>
     <fr>{fragment}</fr>
     [<irt>{Message-ID header for message being replied to}</irt>]
@@ -1779,6 +1782,12 @@ cif is set when the message is a calendar invite that was forwarded by another u
 managed by this user.  The attribute is set to the email of the forwarding user, for whom the invite was
 originally intended.
 
+For <e> elements in the response, if needExp="1" in the request, two additional flags will be included:
+  - isGroup: "1" if the email address is a group
+  - exp: preset only of isGroup="1"
+         "1" if the user can (has permittion to) expand members in this group
+         "0" if the user does not have permission to expand group members 
+             
 ------------
 <GetMsgMetadataRequest>
   <m ids="{msg-id-list}"/>
