@@ -564,6 +564,10 @@ extends TestCase {
         content = "Resent-Message-ID: " + System.currentTimeMillis() + "\r\n" + content;
         TestUtil.addMessageLmtp(recipients, USER_NAME, content);
         assertEquals(3, TestUtil.search(mbox, query).size());
+        
+        // Redeliver the same message, make sure it gets deduped.
+        TestUtil.addMessageLmtp(recipients, USER_NAME, content);
+        assertEquals(3, TestUtil.search(mbox, query).size());
     }
 
     // bug 53058

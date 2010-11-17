@@ -210,12 +210,15 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         try {
             String id = pm.getMimeMessage().getHeader("Resent-Message-ID", null);
             if (!Strings.isNullOrEmpty(id)) {
+                ZimbraLog.lmtp.debug("Resent-Message-ID=%s", id);
                 return id;
             }
         } catch (MessagingException e) {
             ZimbraLog.lmtp.warn("Unable to determine Resent-Message-ID header value", e);
         }
-        return pm.getMessageID();
+        String id = pm.getMessageID();
+        ZimbraLog.lmtp.debug("Resent-Message-ID not found.  Message-ID=%s", id);
+        return id;
     }
     
     /**
@@ -243,7 +246,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
     private void addToDedupeCache(ParsedMessage pm, Mailbox mbox) {
         if (pm == null || mbox == null)
             return;
-        String msgid = pm.getMessageID();
+        String msgid = getMessageID(pm);
         if (msgid == null || msgid.equals(""))
             return;
 
