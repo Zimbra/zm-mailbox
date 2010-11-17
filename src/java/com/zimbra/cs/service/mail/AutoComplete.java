@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
@@ -43,7 +42,7 @@ public class AutoComplete extends MailDocumentHandler {
 
         Provisioning.GalSearchType type = Provisioning.GalSearchType.fromString(request.getAttribute(MailConstants.A_TYPE, "account"));
         int limit = account.getContactAutoCompleteMaxResults();
-        boolean needCanExpand = request.getAttributeBool(AccountConstants.A_NEED_EXP, false);
+        boolean needCanExpand = request.getAttributeBool(MailConstants.A_NEED_EXP, false);
 
         AutoCompleteResult result = query(request, zsc, account, false, name, limit, type, needCanExpand);
         Element response = zsc.createElement(MailConstants.AUTO_COMPLETE_RESPONSE);
@@ -93,9 +92,9 @@ public class AutoComplete extends MailDocumentHandler {
             cn.addAttribute(MailConstants.A_EMAIL, entry.getEmail());
             cn.addAttribute(MailConstants.A_MATCH_TYPE, getType(entry));
             cn.addAttribute(MailConstants.A_RANKING, Integer.toString(entry.getRanking()));
-            cn.addAttribute(AccountConstants.A_IS_GROUP, entry.isGroup());
+            cn.addAttribute(MailConstants.A_IS_GROUP, entry.isGroup());
             if (entry.isGroup() && entry.canExpandGroupMembers())
-                cn.addAttribute(AccountConstants.A_EXP, true);
+                cn.addAttribute(MailConstants.A_EXP, true);
 
             ItemId id = entry.getId();
             if (id != null)

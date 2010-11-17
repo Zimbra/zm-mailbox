@@ -102,6 +102,10 @@ public class GetMsg extends MailDocumentHandler {
                 ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers, false);
             }
         }
+        
+        if (eMsg.getAttributeBool(MailConstants.A_NEED_EXP, false))
+            ToXML.encodeAddrsWithGroupInfo(response, getAuthenticatedAccount(zsc));
+        
         return response;
     }
 
