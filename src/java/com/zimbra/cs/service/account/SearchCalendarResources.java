@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -38,7 +39,7 @@ import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Term;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
-// import com.zimbra.cs.account.ldap.LdapEntrySearchFilter.LdapQueryVisitor;
+import com.zimbra.cs.account.ldap.LdapEntrySearchFilter.LdapQueryVisitor;
 import com.zimbra.cs.gal.GalSearchQueryCallback;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
@@ -124,15 +125,13 @@ public class SearchCalendarResources extends GalDocumentHandler {
         // limit for GAL sync account search is taken from the request
         // set a default if it is not specified in the request
         // otherwise mailbox search defaults to 30
+        // also note that mailbox search has a hard limit of 1000
         if (request.getAttribute(MailConstants.A_QUERY_LIMIT, null) == null)
             request.addAttribute(MailConstants.A_QUERY_LIMIT, 100);
         
         // set limit for the LDAP search
         // paging is not supported for LDAP search, set a high limit
-        //
-        // NOTE: if it is a GAL sync account search, the limit is taken from the limit="..."
-        //       attribute in the SOAP request
-        params.setLimit(2000);
+        params.setLimit(LC.calendar_resource_ldap_search_maxsize.intValue());
 
         String attrsStr = request.getAttribute(AccountConstants.A_ATTRS, null);
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
@@ -149,6 +148,12 @@ public class SearchCalendarResources extends GalDocumentHandler {
         Element mProxiedResponse;
         Set<String> mAttrs;
         EntrySearchFilter mFilter;
+        
+        // default to true.
+        // if there is no match (so we don't get a change to update it), 
+        // the "more" flag in the response should be 0
+        // and it doesn't matter what value pagingSupported is
+        boolean mPagingSupported = true; 
         
         public CalendarResourceGalSearchResultCallback(GalSearchParams params, EntrySearchFilter filter, Set<String> attrs) {
             super(params);
@@ -171,12 +176,17 @@ public class SearchCalendarResources extends GalDocumentHandler {
         public Element getResponse() {
             if (mProxiedResponse != null)
                 return mProxiedResponse;
-            else
+            else {
+                Element resp = super.getResponse();
+                resp.addAttribute(AccountConstants.A_PAGINATION_SUPPORTED, mPagingSupported);
                 return super.getResponse();
+            }
         }
         
         @Override
         public Element handleContact(Contact contact) throws ServiceException {
+            setPagingSupported(true);
+            
             com.zimbra.cs.service.account.ToXML.encodeCalendarResource(getResponse(), 
                     mFormatter.formatItemId(contact), contact.get(ContactConstants.A_email), 
                     contact.getAllFields(), mAttrs, null);
@@ -185,12 +195,13 @@ public class SearchCalendarResources extends GalDocumentHandler {
         
         @Override
         public void handleContact(GalContact galContact) throws ServiceException {
+            setPagingSupported(false);
+            
             /*
              * entries found in Zimbra GAL is already filtered by the extra search query
              * entries found in external GAL needs to be filtered for the exta crteria
              */
-            // if (galContact.isZimbraGal() || matched(galContact)) {
-            if (matched(galContact)) {    
+            if (galContact.isZimbraGal() || matched(galContact)) {
                 com.zimbra.cs.service.account.ToXML.encodeCalendarResource(getResponse(), 
                         galContact.getId(), galContact.getSingleAttr(ContactConstants.A_email), 
                         galContact.getAttrs(), mAttrs, null);
@@ -200,6 +211,14 @@ public class SearchCalendarResources extends GalDocumentHandler {
         @Override
         public void handleElement(Element e) throws ServiceException {
             // should never be called
+        }
+        
+        // kind of a hack: paging is supported for GAL sync account search, not for 
+        // LDAP search.  For the lifetime of this CalendarResourceGalSearchResultCallback
+        // object, we either get all GAL sync account search callback calls, or all LDAP 
+        // search callback calls, never a mix.
+        private void setPagingSupported(boolean suported) {
+            mPagingSupported = suported;
         }
         
         // not used any more, we no longer need to filter search result for 
@@ -242,13 +261,10 @@ public class SearchCalendarResources extends GalDocumentHandler {
          * Supply an extra query for Zimbra GAL LDAP search
          */
         public String getZimbraLdapSearchQuery() {
-            /*
             LdapQueryVisitor visitor = new LdapQueryVisitor();
             filter.traverse(visitor);
             String query = visitor.getFilter();
             return (StringUtil.isNullOrEmpty(query) ? null : query);
-            */
-            return null; // TODO
         }
     }
     

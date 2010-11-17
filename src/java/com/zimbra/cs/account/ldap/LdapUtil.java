@@ -630,6 +630,7 @@ public class LdapUtil {
       }
 
       public static void searchGal(ZimbraLdapContext zlc,
+                                   GalSearchConfig.GalType galType,
                                    int pageSize,
                                    String base, 
                                    String query, 
@@ -701,7 +702,7 @@ public class LdapUtil {
                         SearchResult sr = (SearchResult) ne.next();
                         String dn = sr.getNameInNamespace();
                         
-                        GalContact lgc = new GalContact(dn, rules.apply(zlc, base, sr));
+                        GalContact lgc = new GalContact(galType, dn, rules.apply(zlc, base, sr));
                         String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
                         result.setToken(getLaterTimestamp(result.getToken(), mts));
                         String cts = (String) lgc.getAttrs().get("createTimeStamp");
@@ -834,6 +835,7 @@ public class LdapUtil {
         try {
             zlc = new ZimbraLdapContext(galParams.url(), galParams.requireStartTLS(), galParams.credential(), "external GAL");
             searchGal(zlc,
+                      GalSearchConfig.GalType.ldap,
                       galParams.pageSize(),
                       galParams.searchBase(), 
                       query, 
@@ -935,6 +937,7 @@ public class LdapUtil {
                         cfg.getBindDn(), cfg.getBindPassword(), "external GAL");
             
             searchGal(zlc,
+                      galType,
                       cfg.getPageSize(),
                       cfg.getSearchBase(),
                       params.generateLdapQuery(),

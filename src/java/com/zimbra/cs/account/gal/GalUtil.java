@@ -23,7 +23,13 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 
 public class GalUtil {
     
-    public static String expandFilter(String tokenize, String filterTemplate, String key, String token, boolean internal) throws ServiceException {
+    public static String expandFilter(String tokenize, String filterTemplate, String key, String token, boolean internal) 
+    throws ServiceException {
+        return expandFilter(tokenize, filterTemplate, key, token, internal, null);
+    }
+    
+    public static String expandFilter(String tokenize, String filterTemplate, String key, String token, boolean internal,
+            String extraQuery) throws ServiceException {
         String query;
         
         /*
@@ -43,6 +49,9 @@ public class GalUtil {
         	String arg = LdapUtil.escapeSearchFilterArg(token);
         	query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+query+")";
         }
+        
+        if (extraQuery != null)
+            query = "(&" + query + extraQuery + ")";
         
         return query;
     }

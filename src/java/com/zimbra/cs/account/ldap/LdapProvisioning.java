@@ -74,6 +74,7 @@ import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.krb5.Krb5Principal;
 import com.zimbra.cs.account.names.NameUtil;
+import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mime.MimeTypeInfo;
@@ -4944,6 +4945,7 @@ public class LdapProvisioning extends Provisioning {
         try {
             zlc = new ZimbraLdapContext(false);
             LdapUtil.searchGal(zlc,
+                               GalSearchConfig.GalType.zimbra,
                                galParams.pageSize(),
                                galParams.searchBase(),
                                query,
