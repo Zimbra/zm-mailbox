@@ -15,6 +15,7 @@
   <property name="common.classes.dir" location="${common.dir}/build/classes"/>
   <property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar"/>
   <property name="common.jars.dir" location="${common.dir}/jars"/>
+  <property name="metro.jars.dir" location="jars/metro"/>
 
   <property name="xml.schema.dir" location="${build.dir}/schema"/>
 
@@ -29,6 +30,25 @@
         <include name="**/*.jar"/>
     </fileset>
   </path>
+
+  <path id="jaxws.classpath">
+    <fileset dir="${metro.jars.dir}">
+        <include name="**/*.jar"/>
+    </fileset>
+  </path>
+
+  <path id="test.class.path">
+    <path refid="jaxws.classpath"/>
+    <path refid="class.path"/>
+  </path>
+
+  <taskdef name="schemagen" classname="com.sun.tools.jxc.SchemaGenTask">
+    <classpath refid="jaxws.classpath"/>
+  </taskdef>
+
+  <taskdef name="wsimport" classname="com.sun.tools.ws.ant.WsImport">
+      <classpath refid="jaxws.classpath"/>
+  </taskdef>
 
   <!-- Targets -->
   <target name="build-init">
@@ -46,14 +66,62 @@
     <jar destfile="${build.dir}/${jar.file}" basedir="${build.classes.dir}" />
   </target>
 
-  <target name="clean" description="Removes build files and undeploys extension">
+  <target name="clean" description="Removes build files">
+    <delete dir="${test.src.dir}/com/zimbra/soap/mail/wsimport" />
+    <delete dir="${test.src.dir}/com/zimbra/soap/admin/wsimport" />
+    <delete dir="${test.src.dir}/com/zimbra/soap/account/wsimport" />
     <delete dir="${build.dir}" />
   </target>
 
-  <target name="test-compile" depends="compile">
+  <target name="wsdl-files">
+    <copy verbose="true" overwrite="true" todir="${xml.schema.dir}">
+        <fileset dir="schema">
+            <include name="*.wsdl" />
+        </fileset>
+    </copy>
+  </target>
+
+  <target name="generate-schema">
+    <mkdir dir="${xml.schema.dir}"/>
+    <schemagen srcdir="${src.java.dir}" destdir="${xml.schema.dir}">
+      <classpath refid="class.path"/>
+      <schema namespace="urn:zimbra" file="zimbra.xsd" />
+      <schema namespace="urn:zimbraAccount" file="zimbraAccount.xsd" />
+      <schema namespace="urn:zimbraAdmin" file="zimbraAdmin.xsd" />
+      <schema namespace="urn:zimbraMail" file="zimbraMail.xsd" />
+    </schemagen>
+  </target>
+
+  <target name="account-service-client-support" depends="wsdl-files,generate-schema">
+    <mkdir dir="${test.classes.dir}"/>
+    <!-- extension="true|false" - allow vendor extensions -->
+    <wsimport   wsdl="${xml.schema.dir}/AccountService.wsdl"
+                destdir="${test.classes.dir}"
+                sourcedestdir="${test.src.dir}"
+                keep="true"
+                package="com.zimbra.soap.account.wsimport">
+    </wsimport>
+  </target>
+
+  <target name="mail-service-client-support" depends="wsdl-files,generate-schema">
+    <mkdir dir="${test.classes.dir}"/>
+    <!-- extension="true|false" - allow vendor extensions -->
+    <wsimport   wsdl="${xml.schema.dir}/MailService.wsdl"
+                destdir="${test.classes.dir}"
+                sourcedestdir="${test.src.dir}"
+                keep="true"
+                package="com.zimbra.soap.mail.wsimport">
+    </wsimport>
+  </target>
+
+  <target name="wsdl-client-support"
+      depends="account-service-client-support,mail-service-client-support">
+  </target>
+
+  <target name="test-compile" depends="compile,wsdl-client-support">
     <mkdir dir="${test.classes.dir}"/>
     <javac srcdir="${test.src.dir}" destdir="${test.classes.dir}"
-      debug="true" classpathref="class.path" target="${javac.target}"/>
+      debug="true" classpathref="test.class.path" target="${javac.target}"/>
     <copy todir="${test.classes.dir}">
       <fileset dir="${test.src.dir}" excludes="**/*.java"/>
     </copy>
@@ -64,7 +132,7 @@
     <mkdir dir="${test.dir}/output"/>
     <mkdir dir="${test.dir}/report"/>
     <junit printsummary="on" haltonfailure="on" tempdir="${test.dir}">
-      <classpath refid="class.path"/>
+      <classpath refid="test.class.path"/>
       <classpath path="${test.classes.dir}"/>
       <formatter type="xml"/>
       <batchtest todir="${test.dir}/output">

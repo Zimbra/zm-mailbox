@@ -33,6 +33,13 @@
     <part name="parameters" element="tns:GetInfoResponse"></part>
   </message>
 
+  <message name="getPrefsRequest">
+    <part name="parameters" element="tns:GetPrefsRequest"></part>
+  </message>
+  <message name="getPrefsResponse">
+    <part name="parameters" element="tns:GetPrefsResponse"></part>
+  </message>
+
   <message name="getSignaturesRequest">
     <part name="parameters" element="tns:GetSignaturesRequest"></part>
   </message>
@@ -57,6 +64,10 @@
       <input message="tns:getInfoRequest"/>
       <output message="tns:getInfoResponse"/>
     </operation>
+    <operation name="getPrefsRequest">
+      <input message="tns:getPrefsRequest"/>
+      <output message="tns:getPrefsResponse"/>
+    </operation>
     <operation name="getSignaturesRequest">
       <input message="tns:getSignaturesRequest"/>
       <output message="tns:getSignaturesResponse"/>
@@ -68,46 +79,55 @@
     <operation name="authRequest">
       <soap:operation soapAction=""></soap:operation>
       <input>
-	<soap:body use="literal"></soap:body>
+    <soap:body use="literal"></soap:body>
       </input>
       <output>
-	<soap:body use="literal"></soap:body>
+    <soap:body use="literal"></soap:body>
       </output>
     </operation>
     <operation name="changePasswordRequest">
       <soap:operation soapAction=""></soap:operation>
       <input>
-	<soap:body use="literal"></soap:body>
+    <soap:body use="literal"></soap:body>
       </input>
       <output>
-	<soap:body use="literal"></soap:body>
+    <soap:body use="literal"></soap:body>
       </output>
     </operation>
     <operation name="getIdentitiesRequest">
       <soap:operation soapAction=""></soap:operation>
       <input>
-	<soap:body use="literal"></soap:body>
+    <soap:body use="literal"></soap:body>
       </input>
       <output>
-	<soap:body use="literal"></soap:body>
+    <soap:body use="literal"></soap:body>
       </output>
     </operation>
     <operation name="getInfoRequest">
       <soap:operation soapAction=""></soap:operation>
       <input>
-	<soap:body use="literal"></soap:body>
+    <soap:body use="literal"></soap:body>
       </input>
       <output>
-	<soap:body use="literal"></soap:body>
+    <soap:body use="literal"></soap:body>
+      </output>
+    </operation>
+    <operation name="getPrefsRequest">
+      <soap:operation soapAction=""></soap:operation>
+      <input>
+    <soap:body use="literal"></soap:body>
+      </input>
+      <output>
+    <soap:body use="literal"></soap:body>
       </output>
     </operation>
     <operation name="getSignaturesRequest">
       <soap:operation soapAction=""></soap:operation>
       <input>
-	<soap:body use="literal"></soap:body>
+    <soap:body use="literal"></soap:body>
       </input>
       <output>
-	<soap:body use="literal"></soap:body>
+    <soap:body use="literal"></soap:body>
       </output>
     </operation>
   </binding>
