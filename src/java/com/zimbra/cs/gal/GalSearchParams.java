@@ -48,6 +48,7 @@ public class GalSearchParams {
 	private Domain mDomain;
     private SearchParams mSearchParams;
     private GalSearchResultCallback mResultCallback;
+    private GalSearchQueryCallback mExtraQueryCallback;
     private Element mRequest;
     private QName mResponse;
     private DataSource mDataSource;
@@ -153,6 +154,10 @@ public class GalSearchParams {
 		return mResultCallback;
 	}
 	
+    public GalSearchQueryCallback getExtraQueryCallback() {
+        return mExtraQueryCallback;
+    }
+	   
 	public Element getRequest() {
 		return mRequest;
 	}
@@ -192,7 +197,7 @@ public class GalSearchParams {
 	public void setQuery(String query) {
 		mQuery = query;
 	}
-	
+	   
 	public void setToken(String token) {
 		mSyncToken = new GalSyncToken(token);
 	}
@@ -228,6 +233,10 @@ public class GalSearchParams {
 		mResultCallback = new GalSearchResultCallback(this);
 		return mResultCallback;
 	}
+	
+    public void setExtraQueryCallback(GalSearchQueryCallback callback) {
+        mExtraQueryCallback = callback;
+    }
 	
 	public void setRequest(Element req) {
 		mRequest = req;

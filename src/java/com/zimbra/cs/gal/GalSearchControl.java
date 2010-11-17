@@ -226,6 +226,16 @@ public class GalSearchControl {
             searchQuery.append(query.replace("\"", "\\\"")); // escape quotes
             searchQuery.append("\" AND");
         }
+        
+        GalSearchQueryCallback queryCallback = mParams.getExtraQueryCallback();
+        if (queryCallback != null) {
+            String extraQuery = queryCallback.getMailboxSearchQuery();
+            if (extraQuery != null) {
+                ZimbraLog.gal.debug("extra search query: " + extraQuery);
+                searchQuery.append(" (").append(extraQuery).append(") AND");
+            }
+        }
+        
         GalMode galMode = mParams.getDomain().getGalMode();
         boolean first = true;
         for (DataSource ds : galAcct.getAllDataSources()) {
