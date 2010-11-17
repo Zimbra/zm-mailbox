@@ -763,7 +763,7 @@ import and export of addressbook.
 ----------------------------
 
  <SearchCalendarResourcesRequest>
-     [attrs="a1,a2,a3"] [sortBy="{sortBy}"] [sortAscending="{sortAscending}"] [limit="..."]>
+     [attrs="a1,a2,a3"] [sortBy="{sortBy}"] [sortAscending="{sortAscending}"] [limit="..."] [offset="..."]>
 
    [<name>...</name>]
    <searchFilter>
@@ -778,7 +778,7 @@ import and export of addressbook.
 
  </SearchCalendarResourcesRequest>
 
- <SearchCalendarResourcesResponse>
+ <SearchCalendarResourcesResponse [paginationSupported="1|0"]>
    <calresource name="{name}" id="{id}">
      <a n="...">...</a>+
    </calresource>*
@@ -813,7 +813,14 @@ import and export of addressbook.
           "startswith" - attr starts with value (string)
           "endswith" - attr ends with value (string)
      value - value
-
+     
+   SearchCalendarResourcesResponse:  
+   paginationSupported: 
+     1 - limit and offset in the request was honored
+     0 - the underlying search does not support pagination
+         limit and offset in the request was not honored
+        
+         
 ----------------------------
 
  <ModifyPrefsRequest>

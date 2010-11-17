@@ -30,7 +30,7 @@ import com.zimbra.cs.account.EntrySearchFilter.Visitor;
 
 public class LdapEntrySearchFilter {
 
-    private static class LdapQueryVisitor implements Visitor {
+    public static class LdapQueryVisitor implements Visitor {
         StringBuilder mLdapFilter;
 
         public LdapQueryVisitor() {

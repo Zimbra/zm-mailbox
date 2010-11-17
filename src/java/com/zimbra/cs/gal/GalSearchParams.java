@@ -253,7 +253,12 @@ public class GalSearchParams {
 	public String generateLdapQuery() throws ServiceException {
 		assert(mConfig != null);
 		String token = (mSyncToken != null) ? mSyncToken.getLdapTimestamp(mConfig.mTimestampFormat) : null;
-		return GalUtil.expandFilter(mConfig.getTokenizeKey(), mConfig.getFilter(), mQuery, token, false);
+		
+		String extraQuery = null;
+		if (GalSearchConfig.GalType.zimbra == mConfig.getGalType() && mExtraQueryCallback != null) {
+		    extraQuery = mExtraQueryCallback.getZimbraLdapSearchQuery();
+		}
+		return GalUtil.expandFilter(mConfig.getTokenizeKey(), mConfig.getFilter(), mQuery, token, false, extraQuery);
 	}
 	
 	public void setGalSyncAccount(Account acct) {
