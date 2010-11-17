@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.mime;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -57,7 +58,12 @@ import javax.mail.internet.ParseException;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.QCodec;
 
+import com.google.common.base.Charsets;
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
+import com.ibm.icu.text.CharsetDetector;
+import com.ibm.icu.text.CharsetMatch;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -106,6 +112,10 @@ public class Mime {
      * give up and wrap the whole multipart in a text/plain.
      */
     private static final int MAX_PREAMBLE_LENGTH = 1024;
+
+    private static final Charset CP1252 = toCharset(MimeConstants.P_CHARSET_CP1252);
+    private static final Charset GB2312 = toCharset(MimeConstants.P_CHARSET_GB2312);
+    private static final Charset GBK = toCharset(MimeConstants.P_CHARSET_GBK);
 
     public static class FixedMimeMessage extends MimeMessage {
         public FixedMimeMessage(Session session)  {
@@ -866,69 +876,112 @@ public class Mime {
         return buffer.toString();
     }
 
-    private static boolean SUPPORTS_CP1252 = Charset.isSupported(MimeConstants.P_CHARSET_CP1252);
-    private static boolean SUPPORTS_GBK = Charset.isSupported(MimeConstants.P_CHARSET_GBK);
+    /**
+     * Returns a {@link Charset} for the name, or null if the name is invalid.
+     *
+     * @param name charset name
+     * @return charset or null
+     */
+    private static Charset toCharset(String name) {
+        if (Strings.isNullOrEmpty(name)) {
+            return null;
+        }
+        try {
+            return Charset.forName(name.trim());
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
-    private static final boolean DEFAULT_CP1252 = SUPPORTS_CP1252 && Charset.defaultCharset().name().equals(MimeConstants.P_CHARSET_LATIN1);
-    private static final boolean DEFAULT_GBK = SUPPORTS_GBK && Charset.defaultCharset().name().equals(MimeConstants.P_CHARSET_EUC_CN);
+    /**
+     * Returns a superset of the charset if available.
+     *
+     * @param charset charset
+     * @return a superset of the charset, or the same charset
+     */
+    private static Charset normalizeCharset(Charset charset) {
+        // windows-1252 is a superset of iso-8859-1 and they're often confused, so use cp1252 in its place
+        if (CP1252 != null && Charsets.ISO_8859_1.equals(charset)) {
+            return CP1252;
+        }
 
-    /** Returns a reader that decodes the specified <code>InputStream</code>.
-     *  <code>contentType</code> must of type "text/*".  If a valid charset
-     *  parameter is present in the Content-Type string, it is used as the
-     *  charset for decoding the text.  If not, we fall back to the user's
-     *  default charset preference.  If both of those options fail, the
-     *  platform default is used.
+        if (GBK != null && charset.equals(GB2312)) {
+            return GBK;
+        }
+
+        return charset;
+    }
+
+    /**
+     * Returns a {@link Reader} that decodes the specified {@link InputStream}.
+     * <p>
+     * {@code contentType} must of type "text/*". This method tries to detect a charset in the following order.
+     * <ol>
+     *  <li>{@code charset} parameter in {@code Content-Type}
+     *  <li>auto-detect using ICU4J
+     *  <li>user's default charset preference
+     *  <li>platform default charset
+     * </ol>
      *
      * @param input  The InputStream to decode.
      * @param contentType  The stream's Content-Type, which must be "text/*".
-     * @param defaultCharset  The user's default charset preference */
+     * @param defaultCharset  The user's default charset preference
+     */
     public static Reader getTextReader(InputStream input, String contentType, String defaultCharset) {
-        Reader reader = null;
-
-        String charset = getCharset(contentType);
-        if (charset != null) {
-            charset = charset.toLowerCase();
-            // windows-1252 is a superset of iso-8859-1 and they're often confused, so use cp1252 in its place
-            if (SUPPORTS_CP1252 && charset.equals(MimeConstants.P_CHARSET_LATIN1))
-                reader = getReader(input, MimeConstants.P_CHARSET_CP1252);
-            else if (SUPPORTS_GBK && (charset.equals(MimeConstants.P_CHARSET_GB2312) || charset.equals(MimeConstants.P_CHARSET_EUC_CN)))
-                reader = getReader(input, MimeConstants.P_CHARSET_GBK);
-            if (reader == null)
-                reader = getReader(input, charset);
+        Charset charset = toCharset(getCharset(contentType));
+        if (charset == null) {
+            if (!input.markSupported()) {
+                input = new BufferedInputStream(input);
+            }
+            charset = detectCharset(input, toCharset(defaultCharset));
         }
 
-        // if either there was no explicit charset on the part or it was invalid, try the user's personal default charset
-        if (reader == null && defaultCharset != null && !defaultCharset.trim().isEmpty()) {
-            defaultCharset = defaultCharset.toLowerCase();
-            // windows-1252 is a superset of iso-8859-1 and they're often confused, so use cp1252 in its place
-            if (SUPPORTS_CP1252 && defaultCharset.equals(MimeConstants.P_CHARSET_LATIN1))
-                reader = getReader(input, MimeConstants.P_CHARSET_CP1252);
-            else if (SUPPORTS_GBK && (defaultCharset.equals(MimeConstants.P_CHARSET_GB2312) || defaultCharset.equals(MimeConstants.P_CHARSET_EUC_CN)))
-                reader = getReader(input, MimeConstants.P_CHARSET_GBK);
-            if (reader == null)
-                reader = getReader(input, defaultCharset);
-        }
-
-        // if the user's default charset was also either unspecified or unavailable, go with the JVM's default charset
-        if (reader == null && DEFAULT_CP1252)
-            reader = getReader(input, MimeConstants.P_CHARSET_CP1252);
-        else if (reader == null && DEFAULT_GBK)
-            reader = getReader(input, MimeConstants.P_CHARSET_GBK);
-        if (reader == null)
-            reader = new InputStreamReader(input);
-
-        return reader;
+        return new InputStreamReader(input, normalizeCharset(charset));
     }
 
-    /** Returns a <code>Reader</code> for the <code>InputStream</code> using
-     *  the supplied <tt>charset</tt> to decode.  Returns <tt>null</tt> if
-     *  that charset is not available. */
-    private static Reader getReader(InputStream is, String charset) {
+    private static Charset detectCharset(InputStream input, Charset defaultCharset) {
+        assert(input.markSupported());
+
+        Charset platformDefaultCharset = Charset.defaultCharset();
+        CharsetDetector detector = new CharsetDetector();
         try {
-            return new InputStreamReader(is, charset);
-        } catch (UnsupportedEncodingException e) {
-            return null;
+            detector.setText(input);
+        } catch (IOException e) {
+            return Objects.firstNonNull(defaultCharset, platformDefaultCharset);
         }
+
+        CharsetMatch[] matches = detector.detectAll();
+        List<Charset> charsets = new ArrayList<Charset>(matches.length);
+        for (CharsetMatch match : detector.detectAll()) {
+            try {
+                Charset charset = Charset.forName(match.getName());
+                if (match.getConfidence() > 50) {
+                    return charset;
+                }
+                charsets.add(Charset.forName(match.getName()));
+            } catch (Exception ignore) {
+            }
+        }
+
+        if (charsets.isEmpty()) { // nothing detected
+            return Objects.firstNonNull(defaultCharset, platformDefaultCharset);
+        }
+
+        if (defaultCharset != null) {
+            for (Charset charset : charsets) { // preference to the user default
+                if (charset.equals(defaultCharset)) {
+                    return charset;
+                }
+            }
+        }
+
+        for (Charset charset : charsets) { // preference to the platform default
+            if (charset.equals(platformDefaultCharset)) {
+                return charset;
+            }
+        }
+
+        return charsets.get(0); // otherwise the first entry
     }
 
     public static String getCharset(String contentType) {

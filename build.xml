@@ -563,10 +563,10 @@
     </target>
 
     <target name="clean" description="Deletes classes from build directories">
-        <ant dir="${common.dir}" target="clean" inheritAll="false"/>
+      <ant dir="${common.dir}" target="clean" inheritAll="false"/>
       <ant dir="${soap.dir}" target="clean" inheritAll="false"/>
-        <ant dir="${im.dir}" target="clean" inheritAll="false"/>
-        <delete dir="${build.dir}"/>
+      <ant dir="${im.dir}" target="clean" inheritAll="false"/>
+      <delete dir="${build.dir}"/>
     </target>
 
     <target name="clean-opt-zimbra" description="Deletes deployed jars, classes, and zimlets">
@@ -574,25 +574,29 @@
       <delete dir="${zimbra.home.dir}/lib/jars" failonerror="false"/>
       <delete dir="${zimbra.home.dir}/zimlets-deployed" failonerror="false"/>
       <delete dir="${zimbra.home.dir}/zimlets-properties" failonerror="false"/>
-        <delete failonerror="false">
-          <fileset dir="${jetty.home.dir}/common/lib" includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mysql-connector-java*.jar,mail.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor*.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,jython*.jar"/>
+      <delete failonerror="false">
+        <fileset dir="${jetty.home.dir}/common/lib" includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mysql-connector-java*.jar,mail.jar,zimbra-native.jar,bouncycastle.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor*.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,jython*.jar"/>
       </delete>
     </target>
 
     <!-- jetty loads jetty-util*.jar, log4j*.jar and slf4j*.jar -->
-    <property name="war.include" value="slf4j*.jar, *jsieve*.jar, lucene*.jar, ant-tar*.jar"/>
 
     <target name="war" depends="jar">
-        <echo>war.include=${war.include}</echo>
-        <war warfile="${warfile}" webxml="${war.web.xml}">
-            <fileset dir="WebRoot"/>
-            <lib file="${im.jarfile}"/>
-          <lib file="${soap.jarfile}"/>
-            <lib file="${jarfile}"/>
-            <lib dir="${common.jars.dir}" includes="${war.include}"/>
-            <lib dir="${im.jars.dir}" includes="*.jar"/>
-            <classes dir="${config.dir}" includes="sieveConfig.xml"/>
-        </war>
+      <war warfile="${warfile}" webxml="${war.web.xml}">
+        <fileset dir="WebRoot"/>
+        <lib file="${im.jarfile}"/>
+        <lib file="${soap.jarfile}"/>
+        <lib file="${jarfile}"/>
+        <lib dir="${common.jars.dir}">
+          <include name="slf4j*.jar"/>
+          <include name="*jsieve*.jar"/>
+          <include name="lucene*.jar"/>
+          <include name="ant-tar*.jar"/>
+          <include name="icu4j-*.jar"/>
+        </lib>
+        <lib dir="${im.jars.dir}" includes="*.jar"/>
+        <classes dir="${config.dir}" includes="sieveConfig.xml"/>
+      </war>
     </target>
 
     <target name="spnego-war">
@@ -600,56 +604,56 @@
             <fileset dir="${spnego.dir}" includes="*.jsp"/>
         </war>
     </target>
-	
+
     <target name="spnego-dev-deploy" depends="spnego-war">
-    	<antcall target="stop-webserver"/>
-    	
-    	<delete file="${jetty.home.dir}/webapps/spnego.war"/>
-    	
+      <antcall target="stop-webserver"/>
+
+      <delete file="${jetty.home.dir}/webapps/spnego.war"/>
+
         <delete dir="${jetty.home.dir}/webapps/spnego"/>
         <mkdir dir='${jetty.home.dir}/webapps/spnego'/>
-    	<mkdir dir="${jetty.home.dir}/work/spnego"/>
-    	
+      <mkdir dir="${jetty.home.dir}/work/spnego"/>
+
         <copy file="${spnego-warfile}" todir="${jetty.home.dir}/webapps"/>
         <unzip dest="${jetty.home.dir}/webapps/spnego" src="${jetty.home.dir}/webapps/${spnego-warfilename}"/>
-    	
-    	<!-- 
-    	    ==========================
-    	     config rewrite variables 
-    	    ==========================
-    	-->
-    	
-    	<!-- global config -->
-    	<!-- 
-    	    this is the service principal name registered with setspn and ktpass
-    	    it has to be a real routable name to reach the jetty server
-    	-->
-    	<!-- <property name="SERVICE_PRINCIPAL_NAME"     value="jj-server.spnego.local"/> -->
-    	<!-- <property name="SERVICE_PRINCIPAL_NAME"     value="prome-2s-dhcp141.eng.vmware.com"/> -->
-    	<exec executable="hostname" outputproperty="hostname-FQDN">
-    		<arg value="-f"/>
+
+      <!--
+          ==========================
+           config rewrite variables
+          ==========================
+      -->
+
+      <!-- global config -->
+      <!--
+          this is the service principal name registered with setspn and ktpass
+          it has to be a real routable name to reach the jetty server
+      -->
+      <!-- <property name="SERVICE_PRINCIPAL_NAME"     value="jj-server.spnego.local"/> -->
+      <!-- <property name="SERVICE_PRINCIPAL_NAME"     value="prome-2s-dhcp141.eng.vmware.com"/> -->
+      <exec executable="hostname" outputproperty="hostname-FQDN">
+        <arg value="-f"/>
         </exec>
-    	<property name="SERVICE_PRINCIPAL_NAME"     value="${hostname-FQDN}"/>
-    	<echo>===== hostname for spnego: ${SERVICE_PRINCIPAL_NAME} =====</echo>
-    	
-    	<property name="zimbraSpnegoAuthEnabled"     value="TRUE"/>
-    	<property name="zimbraSpnegoAuthRealm"       value="SPNEGO.LOCAL"/>
-    	<property name="zimbraSpnegoAuthKDC"         value="10.114.13.137"/>
-    	<property name="zimbraSpnegoAuthAdminServer" value="10.114.13.137"/>
-    	<property name="zimbraSpnegoAuthErrorURL"    value="/zimbra/?ignoreLoginURL=1"/>
-    	
-    	<!-- server -->
-    	<property name="zimbraSpnegoAuthPrincipal"   value="HTTP/${SERVICE_PRINCIPAL_NAME}@SPNEGO.LOCAL"/>
-    	<property name="zimbraSpnegoAuthTargetName"  value="HTTP/${SERVICE_PRINCIPAL_NAME}"/>
-    	
-    	<!-- domain -->
-    	<property name="zimbraPreAuthKey"            value="4e2816f16c44fab20ecdee39fb850c3b0bb54d03f1d8e073aaea376a4f407f0c"/>
-    	<property name="zimbraVirtualHostname"       value="${SERVICE_PRINCIPAL_NAME}"/>
-    	<property name="zimbraWebClientLoginURL"     value="http://${SERVICE_PRINCIPAL_NAME}:7070/spnego/spnego_preauth.jsp"/>
+      <property name="SERVICE_PRINCIPAL_NAME"     value="${hostname-FQDN}"/>
+      <echo>===== hostname for spnego: ${SERVICE_PRINCIPAL_NAME} =====</echo>
+
+      <property name="zimbraSpnegoAuthEnabled"     value="TRUE"/>
+      <property name="zimbraSpnegoAuthRealm"       value="SPNEGO.LOCAL"/>
+      <property name="zimbraSpnegoAuthKDC"         value="10.114.13.137"/>
+      <property name="zimbraSpnegoAuthAdminServer" value="10.114.13.137"/>
+      <property name="zimbraSpnegoAuthErrorURL"    value="/zimbra/?ignoreLoginURL=1"/>
+
+      <!-- server -->
+      <property name="zimbraSpnegoAuthPrincipal"   value="HTTP/${SERVICE_PRINCIPAL_NAME}@SPNEGO.LOCAL"/>
+      <property name="zimbraSpnegoAuthTargetName"  value="HTTP/${SERVICE_PRINCIPAL_NAME}"/>
+
+      <!-- domain -->
+      <property name="zimbraPreAuthKey"            value="4e2816f16c44fab20ecdee39fb850c3b0bb54d03f1d8e073aaea376a4f407f0c"/>
+      <property name="zimbraVirtualHostname"       value="${SERVICE_PRINCIPAL_NAME}"/>
+      <property name="zimbraWebClientLoginURL"     value="http://${SERVICE_PRINCIPAL_NAME}:7070/spnego/spnego_preauth.jsp"/>
         <property name="zimbraWebClientLogoutURL"    value="http://${SERVICE_PRINCIPAL_NAME}:7070/?sso=1"/>
         <property name="zimbraAuthKerberos5Realm"    value="${zimbraSpnegoAuthRealm}"/>
-   	
-    	<!-- modify ldap -->
+
+      <!-- modify ldap -->
         <antcall target="zmprov">
             <param name="args" value="-l mcf zimbraSpnegoAuthEnabled ${zimbraSpnegoAuthEnabled}"/>
         </antcall>
@@ -665,14 +669,14 @@
         <antcall target="zmprov">
             <param name="args" value="-l mcf zimbraSpnegoAuthErrorURL ${zimbraSpnegoAuthErrorURL}"/>
         </antcall>
-    	
+
         <antcall target="zmprov">
             <param name="args" value="-l ms ${zimbra.server.hostname} zimbraSpnegoAuthPrincipal ${zimbraSpnegoAuthPrincipal}"/>
         </antcall>
         <antcall target="zmprov">
             <param name="args" value="-l ms ${zimbra.server.hostname} zimbraSpnegoAuthTargetName ${zimbraSpnegoAuthTargetName}"/>
         </antcall>
-    	
+
         <antcall target="zmprov">
              <param name="args" value="-l md ${defaultdomain.name} zimbraPreAuthKey ${zimbraPreAuthKey}"/>
         </antcall>
@@ -688,71 +692,71 @@
         <antcall target="zmprov">
              <param name="args" value="-l md ${defaultdomain.name} zimbraAuthKerberos5Realm ${zimbraAuthKerberos5Realm}"/>
         </antcall>
-    	
-    	<!-- copy spnego config files to jetty/etc -->
+
+      <!-- copy spnego config files to jetty/etc -->
         <echo/>
         <echo>----- copying files -----</echo>
         <echo/>
-    	<copy file="${spnego.dir}/etc/krb5.ini" todir="${jetty.conf.dir}" overwrite="true"/>
+      <copy file="${spnego.dir}/etc/krb5.ini" todir="${jetty.conf.dir}" overwrite="true"/>
         <copy file="${spnego.dir}/etc/spnego.conf" todir="${jetty.conf.dir}" overwrite="true"/>
         <copy file="${spnego.dir}/etc/spnego.properties" todir="${jetty.conf.dir}" overwrite="true"/>
-    	
-    	<echo/>
-    	<echo>----- rewriting files -----</echo>
-    	<echo/>
-    	
-    	<!-- replace the preauth key in spnego_preauth.jsp -->
-    	<echo>rewriting ${jetty.home.dir}/webapps/spnego/spnego_preauth.jsp</echo>
+
+      <echo/>
+      <echo>----- rewriting files -----</echo>
+      <echo/>
+
+      <!-- replace the preauth key in spnego_preauth.jsp -->
+      <echo>rewriting ${jetty.home.dir}/webapps/spnego/spnego_preauth.jsp</echo>
         <replace file="${jetty.home.dir}/webapps/spnego/spnego_preauth.jsp">
              <replacefilter token="REPLACE-ME-WITH-THE-PREAUTH-KEY" value="${zimbraPreAuthKey}"/>
         </replace>
-    	
-    	<!-- mimic zmconfigd -->
-    	<echo>rewriting ${jetty.home.dir}/webapps/spnego/spnego_error.jsp</echo>
-    	<replace file="${jetty.home.dir}/webapps/spnego/spnego_error.jsp">
+
+      <!-- mimic zmconfigd -->
+      <echo>rewriting ${jetty.home.dir}/webapps/spnego/spnego_error.jsp</echo>
+      <replace file="${jetty.home.dir}/webapps/spnego/spnego_error.jsp">
             <replacefilter token="%%zimbraSpnegoAuthErrorURL%%" value="${zimbraSpnegoAuthErrorURL}"/>
         </replace>
-    	
-    	<echo>rewriting ${jetty.home.dir}/webapps/spnego/WEB-INF/web.xml</echo>
-    	<replace file="${jetty.home.dir}/webapps/spnego/WEB-INF/web.xml">
-    	    <replacefilter token="%%zimbraSpnegoAuthRealm%%" value="${zimbraSpnegoAuthRealm}"/>
-    	</replace>
-    	
-    	<echo>rewriting ${jetty.conf.dir}/krb5.ini</echo>
-    	<replace file="${jetty.conf.dir}/krb5.ini">
+
+      <echo>rewriting ${jetty.home.dir}/webapps/spnego/WEB-INF/web.xml</echo>
+      <replace file="${jetty.home.dir}/webapps/spnego/WEB-INF/web.xml">
+          <replacefilter token="%%zimbraSpnegoAuthRealm%%" value="${zimbraSpnegoAuthRealm}"/>
+      </replace>
+
+      <echo>rewriting ${jetty.conf.dir}/krb5.ini</echo>
+      <replace file="${jetty.conf.dir}/krb5.ini">
             <replacefilter token="%%zimbraSpnegoAuthRealm%%" value="${zimbraSpnegoAuthRealm}"/>
-        	<replacefilter token="%%zimbraSpnegoAuthKDC%%" value="${zimbraSpnegoAuthKDC}"/>
-        	<replacefilter token="%%zimbraSpnegoAuthAdminServer%%" value="${zimbraSpnegoAuthAdminServer}"/>
+          <replacefilter token="%%zimbraSpnegoAuthKDC%%" value="${zimbraSpnegoAuthKDC}"/>
+          <replacefilter token="%%zimbraSpnegoAuthAdminServer%%" value="${zimbraSpnegoAuthAdminServer}"/>
         </replace>
-    	
-    	<echo>rewriting ${jetty.conf.dir}/spnego.conf</echo>
+
+      <echo>rewriting ${jetty.conf.dir}/spnego.conf</echo>
         <replace file="${jetty.conf.dir}/spnego.conf">
             <replacefilter token="%%zimbraSpnegoAuthPrincipal%%" value="${zimbraSpnegoAuthPrincipal}"/>
         </replace>
-    	
-    	<echo>rewriting ${jetty.conf.dir}/spnego.properties</echo>
+
+      <echo>rewriting ${jetty.conf.dir}/spnego.properties</echo>
         <replace file="${jetty.conf.dir}/spnego.properties">
             <replacefilter token="%%zimbraSpnegoAuthTargetName%%" value="${zimbraSpnegoAuthTargetName}"/>
         </replace>
-    	
-    	<echo>rewriting ${zimbra.home.dir}/bin/jetty</echo>
+
+      <echo>rewriting ${zimbra.home.dir}/bin/jetty</echo>
         <replace file="${zimbra.home.dir}/bin/jetty">
             <replacefilter token="zimbraSpnegoAuthEnabled: FALSE" value="zimbraSpnegoAuthEnabled: TRUE"/>
         </replace>
-    	<!-- executable permission was removed by the above replace, set it back -->
-    	<chmod file="${zimbra.home.dir}/bin/jetty" perm="+x" />
-        	
-    	<echo>rewriting ${jetty.conf.dir}/jetty.xml</echo>
+      <!-- executable permission was removed by the above replace, set it back -->
+      <chmod file="${zimbra.home.dir}/bin/jetty" perm="+x" />
+
+      <echo>rewriting ${jetty.conf.dir}/jetty.xml</echo>
         <replace file="${jetty.conf.dir}/jetty.xml">
             <replacefilter token="&lt;!-- zimbraSpnegoAuthEnabled" value=""/>
-        	<replacefilter token="zimbraSpnegoAuthEnabled --&gt;" value=""/>
+          <replacefilter token="zimbraSpnegoAuthEnabled --&gt;" value=""/>
         </replace>
-    	
-    	<antcall target="start-webserver"/>
-    	
+
+      <antcall target="start-webserver"/>
+
     </target>
-        	
-	<target name="service-deploy" depends="refresh-opt-zimbra,deploy-war"
+
+  <target name="service-deploy" depends="refresh-opt-zimbra,deploy-war"
             description="Not just war file deployment, but a /opt/zimbra refresh as well!"/>
 
     <target name="deploy-war" depends="stop-jetty,war,copy-war,start-jetty"/>
@@ -821,7 +825,7 @@
         <antcall target="start-webserver"/>
     </target>
 
-	<!-- target called by the production build -->
+  <!-- target called by the production build -->
     <target name="dev-dist" depends="war,spnego-war,dev-dist-unix,dev-dist-jetty,choose-db-schema,generate-ldap-config" description="Initializes build/dist">
         <!-- bin, libexec -->
         <copy todir="${dist.dir}/bin" overwrite="true">
@@ -2128,20 +2132,20 @@
   </target>
 
   <target name="zmprov">
-  	<if>
-  	  <isset property="output"/>
-    <then>		
+    <if>
+      <isset property="output"/>
+    <then>
       <echo>zmprov ${args} (output=${output})</echo>
       <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true" output="${output}">
         <arg line="${args}"/>
       </java>
     </then>
-  	<else>
+    <else>
       <echo>zmprov ${args}</echo>
       <java classname="com.zimbra.cs.account.ProvUtil" fork="true" classpathref="class.path" failonerror="true">
         <arg line="${args}"/>
       </java>
-  	</else>
+    </else>
     </if>
   </target>
 
