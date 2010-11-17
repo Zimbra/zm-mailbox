@@ -379,6 +379,11 @@ public class MailConstants {
     public static final String A_DISPLAY = "d";
     public static final String A_ADDRESS_TYPE = "t";
     public static final String A_ADD_TO_AB = "add";
+ 
+    // group info in addresses
+    public static final String A_IS_GROUP = "isGroup";
+    public static final String A_EXP = "exp";
+    public static final String A_NEED_EXP = "needExp";
 
     public static final String A_PATH = "path";
     public static final String A_NAME = "name";
