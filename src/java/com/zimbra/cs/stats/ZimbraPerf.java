@@ -64,6 +64,9 @@ public class ZimbraPerf {
     public static final String RTS_FD_CACHE_SIZE = "fd_cache_size";
     public static final String RTS_FD_CACHE_HIT_RATE = "fd_cache_hit_rate";
     
+    // ACL cache
+    public static final String RTS_ACL_CACHE_HIT_RATE = "acl_cache_hit_rate";
+    
     // LDAP provisioning caches.
     public static final String RTS_ACCOUNT_CACHE_SIZE = "account_cache_size";
     public static final String RTS_ACCOUNT_CACHE_HIT_RATE = "account_cache_hit_rate";
@@ -122,6 +125,7 @@ public class ZimbraPerf {
             RTS_POP_CONN, RTS_POP_SSL_CONN, RTS_IMAP_CONN, RTS_IMAP_SSL_CONN, RTS_SOAP_SESSIONS,
             RTS_MBOX_CACHE_SIZE, RTS_MSG_CACHE_SIZE, RTS_MSG_CACHE_BYTES,
             RTS_FD_CACHE_SIZE, RTS_FD_CACHE_HIT_RATE,
+            RTS_ACL_CACHE_HIT_RATE,
             RTS_ACCOUNT_CACHE_SIZE, RTS_ACCOUNT_CACHE_HIT_RATE,
             RTS_COS_CACHE_SIZE, RTS_COS_CACHE_HIT_RATE,
             RTS_DOMAIN_CACHE_SIZE, RTS_DOMAIN_CACHE_HIT_RATE,
