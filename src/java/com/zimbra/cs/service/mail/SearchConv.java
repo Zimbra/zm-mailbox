@@ -15,7 +15,6 @@
 
 package com.zimbra.cs.service.mail;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -83,11 +82,12 @@ public class SearchConv extends Search {
         // force to group-by-message
         params.setTypesStr(MailboxIndex.GROUP_BY_MESSAGE);
 
+        Element response = null;
         if (cid.belongsTo(mbox)) { // local
             ZimbraQueryResults results = this.doSearch(zsc, octxt, mbox, params);
 
             try {
-                Element response = zsc.createElement(MailConstants.SEARCH_CONV_RESPONSE);
+                response = zsc.createElement(MailConstants.SEARCH_CONV_RESPONSE);
                 response.addAttribute(MailConstants.A_QUERY_OFFSET, Integer.toString(params.getOffset()));
 
                 SortBy sort = results.getSortBy();
@@ -120,10 +120,14 @@ public class SearchConv extends Search {
                 // call me AFTER putHits since some of the <info> is generated
                 // by the getting of the hits!
                 builder.add(results.getResultInfo(), results.estimateResultSize());
-                return response;
             } finally {
                 results.doneWithSearchResults();
             }
+            
+            if (request.getAttributeBool(MailConstants.A_NEED_EXP, false))
+                ToXML.encodeConvAddrsWithGroupInfo(request, response, getAuthenticatedAccount(zsc));
+            return response;
+            
         } else { // remote
             Element proxyRequest = zsc.createElement(MailConstants.SEARCH_CONV_REQUEST);
 
@@ -143,7 +147,7 @@ public class SearchConv extends Search {
                     
                 // proxy to remote account
                 Account target = Provisioning.getInstance().get(AccountBy.id, cid.getAccountId(), zsc.getAuthToken());
-                Element response = proxyRequest(proxyRequest, context, target.getId());
+                response = proxyRequest(proxyRequest, context, target.getId());
                 return response.detach();
             } catch (SoapFaultException e) {
                 throw ServiceException.FAILURE("SoapFaultException: ", e);
