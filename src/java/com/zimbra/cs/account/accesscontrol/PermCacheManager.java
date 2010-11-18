@@ -17,6 +17,7 @@ package com.zimbra.cs.account.accesscontrol;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.stats.Counter;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.LruMap;
 import com.zimbra.common.util.MapUtil;
@@ -62,6 +63,8 @@ class PermCacheManager {
     private static PermCacheManager theInstance = new PermCacheManager();
     
     private LruMap<String, PermCache> targetCache;
+    
+    private Counter hitRate = new Counter();
     
     // timestamp at which permission cache is invalidated
     // any permission cached prior to this time will be thrown away 
@@ -152,13 +155,24 @@ class PermCacheManager {
             return target.getLabel(); 
     }
     
+    private void updateHitRate(boolean hit) {
+        hitRate.increment(hit ? 100 : 0);
+    }
+    
+    double getHitRate() {
+        return hitRate.getAverage();
+    }
+    
     CachedPermission get(Entry target, String key, Right right) {
         PermCache permCache = getPermCache(target, false);
         if (permCache == null) {
+            updateHitRate(false);
             return CachedPermission.NOT_CACHED;
         }
         
-        return permCache.get(key, right);
+        CachedPermission perm = permCache.get(key, right);
+        updateHitRate(CachedPermission.NOT_CACHED != perm);
+        return perm;
     }
     
     void put(Entry target, String key, Right right, CachedPermission perm) {

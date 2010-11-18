@@ -206,7 +206,39 @@ public class PermCacheManagerTest {
         return cacheableRights;
     }
     
-    // @Test
+    
+    @Test
+    // must be first test - avoid having to call Counter.reset() for the test
+    public void testHitRate() throws Exception {
+       
+        MockAccount target = new MockAccount("target");
+        MockAccount grantee = new MockAccount("grantee");
+        Right right = User.R_loginAs;
+        
+        PermCacheManager pcm = PermCacheManager.getInstance();
+        String cacheKey = PermissionCache.buildCacheKey(grantee, right, false);
+        
+        CachedPermission cachedPerm;
+        
+        cachedPerm = pcm.get(target, cacheKey, right);
+        Assert.assertEquals(CachedPermission.NOT_CACHED, cachedPerm);
+        Assert.assertEquals(0.0, PermissionCache.getHitRate(), 0);
+        
+        CachedPermission expectedPerm = CachedPermission.ALLOWED;
+        pcm.put(target, cacheKey, right, expectedPerm);
+        cachedPerm = pcm.get(target, cacheKey, right);
+        Assert.assertEquals(expectedPerm, cachedPerm);
+        Assert.assertEquals(50.0, PermissionCache.getHitRate(), 0);
+        
+        for (int i = 0; i < 8; i++) {
+            cachedPerm = pcm.get(target, cacheKey, right);
+            Assert.assertEquals(expectedPerm, cachedPerm);
+        }
+        
+        Assert.assertEquals(90.0, PermissionCache.getHitRate(), 0);
+    }
+    
+    @Test
     public void testCachedPerms() throws Exception {
         
         MockAccount target = new MockAccount("target");
@@ -218,7 +250,7 @@ public class PermCacheManagerTest {
         
         for (int rightIdx = 0; rightIdx < cacheableRights.size(); rightIdx++) {
             Right right = cacheableRights.get(rightIdx);
-            System.out.println("Testing " + right.getName());
+            // System.out.println("Testing " + right.getName());
             
             String cacheKey = PermissionCache.buildCacheKey(grantee, right, false);
             
@@ -329,11 +361,6 @@ public class PermCacheManagerTest {
         }
 
         Thread.currentThread().join();
-    }
-    
-
-    @Test
-    public void noOp() throws Exception {
     }
 
 }

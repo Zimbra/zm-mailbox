@@ -57,6 +57,10 @@ public class PermissionCache {
         PermCacheManager.getInstance().invalidateCache(target);
     }
     
+    public static double getHitRate() { 
+        return PermCacheManager.getInstance().getHitRate(); 
+    }
+    
     static CachedPermission cacheGet(Account grantee, Entry target, Right rightNeeded, boolean canDelegateNeeded) {
         if (!cacheEnabled) {
             return CachedPermission.NOT_CACHED;
