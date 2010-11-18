@@ -1044,7 +1044,7 @@
             <then>
             <antcall target="stop-ldap"/>
             <exec failonerror="true" executable="../ZimbraServer/src/perl/install-openldap">
-                <arg line="main"/>
+                <arg line="HELIX"/>
             </exec>
             </then>
         </if>
