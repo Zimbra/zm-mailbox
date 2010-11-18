@@ -15,14 +15,11 @@
 
 package com.zimbra.cs.account.accesscontrol;
 
-import java.util.Iterator;
-import java.util.Map;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.LruMap;
 import com.zimbra.common.util.MapUtil;
-import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
@@ -31,11 +28,11 @@ import com.zimbra.cs.account.accesscontrol.PermissionCache.CachedPermission;
 class PermCacheManager {
 
     /*
-     * Permission cache is a two level LRU map that caches ACL checking result 
-     * for a target-grantee-right permission check.
+     * Permission cache is a two level LRU map with a TTL.
+     * It caches ACL checking result for a target-credential-right permission check.
      * 
-     * e.g. (key)   Does user1(grantee) have the loginAs(right) right on user2(target)?
-     *      (value) The cache lookup result is an instance of CachedPermission.
+     * e.g. "key":   Does user1(credential) have the loginAs(right) right on user2(target)?
+     *      "value": The cache lookup result is an instance of CachedPermission.
      * 
      * 
      * Two level cache lookup:
@@ -48,34 +45,34 @@ class PermCacheManager {
      * The first level is an LRU map:
      *   key:      target id
      *   value:    the "bucket" of cache entries for the target
-     *   max size: LC key acl_cache_max_targets
+     *   max size: LC key acl_cache_target_maxsize
      *   
      * The second level is also an LRU map (the "bucket" for each specific target):
-     *   key:      a string composed of grantee credentials
+     *   key:      credential of the accessing account
      *   value:    byte array.  One nibble (half byte) per cacheable rights.
      *             Currently there are about 7 cacheable rights, so 4 bytes in the byte array.
-     *   max size: LC key acl_cache_max_entries_per_target
+     *   max size: LC key acl_cache_credential_maxsize
      * 
      */
         
-    private static final int ACL_CACHE_MAX_TARGETS = LC.acl_cache_max_targets.intValue();
-    private static final int ACL_CACHE_MAX_ENTRIES_PER_TARGET = LC.acl_cache_max_entries_per_target.intValue();
+    private static final int ACL_CACHE_TARGET_MAXSIZE = LC.acl_cache_target_maxsize.intValue();
+    private static final long ACL_CACHE_TARGET_MAXAGE = LC.acl_cache_target_maxage.intValue() * Constants.MILLIS_PER_MINUTE;
+    private static final int ACL_CACHE_CREDENTIAL_MAXSIZE = LC.acl_cache_credential_maxsize.intValue();
     
     private static PermCacheManager theInstance = new PermCacheManager();
     
     private LruMap<String, PermCache> targetCache;
-
+    
     // timestamp at which permission cache is invalidated
     // any permission cached prior to this time will be thrown away 
     private long invalidatedAt;  
-
     
     static PermCacheManager getInstance() {
         return theInstance;
     }
     
     private PermCacheManager() {
-        targetCache = MapUtil.newLruMap(ACL_CACHE_MAX_TARGETS);
+        targetCache = MapUtil.newLruMap(ACL_CACHE_TARGET_MAXSIZE);
         invalidateCache();
     }
     
@@ -187,15 +184,16 @@ class PermCacheManager {
         
         private long resetAt;
         
-        private LruMap<String, byte[]> keyToPermissionMap;;
+        private LruMap<String, byte[]> credentialToPermissionMap;;
         
         private PermCache() {
-            keyToPermissionMap = MapUtil.newLruMap(ACL_CACHE_MAX_ENTRIES_PER_TARGET);
+            credentialToPermissionMap = MapUtil.newLruMap(ACL_CACHE_CREDENTIAL_MAXSIZE);
             reset();
         }
                 
         private synchronized boolean isExpired(long timestamp) {
-            return resetAt <= timestamp;
+            return (resetAt <= timestamp || 
+                    resetAt + ACL_CACHE_TARGET_MAXAGE < System.currentTimeMillis());
         }
         
         private synchronized void reset() {
@@ -203,7 +201,7 @@ class PermCacheManager {
             // when the cache is expired globally if we come from resetIfExpired.
             // is it ever possible?
             resetAt = System.currentTimeMillis() + 1;
-            keyToPermissionMap.clear();
+            credentialToPermissionMap.clear();
         }
         
         private synchronized void resetIfExpired(long timestamp) {
@@ -212,18 +210,18 @@ class PermCacheManager {
             }
         }
 
-        private synchronized CachedPermission get(String key, Right right) {
-            byte[] cachedPerms = keyToPermissionMap.get(key);
+        private synchronized CachedPermission get(String credential, Right right) {
+            byte[] cachedPerms = credentialToPermissionMap.get(credential);
             if (cachedPerms == null)
                 return CachedPermission.NOT_CACHED;
             return CachedPerms.get(cachedPerms, right);
         }
         
-        private synchronized void put(String key, Right right, CachedPermission perm) {
-            byte[] cachedPerms = keyToPermissionMap.get(key);
+        private synchronized void put(String credential, Right right, CachedPermission perm) {
+            byte[] cachedPerms = credentialToPermissionMap.get(credential);
             if (cachedPerms == null) {
                 cachedPerms = new byte[CachedPerms.getMaxPermArraySize()];
-                keyToPermissionMap.put(key, cachedPerms);
+                credentialToPermissionMap.put(credential, cachedPerms);
             }
             CachedPerms.put(cachedPerms, right, perm);
         }
