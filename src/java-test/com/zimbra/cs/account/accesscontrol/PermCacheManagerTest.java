@@ -283,7 +283,7 @@ public class PermCacheManagerTest {
         Assert.assertEquals(CachedPermission.NOT_CACHED, cachedPerm);
     }
     
-    @Test
+    // @Test
     public void testPermCacheManager() throws Exception {
         
         int acl_cache_target_maxsize = 10;
