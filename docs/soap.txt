@@ -1612,9 +1612,9 @@ if nest="1" on the request, response looks like this:
 If needExp is "1" in the request, and when when the 'fetch' attr is set to a
 msg ID, two additional flags will be included in <e> elements for the message:
   - isGroup: "1" if the email address is a group
-  - exp: preset only of isGroup="1"
-         "1" if the user can (has permittion to) expand members in this group
-         "0" if the user does not have permission to expand group members 
+  - exp: present only when isGroup="1"
+         "1" if the authed user can (has permission to) expand members in this group
+         "0" if the authed user does not have permission to expand group members 
          
 ------------
 
@@ -1792,9 +1792,9 @@ originally intended.
 
 If needExp is "1" in the request, two additional flags will be included in <e> elements for the message:
   - isGroup: "1" if the email address is a group
-  - exp: preset only of isGroup="1"
-         "1" if the user can (has permittion to) expand members in this group
-         "0" if the user does not have permission to expand group members 
+  - exp: present only when isGroup="1"
+         "1" if the authed user can (has permission to) expand members in this group
+         "0" if the authed user does not have permission to expand group members          
              
 ------------
 <GetMsgMetadataRequest>
