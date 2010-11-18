@@ -2167,7 +2167,8 @@ public class ToXML {
         encodeAlarmTimes(alarmElem, calItem);
         // Start time of the meeting instance we're reminding about.
         long alarmInstStart = alarmData.getNextInstanceStart();
-        alarmElem.addAttribute(MailConstants.A_CAL_ALARM_INSTANCE_START, alarmInstStart);
+        if (alarmInstStart != 0)
+            alarmElem.addAttribute(MailConstants.A_CAL_ALARM_INSTANCE_START, alarmInstStart);
         int alarmInvId = alarmData.getInvId();
         int alarmCompNum = alarmData.getCompNum();
         Invite alarmInv = calItem.getInvite(alarmInvId, alarmCompNum);

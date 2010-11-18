@@ -245,7 +245,8 @@ public class CacheToXML {
             alarmElem.addAttribute(MailConstants.A_CAL_NEXT_ALARM, nextAlarm);
         // Start time of the meeting instance we're reminding about.
         long alarmInstStart = alarmData.getNextInstanceStart();
-        alarmElem.addAttribute(MailConstants.A_CAL_ALARM_INSTANCE_START, alarmInstStart);
+        if (alarmInstStart != 0)
+            alarmElem.addAttribute(MailConstants.A_CAL_ALARM_INSTANCE_START, alarmInstStart);
         // Some info on the meeting instance the reminder is for.
         // These allow the UI to display tooltip and issue a Get
         // call on the correct meeting instance.
