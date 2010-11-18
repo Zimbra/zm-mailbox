@@ -460,8 +460,9 @@ public final class LC {
     public static final KnownKey ldap_cache_reverseproxylookup_server_maxage = KnownKey.newKey(15);
     
     // This combination will consume 128M (128K per target) of memory if the cache is full
-    public static final KnownKey acl_cache_max_targets = KnownKey.newKey(1024);
-    public static final KnownKey acl_cache_max_entries_per_target = KnownKey.newKey(512);
+    public static final KnownKey acl_cache_target_maxsize = KnownKey.newKey(1024);
+    public static final KnownKey acl_cache_target_maxage = KnownKey.newKey(15);
+    public static final KnownKey acl_cache_credential_maxsize = KnownKey.newKey(512);
     public static final KnownKey acl_cache_enabled = KnownKey.newKey(true);
     
     public static final KnownKey calendar_resource_ldap_search_maxsize = KnownKey.newKey(1000);
