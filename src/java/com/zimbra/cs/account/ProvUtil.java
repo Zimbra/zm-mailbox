@@ -170,6 +170,11 @@ public class ProvUtil implements HttpDebugListener {
 
     public boolean useLdap() { return mUseLdap; }
 
+    private void deprecated() {
+        System.out.println("This command has been deprecated.");
+        System.exit(1);
+    }
+    
     private void usage() {
         usage(null);
     }
@@ -567,6 +572,14 @@ public class ProvUtil implements HttpDebugListener {
         public Via getVia() { return mVia; }
         public boolean needsSchemaExtension() {
             return mNeedsSchemaExtension || (mCat == Category.RIGHT);
+        }
+        public boolean isDeprecated() {
+            switch (mCat) {
+            case NOTEBOOK:
+                return true;
+            default:
+                return false;
+            }
         }
 
         private Command(String name, String alias) {
@@ -2960,6 +2973,8 @@ public class ProvUtil implements HttpDebugListener {
                 Command cmd = pu.lookupCommand(args[0]);
                 if (cmd == null)
                     pu.usage();
+                if (cmd.isDeprecated())
+                    pu.deprecated();
 
                 if (pu.forceLdapButDontRequireUseLdapOption(cmd))
                     pu.setUseLdap(true, false);
