@@ -24,6 +24,7 @@ import com.zimbra.cs.zclient.event.ZModifyContactEvent;
 import com.zimbra.cs.zclient.event.ZModifyEvent;
 import org.json.JSONException;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class ZContactHit implements ZSearchHit {
@@ -52,17 +53,26 @@ public class ZContactHit implements ZSearchHit {
         mFileAsStr = e.getAttribute(MailConstants.A_FILE_AS_STR, null);
         mRevision = e.getAttribute(MailConstants.A_REVISION, null);
         mFolderId = e.getAttribute(MailConstants.A_FOLDER,null);
-        mType = e.getAttribute(MailConstants.A_CONTACT_TYPE, null);
-        mEmail = e.getAttribute(ContactConstants.A_email, null);
-        mEmail2 = e.getAttribute(ContactConstants.A_email2, null);
-        mEmail3 = e.getAttribute(ContactConstants.A_email3, null);
-        mWorkEmail1 = e.getAttribute(ContactConstants.A_workEmail1, null);
-        mWorkEmail2 = e.getAttribute(ContactConstants.A_workEmail2, null);
-        mWorkEmail3 = e.getAttribute(ContactConstants.A_workEmail3, null);
         mDate = e.getAttributeLong(MailConstants.A_DATE, 0);
         mMetaDataDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
-        mDlist = e.getAttribute(ContactConstants.A_dlist, null);
-        mFullName = e.getAttribute(ContactConstants.A_fullName,null);
+        mType = e.getAttribute(MailConstants.A_CONTACT_TYPE, null);
+        
+        HashMap<String, String> attrs = new HashMap<String, String>();
+
+        for (Element attrEl : e.listElements(MailConstants.E_ATTRIBUTE)) {
+            String name = attrEl.getAttribute(MailConstants.A_ATTRIBUTE_NAME);
+            attrs.put(name, attrEl.getText());
+        }
+
+        mEmail = attrs.get(ContactConstants.A_email);
+        mEmail2 = attrs.get(ContactConstants.A_email2);
+        mEmail3 = attrs.get(ContactConstants.A_email3);
+        mWorkEmail1 = attrs.get(ContactConstants.A_workEmail1);
+        mWorkEmail2 = attrs.get(ContactConstants.A_workEmail2);
+        mWorkEmail3 = attrs.get(ContactConstants.A_workEmail3);
+
+        mDlist = attrs.get(ContactConstants.A_dlist);
+        mFullName = attrs.get(ContactConstants.A_fullName);
     }
 
     public ZJSONObject toZJSONObject() throws JSONException {
