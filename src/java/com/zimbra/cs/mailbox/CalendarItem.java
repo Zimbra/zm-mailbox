@@ -3371,7 +3371,50 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                 return new AlarmData(triggerAt, alarmInstance.getStart(),
                                      invInfo.getMsgId(), invInfo.getComponentId(), theAlarm);
         }
-        return null;
+        if (this instanceof Task) {
+            // Unlike appointments, tasks may have alarms that go off after instance start time and even after
+            // instance end time (as defined by DUE property), and these alarms must be computed differently.
+            return getNextAbsoluteTriggerAlarm(atOrAfter, alarmAction);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Finds the next absolute-trigger alarm that is at or later than "atOrAfter".
+     * @param nextAlarm next alarm should go off at or after this time
+     *                  special values:
+     *                  CalendarItem.NEXT_ALARM_KEEP_CURRENT - keep current value
+     *                  CalendarItem.NEXT_ALARM_ALL_DISMISSED - all alarms have been shown and dismissed
+     *                  CalendarItem.NEXT_ALARM_FROM_NOW - compute next trigger time from current time
+     * @param skipAlarmDefChangeCheck
+     */
+    private AlarmData getNextAbsoluteTriggerAlarm(long atOrAfter, Alarm.Action alarmAction)
+    throws ServiceException {
+        long triggerAt = Long.MAX_VALUE;
+        Alarm theAlarm = null;
+        Invite theInvite = null;
+        for (Invite inv : mInvites) {
+            if (inv.isCancel())
+                continue;
+            for (Iterator<Alarm> alarms = inv.alarmsIterator(); alarms.hasNext(); ) {
+                Alarm alarm = alarms.next();
+                if (alarm.getAction() == alarmAction && alarm.getTriggerAbsolute() != null) {
+                    long absTrig = alarm.getTriggerAbsolute().getUtcTime();
+                    if (atOrAfter <= absTrig && absTrig < triggerAt) {
+                        triggerAt = absTrig;
+                        theAlarm = alarm;
+                        theInvite = inv;
+                    }
+                }
+            }
+        }
+        if (theAlarm != null) {
+            long instStart = theInvite.getStartTime() != null ? theInvite.getStartTime().getUtcTime() : 0;
+            return new AlarmData(triggerAt, instStart, theInvite.getMailItemId(), theInvite.getComponentNum(), theAlarm);
+        } else {
+            return null;
+        }
     }
 
     // Find the earliest alarm with action alarmAction whose trigger time is at or after nextAlarm.
