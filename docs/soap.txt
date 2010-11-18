@@ -1560,7 +1560,7 @@ message-part result:
 -----------
 
 <SearchConvRequest cid="conversation-id" [limit="..."] [offset="..."] [sortBy="{sort-by}"] [types="{types}"] [nest="0|1"]
-           [fetch="1|hits|all|{item-id}"] [max="{max-inlined-length}"] [html="1"] [read="1"] [neuter="0"]>
+           [fetch="1|hits|all|{item-id}"] [max="{max-inlined-length}"] [html="1"] [read="1"] [neuter="0"] [needExp="1|0"]>
   *(<header n="{header-name}/>)
   <query>{query-string}</query>
 </SearchConvRequest>
@@ -1609,6 +1609,13 @@ if nest="1" on the request, response looks like this:
    SEE SearchResponse for more info
 
 
+If needExp is "1" in the request, and when when the 'fetch' attr is set to a
+msg ID, two additional flags will be included in <e> elements for the message:
+  - isGroup: "1" if the email address is a group
+  - exp: preset only of isGroup="1"
+         "1" if the user can (has permittion to) expand members in this group
+         "0" if the user does not have permission to expand group members 
+         
 ------------
 
 <BrowseRequest browseBy="{browse-by}" [regex="{regex-string}"] [maxToReturn="{max}"]/>
@@ -1782,7 +1789,8 @@ cif is set when the message is a calendar invite that was forwarded by another u
 managed by this user.  The attribute is set to the email of the forwarding user, for whom the invite was
 originally intended.
 
-For <e> elements in the response, if needExp="1" in the request, two additional flags will be included:
+
+If needExp is "1" in the request, two additional flags will be included in <e> elements for the message:
   - isGroup: "1" if the email address is a group
   - exp: preset only of isGroup="1"
          "1" if the user can (has permittion to) expand members in this group

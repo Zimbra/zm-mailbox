@@ -2344,19 +2344,38 @@ public class ToXML {
         return cn;
     }
     
-    public static void encodeAddrsWithGroupInfo(Element response, Account authedAcct) {
+    private static void encodeAddrsWithGroupInfo(Provisioning prov, Element eMsg, Account authedAcct) {
+        for (Element eEmail : eMsg.listElements(MailConstants.E_EMAIL)) {
+            String addr = eEmail.getAttribute(MailConstants.A_ADDRESS, null);
+            if (addr != null) {
+                // shortcut the check if the email address is the authed account - it cannot be a group
+                if (addr.equals(authedAcct.getName()))
+                    continue;
+                
+                if (prov.isDistributionList(addr)) {
+                    eEmail.addAttribute(MailConstants.A_IS_GROUP, true);
+                    boolean canExpand = canExpandGroup(prov, addr, authedAcct);
+                    eEmail.addAttribute(MailConstants.A_EXP, canExpand);
+                }
+            }
+        }
+    }
+    
+    public static void encodeMsgAddrsWithGroupInfo(Element response, Account authedAcct) {
         Provisioning prov = Provisioning.getInstance();
         Element eMsg = response.getOptionalElement(MailConstants.E_MSG);
         if (eMsg != null) {
-            for (Element eEmail : eMsg.listElements(MailConstants.E_EMAIL)) {
-                String addr = eEmail.getAttribute(MailConstants.A_ADDRESS, null);
-                if (addr != null) {
-                    if (prov.isDistributionList(addr)) {
-                        eEmail.addAttribute(MailConstants.A_IS_GROUP, true);
-                        boolean canExpand = canExpandGroup(prov, addr, authedAcct);
-                        eEmail.addAttribute(MailConstants.A_EXP, canExpand);
-                    }
-                }
+            encodeAddrsWithGroupInfo(prov, eMsg, authedAcct);
+        }
+    }
+    
+    public static void encodeConvAddrsWithGroupInfo(Element request, Element response, Account authedAcct) {
+        Provisioning prov = Provisioning.getInstance();
+        String fetch = request.getAttribute(MailConstants.A_FETCH, null);
+        for (Element eMsg : response.listElements(MailConstants.E_MSG)) {
+            String msgId = eMsg.getAttribute(MailConstants.A_ID, null);
+            if (fetch != null && fetch.equals(msgId)) {
+                encodeAddrsWithGroupInfo(prov, eMsg, authedAcct);
             }
         }
     }
