@@ -42,6 +42,7 @@ import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Mailbox.BatchedIndexStatus;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
+import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.util.Zimbra;
 
@@ -49,7 +50,7 @@ import com.zimbra.cs.util.Zimbra;
  * Helper class -- basically a dumping ground to move all of the index-oriented things out of Mailbox
  * to try to keep it all in one place
  */
-public class IndexHelper {
+public final class IndexHelper {
     private static final Log sLogger = LogFactory.getLog(IndexHelper.class);
 
     private static final long sBatchIndexMaxBytesPerTransaction = LC.zimbra_index_max_transaction_bytes.longValue();
@@ -102,12 +103,26 @@ public class IndexHelper {
         mailboxIndex = new MailboxIndex(mailbox);
     }
 
-    final MailboxIndex getMailboxIndex() {
+    public final MailboxIndex getMailboxIndex() {
         assert(mailboxIndex != null);
         return mailboxIndex;
     }
 
-    ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, SearchParams params) throws IOException, ServiceException {
+    /**
+     * This is the preferred form of the API call.
+     *
+     * In order to avoid deadlock, callers MUST NOT be holding the Mailbox lock when calling this API.
+     *
+     * You MUST call {@link ZimbraQueryResults#doneWithSearchResults()} when you are done with the search results,
+     * otherwise resources will be leaked.
+     *
+     * @param proto soap protocol the request is coming from. Determines the type of Element we create for proxied results.
+     * @param octxt Operation Context
+     * @param params Search Parameters
+     * @return search result
+     */
+    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, SearchParams params)
+            throws IOException, ServiceException {
         if (Thread.holdsLock(mailbox))
             throw ServiceException.INVALID_REQUEST("Must not call Mailbox.search() while holding Mailbox lock", null);
         if (octxt == null)
@@ -129,6 +144,26 @@ public class IndexHelper {
         }
     }
 
+    public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, SortBy sortBy,
+            int chunkSize, boolean inDumpster) throws IOException, ServiceException {
+        SearchParams params = new SearchParams();
+        params.setQueryStr(queryString);
+        params.setTimeZone(null);
+        params.setLocale(null);
+        params.setTypes(types);
+        params.setSortBy(sortBy);
+        params.setChunkSize(chunkSize);
+        params.setPrefetch(true);
+        params.setMode(SearchResultMode.NORMAL);
+        params.setInDumpster(inDumpster);
+        return search(SoapProtocol.Soap12, octxt, params);
+    }
+
+    public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, SortBy sortBy,
+            int chunkSize) throws IOException, ServiceException {
+        return search(octxt, queryString, types, sortBy, chunkSize, false);
+    }
+
     private Object mIndexImmediatelyModeLock = new Object();
     private int mInIndexImmediatelyMode = 0;
 
@@ -140,7 +175,7 @@ public class IndexHelper {
      * This setting is intentionally stored only in memory -- if the server restarts or the mailbox
      * is somehow reloaded, we revert to the LDAP-set batch index value
      */
-    void setIndexImmediatelyMode() {
+    public void setIndexImmediatelyMode() {
         if (Thread.holdsLock(mailbox)) {
             // can't actually flip the bit b/c of deadlock - do it asynchronously
             Thread t = new Thread() {
@@ -171,7 +206,7 @@ public class IndexHelper {
     /**
      * Clear the "index immediately" mode setting, return to LDAP-set batched index settings
      */
-    void clearIndexImmediatelyMode() {
+    public void clearIndexImmediatelyMode() {
         synchronized(mIndexImmediatelyModeLock) {
             mInIndexImmediatelyMode--;
         }
@@ -342,7 +377,12 @@ public class IndexHelper {
                 success, elapsed, 1000.0 * success / elapsed, status.mNumFailed, mailbox.getIndexDeferredCount());
     }
 
-    void reIndexInBackgroundThread(OperationContext octxt, Set<Byte> types, Set<Integer> itemIds, boolean skipDelete) throws ServiceException {
+    /**
+     * Kick off the requested reindexing in a background thread. The reindexing is run on a best-effort basis, if it
+     * fails a WARN message is logged but it is not retried.
+     */
+    public void reIndexInBackgroundThread(OperationContext octxt, Set<Byte> types, Set<Integer> itemIds,
+            boolean skipDelete) throws ServiceException {
         startReIndex(new ReIndexTask(octxt, types, itemIds, skipDelete), true);
     }
 
@@ -350,7 +390,7 @@ public class IndexHelper {
         try {
             if (globalStatus) {
                 synchronized (mailbox) {
-                    if (mailbox.isReIndexInProgress()) {
+                    if (mailbox.index.isReIndexInProgress()) {
                         throw ServiceException.ALREADY_IN_PROGRESS(
                                 Integer.toString(mailbox.getId()), mReIndexStatus.toString());
                     }
@@ -629,10 +669,8 @@ public class IndexHelper {
      *
      * The indexing subsystem should attempt to batch the completion callbacks if possible, to
      * lessen the number of SQL transactions.
-     *
-     * @param ids
      */
-    void indexingCompleted(int count, SyncToken newHighestModContent, boolean succeeded) {
+    public void indexingCompleted(int count, SyncToken newHighestModContent, boolean succeeded) {
         synchronized (mailbox) {
             try {
                 boolean success = false;
@@ -825,7 +863,8 @@ public class IndexHelper {
                     chunkSizeBytes = 0;
                 }
             }
-            if (ZimbraLog.mailbox.isInfoEnabled() && ((itemsAttempted % 2000) == 0) && mailbox.isReIndexInProgress()) {
+            if (ZimbraLog.mailbox.isInfoEnabled() && ((itemsAttempted % 2000) == 0) &&
+                    mailbox.index.isReIndexInProgress()) {
                 ZimbraLog.mailbox.info("Batch Indexing: Mailbox " + mailbox.getId() +
                         " on item " + itemsAttempted + " out of " + items.size());
             }
@@ -863,11 +902,16 @@ public class IndexHelper {
 
     private static final int NO_CHANGE = -1;
 
-    void redoIndexItem(MailItem item, boolean deleteFirst, int itemId, List<IndexDocument> docList) {
-        try {
-            getMailboxIndex().indexMailItem(mailbox, deleteFirst, docList, item, NO_CHANGE);
-        } catch (Exception e) {
-            ZimbraLog.indexing.info("Skipping indexing; Unable to parse message %d", itemId, e);
+    /**
+     * Entry point for Redo-logging system only. Everybody else should use queueItemForIndexing inside a transaction.
+     */
+    public void redoIndexItem(MailItem item, boolean deleteFirst, int itemId, List<IndexDocument> docList) {
+        synchronized (mailbox) {
+            try {
+                getMailboxIndex().indexMailItem(mailbox, deleteFirst, docList, item, NO_CHANGE);
+            } catch (Exception e) {
+                ZimbraLog.indexing.info("Skipping indexing; Unable to parse message %d", itemId, e);
+            }
         }
     }
 
@@ -934,7 +978,14 @@ public class IndexHelper {
         }
     }
 
-    final BatchedIndexStatus getReIndexStatus() {
-        return mReIndexStatus;
+    public BatchedIndexStatus getReIndexStatus() {
+        synchronized (mailbox) {
+            return mReIndexStatus;
+        }
     }
+
+    public boolean isReIndexInProgress() {
+        return getReIndexStatus() != null;
+    }
+
 }

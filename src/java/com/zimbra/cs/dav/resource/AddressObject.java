@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -59,21 +59,21 @@ public class AddressObject extends MailItemResource {
     // for compatibility with Apple Address Book app.
     private static final String XABSKIND = "X-ADDRESSBOOKSERVER-KIND";
     private static final String XABSMEMBER = "X-ADDRESSBOOKSERVER-MEMBER";
-    
+
     public AddressObject(DavContext ctxt, Contact item) throws ServiceException {
         super(ctxt, item);
         setProperty(DavElements.P_GETCONTENTTYPE, DavProtocol.VCARD_CONTENT_TYPE);
-        
+
         // size is approximate.  it just has to be non-zero as the actual content
         // will be chunked to the client in GET response.
         setProperty(DavElements.P_GETCONTENTLENGTH, Integer.toString(item.getFields().size()));
     }
-    
+
     @Override
     public boolean isCollection() {
         return false;
     }
-    
+
     @Override
     public ResourceProperty getProperty(Element prop) {
         if (prop.getQName().equals(DavElements.CardDav.E_ADDRESS_DATA)) {
@@ -81,7 +81,7 @@ public class AddressObject extends MailItemResource {
         }
         return super.getProperty(prop);
     }
-    
+
     @Override
     public InputStream getContent(DavContext ctxt) throws DavException, IOException {
         try {
@@ -91,7 +91,7 @@ public class AddressObject extends MailItemResource {
         }
         return null;
     }
-    
+
     public String toVCard(DavContext ctxt) throws ServiceException, DavException {
         Contact contact = (Contact)getMailItem(ctxt);
         return VCard.formatContact(contact, null, true).formatted;
@@ -102,7 +102,7 @@ public class AddressObject extends MailItemResource {
         Contact contact = (Contact)getMailItem(ctxt);
         return VCard.formatContact(contact, attrs, true).formatted;
     }
-    
+
     public static DavResource create(DavContext ctxt, String name, Collection where) throws DavException, IOException {
         FileUploadServlet.Upload upload = ctxt.getUpload();
         String buf = new String(ByteUtil.getContent(upload.getInputStream(), (int)upload.getSize()), MimeConstants.P_CHARSET_UTF8);
@@ -135,7 +135,7 @@ public class AddressObject extends MailItemResource {
                                 if (c != null) {
                                     memberEmails.addAll(c.getEmailAddresses());
                                 }
-                                
+
                             }
                         } catch (JSONException e) {
                             ZimbraLog.dav.debug("can't parse xprop %s", memberList, e);
@@ -172,14 +172,14 @@ public class AddressObject extends MailItemResource {
         }
         return res;
     }
-    
+
     public static AddressObject getAddressObjectByUID(DavContext ctxt, String uid, Account account) throws ServiceException {
         Contact c = getContactByUID(ctxt, uid, account);
         if (c == null)
             return null;
         return new AddressObject(ctxt, c);
     }
-    
+
     private static Contact getContactByUID(DavContext ctxt, String uid, Account account) throws ServiceException {
         Contact item = null;
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
@@ -204,7 +204,8 @@ public class AddressObject extends MailItemResource {
             query.append(uid);
             ZimbraLog.dav.debug("query %s", query.toString());
             try {
-                zqr = mbox.search(ctxt.getOperationContext(), query.toString(), new byte[] { MailItem.TYPE_CONTACT }, SortBy.NAME_ASCENDING, 10);
+                zqr = mbox.index.search(ctxt.getOperationContext(), query.toString(),
+                        new byte[] { MailItem.TYPE_CONTACT }, SortBy.NAME_ASCENDING, 10);
                 if (zqr.hasNext()) {
                     ZimbraHit hit = zqr.getNext();
                     if (hit instanceof ContactHit) {

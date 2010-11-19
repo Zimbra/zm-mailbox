@@ -104,7 +104,7 @@ public final class ReIndex extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.REINDEX_RESPONSE);
 
         if (ACTION_START.equalsIgnoreCase(action)) {
-            if (mbox.isReIndexInProgress()) {
+            if (mbox.index.isReIndexInProgress()) {
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_RUNNING);
             } else {
                 byte[] types = null;
@@ -132,13 +132,13 @@ public final class ReIndex extends AdminDocumentHandler {
                         typesSet.add(b);
                     }
                 }
-                mbox.reIndex(getOperationContext(zsc, context), typesSet, itemIds, false);
+                mbox.index.reIndexInBackgroundThread(getOperationContext(zsc, context), typesSet, itemIds, false);
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_STARTED);
             }
         } else if (ACTION_STATUS.equalsIgnoreCase(action)) {
             synchronized (mbox) {
-                if (mbox.isReIndexInProgress()) {
-                    Mailbox.BatchedIndexStatus status = mbox.getReIndexStatus();
+                if (mbox.index.isReIndexInProgress()) {
+                    Mailbox.BatchedIndexStatus status = mbox.index.getReIndexStatus();
                     addProgressInfo(response, status);
                     response.addAttribute(AdminConstants.A_STATUS, STATUS_RUNNING);
                 } else {
@@ -147,8 +147,8 @@ public final class ReIndex extends AdminDocumentHandler {
             }
         } else if (ACTION_CANCEL.equalsIgnoreCase(action)) {
             synchronized (mbox) {
-                if (mbox.isReIndexInProgress()) {
-                    Mailbox.BatchedIndexStatus status = mbox.getReIndexStatus();
+                if (mbox.index.isReIndexInProgress()) {
+                    Mailbox.BatchedIndexStatus status = mbox.index.getReIndexStatus();
                     status.mCancel = true;
                     response.addAttribute(AdminConstants.A_STATUS, STATUS_CANCELLED);
                     addProgressInfo(response, status);

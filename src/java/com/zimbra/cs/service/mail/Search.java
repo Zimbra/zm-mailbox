@@ -133,7 +133,7 @@ public class Search extends MailDocumentHandler  {
     protected ZimbraQueryResults doSearch(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox, SearchParams params) throws ServiceException {
         ZimbraQueryResults results;
         try {
-            results = mbox.search(zsc.getResponseProtocol(), octxt, params);
+            results = mbox.index.search(zsc.getResponseProtocol(), octxt, params);
         } catch (IOException e) {
             throw ServiceException.FAILURE("IO error", e);
         }

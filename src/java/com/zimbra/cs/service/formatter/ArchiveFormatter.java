@@ -257,7 +257,7 @@ public abstract class ArchiveFormatter extends Formatter {
                         conversations = true;
                     query = "is:local";
                 }
-                results = context.targetMailbox.search(context.opContext,
+                results = context.targetMailbox.index.search(context.opContext,
                     query, searchTypes, SortBy.NONE, 4096);
                 try {
                     while (results.hasNext()) {

@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on 2005. 4. 4.
  */
 package com.zimbra.cs.redolog.op;
 
@@ -29,8 +25,11 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
+/**
+ * @since 2005. 4. 4.
+ */
 public class ReindexMailbox extends RedoableOp {
-    
+
     private Set<Byte> mTypes = null;
     private Set<Integer> mItemIds = null;
     private int mCompletionId = 0;
@@ -47,27 +46,31 @@ public class ReindexMailbox extends RedoableOp {
         mSkipDelete = skipDelete;
     }
 
-    @Override public int getOpCode() {
+    @Override
+    public int getOpCode() {
         return OP_REINDEX_MAILBOX;
     }
 
-    @Override public boolean deferCrashRecovery() {
+    @Override
+    public boolean deferCrashRecovery() {
         return true;
     }
 
-    @Override public void redo() throws Exception {
+    @Override
+    public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mbox.reIndex(new OperationContext(this), mTypes, mItemIds, mSkipDelete);
+        mbox.index.reIndexInBackgroundThread(new OperationContext(this), mTypes, mItemIds, mSkipDelete);
     }
 
-    @Override protected String getPrintableData() {
+    @Override
+    protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("Completion="+mCompletionId);
         sb.append(" SkipDelete="+(mSkipDelete?"TRUE":"FALSE"));
         if (mItemIds != null) {
             sb.append(" ITEMIDS[");
             boolean atStart = true;
             for (Integer i : mItemIds) {
-                if (!atStart) 
+                if (!atStart)
                     sb.append(',');
                 else
                     atStart = false;
@@ -80,25 +83,26 @@ public class ReindexMailbox extends RedoableOp {
             sb.append(" TYPES[");
             boolean atStart = true;
             for (Byte b : mTypes) {
-                if (!atStart) 
+                if (!atStart)
                     sb.append(',');
                 else
                     atStart = false;
                 sb.append(MailItem.getNameForType(b));
             }
             sb.append(']');
-                        
+
             return sb.toString();
         } else {
             return null;
         }
     }
 
-    @Override protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override
+    protected void serializeData(RedoLogOutput out) throws IOException {
         if (getVersion().atLeast(1,9)) {
             // completion ID
             out.writeInt(mCompletionId);
-            
+
             // types
             if (mTypes != null) {
                 out.writeBoolean(true);
@@ -127,20 +131,21 @@ public class ReindexMailbox extends RedoableOp {
                 } else {
                     out.writeBoolean(false);
                 }
-                
+
                 if (getVersion().atLeast(1,20)) {
                     out.writeBoolean(mSkipDelete);
                 }
-                                    
+
             } // v10
         } // v9
     }
 
-    @Override protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override
+    protected void deserializeData(RedoLogInput in) throws IOException {
         if (getVersion().atLeast(1,9)) {
             // completionId
             mCompletionId = in.readInt();
-            
+
             // types
             if (in.readBoolean()) {
                 mTypes = new HashSet<Byte>();
@@ -150,7 +155,7 @@ public class ReindexMailbox extends RedoableOp {
             } else {
                 mTypes = null;
             }
-            
+
             // itemIds
             if (getVersion().atLeast(1,10)) {
                 if (in.readBoolean()) {
@@ -166,7 +171,7 @@ public class ReindexMailbox extends RedoableOp {
                 mItemIds = null;
                 mSkipDelete = false;
             } // v10
-            
+
         } // v9
     }
 }

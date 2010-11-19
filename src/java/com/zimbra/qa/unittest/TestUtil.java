@@ -167,7 +167,7 @@ extends Assert {
         }
         return null;
     }
-    
+
     public static String getBaseUrl()
     throws ServiceException {
         String scheme;
@@ -181,7 +181,7 @@ extends Assert {
         }
         return scheme + "://localhost:" + port;
     }
-    
+
     public static String getAdminSoapUrl() {
         int port;
         try {
@@ -349,7 +349,7 @@ extends Assert {
     public static List<Integer> search(Mailbox mbox, String query, byte[] types)
     throws ServiceException, IOException {
         List<Integer> ids = new ArrayList<Integer>();
-        ZimbraQueryResults r = mbox.search(new OperationContext(mbox), query, types, SortBy.DATE_DESCENDING, 100);
+        ZimbraQueryResults r = mbox.index.search(new OperationContext(mbox), query, types, SortBy.DATE_DESCENDING, 100);
         while (r.hasNext()) {
             ZimbraHit hit = r.getNext();
             ids.add(new Integer(hit.getItemId()));

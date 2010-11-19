@@ -635,7 +635,7 @@ public class MailboxManager {
                         // We're going to let the Mailbox drop out of the
                         // cache and eventually get GC'd.  Some immediate
                         // cleanup is necessary though.
-                        MailboxIndex mi = mbox.getMailboxIndex();
+                        MailboxIndex mi = mbox.index.getMailboxIndex();
                         if (mi != null)
                             mi.evict();
                         // Note: mbox is left in maintenance mode.

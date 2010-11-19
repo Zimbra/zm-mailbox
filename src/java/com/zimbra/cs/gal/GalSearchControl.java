@@ -101,9 +101,9 @@ public class GalSearchControl {
         checkFeatureEnabled(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled);
 
         mParams.setOp(GalOp.autocomplete);
-        
+
         Account requestedAcct = mParams.getAccount();
-        
+
         boolean useGalSyncAcct = requestedAcct == null ? true :
             requestedAcct.isGalSyncAccountBasedAutoCompleteEnabled();
 
@@ -226,7 +226,7 @@ public class GalSearchControl {
             searchQuery.append(query.replace("\"", "\\\"")); // escape quotes
             searchQuery.append("\" AND");
         }
-        
+
         GalSearchQueryCallback queryCallback = mParams.getExtraQueryCallback();
         if (queryCallback != null) {
             String extraQuery = queryCallback.getMailboxSearchQuery();
@@ -235,7 +235,7 @@ public class GalSearchControl {
                 searchQuery.append(" (").append(extraQuery).append(") AND");
             }
         }
-        
+
         GalMode galMode = mParams.getDomain().getGalMode();
         boolean first = true;
         for (DataSource ds : galAcct.getAllDataSources()) {
@@ -333,7 +333,7 @@ public class GalSearchControl {
         try {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(galAcct);
             SearchParams searchParams = mParams.getSearchParams();
-            zqr = mbox.search(SoapProtocol.Soap12, new OperationContext(mbox), searchParams);
+            zqr = mbox.index.search(SoapProtocol.Soap12, new OperationContext(mbox), searchParams);
             ResultsPager pager = ResultsPager.create(zqr, searchParams);
             GalSearchResultCallback callback = mParams.getResultCallback();
             int num = 0;
@@ -468,14 +468,14 @@ public class GalSearchControl {
             ZimbraSoapContext zsc = mParams.getSoapContext();
             if (zsc != null) {
                 transport.setResponseProtocol(zsc.getResponseProtocol());
-            
+
                 String requestedAcctId = zsc.getRequestedAccountId();
                 String authTokenAcctId = zsc.getAuthtokenAccountId();
                 if (requestedAcctId != null && !requestedAcctId.equalsIgnoreCase(authTokenAcctId))
                     transport.setTargetAcctId(requestedAcctId);
             }
-                
-            Element req = mParams.getRequest();    
+
+            Element req = mParams.getRequest();
             if (req == null) {
                 req = Element.create(SoapProtocol.Soap12, AccountConstants.SEARCH_GAL_REQUEST);
                 req.addAttribute(AccountConstants.A_TYPE, mParams.getType().toString());
@@ -590,8 +590,8 @@ public class GalSearchControl {
             mParams.getResultCallback().setNewToken(newToken);
         mParams.getResultCallback().setHasMoreResult(hadMore);
     }
-    
-    
+
+
     // bug 46608
     // do zimbra resources search if galMode == ldap
     private boolean needResources() throws ServiceException {

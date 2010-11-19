@@ -517,7 +517,7 @@ public class MailSender {
                 mSession.getProperties().setProperty(JMSession.SMTP_SEND_PARTIAL_PROPERTY, mSendPartial.toString());
                 mSession.getProperties().setProperty(JMSession.SMTPS_SEND_PARTIAL_PROPERTY, mSendPartial.toString());
             }
-            
+
             // actually send the message via SMTP
             Collection<Address> sentAddresses = sendMessage(mbox, mm, rollbacks);
 
@@ -801,7 +801,7 @@ public class MailSender {
                     Collections.addAll(sentAddresses, rcptAddresses);
                     break;
                 } catch (SendFailedException sfe) {
-                    throw sfe; 
+                    throw sfe;
                 } catch (MessagingException e) {
                     Exception chained = e.getNextException();
                     if (chained instanceof ConnectException || chained instanceof UnknownHostException) {
@@ -894,7 +894,7 @@ public class MailSender {
                 Mailbox mbox = (Mailbox) authmbox;
                 ZimbraQueryResults qres = null;
                 try {
-                    qres = mbox.search(octxt, query, types, SortBy.NONE, contacts.size());
+                    qres = mbox.index.search(octxt, query, types, SortBy.NONE, contacts.size());
                     while (qres.hasNext()) {
                         ZimbraHit hit = qres.getNext();
                         if (hit instanceof ContactHit) {

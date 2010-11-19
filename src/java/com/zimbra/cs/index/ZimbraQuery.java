@@ -412,7 +412,7 @@ public final class ZimbraQuery {
         }
 
         Analyzer analyzer = null;
-        MailboxIndex index = mbox.getMailboxIndex();
+        MailboxIndex index = mbox.index.getMailboxIndex();
 
         // Step 1: parse the text using the JavaCC parser
         try {

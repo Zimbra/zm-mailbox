@@ -287,7 +287,7 @@ public class ImapSessionManager {
 
         Mailbox mbox = search.getMailbox();
         try {
-            ZimbraQueryResults zqr = mbox.search(SoapProtocol.Soap12, octxt, params);
+            ZimbraQueryResults zqr = mbox.index.search(SoapProtocol.Soap12, octxt, params);
             try {
                 for (ZimbraHit hit = zqr.getNext(); hit != null; hit = zqr.getNext())
                     i4list.add(hit.getImapMessage());

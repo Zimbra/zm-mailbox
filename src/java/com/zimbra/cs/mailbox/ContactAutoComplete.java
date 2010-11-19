@@ -597,7 +597,7 @@ public class ContactAutoComplete {
             }
             String query = generateQuery(str, folders);
             ZimbraLog.gal.debug("querying folders: " + query);
-            qres = mbox.search(octxt, query, CONTACT_TYPES, SortBy.NONE, limit + 1);
+            qres = mbox.index.search(octxt, query, CONTACT_TYPES, SortBy.NONE, limit + 1);
             while (qres.hasNext()) {
                 ZimbraHit hit = qres.getNext();
                 Map<String,String> fields = null;

@@ -94,13 +94,13 @@ public abstract class Formatter {
 
         Mailbox mbox = context.targetMailbox;
         try {
-            mbox.setIndexImmediatelyMode();
+            mbox.index.setIndexImmediatelyMode();
             saveCallback(context, contentType, folder, filename);
             updateClient(context, null);
         } catch (Exception e) {
             updateClient(context, e);
         } finally {
-            mbox.clearIndexImmediatelyMode();
+            mbox.index.clearIndexImmediatelyMode();
         }
     }
 
@@ -137,7 +137,8 @@ public abstract class Formatter {
                 if (searchTypes == null)
                     searchTypes = getDefaultSearchTypes();
                 byte[] types = MailboxIndex.parseTypesString(searchTypes);
-                ZimbraQueryResults results = context.targetMailbox.search(context.opContext, query, types, SortBy.DATE_DESCENDING, context.getOffset() + context.getLimit());
+                ZimbraQueryResults results = context.targetMailbox.index.search(context.opContext, query, types,
+                        SortBy.DATE_DESCENDING, context.getOffset() + context.getLimit());
                 return new QueryResultIterator(results);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("search error", e);
@@ -325,7 +326,7 @@ public abstract class Formatter {
 
             out.print("    window.parent." + callback + "('" + result + "'");
             if (exception != null) {
-                ServiceException se = 
+                ServiceException se =
                     exception instanceof ServiceException ?
                             (ServiceException) exception :
                                 FormatterServiceException.UNKNOWN_ERROR(exception);

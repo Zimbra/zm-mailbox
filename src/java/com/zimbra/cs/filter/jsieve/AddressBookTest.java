@@ -146,7 +146,7 @@ public class AddressBookTest extends AbstractTest {
                                 iaddrStr = iaddr.getAddress();
                             } catch (AddressException e1) {
                             }
-                            results = mbox.search(new OperationContext(mbox), "To:" + iaddrStr,
+                            results = mbox.index.search(new OperationContext(mbox), "To:" + iaddrStr,
                                     SEARCH_TYPE, SortBy.DATE_ASCENDING, 100);
                             mLog.debug("searching for " + iaddrStr);
                             if (results.hasNext()) {

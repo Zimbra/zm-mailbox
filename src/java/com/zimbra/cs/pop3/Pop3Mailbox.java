@@ -73,7 +73,7 @@ class Pop3Mailbox {
             ZimbraQueryResults results = null;
             mMessages = new ArrayList<Pop3Message>(500);
             try {
-                results = mbox.search(mOpContext, query, POP3_TYPES, SortBy.DATE_DESCENDING, 500);
+                results = mbox.index.search(mOpContext, query, POP3_TYPES, SortBy.DATE_DESCENDING, 500);
 
                 while (results.hasNext()) {
                     ZimbraHit hit = results.getNext();

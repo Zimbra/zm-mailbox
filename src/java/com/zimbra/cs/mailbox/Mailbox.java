@@ -367,19 +367,7 @@ public class Mailbox {
     }
 
     // This class handles all the indexing internals for the Mailbox
-    protected IndexHelper mIndexHelper = new IndexHelper(this);
-
-    /**
-     * Upcall from the indexing subsystem when indexing has completed for the specified items.
-     *
-     * Each call to this API results in one SQL transaction on the mailbox.
-     *
-     * The indexing subsystem should attempt to batch the completion callbacks if possible, to
-     * lessen the number of SQL transactions.
-     */
-    public void indexingCompleted(int count, SyncToken highestModContent, boolean succeeded) {
-        mIndexHelper.indexingCompleted(count, highestModContent, succeeded);
-    }
+    public final IndexHelper index = new IndexHelper(this);
 
     // TODO: figure out correct caching strategy
     private static final int MAX_ITEM_CACHE_WITH_LISTENERS    = LC.zimbra_mailbox_active_cache.intValue();
@@ -430,7 +418,7 @@ public class Mailbox {
         if (!mInitializationComplete) {
             // init the index
             if (!DebugConfig.disableIndexing)
-                mIndexHelper.instantiateMailboxIndex();
+                index.instantiateMailboxIndex();
 
             if (mVersion == null) {
                 // if we've just initialized() the mailbox, then the version will
@@ -445,7 +433,7 @@ public class Mailbox {
 
             // check for mailbox upgrade
             if (!getVersion().atLeast(1, 2)) {
-                mIndexHelper.upgradeMailboxTo1_2();
+                index.upgradeMailboxTo1_2();
             }
 
             // same prescription for both the 1.2 -> 1.3 and 1.3 -> 1.4 migrations
@@ -455,7 +443,7 @@ public class Mailbox {
             }
 
             if (!getVersion().atLeast(1, 5)) {
-                mIndexHelper.indexAllDeferredFlagItems();
+                index.indexAllDeferredFlagItems();
             }
 
             // bug 41144: map "workEmail" contact fields to "email"
@@ -531,11 +519,6 @@ public class Mailbox {
         if (mPersona == null)
             mPersona = IMPersona.loadPersona(this);
         return mPersona;
-    }
-
-    /** Returns the Mailbox's Lucene index. */
-    public MailboxIndex getMailboxIndex() {
-        return mIndexHelper.getMailboxIndex();
     }
 
     /** Retuns the ID of the volume this <tt>Mailbox</tt>'s index lives on. */
@@ -1100,25 +1083,10 @@ public class Mailbox {
     }
 
     /**
-     * Put this mailbox into a temporary (until cleared, or until mailbox reload)
-     * "index immediately" mode.  This is useful for message import performance where we are
-     * adding a large number of items sequentially to a mailbox.
-     *
-     * This setting is intentionally stored only in memory -- if the server restarts or the mailbox
-     * is somehow reloaded, we revert to the LDAP-set batch index value
-     */
-    public void setIndexImmediatelyMode() {
-        mIndexHelper.setIndexImmediatelyMode();
-    }
-    public void clearIndexImmediatelyMode() {
-        mIndexHelper.clearIndexImmediatelyMode();
-    }
-
-    /**
      * @return TRUE if we are indexing items immediately, FALSE otherwise
      */
     private boolean indexImmediately() {
-        return mIndexHelper.getBatchedIndexingCount() == 0;
+        return index.getBatchedIndexingCount() == 0;
     }
 
     public synchronized Connection getOperationConnection() throws ServiceException {
@@ -1150,7 +1118,7 @@ public class Mailbox {
         ZimbraLog.mailbox.info("Locking mailbox %d for maintenance.", getId());
 
         purgeListeners();
-        mIndexHelper.evict();
+        index.evict();
 
         mMaintenance = new MailboxLock(mData.accountId, mId, this);
         return mMaintenance;
@@ -1665,7 +1633,7 @@ public class Mailbox {
                 // attempt to nuke the store and index
                 // FIXME: we're assuming a lot about the store and index here; should use their functions
                 try {
-                    mIndexHelper.deleteIndex();
+                    index.deleteIndex();
                 } catch (IOException iox) {
                     ZimbraLog.store.warn("Unable to delete index data.", iox);
                 }
@@ -1756,26 +1724,6 @@ public class Mailbox {
             toRet.mNumFailed = mNumFailed;
             return toRet;
         }
-    }
-
-    public synchronized boolean isReIndexInProgress() {
-        return getReIndexStatus() != null;
-    }
-
-    public synchronized BatchedIndexStatus getReIndexStatus() {
-        return mIndexHelper.getReIndexStatus();
-    }
-
-    /**
-     * Kick off the requested reindexing in a background thread.  The reindexing is run on a best-effort basis, if it fails a WARN
-     * message is logged but it is not retried.
-     *
-     * @param octxt
-     * @param types
-     * @param itemIds
-     */
-    public void reIndex(OperationContext octxt, Set<Byte> types, Set<Integer> itemIds, boolean skipDelete) throws ServiceException {
-        mIndexHelper.reIndexInBackgroundThread(octxt, types, itemIds, skipDelete);
     }
 
     /** Recalculates the size, metadata, etc. for an existing MailItem and
@@ -3529,73 +3477,6 @@ public class Mailbox {
     }
 
     /**
-     *
-     * In order to avoid deadlock, callers MUST NOT be holding the Mailbox lock when calling this API.
-     *
-     * You MUST call {@link ZimbraQueryResults#doneWithSearchResults()} when you are done with the search results, otherwise
-     * resources will be leaked.
-     *
-     * @param octxt
-     * @param queryString
-     * @param types
-     * @param sortBy
-     * @param chunkSize A hint to the search engine telling it the size of the result set you are expecting
-     * @return
-     * @throws IOException
-     * @throws ServiceException
-     */
-    public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, SortBy sortBy, int chunkSize)
-    throws IOException, ServiceException {
-        return search(octxt, queryString, types, sortBy, chunkSize, false);
-    }
-
-    public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, SortBy sortBy, int chunkSize, boolean inDumpster)
-        throws IOException, ServiceException {
-        SearchParams params = new SearchParams();
-        params.setQueryStr(queryString);
-        params.setTimeZone(null);
-        params.setLocale(null);
-        params.setTypes(types);
-        params.setSortBy(sortBy);
-        params.setChunkSize(chunkSize);
-        params.setPrefetch(true);
-        params.setMode(SearchResultMode.NORMAL);
-        params.setInDumpster(inDumpster);
-        return search(SoapProtocol.Soap12, octxt, params);
-    }
-
-
-
-    /**
-     * Entry point for Redo-logging system only.  Everybody else should use queueItemForIndexing inside a transaction
-     *
-     * @throws ServiceException
-     */
-    synchronized public void redoIndexItem(MailItem item, boolean deleteFirst,
-            int itemId, List<IndexDocument> docList) {
-        mIndexHelper.redoIndexItem(item, deleteFirst, itemId, docList);
-    }
-
-    /**
-     * This is the preferred form of the API call.
-     *
-     * In order to avoid deadlock, callers MUST NOT be holding the Mailbox lock when calling this API.
-     *
-     * You MUST call {@link ZimbraQueryResults#doneWithSearchResults()} when you are done with the search results, otherwise
-     * resources will be leaked.
-     *
-     * @param proto  The soap protocol the request is coming from.  Determines the type of Element we create for proxied results.
-     * @param octxt  Operation Context
-     * @param params Search Parameters
-     * @return
-     * @throws IOException
-     * @throws ServiceException
-     */
-    public ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, SearchParams params) throws IOException, ServiceException {
-        return mIndexHelper.search(proto, octxt, params);
-    }
-
-    /**
      * @param octxt
      * @param params
      * @return A "mailbox neutral" representation of the query string: ie one that is re-written so that all Folder names (and other by-name
@@ -3677,7 +3558,7 @@ public class Mailbox {
 
             BrowseResult browseResult = new BrowseResult();
 
-            MailboxIndex idx = getMailboxIndex();
+            MailboxIndex idx = index.getMailboxIndex();
             if (idx != null) {
                 switch(browseBy) {
                     case attachments:
@@ -4137,14 +4018,14 @@ public class Mailbox {
 
     public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId)
     throws ServiceException {
-        mIndexHelper.maybeIndexDeferredItems();
+        index.maybeIndexDeferredItems();
         boolean addRevision = true;  // Always rev the calendar item.
         return addInvite(octxt, inv, folderId, null, false, false, addRevision);
     }
 
     public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm)
     throws ServiceException {
-        mIndexHelper.maybeIndexDeferredItems();
+        index.maybeIndexDeferredItems();
         boolean addRevision = true;  // Always rev the calendar item.
         return addInvite(octxt, inv, folderId, pm, false, false, addRevision);
     }
@@ -4152,7 +4033,7 @@ public class Mailbox {
     public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId, boolean preserveExistingAlarms,
                            boolean addRevision)
     throws ServiceException {
-        mIndexHelper.maybeIndexDeferredItems();
+        index.maybeIndexDeferredItems();
         return addInvite(octxt, inv, folderId, null, preserveExistingAlarms, false, addRevision);
     }
 
@@ -4510,7 +4391,7 @@ public class Mailbox {
                               int flags, String tagStr, int conversationId, String rcptEmail,
                               Message.DraftInfo dinfo, CustomMetadata customData, DeliveryContext dctxt)
     throws IOException, ServiceException {
-        mIndexHelper.maybeIndexDeferredItems();
+        index.maybeIndexDeferredItems();
         // make sure the message has been analyzed before taking the Mailbox lock
         if (indexImmediately())
             pm.analyzeFully();
@@ -4949,7 +4830,7 @@ public class Mailbox {
                               null, ID_AUTO_INCREMENT, ":API:", dinfo, null, null);
         }
 
-        mIndexHelper.maybeIndexDeferredItems();
+        index.maybeIndexDeferredItems();
 
         // make sure the message has been analyzed before taking the Mailbox lock
         if (indexImmediately())
@@ -6853,7 +6734,7 @@ public class Mailbox {
     public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType, String author, String description,
                                    InputStream data, byte type)
     throws ServiceException {
-        mIndexHelper.maybeIndexDeferredItems();
+        index.maybeIndexDeferredItems();
         try {
             ParsedDocument pd = new ParsedDocument(data, filename, mimeType, System.currentTimeMillis(), author, description);
             return createDocument(octxt, folderId, pd, type);
@@ -6912,7 +6793,7 @@ public class Mailbox {
 
     public Document addDocumentRevision(OperationContext octxt, int docId, String author, String name, String description, InputStream data)
     throws ServiceException {
-        mIndexHelper.maybeIndexDeferredItems();
+        index.maybeIndexDeferredItems();
         Document doc = getDocumentById(octxt, docId);
         try {
             ParsedDocument pd = new ParsedDocument(data, name, doc.getContentType(), System.currentTimeMillis(), author, description);
@@ -6993,7 +6874,7 @@ public class Mailbox {
         if (pm == null)
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding chat to mailbox " + mId, null);
 
-        mIndexHelper.maybeIndexDeferredItems();
+        index.maybeIndexDeferredItems();
         boolean deferIndexing = !indexImmediately();
         List<IndexDocument> docList = null;
         if (!deferIndexing) {
@@ -7325,7 +7206,7 @@ public class Mailbox {
                 // here, just in case item.reindex() recurses into a new transaction...
                 mCurrentChange.indexItems = new ArrayList<IndexItemEntry>();
 
-                mIndexHelper.indexingPartOfEndTransaction(itemsToIndex, mCurrentChange.indexItemsToDelete);
+                index.indexingPartOfEndTransaction(itemsToIndex, mCurrentChange.indexItemsToDelete);
             } // if indexing needed
 
             // 3. Commit the main transaction in database.
@@ -7539,7 +7420,7 @@ public class Mailbox {
             PendingDelete deletes = mCurrentChange.deletes;
             if (deletes != null && deletes.indexIds != null && !deletes.indexIds.isEmpty()) {
                 try {
-                    List<Integer> idxDeleted = mIndexHelper.deleteDocuments(deletes.indexIds);
+                    List<Integer> idxDeleted = index.deleteDocuments(deletes.indexIds);
                     if (idxDeleted.size() != deletes.indexIds.size()) {
                         ZimbraLog.indexing.info("could not delete all index entries for items: %d",
                                 deletes.itemIds.getAll());

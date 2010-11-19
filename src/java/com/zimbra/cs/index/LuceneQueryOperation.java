@@ -424,7 +424,7 @@ public final class LuceneQueryOperation extends QueryOperation {
     }
 
     private void setupTextQueryOperation(QueryContext ctx) throws IOException {
-        MailboxIndex midx = ctx.getMailbox().getMailboxIndex();
+        MailboxIndex midx = ctx.getMailbox().index.getMailboxIndex();
         if (midx != null) {
             mSearcher = midx.getIndexSearcherRef(ctx.getResults().getSortBy());
         }

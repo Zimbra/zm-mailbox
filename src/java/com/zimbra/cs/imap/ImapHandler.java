@@ -2943,7 +2943,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         params.setTimeZone(tz);
 
         try {
-            return mbox.search(SoapProtocol.Soap12, getContext(), params);
+            return mbox.index.search(SoapProtocol.Soap12, getContext(), params);
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("error during proxied query: " + search, ioe);
         }

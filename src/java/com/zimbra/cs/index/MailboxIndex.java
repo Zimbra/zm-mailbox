@@ -17,6 +17,8 @@ package com.zimbra.cs.index;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+
+import com.google.common.base.Objects;
 import com.zimbra.common.util.ZimbraLog;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.search.Sort;
@@ -44,12 +46,12 @@ public final class MailboxIndex {
 
     private final LuceneIndex luceneIndex;
     private final int mMailboxId;
-    private final Mailbox mMailbox;
+    private final Mailbox mailbox;
     private Analyzer mAnalyzer = null;
 
     public MailboxIndex(Mailbox mbox) throws ServiceException {
         mMailboxId = mbox.getId();
-        mMailbox = mbox;
+        mailbox = mbox;
         Volume indexVol = Volume.getById(mbox.getIndexVolume());
         String idxParentDir = indexVol.getMailboxDir(mMailboxId, Volume.TYPE_INDEX);
         luceneIndex = new LuceneIndex(this, idxParentDir, mMailboxId);
@@ -197,7 +199,7 @@ public final class MailboxIndex {
      */
     public int getBatchedIndexingCount() {
         try {
-            return mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 0);
+            return mailbox.getAccount().getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 0);
         } catch (ServiceException e) {
             ZimbraLog.index.debug("Eating ServiceException trying to lookup BatchedIndexSize", e);
         }
@@ -205,7 +207,7 @@ public final class MailboxIndex {
     }
 
     public boolean useBatchedIndexing() throws ServiceException {
-        return mMailbox.getAccount().getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 0) > 0;
+        return mailbox.getAccount().getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 0) > 0;
     }
 
     /**
@@ -267,7 +269,7 @@ public final class MailboxIndex {
 
     @Override
     public String toString() {
-        return "MailboxIndex(" + mMailboxId + ")";
+        return Objects.toStringHelper(this).add("id", mMailboxId).toString();
     }
 
     IndexSearcherRef getIndexSearcherRef(SortBy sortBy) throws IOException {
@@ -464,7 +466,7 @@ public final class MailboxIndex {
         if (count > 0) {
             ZimbraLog.indexing.debug("indexingCompleted count=%d highest=%s success=%b",
                     count, highestToken, succeeded);
-            mMailbox.indexingCompleted(count, highestToken, succeeded);
+            mailbox.index.indexingCompleted(count, highestToken, succeeded);
         }
     }
 
@@ -477,7 +479,7 @@ public final class MailboxIndex {
     }
 
     final Object getLock() {
-        return mMailbox;
+        return mailbox;
     }
 
     int getMailboxId() {

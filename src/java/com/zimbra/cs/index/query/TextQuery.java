@@ -107,7 +107,7 @@ public class TextQuery extends Query {
 
             if (wcToken.length() > 0) {
                 wildcardTerm = wcToken;
-                MailboxIndex mbidx = mbox.getMailboxIndex();
+                MailboxIndex mbidx = mbox.index.getMailboxIndex();
                 List<String> expandedTokens = new ArrayList<String>(100);
                 boolean expandedAllTokens = false;
                 if (mbidx != null) {
@@ -162,7 +162,7 @@ public class TextQuery extends Query {
             return new NoTermQueryOperation();
         } else {
             // indexing is disabled
-            if (mailbox.getMailboxIndex() == null)
+            if (mailbox.index.getMailboxIndex() == null)
                 return new NoTermQueryOperation();
 
             LuceneQueryOperation op = new LuceneQueryOperation();

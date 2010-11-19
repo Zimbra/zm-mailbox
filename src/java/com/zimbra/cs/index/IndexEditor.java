@@ -70,7 +70,7 @@ public class IndexEditor {
 
     public void deleteIndex(int mailboxId) throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mailboxId);
-        MailboxIndex mi = mbox.getMailboxIndex();
+        MailboxIndex mi = mbox.index.getMailboxIndex();
         try {
             mi.deleteIndex();
         } catch (IOException e) {
@@ -91,7 +91,7 @@ public class IndexEditor {
             mLog.info("Mailbox "+ids[i]+"\n");
             try {
                 Mailbox mbx = mmgr.getMailboxById(ids[i]);
-                mbx.reIndex(null, null, null, false);
+                mbx.index.reIndexInBackgroundThread(null, null, null, false);
             } catch (ServiceException e) {
                 mLog.info("Exception ReIndexing " + ids[i], e);
             }
@@ -101,7 +101,7 @@ public class IndexEditor {
     public void reIndex(int mailboxId) {
         try {
             Mailbox mbx = MailboxManager.getInstance().getMailboxById(mailboxId);
-            mbx.reIndex(null, null, null, false);
+            mbx.index.reIndexInBackgroundThread(null, null, null, false);
         } catch(Exception e) {
             outputStream.println("Re-index FAILED with " + ExceptionToString.ToString(e));
         }
