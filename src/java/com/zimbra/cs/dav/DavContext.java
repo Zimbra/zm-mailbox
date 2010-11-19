@@ -92,6 +92,7 @@ public class DavContext {
     private RequestProp mResponseProp;
     private String mDavCompliance;
     private String mPathInfo;
+    private boolean mOverwrite;
 	
     private enum RequestType { PRINCIPAL, RESOURCE };
     
@@ -229,6 +230,9 @@ public class DavContext {
 		mOpCtxt = new OperationContext(authUser);
 		mOpCtxt.setUserAgent(req.getHeader("User-Agent"));
 		mDavCompliance = DavProtocol.getDefaultComplianceString();
+		String overwrite = mReq.getHeader(DavProtocol.HEADER_OVERWRITE);
+		if (overwrite != null && overwrite.equals("T"))
+		    mOverwrite = true;
 	}
 	
 	/* Returns HttpServletRequest object containing the current DAV request. */
@@ -543,5 +547,9 @@ public class DavContext {
     	if (mAuthAccount != null)
     		return mAuthAccount.isPrefAppleIcalDelegationEnabled();
     	return false;
+    }
+    
+    public boolean isOverwriteSet() {
+        return mOverwrite;
     }
 }

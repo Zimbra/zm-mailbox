@@ -219,10 +219,41 @@ public abstract class MailItemResource extends DavResource {
 		} catch (ServiceException se) {
 			int resCode = se instanceof MailServiceException.NoSuchItemException ?
 					HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_FORBIDDEN;
+			if (se.getCode().equals(MailServiceException.ALREADY_EXISTS))
+			    resCode = HttpServletResponse.SC_PRECONDITION_FAILED;
 			throw new DavException("cannot move item", resCode, se);
 		}
 	}
 
+    public void moveWithOverwrite(DavContext ctxt, Collection dest) throws DavException {
+        try {
+            move(ctxt, dest);
+        } catch (DavException e) {
+            if (e.getStatus() == HttpServletResponse.SC_PRECONDITION_FAILED) {
+                // in case of name conflict, delete the existing mail item and
+                // attempt the move operation again.
+                String name = null;
+                for (ServiceException.Argument a : ((MailServiceException)e.getCause()).getArgs()) {
+                    if (a.mName.equals(MailServiceException.NAME))
+                        name = a.mValue;
+                }
+                if (name == null)
+                    throw e;
+                MailItem item = null;
+                try {
+                    Mailbox mbox = getMailbox(ctxt);
+                    item = mbox.getItemByPath(ctxt.getOperationContext(), name, dest.mId);
+                    mbox.delete(ctxt.getOperationContext(), item, null);
+                } catch (ServiceException se) {
+                    throw new DavException("cannot move item", HttpServletResponse.SC_FORBIDDEN, se);
+                }
+                move(ctxt, dest);
+            } else {
+                throw e;
+            }
+        }
+    }
+    
 	/* Copies this resource to another Collection. */
 	public DavResource copy(DavContext ctxt, Collection dest) throws DavException {
 		try {
@@ -232,10 +263,49 @@ public abstract class MailItemResource extends DavResource {
 		} catch (ServiceException se) {
 			int resCode = se instanceof MailServiceException.NoSuchItemException ?
 					HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_FORBIDDEN;
+            if (se.getCode().equals(MailServiceException.ALREADY_EXISTS))
+                resCode = HttpServletResponse.SC_PRECONDITION_FAILED;
 			throw new DavException("cannot copy item", resCode, se);
 		}
 	}
 
+    public DavResource copyWithOverwrite(DavContext ctxt, Collection dest) throws DavException {
+        try {
+            return copy(ctxt, dest);
+        } catch (DavException e) {
+            if (e.getStatus() == HttpServletResponse.SC_PRECONDITION_FAILED) {
+                // in case of name conflict, first find out the name of the item
+                // being copied, then delete the named item in the destination folder,
+                // then attempt the copy operation again.
+                String id = null;
+                for (ServiceException.Argument a : ((MailServiceException)e.getCause()).getArgs()) {
+                    if (a.mName.equals(MailServiceException.ITEM_ID))
+                        id = a.mValue;
+                }
+                if (id == null)
+                    throw e;
+                MailItem item = null;
+                try {
+                    Mailbox mbox = getMailbox(ctxt);
+                    
+                    // using the itemId of the item being copied, first find
+                    // the name of the object causing the conflict.
+                    item = mbox.getItemById(ctxt.getOperationContext(), (int)Long.parseLong(id), MailItem.TYPE_UNKNOWN);
+                    String name = item.getName();
+                    
+                    // delete the object with that name at the destination folder.
+                    item = mbox.getItemByPath(ctxt.getOperationContext(), name, dest.mId);
+                    mbox.delete(ctxt.getOperationContext(), item, null);
+                } catch (ServiceException se) {
+                    throw new DavException("cannot move item", HttpServletResponse.SC_FORBIDDEN, se);
+                }
+                return copy(ctxt, dest);
+            } else {
+                throw e;
+            }
+        }
+    }
+    
 	/* Renames this resource. */
 	public void rename(DavContext ctxt, String newName, DavResource destCollection) throws DavException {
 		if (!(destCollection instanceof MailItemResource))
