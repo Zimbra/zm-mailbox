@@ -91,7 +91,6 @@ public final class MessageData {
             bodySections.add(Body.read(is));
             return;
         }
-        is.skipChar(' ');
         is.skipSpaces();
         switch (attr.getCAtom()) {
         case FLAGS:

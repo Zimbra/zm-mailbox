@@ -19,6 +19,7 @@ import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.MailOutputStream;
 import com.zimbra.cs.mailclient.CommandFailedException;
+import com.zimbra.cs.mailclient.ParseException;
 import com.zimbra.cs.mailclient.util.Ascii;
 
 import java.io.IOException;
@@ -644,7 +645,13 @@ public final class ImapConnection extends MailConnection {
     }
 
     private ImapResponse readResponse() throws IOException {
-        return ImapResponse.read((ImapInputStream) mailIn);
+        try {
+            return ImapResponse.read((ImapInputStream) mailIn);
+        } catch (ParseException pe) {
+            //read rest of the line so TraceInputStream dumps it for debugging
+            mailIn.readLine();
+            throw pe;
+        }
     }
 
     /*
