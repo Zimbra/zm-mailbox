@@ -228,27 +228,27 @@ public final class MemoryStats implements RealtimeStatsCallback {
     private MemoryStats() {
         ZimbraPerf.addStatsCallback(this);
 
-        // gcollector_NAME_count,  gcollector_NAME_time
+        // gc_NAME_count,  gc_NAME_time
         for (String gc : getGarbageCollectorNames()) {
             gc = gc.toLowerCase();
-            ZimbraPerf.addRealtimeStatName(getGCCountColName(gc));
-            ZimbraPerf.addRealtimeStatName(getGCTimeColName(gc));
+            ZimbraPerf.addRealtimeStatName(getGCCountColName(gc), "Number of times that " + gc + " GC was invoked");
+            ZimbraPerf.addRealtimeStatName(getGCTimeColName(gc), "Time (ms) spent on " + gc + " GC");
         }
-        ZimbraPerf.addRealtimeStatName(GC_MINOR_COUNT);
-        ZimbraPerf.addRealtimeStatName(GC_MINOR_TIME);
-        ZimbraPerf.addRealtimeStatName(GC_MAJOR_COUNT);
-        ZimbraPerf.addRealtimeStatName(GC_MAJOR_TIME);
+        ZimbraPerf.addRealtimeStatName(GC_MINOR_COUNT, "Number of times that minor GC was invoked");
+        ZimbraPerf.addRealtimeStatName(GC_MINOR_TIME, "Time (ms) spent on minor GC");
+        ZimbraPerf.addRealtimeStatName(GC_MAJOR_COUNT, "Number of times that major GC was invoked");
+        ZimbraPerf.addRealtimeStatName(GC_MAJOR_TIME, "Time (ms) spent on major GC");
 
-        // mempool_NAME_used, mempool_NAME_free
+        // mpool_NAME_used, mpool_NAME_free
         for (String pool : getHeapPoolNames()) {
             pool = pool.toLowerCase();
-            ZimbraPerf.addRealtimeStatName(getPoolUsedSizeColName(pool));
-            ZimbraPerf.addRealtimeStatName(getPoolFreeSizeColName(pool));
+            ZimbraPerf.addRealtimeStatName(getPoolUsedSizeColName(pool), "Number of bytes used in the " + pool + " memory pool");
+            ZimbraPerf.addRealtimeStatName(getPoolFreeSizeColName(pool), "Number of bytes free in the " + pool + " memory pool");
         }
         
         // heap_used, heap_free
-        ZimbraPerf.addRealtimeStatName(HEAP_USED);
-        ZimbraPerf.addRealtimeStatName(HEAP_FREE);
+        ZimbraPerf.addRealtimeStatName(HEAP_USED, "Number of bytes used in the entire JVM heap");
+        ZimbraPerf.addRealtimeStatName(HEAP_FREE, "Number of bytes free in the entire JVM heap");
     }
     
     /* (non-Javadoc)
