@@ -451,16 +451,24 @@ public class ZimbraMemcachedClient {
     // transcoder for spymemcached API
     private static class ByteArrayTranscoder implements Transcoder<ByteArray> {
 
+        @Override
         public ByteArray decode(CachedData cachedData) {
             return new ByteArray(cachedData.getData());
         }
 
+        @Override
         public CachedData encode(ByteArray byteArray) {
             return new CachedData(0, byteArray.getBytes(), CachedData.MAX_SIZE);
         }
 
+        @Override
         public int getMaxSize() {
             return CachedData.MAX_SIZE;
+        }
+
+        @Override
+        public boolean asyncDecode(CachedData d) {
+            return false;
         }
     }
 
