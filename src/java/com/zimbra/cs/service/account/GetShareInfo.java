@@ -107,7 +107,12 @@ public class GetShareInfo  extends AccountDocumentHandler {
             mountedFolders = new ShareInfo.MountedFolders(octxt, targetAcct);
         }
         
-        ResultFilter resultFilter = new ResultFilterByTarget(granteeId, granteeName);
+        ResultFilter resultFilter;
+        if (request.getAttributeBool(AccountConstants.A_INCLUDE_SELF, true))
+            resultFilter = new ResultFilterByTarget(granteeId, granteeName);
+        else
+            resultFilter = new ResultFilterByTargetExcludeSelf(granteeId, granteeName, targetAcct);         
+        
         ShareInfoVisitor visitor = new ShareInfoVisitor(prov, response, mountedFolders, resultFilter);
         
         if (owner == null) {
@@ -201,6 +206,22 @@ public class GetShareInfo  extends AccountDocumentHandler {
                 return false;
             
             return true;
+        }
+    }
+    
+    public static class ResultFilterByTargetExcludeSelf extends ResultFilterByTarget {
+        Account mSelf; 
+        
+        public ResultFilterByTargetExcludeSelf(String granteeId, String granteeName, Account self) {
+            super(granteeId, granteeName);
+            mSelf = self;
+        }
+        
+        public boolean check(ShareInfoData sid) {
+            if (mSelf.getId().equals(sid.getOwnerAcctId()))
+                return false;
+            
+            return super.check(sid);
         }
     }
     
