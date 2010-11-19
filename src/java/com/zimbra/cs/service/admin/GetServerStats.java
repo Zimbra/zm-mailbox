@@ -72,9 +72,14 @@ public class GetServerStats extends AdminDocumentHandler {
         Element response = zsc.createElement(AdminConstants.GET_SERVER_STATS_RESPONSE);
         for (String name : returnedStats.keySet()) {
             String stringVal = toString(returnedStats.get(name));
-            response.addElement(AdminConstants.E_STAT)
+            Element eStat = response.addElement(AdminConstants.E_STAT)
                 .addAttribute(AdminConstants.A_NAME, name)
                 .setText(stringVal);
+            
+            String description = ZimbraPerf.getDescription(name);
+            if (description != null) {
+                eStat.addAttribute(AdminConstants.A_DESCRIPTION, description);
+            }
         }
         
         return response;

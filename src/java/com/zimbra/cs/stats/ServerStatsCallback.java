@@ -33,7 +33,6 @@ public class ServerStatsCallback implements RealtimeStatsCallback {
         Map<String, Object> data = new HashMap<String, Object>();
         data.put(ZimbraPerf.RTS_MBOX_CACHE_SIZE, ZimbraPerf.getMailboxCacheSize());
         data.put(ZimbraPerf.RTS_MSG_CACHE_SIZE, MessageCache.getSize());
-        data.put(ZimbraPerf.RTS_MSG_CACHE_BYTES, MessageCache.getDataSize());
         
         FileDescriptorCache fdc = BlobInputStream.getFileDescriptorCache();
         data.put(ZimbraPerf.RTS_FD_CACHE_SIZE, fdc.getSize());
