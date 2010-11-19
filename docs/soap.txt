@@ -3268,10 +3268,15 @@ Note:
 
 
 ----------------------------
-<GetShareInfoRequest>
+<GetShareInfoRequest [includeSelf="1|0"]>
     [<grantee type="{grantee_type}" [id="{grantee-id}"] [name="{grantee-name}"]/>]
     [<owner by="{owner-by}">...</owner>]
 </GetShareInfoRequest>
+
+{includeSelf}  = 0 if shares owned by the requested account should not be included in the response
+                 1 (default) include shares owned by the requested account 
+                 (It might be useful to see the shares I've shared to a DL that I belong to so 
+                 that I know I'm sharing it correctly.)
 
 {grantee_type} = if <owner> is not specified: grp
                  if <owner> is specified: usr | grp | pub | all | cos | dom | guest | key
