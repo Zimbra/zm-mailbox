@@ -124,7 +124,7 @@
 
     <property name="ical4j.jar" value="ical4j-0.9.16-patched.jar"/>
     <property name="ziputil.jar" value="ant-1.7.0-ziputil-patched.jar"/>
-    <property name="memcached.jar" value="memcached-2.3.1.jar"/>
+    <property name="memcached.jar" value="memcached-2.5.jar"/>
 
     <condition property="db-sqlite">
         <isset property="env.ZIMBRA_USE_SQLITE"/>
