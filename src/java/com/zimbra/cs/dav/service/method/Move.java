@@ -33,49 +33,53 @@ import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavMethod;
 
 public class Move extends DavMethod {
-	public static final String MOVE  = "MOVE";
-	public String getName() {
-		return MOVE;
-	}
-	
-	public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
-		DavResource rs = ctxt.getRequestedResource();
-        if (!(rs instanceof MailItemResource))
-            throw new DavException("cannot copy", HttpServletResponse.SC_BAD_REQUEST, null);
-		Collection col = getDestinationCollection(ctxt);
-		MailItemResource mir = (MailItemResource) rs;
-		mir.move(ctxt, col);
+    public static final String MOVE  = "MOVE";
+    public String getName() {
+        return MOVE;
+    }
 
-		renameIfNecessary(ctxt, mir, col);
-		ctxt.setStatus(HttpServletResponse.SC_NO_CONTENT);
-	}
-	
-	protected void renameIfNecessary(DavContext ctxt, DavResource rs, MailItemResource destCollection) throws DavException {
-	    if (!(rs instanceof Collection) && !(rs instanceof Notebook))
-	        return;
-		String oldName = ctxt.getItem();
-		String dest = getDestination(ctxt);
-		int begin, end;
-		end = dest.length();
-		if (dest.endsWith("/"))
-			end--;
-		begin = dest.lastIndexOf("/", end-1);
-		String newName = dest.substring(begin+1, end);
+    public void handle(DavContext ctxt) throws DavException, IOException, ServiceException {
+        DavResource rs = ctxt.getRequestedResource();
+        if (!(rs instanceof MailItemResource))
+            throw new DavException("cannot move", HttpServletResponse.SC_BAD_REQUEST, null);
+        Collection col = getDestinationCollection(ctxt);
+        MailItemResource mir = (MailItemResource) rs;
+        if (ctxt.isOverwriteSet()) {
+            mir.moveWithOverwrite(ctxt, col);
+        } else {
+            mir.move(ctxt, col);
+        }
+
+        renameIfNecessary(ctxt, mir, col);
+        ctxt.setStatus(HttpServletResponse.SC_NO_CONTENT);
+    }
+
+    protected void renameIfNecessary(DavContext ctxt, DavResource rs, MailItemResource destCollection) throws DavException {
+        if (!(rs instanceof Collection) && !(rs instanceof Notebook))
+            return;
+        String oldName = ctxt.getItem();
+        String dest = getDestination(ctxt);
+        int begin, end;
+        end = dest.length();
+        if (dest.endsWith("/"))
+            end--;
+        begin = dest.lastIndexOf("/", end-1);
+        String newName = dest.substring(begin+1, end);
         try {
             newName = URLDecoder.decode(newName, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             ZimbraLog.dav.warn("can't decode URL ", dest, e);
         }
-		if (!oldName.equals(newName))
-			rs.rename(ctxt, newName, destCollection);
-	}
-	
-	protected String getDestination(DavContext ctxt) throws DavException {
+        if (!oldName.equals(newName))
+            rs.rename(ctxt, newName, destCollection);
+    }
+
+    protected String getDestination(DavContext ctxt) throws DavException {
         String destination = ctxt.getRequest().getHeader(DavProtocol.HEADER_DESTINATION);
         if (destination == null)
             throw new DavException("no destination specified", HttpServletResponse.SC_BAD_REQUEST, null);
         return destination;
-	}
+    }
     protected Collection getDestinationCollection(DavContext ctxt) throws DavException {
         String destinationUrl = getDestination(ctxt);
         if (!destinationUrl.endsWith("/")) {
