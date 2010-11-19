@@ -95,6 +95,9 @@ public class FlushCache extends AdminDocumentHandler {
     private void doFlush(Map<String, Object> context, CacheEntryType cacheType, Element eCache) throws ServiceException {
 
         switch (cacheType) {
+        case acl:
+            PermissionCache.invalidateCache();
+            break;        
         case uistrings:
             FlushCache.sendFlushRequest(context, "/zimbra", "/res/AjxMsg.js");
             FlushCache.sendFlushRequest(context, "/zimbraAdmin", "/res/AjxMsg.js");
@@ -109,9 +112,6 @@ public class FlushCache extends AdminDocumentHandler {
         case license:
             flushLdapCache(CacheEntryType.config, eCache); // refresh global config for parsed license
             Provisioning.getInstance().refreshValidators(); // refresh other bits of cached license data
-            break;
-        case permission:
-            PermissionCache.invalidateCache();
             break;
         case zimlet:
             FlushCache.sendFlushRequest(context, "/service", "/zimlet/res/all.js");
