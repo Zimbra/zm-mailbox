@@ -35,7 +35,6 @@ import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogProvider;
@@ -129,7 +128,7 @@ public final class SoapEngine {
 
     private void logRequest(Map<String, Object> context, Element envelope) {
         if (ZimbraLog.soap.isTraceEnabled() && !context.containsKey(SoapEngine.SOAP_REQUEST_LOGGED)) {
-            ZimbraLog.soap.trace("C:\n%s", envelope.prettyPrint());
+            ZimbraLog.soap.trace("C:\n%s", envelope.prettyPrint(true));
             context.put(SOAP_REQUEST_LOGGED, Boolean.TRUE);
         }
     }
@@ -181,7 +180,6 @@ public final class SoapEngine {
      * @param path  the path (i.e., /service/foo) of the service to dispatch to
      * @param envelope the top-level element of the message
      * @param context user context parameters
-     * @param loggedRequest <tt>true</tt> if the SOAP message has already been logged
      * @return an XmlObject which is a SoapEnvelope containing the response
      *
      */
@@ -405,7 +403,7 @@ public final class SoapEngine {
                 long duration = System.currentTimeMillis() - startTime;
                 if (LC.zimbra_slow_logging_enabled.booleanValue() && duration > LC.zimbra_slow_logging_threshold.longValue() &&
                         !request.getQName().getName().equals(MailConstants.SYNC_REQUEST.getName())) {
-                    ZimbraLog.soap.warn("Slow SOAP request (start=" + startTime + "):\n" + request.prettyPrint());
+                    ZimbraLog.soap.warn("Slow SOAP request (start=" + startTime + "):\n" + request.prettyPrint(true));
                     ZimbraLog.soap.warn("Slow SOAP response (time=" + duration + "):\n" + response.prettyPrint());
                 }
             }
