@@ -1150,27 +1150,6 @@
             </then>
         </if>
 
-        <if>
-            <not>
-                <isset property="email-only" />
-            </not>
-            <then>
-                <if>
-                    <available file="data/briefcase" /> <!-- Not available for community builds -->
-                    <then>
-                        <echo>Importing files into Briefcase
-                            for
-                            ${account-to-inject.email}</echo>
-                        <java classname="com.zimbra.cs.account.ProvUtil"
-                            fork="true" classpathref="class.path"
-                            failonerror="true">
-                            <arg
-                                line="impn ${account-to-inject.email} data/briefcase/user1 Briefcase" />
-                        </java>
-                    </then>
-                </if>
-            </then>
-        </if>
     </target>
 
     <target name="inject-npscontacts" depends="compile">
