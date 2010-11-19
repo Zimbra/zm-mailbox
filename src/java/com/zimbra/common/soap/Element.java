@@ -302,6 +302,8 @@ public abstract class Element implements Cloneable {
     
     public abstract String prettyPrint();
 
+    public abstract String prettyPrint(boolean safe);
+
     /** Serialize this <tt>Element</tt> to an <code>Appendable</code>. */
     public abstract void toString(Appendable out) throws IOException;
     
@@ -979,7 +981,7 @@ public abstract class Element implements Cloneable {
         @Override public String toString() {
             StringBuilder sb = new StringBuilder();  
             try {
-                toString(sb, -1);
+                toString(sb, -1, false);
             } catch (IOException e) {
                 // should really not happen with the StringBuilder impl of Appendable, just log it
                 ZimbraLog.soap.error("Caught IOException: ", e);
@@ -988,13 +990,17 @@ public abstract class Element implements Cloneable {
         }
         
         @Override public void toString(Appendable out) throws IOException {
-            toString(out, -1);
+            toString(out, -1, false);
         }
         
         @Override public String prettyPrint() {
-            StringBuilder sb = new StringBuilder();  
+            return prettyPrint(false);
+        }
+
+        @Override public String prettyPrint(boolean safe) {
+            StringBuilder sb = new StringBuilder();
             try {
-                toString(sb, 0);  
+                toString(sb, 0, safe);
             } catch (IOException e) {
                 // should really not happen with the StringBuilder impl of Appendable, just log it
                 ZimbraLog.soap.error("Caught IOException: ", e);
@@ -1003,7 +1009,7 @@ public abstract class Element implements Cloneable {
         }
 
         private static final int INDENT_SIZE = 2;
-        private void toString(Appendable sb, int indent) throws IOException {
+        private void toString(Appendable sb, int indent, boolean safe) throws IOException {
             indent = indent < 0 ? -1 : indent + INDENT_SIZE;
             sb.append('{');
             boolean needNamespace = mNamespaces == null ? false : namespaceDeclarationNeeded("", mNamespaces.get("").toString());
@@ -1015,9 +1021,9 @@ public abstract class Element implements Cloneable {
                     sb.append('"').append(StringUtil.jsEncode(attr.getKey())).append(indent >= 0 ? "\": " : "\":");
 
                     Object value = attr.getValue();
-                    if (value instanceof String)                 sb.append('"').append(StringUtil.jsEncode(value)).append('"');
+                    if (value instanceof String)                 sb.append('"').append(StringUtil.jsEncode(getAttrStringValue(attr, safe))).append('"');
                     else if (value instanceof JSONKeyValuePair)  sb.append(value.toString());
-                    else if (value instanceof JSONElement)       ((JSONElement) value).toString(sb, indent);
+                    else if (value instanceof JSONElement)       ((JSONElement) value).toString(sb, indent, safe);
                     else if (value instanceof Element)           sb.append('"').append(StringUtil.jsEncode(value)).append('"');
                     else if (!(value instanceof List<?>))        sb.append(String.valueOf(value));
                     else {
@@ -1029,7 +1035,7 @@ public abstract class Element implements Cloneable {
                                     indent(sb, lindent, true);
                                 Object child = lit.next();
                                 if (child instanceof JSONElement)
-                                    ((JSONElement) child).toString(sb, lindent);
+                                    ((JSONElement) child).toString(sb, lindent, safe);
                                 else if (child instanceof JSONKeyValuePair)
                                     sb.append(child.toString());
                                 else
@@ -1047,6 +1053,13 @@ public abstract class Element implements Cloneable {
                 indent(sb, indent - 2, true);
             }
             sb.append('}');
+        }
+
+        private String getAttrStringValue(Map.Entry<String, Object> attr, boolean safe) {
+            if (safe && ((A_CONTENT.equals(attr.getKey()) && isSensitiveElement(this)) || isSensitiveAttr(attr)))
+                return SENSITIVE_STRING_REPLACEMENT;
+            else
+                return (String) attr.getValue();
         }
     }
 
@@ -1312,7 +1325,7 @@ public abstract class Element implements Cloneable {
         @Override public String toString() {
             StringBuilder sb = new StringBuilder();  
             try {
-                toString(sb, -1);  
+                toString(sb, -1, false);
             } catch (IOException e) {
                 // should really not happen with the StringBuilder impl of Appendable, just log it
                 ZimbraLog.soap.error("Caught IOException: ", e);
@@ -1321,13 +1334,19 @@ public abstract class Element implements Cloneable {
         }
         
         @Override public void toString(Appendable out) throws IOException {
-            toString(out, -1);
+            toString(out, -1, false);
         }
-        
-        @Override public String prettyPrint() {
-            StringBuilder sb = new StringBuilder();  
+
+        @Override
+        public String prettyPrint() {
+            return prettyPrint(false);
+        }
+
+        @Override
+        public String prettyPrint(boolean safe) {
+            StringBuilder sb = new StringBuilder();
             try {
-                toString(sb, 0);  
+                toString(sb, 0, safe);
             } catch (IOException e) {
                 // should really not happen with the StringBuilder impl of Appendable, just log it
                 ZimbraLog.soap.error("Caught IOException: ", e);
@@ -1336,7 +1355,7 @@ public abstract class Element implements Cloneable {
         }
 
         private static final int INDENT_SIZE = 2;
-        private void toString(Appendable sb, int indent) throws IOException {
+        private void toString(Appendable sb, int indent, boolean safe) throws IOException {
             indent(sb, indent, indent > 0);
             // element's qualified name
             String qn = getQualifiedName();
@@ -1344,7 +1363,7 @@ public abstract class Element implements Cloneable {
             // element's attributes
             if (mAttributes != null) {
                 for (Map.Entry<String, Object> attr : mAttributes.entrySet())
-                    sb.append(' ').append(attr.getKey()).append("=\"").append(xmlEncode((String) attr.getValue(), true)).append('"');
+                    sb.append(' ').append(attr.getKey()).append("=\"").append(xmlEncode(getAttrValue(attr, safe), true)).append('"');
             }
             // new namespaces defined on this element
             if (mNamespaces != null) {
@@ -1356,27 +1375,50 @@ public abstract class Element implements Cloneable {
                 }
             }
             // element content (children/text) and closing
-            String text = "".equals(mText) ? null : mText;
-            if (mChildren != null || text != null) {
+            if (mChildren != null || !StringUtil.isNullOrEmpty(mText)) {
                 sb.append('>');
                 if (mChildren != null) {
                     for (Element child : mChildren) {
                         if (child instanceof XMLElement)
-                            ((XMLElement) child).toString(sb, indent < 0 ? -1 : indent + INDENT_SIZE);
+                            ((XMLElement) child).toString(sb, indent < 0 ? -1 : indent + INDENT_SIZE, safe);
                         else
                             sb.append(xmlEncode(child.toString(), false));
                     }
                     indent(sb, indent, true);
                 } else {
-                    sb.append(xmlEncode(text, false));
+                    sb.append(xmlEncode(getText(safe), false));
                 }
                 sb.append("</").append(qn).append('>');
             } else {
                 sb.append("/>");
             }
         }
+
+        private static String getAttrValue(Map.Entry<String, Object> attr, boolean safe) {
+            return safe && isSensitiveAttr(attr) ? SENSITIVE_STRING_REPLACEMENT : (String) attr.getValue();
+        }
+
+        private String getText(boolean safe) {
+            if (safe && isSensitiveElement(this))
+                return SENSITIVE_STRING_REPLACEMENT;
+            else
+                return getText();
+        }
     }
 
+    private static final List<String> SENSITIVE_ATTRS = Arrays.asList("password", "pass", "pwd");
+    private static final String SENSITIVE_STRING_REPLACEMENT = "****";
+
+    private static boolean isSensitiveAttr(Map.Entry<String, Object> attr) {
+        return SENSITIVE_ATTRS.contains(attr.getKey());
+    }
+
+    private static boolean isSensitiveElement(Element element) {
+        // - elements having name that ends with "password" or "Password"
+        // - elements like: <a n='zimbraGalLdapBindPassword'>...</a>
+        String name = element.getName();
+        return name.endsWith("assword") || (name.equals("a") && element.getAttribute("n", "").endsWith("assword"));
+    }
 
     public static void main(String[] args) throws ContainerException, SoapParseException {
         System.out.println(Element.parseJSON("{ 'a':'b'}").getAttribute("a", null));
