@@ -715,6 +715,7 @@ public class AdminConstants {
 
     // Monitoring
     public static final String E_STAT = "stat";
+    public static final String A_DESCRIPTION = "description";
 
     public static final String A_FULLSYNC = "fullSync";
     public static final String A_RESET    = "reset";
