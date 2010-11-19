@@ -221,6 +221,10 @@ final class RemoteFolder {
         LOG.info(errmsg(String.format(fmt, args)));
     }
 
+    public void info(String msg, Throwable e) {
+        LOG.info(errmsg(msg), e);
+    }
+
     public void warn(String msg, Throwable e) {
         LOG.error(errmsg(msg), e);
     }

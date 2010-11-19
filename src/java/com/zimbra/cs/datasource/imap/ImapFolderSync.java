@@ -118,6 +118,13 @@ class ImapFolderSync {
     	if (ds.isSyncInboxOnly() && !path.equalsIgnoreCase("Inbox"))
     	    return null;
         remoteFolder = new RemoteFolder(connection, path);
+        // return null tracker if STATUS command results in an error
+        try {
+            remoteFolder.status();
+        } catch (IOException e) {
+            remoteFolder.info("Error in STATUS command", e);
+            return null;
+        }
         remoteFolder.info("syncing remote folder " + path);
         tracker = imapSync.getTrackedFolders().getByRemotePath(path);
         if (tracker != null) {
