@@ -794,7 +794,7 @@ Notes:
 </GetServerStatsRequest>
 
 <GetServerStatsResponse>
-  <stat name="{stat-name}"/>{stat-value}</stat>+
+  <stat name="{stat-name}" description="{text}">{stat-value}</stat>+
 </GetServerStatsResponse>
 
 Returns server monitoring stats.  These are the same stats that are logged
