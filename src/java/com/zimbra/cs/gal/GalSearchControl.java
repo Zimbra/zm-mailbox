@@ -117,7 +117,6 @@ public class GalSearchControl {
 		// fallback to ldap search
 		mParams.setQuery(query+"*");
 		mParams.getResultCallback().reset(mParams);
-		mParams.setLimit(100);
 		ldapSearch();
 	}
 	
@@ -147,7 +146,6 @@ public class GalSearchControl {
 				query = "*"+query;
 			mParams.setQuery(query);
 			mParams.getResultCallback().reset(mParams);
-			mParams.setLimit(100);
 			ldapSearch();
 		}
 	}
@@ -497,6 +495,11 @@ public class GalSearchControl {
             mParams.setType(stype);
         }
         int limit = mParams.getLimit();
+        if (limit == 0 && GalOp.sync != mParams.getOp()) {
+            limit = domain.getGalMaxResults();
+            mParams.setLimit(limit);
+        }
+        
         if (galMode == GalMode.both) {
         	// make two gal searches for 1/2 results each
         	mParams.setLimit(limit / 2);
