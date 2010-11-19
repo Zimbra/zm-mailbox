@@ -143,8 +143,8 @@ public final class IndexDocument {
                 Field.Store.NO, Field.Index.ANALYZED));
     }
 
-    public void addMailboxBlobId(String value) {
-        document.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, value,
+    public void addMailboxBlobId(int value) {
+        document.add(new Field(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(value),
                 Field.Store.YES, Field.Index.NOT_ANALYZED));
     }
 

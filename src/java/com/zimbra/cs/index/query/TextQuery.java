@@ -111,8 +111,12 @@ public class TextQuery extends Query {
                 List<String> expandedTokens = new ArrayList<String>(100);
                 boolean expandedAllTokens = false;
                 if (mbidx != null) {
-                    expandedAllTokens = mbidx.expandWildcardToken(
-                            expandedTokens, field, wcToken, MAX_WILDCARD_TERMS);
+                    try {
+                        expandedAllTokens = mbidx.expandWildcardToken(
+                                expandedTokens, field, wcToken, MAX_WILDCARD_TERMS);
+                    } catch (IOException e) {
+                        throw ServiceException.FAILURE("Failed to expand wildcard", e);
+                    }
                 }
 
                 queryInfo.add(new WildcardExpansionQueryInfo(wcToken + "*",

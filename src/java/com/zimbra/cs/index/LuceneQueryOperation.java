@@ -423,14 +423,10 @@ public final class LuceneQueryOperation extends QueryOperation {
         }
     }
 
-    private void setupTextQueryOperation(QueryContext ctx) {
+    private void setupTextQueryOperation(QueryContext ctx) throws IOException {
         MailboxIndex midx = ctx.getMailbox().getMailboxIndex();
         if (midx != null) {
-            try {
-                mSearcher = midx.getIndexSearcherRef(ctx.getResults().getSortBy());
-            } catch (IOException e) {
-                ZimbraLog.index_search.error("failed to obtain searcher", e);
-            }
+            mSearcher = midx.getIndexSearcherRef(ctx.getResults().getSortBy());
         }
     }
 
@@ -675,7 +671,11 @@ public final class LuceneQueryOperation extends QueryOperation {
             mDBOp.setLuceneQueryOperation(this);
             mDBOp.begin(ctx); // will call back into this method again!
         } else { // 2nd time called
-            setupTextQueryOperation(ctx);
+            try {
+                setupTextQueryOperation(ctx);
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("Failed to open index", e);
+            }
         }
     }
 

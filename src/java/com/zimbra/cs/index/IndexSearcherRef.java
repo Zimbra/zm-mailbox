@@ -54,11 +54,6 @@ class IndexSearcherRef {
         return mReader.getReader();
     }
 
-    synchronized void forceClose() {
-        mReader.forceClose();
-        mReader = null;
-    }
-
     /**
      * Decrements the reference counter.
      * <p>

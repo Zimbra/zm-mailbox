@@ -487,7 +487,7 @@ public class Mailbox {
                 migrateWikiFolders();
                 updateVersion(new MailboxVersion((short) 1, (short) 10));
             }
-            
+
             // done!
             mInitializationComplete = true;
             return true;
@@ -1081,12 +1081,10 @@ public class Mailbox {
         if (deleteFirst)
             mCurrentChange.addIndexDelete(item.getIndexId());
 
-        if (data != null && this.mIndexHelper.getNumNotSubmittedToIndex() > 0) {
+        if (data != null && getIndexDeferredCount() > 0) {
             // can't submit immediately -- index is behind..
-            if (ZimbraLog.index_add.isDebugEnabled()) {
-                ZimbraLog.index_add.debug("Deferring indexing for item "+item.getId()+" b/c index is " +
-                        "not up-to-date (not-submitted = "+this.mIndexHelper.getNumNotSubmittedToIndex()+")");
-            }
+            ZimbraLog.indexing.debug("Deferring indexing for item %d b/c index is not up-to-date deferred=%d",
+                    item.getId(), getIndexDeferredCount());
             data = null; // continue down below so that we update the index deferred count
         }
 
@@ -1152,7 +1150,7 @@ public class Mailbox {
         ZimbraLog.mailbox.info("Locking mailbox %d for maintenance.", getId());
 
         purgeListeners();
-        mIndexHelper.flush();
+        mIndexHelper.evict();
 
         mMaintenance = new MailboxLock(mData.accountId, mId, this);
         return mMaintenance;
@@ -4968,7 +4966,7 @@ public class Mailbox {
         } finally {
             ByteUtil.closeStream(is);
         }
-        
+
         String digest = staged.getDigest();
         int size = (int) staged.getSize();
 
@@ -6000,7 +5998,8 @@ public class Mailbox {
             try {
                 indexData = pc.getLuceneDocuments(this);
             } catch (ServiceException e) {
-                ZimbraLog.index_add.info("Caught exception analyzing new contact in folder " + folderId + "; contact will not be indexed", e);
+                ZimbraLog.indexing.info("Failed to analyze new contact in folder %d; contact will not be indexed",
+                        folderId, e);
                 indexData = Collections.emptyList();
             }
         }
@@ -6065,7 +6064,8 @@ public class Mailbox {
             try {
                 indexData = pc.getLuceneDocuments(this);
             } catch (Exception e) {
-                ZimbraLog.index_add.info("caught exception analyzing contact " + contactId + "; contact will not be indexed", e);
+                ZimbraLog.indexing.info("caught exception analyzing contact %d; contact will not be indexed",
+                        contactId, e);
                 indexData = new ArrayList<IndexDocument>();
             }
         }
@@ -6379,7 +6379,7 @@ public class Mailbox {
         FeedManager.SubscriptionData<?> sdata = FeedManager.retrieveRemoteDatasource(getAccount(), url, fsd);
         importFeedInternal(octxt, folder, url, subscription, fsd, sdata);
     }
-    
+
     private synchronized void importFeedInternal(OperationContext octxt, Folder folder,
                                                  String url, boolean subscription, Folder.SyncData fsd,
                                                  FeedManager.SubscriptionData<?> sdata)
@@ -6541,7 +6541,7 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
+
     private void emptyLargeFolder(OperationContext octxt, int folderId, boolean removeSubfolders, int batchSize)
     throws ServiceException {
         ZimbraLog.mailbox.debug("Emptying large folder %s, removeSubfolders=%b, batchSize=%d",
@@ -6566,7 +6566,7 @@ public class Mailbox {
             }
         }
         int lastChangeID = octxt != null && octxt.change != -1 ? octxt.change : getLastChangeID();
-        
+
         QueryParams params = new QueryParams();
         params.setFolderIds(folderIds).setModifiedSequenceBefore(lastChangeID + 1).setRowLimit(batchSize);
         params.setExcludedTypes(MailItem.TYPE_FOLDER, MailItem.TYPE_MOUNTPOINT, MailItem.TYPE_SEARCHFOLDER);
@@ -7066,7 +7066,7 @@ public class Mailbox {
 
         String digest = staged.getDigest();
         int size = (int) staged.getSize();
-        
+
         synchronized (this) {
             SaveChat redoRecorder = new SaveChat(mId, id, digest, size, -1, 0, null);
 
@@ -7105,7 +7105,7 @@ public class Mailbox {
     }
 
     // optimize the underlying database
-    public void optimize(OperationContext octxt, int level) throws ServiceException {
+    public void optimize(OperationContext octxt, int level) {
         synchronized (this) {
             try {
                 Connection conn = DbPool.getConnection(this);
@@ -7541,11 +7541,12 @@ public class Mailbox {
                 try {
                     List<Integer> idxDeleted = mIndexHelper.deleteDocuments(deletes.indexIds);
                     if (idxDeleted.size() != deletes.indexIds.size()) {
-                        if (ZimbraLog.index_add.isInfoEnabled())
-                            ZimbraLog.index_add.info("could not delete all index entries for items: " + deletes.itemIds.getAll());
+                        ZimbraLog.indexing.info("could not delete all index entries for items: %d",
+                                deletes.itemIds.getAll());
                     }
                 } catch (IOException e) {
-                    ZimbraLog.index_add.info("ignoring error while deleting index entries for items: " + deletes.itemIds.getAll(), e);
+                    ZimbraLog.indexing.info("ignoring error while deleting index entries for items: %s",
+                            deletes.itemIds.getAll(), e);
                 }
             }
 
@@ -7738,7 +7739,7 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
+
     private static final String CN_ID         = "id";
     private static final String CN_ACCOUNT_ID = "account_id";
     private static final String CN_NEXT_ID    = "next_item_id";

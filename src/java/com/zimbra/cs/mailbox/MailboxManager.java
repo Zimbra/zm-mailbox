@@ -637,7 +637,7 @@ public class MailboxManager {
                         // cleanup is necessary though.
                         MailboxIndex mi = mbox.getMailboxIndex();
                         if (mi != null)
-                            mi.flush();
+                            mi.evict();
                         // Note: mbox is left in maintenance mode.
                     } else {
                         mbox.endMaintenance(success);

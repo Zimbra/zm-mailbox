@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -55,63 +55,63 @@ import com.zimbra.znative.IO;
  */
 public class RedoLogManager {
 
-	private static class TxnIdGenerator {
-		private int mTime;
-		private int mCounter;
+    private static class TxnIdGenerator {
+        private int mTime;
+        private int mCounter;
 
-		public TxnIdGenerator() {
-			init();
-		}
+        public TxnIdGenerator() {
+            init();
+        }
 
-		private void init() {
-			mTime = (int) (System.currentTimeMillis() / 1000);
-			mCounter = 1;
-		}
+        private void init() {
+            mTime = (int) (System.currentTimeMillis() / 1000);
+            mCounter = 1;
+        }
 
-		public synchronized TransactionId getNext() {
-			TransactionId tid = new TransactionId(mTime, mCounter);
-			if (mCounter < 0x7fffffffL)
-				mCounter++;
-			else
-				init();
-			return tid;
-		}
-	}
+        public synchronized TransactionId getNext() {
+            TransactionId tid = new TransactionId(mTime, mCounter);
+            if (mCounter < 0x7fffffffL)
+                mCounter++;
+            else
+                init();
+            return tid;
+        }
+    }
 
-	private boolean mEnabled;
+    private boolean mEnabled;
     private boolean mInCrashRecovery;
     private final Object mInCrashRecoveryGuard = new Object();
     private boolean mShuttingDown;
     private final Object mShuttingDownGuard = new Object();
     private boolean mInPostStartupCrashRecovery;  // also protected by mShuttingDownGuard
-	private boolean mSupportsCrashRecovery;
-	private boolean mRecoveryMode;	// Are we in crash-recovery mode?
-	private File mArchiveDir;		// where log files are archived as they get rolled over
-	private File mLogFile;			// full path to the "redo.log" file
+    private boolean mSupportsCrashRecovery;
+    private boolean mRecoveryMode;	// Are we in crash-recovery mode?
+    private File mArchiveDir;		// where log files are archived as they get rolled over
+    private File mLogFile;			// full path to the "redo.log" file
 
-	// This read/write lock is used to allow multiple threads to call log()
-	// simultaneously under normal circumstances, while locking them out
-	// when checkpoint or rollover is in progress.  Thus, "loggers" are
-	// "readers", and threads that do checkpoint/rollover are "writers".
-	private ReentrantReadWriteLock mRWLock;
+    // This read/write lock is used to allow multiple threads to call log()
+    // simultaneously under normal circumstances, while locking them out
+    // when checkpoint or rollover is in progress.  Thus, "loggers" are
+    // "readers", and threads that do checkpoint/rollover are "writers".
+    private ReentrantReadWriteLock mRWLock;
 
-	// Insertion-order-preserved map of active transactions.  Each thread
-	// reading from or writing to this map must first acquire a read or
-	// write lock on mRWLock, then do "synchronzed (mActiveOps) { ... }".
-	// This is done to prevent deadlock.
-	private LinkedHashMap<TransactionId, RedoableOp> mActiveOps;
+    // Insertion-order-preserved map of active transactions.  Each thread
+    // reading from or writing to this map must first acquire a read or
+    // write lock on mRWLock, then do "synchronzed (mActiveOps) { ... }".
+    // This is done to prevent deadlock.
+    private LinkedHashMap<TransactionId, RedoableOp> mActiveOps;
 
-	private long mLogRolloverMinAgeMillis;
-	private long mLogRolloverSoftMaxBytes;
-	private long mLogRolloverHardMaxBytes;
+    private long mLogRolloverMinAgeMillis;
+    private long mLogRolloverSoftMaxBytes;
+    private long mLogRolloverHardMaxBytes;
 
-	private TxnIdGenerator mTxnIdGenerator;
-	private RolloverManager mRolloverMgr;
+    private TxnIdGenerator mTxnIdGenerator;
+    private RolloverManager mRolloverMgr;
 
     private long mInitialLogSize;	// used in log rollover
 
-	// the actual logger
-	private LogWriter mLogWriter;
+    // the actual logger
+    private LogWriter mLogWriter;
 
     private Object mStatGuard;
     private long mElapsed;
@@ -119,13 +119,13 @@ public class RedoLogManager {
 
 
     public RedoLogManager(File redolog, File archdir, boolean supportsCrashRecovery) {
-		mEnabled = false;
+        mEnabled = false;
         mShuttingDown = false;
         mRecoveryMode = false;
         mSupportsCrashRecovery = supportsCrashRecovery;
 
         mLogFile = redolog;
-    	mArchiveDir = archdir;
+        mArchiveDir = archdir;
 
         mRWLock = new ReentrantReadWriteLock();
         mActiveOps = new LinkedHashMap<TransactionId, RedoableOp>(100);
@@ -142,29 +142,29 @@ public class RedoLogManager {
         mCounter = 0;
     }
 
-	protected LogWriter getLogWriter() {
-		return mLogWriter;
-	}
+    protected LogWriter getLogWriter() {
+        return mLogWriter;
+    }
 
-	/**
-	 * Returns the File object for the one and only redo log file "redo.log".
-	 * @return
-	 */
-	public File getLogFile() {
-		return mLogFile;
-	}
+    /**
+     * Returns the File object for the one and only redo log file "redo.log".
+     * @return
+     */
+    public File getLogFile() {
+        return mLogFile;
+    }
 
-	public File getArchiveDir() {
-		return mArchiveDir;
-	}
+    public File getArchiveDir() {
+        return mArchiveDir;
+    }
 
     public File getRolloverDestDir() {
         return mArchiveDir;
     }
 
     public LogWriter getCurrentLogWriter() {
-		return mLogWriter;
-	}
+        return mLogWriter;
+    }
 
     public LogWriter createLogWriter(RedoLogManager redoMgr,
                                         File logfile,
@@ -185,21 +185,21 @@ public class RedoLogManager {
     }
 
     public synchronized void start() {
-		mEnabled = true;
+        mEnabled = true;
 
-		try {
-			File logdir = mLogFile.getParentFile();
-	        if (!logdir.exists()) {
-	        	if (!logdir.mkdirs())
-	        		throw new IOException("Unable to create directory " + logdir.getAbsolutePath());
-	        }
-	        if (!mArchiveDir.exists()) {
-	        	if (!mArchiveDir.mkdirs())
-	        		throw new IOException("Unable to create directory " + mArchiveDir.getAbsolutePath());
-	        }
-		} catch (IOException e) {
-			signalFatalError(e);
-		}
+        try {
+            File logdir = mLogFile.getParentFile();
+            if (!logdir.exists()) {
+                if (!logdir.mkdirs())
+                    throw new IOException("Unable to create directory " + logdir.getAbsolutePath());
+            }
+            if (!mArchiveDir.exists()) {
+                if (!mArchiveDir.mkdirs())
+                    throw new IOException("Unable to create directory " + mArchiveDir.getAbsolutePath());
+            }
+        } catch (IOException e) {
+            signalFatalError(e);
+        }
 
         setInCrashRecovery(true);
 
@@ -217,39 +217,39 @@ public class RedoLogManager {
 
         ArrayList<RedoableOp> postStartupRecoveryOps = new ArrayList<RedoableOp>(100);
         int numRecoveredOps = 0;
-		if (mSupportsCrashRecovery) {
-			mRecoveryMode = true;
-			ZimbraLog.redolog.info("Starting pre-startup crash recovery");
-			// Run crash recovery.
-			try {
-				mLogWriter.open();
+        if (mSupportsCrashRecovery) {
+            mRecoveryMode = true;
+            ZimbraLog.redolog.info("Starting pre-startup crash recovery");
+            // Run crash recovery.
+            try {
+                mLogWriter.open();
                 mRolloverMgr.initSequence(mLogWriter.getSequence());
-				RedoPlayer redoPlayer = new RedoPlayer(true);
-				try {
-				    numRecoveredOps = redoPlayer.runCrashRecovery(this, postStartupRecoveryOps);
-				} finally {
-				    redoPlayer.shutdown();
-				}
-				mLogWriter.close();
-			} catch (Exception e) {
-				ZimbraLog.redolog.fatal("Exception during crash recovery");
-				signalFatalError(e);
-			}
-			ZimbraLog.redolog.info("Finished pre-startup crash recovery");
-			mRecoveryMode = false;
-		}
+                RedoPlayer redoPlayer = new RedoPlayer(true);
+                try {
+                    numRecoveredOps = redoPlayer.runCrashRecovery(this, postStartupRecoveryOps);
+                } finally {
+                    redoPlayer.shutdown();
+                }
+                mLogWriter.close();
+            } catch (Exception e) {
+                ZimbraLog.redolog.fatal("Exception during crash recovery");
+                signalFatalError(e);
+            }
+            ZimbraLog.redolog.info("Finished pre-startup crash recovery");
+            mRecoveryMode = false;
+        }
 
         setInCrashRecovery(false);
 
-		// Reopen log after crash recovery.
-		try {
-			mLogWriter.open();
+        // Reopen log after crash recovery.
+        try {
+            mLogWriter.open();
             mRolloverMgr.initSequence(mLogWriter.getSequence());
-			mInitialLogSize = mLogWriter.getSize();
-		} catch (IOException e) {
-			ZimbraLog.redolog.fatal("Unable to open redo log");
-			signalFatalError(e);
-		}
+            mInitialLogSize = mLogWriter.getSize();
+        } catch (IOException e) {
+            ZimbraLog.redolog.fatal("Unable to open redo log");
+            signalFatalError(e);
+        }
 
         if (numRecoveredOps > 0) {
             // Add post-recovery ops to map before rollover, so the new redolog
@@ -279,7 +279,7 @@ public class RedoLogManager {
                 psrThread.start();
             }
         }
-	}
+    }
 
     private class PostStartupCrashRecoveryThread extends Thread {
         List mOps;
@@ -287,7 +287,7 @@ public class RedoLogManager {
         private PostStartupCrashRecoveryThread(List ops) {
             super("PostStartupCrashRecovery");
             setDaemon(true);
-    		mOps = ops;
+            mOps = ops;
         }
 
         public void run() {
@@ -300,19 +300,19 @@ public class RedoLogManager {
                         break;
                     }
                 }
-            	RedoableOp op = (RedoableOp) iter.next();
+                RedoableOp op = (RedoableOp) iter.next();
                 try {
                     if (ZimbraLog.redolog.isDebugEnabled())
                         ZimbraLog.redolog.debug("REDOING: " + op);
-					op.redo();
-				} catch (Exception e) {
+                    op.redo();
+                } catch (Exception e) {
                     // If there's any problem, just log the error and move on.
                     // The alternative is to abort the server, but that may be
                     // too drastic.
                     ZimbraLog.redolog.error("Redo failed for [" + op + "]." +
                                             "  Backend state of affected item is indeterminate." +
                                             "  Marking operation as aborted and moving on.", e);
-				} finally {
+                } finally {
                     // If the redo didn't work, we need to mark this operation
                     // as aborted in the redolog so it doesn't get reattempted
                     // during next startup.
@@ -326,9 +326,6 @@ public class RedoLogManager {
                     logOnly(abort, true);
                 }
             }
-
-            // Flush out all uncommitted Lucene index writes.
-            MailboxIndex.flushAllWriters();
 
             if (!interrupted)
                 ZimbraLog.redolog.info("Finished post-startup crash recovery");
@@ -345,27 +342,27 @@ public class RedoLogManager {
         }
     }
 
-	public synchronized void stop() {
-		if (!mEnabled)
-			return;
+    public synchronized void stop() {
+        if (!mEnabled)
+            return;
 
-		synchronized (mShuttingDownGuard) {
+        synchronized (mShuttingDownGuard) {
             mShuttingDown = true;
-		    if (mInPostStartupCrashRecovery) {
-		        // Wait for PostStartupCrashRecoveryThread to signal us.
-		        try {
+            if (mInPostStartupCrashRecovery) {
+                // Wait for PostStartupCrashRecoveryThread to signal us.
+                try {
                     mShuttingDownGuard.wait();
                 } catch (InterruptedException e) {}
-		    }
-		}
+            }
+        }
 
-		try {
+        try {
             forceRollover();
             mLogWriter.flush();
-			mLogWriter.close();
-		} catch (Exception e) {
-			ZimbraLog.redolog.error("Error closing redo log " + mLogFile.getName(), e);
-		}
+            mLogWriter.close();
+        } catch (Exception e) {
+            ZimbraLog.redolog.error("Error closing redo log " + mLogFile.getName(), e);
+        }
 
         double rate = 0.0;
         if (mCounter > 0)
@@ -376,45 +373,45 @@ public class RedoLogManager {
         ZimbraLog.redolog.info("Logged: " + mCounter + " items, " + rate + "ms/item");
     }
 
-	public TransactionId getNewTxnId() {
-		return mTxnIdGenerator.getNext();
-	}
+    public TransactionId getNewTxnId() {
+        return mTxnIdGenerator.getNext();
+    }
 
-	public void log(RedoableOp op, boolean synchronous) {
-		if (!mEnabled || mRecoveryMode)
-			return;
+    public void log(RedoableOp op, boolean synchronous) {
+        if (!mEnabled || mRecoveryMode)
+            return;
 
-		logOnly(op, synchronous);
+        logOnly(op, synchronous);
 
-		if (isRolloverNeeded(false))
-			rollover(false, false);
-	}
+        if (isRolloverNeeded(false))
+            rollover(false, false);
+    }
 
-	/**
-	 * Logs the COMMIT record for an operation.
-	 * @param op
-	 */
-	public void commit(RedoableOp op) {
-		if (mEnabled) {
+    /**
+     * Logs the COMMIT record for an operation.
+     * @param op
+     */
+    public void commit(RedoableOp op) {
+        if (mEnabled) {
             long redoSeq = mRolloverMgr.getCurrentSequence();
-			CommitTxn commit = new CommitTxn(op);
+            CommitTxn commit = new CommitTxn(op);
             // Commit records are written without fsync.  It's okay to
             // allow fsync to happen by itself or wait for one during
             // logging of next redo item.
-			log(commit, false);
+            log(commit, false);
             commit.setSerializedByteArray(null);
         }
-	}
+    }
 
-	public void abort(RedoableOp op) {
-		if (mEnabled) {
-			AbortTxn abort = new AbortTxn(op);
+    public void abort(RedoableOp op) {
+        if (mEnabled) {
+            AbortTxn abort = new AbortTxn(op);
             // Abort records are written with fsync, to prevent triggering
             // redo during crash recovery.
-			log(abort, true);
+            log(abort, true);
             abort.setSerializedByteArray(null);
-		}
-	}
+        }
+    }
 
     public void flush() throws IOException {
         if (mEnabled)
@@ -422,34 +419,34 @@ public class RedoLogManager {
     }
 
     /**
-	 * Log an operation to the logger.  Only does logging; doesn't
-	 * bother with checkpoint, rollover, etc.
-	 * @param op
-	 * @param synchronous
-	 */
-	protected void logOnly(RedoableOp op, boolean synchronous) {
-		try {
-			// Do the logging while holding a read lock on the RW lock.
-			// This prevents checkpoint or rollover from starting when
-			// there are any threads in the act of logging.
-			ReadLock readLock = mRWLock.readLock();
-			readLock.lockInterruptibly();
-			try {
-				// Update active ops map.
-				synchronized (mActiveOps) {
-					if (op.isStartMarker()) {
-						mActiveOps.put(op.getTransactionId(), op);
-					}
-					if (op.isEndMarker())
-						mActiveOps.remove(op.getTransactionId());
-				}
+     * Log an operation to the logger.  Only does logging; doesn't
+     * bother with checkpoint, rollover, etc.
+     * @param op
+     * @param synchronous
+     */
+    protected void logOnly(RedoableOp op, boolean synchronous) {
+        try {
+            // Do the logging while holding a read lock on the RW lock.
+            // This prevents checkpoint or rollover from starting when
+            // there are any threads in the act of logging.
+            ReadLock readLock = mRWLock.readLock();
+            readLock.lockInterruptibly();
+            try {
+                // Update active ops map.
+                synchronized (mActiveOps) {
+                    if (op.isStartMarker()) {
+                        mActiveOps.put(op.getTransactionId(), op);
+                    }
+                    if (op.isEndMarker())
+                        mActiveOps.remove(op.getTransactionId());
+                }
 
-				try {
+                try {
                     long start = System.currentTimeMillis();
-					mLogWriter.log(op, op.getInputStream(), synchronous);
+                    mLogWriter.log(op, op.getInputStream(), synchronous);
                     long elapsed = System.currentTimeMillis() - start;
                     synchronized (mStatGuard) {
-                    	mElapsed += elapsed;
+                        mElapsed += elapsed;
                         mCounter++;
                     }
                 } catch (NullPointerException e) {
@@ -490,137 +487,137 @@ public class RedoLogManager {
                 } catch (OutOfMemoryError e) {
                     Zimbra.halt("out of memory", e);
                 } catch (Throwable e) {
-					ZimbraLog.redolog.error("Redo logging to logger " + mLogWriter.getClass().getName() + " failed", e);
-					signalFatalError(e);
-				}
+                    ZimbraLog.redolog.error("Redo logging to logger " + mLogWriter.getClass().getName() + " failed", e);
+                    signalFatalError(e);
+                }
 
-				if (ZimbraLog.redolog.isDebugEnabled())
-					ZimbraLog.redolog.debug(op.toString());
-			} finally {
-				readLock.unlock();
-			}
-		} catch (InterruptedException e) {
-		    synchronized (mShuttingDownGuard) {
+                if (ZimbraLog.redolog.isDebugEnabled())
+                    ZimbraLog.redolog.debug(op.toString());
+            } finally {
+                readLock.unlock();
+            }
+        } catch (InterruptedException e) {
+            synchronized (mShuttingDownGuard) {
                 if (!mShuttingDown)
-        			ZimbraLog.redolog.warn("InterruptedException while logging", e);
+                    ZimbraLog.redolog.warn("InterruptedException while logging", e);
                 else
                     ZimbraLog.redolog.info("Thread interrupted for shutdown");
-		    }
-		}
-	}
+            }
+        }
+    }
 
     /**
      * Should be called with write lock on mRWLock held.
      */
-	private void checkpoint() {
-		LinkedHashSet<TransactionId> txns = null;
-		synchronized (mActiveOps) {
+    private void checkpoint() {
+        LinkedHashSet<TransactionId> txns = null;
+        synchronized (mActiveOps) {
             if (mActiveOps.size() == 0)
                 return;
 
             // Create an empty LinkedHashSet and insert keys from mActiveOps
-			// by iterating the keyset.
+            // by iterating the keyset.
             txns = new LinkedHashSet<TransactionId>();
-			for (Iterator<Map.Entry<TransactionId, RedoableOp>>
-			     it = mActiveOps.entrySet().iterator(); it.hasNext(); ) {
-				Map.Entry<TransactionId, RedoableOp> entry = it.next();
-				txns.add(entry.getKey());
-			}
-		}
-		Checkpoint ckpt = new Checkpoint(txns);
-		logOnly(ckpt, true);
-	}
+            for (Iterator<Map.Entry<TransactionId, RedoableOp>>
+                 it = mActiveOps.entrySet().iterator(); it.hasNext(); ) {
+                Map.Entry<TransactionId, RedoableOp> entry = it.next();
+                txns.add(entry.getKey());
+            }
+        }
+        Checkpoint ckpt = new Checkpoint(txns);
+        logOnly(ckpt, true);
+    }
 
-	/**
-	 * Determines if a log rollover is needed.  If immediate is true, rollover
-	 * is deemed needed if current log is non-empty.  If immediate is false,
-	 * rollover is needed only if the log hits the maximum size limit.
-	 * @param immediate
-	 * @return
-	 */
-	protected boolean isRolloverNeeded(boolean immediate) {
+    /**
+     * Determines if a log rollover is needed.  If immediate is true, rollover
+     * is deemed needed if current log is non-empty.  If immediate is false,
+     * rollover is needed only if the log hits the maximum size limit.
+     * @param immediate
+     * @return
+     */
+    protected boolean isRolloverNeeded(boolean immediate) {
         boolean result = false;
-		try {
-			if (immediate) {
-				result = !mLogWriter.isEmpty();
-			} else {
-				long size = mLogWriter.getSize();
-				if (size >= mLogRolloverHardMaxBytes) {
-				    // Log is bigger than hard max.
-				    result = true;
-				} else if (size >= mLogRolloverSoftMaxBytes && size > mInitialLogSize) {
-				    // Log is bigger than soft max, but it it old enough?
-				    long now = System.currentTimeMillis();
+        try {
+            if (immediate) {
+                result = !mLogWriter.isEmpty();
+            } else {
+                long size = mLogWriter.getSize();
+                if (size >= mLogRolloverHardMaxBytes) {
+                    // Log is bigger than hard max.
+                    result = true;
+                } else if (size >= mLogRolloverSoftMaxBytes && size > mInitialLogSize) {
+                    // Log is bigger than soft max, but it it old enough?
+                    long now = System.currentTimeMillis();
                     long createTime = Math.min(mLogWriter.getCreateTime(), now);
                     long age = now - createTime;
-				    result = age >= mLogRolloverMinAgeMillis;
-				}
-			}
-		} catch (IOException e) {
-			ZimbraLog.redolog.fatal("Unable to get redo log size");
-			signalFatalError(e);
-		}
-		return result;
-	}
+                    result = age >= mLogRolloverMinAgeMillis;
+                }
+            }
+        } catch (IOException e) {
+            ZimbraLog.redolog.fatal("Unable to get redo log size");
+            signalFatalError(e);
+        }
+        return result;
+    }
 
-	protected void setRolloverLimits(long minAgeMillis, long softMaxBytes, long hardMaxBytes) {
-	    mLogRolloverMinAgeMillis = minAgeMillis;
-	    mLogRolloverSoftMaxBytes = softMaxBytes;
-	    mLogRolloverHardMaxBytes = hardMaxBytes;
-	}
+    protected void setRolloverLimits(long minAgeMillis, long softMaxBytes, long hardMaxBytes) {
+        mLogRolloverMinAgeMillis = minAgeMillis;
+        mLogRolloverSoftMaxBytes = softMaxBytes;
+        mLogRolloverHardMaxBytes = hardMaxBytes;
+    }
 
-	/**
-	 * Do a log rollover if necessary.  If force is true, rollover occurs if
-	 * log is non-empty.  If force is false, rollover happens only when it's
-	 * needed according to isRolloverNeeded().
-	 * @param force
+    /**
+     * Do a log rollover if necessary.  If force is true, rollover occurs if
+     * log is non-empty.  If force is false, rollover happens only when it's
+     * needed according to isRolloverNeeded().
+     * @param force
      * @param skipCheckpoint if true, skips writing Checkpoint entry at end of file
-	 * @return java.io.File object for rolled over file; null if no rollover occurred
-	 */
-	protected File rollover(boolean force, boolean skipCheckpoint) {
+     * @return java.io.File object for rolled over file; null if no rollover occurred
+     */
+    protected File rollover(boolean force, boolean skipCheckpoint) {
         if (!mEnabled)
             return null;
 
         File rolledOverFile = null;
         // Grab a write lock on mRWLock.  No thread will be
         // able to log a new item until rollover is done.
-		WriteLock writeLock = mRWLock.writeLock();
-		try {
-			writeLock.lockInterruptibly();
-		} catch (InterruptedException e) {
-		    synchronized (mShuttingDownGuard) {
+        WriteLock writeLock = mRWLock.writeLock();
+        try {
+            writeLock.lockInterruptibly();
+        } catch (InterruptedException e) {
+            synchronized (mShuttingDownGuard) {
                 if (!mShuttingDown)
-        			ZimbraLog.redolog.error("InterruptedException during log rollover", e);
+                    ZimbraLog.redolog.error("InterruptedException during log rollover", e);
                 else
                     ZimbraLog.redolog.debug("Rollover interrupted during shutdown");
-		    }
-			return rolledOverFile;
-		}
+            }
+            return rolledOverFile;
+        }
 
-		try {
-			if (isRolloverNeeded(force)) {
-				ZimbraLog.redolog.debug("Redo log rollover started");
+        try {
+            if (isRolloverNeeded(force)) {
+                ZimbraLog.redolog.debug("Redo log rollover started");
 
-				long start = System.currentTimeMillis();
-				// Force the database to persist the committed changes to disk.
+                long start = System.currentTimeMillis();
+                // Force the database to persist the committed changes to disk.
                 // This is very important when running mysql with innodb_flush_log_at_trx_commit=0 (or 2).
                 Db.getInstance().flushToDisk();
 
                 if (!skipCheckpoint)
-    				checkpoint();
+                    checkpoint();
                 synchronized (mActiveOps) {
                     rolledOverFile = mLogWriter.rollover(mActiveOps);
-					mInitialLogSize = mLogWriter.getSize();
-				}
+                    mInitialLogSize = mLogWriter.getSize();
+                }
                 long elapsed = System.currentTimeMillis() - start;
-				ZimbraLog.redolog.info("Redo log rollover took " + elapsed + "ms");
-			}
-		} catch (IOException e) {
-			ZimbraLog.redolog.error("IOException during redo log rollover");
-			signalFatalError(e);
+                ZimbraLog.redolog.info("Redo log rollover took " + elapsed + "ms");
+            }
+        } catch (IOException e) {
+            ZimbraLog.redolog.error("IOException during redo log rollover");
+            signalFatalError(e);
         } finally {
-			writeLock.unlock();
-		}
+            writeLock.unlock();
+        }
 
         /* TODO: Finish implementing Rollover as a replicated op.
          * Checking in this partial code to work on something else.
@@ -634,11 +631,11 @@ public class RedoLogManager {
             logOnly(commit, true);
         }
         */
-		return rolledOverFile;
-	}
+        return rolledOverFile;
+    }
 
     public File forceRollover() {
-    	return forceRollover(false);
+        return forceRollover(false);
     }
 
     public File forceRollover(boolean skipCheckpoint) {
@@ -646,11 +643,11 @@ public class RedoLogManager {
     }
 
     public RolloverManager getRolloverManager() {
-    	return mRolloverMgr;
+        return mRolloverMgr;
     }
 
     public long getCurrentLogSequence() {
-    	return mRolloverMgr.getCurrentSequence();
+        return mRolloverMgr.getCurrentSequence();
     }
 
     /**
@@ -663,23 +660,23 @@ public class RedoLogManager {
     }
 
     /**
-	 * Acquires an exclusive lock on the log manager.  When the log manager
-	 * is locked this way, it is guaranteed that no thread is in the act
-	 * of logging or doing a log rollover.  In other words, the logs are
-	 * quiesced.
-	 * 
-	 * The thread calling this method must later release the lock by calling
-	 * releaseExclusiveLock() method and passing the Sync object that was
-	 * returned by this method.
-	 * 
-	 * @return the Sync object to be used later to release the lock
-	 * @throws InterruptedException
-	 */
-	protected WriteLock acquireExclusiveLock() throws InterruptedException {
-		WriteLock writeLock = mRWLock.writeLock();
-		writeLock.lockInterruptibly();
-		return writeLock;
-	}
+     * Acquires an exclusive lock on the log manager.  When the log manager
+     * is locked this way, it is guaranteed that no thread is in the act
+     * of logging or doing a log rollover.  In other words, the logs are
+     * quiesced.
+     *
+     * The thread calling this method must later release the lock by calling
+     * releaseExclusiveLock() method and passing the Sync object that was
+     * returned by this method.
+     *
+     * @return the Sync object to be used later to release the lock
+     * @throws InterruptedException
+     */
+    protected WriteLock acquireExclusiveLock() throws InterruptedException {
+        WriteLock writeLock = mRWLock.writeLock();
+        writeLock.lockInterruptibly();
+        return writeLock;
+    }
 
     /**
      * Releases the exclusive lock on the log manager.
@@ -690,10 +687,10 @@ public class RedoLogManager {
         exclusiveLock.unlock();
     }
 
-	protected void signalFatalError(Throwable e) {
+    protected void signalFatalError(Throwable e) {
         // Die before any further damage is done.
         Zimbra.halt("Aborting process", e);
-	}
+    }
 
     /**
      * @param seq
@@ -754,7 +751,7 @@ public class RedoLogManager {
                     // Most likely, the CommitId is too old.
                     throw MailServiceException.INVALID_COMMIT_ID(cid.toString());
                 }
-    
+
                 // Create a temp directory and make hard links to all redologs.
                 // This prevents the logs from disappearing while being scanned.
                 String dirName = "tmp-scan-" + System.currentTimeMillis();

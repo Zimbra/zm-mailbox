@@ -19,9 +19,13 @@ import java.util.Collection;
 import java.util.List;
 import com.zimbra.common.util.ZimbraLog;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.index.SortBy.SortDirection;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.IndexHelper;
 import com.zimbra.cs.mailbox.MailItem;
@@ -207,8 +211,8 @@ public final class MailboxIndex {
     /**
      * @see LuceneIndex#getDomainsForField(String, String, Collection)
      */
-    public void getDomainsForField(String fieldName, String regex,
-            Collection<BrowseTerm> collection) throws IOException {
+    public void getDomainsForField(String fieldName, String regex, Collection<BrowseTerm> collection)
+            throws IOException {
         luceneIndex.getDomainsForField(fieldName, regex, collection);
     }
 
@@ -230,32 +234,23 @@ public final class MailboxIndex {
      * A hint to the indexing system that we're doing a 'bulk' write to the index
      * -- writing multiple items to the index.
      * <ul>
-     *  <li>Caller MUST hold call endWriteOperation() at the end.
+     *  <li>Caller MUST hold call {@link #endWrite()} at the end.
      *  <li>Caller MUST the mailbox lock for the duration of the begin/end pair
      * </ul>
-     *
-     * @see LuceneIndex#beginWriteOperation()
      */
-    public void beginWriteOperation() throws IOException {
-        luceneIndex.beginWriteOperation();
+    public void beginWrite() throws IOException {
+        luceneIndex.beginWrite();
+    }
+
+    public void endWrite() {
+        luceneIndex.endWrite();
     }
 
     /**
-     * @see LuceneIndex#endWriteOperation()
+     * Removes from cache.
      */
-    public void endWriteOperation() {
-        luceneIndex.endWriteOperation();
-    }
-
-    /**
-     * Force all outstanding index writes to go through.
-     * <p>
-     * This API should be called when the system detects that it has free time.
-     *
-     * @see LuceneIndex#flush()
-     */
-    public void flush() {
-        luceneIndex.flush();
+    public void evict() {
+        luceneIndex.evict();
     }
 
     /**
@@ -275,10 +270,49 @@ public final class MailboxIndex {
         return "MailboxIndex(" + mMailboxId + ")";
     }
 
-    IndexSearcherRef getIndexSearcherRef(SortBy sort) throws IOException {
-        IndexSearcherRef toRet = luceneIndex.getIndexSearcherRef();
-        toRet.setSort(luceneIndex.getSort(sort));
-        return toRet;
+    IndexSearcherRef getIndexSearcherRef(SortBy sortBy) throws IOException {
+        IndexSearcherRef ref = luceneIndex.getIndexSearcherRef();
+        ref.setSort(toSort(sortBy));
+        return ref;
+    }
+
+    private Sort toSort(SortBy sortBy) {
+        if (sortBy == null || sortBy == SortBy.NONE) {
+            return null;
+        }
+
+        boolean reverse = false;;
+        if (sortBy.getDirection() == SortDirection.DESCENDING) {
+            reverse = true;
+        }
+
+        int type;
+        String field;
+        switch (sortBy.getCriterion()) {
+        case NAME:
+        case NAME_NATURAL_ORDER:
+        case SENDER:
+            field = LuceneFields.L_SORT_NAME;
+            type = SortField.STRING;
+            break;
+        case SUBJECT:
+            field = LuceneFields.L_SORT_SUBJECT;
+            type = SortField.STRING;
+            break;
+        case SIZE:
+            field = LuceneFields.L_SORT_SIZE;
+            type = SortField.LONG;
+            break;
+        case DATE:
+        default:
+            // default to DATE_DESCENDING!
+            field = LuceneFields.L_SORT_DATE;
+            type = SortField.STRING;
+            reverse = true;;
+            break;
+        }
+
+        return new Sort(new SortField(field, type, reverse));
     }
 
     LuceneIndex getLuceneIndex() {
@@ -303,16 +337,6 @@ public final class MailboxIndex {
             return;
         }
         LuceneIndex.shutdown();
-    }
-
-    /**
-     * @see LuceneIndex#flushAllWriters()
-     */
-    public static void flushAllWriters() {
-        if (DebugConfig.disableIndexing) {
-            return;
-        }
-        LuceneIndex.flushAllWriters();
     }
 
     /**
@@ -418,34 +442,28 @@ public final class MailboxIndex {
      *  reindex of specific items or types).  Out-of-index adds SHOULD NOT BE
      *  TRACKED -- do not call indexingCompleted for them.
      */
-    public void indexMailItem(Mailbox mbox, boolean deleteFirst,
-            List<IndexDocument> docList, MailItem mi, int modContent)
-        throws ServiceException {
+    public void indexMailItem(Mailbox mbox, boolean deleteFirst, List<IndexDocument> docList, MailItem mi,
+            int modContent) throws ServiceException {
 
         initAnalyzer(mbox);
         synchronized(getLock()) {
-            String indexId = mi.getIndexId() == -1 ? null : Integer.toString(mi.getIndexId());
-            try {
-                if (docList != null) {
-                    IndexDocument[] docs = new IndexDocument[docList.size()];
-                    docs = docList.toArray(docs);
-                    luceneIndex.addDocument(docs, mi.getId(), indexId,
-                            modContent, mi.getDate(), mi.getSize(),
+            if (docList != null) {
+                IndexDocument[] docs = new IndexDocument[docList.size()];
+                docs = docList.toArray(docs);
+                try {
+                    luceneIndex.addDocument(docs, mi.getId(), mi.getIndexId(), modContent, mi.getDate(), mi.getSize(),
                             mi.getSortSubject(), mi.getSortSender(), deleteFirst);
+                } catch (IOException e) {
+                    throw ServiceException.FAILURE("Failed to index", e);
                 }
-            } catch (IOException e) {
-                throw ServiceException.FAILURE("indexMailItem caught IOException", e);
             }
         }
     }
 
     void indexingCompleted(int count, SyncToken highestToken, boolean succeeded) {
         if (count > 0) {
-            if (ZimbraLog.index_add.isDebugEnabled()) {
-                ZimbraLog.index_add.debug("indexingCompleted(" + count + "," +
-                        highestToken + "," + (succeeded ? "SUCCEEDED)" : "FAILED)"));
-            }
-
+            ZimbraLog.indexing.debug("indexingCompleted count=%d highest=%s success=%b",
+                    count, highestToken, succeeded);
             mMailbox.indexingCompleted(count, highestToken, succeeded);
         }
     }
@@ -454,16 +472,8 @@ public final class MailboxIndex {
      * @see LuceneIndex#expandWildcardToken(Collection, String, String, int)
      */
     public boolean expandWildcardToken(Collection<String> toRet, String field,
-            String token, int maxToReturn) throws ServiceException {
+            String token, int maxToReturn) throws IOException {
         return luceneIndex.expandWildcardToken(toRet, field, token, maxToReturn);
-    }
-
-    /**
-     * @see LuceneIndex#suggestSpelling(String, String)
-     */
-    List<SpellSuggestQueryInfo.Suggestion> suggestSpelling(String field,
-            String token) throws ServiceException {
-        return luceneIndex.suggestSpelling(field, token);
     }
 
     final Object getLock() {

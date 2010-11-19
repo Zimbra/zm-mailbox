@@ -33,11 +33,11 @@ import com.zimbra.common.util.ZimbraLog;
  * Reference to {@link IndexReader} that supports reference count.
  */
 final class IndexReaderRef {
-    private LuceneIndex mIdx;
-    private IndexReader mReader;
-    private int mCount = 1;
-    private long mAccessTime;
-    private boolean mRequiresReopen = false;
+    private LuceneIndex index;
+    private IndexReader reader;
+    private int count = 1;
+    private long lastAccessTime;
+    private boolean stale = false; // reopen if stale
 
     // debugging stuff
     private boolean mDebug = false;
@@ -129,7 +129,7 @@ final class IndexReaderRef {
 
         // MailboxId
         int mailboxId = -1;
-        mailboxId = mIdx.getMailboxId();
+        mailboxId = index.getMailboxId();
         if (mailboxId == -1) {
             line.append("unknown" + DEBUG_DELIM);
         } else {
@@ -148,11 +148,11 @@ final class IndexReaderRef {
         line.append(hashCode() + DEBUG_DELIM);
 
         // RefCount,
-        line.append("[" + mCount + "]" + DEBUG_DELIM);
+        line.append("[" + count + "]" + DEBUG_DELIM);
 
         // LastAccessTime,
-        String accessTime = String.format("%1$tm%1$td-%1$tH:%1$tM:%1$tS.%1$tL", new Date(mAccessTime));
-        line.append(accessTime + "(" + mAccessTime + ")" + DEBUG_DELIM);
+        String accessTime = String.format("%1$tm%1$td-%1$tH:%1$tM:%1$tS.%1$tL", new Date(lastAccessTime));
+        line.append(accessTime + "(" + accessTime + ")" + DEBUG_DELIM);
 
         // StackFrames
         StackTraceElement[] stack = curThread.getStackTrace();
@@ -179,10 +179,10 @@ final class IndexReaderRef {
         IndexReaderRefStats.addStats(line.toString() + "\n");
     }
 
-    IndexReaderRef(LuceneIndex idx, IndexReader reader) {
-        mIdx = idx;
-        mReader= reader;
-        mAccessTime = System.currentTimeMillis();
+    IndexReaderRef(LuceneIndex index, IndexReader reader) {
+        this.index = index;
+        this.reader = reader;
+        lastAccessTime = System.currentTimeMillis();
 
         if (DebugConfig.enableIndexReaderRefStats && ZimbraLog.index.isDebugEnabled()) {
             mDebug = true;
@@ -192,22 +192,17 @@ final class IndexReaderRef {
     }
 
     synchronized IndexReader getReader() {
-        return mReader;
+        return reader;
     }
-
 
     /**
      * Increments the reference counter.
      */
     synchronized void inc() {
-        mAccessTime = System.currentTimeMillis();
-        mCount++;
+        lastAccessTime = System.currentTimeMillis();
+        count++;
 
         statMe(DebugAction.ADD);
-    }
-
-    synchronized void forceClose() {
-        closeIt();
     }
 
     /**
@@ -217,46 +212,35 @@ final class IndexReaderRef {
      * {@link IndexReader}.
      */
     synchronized void dec() {
-        mCount--;
-        assert(mCount >= 0);
-        if (0 == mCount) {
-            closeIt();
+        count--;
+        assert(count >= 0);
+        if (0 == count) {
+            close();
         }
 
         statMe(DebugAction.DEC);
     }
 
-    synchronized boolean markForReopen() {
-        if (mCount != 1) {
-            return false;
-        }
-        mRequiresReopen = true;
-        return true;
+    synchronized void stale() {
+        stale = true;
     }
 
-    synchronized boolean requiresReopen() {
-        assert(!mRequiresReopen || mCount==1);
-        return mRequiresReopen;
-    }
-
-    synchronized void reopened(IndexReader newReader) {
-        assert(mRequiresReopen && mCount==1);
-        mRequiresReopen = false;
-        mReader = newReader;
+    synchronized boolean isStale() {
+        return stale;
     }
 
     synchronized long getAccessTime() {
-        return mAccessTime;
+        return lastAccessTime;
     }
 
-    private void closeIt() {
+    private void close() {
         try {
-            mReader.close();
+            reader.close();
         } catch (IOException e) {
-            ZimbraLog.im.debug("Caught exception while closing IndexReader: ", e);
+            ZimbraLog.index_lucene.warn("Failed to close IndexReader %s", index, e);
         } finally {
-            mReader = null;
-            mIdx.onReaderClose(this);
+            reader = null;
+            index.onCloseReader(this);
         }
     }
 }

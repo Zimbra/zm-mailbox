@@ -14,211 +14,163 @@
  */
 package com.zimbra.cs.index;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-import org.apache.lucene.index.IndexReader;
-
-import com.zimbra.common.localconfig.LC;
+import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
- * Self-sweeping (with it's own sweeper thread) LRU cache of open index readers
+ * Self-sweeping (with it's own sweeper thread) LRU cache of {@link IndexReaderRef}.
+ *
+ * @author tim
+ * @author ysasaki
  */
-final class IndexReadersCache extends Thread {
-    private static Log sLog = LogFactory.getLog(IndexReadersCache.class);
+final class IndexReadersCache {
+    private static final Log LOG = LogFactory.getLog(IndexReadersCache.class);
 
-    private final int mMaxOpenReaders;
-    private Map<LuceneIndex, IndexReaderRef> mOpenIndexReaders;
-    private boolean mShutdown;
-    private long mSweepIntervalMS;
-    private long mMaxReaderOpenTimeMS;
+    private final int maxReaders;
+    private final Map<LuceneIndex, IndexReaderRef> readers;
+    private final ScheduledExecutorService sweeper = Executors.newSingleThreadScheduledExecutor(
+            new ThreadFactoryBuilder().setNameFormat("IndexReadersCache-Sweeper").build());
+    private final long ttl;
 
-    private static boolean sUseReaderReopen = LC.zimbra_index_use_reader_reopen.booleanValue();
+    IndexReadersCache(int max, long ttl, long sweepInterval) {
+        Preconditions.checkArgument(ttl >= 0, "ttl must be >= 0: " + ttl);
+        Preconditions.checkArgument(sweepInterval >= 100, "sweepInterval must be >= 100: " + sweepInterval);
 
-    IndexReadersCache(int maxOpenReaders, long maxReaderOpenTime, long sweepIntervalMS) {
-        super("IndexReadersCache-Sweeper");
-        if (maxReaderOpenTime < 0) {
-            maxReaderOpenTime = 0;
+        this.ttl = ttl;
+        maxReaders = max;
+        readers = new LinkedHashMap<LuceneIndex, IndexReaderRef>(maxReaders) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<LuceneIndex, IndexReaderRef> eldest) {
+                if (size() > maxReaders) {
+                    ZimbraLog.index.debug("Prune IndexReader (overflow): %s", eldest.getKey());
+                    eldest.getValue().dec();
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        };
+        if (maxReaders > 0) {
+            sweeper.scheduleWithFixedDelay(new Sweeper(), sweepInterval, sweepInterval, TimeUnit.MILLISECONDS);
         }
-        if (sweepIntervalMS < 100) {
-            sweepIntervalMS = 100;
+    }
+
+    void shutdown() {
+        sweeper.shutdownNow();
+        synchronized (this) {
+            for (IndexReaderRef reader: readers.values()) {
+                reader.dec();
+            }
+            readers.clear();
         }
-        mMaxReaderOpenTimeMS = maxReaderOpenTime;
-        mMaxOpenReaders = maxOpenReaders;
-        mOpenIndexReaders = new LinkedHashMap<LuceneIndex, IndexReaderRef>(mMaxOpenReaders);
-        mShutdown = false;
-        mSweepIntervalMS = sweepIntervalMS;
     }
 
     /**
-     * Shut down the sweeper thread and clear the cached
+     * Calls {@link IndexReaderRef#inc()} and puts it into the cache.
+     *
+     * @param index cache key
+     * @param ref cache value
      */
-    synchronized void signalShutdown() {
-        mShutdown = true;
-        notify();
-    }
-
-    /**
-     * Put the passed-in {@link IndexReader} into the cache, if applicable. This
-     * function will automatically {@link IndexReaderRef#inc()} the
-     * {@link IndexReader} if it stores it in it's cache
-     */
-    synchronized void putIndexReader(LuceneIndex idx, IndexReaderRef reader) {
-        // special case disabled index reader cache:
-        if (mMaxOpenReaders <= 0) {
+    void put(LuceneIndex index, IndexReaderRef ref) {
+        if (maxReaders <= 0) { // cache disabled
             return;
         }
-        // +1 b/c we haven't added the new one yet
-        int toRemove = mOpenIndexReaders.size() + 1 - mMaxOpenReaders;
-        if (toRemove > 0) {
-            // remove extra (above our limit) readers
-            for (Iterator<Entry<LuceneIndex, IndexReaderRef>> iter =
-                mOpenIndexReaders.entrySet().iterator(); toRemove > 0; toRemove--) {
-
-                Entry<LuceneIndex, IndexReaderRef> entry = iter.next();
-                entry.getValue().dec();
-                if (sLog.isDebugEnabled()) {
-                    sLog.debug("Releasing index reader for index: " +
-                            entry.getKey() + " from cache (too many open)");
-                }
-                iter.remove();
-            }
+        ref.inc();
+        synchronized (this) {
+            ref = readers.put(index, ref);
         }
-        assert(toRemove <= 0);
-        reader.inc();
-        mOpenIndexReaders.put(idx, reader);
+        if (ref != null) {
+            ref.dec();
+        }
     }
 
-    /**
-     * Called by the {@link LuceneIndex} when it closes the reader itself
-     * (e.g. when there is write activity to the index)
-     */
-    synchronized void removeIndexReader(LuceneIndex idx) {
-        if (mMaxOpenReaders <= 0) {
+    void remove(LuceneIndex index) {
+        if (maxReaders <= 0) { // cache disabled
             return;
         }
-        IndexReaderRef reader = mOpenIndexReaders.get(idx);
-        if (reader != null && !reader.requiresReopen()) {
-            if (sUseReaderReopen && reader.markForReopen()) {
-                if (sLog.isDebugEnabled()) {
-                    sLog.debug("IndexReader successfully marked for re-open: " + idx.toString());
-                }
-                return; // can be reopened: leave in cache and return
-            }
-
-            // can't reopen in, someone's really using it...
-            IndexReaderRef removed = mOpenIndexReaders.remove(idx);
-            if (removed != null) {
-                removed.dec();
-                if (sLog.isDebugEnabled()) {
-                    sLog.debug("Closing index reader for index: " + idx.toString() + " (removed)");
-                }
-            }
+        IndexReaderRef ref;
+        synchronized (this) {
+            ref = readers.remove(index);
+        }
+        if (ref != null) {
+            ref.dec();
         }
     }
 
     /**
-     * Returns ALREADY ADDREFED IndexReader, or NULL if there is not one cached.
+     * Marks the cache entry stale.
      */
-    synchronized IndexReaderRef getIndexReader(LuceneIndex idx) {
-        IndexReaderRef toRet = mOpenIndexReaders.get(idx);
-        if (toRet != null) {
-            if (toRet.requiresReopen()) {
-                try {
-                    IndexReader oldReader = toRet.getReader();
-                    IndexReader newReader = oldReader.reopen();
-                    if (newReader != null && newReader != oldReader) {
-                        // reader changed, must close old one
-                        oldReader.close();
-                        if (sLog.isDebugEnabled()) {
-                            sLog.debug("Reopened new indexreader instance: " + newReader);
-                        }
-                        toRet.reopened(newReader);
-                    } else {
-                        if (sLog.isDebugEnabled()) {
-                            sLog.debug("Attempted reopen but reader was current: " + oldReader);
-                        }
-                        toRet.reopened(oldReader);
+    void stale(LuceneIndex index) {
+        if (maxReaders <= 0) { // cache disabled
+            return;
+        }
+
+        IndexReaderRef ref ;
+        synchronized (this) {
+            ref = readers.get(index);
+        }
+        if (ref != null) {
+            ZimbraLog.index_lucene.debug("Stale IndexReader: %s", index);
+            ref.stale();
+        }
+    }
+
+    /**
+     * Returns the cache value, or null if not cached.
+     *
+     * @param index cache key
+     * @return cache value or null
+     */
+    IndexReaderRef get(LuceneIndex index) {
+        IndexReaderRef ref;
+        synchronized (this) {
+            ref = readers.get(index);
+        }
+        if (ref != null) {
+            ref.inc();
+        }
+        return ref;
+    }
+
+    private final class Sweeper implements Runnable {
+        @Override
+        public void run() {
+            LOG.debug("begin");
+
+            long cutoff = System.currentTimeMillis() - ttl;
+            List<IndexReaderRef> remove = new ArrayList<IndexReaderRef>(readers.size());
+            synchronized (IndexReadersCache.this) {
+                Iterator<Map.Entry<LuceneIndex, IndexReaderRef>> itr = readers.entrySet().iterator();
+                while (itr.hasNext()) {
+                    Entry<LuceneIndex, IndexReaderRef> entry = itr.next();
+                    if (entry.getValue().getAccessTime() < cutoff) {
+                        LOG.debug("Prune IndexReader (time out): %s", entry.getKey());
+                        remove.add(entry.getValue());
+                        itr.remove();
                     }
-                } catch (IOException e) {
-                    ZimbraLog.im.debug("Caught exception while attempting to reopen IndexReader", e);
-                    toRet.dec();
-                    return null;
                 }
             }
-            toRet.inc();
-        }
-        return toRet;
-    }
 
-    synchronized boolean containsKey(LuceneIndex idx) {
-        return mOpenIndexReaders.containsKey(idx);
-    }
-
-    /**
-     * Sweeper thread entry point
-     */
-    @Override
-    public void run() {
-        if (mMaxOpenReaders <= 0) {
-            sLog.info(getName() + " thread disabled (Max open IndexReaders set to 0)");
-            return;
-        } else {
-            sLog.info(getName() + " thread starting");
-
-            boolean shutdown = false;
-            while (!shutdown) {
-                // Sleep until next scheduled wake-up time, or until notified.
-                synchronized (this) {
-                    long startTime = System.currentTimeMillis();
-
-                    if (!mShutdown) {  // Don't go into wait() if shutting down.  (bug 1962)
-                        long now = System.currentTimeMillis();
-                        long until = startTime + mSweepIntervalMS;
-                        if (until > now) {
-                            try {
-                                wait(until - now);
-                            } catch (InterruptedException e) {
-                            }
-                        }
-                    }
-                    shutdown = mShutdown;
-
-                    if (!shutdown) {
-                        long now = System.currentTimeMillis();
-                        long cutoff = now - mMaxReaderOpenTimeMS;
-
-                        for (Iterator<Entry<LuceneIndex,IndexReaderRef>> iter =
-                            mOpenIndexReaders.entrySet().iterator(); iter.hasNext();) {
-
-                            Entry<LuceneIndex,IndexReaderRef> entry = iter.next();
-                            if (entry.getValue().getAccessTime() < cutoff) {
-                                if (sLog.isDebugEnabled()) {
-                                    sLog.debug("Releasing cached index reader for index: " +
-                                            entry.getKey() + " (timed out)");
-                                }
-                                entry.getValue().dec();
-                                iter.remove();
-                            }
-                        }
-                    } // if (!shutdown)
-                } // synchronized(this)
-            } // while !shutdown
-
-            // Shutdown time: clear the cache now
-            synchronized (this) {
-                for (IndexReaderRef reader: mOpenIndexReaders.values()) {
-                    reader.dec();
-                }
-                mOpenIndexReaders.clear();
+            // close outside of synchronized block
+            for (IndexReaderRef ref : remove) {
+                ref.dec();
             }
-            sLog.info(getName() + " thread exiting");
+
+            LOG.debug("end");
         }
     }
+
 }
