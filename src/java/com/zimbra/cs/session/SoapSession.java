@@ -43,6 +43,7 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.index.ZimbraQueryResults;
@@ -141,15 +142,17 @@ public class SoapSession extends Session {
          * We also assume that it *might* change between invocations of calculateVisibileFolders (i.e. check accessmgr each time)
          * @throws ServiceException
          */
-        protected void cacheAccountAccess(Account authed, Account target) throws ServiceException {
-            mParentHasFullAccess = AccessManager.getInstance().canAccessAccount(authed, target); 
+        protected void cacheAccountAccess(String authedAcctId, String targetAcctId) throws ServiceException {
+            Provisioning prov = Provisioning.getInstance();
+            mParentHasFullAccess = AccessManager.getInstance().canAccessAccount(
+                prov.get(AccountBy.id, authedAcctId), prov.get(AccountBy.id, targetAcctId));
         }
 
         private boolean calculateVisibleFolders(boolean force) throws ServiceException {
             long now = System.currentTimeMillis();
 
             Mailbox mbox = mMailbox;
-            cacheAccountAccess(getParentSession().getMailbox().getAccount(), mMailbox.getAccount());
+            cacheAccountAccess(mAuthenticatedAccountId, mTargetAccountId);
             if (mbox == null) {
                 mVisibleFolderIds = Collections.emptySet();
                 return true;
