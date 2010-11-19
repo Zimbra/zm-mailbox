@@ -86,9 +86,11 @@ public class IndexHelper {
         LC.zimbra_index_reindex_pool_size.intValue()); // dont wait for it to complete on shutdown
     static ThreadPool sIndexingCompletedThreadPool = new ThreadPool("IndexingCompleted",
         LC.zimbra_index_completed_pool_size.intValue()); // wait for this to complete on shutdown
-    private MailboxIndex   mMailboxIndex = null;
+    private MailboxIndex mailboxIndex;
 
-    IndexHelper(Mailbox mbox) { mMbox = mbox; }
+    IndexHelper(Mailbox mbox) {
+        mMbox = mbox;
+    }
 
     static void startup() {}
 
@@ -102,11 +104,17 @@ public class IndexHelper {
     }
 
     void instantiateMailboxIndex() throws ServiceException {
-        mMailboxIndex = new MailboxIndex(getMailbox());
+        mailboxIndex = new MailboxIndex(getMailbox());
     }
 
-    final private Mailbox getMailbox() { return mMbox; }
-    final MailboxIndex getMailboxIndex() { return mMailboxIndex; }
+    final private Mailbox getMailbox() {
+        return mMbox;
+    }
+
+    final MailboxIndex getMailboxIndex() {
+        assert(mailboxIndex != null);
+        return mailboxIndex;
+    }
 
     ZimbraQueryResults search(SoapProtocol proto, OperationContext octxt, SearchParams params) throws IOException, ServiceException {
         if (Thread.holdsLock(getMailbox()))
@@ -183,31 +191,24 @@ public class IndexHelper {
      *  size.)  If this number is <tt>0</tt>, all items are indexed immediately
      *  when they are added. */
     int getBatchedIndexingCount() {
-        synchronized(mIndexImmediatelyModeLock) {
-            if (mInIndexImmediatelyMode>0)
+        synchronized (mIndexImmediatelyModeLock) {
+            if (mInIndexImmediatelyMode > 0) {
                 return 0;
-
-            if (getMailboxIndex() != null)
-                return getMailboxIndex().getBatchedIndexingCount();
-            return 0;
+            }
+            return getMailboxIndex().getBatchedIndexingCount();
         }
     }
 
     void flush() {
-        if (mMailboxIndex != null)
-            mMailboxIndex.flush();
+        getMailboxIndex().flush();
     }
 
     void deleteIndex() throws IOException {
-        if (mMailboxIndex != null)
-            mMailboxIndex.deleteIndex();
+        getMailboxIndex().deleteIndex();
     }
 
     List<Integer> deleteDocuments(List<Integer> indexIds) throws IOException {
-        if (getMailboxIndex() != null)
-            return getMailboxIndex().deleteDocuments(indexIds);
-        else
-            return indexIds; // pretend like we have an index, and deleted everything
+        return getMailboxIndex().deleteDocuments(indexIds);
     }
 
     /**
@@ -468,8 +469,7 @@ public class IndexHelper {
                             getMailbox().beginTransaction("reIndex_all", octxt, null);
                             mFullReindexInProgress = true;
                             // reindexing everything, just delete the index
-                            if (getMailboxIndex() != null)
-                                getMailboxIndex().deleteIndex();
+                            getMailboxIndex().deleteIndex();
 
                             // index has been deleted, cancel pending indexes
                             mNumIndexingInProgress = 0;
@@ -494,10 +494,9 @@ public class IndexHelper {
                 }
                 if (ZimbraLog.mailbox.isInfoEnabled()) {
                     long end = System.currentTimeMillis();
-                    if (getMailboxIndex() != null)
-                        getMailboxIndex().flush();
-                    ZimbraLog.mailbox.info("Re-Indexing: Mailbox " + getMailbox().getId() + " COMPLETED in "+
-                                           (end-start) + "ms");
+                    getMailboxIndex().flush();
+                    ZimbraLog.mailbox.info("Re-Indexing: Mailbox %d COMPLETED in %d ms",
+                            getMailbox().getId(), end - start);
                 }
                 return;
             }
@@ -960,16 +959,14 @@ public class IndexHelper {
 
     void redoIndexItem(MailItem item, boolean deleteFirst, int itemId, List<IndexDocument> docList) {
         try {
-            if (getMailboxIndex() != null) {
-                getMailboxIndex().indexMailItem(getMailbox(), deleteFirst, docList, item, NO_CHANGE);
-            }
+            getMailboxIndex().indexMailItem(getMailbox(), deleteFirst, docList, item, NO_CHANGE);
         } catch (Exception e) {
             ZimbraLog.index_add.info("Skipping indexing; Unable to parse message " + itemId + ": " + e.toString(), e);
         }
     }
 
     void indexingPartOfEndTransaction(List<IndexItemEntry> itemsToIndex, List<Integer> itemsToDelete) {
-        if (getMailboxIndex() != null && (itemsToDelete != null && !itemsToDelete.isEmpty())) {
+        if (itemsToDelete != null && !itemsToDelete.isEmpty()) {
             try {
                 getMailboxIndex().deleteDocuments(itemsToDelete);
             } catch (IOException e) {
@@ -1001,25 +998,23 @@ public class IndexHelper {
                     ZimbraLog.mailbox.debug("indexMailItem(changeId=" + getMailbox().getLastChangeID() + ", "
                             + "token=" + entry.mModContent + "-" + entry.mMailItem.getId() + ")");
                 }
-                if (getMailboxIndex() != null) {
-                    SyncToken old = mHighestSubmittedToIndex;
-                    try {
-                        if (entry.mModContent != NO_CHANGE) {
-                            // update our in-memory structures (but not the ones in SQL)
-                            // so that we don't re-submit the same index items over and over
-                            // again
-                            mNumIndexingInProgress++;
-                            mHighestSubmittedToIndex = new SyncToken(entry.mModContent, item.getId());
-                        }
-                        getMailboxIndex().indexMailItem(getMailbox(),
-                                entry.mDeleteFirst, entry.mDocuments, item, entry.mModContent);
-                    } catch (ServiceException e) {
-                        if (entry.mModContent != NO_CHANGE) {
-                            // backout!
-                            mHighestSubmittedToIndex = old;
-                            mNumIndexingInProgress--;
-                            throw e;
-                        }
+                SyncToken old = mHighestSubmittedToIndex;
+                try {
+                    if (entry.mModContent != NO_CHANGE) {
+                        // update our in-memory structures (but not the ones in SQL)
+                        // so that we don't re-submit the same index items over and over
+                        // again
+                        mNumIndexingInProgress++;
+                        mHighestSubmittedToIndex = new SyncToken(entry.mModContent, item.getId());
+                    }
+                    getMailboxIndex().indexMailItem(getMailbox(),
+                            entry.mDeleteFirst, entry.mDocuments, item, entry.mModContent);
+                } catch (ServiceException e) {
+                    if (entry.mModContent != NO_CHANGE) {
+                        // backout!
+                        mHighestSubmittedToIndex = old;
+                        mNumIndexingInProgress--;
+                        throw e;
                     }
                 }
 
