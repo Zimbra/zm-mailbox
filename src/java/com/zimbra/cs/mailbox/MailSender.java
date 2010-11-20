@@ -38,11 +38,13 @@ import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -55,6 +57,7 @@ import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedContact;
@@ -398,6 +401,26 @@ public class MailSender {
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm)
     throws ServiceException {
         try {
+            long maxSize = 0;
+            try {
+                Config config = Provisioning.getInstance().getConfig();
+                maxSize = config.getIntAttr(Provisioning.A_zimbraMtaMaxMessageSize, -1);
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.warn("Unable to determine max message size.  Disabling limit check.", e);
+            }
+            if (maxSize < 0) {
+                maxSize = Long.MAX_VALUE;
+            }
+
+            int size = mm.getSize();
+            if (size == -1) {
+                size = (int) ByteUtil.getDataLength(Mime.getInputStream(mm));
+            }
+
+            if (size > maxSize) {
+                throw MailServiceException.MESSAGE_TOO_BIG(maxSize, size);
+            }
+
             Account acct = mbox.getAccount();
             Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
             boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
