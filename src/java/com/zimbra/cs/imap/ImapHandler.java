@@ -988,7 +988,14 @@ public abstract class ImapHandler extends ProtocolHandler {
 
         sendNotifications(true, false);
         if (isAuthenticated()) {
-            sendUntagged("ID (" + ID_PARAMS + " \"USER\" \"" + mCredentials.getUsername() + "\")");
+            String localServerId = null;
+            try {
+                localServerId = Provisioning.getInstance().getLocalServer().getId();
+            } catch (ServiceException e) {
+                ZimbraLog.imap.warn("Error in getting local server id", e);
+            }
+            sendUntagged("ID (" + ID_PARAMS + " \"USER\" \"" + mCredentials.getUsername() + 
+                    (localServerId == null ? "" : "\" \"SERVER\" \"" + localServerId) + "\")");
         } else {
             sendUntagged("ID (" + ID_PARAMS + ")");
         }
