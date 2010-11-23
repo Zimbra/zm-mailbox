@@ -21,6 +21,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DataSource.ConnectionType;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.datasource.MessageContent;
 import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.mailclient.CommandFailedException;
@@ -175,7 +176,9 @@ final class ConnectionManager {
                 IDInfo id = ic.id();
                 if ("Zimbra".equalsIgnoreCase(id.getName())) {
                     String user = id.get("user");
-                    return user != null && user.equals(ds.getAccount().getName());
+                    String server = id.get("server");
+                    return user != null && user.equals(ds.getAccount().getName()) &&
+                            server != null && server.equals(Provisioning.getInstance().getLocalServer().getId());
                 }
             } catch (CommandFailedException e) {
                 // Skip check if ID command fails
