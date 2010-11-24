@@ -1009,6 +1009,9 @@ public class Message extends MailItem {
     @Override MailItem copy(Folder folder, int id, int parentId) throws IOException, ServiceException {
         Message copy = (Message) super.copy(folder, id, parentId);
 
+        if (isDraft())
+            copy.setDraftAutoSendTime(0);
+
         Conversation parent = (Conversation) getParent();
         if (parent instanceof VirtualConversation && parent.getId() == parentId && !isDraft() && inSpam() == folder.inSpam()) {
             Conversation conv = mMailbox.createConversation(new Message[] { this, copy }, Mailbox.ID_AUTO_INCREMENT);
@@ -1016,6 +1019,26 @@ public class Message extends MailItem {
             parent.removeChild(this);
         }
         return copy;
+    }
+
+    /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
+     *         {@link ACL#RIGHT_READ} on the original item */
+    @Override
+    MailItem icopy(Folder target, int copyId) throws IOException, ServiceException {
+        Message copy = (Message) super.icopy(target, copyId);
+        if (isDraft())
+            copy.setDraftAutoSendTime(0);
+        return copy;
+    }
+
+    /** @perms {@link ACL#RIGHT_INSERT} on the target folder,
+     *         {@link ACL#RIGHT_DELETE} on the source folder */
+    @Override
+    boolean move(Folder target) throws ServiceException {
+        boolean moved = super.move(target);
+        if (moved && isDraft() && target.inTrash())
+            setDraftAutoSendTime(0);
+        return moved;
     }
 
     @Override public List<IndexDocument> generateIndexData(boolean doConsistencyCheck) throws MailItem.TemporaryIndexingException {
