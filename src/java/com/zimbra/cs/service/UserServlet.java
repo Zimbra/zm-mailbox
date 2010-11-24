@@ -155,7 +155,7 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_PART = "part"; // part query param
 
     /**
-     * Body query param.  Also used by {@link #ZipFormatter} and {@link #TarFormatter} to specify whether
+     * Body query param.  Also used by {@link ZipFormatter} and {@link TarFormatter} to specify whether
      * the entire message should be returned (<tt>body=1</tt>), or just the headers (<tt>body=0</tt>).
      * The default is <tt>1</tt>.
      */
@@ -212,14 +212,14 @@ public class UserServlet extends ZimbraServlet {
     public static final String UPLOAD_TYPE = "uploadType"; // upload content type
 
     /**
-     * Used by {@link #TarFormatter} to specify whether the <tt>.meta</tt>
+     * Used by {@link TarFormatter} to specify whether the <tt>.meta</tt>
      * files should be added to the tarball (<tt>meta=1</tt>) or not (<tt>meta=0</tt>).
      * The default is <tt>1</tt>.
      */
     public static final String QP_META = "meta";
 
     /**
-     * Used by {@link #IfbFormatter} to specify the UID of calendar item to exclude when computing free/busy.
+     * Used by {@link IfbFormatter} to specify the UID of calendar item to exclude when computing free/busy.
      */
     public static final String QP_EXUID = "exuid";
 
@@ -478,7 +478,7 @@ public class UserServlet extends ZimbraServlet {
         }
     }
 
-    private AuthToken getProxyAuthToken(Context context) throws ServiceException {
+    private static AuthToken getProxyAuthToken(Context context) throws ServiceException {
         String encoded = Provisioning.getInstance().getProxyAuthToken(context.targetAccount.getId());
         if (encoded != null) {
             return new ZimbraAuthTokenEncoded(encoded);
