@@ -274,7 +274,7 @@ public class ZimbraServlet extends HttpServlet {
         }
     }
 
-    protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, String accountId)
+    public static void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, String accountId)
     throws IOException, ServiceException {
         Provisioning prov = Provisioning.getInstance();
         Account acct = prov.get(AccountBy.id, accountId);
@@ -285,12 +285,12 @@ public class ZimbraServlet extends HttpServlet {
         proxyServletRequest(req, resp, prov.getServer(acct), null);
     }
 
-    protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, AuthToken authToken)
+    public static void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, AuthToken authToken)
     throws IOException, ServiceException {
         proxyServletRequest(req, resp, server, HttpUtil.getFullRequestURL(req), authToken);
     }
 
-    protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, String uri, AuthToken authToken)
+    public static void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, Server server, String uri, AuthToken authToken)
     throws IOException, ServiceException {
         if (server == null) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "cannot find remote server");
@@ -320,7 +320,7 @@ public class ZimbraServlet extends HttpServlet {
         }
     }
 
-    private boolean hasZimbraAuthCookie(HttpState state) {
+    private static boolean hasZimbraAuthCookie(HttpState state) {
         Cookie[] cookies = state.getCookies();
         if (cookies == null)
             return false;
@@ -332,7 +332,7 @@ public class ZimbraServlet extends HttpServlet {
         return false;
     }
     
-    protected void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, HttpMethod method, HttpState state)
+    public static void proxyServletRequest(HttpServletRequest req, HttpServletResponse resp, HttpMethod method, HttpState state)
     throws IOException, ServiceException {
         // create an HTTP client with the same cookies
         javax.servlet.http.Cookie cookies[] = req.getCookies();
@@ -360,6 +360,8 @@ public class ZimbraServlet extends HttpServlet {
         if (hopcount >= MAX_PROXY_HOPCOUNT)
             throw ServiceException.TOO_MANY_HOPS(HttpUtil.getFullRequestURL(req));
         method.addRequestHeader("X-Zimbra-Hopcount", Integer.toString(hopcount + 1));
+        if (method.getRequestHeader("X-Zimbra-Orig-Url") == null)
+            method.addRequestHeader("X-Zimbra-Orig-Url", req.getRequestURL().toString());
         String ua = req.getHeader("User-Agent");
         if (ua != null)
             method.setRequestHeader("User-Agent", ua);
