@@ -283,6 +283,8 @@ public class MailConstants {
     public static final QName SEND_VERIFICATION_CODE_RESPONSE = QName.get("SendVerificationCodeResponse", NAMESPACE);
     public static final QName VERIFY_CODE_REQUEST = QName.get("VerifyCodeRequest", NAMESPACE);
     public static final QName VERIFY_CODE_RESPONSE = QName.get("VerifyCodeResponse", NAMESPACE);
+    public static final QName INVALIDATE_REMINDER_DEVICE_REQUEST = QName.get("InvalidateReminderDeviceRequest", NAMESPACE);
+    public static final QName INVALIDATE_REMINDER_DEVICE_RESPONSE = QName.get("InvalidateReminderDeviceResponse", NAMESPACE);
 
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
