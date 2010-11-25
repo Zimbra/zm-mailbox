@@ -169,6 +169,7 @@ public class MailService implements DocumentService {
 
         dispatcher.registerHandler(MailConstants.SEND_VERIFICATION_CODE_REQUEST, new SendVerificationCode());
         dispatcher.registerHandler(MailConstants.VERIFY_CODE_REQUEST, new VerifyCode());
+        dispatcher.registerHandler(MailConstants.INVALIDATE_REMINDER_DEVICE_REQUEST, new InvalidateReminderDevice());
 
         // spell check
         dispatcher.registerHandler(MailConstants.CHECK_SPELLING_REQUEST, new CheckSpelling());
