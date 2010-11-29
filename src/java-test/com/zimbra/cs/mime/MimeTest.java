@@ -36,6 +36,11 @@ public class MimeTest {
                 "\u30a6\u30a7\u30a2\u88fd\u54c1\u3002"));
         Assert.assertTrue(result.endsWith("\u65e5\u672c\u3067\u306f\u4f4f\u53cb\u5546\u4e8b\u304c\u7dcf\u8ca9\u58f2" +
                 "\u4ee3\u7406\u5e97\u3068\u306a\u3063\u3066\u3044\u308b\u3002"));
+
+        // ICU4J thinks it's UTF-32 with confidence 25. We only trust if the confidence is greater than 50.
+        reader = Mime.getTextReader(getClass().getResourceAsStream("p4-notification.txt"), "text/plain", null);
+        result = IOUtils.toString(reader);
+        Assert.assertTrue(result.startsWith("Change 259706"));
     }
 
 }

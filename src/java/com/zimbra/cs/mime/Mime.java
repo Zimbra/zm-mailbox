@@ -59,7 +59,6 @@ import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.QCodec;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.ibm.icu.text.CharsetDetector;
@@ -942,46 +941,28 @@ public class Mime {
     private static Charset detectCharset(InputStream input, Charset defaultCharset) {
         assert(input.markSupported());
 
-        Charset platformDefaultCharset = Charset.defaultCharset();
+        if (defaultCharset == null) {
+            defaultCharset = Charset.defaultCharset();
+        }
         CharsetDetector detector = new CharsetDetector();
         try {
             detector.setText(input);
         } catch (IOException e) {
-            return Objects.firstNonNull(defaultCharset, platformDefaultCharset);
+            return defaultCharset;
         }
 
-        CharsetMatch[] matches = detector.detectAll();
-        List<Charset> charsets = new ArrayList<Charset>(matches.length);
-        for (CharsetMatch match : detector.detectAll()) {
-            try {
-                Charset charset = Charset.forName(match.getName());
-                if (match.getConfidence() > 50) {
-                    return charset;
+        for (CharsetMatch match : detector.detectAll()) { // matches are sorted by confidence
+            if (match.getConfidence() > 50) { // only trust good match
+                try {
+                    return Charset.forName(match.getName());
+                } catch (Exception ignore) {
                 }
-                charsets.add(Charset.forName(match.getName()));
-            } catch (Exception ignore) {
+            } else {
+                break;
             }
         }
 
-        if (charsets.isEmpty()) { // nothing detected
-            return Objects.firstNonNull(defaultCharset, platformDefaultCharset);
-        }
-
-        if (defaultCharset != null) {
-            for (Charset charset : charsets) { // preference to the user default
-                if (charset.equals(defaultCharset)) {
-                    return charset;
-                }
-            }
-        }
-
-        for (Charset charset : charsets) { // preference to the platform default
-            if (charset.equals(platformDefaultCharset)) {
-                return charset;
-            }
-        }
-
-        return charsets.get(0); // otherwise the first entry
+        return defaultCharset;
     }
 
     public static String getCharset(String contentType) {
