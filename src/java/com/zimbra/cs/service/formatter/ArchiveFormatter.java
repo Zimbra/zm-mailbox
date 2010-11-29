@@ -1110,7 +1110,7 @@ public abstract class ArchiveFormatter extends Formatter {
                                 oldDoc.getId(), doc.getCreator(),
                                 doc.getName(), doc.getDescription(), ais.getInputStream());
                         if (r != Resolve.Skip)
-                            mbox.setDate(oc, newItem.getId(), doc.getType(),
+                            mbox.setDate(oc, oldDoc.getId(), doc.getType(),
                                 doc.getDate());
                     }
                 }
