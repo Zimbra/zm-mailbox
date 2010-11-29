@@ -30,7 +30,7 @@
     <!-- =========================================================== -->
 
     <!-- user services connector, no SSL -->
-    <!-- HTTPBEGIN %%comment VAR:zimbraMailMode,-->,http,redirect,mixed,both%%
+    <!-- HTTPBEGIN -->
     <Call name="addConnector">
       <Arg>
         <New id="http" class="org.mortbay.jetty.nio.SelectChannelConnector">
@@ -43,10 +43,10 @@
         </New>
       </Arg>
     </Call>
-    %%comment VAR:zimbraMailMode,<!--,http,redirect,mixed,both%% HTTPEND -->
+    <!-- HTTPEND -->
     
     <!-- user services connector, SSL -->
-    <!-- HTTPSBEGIN %%comment VAR:zimbraMailMode,-->,https,redirect,mixed,both%%
+    <!-- HTTPSBEGIN
     <Call name="addConnector">
       <Arg>
         <New id="ssl" class="org.mortbay.jetty.security.SslSelectChannelConnector">
@@ -66,7 +66,7 @@
         </New>
       </Arg>
     </Call>
-    %%comment VAR:zimbraMailMode,<!--,https,redirect,mixed,both%% HTTPSEND -->
+    HTTPSEND -->
 
     <!-- =============================================================== -->
     <!-- Admin services connector; requires SSL -->
@@ -74,7 +74,7 @@
     <Call name="addConnector">
       <Arg>
         <New id="admin" class="org.mortbay.jetty.security.SslSelectChannelConnector">
-          <Set name="Port">%%zimbraAdminPort%%</Set>
+          <Set name="Port">7071</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set>
 	  <Set name="lowResourceMaxIdleTime">1000</Set>
@@ -125,7 +125,6 @@
         <Call name="addRewriteRule"><Arg>%%zimbraMailURL%%/user/*</Arg><Arg>/service/user</Arg></Call>
         <!-- stop if we've hit the proper webapps -->
         <Call name="addRewriteRule"><Arg>/service/*</Arg><Arg></Arg></Call>
-        <Call name="addRewriteRule"><Arg>/spnego/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>/zimlet/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>%%zimbraAdminURL%%/*</Arg><Arg></Arg></Call>
         <Call name="addRewriteRule"><Arg>%%zimbraMailURL%%/*</Arg><Arg></Arg></Call>
@@ -224,17 +223,6 @@
       </Set>
     </New>
 
-    <!-- uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE  %%comment VAR:zimbraSpnegoAuthEnabled,-->%%
-    <New id="spnego" class="org.mortbay.jetty.webapp.WebAppContext">
-      <Arg><Ref id="Contexts"/></Arg>
-      <Arg><SystemProperty name="jetty.home" default="."/>/webapps/spnego</Arg>
-      <Arg>/spnego</Arg>
-      <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
-      <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
-      <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/spnego</Set>
-    </New>
-    %%comment VAR:zimbraSpnegoAuthEnabled,<!--%% -->
-     
     <!-- =========================================================== -->
     <!-- Configure the context deployer                              -->
     <!-- A context deployer will deploy contexts described in        -->
@@ -293,14 +281,14 @@
     <!-- =========================================================== -->
     <Set name="UserRealms">
       <Array type="org.mortbay.jetty.security.UserRealm">
-		<!-- uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE  %%comment VAR:zimbraSpnegoAuthEnabled,-->%%
+        <!--
         <Item>
-          <New class="org.mortbay.jetty.security.SpnegoUserRealm">
-            <Set name="name">Spnego Authentication Realm</Set>
-            <Set name="config"><SystemProperty name="jetty.home" default="."/>/etc/spnego.properties</Set>
+          <New class="org.mortbay.jetty.security.HashUserRealm">
+            <Set name="name">Test Realm</Set>
+            <Set name="config"><SystemProperty name="jetty.home" default="."/>/etc/realm.properties</Set>
           </New>
         </Item>
-		%%comment VAR:zimbraSpnegoAuthEnabled,<!--%% -->
+	-->
       </Array>
     </Set>
 
@@ -325,7 +313,7 @@
       </Set>
     </Ref>
 
-    <!-- DEBUGBEGIN %%comment VAR:zimbraHttpDebugHandlerEnabled,-->%%
+    <!-- DEBUGBEGIN
     <Get id="oldhandler" name="handler"/>
     <Set name="handler">
       <New id="DebugHandler" class="org.mortbay.jetty.handler.DebugHandler">
@@ -339,7 +327,7 @@
         </Set>
       </New>
     </Set>
-    %%comment VAR:zimbraHttpDebugHandlerEnabled,<!--%% DEBUGEND -->
+    DEBUGEND -->
 
     <!-- =========================================================== -->
     <!-- extra options                                               -->
@@ -352,17 +340,17 @@
     <!-- start connectors                                            -->
     <!-- =========================================================== -->
     
-    <!-- HTTPBEGIN %%comment VAR:zimbraMailMode,-->,http,redirect,mixed,both%%
+    <!-- HTTPBEGIN -->
     <Ref id="http">
       <Call name="open"/>
     </Ref>
-    %%comment VAR:zimbraMailMode,<!--,http,redirect,mixed,both%% HTTPEND -->
+    <!-- HTTPEND -->
     
-    <!-- HTTPSBEGIN %%comment VAR:zimbraMailMode,-->,https,redirect,mixed,both%%
+    <!-- HTTPSBEGIN
     <Ref id="ssl">
       <Call name="open"/>
     </Ref>
-    %%comment VAR:zimbraMailMode,<!--,https,redirect,mixed,both%% HTTPSEND -->
+    HTTPSEND -->
     
     <Ref id="admin">
       <Call name="open"/>
