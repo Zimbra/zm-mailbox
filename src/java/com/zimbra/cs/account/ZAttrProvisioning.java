@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101106-0144 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101127-2344 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3594,7 +3594,7 @@ public class ZAttrProvisioning {
      * need to download the GAL contact again when none of the meaningful
      * attributes have changed.
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 6.0.10
      */
     @ZAttr(id=1145)
     public static final String A_zimbraGalSyncIgnoredAttributes = "zimbraGalSyncIgnoredAttributes";
@@ -3746,6 +3746,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=325)
     public static final String A_zimbraGroupId = "zimbraGroupId";
+
+    /**
+     * whether to indicate if an email address on a message is a GAL group
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1153)
+    public static final String A_zimbraGroupIndicatorEnabled = "zimbraGroupIndicatorEnabled";
 
     /**
      * help URL for admin

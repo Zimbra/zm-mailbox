@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101106-0144 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101127-2344 */
 
     /**
      * RFC2256: descriptive information
@@ -9480,6 +9480,78 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetGalTokenizeSearchKey(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalTokenizeSearchKey, "");
+        return attrs;
+    }
+
+    /**
+     * whether to indicate if an email address on a message is a GAL group
+     *
+     * @return zimbraGroupIndicatorEnabled, or false if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1153)
+    public boolean isGroupIndicatorEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraGroupIndicatorEnabled, false);
+    }
+
+    /**
+     * whether to indicate if an email address on a message is a GAL group
+     *
+     * @param zimbraGroupIndicatorEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1153)
+    public void setGroupIndicatorEnabled(boolean zimbraGroupIndicatorEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGroupIndicatorEnabled, zimbraGroupIndicatorEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to indicate if an email address on a message is a GAL group
+     *
+     * @param zimbraGroupIndicatorEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1153)
+    public Map<String,Object> setGroupIndicatorEnabled(boolean zimbraGroupIndicatorEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGroupIndicatorEnabled, zimbraGroupIndicatorEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether to indicate if an email address on a message is a GAL group
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1153)
+    public void unsetGroupIndicatorEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGroupIndicatorEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to indicate if an email address on a message is a GAL group
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1153)
+    public Map<String,Object> unsetGroupIndicatorEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGroupIndicatorEnabled, "");
         return attrs;
     }
 
