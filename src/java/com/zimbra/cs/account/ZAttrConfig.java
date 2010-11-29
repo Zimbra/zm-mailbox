@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101127-2344 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: descriptive information
@@ -9130,6 +9130,83 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetGalSyncLdapPageSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraGalSyncLdapPageSize, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of concurrent GAL sync requests allowed on the system /
+     * domain.
+     *
+     * @return zimbraGalSyncMaxConcurrentClients, or 2 if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1154)
+    public int getGalSyncMaxConcurrentClients() {
+        return getIntAttr(Provisioning.A_zimbraGalSyncMaxConcurrentClients, 2);
+    }
+
+    /**
+     * Maximum number of concurrent GAL sync requests allowed on the system /
+     * domain.
+     *
+     * @param zimbraGalSyncMaxConcurrentClients new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1154)
+    public void setGalSyncMaxConcurrentClients(int zimbraGalSyncMaxConcurrentClients) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncMaxConcurrentClients, Integer.toString(zimbraGalSyncMaxConcurrentClients));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of concurrent GAL sync requests allowed on the system /
+     * domain.
+     *
+     * @param zimbraGalSyncMaxConcurrentClients new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1154)
+    public Map<String,Object> setGalSyncMaxConcurrentClients(int zimbraGalSyncMaxConcurrentClients, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncMaxConcurrentClients, Integer.toString(zimbraGalSyncMaxConcurrentClients));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of concurrent GAL sync requests allowed on the system /
+     * domain.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1154)
+    public void unsetGalSyncMaxConcurrentClients() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncMaxConcurrentClients, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of concurrent GAL sync requests allowed on the system /
+     * domain.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1154)
+    public Map<String,Object> unsetGalSyncMaxConcurrentClients(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGalSyncMaxConcurrentClients, "");
         return attrs;
     }
 
