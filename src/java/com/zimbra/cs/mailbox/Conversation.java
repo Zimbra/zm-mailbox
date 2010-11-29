@@ -498,6 +498,10 @@ public class Conversation extends MailItem {
                 }
             }
 
+            // if a draft is being moved to Trash then remove any "send-later" info from it
+            if (toTrash && msg.isDraft())
+                msg.setDraftAutoSendTime(0);
+
             // handle folder message counts
             source.updateSize(-1, isDeleted ? -1 : 0, -msg.getTotalSize());
             target.updateSize(1, isDeleted ? 1 : 0, msg.getTotalSize());
