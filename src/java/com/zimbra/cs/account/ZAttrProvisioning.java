@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 7.0.0_BETA1_1111 pshao 20101127-2344 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3422,6 +3422,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGalAutoCompleteLdapFilter = "zimbraGalAutoCompleteLdapFilter";
 
     /**
+     * whether to indicate if an email address on a message is a GAL group
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1153)
+    public static final String A_zimbraGalGroupIndicatorEnabled = "zimbraGalGroupIndicatorEnabled";
+
+    /**
      * LDAP search base for interal GAL queries (special values:
      * &quot;ROOT&quot; for top, &quot;DOMAIN&quot; for domain only,
      * &quot;SUBDOMAINS&quot; for domain and subdomains)
@@ -3755,14 +3763,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=325)
     public static final String A_zimbraGroupId = "zimbraGroupId";
-
-    /**
-     * whether to indicate if an email address on a message is a GAL group
-     *
-     * @since ZCS 7.0.0
-     */
-    @ZAttr(id=1153)
-    public static final String A_zimbraGroupIndicatorEnabled = "zimbraGroupIndicatorEnabled";
 
     /**
      * help URL for admin

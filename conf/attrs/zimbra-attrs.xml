@@ -5223,7 +5223,7 @@ TODO: delete them permerntly from here
   <desc>where the reading pane is displayed for briefcase</desc>
 </attr>
 
-<attr id="1153" name="zimbraGroupIndicatorEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.0">
+<attr id="1153" name="zimbraGalGroupIndicatorEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>whether to indicate if an email address on a message is a GAL group</desc>
 </attr>
