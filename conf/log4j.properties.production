@@ -56,7 +56,7 @@ log4j.appender.SYNC.layout=com.zimbra.common.util.ZimbraPatternLayout
 log4j.appender.SYNC.layout.ConversionPattern=%d %-5p [%t] [%z] %c{1} - %m%n
 
 # Appender SYNCTRACE writes to the file "synctrace.log".
-llog4j.appender.SYNCTRACE=org.apache.log4j.rolling.RollingFileAppender
+log4j.appender.SYNCTRACE=org.apache.log4j.rolling.RollingFileAppender
 log4j.appender.SYNCTRACE.RollingPolicy=org.apache.log4j.rolling.TimeBasedRollingPolicy
 log4j.appender.SYNCTRACE.RollingPolicy.FileNamePattern=/opt/zimbra/log/synctrace.log.%d{yyyy-MM-dd}.gz
 log4j.appender.SYNCTRACE.File=/opt/zimbra/log/synctrace.log
