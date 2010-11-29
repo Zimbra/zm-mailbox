@@ -119,8 +119,10 @@ public abstract class HttpStoreManager extends StoreManager {
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         GetMethod get = new GetMethod(getGetUrl(mbox, locator));
         int statusCode = HttpClientUtil.executeMethod(client, get);
-        if (statusCode != HttpStatus.SC_OK)
+        if (statusCode != HttpStatus.SC_OK) {
+            get.releaseConnection();
             throw new IOException("unexpected return code during blob GET: " + get.getStatusText());
+        }
         return new UserServlet.HttpInputStream(get);
     }
 
