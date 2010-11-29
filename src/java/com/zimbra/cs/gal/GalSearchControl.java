@@ -161,7 +161,41 @@ public class GalSearchControl {
         }
     }
 
+    private static HashSet<String> SyncClients;
+    
+    static {
+        SyncClients = new HashSet<String>();
+    }
+    
     public void sync() throws ServiceException {
+        String id = Thread.currentThread().getName();
+        int capacity = mParams.getDomain().getGalSyncMaxConcurrentClients();
+        boolean doSync = false;
+        
+        try {
+            synchronized (SyncClients) {
+                // allow the sync only when the # of sync clients
+                // are within the capacity.
+                if (SyncClients.size() < capacity) {
+                    SyncClients.add(id);
+                    doSync = true;
+                }
+            }
+            if (doSync) {
+                doSync();
+            } else {
+                // return "no change".
+                mParams.getResultCallback().setNewToken(mParams.getGalSyncToken());
+                return;
+            }
+        } finally {
+            synchronized (SyncClients) {
+                SyncClients.remove(id);
+            }
+        }
+    }
+    
+    private void doSync() throws ServiceException {
 
         checkFeatureEnabled(Provisioning.A_zimbraFeatureGalSyncEnabled);
 

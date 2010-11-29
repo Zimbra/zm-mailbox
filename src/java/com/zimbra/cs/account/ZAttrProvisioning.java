@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101127-2344 */
+    /* build: unknown unknown unknown unknown */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3704,6 +3704,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=589)
     public static final String A_zimbraGalSyncLdapURL = "zimbraGalSyncLdapURL";
+
+    /**
+     * Maximum number of concurrent GAL sync requests allowed on the system /
+     * domain.
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1154)
+    public static final String A_zimbraGalSyncMaxConcurrentClients = "zimbraGalSyncMaxConcurrentClients";
 
     /**
      * LDAP generalized time format for external GAL sync

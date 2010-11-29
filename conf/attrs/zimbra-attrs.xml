@@ -5228,5 +5228,10 @@ TODO: delete them permerntly from here
   <desc>whether to indicate if an email address on a message is a GAL group</desc>
 </attr>
 
+<attr id="1154" name="zimbraGalSyncMaxConcurrentClients" type="integer" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="7.0.0">
+  <globalConfigValue>2</globalConfigValue>
+  <desc>Maximum number of concurrent GAL sync requests allowed on the system / domain.</desc>
+</attr>
+
 </attrs>
 
