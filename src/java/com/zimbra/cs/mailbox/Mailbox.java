@@ -446,12 +446,6 @@ public class Mailbox {
                 index.indexAllDeferredFlagItems();
             }
 
-            // bug 41144: map "workEmail" contact fields to "email"
-            if (!getVersion().atLeast(1, 6)) {
-                MailboxUpgrade.upgradeTo1_6(this);
-                updateVersion(new MailboxVersion((short) 1, (short) 6));
-            }
-
             // bug 41893: revert folder colors back to mapped value
             if (!getVersion().atLeast(1, 7)) {
                 MailboxUpgrade.upgradeTo1_7(this);
