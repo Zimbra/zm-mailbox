@@ -430,62 +430,60 @@ public class MailboxManager {
 
         long startTime = ZimbraPerf.STOPWATCH_MBOX_GET.start();
 
-        Mailbox mbox = null;
         synchronized (this) {
             // check to see if the mailbox has already been cached
             Object cached = retrieveFromCache(mailboxId, true);
             if (cached instanceof Mailbox) {
+                ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
                 ZimbraPerf.COUNTER_MBOX_CACHE.increment(100);
-                mbox = (Mailbox) cached;
+                return (Mailbox) cached;
             }
         }
 
-        if (mbox == null) { // not found in cache
-            if (fetchMode == FetchMode.ONLY_IF_CACHED)
-                return null;
+        if (fetchMode == FetchMode.ONLY_IF_CACHED)
+            return null;
 
-            ZimbraPerf.COUNTER_MBOX_CACHE.increment(0);
-            MailboxData data;
-            synchronized (DbMailbox.getSynchronizer()) {
-                Connection conn = null;
-                try {
-                    // fetch the Mailbox data from the database
-                    conn = DbPool.getConnection();
-                    data = DbMailbox.getMailboxStats(conn, mailboxId);
-                    if (data == null)
-                        throw MailServiceException.NO_SUCH_MBOX(mailboxId);
-                } finally {
-                    if (conn != null)
-                        DbPool.quietClose(conn);
-                }
+        ZimbraPerf.COUNTER_MBOX_CACHE.increment(0);
+        MailboxData data;
+        synchronized (DbMailbox.getSynchronizer()) {
+            Connection conn = null;
+            try {
+                // fetch the Mailbox data from the database
+                conn = DbPool.getConnection();
+                data = DbMailbox.getMailboxStats(conn, mailboxId);
+                if (data == null)
+                    throw MailServiceException.NO_SUCH_MBOX(mailboxId);
+            } finally {
+                if (conn != null)
+                    DbPool.quietClose(conn);
             }
+        }
 
-            mbox = instantiateMailbox(data);
+        Mailbox mbox = instantiateMailbox(data);
 
-            if (!skipMailHostCheck) {
-                // The host check here makes sure that sessions that were
-                // already connected at the time of mailbox move are not
-                // allowed to continue working with this mailbox which is
-                // essentially a soft-deleted copy.  The WRONG_HOST
-                // exception forces the clients to reconnect to the new
-                // server.
-                Account account = mbox.getAccount();
-                if (!Provisioning.onLocalServer(account))
-                    throw ServiceException.WRONG_HOST(account.getMailHost(), null);
-            }
+        if (!skipMailHostCheck) {
+            // The host check here makes sure that sessions that were
+            // already connected at the time of mailbox move are not
+            // allowed to continue working with this mailbox which is
+            // essentially a soft-deleted copy.  The WRONG_HOST
+            // exception forces the clients to reconnect to the new
+            // server.
+            Account account = mbox.getAccount();
+            if (!Provisioning.onLocalServer(account))
+                throw ServiceException.WRONG_HOST(account.getMailHost(), null);
+        }
 
-            synchronized (this) {
-                // avoid the race condition by re-checking the cache and using that data (if any)
-                Object cached = retrieveFromCache(mailboxId, false);
-                if (cached instanceof Mailbox) {
-                    mbox = (Mailbox) cached;
-                } else {
-                    // cache the newly-created Mailbox object
-                    if (cached instanceof MailboxLock)
-                        ((MailboxLock) cached).cacheMailbox(mbox);
-                    else
-                        cacheMailbox(mbox);
-                }
+        synchronized (this) {
+            // avoid the race condition by re-checking the cache and using that data (if any)
+            Object cached = retrieveFromCache(mailboxId, false);
+            if (cached instanceof Mailbox) {
+                mbox = (Mailbox) cached;
+            } else {
+                // cache the newly-created Mailbox object
+                if (cached instanceof MailboxLock)
+                    ((MailboxLock) cached).cacheMailbox(mbox);
+                else
+                    cacheMailbox(mbox);
             }
         }
 
