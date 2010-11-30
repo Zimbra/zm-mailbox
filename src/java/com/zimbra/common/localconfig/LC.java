@@ -565,6 +565,8 @@ public final class LC {
     public static final KnownKey postfix_virtual_mailbox_maps = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-vmm.cf");
     public static final KnownKey postfix_virtual_transport = KnownKey.newKey("error");
 
+    public static final KnownKey sasl_smtpd_mech_list = KnownKey.newKey("PLAIN LOGIN");
+
     public static final KnownKey cbpolicyd_pid_file = KnownKey.newKey("${zimbra_log_directory}/cbpolicyd.pid");
     public static final KnownKey cbpolicyd_log_file = KnownKey.newKey("${zimbra_log_directory}/cbpolicyd.log");
     public static final KnownKey cbpolicyd_db_file = KnownKey.newKey("${zimbra_home}/data/cbpolicyd/db/cbpolicyd.sqlitedb");
