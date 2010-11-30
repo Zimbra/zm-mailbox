@@ -1,0 +1,7 @@
+To: "Server Team" <server-team@example.com>, "QA team" <qa-team@example.com>, user@example.com
+Cc: "Client team" <client-team@example.com>
+From: "Admin Team" <admin-team@example.com>
+Subject: Groups
+Date: Fri, 26 Aug 2005 14:45:18 -0700
+
+Group test.

@@ -47,6 +47,8 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.fb.FreeBusy;
+import com.zimbra.cs.gal.GalGroup;
+import com.zimbra.cs.gal.GalGroup.GroupInfo;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
@@ -2345,62 +2347,44 @@ public class ToXML {
         return cn;
     }
     
-    private static void encodeAddrsWithGroupInfo(Provisioning prov, Element eMsg, Account authedAcct) {
+    private static void encodeAddrsWithGroupInfo(Provisioning prov, Element eMsg, 
+            Account requestedAcct, Account authedAcct) {
         for (Element eEmail : eMsg.listElements(MailConstants.E_EMAIL)) {
             String addr = eEmail.getAttribute(MailConstants.A_ADDRESS, null);
             if (addr != null) {
-                // shortcut the check if the email address is the authed account - it cannot be a group
-                if (addr.equals(authedAcct.getName()))
+                // shortcut the check if the email address is the authed or requested account - it cannot be a group
+                if (addr.equalsIgnoreCase(requestedAcct.getName()) || addr.equalsIgnoreCase(authedAcct.getName()))
                     continue;
                 
-                if (prov.isDistributionList(addr)) {
+                GroupInfo groupInfo = GalGroup.getGroupInfo(addr, requestedAcct, authedAcct);
+                if (GroupInfo.IS_GROUP == groupInfo) {
                     eEmail.addAttribute(MailConstants.A_IS_GROUP, true);
-                    boolean canExpand = canExpandGroup(prov, addr, authedAcct);
-                    eEmail.addAttribute(MailConstants.A_EXP, canExpand);
+                    eEmail.addAttribute(MailConstants.A_EXP, false);
+                } else if (GroupInfo.CAN_EXPAND == groupInfo) {
+                    eEmail.addAttribute(MailConstants.A_IS_GROUP, true);
+                    eEmail.addAttribute(MailConstants.A_EXP, true);
                 }
             }
         }
     }
     
-    public static void encodeMsgAddrsWithGroupInfo(Element response, Account authedAcct) {
+    public static void encodeMsgAddrsWithGroupInfo(Element response, Account requestedAcct, Account authedAcct) {
         Provisioning prov = Provisioning.getInstance();
         Element eMsg = response.getOptionalElement(MailConstants.E_MSG);
         if (eMsg != null) {
-            encodeAddrsWithGroupInfo(prov, eMsg, authedAcct);
+            encodeAddrsWithGroupInfo(prov, eMsg, requestedAcct, authedAcct);
         }
     }
     
-    public static void encodeConvAddrsWithGroupInfo(Element request, Element response, Account authedAcct) {
+    public static void encodeConvAddrsWithGroupInfo(Element request, Element response, 
+            Account requestedAcct, Account authedAcct) {
         Provisioning prov = Provisioning.getInstance();
         String fetch = request.getAttribute(MailConstants.A_FETCH, null);
         for (Element eMsg : response.listElements(MailConstants.E_MSG)) {
             String msgId = eMsg.getAttribute(MailConstants.A_ID, null);
             if (fetch != null && fetch.equals(msgId)) {
-                encodeAddrsWithGroupInfo(prov, eMsg, authedAcct);
+                encodeAddrsWithGroupInfo(prov, eMsg, requestedAcct, authedAcct);
             }
         }
-    }
-    
-    private static boolean canExpandGroup(Provisioning prov, String groupName, Account authedAcct) {
-        try {
-            // get the dl object for ACL checking
-            DistributionList dl = prov.getAclGroup(DistributionListBy.name, groupName);
-
-            // the DL might have been deleted since the last GAL sync account sync, throw.
-            // or should we just let the request through?
-            if (dl == null) {
-                ZimbraLog.gal.warn("unable to find distribution list " + groupName + " for permission checking");
-                return false;
-            }
-
-            if (!AccessManager.getInstance().canDo(authedAcct, dl, User.R_viewDistList, false))
-                return false;
-
-        } catch (ServiceException e) {
-            ZimbraLog.gal.warn("unable to check permission for gal group expansion: " + groupName);
-            return false;
-        }
-        
-        return true;
     }
 }

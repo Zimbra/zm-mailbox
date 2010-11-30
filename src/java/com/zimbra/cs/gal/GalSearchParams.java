@@ -37,6 +37,7 @@ public class GalSearchParams {
 	private GalSearchConfig mConfig;
 	private Provisioning.GalSearchType mType = Provisioning.GalSearchType.account;
 	private int mLimit;
+	private Integer mLdapLimit; // ldap search does not support paging, allow a different limit for ldap search
 	private int mPageSize;
 	private String mQuery;
 	private GalSyncToken mSyncToken;
@@ -89,6 +90,10 @@ public class GalSearchParams {
 
 	public int getLimit() {
 		return mLimit;
+	}
+	
+	public Integer getLdapLimit() {
+	    return mLdapLimit;
 	}
 
 	public int getPageSize() {
@@ -189,6 +194,10 @@ public class GalSearchParams {
 	public void setLimit(int limit) {
 		mLimit = limit;
 	}
+	
+    public void setLdapLimit(int limit) {
+        mLdapLimit = limit;
+    }
 	
 	public void setPageSize(int pageSize) {
 		mPageSize = pageSize;

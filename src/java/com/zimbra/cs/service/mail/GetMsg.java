@@ -104,7 +104,7 @@ public class GetMsg extends MailDocumentHandler {
         }
         
         if (eMsg.getAttributeBool(MailConstants.A_NEED_EXP, false))
-            ToXML.encodeMsgAddrsWithGroupInfo(response, getAuthenticatedAccount(zsc));
+            ToXML.encodeMsgAddrsWithGroupInfo(response, getRequestedAccount(zsc), getAuthenticatedAccount(zsc));
         
         return response;
     }
