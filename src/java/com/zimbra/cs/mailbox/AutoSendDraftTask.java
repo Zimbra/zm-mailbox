@@ -45,14 +45,12 @@ public class AutoSendDraftTask extends ScheduledTask<Object> {
             ZimbraLog.scheduler.debug("Draft message with id %s no longer exists in mailbox", draftId);
             return null;
         }
-        if (!msg.isDraft()) {
-            ZimbraLog.scheduler.warn("Message with id %s is unexpectedly not a Draft", draftId);
+        if (msg.getDraftAutoSendTime() == 0) {
+            ZimbraLog.scheduler.warn("Message with id %s is not a Draft scheduled to be auto-sent", draftId);
             return null;
         }
         if (msg.isTagged(Flag.ID_FLAG_DELETED) || msg.inTrash()) {
             ZimbraLog.scheduler.debug("Draft with id %s is deleted", draftId);
-            // remove scheduling metadata from the draft
-            msg.setDraftAutoSendTime(0);
             return null;
         }
         // send draft
@@ -60,13 +58,7 @@ public class AutoSendDraftTask extends ScheduledTask<Object> {
         mailSender.setOriginalMessageId(StringUtil.isNullOrEmpty(msg.getDraftOrigId()) ? null : new ItemId(msg.getDraftOrigId(), mbox.getAccountId()));
         mailSender.setReplyType(StringUtil.isNullOrEmpty(msg.getDraftReplyType()) ? null : msg.getDraftReplyType());
         mailSender.setIdentity(StringUtil.isNullOrEmpty(msg.getDraftIdentityId()) ? null : mbox.getAccount().getIdentityById(msg.getDraftIdentityId()));
-        try {
-            mailSender.sendMimeMessage(null, mbox, msg.getMimeMessage());
-        } catch (Exception e) {
-            // remove scheduling metadata from the draft
-            msg.setDraftAutoSendTime(0);
-            throw e;
-        }
+        mailSender.sendMimeMessage(null, mbox, msg.getMimeMessage());
         // now delete the draft
         mbox.delete(null, draftId, MailItem.TYPE_MESSAGE);
         return null;
