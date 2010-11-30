@@ -50,7 +50,7 @@
   <desc>get all groups the account is a member of</desc>
 </right>
 
-<right name="adminLoginAs" type="preset" targetType="account" cache="1">
+<right name="adminLoginAs" type="preset" targetType="account">
   <desc>login as the user as an admin.
         This is different from the loginAs user right as follows:
             - loginAs is effective only when login as an user
@@ -624,17 +624,6 @@
   <desc>get stats of server</desc>
 </right>
 
-<right name="getHSMStatus" type="preset" targetType="server">
-  <desc>get HSM process status for a server</desc>
-</right>
-
-<right name="moveBlobs" type="preset" targetType="server">
-  <desc>move blobs, start and abort HSM thread on a server</desc>
-</right>
-
-<right name="createMigrationTask" type="preset" targetType="server">
-    <desc>create bulk migration task on a server</desc>
-</right>
 <!-- 
   TODO:
           - deployAdminExtension             : deploy admin extensions
@@ -649,6 +638,7 @@
           - configureIMAP                    : configure IMAP
           - configurePOPProxy                : configure POP3 proxy
           - configureIMAPProxy               : configure IMAP proxy
+          - configureVolumes                 : configure volumes
           - configureServiceEnabled          : configure services enabled
 -->
 
@@ -724,6 +714,7 @@
 <right name="createZimlet" type="preset" targetType="global">
   <desc>create zimlet</desc>
 </right>
+
 
 <!-- 
 ========================================================
