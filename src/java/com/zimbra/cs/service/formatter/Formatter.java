@@ -33,6 +33,7 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
@@ -281,6 +282,8 @@ public abstract class Formatter {
                     throw (ServletException)exception;
                 else if (exception instanceof IOException)
                     throw (IOException)exception;
+                else if (exception instanceof NoSuchItemException)
+                    throw (ServiceException)exception;
                 throw ServiceException.FAILURE(
                     getType() + " formatter failure", exception);
             }
