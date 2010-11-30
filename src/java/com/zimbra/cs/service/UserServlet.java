@@ -777,7 +777,13 @@ public class UserServlet extends ZimbraServlet {
             if (context.target == null) {
                 // still no joy.  the only viable possibility at this point is that there's a mountpoint somewhere higher up in the requested path
                 try {
-                    Pair<Folder, String> match = mbox.getFolderByPathLongestMatch(context.opContext, Mailbox.ID_FOLDER_USER_ROOT, context.itemPath);
+                    // to search for the mountpoint we use admin rights on the user's mailbox.
+                    // this is done so that MailItems in the mountpoint can be resolved
+                    // according to the ACL stored in the owner's Folder.  when a mountpoint
+                    // is found, then the request is proxied to the owner's mailbox host,
+                    // and the current requestor's credential is used to validate against
+                    // the ACL.
+                    Pair<Folder, String> match = mbox.getFolderByPathLongestMatch(null, Mailbox.ID_FOLDER_USER_ROOT, context.itemPath);
                     Folder reachable = match.getFirst();
                     if (reachable instanceof Mountpoint) {
                         context.target = reachable;
