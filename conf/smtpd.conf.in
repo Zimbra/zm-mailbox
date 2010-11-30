@@ -1,7 +1,0 @@
-#
-# This is ${cyrus-sasl-prefix}/lib/sasl2/smtpd.conf
-#
-log_level: 3
-pwcheck_method: saslauthd
-mech_list: @@sasl_smtpd_mech_list@@
-#saslauthd_path: /opt/zimbra/cyrus-sasl/state/mux
