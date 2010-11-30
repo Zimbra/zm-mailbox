@@ -3,17 +3,19 @@ This install doc is aimed at developers internal to Zimbra. You'll see paths to 
 Ref: https://wiki.eng.vmware.com/Zimbra/devEnvironment/windows
 
 1. Install Perforce (P4) (www.perforce.com)
-Configure server port to "depot.lab.zimbra.com:1666".
+Configure server port to "perforce-zimbra.eng.vmware.com:1666".
 (PS: After successfully installing Perforce, create a new workspace which would help you to track the checked out code from "eric" server. )
 
 2. Checkout the following from Perforce:
 //depot/main/ZimbraServer/...
+//depot/main/ZimbraSoap/...
 //depot/main/ZimbraCommon/...
 //depot/main/ZimbraIM/...
 //depot/main/ZimbraLicenses/...
 //depot/main/ZimbraTagLib/...
 //depot/main/ZimbraWebClient/...
 //depot/main/Zimlet/...
+//depot/main/ThirdParty/jetty/...
 //depot/main/ThirdPartyBuilds/windows/...
 
 Optional: ThirdParty - not needed to run, but has javadocs and source for the various 3rd party jars/servers. It's very very large since all the built servers and 3rd Party code (multiple versions) are in there.
@@ -21,13 +23,14 @@ Optional: ThirdParty - not needed to run, but has javadocs and source for the va
 3. Install latest 1.6.x JDK. Need full JDK, not just a JRE. 
 Recommend installing in c:\opt\zimbra\java
 Set the JAVA_HOME environment variable to point to the installed JDK location.
+Add the installed JDK location to the PATH environment variable.
 
 4. Install Eclipse (www.eclipse.org) You should install the Perforce plugin for Eclipse. To install, select Help | Software Updates | Find and Install... Then select the "Search for new features to install" and hit Next. From this screen, add a new remote site using the URL: http://www.perforce.com/downloads/http/p4-wsad/install/
 This will add a P4 entry to the list on the left. Select that and continue through the wizard.
 NOTE: You will need to configure the plugin with your Perforce information before using the Perforce Perspective. If you are setting up eclipse inside vmware domain; you need to enable the HTTP proxy in Eclipse.
 
 5. To Open Perforce Perspective select Windows | Open Perspective | Perforce
-Add New Server from context menu in the Depots Explorer (fill port as depot.lab.zimbra.com:1666)
+Add New Server from context menu in the Depots Explorer (fill port as perforce-zimbra.eng.vmware.com:1666)
 Once you get the Perforce Perspective open right click on  ZimbraServer and select "Import as project".
 Do the same for ZimbraWebClient. Alternatively, you can right click on the project -> team -> share project. Select perforce -> use existing server connection. 
 
