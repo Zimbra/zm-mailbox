@@ -75,9 +75,6 @@
   </target>
 
   <target name="clean" description="Removes build files">
-    <delete dir="${wsdl.test.src.dir}/com/zimbra/soap/mail/wsimport" />
-    <delete dir="${wsdl.test.src.dir}/com/zimbra/soap/admin/wsimport" />
-    <delete dir="${wsdl.test.src.dir}/com/zimbra/soap/account/wsimport" />
     <delete dir="${build.dir}" />
   </target>
 
@@ -102,23 +99,25 @@
 
   <target name="account-service-client-support" depends="wsdl-files,generate-schema">
     <mkdir dir="${wsdl.test.classes.dir}"/>
+    <delete dir="${wsdl.test.src.dir}/com/zimbra/soap/account/wsimport/generated" />
     <!-- extension="true|false" - allow vendor extensions -->
     <wsimport   wsdl="${xml.schema.dir}/AccountService.wsdl"
                 destdir="${wsdl.test.classes.dir}"
                 sourcedestdir="${wsdl.test.src.dir}"
-                keep="true"
-                package="com.zimbra.soap.account.wsimport">
+                keep="false"
+                package="com.zimbra.soap.account.wsimport.generated">
     </wsimport>
   </target>
 
   <target name="mail-service-client-support" depends="wsdl-files,generate-schema">
     <mkdir dir="${wsdl.test.classes.dir}"/>
+    <delete dir="${wsdl.test.src.dir}/com/zimbra/soap/mail/wsimport/generated" />
     <!-- extension="true|false" - allow vendor extensions -->
     <wsimport   wsdl="${xml.schema.dir}/MailService.wsdl"
                 destdir="${wsdl.test.classes.dir}"
                 sourcedestdir="${wsdl.test.src.dir}"
-                keep="true"
-                package="com.zimbra.soap.mail.wsimport">
+                keep="false"
+                package="com.zimbra.soap.mail.wsimport.generated">
     </wsimport>
   </target>
 
