@@ -453,7 +453,13 @@ public final class LC {
     public static final KnownKey acl_cache_target_maxage = KnownKey.newKey(15);
     public static final KnownKey acl_cache_credential_maxsize = KnownKey.newKey(512);
     public static final KnownKey acl_cache_enabled = KnownKey.newKey(true);
-
+    
+    @Supported
+    public static final KnownKey gal_group_cache_maxsize_per_domain = KnownKey.newKey(0);
+    
+    @Supported
+    public static final KnownKey gal_group_cache_maxage = KnownKey.newKey(10080);  // 7 days
+    
     public static final KnownKey calendar_resource_ldap_search_maxsize = KnownKey.newKey(1000);
 
     // This value is stored here for use by zmmycnf program. Changing this
