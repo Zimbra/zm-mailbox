@@ -35,6 +35,7 @@ List all registered devices and their status
     [<remoteWipeReqTime>{remote_wipe_req}</remoteWipeReqTime>
     [<removeWipeAckTime>{remote_wipe_ack}</remoteWipeAckTime>]]
     [<recoveryPassword>{recover_password}</recoveryPassword>]
+    [<lastUsedDate>{last_used_date}</lastUsedDate>]
   </device>*
 </GetDeviceStatusResponse>
 
@@ -48,7 +49,7 @@ first_req_recv - when this device first registered with the server
 last_policy_update - when policy was last updated on this device
 remote_wipe_req - time (seconds since epoch) when remote wipe was initiated
 remote_wipe_ack - time (seconds since epoch) when device confirmed the remote wipe
-
+last_used_date - date when the device was last used (the date is stored in server's time zone)
 
 ---------------------
 <RemoveDeviceRequest>
@@ -120,6 +121,10 @@ zimbra sync specific admin SOAP messages:
 -----------------------------------------
 <GetDevicesCountRequest>
 <GetDevicesCountResponse>
+<GetDevicesCountSinceLastUsedRequest>
+<GetDevicesCountSinceLastUsedResponse>
+<GetDevicesCountUsedTodayRequest>
+<GetDevicesCountUsedTodayResponse>
 
 
 ------------------------
@@ -134,3 +139,30 @@ Get the registered devices count on the server.
   <count>1023</count>
 </GetDevicesCountResponse>
 
+
+-------------------------------------
+<GetDevicesCountSinceLastUsedRequest>
+-------------------------------------
+
+Get the mobile devices count on the server since last used date.
+
+<GetDevicesCountSinceLastUsedRequest xmlns="urn:zimbraAdmin">
+  <lastUsedDate date="{yyyy-MM-dd}" />
+</GetDevicesCountSinceLastUsedRequest>
+
+<GetDevicesCountSinceLastUsedResponse>
+  <count>1023</count>
+</GetDevicesCountSinceLastUsedResponse>
+
+
+---------------------------------
+<GetDevicesCountUsedTodayRequest>
+---------------------------------
+
+Get the mobile devices count on the server used today.
+
+<GetDevicesCountUsedTodayRequest xmlns="urn:zimbraAdmin"/>
+
+<GetDevicesCountUsedTodayResponse>
+  <count>1023</count>
+</GetDevicesCountUsedTodayResponse>
