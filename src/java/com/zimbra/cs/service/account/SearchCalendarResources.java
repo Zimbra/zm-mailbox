@@ -149,11 +149,7 @@ public class SearchCalendarResources extends GalDocumentHandler {
         Set<String> mAttrs;
         EntrySearchFilter mFilter;
         
-        // default to true.
-        // if there is no match (so we don't get a change to update it), 
-        // the "more" flag in the response should be 0
-        // and it doesn't matter what value pagingSupported is
-        boolean mPagingSupported = true; 
+        boolean mPagingSupported; // default to false
         
         public CalendarResourceGalSearchResultCallback(GalSearchParams params, EntrySearchFilter filter, Set<String> attrs) {
             super(params);
@@ -185,8 +181,6 @@ public class SearchCalendarResources extends GalDocumentHandler {
         
         @Override
         public Element handleContact(Contact contact) throws ServiceException {
-            setPagingSupported(true);
-            
             com.zimbra.cs.service.account.ToXML.encodeCalendarResource(getResponse(), 
                     mFormatter.formatItemId(contact), contact.get(ContactConstants.A_email), 
                     contact.getAllFields(), mAttrs, null);
@@ -195,8 +189,6 @@ public class SearchCalendarResources extends GalDocumentHandler {
         
         @Override
         public void handleContact(GalContact galContact) throws ServiceException {
-            setPagingSupported(false);
-            
             /*
              * entries found in Zimbra GAL is already filtered by the extra search query
              * entries found in external GAL needs to be filtered for the exta crteria
@@ -213,12 +205,11 @@ public class SearchCalendarResources extends GalDocumentHandler {
             // should never be called
         }
         
-        // kind of a hack: paging is supported for GAL sync account search, not for 
-        // LDAP search.  For the lifetime of this CalendarResourceGalSearchResultCallback
-        // object, we either get all GAL sync account search callback calls, or all LDAP 
-        // search callback calls, never a mix.
-        private void setPagingSupported(boolean suported) {
-            mPagingSupported = suported;
+        
+        @Override
+        public void setQueryOffset(int offset) {
+            super.setQueryOffset(offset);
+            mPagingSupported = true;
         }
         
         // not used any more, we no longer need to filter search result for 

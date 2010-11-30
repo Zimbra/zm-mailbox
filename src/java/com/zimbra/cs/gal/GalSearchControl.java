@@ -580,11 +580,19 @@ public class GalSearchControl {
             }
             mParams.setType(stype);
         }
-        int limit = mParams.getLimit();
-        if (limit == 0 && GalOp.sync != mParams.getOp()) {
+        
+        Integer ldapLimit = mParams.getLdapLimit();
+        int limit;
+        if (ldapLimit == null)
+            limit = mParams.getLimit();
+        else
+            limit = ldapLimit;
+        
+        // restrict to domain config if we are not syncing, and there is no specific ldap limit set
+        if (limit == 0 && GalOp.sync != mParams.getOp() && ldapLimit == null) {
             limit = domain.getGalMaxResults();
-            mParams.setLimit(limit);
         }
+        mParams.setLimit(limit);
         
         if (galMode == GalMode.both) {
             // make two gal searches for 1/2 results each

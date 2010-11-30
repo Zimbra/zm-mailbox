@@ -125,7 +125,7 @@ public class SearchConv extends Search {
             }
             
             if (request.getAttributeBool(MailConstants.A_NEED_EXP, false))
-                ToXML.encodeConvAddrsWithGroupInfo(request, response, getAuthenticatedAccount(zsc));
+                ToXML.encodeConvAddrsWithGroupInfo(request, response, getRequestedAccount(zsc), getAuthenticatedAccount(zsc));
             return response;
             
         } else { // remote

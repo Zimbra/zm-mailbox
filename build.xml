@@ -1460,7 +1460,9 @@
             zimbraServiceEnabled mta \
             zimbraServiceEnabled mailbox
             ModifyServer ${zimbra.server.hostname} zimbraMailPurgeSleepInterval 0
-            cd ${defaultdomain.name}
+            cd ${defaultdomain.name} \
+        	zimbraGalInternalSearchBase ROOT \
+        	zimbraGalGroupIndicatorEnabled TRUE
             mcf zimbraDefaultDomainName ${defaultdomain.name}
             mc default zimbraFeatureIMEnabled FALSE
             ca admin@${defaultdomain.name} test123 \
@@ -1630,6 +1632,12 @@
             zimbraCalResContactPhone '(650)555-1212' \
             zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
             zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
+        	cd example.com
+        	cdl admin-team@example.com
+        	cdl client-team@example.com
+    	    cdl qa-team@example.com
+	        cdl server-team@example.com
+        	grr domain example.com dom ${defaultdomain.name} viewDistList
          </echo>
     </target>
 
