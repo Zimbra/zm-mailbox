@@ -88,17 +88,6 @@ public class MailboxUpgrade {
 	// Public static functions
 	//
 
-	public static void upgradeTo1_6(Mailbox mbox) throws ServiceException {
-		// bug 41144 -- need to map "workEmail" fields back to "email"
-		OperationContext octxt = new OperationContext(mbox);
-		List<Contact> contacts = mbox.getContactList(octxt, -1, SortBy.NONE);
-		for (Contact contact : contacts) {
-			if (contact.get("workEmail") != null) {
-				upgradeContactTo1_6(octxt, mbox, contact);
-			}
-		}
-	}
-
 	public static void upgradeTo1_7(Mailbox mbox) throws ServiceException {
 		// bug 41893: revert folder colors back to mapped value
 		OperationContext octxt = new OperationContext(mbox);
@@ -128,50 +117,5 @@ public class MailboxUpgrade {
             }
         }
     }
-
-	//
-	// Static functions
-	//
-
-	static void upgradeContactTo1_6(OperationContext octxt, Mailbox mbox, Contact contact)
-	throws ServiceException {
-		Map<String,String> fields = contact.getFields();
-		Map<String,String> nfields = new HashMap<String,String>();
-
-		// find highest numbered "email" field
-		int emailLen = ContactConstants.A_email.length();
-		int number = 0;
-		for (String key : fields.keySet()) {
-			if (!key.startsWith(ContactConstants.A_email)) continue;
-			try {
-				int num = key.equals(ContactConstants.A_email) ? 1 : Integer.parseInt(key.substring(emailLen), 10);
-				if (num > number) {
-					number = num;
-				}
-			}
-			catch (NumberFormatException e) {
-				// ignore
-			}
-		}
-
-		// collect "workEmail" fields
-		List<String> keys = new java.util.LinkedList<String>();
-		for (String key : fields.keySet()) {
-			if (!key.startsWith("workEmail")) continue;
-			keys.add(key);
-		}
-
-		// rename "workEmail" to "email"+number
-		for (String key : keys) {
-			String nkey = ContactConstants.A_email+(++number > 1 ? String.valueOf(number) : "");
-			nfields.put(key, "");
-			nfields.put(nkey, fields.get(key));
-		}
-
-		// save modified metadata
-		ParsedContact pcontact = new ParsedContact(contact);
-		pcontact.modify(nfields, null);
-		mbox.modifyContact(octxt, contact.getId(), pcontact);
-	}
 
 } // class MailboxUpgrade
