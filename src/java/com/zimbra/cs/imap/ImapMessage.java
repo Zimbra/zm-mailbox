@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Apr 30, 2005
  */
 package com.zimbra.cs.imap;
 
@@ -26,15 +22,14 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeSet;
 
@@ -49,6 +44,7 @@ import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.BCodec;
 import org.apache.commons.codec.net.QCodec;
 
+import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeCompoundHeader;
@@ -66,6 +62,9 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.util.JMSession;
 
+/**
+ * @since Apr 30, 2005
+ */
 public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializable {
     private static final long serialVersionUID = -1756550148606322493L;
 
@@ -75,7 +74,8 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         ImapMessageSet(Collection<ImapMessage> msgs)  { this();  addAll(msgs); }
     }
 
-    public static final List<Byte> SUPPORTED_TYPES = Arrays.asList(MailItem.TYPE_MESSAGE, MailItem.TYPE_CHAT, MailItem.TYPE_CONTACT);
+    public static final Set<Byte> SUPPORTED_TYPES = ImmutableSet.of(
+            MailItem.TYPE_MESSAGE, MailItem.TYPE_CHAT, MailItem.TYPE_CONTACT);
 
     static final short FLAG_RECENT       = 0x0001;
     static final short FLAG_SPAM         = 0x0002;

@@ -18,11 +18,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import com.zimbra.common.mailbox.ContactConstants;
@@ -228,7 +230,7 @@ public class ContactAutoComplete {
     private boolean mIncludeGal;
     private boolean mNeedCanExpand; // whether the canExpand info is needed for GAL groups
 
-    private static final byte[] CONTACT_TYPES = new byte[] { MailItem.TYPE_CONTACT };
+    private static final Set<Byte> CONTACT_TYPES = Collections.singleton(MailItem.TYPE_CONTACT);
 
     private boolean mIncludeSharedFolders;
     private Collection<String> mEmailKeys;

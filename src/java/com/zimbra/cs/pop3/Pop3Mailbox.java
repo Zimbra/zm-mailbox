@@ -17,8 +17,10 @@ package com.zimbra.cs.pop3;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
@@ -46,7 +48,7 @@ class Pop3Mailbox {
     private List<Pop3Message> mMessages; // array of pop messages
     private OperationContext mOpContext;
 
-    private static final byte[] POP3_TYPES = new byte[] { MailItem.TYPE_MESSAGE };
+    private static final Set<Byte> POP3_TYPES = Collections.singleton(MailItem.TYPE_MESSAGE);
 
     /**
      * initialize the Pop3Mailbox, without keeping a reference to either the Mailbox object or

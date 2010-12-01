@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.dom4j.Element;
 import org.dom4j.QName;
@@ -63,7 +64,7 @@ public class ScheduleInbox extends CalendarCollection {
         }
     }
 
-    protected static final byte[] SEARCH_TYPES = new byte[] { MailItem.TYPE_MESSAGE };
+    protected static final Set<Byte> SEARCH_TYPES = Collections.singleton(MailItem.TYPE_MESSAGE);
 
     @Override
     public java.util.Collection<DavResource> getAppointmentsByUids(DavContext ctxt, List<String> hrefs) throws ServiceException, DavException {

@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -338,16 +339,15 @@ extends Assert {
     /**
      * Searches a mailbox and returns the id's of all matching items.
      */
-    public static List<Integer> search(Mailbox mbox, String query, byte type)
-    throws ServiceException, IOException {
-        return search(mbox, query, new byte[] { type });
+    public static List<Integer> search(Mailbox mbox, String query, byte type) throws ServiceException, IOException {
+        return search(mbox, query, Collections.singleton(type));
     }
 
     /**
      * Searches a mailbox and returns the id's of all matching items.
      */
-    public static List<Integer> search(Mailbox mbox, String query, byte[] types)
-    throws ServiceException, IOException {
+    public static List<Integer> search(Mailbox mbox, String query, Set<Byte> types)
+            throws ServiceException, IOException {
         List<Integer> ids = new ArrayList<Integer>();
         ZimbraQueryResults r = mbox.index.search(new OperationContext(mbox), query, types, SortBy.DATE_DESCENDING, 100);
         while (r.hasNext()) {

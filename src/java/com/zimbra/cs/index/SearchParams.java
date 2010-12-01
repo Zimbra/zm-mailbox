@@ -15,13 +15,17 @@
 
 package com.zimbra.cs.index;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Joiner;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -161,10 +165,14 @@ public final class SearchParams implements Cloneable {
     }
 
     public String getTypesStr() {
-        return mGroupByStr;
+        List<String> list = new ArrayList<String>(types.size());
+        for (byte type : types) {
+            list.add(MailItem.getNameForType(type));
+        }
+        return Joiner.on(',').skipNulls().join(list);
     }
 
-    public byte[] getTypes() {
+    public Set<Byte> getTypes() {
         return types;
     }
 
@@ -346,28 +354,12 @@ public final class SearchParams implements Cloneable {
         setLimit(chunkSize + mOffset);
     }
 
-    public void setTypesStr(String groupByStr) throws ServiceException {
-        mGroupByStr = groupByStr;
-        byte[] typesToSet = MailboxIndex.parseTypesString(getTypesStr());
-        setTypesInternal(typesToSet);
+    public void setTypes(String value) throws ServiceException {
+        setTypes(MailboxIndex.parseTypes(value));
     }
 
-    public void setTypes(byte[] _types) {
-        boolean atFirst = true;
-        StringBuilder s = new StringBuilder();
-        for (byte b : _types) {
-            if (!atFirst) {
-                s.append(',');
-            }
-            s.append(MailItem.getNameForType(b));
-            atFirst = false;
-        }
-        mGroupByStr = s.toString();
-        setTypesInternal(_types);
-    }
-
-    private void setTypesInternal(byte[] _types) {
-        types = _types;
+    public void setTypes(Set<Byte> value) {
+        types = value;
         checkForLocalizedContactSearch();
     }
 
@@ -387,8 +379,7 @@ public final class SearchParams implements Cloneable {
 
             // FIXME: for bug 41920, disable localized contact sorting
             // bug 22665 - if searching ONLY for contacts, and locale is not EN, used localized re-sort
-            if (types != null && types.length == 1 &&
-                    types[0] == MailItem.TYPE_CONTACT && !isSystemDefaultLocale()) {
+            if (types.size() == 1 && types.contains(MailItem.TYPE_CONTACT) && !isSystemDefaultLocale()) {
                 if (mLocale != null) {
                     if (mSortBy != null) {
                         if (mSortBy.getType() == SortBy.Type.NAME_ASCENDING) {
@@ -630,9 +621,8 @@ public final class SearchParams implements Cloneable {
         }
         params.setInDumpster(request.getAttributeBool(MailConstants.A_IN_DUMPSTER, false));
         params.setQueryStr(query);
-        params.setTypesStr(request.getAttribute(MailConstants.A_SEARCH_TYPES,
-                request.getAttribute(MailConstants.A_GROUPBY,
-                        Search.DEFAULT_SEARCH_TYPES)));
+        params.setTypes(request.getAttribute(MailConstants.A_SEARCH_TYPES,
+                request.getAttribute(MailConstants.A_GROUPBY, Search.DEFAULT_SEARCH_TYPES)));
         params.setSortByStr(request.getAttribute(MailConstants.A_SORTBY,
                 SortBy.DATE_DESCENDING.toString()));
 
@@ -936,7 +926,6 @@ public final class SearchParams implements Cloneable {
         o.mPrevOffset = mPrevOffset;
         o.mEndSortValueStr = mEndSortValueStr;
         o.mEndSortValueLong = mEndSortValueLong;
-        o.mGroupByStr = mGroupByStr;
         o.mSortByStr = mSortByStr;
         o.mSortBy = mSortBy;
         o.types = types;
@@ -1027,12 +1016,11 @@ public final class SearchParams implements Cloneable {
 
 
     // unparsed -- these need to go away!
-    private String mGroupByStr;
     private String mSortByStr;
 
     // parsed:
     private SortBy mSortBy;
-    private byte[] types; // types to seach for
+    private Set<Byte> types = Collections.emptySet(); // types to seach for
 
     private boolean mPrefetch = true;
     private Mailbox.SearchResultMode mMode = Mailbox.SearchResultMode.NORMAL;

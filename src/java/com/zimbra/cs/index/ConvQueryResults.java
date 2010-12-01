@@ -36,8 +36,7 @@ final class ConvQueryResults extends ZimbraQueryResultsImpl {
     private List<ZimbraHit> mCachedResults = new ArrayList<ZimbraHit>();
     private Set<Integer> mSeenConvIDs = new HashSet<Integer>();
 
-    ConvQueryResults(ZimbraQueryResults results, byte[] types,
-            SortBy searchOrder, Mailbox.SearchResultMode mode) {
+    ConvQueryResults(ZimbraQueryResults results, Set<Byte> types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
         super(types, searchOrder, mode);
         mResults = results;
     }

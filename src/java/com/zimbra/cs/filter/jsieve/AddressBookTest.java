@@ -12,14 +12,10 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Nov 11, 2004
- *
- */
 package com.zimbra.cs.filter.jsieve;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
@@ -48,12 +44,15 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 
+/**
+ * @since Nov 11, 2004
+ */
 public class AddressBookTest extends AbstractTest {
 
     static final String IN = ":in";
     static final String CONTACTS = "contacts";
     static final String GAL = "GAL";
-    static final byte[] SEARCH_TYPE = { MailItem.TYPE_CONTACT };
+    static final Set<Byte> SEARCH_TYPE = Collections.singleton(MailItem.TYPE_CONTACT);
     private static Log mLog = LogFactory.getLog(AddressBookTest.class);
 
     @Override
@@ -61,7 +60,6 @@ public class AddressBookTest extends AbstractTest {
             throws SieveException {
         String comparator = null;
         Set<String> abooks = null;
-        @SuppressWarnings("unchecked")
         ListIterator<Argument> argumentsIter = arguments.getArgumentList().listIterator();
 
         // First argument MUST be a tag of ":in"
@@ -90,7 +88,7 @@ public class AddressBookTest extends AbstractTest {
                 StringListArgument strList = (StringListArgument) argument;
                 headers = new String[strList.getList().size()];
                 for (int i=0; i< headers.length; i++) {
-                    headers[i] = (String) strList.getList().get(i);
+                    headers[i] = strList.getList().get(i);
                 }
             }
         }
@@ -105,7 +103,7 @@ public class AddressBookTest extends AbstractTest {
                 StringListArgument strList = (StringListArgument) argument;
                 abooks = new HashSet<String>();
                 for (int i=0; i< strList.getList().size(); i++) {
-                    String abookName = (String) strList.getList().get(i);
+                    String abookName = strList.getList().get(i);
                     if (!CONTACTS.equals(abookName) && !GAL.equals(abookName))
                         throw new SyntaxException("Unknown address book name: " + abookName);
                     // eliminate duplicates by adding it to the set
@@ -122,10 +120,10 @@ public class AddressBookTest extends AbstractTest {
 
         if (! (mail instanceof ZimbraMailAdapter))
             return false;
-        return test(mail, comparator, headers, abooks);
+        return test(mail, headers, abooks);
     }
 
-    private boolean test(MailAdapter mail, String comparator, String[] headers, Set<String> abooks) throws SieveException {
+    private boolean test(MailAdapter mail, String[] headers, Set<String> abooks) throws SieveException {
         ZimbraMailAdapter zimbraMail = (ZimbraMailAdapter) mail;
         for (String abookName : abooks) {
             if (CONTACTS.equals(abookName)) {
@@ -133,7 +131,6 @@ public class AddressBookTest extends AbstractTest {
                 // searching contacts
                 for (int i=0; i<headers.length; i++) {
                     // get values for header that should contains address, like From, To, etc.
-                    @SuppressWarnings("unchecked")
                     List<String> headerVals = mail.getHeader(headers[i]);
                     for (int k=0; k<headerVals.size(); k++) {
                         // each header may contain multiple vaules; e.g., To: may contain many recipients

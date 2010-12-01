@@ -39,7 +39,7 @@ class MsgQueryResults extends ZimbraQueryResultsImpl {
      */
     private final Set<Integer> mSeenMsgs = new HashSet<Integer>();
 
-    MsgQueryResults(ZimbraQueryResults topLevelQueryOperation, byte[] types,
+    MsgQueryResults(ZimbraQueryResults topLevelQueryOperation, Set<Byte> types,
             SortBy searchOrder, Mailbox.SearchResultMode mode) {
         super(types, searchOrder, mode);
         mResults = topLevelQueryOperation;

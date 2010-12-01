@@ -652,75 +652,57 @@ public class DBQueryOperation extends QueryOperation {
         return toRet;
     }
 
-    private byte[] convertTypesToDbQueryTypes(byte[] types)
-    {
-        // hackery
-        int numUsed = 0;
-        byte[] tmp = new byte[2*types.length]; // boy I love java - no resizable array holds native types
+    private Set<Byte> convertTypesToDbQueryTypes(Set<Byte> types) {
+        Set<Byte> result = new HashSet<Byte>();
 
-        for (int i = 0; i < types.length; i++) {
-            if (types[i] == 0) {
-                types = null;
+        for (Byte b : types) {
+            switch (b) {
+            case 0:
+                return result;
+            case MailItem.TYPE_FOLDER:
+            case MailItem.TYPE_SEARCHFOLDER:
+            case MailItem.TYPE_TAG:
+                result.add(MailItem.TYPE_UNKNOWN);
                 break;
-            }
-            switch(types[i]) {
-                case 0:
-                    return null;
-                case MailItem.TYPE_FOLDER:
-                case MailItem.TYPE_SEARCHFOLDER:
-                case MailItem.TYPE_TAG:
-                    tmp[numUsed++] = MailItem.TYPE_UNKNOWN;
-                    break;
-                case MailItem.TYPE_CONVERSATION:
-                    tmp[numUsed++] = MailItem.TYPE_MESSAGE;
-                    tmp[numUsed++] = MailItem.TYPE_CHAT;
-                    break;
-                case MailItem.TYPE_MESSAGE:
-                    tmp[numUsed++] = MailItem.TYPE_MESSAGE;
-                    tmp[numUsed++] = MailItem.TYPE_CHAT;
-                    break;
-                case MailItem.TYPE_CONTACT:
-                    tmp[numUsed++] = MailItem.TYPE_CONTACT;
-                    break;
-                case MailItem.TYPE_APPOINTMENT:
-                    tmp[numUsed++] = MailItem.TYPE_APPOINTMENT;
-                    break;
-                case MailItem.TYPE_TASK:
-                    tmp[numUsed++] = MailItem.TYPE_TASK;
-                    break;
-                case MailItem.TYPE_DOCUMENT:
-                    tmp[numUsed++] = MailItem.TYPE_DOCUMENT;
-                    break;
-                case MailItem.TYPE_NOTE:
-                    tmp[numUsed++] = MailItem.TYPE_NOTE;
-                    break;
-                case MailItem.TYPE_FLAG:
-                    tmp[numUsed++] = MailItem.TYPE_FLAG;
-                    break;
-                case MailItem.TYPE_WIKI:
-                    tmp[numUsed++] = MailItem.TYPE_WIKI;
-                    break;
+            case MailItem.TYPE_CONVERSATION:
+                result.add(MailItem.TYPE_MESSAGE);
+                result.add(MailItem.TYPE_CHAT);
+                break;
+            case MailItem.TYPE_MESSAGE:
+                result.add(MailItem.TYPE_MESSAGE);
+                result.add(MailItem.TYPE_CHAT);
+                break;
+            case MailItem.TYPE_CONTACT:
+                result.add(MailItem.TYPE_CONTACT);
+                break;
+            case MailItem.TYPE_APPOINTMENT:
+                result.add(MailItem.TYPE_APPOINTMENT);
+                break;
+            case MailItem.TYPE_TASK:
+                result.add(MailItem.TYPE_TASK);
+                break;
+            case MailItem.TYPE_DOCUMENT:
+                result.add(MailItem.TYPE_DOCUMENT);
+                break;
+            case MailItem.TYPE_NOTE:
+                result.add(MailItem.TYPE_NOTE);
+                break;
+            case MailItem.TYPE_FLAG:
+                result.add(MailItem.TYPE_FLAG);
+                break;
+            case MailItem.TYPE_WIKI:
+                result.add(MailItem.TYPE_WIKI);
+                break;
             }
         }
 
-        byte[] toRet = new byte[numUsed];
-        System.arraycopy(tmp,0,toRet,0,numUsed);
-
-        return toRet;
+        return result;
     }
 
     private Set<Byte> getDbQueryTypes() {
-        byte[] defTypes = convertTypesToDbQueryTypes(context.getResults().getTypes());
-        HashSet<Byte> toRet = new HashSet<Byte>();
-        for (Byte b : defTypes)
-            toRet.add(b);
-
-        if (mTypes.size() > 0) {
-            for (Byte b : mTypes)
-                if (!toRet.contains(b))
-                    toRet.add(b);
-        }
-        return toRet;
+        Set<Byte> result = convertTypesToDbQueryTypes(context.getResults().getTypes());
+        result.addAll(mTypes);
+        return result;
     }
 
     /**

@@ -910,14 +910,14 @@ public class MailSender {
             }
         }
 
-        byte[] types = { MailItem.TYPE_CONTACT };
         String query = buf.toString();
         try {
             if (authmbox instanceof Mailbox) {
                 Mailbox mbox = (Mailbox) authmbox;
                 ZimbraQueryResults qres = null;
                 try {
-                    qres = mbox.index.search(octxt, query, types, SortBy.NONE, contacts.size());
+                    qres = mbox.index.search(octxt, query, Collections.singleton(MailItem.TYPE_CONTACT),
+                            SortBy.NONE, contacts.size());
                     while (qres.hasNext()) {
                         ZimbraHit hit = qres.getNext();
                         if (hit instanceof ContactHit) {

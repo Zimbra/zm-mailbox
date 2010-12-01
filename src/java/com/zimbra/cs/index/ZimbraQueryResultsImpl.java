@@ -17,6 +17,7 @@ package com.zimbra.cs.index;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.lucene.document.Document;
 
@@ -67,12 +68,12 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     private Map<Integer, NoteHit>  mNoteHits;
     private Map<Integer, CalendarItemHit> mCalItemHits;
 
-    private byte[] mTypes;
-    private SortBy mSearchOrder;
-    private Mailbox.SearchResultMode mMode;
+    private final Set<Byte> types;
+    private final SortBy mSearchOrder;
+    private final Mailbox.SearchResultMode mMode;
 
-    ZimbraQueryResultsImpl(byte[] types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
-        mTypes = types;
+    ZimbraQueryResultsImpl(Set<Byte> types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
+        this.types = types;
         mMode = mode;
         mSearchOrder = searchOrder;
 
@@ -106,8 +107,8 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
         return mSearchOrder;
     }
 
-    byte[] getTypes() {
-        return mTypes;
+    Set<Byte> getTypes() {
+        return types;
     }
 
     public Mailbox.SearchResultMode getSearchMode() {

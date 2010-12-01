@@ -16,6 +16,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +29,6 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
@@ -36,6 +36,7 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -80,7 +81,7 @@ public class SearchConv extends Search {
         params.setQueryStr(queryBuffer.toString());
 
         // force to group-by-message
-        params.setTypesStr(MailboxIndex.GROUP_BY_MESSAGE);
+        params.setTypes(Collections.singleton(MailItem.TYPE_MESSAGE));
 
         Element response = null;
         if (cid.belongsTo(mbox)) { // local
@@ -123,11 +124,11 @@ public class SearchConv extends Search {
             } finally {
                 results.doneWithSearchResults();
             }
-            
+
             if (request.getAttributeBool(MailConstants.A_NEED_EXP, false))
                 ToXML.encodeConvAddrsWithGroupInfo(request, response, getRequestedAccount(zsc), getAuthenticatedAccount(zsc));
             return response;
-            
+
         } else { // remote
             Element proxyRequest = zsc.createElement(MailConstants.SEARCH_CONV_REQUEST);
 
@@ -144,7 +145,7 @@ public class SearchConv extends Search {
                 // ZimbraQuery APIs...
                 String rewrittenQueryString = mbox.getRewrittenQueryString(octxt, params);
                 proxyRequest.addAttribute(MailConstants.E_QUERY, rewrittenQueryString, Element.Disposition.CONTENT);
-                    
+
                 // proxy to remote account
                 Account target = Provisioning.getInstance().get(AccountBy.id, cid.getAccountId(), zsc.getAuthToken());
                 response = proxyRequest(proxyRequest, context, target.getId());

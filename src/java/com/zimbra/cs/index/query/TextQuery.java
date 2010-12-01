@@ -29,7 +29,6 @@ import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanClause.Occur;
 
-import com.google.common.base.Preconditions;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
@@ -55,7 +54,7 @@ public class TextQuery extends Query {
     private List<String> oredTokens;
     private String wildcardTerm;
     private List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
-    private Mailbox mailbox;
+    private final Mailbox mailbox;
 
     private static final int MAX_WILDCARD_TERMS =
         LC.zimbra_index_wildcard_max_terms_expanded.intValue();
@@ -69,7 +68,7 @@ public class TextQuery extends Query {
     }
 
     protected TextQuery(Mailbox mbox, TokenStream stream, String field, String text) throws ServiceException {
-        mailbox = Preconditions.checkNotNull(mbox);
+        mailbox = mbox;
         this.field = field;
         this.term = text;
         oredTokens = new LinkedList<String>();
@@ -107,26 +106,22 @@ public class TextQuery extends Query {
 
             if (wcToken.length() > 0) {
                 wildcardTerm = wcToken;
-                MailboxIndex mbidx = mbox.index.getMailboxIndex();
-                List<String> expandedTokens = new ArrayList<String>(100);
                 boolean expandedAllTokens = false;
-                if (mbidx != null) {
+                List<String> expandedTokens = new ArrayList<String>(100);
+                if (mailbox != null) { // null if testing
+                    MailboxIndex mbidx = mailbox.index.getMailboxIndex();
                     try {
                         expandedAllTokens = mbidx.expandWildcardToken(
                                 expandedTokens, field, wcToken, MAX_WILDCARD_TERMS);
                     } catch (IOException e) {
                         throw ServiceException.FAILURE("Failed to expand wildcard", e);
                     }
+                    queryInfo.add(new WildcardExpansionQueryInfo(wcToken + "*",
+                            expandedTokens.size(), expandedAllTokens));
                 }
-
-                queryInfo.add(new WildcardExpansionQueryInfo(wcToken + "*",
-                        expandedTokens.size(), expandedAllTokens));
-                //
-                // By design, we interpret *zero* tokens to mean "ignore this search term"
-                // therefore if the wildcard expands to no terms, we need to stick something
-                // in right here, just so we don't get confused when we go to execute the
-                // query later
-                //
+                // By design, we interpret *zero* tokens to mean "ignore this search term" therefore if the wildcard
+                // expands to no terms, we need to stick something in right here, just so we don't get confused when we
+                // go to execute the query later.
                 if (expandedTokens.size() == 0 || !expandedAllTokens) {
                     tokens.add(wcToken);
                 } else {
@@ -161,10 +156,6 @@ public class TextQuery extends Query {
             // we pass NULL to addClause which will add a blank clause for us...
             return new NoTermQueryOperation();
         } else {
-            // indexing is disabled
-            if (mailbox.index.getMailboxIndex() == null)
-                return new NoTermQueryOperation();
-
             LuceneQueryOperation op = new LuceneQueryOperation();
 
             for (QueryInfo inf : queryInfo) {

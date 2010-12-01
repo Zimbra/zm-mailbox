@@ -575,7 +575,7 @@ public class ImapPath implements Comparable<ImapPath> {
                 return false;
             // search folder visibility depends on an account setting
             if (folder instanceof SearchFolder)
-                return ((SearchFolder) folder).isImapVisible() && ImapFolder.getTypeConstraint((SearchFolder) folder).length > 0;
+                return ((SearchFolder) folder).isImapVisible() && ImapFolder.getTypeConstraint((SearchFolder) folder).size() > 0;
         } else {
             ZFolder zfolder = (ZFolder) mFolder;
             // the mailbox root folder is not visible

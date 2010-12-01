@@ -15,6 +15,8 @@
 
 package com.zimbra.cs.index;
 
+import java.util.Set;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.ResultValidator.QueryResult;
 import com.zimbra.cs.mailbox.MailItem;
@@ -91,16 +93,11 @@ public abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
         }
 
         Grouping retType = Grouping.ITEM; //MailboxIndex.SEARCH_RETURN_DOCUMENTS;
-        byte[] types = params.getTypes();
-        for (int i = 0; i < types.length; i++) {
-            if (types[i] == MailItem.TYPE_CONVERSATION) {
-                retType = Grouping.CONVERSATION; //MailboxIndex.SEARCH_RETURN_CONVERSATIONS;
-                break;
-            }
-            if (types[i] == MailItem.TYPE_MESSAGE) {
-                retType = Grouping.MESSAGE; // MailboxIndex.SEARCH_RETURN_MESSAGES;
-                break;
-            }
+        Set<Byte> types = params.getTypes();
+        if (types.contains(MailItem.TYPE_CONVERSATION)) {
+            retType = Grouping.CONVERSATION; //MailboxIndex.SEARCH_RETURN_CONVERSATIONS;
+        } else if (types.contains(MailItem.TYPE_MESSAGE)) {
+            retType = Grouping.MESSAGE; // MailboxIndex.SEARCH_RETURN_MESSAGES;
         }
 
         // set me to TRUE if you're returning Conversations or something which could benefit from preloading

@@ -15,6 +15,8 @@
 
 package com.zimbra.qa.unittest;
 
+import java.util.Collections;
+
 import junit.framework.TestCase;
 
 import com.zimbra.common.util.ZimbraLog;
@@ -89,8 +91,8 @@ public class TestUnread extends TestCase
      *   <li>T2 is assigned to M1 and M2</li>
      * </ul>
      */
-    protected void setUp()
-    throws Exception {
+    @Override
+    protected void setUp() throws Exception {
         super.setUp();
 
         mAccount = TestUtil.getAccount(USER_NAME);
@@ -366,9 +368,8 @@ public class TestUnread extends TestCase
         ZimbraLog.test.debug("testSearch");
         verifySetUp();
 
-        byte[] types = { MailItem.TYPE_MESSAGE };
-        ZimbraQueryResults results = mMbox.index.search(new OperationContext(mMbox), "is:unread", types,
-                SortBy.DATE_DESCENDING, 100);
+        ZimbraQueryResults results = mMbox.index.search(new OperationContext(mMbox), "is:unread",
+                Collections.singleton(MailItem.TYPE_MESSAGE), SortBy.DATE_DESCENDING, 100);
         assertTrue("No search results found", results.hasNext());
         results.doneWithSearchResults();
     }
@@ -515,8 +516,8 @@ public class TestUnread extends TestCase
         assertTrue("getMessage2().isTagged(getTag2())", getMessage2().isTagged(getTag2()));
     }
 
-    protected void tearDown()
-    throws Exception {
+    @Override
+    protected void tearDown() throws Exception {
         TestUtil.deleteTestData(USER_NAME, TEST_NAME);
     }
 }

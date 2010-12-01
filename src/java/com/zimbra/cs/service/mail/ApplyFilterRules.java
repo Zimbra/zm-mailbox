@@ -36,6 +36,7 @@ import org.apache.jsieve.parser.generated.ParseException;
 import org.dom4j.QName;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -102,12 +103,10 @@ public class ApplyFilterRules extends MailDocumentHandler {
                 messageIds.add(Integer.valueOf(id));
             }
         } else if (query != null) {
-            byte[] types = new byte[] { MailItem.TYPE_MESSAGE };
             ZimbraQueryResults results = null;
-
             try {
-                results = mbox.index.search(new OperationContext(mbox), query, types,
-                    SortBy.NONE, Integer.MAX_VALUE);
+                results = mbox.index.search(new OperationContext(mbox), query,
+                        Collections.singleton(MailItem.TYPE_MESSAGE), SortBy.NONE, Integer.MAX_VALUE);
                 while (results.hasNext()) {
                     ZimbraHit hit = results.getNext();
                     messageIds.add(hit.getItemId());

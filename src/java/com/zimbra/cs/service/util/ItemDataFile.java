@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,6 +25,7 @@ import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -42,34 +43,31 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.util.ItemData;
 
 public class ItemDataFile {
-    public static void create(String path, OutputStream os, boolean verbose)
-        throws IOException {
-        create(path, null, "UTF-8", os, verbose);
+    public static void create(String path, OutputStream os) throws IOException {
+        create(path, null, "UTF-8", os);
     }
 
-    public static void create(String path, byte[] types, String cset,
-        OutputStream os, boolean verbose) throws IOException {
+    public static void create(String path, Set<Byte> types, String cset, OutputStream os) throws IOException {
         File f = new File(path);
         TarOutputStream tos = new TarOutputStream(new GZIPOutputStream(os),
             cset == null ? "UTF-8" : cset);
-        
+
         tos.setLongFileMode(TarOutputStream.LONGFILE_GNU);
         try {
             if (f.isDirectory())
-                addDir(f, f.getPath(), types, tos, verbose);
+                addDir(f, f.getPath(), types, tos);
             else
-                addFile(f, f.getParent(), types, tos, verbose);
+                addFile(f, f.getParent(), types, tos);
         } finally {
             tos.close();
         }
     }
-    
-    public static void extract(InputStream is, boolean verbose) throws IOException {
-        extract(is, true, null, null, "UTF-8", verbose);
+
+    public static void extract(InputStream is) throws IOException {
+        extract(is, true, null, null, "UTF-8");
     }
-    
-    public static void extract(InputStream is, boolean meta, byte[] types,
-        String cset, String dir, boolean verbose) throws IOException {
+
+    public static void extract(InputStream is, boolean meta, Set<Byte> types, String cset, String dir) throws IOException {
         byte[] buf = new byte[TarBuffer.DEFAULT_BLKSIZE];
         TarEntry te;
         TarInputStream tis = new TarInputStream(new GZIPInputStream(is),
@@ -84,7 +82,7 @@ public class ItemDataFile {
 
                 File f = new File(dir + File.separator + te.getName());
                 FileOutputStream out;
-    
+
                 if (!f.getParent().equals("."))
                     f.getParentFile().mkdir();
                 if (te.getName().endsWith(".meta")) {
@@ -96,7 +94,7 @@ public class ItemDataFile {
                     out.write(id.encode(2).getBytes("UTF-8"));
                 } else {
                     int in;
-                    
+
                     System.out.println(f);
                     out = new FileOutputStream(f);
                     while ((in = tis.read(buf)) != -1)
@@ -113,9 +111,8 @@ public class ItemDataFile {
     public static void list(InputStream is, PrintStream os) throws IOException {
         list(is, null, "UTF-8", os);
     }
-    
-    public static void list(InputStream is, byte[] types, String cset,
-        PrintStream os) throws IOException {
+
+    public static void list(InputStream is, Set<Byte> types, String cset, PrintStream os) throws IOException {
         DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT,
             DateFormat.SHORT);
         TarEntry te;
@@ -126,7 +123,7 @@ public class ItemDataFile {
         "PATH");
         try {
             TarEntry idEntry = null;
-            
+
             while ((te = tis.getNextEntry()) != null) {
                 if (te.getName().endsWith(".meta")) {
                     if (idEntry != null && !skip(types,
@@ -159,34 +156,28 @@ public class ItemDataFile {
     static byte[] getData(TarInputStream tis, TarEntry te) throws IOException {
         int dsz = (int)te.getSize();
         byte[] data = new byte[dsz];
-        
+
         if (tis.read(data, 0, dsz) != dsz)
             throw new IOException("archive read err");
         return data;
     }
-    
-    static boolean skip(byte[] types, byte type) {
-        if (types == null)
-            return false;
-        for (byte t : types)
-            if (t == type)
-                return false;
-        return true;
+
+    static boolean skip(Set<Byte> types, byte type) {
+        return types != null && !types.contains(type);
     }
-    
-    static void addDir(File f, String topdir, byte[] types, TarOutputStream tos,
-        boolean verbose) throws IOException {
+
+    static void addDir(File f, String topdir, Set<Byte> types, TarOutputStream tos) throws IOException {
         String path = f.getPath();
         String[] all = f.list();
         List<File>dirs = new ArrayList<File>();
         List<File>files = new ArrayList<File>();
-    
+
         Arrays.sort(all);
         for (String file : all) {
             File subf = new File(path + File.separator + file);
-      
+
             if (subf.getName().equals("Tags") && path.equals(topdir)) {
-                addDir(subf, topdir, types, tos, verbose);
+                addDir(subf, topdir, types, tos);
             } else if (subf.isDirectory()) {
                 dirs.add(subf);
             } else if (subf.getName().endsWith(".meta")) {
@@ -200,26 +191,25 @@ public class ItemDataFile {
             }
         }
         for (File file : files)
-            addFile(file, topdir, types, tos, verbose);
+            addFile(file, topdir, types, tos);
         for (File dir : dirs)
-            addDir(dir, topdir, types, tos, verbose);
+            addDir(dir, topdir, types, tos);
     }
 
-    static void addFile(File f, String topdir, byte[] types, TarOutputStream tos,
-        boolean verbose) throws IOException {
+    static void addFile(File f, String topdir, Set<Byte> types, TarOutputStream tos) throws IOException {
         ItemData id = null;
         String path = f.getPath();
         File mf = new File(path + ".meta");
         TarEntry te;
         byte type;
-    
+
         if (path.indexOf(topdir) == 0)
             path = path.substring(topdir.length() + 1);
         path = path.replace('\\', '/');
         if (mf.exists()) {
             byte[] meta = new byte[(int)mf.length()];
             FileInputStream fis = new FileInputStream(mf);
-            
+
             if (fis.read(meta) != mf.length())
                throw new IOException("meta read err: " + f.getPath());
             fis.close();
@@ -259,7 +249,7 @@ public class ItemDataFile {
             byte[] buf = new byte[TarBuffer.DEFAULT_BLKSIZE];
             FileInputStream fis = new FileInputStream(f);
             int in;
-            
+
             te = new TarEntry(path);
             System.out.println(te.getName());
             te.setGroupName(MailItem.getNameForType(id.ud.type));
@@ -284,7 +274,6 @@ public class ItemDataFile {
         String cset = null;
         Options opts = new Options();
         CommandLineParser parser = new GnuParser();
-        boolean verbose = false;
 
         opts.addOption("a", "assemble", false, "assemble backup");
         opts.addOption("c", "charset", true, "path charset");
@@ -294,14 +283,13 @@ public class ItemDataFile {
         opts.addOption("n", "nometa", false, "ignore metadata");
         opts.addOption("p", "path", true, "extracted backup path");
         opts.addOption("t", "types", true, "item types");
-        opts.addOption("v", "verbose", false, "verbose");
         ZimbraLog.toolSetupLog4j("ERROR", null);
         try {
             CommandLine cl = parser.parse(opts, args);
             String path = ".";
             String file = null;
             boolean meta = true;
-            byte[] types = null;
+            Set<Byte> types = null;
 
             if (cl.hasOption('c'))
                 cset = cl.getOptionValue('c');
@@ -310,21 +298,19 @@ public class ItemDataFile {
             if (cl.hasOption('p'))
                 path = cl.getOptionValue('p');
             if (cl.hasOption('t'))
-                types = MailboxIndex.parseTypesString(cl.getOptionValue('t'));
+                types = MailboxIndex.parseTypes(cl.getOptionValue('t'));
             if (cl.hasOption('h') || cl.getArgs().length != 1)
                 usage(opts);
-            if (cl.hasOption('v'))
-                verbose = true;
             file = cl.getArgs()[0];
-            if (cl.hasOption('a'))
-                create(path, types, cset, new FileOutputStream(file), verbose);
-            else if (cl.hasOption('e'))
-                extract(new FileInputStream(file), meta, types, cset, path, verbose);
-            else if (cl.hasOption('l'))
-                list(file.equals("-") ? System.in : new FileInputStream(file),
-                    types, cset, System.out);
-            else
+            if (cl.hasOption('a')) {
+                create(path, types, cset, new FileOutputStream(file));
+            } else if (cl.hasOption('e')) {
+                extract(new FileInputStream(file), meta, types, cset, path);
+            } else if (cl.hasOption('l')) {
+                list(file.equals("-") ? System.in : new FileInputStream(file), types, cset, System.out);
+            } else {
                 usage(opts);
+            }
         } catch (Exception e) {
             if (e instanceof UnrecognizedOptionException)
                 usage(opts);

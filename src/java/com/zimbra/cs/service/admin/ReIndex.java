@@ -107,10 +107,10 @@ public final class ReIndex extends AdminDocumentHandler {
             if (mbox.index.isReIndexInProgress()) {
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_RUNNING);
             } else {
-                byte[] types = null;
+                Set<Byte> types = null;
                 String typesStr = mreq.getAttribute(MailConstants.A_SEARCH_TYPES, null);
                 if (typesStr != null) {
-                    types = MailboxIndex.parseTypesString(typesStr);
+                    types = MailboxIndex.parseTypes(typesStr);
                 }
 
                 Set<Integer> itemIds = null;
@@ -122,17 +122,7 @@ public final class ReIndex extends AdminDocumentHandler {
                         itemIds.add(Integer.parseInt(target));
                     }
                 }
-
-                Set<Byte> typesSet;
-                if (types == null) {
-                    typesSet = null;
-                } else {
-                    typesSet = new HashSet<Byte>();
-                    for (byte b : types) {
-                        typesSet.add(b);
-                    }
-                }
-                mbox.index.reIndexInBackgroundThread(getOperationContext(zsc, context), typesSet, itemIds, false);
+                mbox.index.reIndexInBackgroundThread(getOperationContext(zsc, context), types, itemIds, false);
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_STARTED);
             }
         } else if (ACTION_STATUS.equalsIgnoreCase(action)) {

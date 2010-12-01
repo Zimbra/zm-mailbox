@@ -251,6 +251,7 @@ public abstract class Filter {
             mMatch = MatchType.fromString(elem.attributeValue(DavElements.P_MATCH_TYPE));
         }
 
+        @Override
         public Collection<AddressObject> match(DavContext ctxt, AddressbookCollection folder) {
             // search the folder for #key:val where key is mName and val is mTextMatch.mText.
             //boolean ignoreCase = mCollation.equals(DavElements.ASCII);
@@ -286,7 +287,7 @@ public abstract class Filter {
                     return result;
                 }
                 zqr = mbox.index.search(ctxt.getOperationContext(), filter,
-                        new byte[] { MailItem.TYPE_CONTACT }, SortBy.NAME_ASCENDING, 100);
+                        Collections.singleton(MailItem.TYPE_CONTACT), SortBy.NAME_ASCENDING, 100);
                 while (zqr.hasNext()) {
                     ZimbraHit hit = zqr.getNext();
                     if (hit instanceof ContactHit) {

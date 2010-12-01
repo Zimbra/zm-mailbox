@@ -15,11 +15,14 @@
 package com.zimbra.cs.index.query.parser;
 
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -58,6 +61,8 @@ import com.zimbra.cs.index.query.TextQuery;
 import com.zimbra.cs.index.query.TypeQuery;
 import static com.zimbra.cs.index.query.parser.ParserConstants.*;
 import static com.zimbra.cs.index.query.parser.ParserTreeConstants.*;
+
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ItemId;
@@ -142,6 +147,7 @@ public final class QueryParser {
     private Locale locale = Locale.ENGLISH;
     private int defaultField = CONTENT;
     private String sortBy;
+    private Set<Byte> types = Collections.emptySet();
 
     /**
      * Constructs a new {@link QueryParser}.
@@ -181,10 +187,13 @@ public final class QueryParser {
     public void setDefaultField(String name) throws ServiceException {
         Integer jj = IMG2JJ.get(name);
         if (jj == null) {
-            throw MailServiceException.QUERY_PARSE_ERROR(
-                    name, null, name, -1, "UNKNOWN_QUERY_TYPE");
+            throw MailServiceException.QUERY_PARSE_ERROR(name, null, name, -1, "UNKNOWN_QUERY_TYPE");
         }
         defaultField = jj;
+    }
+
+    public void setTypes(Set<Byte> value) {
+        types = value;
     }
 
     /**
@@ -275,24 +284,24 @@ public final class QueryParser {
         Query clause = null;
         SimpleNode child = (SimpleNode) node.jjtGetChild(num - 1);
         switch (child.id) {
-            case JJTTEXTCLAUSE:
-                clause = toTextClause(child);
-                break;
-            case JJTITEMCLAUSE:
-                clause = toItemClause(child);
-                break;
-            case JJTDATECLAUSE:
-                clause = toDateClause(child);
-                break;
-            case JJTQUERY:
-                clause = toSubQuery(child);
-                break;
-            case JJTDEFAULTCLAUSE:
-                clause = toDefaultClause(child);
-                break;
-            default:
-                assert(false);
-                return null;
+        case JJTTEXTCLAUSE:
+            clause = toTextClause(child);
+            break;
+        case JJTITEMCLAUSE:
+            clause = toItemClause(child);
+            break;
+        case JJTDATECLAUSE:
+            clause = toDateClause(child);
+            break;
+        case JJTQUERY:
+            clause = toSubQuery(child);
+            break;
+        case JJTDEFAULTCLAUSE:
+            clause = toDefaultClause(child);
+            break;
+        default:
+            assert(false);
+            return null;
         }
         if (node.jjtGetNumChildren() > 1) {
             clause.setModifier(toModifier((SimpleNode) node.jjtGetChild(0)));
@@ -316,38 +325,28 @@ public final class QueryParser {
         return toTerm(node.jjtGetFirstToken(), (SimpleNode) node.jjtGetChild(0));
     }
 
-    private Query toDefaultClause(SimpleNode node)
-        throws ParseException, ServiceException {
-
+    private Query toDefaultClause(SimpleNode node) throws ParseException, ServiceException {
         assert(node.id == JJTDEFAULTCLAUSE);
 
-        return createQuery(Token.newToken(defaultField),
-                node.jjtGetFirstToken(), toString(node));
+        return createQuery(Token.newToken(defaultField), node.jjtGetFirstToken(), toString(node));
     }
 
-    private Query toItemClause(SimpleNode node)
-        throws ParseException, ServiceException {
-
+    private Query toItemClause(SimpleNode node) throws ParseException, ServiceException {
         assert(node.id == JJTITEMCLAUSE);
         assert(node.jjtGetNumChildren() == 1);
 
         return toTerm(node.jjtGetFirstToken(), (SimpleNode) node.jjtGetChild(0));
     }
 
-    private Query toDateClause(SimpleNode node)
-        throws ParseException, ServiceException {
-
+    private Query toDateClause(SimpleNode node) throws ParseException, ServiceException {
         assert(node.id == JJTDATECLAUSE);
         assert(node.jjtGetNumChildren() == 1);
 
         return toTerm(node.jjtGetFirstToken(), (SimpleNode) node.jjtGetChild(0));
     }
 
-    private Query toTerm(Token field, SimpleNode node)
-        throws ParseException, ServiceException {
-
-        assert(node.id == JJTDATETERM || node.id == JJTTEXTTERM ||
-                node.id == JJTITEMTERM);
+    private Query toTerm(Token field, SimpleNode node) throws ParseException, ServiceException {
+        assert(node.id == JJTDATETERM || node.id == JJTTEXTTERM || node.id == JJTITEMTERM);
 
         if (node.jjtGetNumChildren() == 0) {
             Token token = node.jjtGetFirstToken();
@@ -461,166 +460,166 @@ public final class QueryParser {
         sortBy = node.jjtGetFirstToken().next.image;
     }
 
-    private Query createQuery(Token field, Token term, String text)
-        throws ParseException, ServiceException {
+    private Query createQuery(Token field, Token term, String text) throws ParseException, ServiceException {
 
         switch (field.kind) {
-          case HAS:
+        case HAS:
             if (text.equalsIgnoreCase("attachment")) {
                 return new AttachmentQuery("any");
             } else {
                 return new HasQuery(text);
             }
-          case ATTACHMENT:
+        case ATTACHMENT:
             return new AttachmentQuery(text);
-          case TYPE:
+        case TYPE:
             return new TypeQuery(text);
-          case ITEM:
+        case ITEM:
             return ItemQuery.create(mailbox, text);
-          case UNDERID:
-          case INID: {
-              ItemId iid = null;
-              int subfolderSplit = text.indexOf('/');
-              String iidStr;
-              String subfolderPath = null;
-              if (subfolderSplit > 0) {
-                  iidStr = text.substring(0, subfolderSplit);
-                  subfolderPath = text.substring(subfolderSplit + 1);
-              } else {
-                  iidStr = text;
-              }
-              iid = new ItemId(iidStr, (String) null);
-              try {
-                  return InQuery.create(mailbox, iid, subfolderPath, (field.kind == UNDERID));
-              } catch (ServiceException e) {
-                  // bug: 18623 -- dangling mountpoints create problems with 'is:remote'
-                  ZimbraLog.index.debug("Ignoring INID/UNDERID clause b/c of ServiceException", e);
-                  return InQuery.create(InQuery.In.NONE, false);
-              }
-          }
-          case UNDER:
-          case IN: {
-              Integer folderId = FOLDER2ID.get(text.toLowerCase());
-              if (folderId != null) {
-                  return InQuery.create(mailbox, folderId, (field.kind == UNDER));
-              } else {
-                  return InQuery.create(mailbox, text, (field.kind == UNDER));
-              }
-          }
-          case TAG:
-              return new TagQuery(mailbox, text, true);
-          case PRIORITY:
-              try {
-                  return new PriorityQuery(mailbox,
-                          PriorityQuery.Priority.valueOf(text.toUpperCase()));
-              } catch (IllegalArgumentException e) {
-                  throw exception("INVALID_PRIORITY", term);
-              }
-          case IS:
-              try {
-                  return BuiltInQuery.getQuery(text.toLowerCase(), mailbox, analyzer);
-              } catch (IllegalArgumentException e) {
-                  throw exception("UNKNOWN_TEXT_AFTER_IS", term);
-              }
-          case CONV:
-              return ConvQuery.create(mailbox, text);
-          case CONV_COUNT:
-              return ConvCountQuery.create(text);
-          case DATE:
-              return createDateQuery(DateQuery.Type.DATE, term, text);
-          case DAY:
-              return createDateQuery(DateQuery.Type.DAY, term, text);
-          case WEEK:
-              return createDateQuery(DateQuery.Type.WEEK, term, text);
-          case MONTH:
-              return createDateQuery(DateQuery.Type.MONTH, term, text);
-          case YEAR:
-              return createDateQuery(DateQuery.Type.YEAR, term, text);
-          case AFTER:
-              return createDateQuery(DateQuery.Type.AFTER, term, text);
-          case BEFORE:
-              return createDateQuery(DateQuery.Type.BEFORE, term, text);
-          case CONV_START:
-              return createDateQuery(DateQuery.Type.CONV_START, term, text);
-          case CONV_END:
-              return createDateQuery(DateQuery.Type.CONV_END, term, text);
-          case APPT_START:
-              return createDateQuery(DateQuery.Type.APPT_START, term, text);
-          case APPT_END:
-              return createDateQuery(DateQuery.Type.APPT_END, term,text);
-          case TOFROM:
-              if (Strings.isNullOrEmpty(text)) {
-                  throw exception("MISSING_TEXT_AFTER_TOFROM", term);
-              }
-              return AddrQuery.create(mailbox, analyzer,
-                      EnumSet.of(Address.TO, Address.FROM), text);
-          case TOCC:
-              if (Strings.isNullOrEmpty(text)) {
-                  throw exception("MISSING_TEXT_AFTER_TOCC", term);
-              }
-              return AddrQuery.create(mailbox, analyzer,
-                      EnumSet.of(Address.TO, Address.CC), text);
-          case FROMCC:
-              if (Strings.isNullOrEmpty(text)) {
-                  throw exception("MISSING_TEXT_AFTER_FROMCC", term);
-              }
-              return AddrQuery.create(mailbox, analyzer,
-                      EnumSet.of(Address.FROM, Address.CC), text);
-          case TOFROMCC:
-              if (Strings.isNullOrEmpty(text)) {
-                  throw exception("MISSING_TEXT_AFTER_TOFROMCC", term);
-               }
-              return AddrQuery.create(mailbox, analyzer,
-                      EnumSet.of(Address.TO, Address.FROM, Address.CC), text);
-          case FROM:
-              if (Strings.isNullOrEmpty(text)) {
-                  throw exception("MISSING_TEXT_AFTER_FROM", term);
-              }
-              return SenderQuery.create(mailbox, analyzer, text);
-          case TO:
-              if (Strings.isNullOrEmpty(text)) {
-                  throw exception("MISSING_TEXT_AFTER_TO", term);
-              }
-              return createAddrDomainQuery(LuceneFields.L_H_TO, text);
-          case CC:
-              if (Strings.isNullOrEmpty(text)) {
-                  throw exception("MISSING_TEXT_AFTER_CC", term);
-              }
-              return createAddrDomainQuery(LuceneFields.L_H_CC, text);
-          case ENVTO:
-              if (Strings.isNullOrEmpty(text)) {
-                  throw exception("MISSING_TEXT_AFTER_ENVTO", term);
-              }
-              return createAddrDomainQuery(LuceneFields.L_H_X_ENV_TO, text);
-          case ENVFROM:
-              if (Strings.isNullOrEmpty(text)) {
-                  throw exception("MISSING_TEXT_AFTER_ENVFROM", term);
-              }
-              return createAddrDomainQuery(LuceneFields.L_H_X_ENV_FROM, text);
-          case MODSEQ:
-              return new ModseqQuery(text);
-          case SIZE:
-              return createSizeQuery(SizeQuery.Type.EQ, term, text);
-          case BIGGER:
-              return createSizeQuery(SizeQuery.Type.GT, term, text);
-          case SMALLER:
-              return createSizeQuery(SizeQuery.Type.LT, term, text);
-          case SUBJECT:
-              return SubjectQuery.create(mailbox, analyzer, text);
-          case FIELD:
-              return createFieldQuery(field.image, term, text);
-          case CONTACT:
-              // always make it wildcard search
-              return new TextQuery(mailbox, analyzer,
-                      LuceneFields.L_CONTACT_DATA, text.replaceFirst("[*]*$", "*"));
-          default:
-              return new TextQuery(mailbox, analyzer,
-                      JJ2LUCENE.get(field.kind), text);
+        case UNDERID:
+        case INID: {
+            ItemId iid = null;
+            int subfolderSplit = text.indexOf('/');
+            String iidStr;
+            String subfolderPath = null;
+            if (subfolderSplit > 0) {
+                iidStr = text.substring(0, subfolderSplit);
+                subfolderPath = text.substring(subfolderSplit + 1);
+            } else {
+                iidStr = text;
+            }
+            iid = new ItemId(iidStr, (String) null);
+            try {
+                return InQuery.create(mailbox, iid, subfolderPath, (field.kind == UNDERID));
+            } catch (ServiceException e) {
+                // bug: 18623 -- dangling mountpoints create problems with 'is:remote'
+                ZimbraLog.index.debug("Ignoring INID/UNDERID clause b/c of ServiceException", e);
+                return InQuery.create(InQuery.In.NONE, false);
+            }
+        }
+        case UNDER:
+        case IN: {
+            Integer folderId = FOLDER2ID.get(text.toLowerCase());
+            if (folderId != null) {
+                return InQuery.create(mailbox, folderId, (field.kind == UNDER));
+            } else {
+                return InQuery.create(mailbox, text, (field.kind == UNDER));
+            }
+        }
+        case TAG:
+            return new TagQuery(mailbox, text, true);
+        case PRIORITY:
+            try {
+                return new PriorityQuery(mailbox, PriorityQuery.Priority.valueOf(text.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                throw exception("INVALID_PRIORITY", term);
+            }
+        case IS:
+            try {
+                return BuiltInQuery.getQuery(text.toLowerCase(), mailbox, analyzer);
+            } catch (IllegalArgumentException e) {
+                throw exception("UNKNOWN_TEXT_AFTER_IS", term);
+            }
+        case CONV:
+            return ConvQuery.create(mailbox, text);
+        case CONV_COUNT:
+            return ConvCountQuery.create(text);
+        case DATE:
+            return createDateQuery(DateQuery.Type.DATE, term, text);
+        case DAY:
+            return createDateQuery(DateQuery.Type.DAY, term, text);
+        case WEEK:
+            return createDateQuery(DateQuery.Type.WEEK, term, text);
+        case MONTH:
+            return createDateQuery(DateQuery.Type.MONTH, term, text);
+        case YEAR:
+            return createDateQuery(DateQuery.Type.YEAR, term, text);
+        case AFTER:
+            return createDateQuery(DateQuery.Type.AFTER, term, text);
+        case BEFORE:
+            return createDateQuery(DateQuery.Type.BEFORE, term, text);
+        case CONV_START:
+            return createDateQuery(DateQuery.Type.CONV_START, term, text);
+        case CONV_END:
+            return createDateQuery(DateQuery.Type.CONV_END, term, text);
+        case APPT_START:
+            return createDateQuery(DateQuery.Type.APPT_START, term, text);
+        case APPT_END:
+            return createDateQuery(DateQuery.Type.APPT_END, term,text);
+        case TOFROM:
+            if (Strings.isNullOrEmpty(text)) {
+                throw exception("MISSING_TEXT_AFTER_TOFROM", term);
+            }
+            return AddrQuery.create(mailbox, analyzer, EnumSet.of(Address.TO, Address.FROM), text);
+        case TOCC:
+            if (Strings.isNullOrEmpty(text)) {
+                throw exception("MISSING_TEXT_AFTER_TOCC", term);
+            }
+            return AddrQuery.create(mailbox, analyzer, EnumSet.of(Address.TO, Address.CC), text);
+        case FROMCC:
+            if (Strings.isNullOrEmpty(text)) {
+                throw exception("MISSING_TEXT_AFTER_FROMCC", term);
+            }
+            return AddrQuery.create(mailbox, analyzer, EnumSet.of(Address.FROM, Address.CC), text);
+        case TOFROMCC:
+            if (Strings.isNullOrEmpty(text)) {
+                throw exception("MISSING_TEXT_AFTER_TOFROMCC", term);
+            }
+            return AddrQuery.create(mailbox, analyzer, EnumSet.of(Address.TO, Address.FROM, Address.CC), text);
+        case FROM:
+            if (Strings.isNullOrEmpty(text)) {
+                throw exception("MISSING_TEXT_AFTER_FROM", term);
+            }
+            return SenderQuery.create(mailbox, analyzer, text);
+        case TO:
+            if (Strings.isNullOrEmpty(text)) {
+                throw exception("MISSING_TEXT_AFTER_TO", term);
+            }
+            return createAddrDomainQuery(LuceneFields.L_H_TO, text);
+        case CC:
+            if (Strings.isNullOrEmpty(text)) {
+                throw exception("MISSING_TEXT_AFTER_CC", term);
+            }
+            return createAddrDomainQuery(LuceneFields.L_H_CC, text);
+        case ENVTO:
+            if (Strings.isNullOrEmpty(text)) {
+                throw exception("MISSING_TEXT_AFTER_ENVTO", term);
+            }
+            return createAddrDomainQuery(LuceneFields.L_H_X_ENV_TO, text);
+        case ENVFROM:
+            if (Strings.isNullOrEmpty(text)) {
+                throw exception("MISSING_TEXT_AFTER_ENVFROM", term);
+            }
+            return createAddrDomainQuery(LuceneFields.L_H_X_ENV_FROM, text);
+        case MODSEQ:
+            return new ModseqQuery(text);
+        case SIZE:
+            return createSizeQuery(SizeQuery.Type.EQ, term, text);
+        case BIGGER:
+            return createSizeQuery(SizeQuery.Type.GT, term, text);
+        case SMALLER:
+            return createSizeQuery(SizeQuery.Type.LT, term, text);
+        case SUBJECT:
+            return SubjectQuery.create(mailbox, analyzer, text);
+        case FIELD:
+            return createFieldQuery(field.image, term, text);
+        case CONTACT:
+            return createContactQuery(text);
+        case CONTENT:
+            if (types.contains(MailItem.TYPE_CONTACT)) { // combine with CONTACT query
+                List<Query> clauses = new ArrayList<Query>(3);
+                clauses.add(createContactQuery(text));
+                clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));
+                clauses.add(createContentQuery(text));
+                return new SubQuery(clauses);
+            } else {
+                return createContentQuery(text);
+            }
+        default:
+            return new TextQuery(mailbox, analyzer, JJ2LUCENE.get(field.kind), text);
         }
     }
 
-    private SizeQuery createSizeQuery(SizeQuery.Type type, Token term,
-            String text) throws ParseException {
+    private SizeQuery createSizeQuery(SizeQuery.Type type, Token term, String text) throws ParseException {
         try {
             return new SizeQuery(type, text);
         } catch (java.text.ParseException e) {
@@ -628,8 +627,7 @@ public final class QueryParser {
         }
     }
 
-    private DateQuery createDateQuery(DateQuery.Type type, Token term,
-            String text) throws ParseException {
+    private DateQuery createDateQuery(DateQuery.Type type, Token term, String text) throws ParseException {
         DateQuery query = new DateQuery(type);
         try {
             query.parseDate(text, timezone, locale);
@@ -639,9 +637,7 @@ public final class QueryParser {
         return query;
     }
 
-    private Query createAddrDomainQuery(String field, String term)
-        throws ServiceException {
-
+    private Query createAddrDomainQuery(String field, String term) throws ServiceException {
         if (term.startsWith("@")) {
             return new DomainQuery(field, term);
         } else {
@@ -657,6 +653,15 @@ public final class QueryParser {
         } else {
             throw exception("INVALID_FIELD_FORMAT", term);
         }
+    }
+
+    private Query createContactQuery(String text) throws ServiceException {
+        // always make it wildcard search
+        return new TextQuery(mailbox, analyzer, LuceneFields.L_CONTACT_DATA, text.replaceFirst("[*]*$", "*"));
+    }
+
+    private Query createContentQuery(String text) throws ServiceException {
+        return new TextQuery(mailbox, analyzer, LuceneFields.L_CONTENT, text);
     }
 
     private ParseException exception(String message, Token token) {

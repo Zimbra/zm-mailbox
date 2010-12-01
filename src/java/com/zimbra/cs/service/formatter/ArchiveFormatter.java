@@ -33,6 +33,8 @@ import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.primitives.Bytes;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -135,7 +137,8 @@ public abstract class ArchiveFormatter extends Formatter {
     protected abstract ArchiveOutputStream getOutputStream(Context context,
         String charset) throws IOException;
 
-    @Override public void formatCallback(Context context) throws IOException,
+    @Override
+    public void formatCallback(Context context) throws IOException,
         ServiceException, UserServletException {
         HashMap<Integer, Integer> cnts = new HashMap<Integer, Integer>();
         boolean conversations = false;
@@ -152,12 +155,9 @@ public abstract class ArchiveFormatter extends Formatter {
             MailItem.TYPE_FOLDER, MailItem.TYPE_SEARCHFOLDER, MailItem.TYPE_TAG,
             MailItem.TYPE_FLAG, MailItem.TYPE_MOUNTPOINT
         };
-        byte searchTypes[] = {
-            MailItem.TYPE_MESSAGE, MailItem.TYPE_CONTACT,
-            MailItem.TYPE_DOCUMENT, MailItem.TYPE_WIKI,
-            MailItem.TYPE_APPOINTMENT, MailItem.TYPE_TASK, MailItem.TYPE_CHAT,
-            MailItem.TYPE_NOTE
-        };
+        Set<Byte> searchTypes = ImmutableSet.of(MailItem.TYPE_MESSAGE, MailItem.TYPE_CONTACT, MailItem.TYPE_DOCUMENT,
+                MailItem.TYPE_WIKI, MailItem.TYPE_APPOINTMENT, MailItem.TYPE_TASK, MailItem.TYPE_CHAT,
+                MailItem.TYPE_NOTE);
         ArchiveOutputStream aos = null;
         String types = context.getTypesString();
 
@@ -188,18 +188,11 @@ public abstract class ArchiveFormatter extends Formatter {
                 context.resp.setContentType("application/x-compressed-tar");
             else if (ext.equals(".zip"))
                 context.resp.setContentType("application/zip");
-            if (types != null && !types.equals("")) {
-                Arrays.sort(searchTypes = MailboxIndex.parseTypesString(types));
+            if (!Strings.isNullOrEmpty(types)) {
+                searchTypes = MailboxIndex.parseTypes(types);
                 sysTypes = new byte[0];
-                if (Arrays.binarySearch(searchTypes, MailItem.TYPE_CONVERSATION) >= 0) {
-                    int i = 0;
-                    byte newTypes[] = new byte[searchTypes.length - 1];
-
-                    for (byte type : searchTypes)
-                        if (type != MailItem.TYPE_CONVERSATION)
-                            newTypes[i++] = type;
+                if (searchTypes.remove(MailItem.TYPE_CONVERSATION)) {
                     conversations = true;
-                    searchTypes = newTypes;
                 }
             }
             if (lock != null && (lock.equals("1") || lock.equals("t") ||
@@ -630,26 +623,15 @@ public abstract class ArchiveFormatter extends Formatter {
                 resolve.substring(1).toLowerCase());
             if (timeout != null)
                 interval = Long.parseLong(timeout);
-            byte searchTypes[] = null;
+            Set<Byte> searchTypes = null;
 
             if (context.reqListIds != null) {
                 ids = context.reqListIds.clone();
                 Arrays.sort(ids);
             }
-            if (types != null && !types.equals("")) {
-                Arrays.sort(searchTypes = MailboxIndex.parseTypesString(types));
-                for (byte type : searchTypes) {
-                    if (type == MailItem.TYPE_CONVERSATION) {
-                        int idx = 0;
-                        byte[] newTypes = new byte[searchTypes.length - 1];
-
-                        for (byte t : searchTypes)
-                            if (t != MailItem.TYPE_CONVERSATION)
-                                newTypes[idx++] = t;
-                        searchTypes = newTypes;
-                        break;
-                    }
-                }
+            if (!Strings.isNullOrEmpty(types)) {
+                searchTypes = MailboxIndex.parseTypes(types);
+                searchTypes.remove(MailItem.TYPE_CONVERSATION);
             }
             Charset charset = context.getCharset();
             try {
@@ -675,21 +657,10 @@ public abstract class ArchiveFormatter extends Formatter {
                         }
                         if (searchTypes == null) {
                             delIds = context.targetMailbox.listItemIds(
-                                context.opContext, MailItem.TYPE_UNKNOWN,
-                                f.getId());
-                        } else if (Arrays.binarySearch(searchTypes,
-                            MailItem.TYPE_CONVERSATION) < 0) {
-                            delIds = context.targetMailbox.getItemIds(
-                                context.opContext, f.getId()).getIds(searchTypes);
+                                    context.opContext, MailItem.TYPE_UNKNOWN, f.getId());
                         } else {
-                            byte[] delTypes = new byte[searchTypes.length - 1];
-                            int i = 0;
-
-                            for (byte type : searchTypes)
-                                if (type != MailItem.TYPE_CONVERSATION)
-                                    delTypes[i++] = type;
                             delIds = context.targetMailbox.getItemIds(
-                                context.opContext, f.getId()).getIds(delTypes);
+                                    context.opContext, f.getId()).getIds(Bytes.toArray(searchTypes));
                         }
                         if (delIds == null)
                             continue;
@@ -899,10 +870,10 @@ public abstract class ArchiveFormatter extends Formatter {
     }
 
     private void addItem(Context context, Folder fldr,
-        Map<Object, Folder> fmap, Map<String, Integer> digestMap,
-        Map<Integer, Integer> idMap, int[] ids, byte[] searchTypes, Resolve r,
-        ItemData id, ArchiveInputStream ais, ArchiveInputEntry aie,
-        List<ServiceException> errs) throws ServiceException {
+            Map<Object, Folder> fmap, Map<String, Integer> digestMap,
+            Map<Integer, Integer> idMap, int[] ids, Set<Byte> searchTypes, Resolve r,
+            ItemData id, ArchiveInputStream ais, ArchiveInputEntry aie,
+            List<ServiceException> errs) throws ServiceException {
         try {
             Mailbox mbox = fldr.getMailbox();
             MailItem mi = MailItem.constructItem(mbox, id.ud);
@@ -915,9 +886,9 @@ public abstract class ArchiveFormatter extends Formatter {
                 id.path.startsWith(fldr.getPath() + '/');
 
             if ((ids != null && Arrays.binarySearch(ids, id.ud.id) < 0) ||
-                (searchTypes != null && Arrays.binarySearch(searchTypes,
-                id.ud.type) < 0))
+                    (searchTypes != null && !searchTypes.contains(id.ud.type))) {
                 return;
+            }
             if (id.ud.getBlobDigest() != null && aie == null) {
                 addError(errs, FormatterServiceException.MISSING_BLOB(id.path));
                 return;
@@ -1350,9 +1321,9 @@ public abstract class ArchiveFormatter extends Formatter {
     }
 
     private void addData(Context context, Folder fldr, Map<Object, Folder> fmap,
-        byte[] searchTypes, Resolve r, boolean timestamp,
-        ArchiveInputStream ais, ArchiveInputEntry aie,
-        List<ServiceException> errs) throws ServiceException {
+            Set<Byte> searchTypes, Resolve r, boolean timestamp,
+            ArchiveInputStream ais, ArchiveInputEntry aie,
+            List<ServiceException> errs) throws ServiceException {
         try {
             int defaultFldr;
             Mailbox mbox = fldr.getMailbox();
@@ -1402,8 +1373,9 @@ public abstract class ArchiveFormatter extends Formatter {
                 type = MailItem.TYPE_DOCUMENT;
                 view = Folder.TYPE_DOCUMENT;
             }
-            if (searchTypes != null && Arrays.binarySearch(searchTypes, type) < 0)
+            if (searchTypes != null && !searchTypes.contains(type)) {
                 return;
+            }
             if (dir.equals("")) {
                 if (fldr.getPath().equals("/"))
                     fldr = mbox.getFolderById(oc, defaultFldr);

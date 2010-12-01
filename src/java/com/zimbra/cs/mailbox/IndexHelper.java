@@ -144,7 +144,7 @@ public final class IndexHelper {
         }
     }
 
-    public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, SortBy sortBy,
+    public ZimbraQueryResults search(OperationContext octxt, String queryString, Set<Byte> types, SortBy sortBy,
             int chunkSize, boolean inDumpster) throws IOException, ServiceException {
         SearchParams params = new SearchParams();
         params.setQueryStr(queryString);
@@ -159,7 +159,7 @@ public final class IndexHelper {
         return search(SoapProtocol.Soap12, octxt, params);
     }
 
-    public ZimbraQueryResults search(OperationContext octxt, String queryString, byte[] types, SortBy sortBy,
+    public ZimbraQueryResults search(OperationContext octxt, String queryString, Set<Byte> types, SortBy sortBy,
             int chunkSize) throws IOException, ServiceException {
         return search(octxt, queryString, types, sortBy, chunkSize, false);
     }

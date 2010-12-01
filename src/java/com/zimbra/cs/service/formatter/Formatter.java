@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -93,15 +94,13 @@ public abstract class Formatter {
     public final void save(UserServlet.Context context, String contentType, Folder folder, String filename)
         throws UserServletException, IOException, ServletException, ServiceException {
 
-        Mailbox mbox = context.targetMailbox;
+        //TODO: set a large threshold for batch indexing
+        //Mailbox mbox = context.targetMailbox;
         try {
-            mbox.index.setIndexImmediatelyMode();
             saveCallback(context, contentType, folder, filename);
             updateClient(context, null);
         } catch (Exception e) {
             updateClient(context, e);
-        } finally {
-            mbox.index.clearIndexImmediatelyMode();
         }
     }
 
@@ -135,9 +134,10 @@ public abstract class Formatter {
                         query = "in:" + f.getPath() + " " + query;
                 }
                 String searchTypes = context.getTypesString();
-                if (searchTypes == null)
+                if (searchTypes == null) {
                     searchTypes = getDefaultSearchTypes();
-                byte[] types = MailboxIndex.parseTypesString(searchTypes);
+                }
+                Set<Byte> types = MailboxIndex.parseTypes(searchTypes);
                 ZimbraQueryResults results = context.targetMailbox.index.search(context.opContext, query, types,
                         SortBy.DATE_DESCENDING, context.getOffset() + context.getLimit());
                 return new QueryResultIterator(results);

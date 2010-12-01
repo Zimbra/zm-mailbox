@@ -16,9 +16,14 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.util.ZimbraLog;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.search.Sort;
@@ -391,42 +396,31 @@ public final class MailboxIndex {
         SEARCH_FOR_MESSAGES + ',' + SEARCH_FOR_NOTES + ',' +
         SEARCH_FOR_TASKS + ',' + SEARCH_FOR_WIKI;
 
-    public static byte[] parseTypesString(String groupBy) throws ServiceException {
-        String[] strs = groupBy.split("\\s*,\\s*");
+    private static final Map<String, Byte> TYPE_MAP = new ImmutableMap.Builder<String, Byte>()
+        .put(GROUP_BY_NONE, (byte) 0)
+        .put(SEARCH_FOR_CONVERSATIONS, MailItem.TYPE_CONVERSATION)
+        .put(SEARCH_FOR_MESSAGES, MailItem.TYPE_MESSAGE)
+        .put(SEARCH_FOR_CHATS, MailItem.TYPE_CHAT)
+        .put(SEARCH_FOR_CONTACTS, MailItem.TYPE_CONTACT)
+        .put(SEARCH_FOR_DOCUMENTS, MailItem.TYPE_DOCUMENT)
+        .put(SEARCH_FOR_BRIEFCASE, MailItem.TYPE_DOCUMENT)
+        .put(SEARCH_FOR_APPOINTMENTS, MailItem.TYPE_APPOINTMENT)
+        .put(SEARCH_FOR_NOTES, MailItem.TYPE_NOTE)
+        .put(SEARCH_FOR_TAGS, MailItem.TYPE_TAG)
+        .put(SEARCH_FOR_TASKS, MailItem.TYPE_TASK)
+        .put(SEARCH_FOR_WIKI, MailItem.TYPE_WIKI)
+        .build();
 
-        byte[] types = new byte[strs.length];
-        for (int i = 0; i < strs.length; i++) {
-            if (SEARCH_FOR_CONVERSATIONS.equals(strs[i])) {
-                types[i] = MailItem.TYPE_CONVERSATION;
-            } else if (SEARCH_FOR_MESSAGES.equals(strs[i])) {
-                types[i] = MailItem.TYPE_MESSAGE;
-            } else if (GROUP_BY_NONE.equals(strs[i])) {
-                types[i] = 0;
-            } else if (SEARCH_FOR_CHATS.equals(strs[i])) {
-                types[i] = MailItem.TYPE_CHAT;
-            } else if (SEARCH_FOR_CONTACTS.equals(strs[i])) {
-                types[i] = MailItem.TYPE_CONTACT;
-            } else if (SEARCH_FOR_DOCUMENTS.equals(strs[i])) {
-                types[i] = MailItem.TYPE_DOCUMENT;
-            } else if (SEARCH_FOR_BRIEFCASE.equals(strs[i])) {
-                types[i] = MailItem.TYPE_DOCUMENT;
-            } else if (SEARCH_FOR_APPOINTMENTS.equals(strs[i])) {
-                types[i] = MailItem.TYPE_APPOINTMENT;
-            } else if (SEARCH_FOR_NOTES.equals(strs[i])) {
-                types[i] = MailItem.TYPE_NOTE;
-            } else if (SEARCH_FOR_TAGS.equals(strs[i])) {
-                types[i] = MailItem.TYPE_TAG;
-            } else if (SEARCH_FOR_TASKS.equals(strs[i])) {
-                types[i] = MailItem.TYPE_TASK;
-            } else if (SEARCH_FOR_WIKI.equals(strs[i])) {
-                types[i] = MailItem.TYPE_WIKI;
-            } else {
-                throw ServiceException.INVALID_REQUEST(
-                        "unknown groupBy: " + strs[i], null);
+    public static Set<Byte> parseTypes(String types) throws ServiceException {
+        Set<Byte> result = new HashSet<Byte>();
+        for (String type : Splitter.on(',').trimResults().split(types)) {
+            Byte b = TYPE_MAP.get(type);
+            if (b == null) {
+                throw ServiceException.INVALID_REQUEST("unknown groupBy: " + type, null);
             }
+            result.add(b);
         }
-
-        return types;
+        return result;
     }
 
     /**

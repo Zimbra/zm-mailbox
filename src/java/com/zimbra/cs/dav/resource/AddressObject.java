@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
@@ -205,7 +206,7 @@ public class AddressObject extends MailItemResource {
             ZimbraLog.dav.debug("query %s", query.toString());
             try {
                 zqr = mbox.index.search(ctxt.getOperationContext(), query.toString(),
-                        new byte[] { MailItem.TYPE_CONTACT }, SortBy.NAME_ASCENDING, 10);
+                        Collections.singleton(MailItem.TYPE_CONTACT), SortBy.NAME_ASCENDING, 10);
                 if (zqr.hasNext()) {
                     ZimbraHit hit = zqr.getNext();
                     if (hit instanceof ContactHit) {

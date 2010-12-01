@@ -994,7 +994,7 @@ public abstract class ImapHandler extends ProtocolHandler {
             } catch (ServiceException e) {
                 ZimbraLog.imap.warn("Error in getting local server id", e);
             }
-            sendUntagged("ID (" + ID_PARAMS + " \"USER\" \"" + mCredentials.getUsername() + 
+            sendUntagged("ID (" + ID_PARAMS + " \"USER\" \"" + mCredentials.getUsername() +
                     (localServerId == null ? "" : "\" \"SERVER\" \"" + localServerId) + "\")");
         } else {
             sendUntagged("ID (" + ID_PARAMS + ")");
@@ -2785,7 +2785,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     private static final int RETURN_SAVE  = 0x10;
 
     private static final int LARGEST_FOLDER_BATCH = 600;
-    public static final byte[] ITEM_TYPES = ArrayUtil.toByteArray(ImapMessage.SUPPORTED_TYPES);
+    public static final Set<Byte> ITEM_TYPES = ImapMessage.SUPPORTED_TYPES;
 
     boolean doSEARCH(String tag, ImapSearch i4search, boolean byUID, Integer options) throws IOException, ImapParseException {
         return search(tag, "SEARCH", i4search, byUID, options, null);

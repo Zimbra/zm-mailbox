@@ -21,9 +21,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jivesoftware.wildfire.XMPPServer;
 
+import com.google.common.collect.Iterables;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -89,12 +91,9 @@ public class Search extends MailDocumentHandler  {
         }
         SearchParams params = SearchParams.parse(request, zsc, acct.getAttr(Provisioning.A_zimbraPrefMailInitialSearch));
         if (params.inDumpster()) {
-            byte[] types = params.getTypes();
-            if (types != null) {
-                for (byte t : types) {
-                    if (t == MailItem.TYPE_CONVERSATION)
-                        throw ServiceException.INVALID_REQUEST("cannot search for conversations in dumpster", null);
-                }
+            Set<Byte> types = params.getTypes();
+            if (types.contains(MailItem.TYPE_CONVERSATION)) {
+                throw ServiceException.INVALID_REQUEST("cannot search for conversations in dumpster", null);
             }
         }
 
@@ -186,10 +185,14 @@ public class Search extends MailDocumentHandler  {
     // Otherwise returns null.
     private static List<String> getFolderIdListIfSimpleAppointmentsQuery(SearchParams params) {
         // types = "appointment"
-        byte[] types = params.getTypes();
-        if (types == null || types.length != 1 ||
-            (types[0] != MailItem.TYPE_APPOINTMENT && types[0] != MailItem.TYPE_TASK))
+        Set<Byte> types = params.getTypes();
+        if (types.size() != 1) {
             return null;
+        }
+        byte type = Iterables.getOnlyElement(types);
+        if (type != MailItem.TYPE_APPOINTMENT && type != MailItem.TYPE_TASK) {
+            return null;
+        }
         // has time range
         if (params.getCalItemExpandStart() == -1 || params.getCalItemExpandEnd() == -1)
             return null;
@@ -243,15 +246,10 @@ public class Search extends MailDocumentHandler  {
         return str;
     }
 
-    private static void runSimpleAppointmentQuery(Element parent, SearchParams params,
-                                                  OperationContext octxt, ZimbraSoapContext zsc,
-                                                  Account authAcct, Mailbox mbox,
-                                                  List<String> folderIdStrs)
-    throws ServiceException {
-        byte itemType = MailItem.TYPE_APPOINTMENT;
-        byte[] types = params.getTypes();
-        if (types != null && types.length == 1)
-            itemType = types[0];
+    private static void runSimpleAppointmentQuery(Element parent, SearchParams params, OperationContext octxt,
+            ZimbraSoapContext zsc, Account authAcct, Mailbox mbox, List<String> folderIdStrs) throws ServiceException {
+        Set<Byte> types = params.getTypes();
+        byte itemType = types.size() == 1 ? Iterables.getOnlyElement(types) : MailItem.TYPE_APPOINTMENT;
 
         parent.addAttribute(MailConstants.A_SORTBY, params.getSortByStr());
         parent.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());

@@ -28,6 +28,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.TimerTask;
 
 import com.zimbra.common.localconfig.LC;
@@ -273,8 +274,8 @@ public class ImapSessionManager {
     private static List<ImapMessage> loadVirtualFolder(OperationContext octxt, SearchFolder search) throws ServiceException {
         List<ImapMessage> i4list = new ArrayList<ImapMessage>();
 
-        byte[] types = ImapFolder.getTypeConstraint(search);
-        if (types.length == 0)
+        Set<Byte> types = ImapFolder.getTypeConstraint(search);
+        if (types.isEmpty())
             return i4list;
 
         SearchParams params = new SearchParams();

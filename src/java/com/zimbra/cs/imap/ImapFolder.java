@@ -12,10 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Apr 30, 2005
- */
 package com.zimbra.cs.imap;
 
 import java.util.ArrayList;
@@ -23,6 +19,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -32,7 +29,6 @@ import java.util.TreeMap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
@@ -50,6 +46,9 @@ import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.zclient.ZFolder;
 
+/**
+ * @since Apr 30, 2005
+ */
 public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolderData, java.io.Serializable {
     private static final long serialVersionUID = -7279453727601658427L;
 
@@ -64,7 +63,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
     private int mUIDValidityValue;
 
     private String mQuery;
-    private byte[] mTypeConstraint = ImapHandler.ITEM_TYPES;
+    private Set<Byte> mTypeConstraint = ImapHandler.ITEM_TYPES;
 
     private List<ImapMessage>                   mSequence;
     private transient Map<Integer, ImapMessage> mMessageIds;
@@ -206,9 +205,9 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         return mQuery == null ? "" : mQuery;
     }
 
-    static byte[] getTypeConstraint(SearchFolder search) {
+    static Set<Byte> getTypeConstraint(SearchFolder search) {
         // constrain the search to the actually-requested types
-        List<Byte> types = new ArrayList<Byte>(1);
+        Set<Byte> types = new HashSet<Byte>();
         String typestr = search.getReturnTypes().toLowerCase();
         if (typestr.equals(""))
             typestr = Search.DEFAULT_SEARCH_TYPES;
@@ -220,12 +219,12 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
             else if (type.equals(MailboxIndex.SEARCH_FOR_CHATS))
                 types.add(MailItem.TYPE_CHAT);
         }
-        return ArrayUtil.toByteArray(types);
+        return types;
     }
 
     /** Returns the types of items exposed in this IMAP folder.  Defaults to
      *  {@link ImapHandler#ITEM_TYPES} except for search folders. */
-    byte[] getTypeConstraint() {
+    Set<Byte> getTypeConstraint() {
         return mTypeConstraint;
     }
 
