@@ -19,6 +19,7 @@ import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.Folder;
 
 /*
@@ -34,11 +35,11 @@ import com.zimbra.soap.mail.type.Folder;
   </folder>
 </GetFolderResponse>
  */
-@XmlRootElement(name="GetFolderResponse")
-@XmlType(propOrder = {})
+@XmlRootElement(name=MailConstants.E_GET_FOLDER_RESPONSE)
+@XmlType(propOrder = {MailConstants.E_FOLDER})
 public class GetFolderResponse {
 
-    @XmlElementRef private Folder folder;
+    @XmlElementRef(name=MailConstants.E_FOLDER) private Folder folder;
     
     public GetFolderResponse() {
     }

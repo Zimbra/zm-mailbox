@@ -38,10 +38,14 @@ import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
 import com.zimbra.soap.admin.message.ReloadLocalConfigRequest;
 import com.zimbra.soap.admin.message.ReloadLocalConfigResponse;
+import com.zimbra.soap.mail.message.ExportContactsRequest;
+import com.zimbra.soap.mail.message.ExportContactsResponse;
 import com.zimbra.soap.mail.message.GetDataSourcesRequest;
 import com.zimbra.soap.mail.message.GetDataSourcesResponse;
 import com.zimbra.soap.mail.message.GetFolderRequest;
 import com.zimbra.soap.mail.message.GetFolderResponse;
+import com.zimbra.soap.mail.message.ImportContactsRequest;
+import com.zimbra.soap.mail.message.ImportContactsResponse;
 
 public final class JaxbUtil {
 
@@ -65,8 +69,12 @@ public final class JaxbUtil {
             // zimbraMail
             GetDataSourcesRequest.class,
             GetDataSourcesResponse.class,
+            ExportContactsRequest.class,
+            ExportContactsResponse.class,
             GetFolderRequest.class,
             GetFolderResponse.class,
+            ImportContactsRequest.class,
+            ImportContactsResponse.class,
 
             // zimbraAdmin
             ReloadLocalConfigRequest.class,

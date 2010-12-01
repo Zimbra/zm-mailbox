@@ -17,6 +17,8 @@ package com.zimbra.soap.account.message;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name="GetIdentitiesRequest")
+import com.zimbra.common.soap.AccountConstants;
+
+@XmlRootElement(name=AccountConstants.E_GET_IDENTITIES_REQUEST)
 public class GetIdentitiesRequest {
 }

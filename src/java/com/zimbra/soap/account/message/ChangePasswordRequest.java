@@ -19,6 +19,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.Account;
 
 /*
@@ -29,13 +30,16 @@ import com.zimbra.soap.account.type.Account;
    [<virtualHost>{virtual-host}</virtualHost>]
  </ChangePasswordRequest>
 */
-@XmlRootElement(name="ChangePasswordRequest")
+@XmlRootElement(name=AccountConstants.E_CHANGE_PASSWORD_REQUEST)
 @XmlType(propOrder = {})
 public class ChangePasswordRequest {
-    @XmlElement(required = true) private Account account;
-    @XmlElement(required = true) private String oldPassword;
-    @XmlElement(required = true) private String password;
-    @XmlElement private String virtualHost;
+    @XmlElement(name=AccountConstants.E_ACCOUNT, required=true)
+    private Account account;
+    @XmlElement(name=AccountConstants.E_OLD_PASSWORD, required=true)
+    private String oldPassword;
+    @XmlElement(name=AccountConstants.E_PASSWORD, required=true)
+    private String password;
+    @XmlElement(name=AccountConstants.E_VIRTUAL_HOST) private String virtualHost;
     
     public ChangePasswordRequest() {
     }

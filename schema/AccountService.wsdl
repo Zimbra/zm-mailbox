@@ -19,6 +19,13 @@
     <part name="parameters" element="tns:ChangePasswordResponse"></part>
   </message>
 
+  <message name="endSessionRequest">
+    <part name="parameters" element="tns:EndSessionRequest"></part>
+  </message>
+  <message name="endSessionResponse">
+    <part name="parameters" element="tns:EndSessionResponse"></part>
+  </message>
+
   <message name="getIdentitiesRequest">
     <part name="parameters" element="tns:GetIdentitiesRequest"></part>
   </message>
@@ -56,6 +63,10 @@
       <input message="tns:changePasswordRequest"/>
       <output message="tns:changePasswordResponse"/>
     </operation>
+    <operation name="endSessionRequest">
+      <input message="tns:endSessionRequest"/>
+      <output message="tns:endSessionResponse"/>
+    </operation>
     <operation name="getIdentitiesRequest">
       <input message="tns:getIdentitiesRequest"/>
       <output message="tns:getIdentitiesResponse"/>
@@ -86,6 +97,15 @@
       </output>
     </operation>
     <operation name="changePasswordRequest">
+      <soap:operation soapAction=""></soap:operation>
+      <input>
+    <soap:body use="literal"></soap:body>
+      </input>
+      <output>
+    <soap:body use="literal"></soap:body>
+      </output>
+    </operation>
+    <operation name="endSessionRequest">
       <soap:operation soapAction=""></soap:operation>
       <input>
     <soap:body use="literal"></soap:body>

@@ -24,13 +24,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.Pref;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name="GetPrefsRequest")
-@XmlType(propOrder = {"pref"})
+@XmlRootElement(name=AccountConstants.E_GET_PREFS_REQUEST)
+@XmlType(propOrder = {AccountConstants.E_PREF})
 public class GetPrefsRequest {
-    @XmlElement(name="pref")
+    @XmlElement(name=AccountConstants.E_PREF)
     private List<Pref> pref;
 
     public void setPref(List<Pref> pref) {

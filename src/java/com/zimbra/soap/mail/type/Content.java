@@ -13,33 +13,39 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.account.message;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+package com.zimbra.soap.mail.type;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.account.type.Pref;
+import javax.xml.bind.annotation.XmlValue;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AccountConstants.E_GET_PREFS_RESPONSE)
-@XmlType(propOrder = {AccountConstants.E_PREF})
-public class GetPrefsResponse {
-    @XmlElement(name=AccountConstants.E_PREF)
-    private List<Pref> pref = new ArrayList<Pref>();
+@XmlRootElement(name="content")
+@XmlType(propOrder = {})
+public class Content {
 
-    public void setPref(List<Pref> pref) {
-        this.pref = pref;
+    @XmlAttribute(required=false, name="aid") private String attachUploadId;
+    @XmlValue private String value;
+    
+    public Content() {
+    }
+    
+    public String getAttachUploadId() {
+        return attachUploadId;
+    }
+    
+    public void setAttachUploadId(String attachUploadId) {
+        this.attachUploadId = attachUploadId;
     }
 
-    public List<Pref> getPref() {
-        return Collections.unmodifiableList(pref);
+    public String getValue() {
+        return value;
+    }
+    
+    public void setValue(String value) {
+        this.value = value;
     }
 }

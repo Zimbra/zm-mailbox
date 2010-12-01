@@ -18,12 +18,14 @@ package com.zimbra.soap.mail.message;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import com.zimbra.common.soap.MailConstants;
 
-@XmlRootElement(name="ExportContactsResponse")
-@XmlType(propOrder = {})
+@XmlRootElement(name=MailConstants.E_EXPORT_CONTACTS_RESPONSE)
+@XmlType(propOrder = {MailConstants.E_CONTENT})
 public class ExportContactsResponse {
 
-    @XmlElement private String content;
+    @XmlElement(name=MailConstants.E_CONTENT, required=true)
+    private String content;
     
     public ExportContactsResponse() {
     }

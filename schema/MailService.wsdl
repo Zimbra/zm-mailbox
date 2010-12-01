@@ -37,6 +37,14 @@
     <part name="parameters" element="tns:ExportContactsResponse"></part>
   </message>
 
+  <message name="importContactsRequest">
+    <part name="parameters" element="tns:ImportContactsRequest"></part>
+  </message>
+
+  <message name="importContactsResponse">
+    <part name="parameters" element="tns:ImportContactsResponse"></part>
+  </message>
+
   <portType name="MailService">
     <operation name="getDataSourcesRequest">
       <input message="tns:getDataSourcesRequest"/>
@@ -49,6 +57,10 @@
     <operation name="exportContactsRequest">
       <input message="tns:exportContactsRequest"/>
       <output message="tns:exportContactsResponse"/>
+    </operation>
+    <operation name="importContactsRequest">
+      <input message="tns:importContactsRequest"/>
+      <output message="tns:importContactsResponse"/>
     </operation>
   </portType>
 
@@ -73,6 +85,15 @@
       </output>
     </operation>
     <operation name="exportContactsRequest">
+      <soap:operation soapAction=""></soap:operation>
+      <input>
+        <soap:body use="literal"></soap:body>
+      </input>
+      <output>
+        <soap:body use="literal"></soap:body>
+      </output>
+    </operation>
+    <operation name="importContactsRequest">
       <soap:operation soapAction=""></soap:operation>
       <input>
         <soap:body use="literal"></soap:body>

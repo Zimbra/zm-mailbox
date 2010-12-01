@@ -13,11 +13,11 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.message;
+package com.zimbra.soap.account.message;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AccountConstants;
 
-@XmlRootElement(name=MailConstants.E_GET_DATA_SOURCES_REQUEST)
-public class GetDataSourcesRequest {
+@XmlRootElement(name=AccountConstants.E_END_SESSION_REQUEST)
+public class EndSessionRequest {
 }

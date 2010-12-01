@@ -26,6 +26,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.collect.Multimap;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.soap.account.type.Attr;
 import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.account.type.Session;
@@ -42,22 +44,27 @@ import com.zimbra.soap.account.type.Session;
    [<skin>{skin-name}</skin>]
  </AuthResponse>
  */
-@XmlRootElement(name="AuthResponse")
+@XmlRootElement(name=AccountConstants.E_AUTH_RESPONSE)
 @XmlType(propOrder = {})
 public class AuthResponse {
 
-    @XmlElement(required=true) private String authToken;
-    @XmlElement(required=true) private long lifetime;
-    @XmlElement                private Session session;
-    @XmlElement                private String refer;
-    @XmlElement                private String skin;
+    @XmlElement(name=AccountConstants.E_AUTH_TOKEN, required=true)
+    private String authToken;
+    @XmlElement(name=AccountConstants.E_LIFETIME, required=true)
+    private long lifetime;
+    @XmlElement(name=HeaderConstants.E_SESSION)
+    private Session session;
+    @XmlElement(name=AccountConstants.E_REFERRAL)
+    private String refer;
+    @XmlElement(name=AccountConstants.E_SKIN)
+    private String skin;
     
-    @XmlElementWrapper(name="prefs")
-    @XmlElement(name="pref")
+    @XmlElementWrapper(name=AccountConstants.E_PREFS)
+    @XmlElement(name=AccountConstants.E_PREF)
     private List<Pref> prefs = new ArrayList<Pref>();
     
-    @XmlElementWrapper(name="attrs")
-    @XmlElement(name="attr")
+    @XmlElementWrapper(name=AccountConstants.E_ATTRS)
+    @XmlElement(name=AccountConstants.E_ATTR)
     private List<Attr> attrs = new ArrayList<Attr>();
     
     public AuthResponse() {

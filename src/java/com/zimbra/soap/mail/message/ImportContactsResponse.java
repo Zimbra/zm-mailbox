@@ -13,33 +13,32 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.account.message;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+package com.zimbra.soap.mail.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.account.type.Pref;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.mail.type.ImportContact;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AccountConstants.E_GET_PREFS_RESPONSE)
-@XmlType(propOrder = {AccountConstants.E_PREF})
-public class GetPrefsResponse {
-    @XmlElement(name=AccountConstants.E_PREF)
-    private List<Pref> pref = new ArrayList<Pref>();
+@XmlRootElement(name=MailConstants.E_IMPORT_CONTACTS_RESPONSE)
+@XmlType(propOrder = {MailConstants.E_CONTACT})
+public class ImportContactsResponse {
 
-    public void setPref(List<Pref> pref) {
-        this.pref = pref;
+    @XmlElement(name=MailConstants.E_CONTACT, required=true)
+    private ImportContact cn;
+    
+    public ImportContactsResponse() {
     }
-
-    public List<Pref> getPref() {
-        return Collections.unmodifiableList(pref);
+    
+    public ImportContact getContact() {
+        return cn;
+    }
+    
+    public void setContact(ImportContact contact) {
+        this.cn = contact;
     }
 }

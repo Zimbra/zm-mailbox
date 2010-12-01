@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.Signature;
 
-@XmlRootElement(name="GetSignaturesResponse")
+@XmlRootElement(name=AccountConstants.E_GET_SIGNATURES_RESPONSE)
 @XmlType(propOrder = {})
 public class GetSignaturesResponse {
 

@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.Folder;
 
 /*
@@ -28,13 +29,16 @@ import com.zimbra.soap.mail.type.Folder;
 </GetFolderRequest>
 
  */
-@XmlRootElement(name="GetFolderRequest")
+@XmlRootElement(name=MailConstants.E_GET_FOLDER_REQUEST)
 @XmlType(propOrder = {})
 public class GetFolderRequest {
 
-    @XmlAttribute(name="visible") private Boolean isVisible;
-    @XmlAttribute private boolean needGranteeName;
-    @XmlElement private Folder folder;
+    @XmlAttribute(name=MailConstants.A_VISIBLE)
+    private Boolean isVisible;
+    @XmlAttribute(name=MailConstants.A_NEED_GRANTEE_NAME)
+    private boolean needGranteeName;
+    @XmlElement(name=MailConstants.E_FOLDER)
+    private Folder folder;
     
     public GetFolderRequest() {
     }
