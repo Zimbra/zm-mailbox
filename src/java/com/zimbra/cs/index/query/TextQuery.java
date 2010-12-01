@@ -29,7 +29,6 @@ import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanClause.Occur;
 
-import com.google.common.base.Preconditions;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.index.LuceneFields;
@@ -69,7 +68,7 @@ public class TextQuery extends Query {
     }
 
     protected TextQuery(Mailbox mbox, TokenStream stream, String field, String text) throws ServiceException {
-        mailbox = Preconditions.checkNotNull(mbox);
+        mailbox = mbox;
         this.field = field;
         this.term = text;
         oredTokens = new LinkedList<String>();
@@ -107,16 +106,16 @@ public class TextQuery extends Query {
 
             if (wcToken.length() > 0) {
                 wildcardTerm = wcToken;
-                MailboxIndex mbidx = mbox.getMailboxIndex();
-                List<String> expandedTokens = new ArrayList<String>(100);
                 boolean expandedAllTokens = false;
-                if (mbidx != null) {
+                List<String> expandedTokens = new ArrayList<String>(100);
+                if (mailbox != null) {
+                    MailboxIndex mbidx = mbox.getMailboxIndex();
                     expandedAllTokens = mbidx.expandWildcardToken(
                             expandedTokens, field, wcToken, MAX_WILDCARD_TERMS);
+                    queryInfo.add(new WildcardExpansionQueryInfo(wcToken + "*",
+                            expandedTokens.size(), expandedAllTokens));
                 }
 
-                queryInfo.add(new WildcardExpansionQueryInfo(wcToken + "*",
-                        expandedTokens.size(), expandedAllTokens));
                 //
                 // By design, we interpret *zero* tokens to mean "ignore this search term"
                 // therefore if the wildcard expands to no terms, we need to stick something
@@ -157,10 +156,6 @@ public class TextQuery extends Query {
             // we pass NULL to addClause which will add a blank clause for us...
             return new NoTermQueryOperation();
         } else {
-            // indexing is disabled
-            if (mailbox.getMailboxIndex() == null)
-                return new NoTermQueryOperation();
-
             LuceneQueryOperation op = new LuceneQueryOperation();
 
             for (QueryInfo inf : queryInfo) {

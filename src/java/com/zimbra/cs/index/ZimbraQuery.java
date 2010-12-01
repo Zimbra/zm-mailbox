@@ -16,6 +16,7 @@
 package com.zimbra.cs.index;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -49,18 +50,16 @@ import com.zimbra.common.soap.SoapProtocol;
  * <ol>
  *  <li>Constructor
  *  <ol>
- *   <li>Parse the query string, turn it into a list of {@link Query}'s. This is
- *   done by the JavaCC-generated {@link QueryParser}.
- *   <li>Push "not's" down to the leaves, so that we never have to invert result
- *   sets. See the internal {@link ParseTree} class.
- *   <li>Generate a {@link QueryOperation} (which is usually a tree of
- *   {@link QueryOperation} objects) from the {@link ParseTree}, then optimize
- *   them {@link QueryOperation}s in preparation to run the query.
+ *   <li>Parse the query string, turn it into a list of {@link Query}'s. This is done by the JavaCC-generated
+ *   {@link QueryParser}.
+ *   <li>Push "not's" down to the leaves, so that we never have to invert result sets. See the internal
+ *   {@link ParseTree} class.
+ *   <li>Generate a {@link QueryOperation} (which is usually a tree of {@link QueryOperation} objects) from the
+ *   {@link ParseTree}, then optimize them {@link QueryOperation}s in preparation to run the query.
  *  </ol>
- *  <li>{@link #execute()} - Begin the search, get the {@link ZimbraQueryResults}
- *  iterator.
+ *  <li>{@link #execute()} - Begin the search, get the {@link ZimbraQueryResults} iterator.
  * </ol>
- * long-standing TODO is to move ParseTree classes out of this class.
+ * TODO: move ParseTree classes out of this class
  *
  * @author tim
  * @author ysasaki
@@ -413,6 +412,15 @@ public final class ZimbraQuery {
 
         Analyzer analyzer = null;
         MailboxIndex index = mbox.getMailboxIndex();
+        Set<Byte> types;
+        if (params.getTypes() != null) {
+            types = new HashSet<Byte>();
+            for (byte type : params.getTypes()) {
+                types.add(type);
+            }
+        } else {
+            types = Collections.emptySet();
+        }
 
         // Step 1: parse the text using the JavaCC parser
         try {
@@ -424,6 +432,7 @@ public final class ZimbraQuery {
             }
             QueryParser parser = new QueryParser(mbox, analyzer);
             parser.setDefaultField(params.getDefaultField());
+            parser.setTypes(types);
             parser.setTimeZone(params.getTimeZone());
             parser.setLocale(params.getLocale());
             mClauses = parser.parse(params.getQueryStr());
@@ -433,8 +442,7 @@ public final class ZimbraQuery {
                 handleSortByOverride(sortBy);
             }
         } catch (Error e) {
-            throw ServiceException.FAILURE(
-                    "ZimbraQueryParser threw Error: " + e, e);
+            throw ServiceException.PARSE_ERROR("PARSER_ERROR", e);
         }
 
         if (ZimbraLog.index_search.isDebugEnabled()) {
@@ -670,15 +678,8 @@ public final class ZimbraQuery {
                 Set<Folder> hasFolderRightPrivateSet = new HashSet<Folder>();
 
                 // ...don't do any of this if they aren't asking for a calendar type...
-                boolean hasCalendarType = false;
-                if (params.getTypes() != null) {
-                    for (byte b : params.getTypes()) {
-                        if (b == MailItem.TYPE_APPOINTMENT || b == MailItem.TYPE_TASK) {
-                            hasCalendarType = true;
-                            break;
-                        }
-                    }
-                }
+                boolean hasCalendarType =
+                    types.contains(MailItem.TYPE_APPOINTMENT) || types.contains(MailItem.TYPE_TASK);
                 if (hasCalendarType && !allowPrivateAccess && countSearchTextOperations(localOps)>0) {
                     // the searcher is NOT allowed to see private items globally....lets check
                     // to see if there are any individual folders that they DO have rights to...
