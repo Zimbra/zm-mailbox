@@ -1067,6 +1067,7 @@ public final class LC {
     public static final KnownKey ldap_dit_naming_rdn_attr_zimlet       = KnownKey.newKey("");
     // LDAP Custom DIT base DN for LDAP admin entries
     public static final KnownKey ldap_dit_base_dn_admin         = KnownKey.newKey("");
+    public static final KnownKey command_line_editing_enabled = KnownKey.newKey(true);
     
     static {
         // Automatically set the key name with the variable name.
