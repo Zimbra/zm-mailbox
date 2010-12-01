@@ -53,7 +53,6 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.dom4j.QName;
 import org.json.JSONException;
 
-import com.google.common.collect.Lists;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
@@ -134,7 +133,11 @@ import com.zimbra.soap.mail.message.GetDataSourcesRequest;
 import com.zimbra.soap.mail.message.GetDataSourcesResponse;
 import com.zimbra.soap.mail.message.GetFolderRequest;
 import com.zimbra.soap.mail.message.GetFolderResponse;
+import com.zimbra.soap.mail.message.ImportContactsRequest;
+import com.zimbra.soap.mail.message.ImportContactsResponse;
+import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
+import com.zimbra.soap.mail.type.ImportContact;
 import com.zimbra.soap.type.CalDataSource;
 import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.ImapDataSource;
@@ -987,7 +990,7 @@ public class ZMailbox implements ToZJSONObject {
     @SuppressWarnings("unchecked")
     public List<ZTag> getAllTags() throws ServiceException {
         populateTagCache();
-        List result = new ArrayList<ZTag>(mNameToTag.values());
+        List <ZTag> result = new ArrayList<ZTag>(mNameToTag.values());
         Collections.sort(result);
         return result;
     }
@@ -1459,6 +1462,12 @@ public class ZMailbox implements ToZJSONObject {
             mCount = response.getAttributeLong(MailConstants.A_NUM);
         }
 
+        public ZImportContactsResult(ImportContactsResponse res) {
+            ImportContact impCntct = res.getContact();
+            mIds = impCntct.getListOfCreatedIds();
+            mCount = impCntct.getNumImported();
+        }
+
         public String getIds() {
             return mIds;
         }
@@ -1471,12 +1480,14 @@ public class ZMailbox implements ToZJSONObject {
     public static final String CONTACT_IMPORT_TYPE_CSV = "csv";
 
     public ZImportContactsResult importContacts(String folderId, String type, String attachmentId) throws ServiceException {
-    	Element req = newRequestElement(MailConstants.IMPORT_CONTACTS_REQUEST);
-    	req.addAttribute(MailConstants.A_CONTENT_TYPE, type);
-    	req.addAttribute(MailConstants.A_FOLDER, folderId);
-    	Element content = req.addUniqueElement(MailConstants.E_CONTENT);
-    	content.addAttribute(MailConstants.A_ATTACHMENT_ID, attachmentId);
-    	return new ZImportContactsResult(invoke(req).getElement(MailConstants.E_CONTACT));
+        ImportContactsRequest request = new ImportContactsRequest();
+        request.setContentType(type);
+        request.setFolderId(folderId);
+        Content importContent = new Content();
+        importContent.setAttachUploadId(attachmentId);
+        request.setContent(importContent);
+        ImportContactsResponse res = this.invokeJaxb(request);
+        return new ZImportContactsResult(res);
     }
 
 

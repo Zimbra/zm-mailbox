@@ -25,6 +25,7 @@ import javax.mail.util.ByteArrayDataSource;
 
 import junit.framework.TestCase;
 
+import org.testng.Assert;
 import org.testng.TestNG;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -49,6 +50,7 @@ import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.ContactSortBy;
 import com.zimbra.cs.zclient.ZMailbox.ZAttachmentInfo;
+import com.zimbra.cs.zclient.ZMailbox.ZImportContactsResult;
 
 
 public class TestContacts
@@ -290,6 +292,23 @@ extends TestCase {
     throws Exception {
         InputStream in = contact.getAttachmentData(attachmentName);
         return ByteUtil.getContent(in, 0);
+    }
+    
+    /**
+     * test zclient contact import
+     */
+    @Test
+    public void testImportContacts()
+    throws Exception {
+        int timeout = (int) Constants.MILLIS_PER_MINUTE;
+        long contactNum = 1;
+        String folderId = Integer.toString(Mailbox.ID_FOLDER_CONTACTS);
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String csvText = "\"email\",\"fullName\"\n\"testImportContacts@example.org\",\"" + NAME_PREFIX + " testImportContacts\"";
+        String attachmentId = mbox.uploadAttachment("ImportContacts.csv", csvText.getBytes(), "text/plain", timeout);
+
+        ZImportContactsResult res = mbox.importContacts(folderId, ZMailbox.CONTACT_IMPORT_TYPE_CSV, attachmentId);
+        Assert.assertEquals(res.getCount(), contactNum, "Number of contacts imported");
     }
     
     @AfterMethod
