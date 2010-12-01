@@ -27,19 +27,17 @@ import org.jivesoftware.wildfire.XMPPServer;
 
 import com.google.common.collect.Iterables;
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
-
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.im.provider.ZimbraRoutingTableImpl;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.QueryInfo;
@@ -49,17 +47,17 @@ import com.zimbra.cs.index.SearchParams.ExpandResults;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.cache.CacheToXML;
 import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache;
+import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarData;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
-import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
@@ -402,7 +400,7 @@ public class Search extends MailDocumentHandler  {
                 queryStr.append("inid:\"").append(ifmt.formatItemId(folderId)).append("\"");
             }
         }
-        Element req = new JSONElement(MailConstants.SEARCH_REQUEST);
+        Element req = zsc.createElement(MailConstants.SEARCH_REQUEST);
         req.addAttribute(MailConstants.A_SEARCH_TYPES, params.getTypesStr());
         req.addAttribute(MailConstants.A_SORTBY, params.getSortByStr());
         req.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
