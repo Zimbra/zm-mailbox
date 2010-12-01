@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.zclient.ZClientException;
@@ -29,9 +28,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
+import com.zimbra.cs.zclient.ZMessage;
 
 public class TestMaxMessageSize
 extends TestCase {
@@ -56,8 +55,8 @@ extends TestCase {
     throws Exception {
         setMaxMessageSize(TEST_MAX_MESSAGE_SIZE);
         Map<String, byte[]> attachments = new HashMap<String, byte[]>();
-        attachments.put("file1.exe", new byte[500]);
-        attachments.put("file2.exe", new byte[600]);
+        attachments.put("file1.exe", new byte[200]);
+        attachments.put("file2.exe", new byte[300]);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String aid = mbox.uploadAttachments(attachments, 5000);
         TestUtil.sendMessage(mbox, USER_NAME, NAME_PREFIX, "Message size below threshold", aid);
@@ -88,10 +87,10 @@ extends TestCase {
     throws Exception {
         setMaxMessageSize(TEST_MAX_MESSAGE_SIZE);
         
-        // Upload attachment whose is 70% of the threshold.  If this number
+        // Upload attachment whose size is 50% of the threshold.  If this number
         // gets incremented twice, it would exceed the threshold.
         Map<String, byte[]> attachments = new HashMap<String, byte[]>();
-        attachments.put("file1.exe", new byte[(int) (TEST_MAX_MESSAGE_SIZE * 0.7)]);
+        attachments.put("file1.exe", new byte[(int) (TEST_MAX_MESSAGE_SIZE * 0.5)]);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         String aid = mbox.uploadAttachments(attachments, 5000);
 

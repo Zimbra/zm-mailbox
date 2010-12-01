@@ -401,22 +401,12 @@ public class MailSender {
     public ItemId sendMimeMessage(OperationContext octxt, Mailbox mbox, MimeMessage mm)
     throws ServiceException {
         try {
-            long maxSize = 0;
-            try {
-                Config config = Provisioning.getInstance().getConfig();
-                maxSize = config.getIntAttr(Provisioning.A_zimbraMtaMaxMessageSize, -1);
-            } catch (ServiceException e) {
-                ZimbraLog.mailbox.warn("Unable to determine max message size.  Disabling limit check.", e);
-            }
-            if (maxSize < 0) {
-                maxSize = Long.MAX_VALUE;
-            }
-
+            long maxSize = Provisioning.getInstance().getConfig().getMtaMaxMessageSize();
             int size = mm.getSize();
             if (size == -1) {
                 size = (int) ByteUtil.getDataLength(Mime.getInputStream(mm));
             }
-
+            
             if (size > maxSize) {
                 throw MailServiceException.MESSAGE_TOO_BIG(maxSize, size);
             }
