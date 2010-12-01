@@ -400,9 +400,7 @@ public class Mailbox {
     private MailboxLock    mMaintenance = null;
     private IMPersona      mPersona = null;
     private MailboxVersion mVersion = null;
-
-    /** used by finishInitialization() to make sure the init steps happen only once */
-    private boolean mInitializationComplete = false;
+    private volatile boolean open = false;
 
     protected Mailbox(MailboxData data) {
         mId   = data.id;
@@ -412,22 +410,31 @@ public class Mailbox {
         // index init done in finishInitialization()
     }
 
+    boolean isOpen() {
+        return open;
+    }
+
     /**
-     * Called by the MailboxManager before returning the mailbox, this
-     * function makes sure the Mailbox is fully initialized (index initialized,
-     * version check, etc etc).
+     * Called by the MailboxManager before returning the mailbox, this function makes sure the Mailbox is ready to use
+     * (index initialized, version check, etc etc).
+     * <p>
+     * Any mailbox-open steps that require I/O should be done in this API and not in the Mailbox constructor since the
+     * Mailbox constructor can conceivably be run twice in a race (even though the MailboxManager makes sure only one
+     * instance of a particular mailbox "wins").
      *
-     * Any mailbox-initialization steps that require I/O should be done in this
-     * API and not in the Mailbox constructor since the Mailbox constructor can
-     * conceivably be run twice in a race (even though the MailboxMgr makes sure
-     * only one instance of a particular mailbox "wins")
-     *
-     * @return TRUE if we did some work (this was the mailbox's first init) or
-     *         FALSE if mailbox was already initialized
+     * @return TRUE if we did some work (this was the mailbox's first open) or FALSE if mailbox was already opened
      * @throws ServiceException
      */
-    synchronized boolean finishInitialization() throws ServiceException {
-        if (!mInitializationComplete) {
+    boolean open() throws ServiceException {
+        if (open) { // already opened
+            return false;
+        }
+
+        synchronized (this) {
+            if (open) { // double checked locking
+                return false;
+            }
+
             // init the index
             if (!DebugConfig.disableIndexing)
                 mIndexHelper.instantiateMailboxIndex();
@@ -481,12 +488,10 @@ public class Mailbox {
                 migrateWikiFolders();
                 updateVersion(new MailboxVersion((short) 1, (short) 10));
             }
-            
+
             // done!
-            mInitializationComplete = true;
-            return true;
+            return open = true;
         }
-        return false;
     }
 
     /** Returns the server-local numeric ID for this mailbox.  To get a
@@ -4962,7 +4967,7 @@ public class Mailbox {
         } finally {
             ByteUtil.closeStream(is);
         }
-        
+
         String digest = staged.getDigest();
         int size = (int) staged.getSize();
 
@@ -6373,7 +6378,7 @@ public class Mailbox {
         FeedManager.SubscriptionData<?> sdata = FeedManager.retrieveRemoteDatasource(getAccount(), url, fsd);
         importFeedInternal(octxt, folder, url, subscription, fsd, sdata);
     }
-    
+
     private synchronized void importFeedInternal(OperationContext octxt, Folder folder,
                                                  String url, boolean subscription, Folder.SyncData fsd,
                                                  FeedManager.SubscriptionData<?> sdata)
@@ -6535,7 +6540,7 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
+
     private void emptyLargeFolder(OperationContext octxt, int folderId, boolean removeSubfolders, int batchSize)
     throws ServiceException {
         ZimbraLog.mailbox.debug("Emptying large folder %s, removeSubfolders=%b, batchSize=%d",
@@ -6560,7 +6565,7 @@ public class Mailbox {
             }
         }
         int lastChangeID = octxt != null && octxt.change != -1 ? octxt.change : getLastChangeID();
-        
+
         QueryParams params = new QueryParams();
         params.setFolderIds(folderIds).setModifiedSequenceBefore(lastChangeID + 1).setRowLimit(batchSize);
         params.setExcludedTypes(MailItem.TYPE_FOLDER, MailItem.TYPE_MOUNTPOINT, MailItem.TYPE_SEARCHFOLDER);
@@ -7060,7 +7065,7 @@ public class Mailbox {
 
         String digest = staged.getDigest();
         int size = (int) staged.getSize();
-        
+
         synchronized (this) {
             SaveChat redoRecorder = new SaveChat(mId, id, digest, size, -1, 0, null);
 
@@ -7732,7 +7737,7 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
+
     private static final String CN_ID         = "id";
     private static final String CN_ACCOUNT_ID = "account_id";
     private static final String CN_NEXT_ID    = "next_item_id";

@@ -430,69 +430,71 @@ public class MailboxManager {
 
         long startTime = ZimbraPerf.STOPWATCH_MBOX_GET.start();
 
+        Mailbox mbox = null;
         synchronized (this) {
             // check to see if the mailbox has already been cached
             Object cached = retrieveFromCache(mailboxId, true);
             if (cached instanceof Mailbox) {
-                ZimbraPerf.STOPWATCH_MBOX_GET.stop(startTime);
                 ZimbraPerf.COUNTER_MBOX_CACHE.increment(100);
-                return (Mailbox) cached;
-            }
-        }
-
-        if (fetchMode == FetchMode.ONLY_IF_CACHED)
-            return null;
-
-        ZimbraPerf.COUNTER_MBOX_CACHE.increment(0);
-        MailboxData data;
-        synchronized (DbMailbox.getSynchronizer()) {
-            Connection conn = null;
-            try {
-                // fetch the Mailbox data from the database
-                conn = DbPool.getConnection();
-                data = DbMailbox.getMailboxStats(conn, mailboxId);
-                if (data == null)
-                    throw MailServiceException.NO_SUCH_MBOX(mailboxId);
-            } finally {
-                if (conn != null)
-                    DbPool.quietClose(conn);
-            }
-        }
-
-        Mailbox mbox = instantiateMailbox(data);
-
-        if (!skipMailHostCheck) {
-            // The host check here makes sure that sessions that were
-            // already connected at the time of mailbox move are not
-            // allowed to continue working with this mailbox which is
-            // essentially a soft-deleted copy.  The WRONG_HOST
-            // exception forces the clients to reconnect to the new
-            // server.
-            Account account = mbox.getAccount();
-            if (!Provisioning.onLocalServer(account))
-                throw ServiceException.WRONG_HOST(account.getMailHost(), null);
-        }
-
-        synchronized (this) {
-            // avoid the race condition by re-checking the cache and using that data (if any)
-            Object cached = retrieveFromCache(mailboxId, false);
-            if (cached instanceof Mailbox) {
                 mbox = (Mailbox) cached;
-            } else {
-                // cache the newly-created Mailbox object
-                if (cached instanceof MailboxLock)
-                    ((MailboxLock) cached).cacheMailbox(mbox);
-                else
-                    cacheMailbox(mbox);
             }
         }
 
-        // now, make sure the mailbox is initialized -- we do this after releasing
-        // the Mgr lock so that filesystem IO and other longer operations don't
-        // block the system
-        if (mbox.finishInitialization()) {
-            // if TRUE, then this was the mailbox's first initialization, so we need to
-            // notify listeners of the mailbox being loaded
+        if (fetchMode == FetchMode.ONLY_IF_CACHED && (mbox == null || !mbox.isOpen())) {
+            // if the mailbox is in the middle of opening, deem it not cached rather than waiting.
+            return null;
+        }
+
+        if (mbox == null) { // not found in cache
+            ZimbraPerf.COUNTER_MBOX_CACHE.increment(0);
+            MailboxData data;
+            synchronized (DbMailbox.getSynchronizer()) {
+                Connection conn = null;
+                try {
+                    // fetch the Mailbox data from the database
+                    conn = DbPool.getConnection();
+                    data = DbMailbox.getMailboxStats(conn, mailboxId);
+                    if (data == null)
+                        throw MailServiceException.NO_SUCH_MBOX(mailboxId);
+                } finally {
+                    if (conn != null)
+                        DbPool.quietClose(conn);
+                }
+            }
+
+            mbox = instantiateMailbox(data);
+
+            if (!skipMailHostCheck) {
+                // The host check here makes sure that sessions that were
+                // already connected at the time of mailbox move are not
+                // allowed to continue working with this mailbox which is
+                // essentially a soft-deleted copy.  The WRONG_HOST
+                // exception forces the clients to reconnect to the new
+                // server.
+                Account account = mbox.getAccount();
+                if (!Provisioning.onLocalServer(account))
+                    throw ServiceException.WRONG_HOST(account.getMailHost(), null);
+            }
+
+            synchronized (this) {
+                // avoid the race condition by re-checking the cache and using that data (if any)
+                Object cached = retrieveFromCache(mailboxId, false);
+                if (cached instanceof Mailbox) {
+                    mbox = (Mailbox) cached;
+                } else {
+                    // cache the newly-created Mailbox object
+                    if (cached instanceof MailboxLock)
+                        ((MailboxLock) cached).cacheMailbox(mbox);
+                    else
+                        cacheMailbox(mbox);
+                }
+            }
+        }
+
+        // now, make sure the mailbox is opened -- we do this after releasing MailboxManager lock so that filesystem IO
+        // and other longer operations don't block the system.
+        if (mbox.open()) {
+            // if TRUE, then the mailbox is actually opened, so we need to notify listeners of the mailbox being loaded
             notifyMailboxLoaded(mbox);
         }
 
@@ -788,10 +790,9 @@ public class MailboxManager {
             }
         } while (mbox == null);
 
-        // now, make sure the mailbox is initialized -- we do this after releasing
-        // the Mgr lock so that filesystem IO and other longer operations don't
-        // block the system
-        if (mbox.finishInitialization())
+        // now, make sure the mailbox is opened -- we do this after releasing the MailboxManager lock so that filesystem
+        // IO and other longer operations don't block the system.
+        if (mbox.open())
             notifyMailboxCreated(mbox);
 
         return mbox;
