@@ -15,6 +15,13 @@
 
 package com.zimbra.common.util;
 
+import java.io.File;
+import java.io.IOException;
+
+import jline.ConsoleReader;
+import jline.ConsoleReaderInputStream;
+import jline.History;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.net.SocketFactories;
 import org.apache.commons.cli.CommandLine;
@@ -79,5 +86,31 @@ public class CliUtil {
             return null;
         }
         return opt.getValue();
+    }
+    
+    /**
+     * Turns on command line editing with JLine.  
+     * @param histFilePath path to the history file, or {@code null} to not save history
+     * @throws IOException if the history file is not writable or cannot be created
+     */
+    public static void enableCommandLineEditing(String histFilePath)
+    throws IOException {
+        File histFile = null;
+        if (histFilePath != null) {
+            histFile = new File(histFilePath);
+            if (!histFile.exists()) {
+                if (!histFile.createNewFile()) {
+                    throw new IOException("Unable to create history file " + histFilePath);
+                }
+            }
+            if (!histFile.canWrite()) {
+                throw new IOException (histFilePath + " is not writable");
+            }
+        }
+        ConsoleReader reader = new ConsoleReader();
+        if (histFile != null) {
+            reader.setHistory(new History(histFile));
+        }
+        ConsoleReaderInputStream.setIn(reader);
     }
 }
