@@ -15,6 +15,7 @@
 package com.zimbra.cs.gal;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -105,6 +106,9 @@ public class GalSearchConfig {
 			        groupHandlerClass = domain.getAttr(Provisioning.A_zimbraGalLdapGroupHandlerClass);
 				mRules = new LdapGalMapRules(attrs, valueMap, groupHandlerClass);
 			}
+			
+			if (StringUtil.isNullOrEmpty(mFilter))
+			    throw ServiceException.INVALID_REQUEST("missing GAL filter", null);
 			
 			mFilter = GalUtil.expandFilter(null, mFilter, "", null, false);
 		}
