@@ -85,7 +85,6 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
-import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.BrowseResult.DomainItem;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
@@ -388,9 +387,7 @@ public class Mailbox {
     private MailboxLock    mMaintenance = null;
     private IMPersona      mPersona = null;
     private MailboxVersion mVersion = null;
-
-    /** used by finishInitialization() to make sure the init steps happen only once */
-    private boolean mInitializationComplete = false;
+    private volatile boolean open = false;
 
     protected Mailbox(MailboxData data) {
         mId   = data.id;
@@ -400,22 +397,31 @@ public class Mailbox {
         // index init done in finishInitialization()
     }
 
+    boolean isOpen() {
+        return open;
+    }
+
     /**
-     * Called by the MailboxManager before returning the mailbox, this
-     * function makes sure the Mailbox is fully initialized (index initialized,
-     * version check, etc etc).
+     * Called by the MailboxManager before returning the mailbox, this function makes sure the Mailbox is ready to use
+     * (index initialized, version check, etc etc).
+     * <p>
+     * Any mailbox-open steps that require I/O should be done in this API and not in the Mailbox constructor since the
+     * Mailbox constructor can conceivably be run twice in a race (even though the MailboxManager makes sure only one
+     * instance of a particular mailbox "wins").
      *
-     * Any mailbox-initialization steps that require I/O should be done in this
-     * API and not in the Mailbox constructor since the Mailbox constructor can
-     * conceivably be run twice in a race (even though the MailboxMgr makes sure
-     * only one instance of a particular mailbox "wins")
-     *
-     * @return TRUE if we did some work (this was the mailbox's first init) or
-     *         FALSE if mailbox was already initialized
+     * @return TRUE if we did some work (this was the mailbox's first open) or FALSE if mailbox was already opened
      * @throws ServiceException
      */
-    synchronized boolean finishInitialization() throws ServiceException {
-        if (!mInitializationComplete) {
+    boolean open() throws ServiceException {
+        if (open) { // already opened
+            return false;
+        }
+
+        synchronized (this) {
+            if (open) { // double checked locking
+                return false;
+            }
+
             // init the index
             if (!DebugConfig.disableIndexing)
                 index.instantiateMailboxIndex();
@@ -471,10 +477,8 @@ public class Mailbox {
             }
 
             // done!
-            mInitializationComplete = true;
-            return true;
+            return open = true;
         }
-        return false;
     }
 
     /** Returns the server-local numeric ID for this mailbox.  To get a
