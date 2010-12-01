@@ -33,6 +33,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -108,6 +109,15 @@ public class CreateCalendarItem extends CalendarRequest {
             dat.mInvite.setNeverSent(true);
         }
 
-        return sendCalendarMessage(zsc, octxt, iidFolder.getId(), acct, mbox, dat, response);
+        sendCalendarMessage(zsc, octxt, iidFolder.getId(), acct, mbox, dat, response);
+        boolean echo = request.getAttributeBool(MailConstants.A_CAL_ECHO, false);
+        if (echo && dat.mAddInvData != null) {
+            ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+            int maxSize = (int) request.getAttributeLong(MailConstants.A_MAX_INLINED_LENGTH, 0);
+            boolean wantHTML = request.getAttributeBool(MailConstants.A_WANT_HTML, false);
+            boolean neuter = request.getAttributeBool(MailConstants.A_NEUTER, true);
+            echoAddedInvite(response, ifmt, octxt, mbox, dat.mAddInvData, maxSize, wantHTML, neuter);
+        }
+        return response;
     }
 }

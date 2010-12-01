@@ -46,7 +46,10 @@
 //    This is the API to create a new Appointment, optionally  sending out
 //  meeting Invitations to other people.
 //
-<CreateAppointmentRequest>
+<CreateAppointmentRequest
+    [echo="1"]  // if specified, the created appointment is echoed back in the response as if a GetMsgRequest was made
+    [max="{max-inlined-length}"] [html="*0|1"] [neuter="0|*1"]  // options for echoing
+>
   <m f="{flags}" l="{folder}">  // See soap.txt for complete list of attrs on <m>
      [<e .../>*]  // users to send request to
      <su>{subject}</su>
@@ -427,7 +430,9 @@ RECURRENCE SPECIFIERS!
  <bymonth>,<byweekno>.... --- TODO 
 ----------------------
 
-<CreateAppointmentResponse calItemId="APPOINTMENT-ID" invId="invite-message-id" ms="change-sequence" rev="revision"/>
+<CreateAppointmentResponse calItemId="APPOINTMENT-ID" invId="invite-message-id" ms="change-sequence" rev="revision">
+  [<m .../>]  // if echo="1" was specified in the request
+</CreateAppointmentResponse>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -831,11 +836,15 @@ OR
 //
 <ModifyAppointmentRequest id="INVITE_ID_OF_DEFAULT_INVITE" comp="COMPONENT_NUM_DEFAULT_INVITE"
     ms="change-sequence of fetched version" rev="revision of fetched version"
+    [echo="1"]  // if specified, the modified appointment is echoed back in the response as if a GetMsgRequest was made
+    [max="{max-inlined-length}"] [html="*0|1"] [neuter="0|*1"]  // options for echoing
 >
    rest is SAME as CreateAppointmentRequest
 </ModifyAppointmentRequest>
 
-<ModifyAppointmentResponse calItemId="appointment-id" invId="invite-message-id" ms="change-sequence" rev="revision"/>
+<ModifyAppointmentResponse calItemId="appointment-id" invId="invite-message-id" ms="change-sequence" rev="revision">
+  [<m .../>]  // if echo="1" was specified in the request
+</ModifyAppointmentResponse>
 
 "ms" and "rev" are used for conflict detection.  By setting these, the request indicates
 which version of the appointment it is attempting to modify.  If the appointment was updated on
@@ -874,6 +883,8 @@ the server between the fetch and modify, an INVITE_OUT_OF_DATE exception will be
 //
 <CreateAppointmentExceptionRequest id="ID_DEFAULT_INVITE" comp="COMP_DEFAULT_INVITE"
     ms="change-sequence of fetched series" rev="revision of fetched series"
+    [echo="1"]  // if specified, the created exception is echoed back in the response as if a GetMsgRequest was made
+    [max="{max-inlined-length}"] [html="*0|1"] [neuter="0|*1"]  // options for echoing
 >
 
   Just like CreateAppointmentRequest above:
