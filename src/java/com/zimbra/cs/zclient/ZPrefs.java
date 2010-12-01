@@ -207,7 +207,7 @@ public class ZPrefs {
     
     public String getForwardIncludeOriginalText() { return get(Provisioning.A_zimbraPrefForwardIncludeOriginalText); }
     public boolean getForwardIncludeAsAttachment() { return "includeAsAttachment".equals(getForwardIncludeOriginalText()); }
-    public boolean getForwardIncludeBody() { return "includeBody".equals(getForwardIncludeOriginalText()); }
+    public boolean getForwardIncludeBody() { return "includeBody".equals(getForwardIncludeOriginalText()) || "includeBodyAndHeaders".equals(getForwardIncludeOriginalText()); }
     public boolean getForwardIncludeBodyWithPrefx() { return "includeBodyWithPrefix".equals(getForwardIncludeOriginalText()); }
     
     public String getForwardReplyFormat() { return get(Provisioning.A_zimbraPrefForwardReplyFormat); }
