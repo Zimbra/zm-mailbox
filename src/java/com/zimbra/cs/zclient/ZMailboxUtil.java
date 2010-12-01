@@ -2702,7 +2702,22 @@ public class ZMailboxUtil implements DebugListener {
         try {
             pu.initMailbox();
             if (args.length < 1) {
-                InputStream is = cl.hasOption('f') ? new FileInputStream(cl.getOptionValue('f')) : System.in;
+                InputStream is = null;
+                if (cl.hasOption('f')) {
+                    is = new FileInputStream(cl.getOptionValue('f'));
+                } else {
+                    if (LC.command_line_editing_enabled.booleanValue()) {
+                        try {
+                            CliUtil.enableCommandLineEditing(LC.zimbra_home.value() + "/.zmmailbox_history");
+                        } catch (IOException e) {
+                            System.err.println("Command line editing will be disabled: " + e);
+                            if (pu.mGlobalVerbose) {
+                                e.printStackTrace(System.err);
+                            }
+                        }
+                    }
+                    is = System.in;  // This has to happen last because JLine modifies System.in.
+                }
                 pu.interactive(new BufferedReader(new InputStreamReader(is, "UTF-8")));
             } else {
                 pu.execute(args);
