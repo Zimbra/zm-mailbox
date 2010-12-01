@@ -3645,11 +3645,13 @@ public class Mailbox {
     public static class AddInviteData {
         public int calItemId;
         public int invId;
+        public int compNum;
         public int modSeq;
         public int rev;
-        public AddInviteData(int calItemId, int invId, int modSeq, int rev) {
+        public AddInviteData(int calItemId, int invId, int compNum, int modSeq, int rev) {
             this.calItemId = calItemId;
             this.invId = invId;
+            this.compNum = compNum;
             this.modSeq = modSeq;
             this.rev = rev;
         }
@@ -4113,7 +4115,7 @@ public class Mailbox {
 
                 success = true;
                 if (processed)
-                    return new AddInviteData(calItem.getId(), inv.getMailItemId(),
+                    return new AddInviteData(calItem.getId(), inv.getMailItemId(), inv.getComponentNum(),
                                              calItem.getModifiedSequence(), calItem.getSavedSequence());
                 else
                     return null;

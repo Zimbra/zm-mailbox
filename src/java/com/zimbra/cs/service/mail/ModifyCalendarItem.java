@@ -32,6 +32,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -226,6 +227,14 @@ public class ModifyCalendarItem extends CalendarRequest {
 
         // Apply the change and notify existing attendees.
         sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true);
+        boolean echo = request.getAttributeBool(MailConstants.A_CAL_ECHO, false);
+        if (echo && dat.mAddInvData != null) {
+            ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
+            int maxSize = (int) request.getAttributeLong(MailConstants.A_MAX_INLINED_LENGTH, 0);
+            boolean wantHTML = request.getAttributeBool(MailConstants.A_WANT_HTML, false);
+            boolean neuter = request.getAttributeBool(MailConstants.A_NEUTER, true);
+            echoAddedInvite(response, ifmt, octxt, mbox, dat.mAddInvData, maxSize, wantHTML, neuter);
+        }
 
         // Notify removed attendees.
         List<ZAttendee> atsCanceled = parser.getAttendeesCanceled();

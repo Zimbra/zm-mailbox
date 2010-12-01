@@ -86,6 +86,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         MimeMessage mMm;
         Invite mInvite;
         boolean mDontNotifyAttendees;
+        AddInviteData mAddInvData;
     }
 
     /**
@@ -385,6 +386,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         }
 
         if (updateOwnAppointment && response != null && aid != null) {
+            csd.mAddInvData = aid;
             ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
             String id = ifmt.formatItemId(aid.calItemId);
             response.addAttribute(MailConstants.A_CAL_ID, id);
@@ -400,6 +402,19 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         }
         
         return response;
+    }
+
+    protected static Element echoAddedInvite(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Mailbox mbox,
+                                             AddInviteData aid, int maxSize, boolean wantHtml, boolean neuter)
+    throws ServiceException {
+        CalendarItem calItem = mbox.getCalendarItemById(octxt, aid.calItemId);
+        Invite inv = calItem.getInvite(aid.invId, aid.compNum);
+        String recurIdZ = null;
+        if (inv != null && inv.getRecurId() != null)
+            recurIdZ = inv.getRecurId().getDtZ();
+        ItemId iid = new ItemId(calItem, aid.invId);
+        ToXML.encodeInviteAsMP(parent, ifmt, octxt, calItem, recurIdZ, iid, null, maxSize, wantHtml, neuter, null, false);
+        return parent;
     }
 
     protected static Element sendOrganizerChangeMessage(

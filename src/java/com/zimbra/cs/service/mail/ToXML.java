@@ -1109,7 +1109,9 @@ public class ToXML {
             m = encodeMessageCommon(parent, ifmt, calItem, fields, serializeType);
             m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(calItem, invId));
         } else {
-            m = parent.addElement(MailConstants.E_MSG);
+            m = parent.getOptionalElement(MailConstants.E_MSG);
+            if (m == null)
+                m = parent.addElement(MailConstants.E_MSG);
             m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(calItem, invId));
             m.addAttribute(MailConstants.A_PART, part);
         }
@@ -1294,7 +1296,9 @@ public class ToXML {
 
     private static Element encodeMessageCommon(Element parent, ItemIdFormatter ifmt, MailItem item, int fields, boolean serializeType) {
         String name = serializeType && item instanceof Chat ? MailConstants.E_CHAT : MailConstants.E_MSG;
-        Element elem = parent.addElement(name);
+        Element elem = parent.getOptionalElement(name);
+        if (elem == null)
+            elem = parent.addElement(name);
         // DO NOT encode the item-id here, as some Invite-Messages-In-CalendarItems have special item-id's
         if (needToOutput(fields, Change.MODIFIED_SIZE))
             elem.addAttribute(MailConstants.A_SIZE, item.getSize());

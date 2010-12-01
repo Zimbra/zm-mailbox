@@ -165,6 +165,13 @@ public class CreateCalendarItemException extends CalendarRequest {
             }
 
             sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response);
+            boolean echo = request.getAttributeBool(MailConstants.A_CAL_ECHO, false);
+            if (echo && dat.mAddInvData != null) {
+                int maxSize = (int) request.getAttributeLong(MailConstants.A_MAX_INLINED_LENGTH, 0);
+                boolean wantHTML = request.getAttributeBool(MailConstants.A_WANT_HTML, false);
+                boolean neuter = request.getAttributeBool(MailConstants.A_NEUTER, true);
+                echoAddedInvite(response, ifmt, octxt, mbox, dat.mAddInvData, maxSize, wantHTML, neuter);
+            }
         }
 
         // Inter-mailbox move if necessary.
