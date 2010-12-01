@@ -2967,7 +2967,24 @@ public class ProvUtil implements HttpDebugListener {
         try {
             if (args.length < 1) {
                 pu.initProvisioning();
-                InputStream is = cl.hasOption('f') ? new FileInputStream(cl.getOptionValue('f')) : System.in;
+                InputStream is = null;
+                if (cl.hasOption('f')) {
+                    is = new FileInputStream(cl.getOptionValue('f'));
+                } else {
+                    if (LC.command_line_editing_enabled.booleanValue()) {
+                        try {
+                            CliUtil.enableCommandLineEditing(LC.zimbra_home.value() + "/.zmprov_history");
+                        } catch (IOException e) {
+                            System.err.println("Command line editing will be disabled: " + e);
+                            if (pu.mVerbose) {
+                                e.printStackTrace(System.err);
+                            }
+                        }
+                    }
+                    
+                    // This has to happen last because JLine modifies System.in.
+                    is = System.in;
+                }
                 pu.interactive(new BufferedReader(new InputStreamReader(is, "UTF-8")));
             } else {
                 Command cmd = pu.lookupCommand(args[0]);
