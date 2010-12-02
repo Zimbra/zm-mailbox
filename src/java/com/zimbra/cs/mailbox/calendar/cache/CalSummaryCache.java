@@ -139,7 +139,7 @@ public class CalSummaryCache {
             String defaultEffectivePartStat = calItem.getEffectivePartStat(defaultInvite, null);
             FullInstanceData defaultData =
                 new FullInstanceData(defaultInvite, null, defDtStartLong, defDurationLong,
-                                     defaultEffectivePartStat, defaultFba, null, null);
+                                     defaultEffectivePartStat, defaultFba, null);
             calItemData = new CalendarItemData(
                     calItem.getType(), calItem.getFolderId(), calItem.getId(),
                     calItem.getFlagString(), calItem.getTagString(),
@@ -187,7 +187,7 @@ public class CalSummaryCache {
                     InstanceData instData;
                     if (!inst.isException()) {
                         String ridZ = inst.getRecurIdZ();
-                        Long tzOffset = instStartLong != null ? new Long(inst.getTzOffset()) : null;
+                        Long tzOffset = instStartLong != null && inst.isAllDay() ? new Long(inst.getTzOffset()) : null;
                         instData = new InstanceData(
                                 ridZ, instStartLong, durationLong, alarmAt, tzOffset,
                                 effectivePartStat, fba, inv.getPercentComplete(),
@@ -196,7 +196,7 @@ public class CalSummaryCache {
                         String ridZ = null;
                         if (inv.hasRecurId())
                             ridZ = inv.getRecurId().getDtZ();
-                        instData = new FullInstanceData(inv, ridZ, instStartLong, durationLong, effectivePartStat, fba, alarmAt, defaultData);
+                        instData = new FullInstanceData(inv, ridZ, instStartLong, durationLong, effectivePartStat, fba, alarmAt);
                     }
                     calItemData.addInstance(instData);
                 } catch (MailServiceException.NoSuchItemException e) {

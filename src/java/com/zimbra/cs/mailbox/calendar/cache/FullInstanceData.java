@@ -171,8 +171,7 @@ public class FullInstanceData extends InstanceData {
 
     // create a full instance, clearing fields that don't override the default instance
     public FullInstanceData(Invite inv, String recurIdZ, Long dtStart, Long duration,
-                            String partStat, String freeBusyActual, Long alarmAt,
-                            FullInstanceData defaultInstance)
+                            String partStat, String freeBusyActual, Long alarmAt)
     throws ServiceException {
         super(recurIdZ, dtStart, duration, alarmAt,
               dtStart != null ? Util.getTZOffsetForInvite(inv, dtStart) : null,
@@ -200,55 +199,6 @@ public class FullInstanceData extends InstanceData {
              inv.getName(), inv.getLocation(), inv.getFragment(), descInMeta, desc, descHtml,
              inv.isAllDayEvent(), inv.getStatus(), inv.getPriority(), inv.getClassProp(),
              inv.getFreeBusy(), inv.getTransparency(), inv.getCategories(), inv.getGeo());
-        clearUnchangedFields(defaultInstance);
-    }
-
-    protected void clearUnchangedFields(FullInstanceData other) {
-        super.clearUnchangedFields(other);
-        if (other != null) {
-        	if (Util.sameValues(mOrganizer, other.getOrganizer()))
-        		mOrganizer = null;
-            if (Util.sameValues(mIsOrganizer, other.isOrganizer()))
-                mIsOrganizer = null;
-            if (Util.sameValues(mNumAttendees, other.getNumAttendees()))
-                mNumAttendees = null;
-            if (Util.sameValues(mHasAlarm, other.hasAlarm()))
-            	mHasAlarm = null;
-            if (Util.sameValues(mHasAttachment, other.hasAttachment()))
-                mHasAttachment = null;
-            if (Util.sameValues(mDraft, other.isDraft()))
-                mDraft = null;
-            if (Util.sameValues(mNeverSent, other.isNeverSent()))
-                mNeverSent = null;
-            if (Util.sameValues(mSummary, other.getSummary()))
-                 mSummary = null;
-            if (Util.sameValues(mLocation, other.getLocation()))
-                mLocation = null;
-            if (Util.sameValues(mFragment, other.getFragment()))
-                mFragment = null;
-            if (Util.sameValues(mDescInMeta, other.descInMeta()))
-                mDescInMeta = null;
-            if (Util.sameValues(mDesc, other.getDesc()))
-                mDesc = null;
-            if (Util.sameValues(mDescHtml, other.getDescHtml()))
-                mDescHtml = null;
-            if (Util.sameValues(mIsAllDay, other.isAllDay()))
-                mIsAllDay = null;
-            if (Util.sameValues(mStatus, other.getStatus()))
-                mStatus = null;
-            if (Util.sameValues(mPriority, other.getPriority()))
-                mPriority = null;
-            if (Util.sameValues(mClassProp, other.getClassProp()))
-                mClassProp = null;
-            if (Util.sameValues(mFreeBusyIntended, other.getFreeBusyIntended()))
-                mFreeBusyIntended = null;
-            if (Util.sameValues(mTransparency, other.getTransparency()))
-                mTransparency = null;
-            if (Util.sameValues(mCategories, other.getCategories()))
-                mCategories = null;
-            if (Util.sameValues(mGeo, other.getGeo()))
-                mGeo = null;
-        }
     }
 
     private static final String FN_IS_FULL_INSTANCE = "isFull";
