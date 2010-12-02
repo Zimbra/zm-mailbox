@@ -782,6 +782,8 @@ public final class LC {
     public static final KnownKey zmstat_disk_interval = KnownKey.newKey(600);
     public static final KnownKey zmstat_max_retention = KnownKey.newKey(0);
 
+    public static final KnownKey zmstat_df_excludes = KnownKey.newKey("");
+
     public static final KnownKey zimbra_noop_default_timeout = KnownKey.newKey(300);
     public static final KnownKey zimbra_noop_min_timeout = KnownKey.newKey(30);
     public static final KnownKey zimbra_noop_max_timeout = KnownKey.newKey(1200);
