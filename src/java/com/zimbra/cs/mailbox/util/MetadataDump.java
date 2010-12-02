@@ -278,7 +278,7 @@ public class MetadataDump {
 
     public static void main(String[] args) {
         try {
-            CliUtil.toolSetup();
+            CliUtil.toolSetup("WARN");
             int mboxId = 0;
             int itemId = 0;
     
