@@ -609,13 +609,12 @@
       <antcall target="stop-webserver"/>
 
       <delete file="${jetty.home.dir}/webapps/spnego.war"/>
-
-        <delete dir="${jetty.home.dir}/webapps/spnego"/>
-        <mkdir dir='${jetty.home.dir}/webapps/spnego'/>
+      <delete dir="${jetty.home.dir}/webapps/spnego"/>
+      <mkdir dir='${jetty.home.dir}/webapps/spnego'/>
       <mkdir dir="${jetty.home.dir}/work/spnego"/>
 
-        <copy file="${spnego-warfile}" todir="${jetty.home.dir}/webapps"/>
-        <unzip dest="${jetty.home.dir}/webapps/spnego" src="${jetty.home.dir}/webapps/${spnego-warfilename}"/>
+      <copy file="${spnego-warfile}" todir="${jetty.home.dir}/webapps"/>
+      <unzip dest="${jetty.home.dir}/webapps/spnego" src="${jetty.home.dir}/webapps/${spnego-warfilename}"/>
 
       <!--
           ==========================
@@ -638,8 +637,6 @@
 
       <property name="zimbraSpnegoAuthEnabled"     value="TRUE"/>
       <property name="zimbraSpnegoAuthRealm"       value="SPNEGO.LOCAL"/>
-      <property name="zimbraSpnegoAuthKDC"         value="10.114.13.137"/>
-      <property name="zimbraSpnegoAuthAdminServer" value="10.114.13.137"/>
       <property name="zimbraSpnegoAuthErrorURL"    value="/zimbra/?ignoreLoginURL=1"/>
 
       <!-- server -->
@@ -650,56 +647,68 @@
       <property name="zimbraPreAuthKey"            value="4e2816f16c44fab20ecdee39fb850c3b0bb54d03f1d8e073aaea376a4f407f0c"/>
       <property name="zimbraVirtualHostname"       value="${SERVICE_PRINCIPAL_NAME}"/>
       <property name="zimbraWebClientLoginURL"     value="http://${SERVICE_PRINCIPAL_NAME}:7070/spnego/spnego_preauth.jsp"/>
-        <property name="zimbraWebClientLogoutURL"    value="http://${SERVICE_PRINCIPAL_NAME}:7070/?sso=1"/>
-        <property name="zimbraAuthKerberos5Realm"    value="${zimbraSpnegoAuthRealm}"/>
+      <property name="zimbraWebClientLogoutURL"    value="http://${SERVICE_PRINCIPAL_NAME}:7070/?sso=1"/>
+      <property name="zimbraAuthKerberos5Realm"    value="${zimbraSpnegoAuthRealm}"/>
 
       <!-- modify ldap -->
-        <antcall target="zmprov">
-            <param name="args" value="-l mcf zimbraSpnegoAuthEnabled ${zimbraSpnegoAuthEnabled}"/>
-        </antcall>
-        <antcall target="zmprov">
-            <param name="args" value="-l mcf zimbraSpnegoAuthRealm ${zimbraSpnegoAuthRealm}"/>
-        </antcall>
-        <antcall target="zmprov">
-            <param name="args" value="-l mcf zimbraSpnegoAuthKDC ${zimbraSpnegoAuthKDC}"/>
-        </antcall>
-        <antcall target="zmprov">
-            <param name="args" value="-l mcf zimbraSpnegoAuthAdminServer ${zimbraSpnegoAuthAdminServer}"/>
-        </antcall>
-        <antcall target="zmprov">
-            <param name="args" value="-l mcf zimbraSpnegoAuthErrorURL ${zimbraSpnegoAuthErrorURL}"/>
-        </antcall>
+      <antcall target="zmprov">
+        <param name="args" value="-l mcf zimbraSpnegoAuthEnabled ${zimbraSpnegoAuthEnabled}"/>
+      </antcall>
+      <antcall target="zmprov">
+        <param name="args" value="-l mcf zimbraSpnegoAuthRealm ${zimbraSpnegoAuthRealm}"/>
+      </antcall>
+      <antcall target="zmprov">
+        <param name="args" value="-l mcf zimbraSpnegoAuthErrorURL ${zimbraSpnegoAuthErrorURL}"/>
+      </antcall>
 
-        <antcall target="zmprov">
-            <param name="args" value="-l ms ${zimbra.server.hostname} zimbraSpnegoAuthPrincipal ${zimbraSpnegoAuthPrincipal}"/>
-        </antcall>
-        <antcall target="zmprov">
-            <param name="args" value="-l ms ${zimbra.server.hostname} zimbraSpnegoAuthTargetName ${zimbraSpnegoAuthTargetName}"/>
-        </antcall>
+      <antcall target="zmprov">
+        <param name="args" value="-l ms ${zimbra.server.hostname} zimbraSpnegoAuthPrincipal ${zimbraSpnegoAuthPrincipal}"/>
+      </antcall>
+      <antcall target="zmprov">
+        <param name="args" value="-l ms ${zimbra.server.hostname} zimbraSpnegoAuthTargetName ${zimbraSpnegoAuthTargetName}"/>
+      </antcall>
 
-        <antcall target="zmprov">
-             <param name="args" value="-l md ${defaultdomain.name} zimbraPreAuthKey ${zimbraPreAuthKey}"/>
-        </antcall>
-        <antcall target="zmprov">
-             <param name="args" value="-l md ${defaultdomain.name} +zimbraVirtualHostname ${zimbraVirtualHostname}"/>
-        </antcall>
-        <antcall target="zmprov">
-             <param name="args" value="-l md ${defaultdomain.name} zimbraWebClientLoginURL ${zimbraWebClientLoginURL}"/>
-        </antcall>
-        <antcall target="zmprov">
-             <param name="args" value="-l md ${defaultdomain.name} zimbraWebClientLogoutURL ${zimbraWebClientLogoutURL}"/>
-        </antcall>
-        <antcall target="zmprov">
-             <param name="args" value="-l md ${defaultdomain.name} zimbraAuthKerberos5Realm ${zimbraAuthKerberos5Realm}"/>
-        </antcall>
-
+      <antcall target="zmprov">
+        <param name="args" value="-l md ${defaultdomain.name} zimbraPreAuthKey ${zimbraPreAuthKey}"/>
+      </antcall>
+      <antcall target="zmprov">
+        <param name="args" value="-l md ${defaultdomain.name} +zimbraVirtualHostname ${zimbraVirtualHostname}"/>
+      </antcall>
+      <antcall target="zmprov">
+        <param name="args" value="-l md ${defaultdomain.name} zimbraWebClientLoginURL ${zimbraWebClientLoginURL}"/>
+      </antcall>
+      <antcall target="zmprov">
+        <param name="args" value="-l md ${defaultdomain.name} zimbraWebClientLogoutURL ${zimbraWebClientLogoutURL}"/>
+      </antcall>
+      <antcall target="zmprov">
+        <param name="args" value="-l md ${defaultdomain.name} zimbraAuthKerberos5Realm ${zimbraAuthKerberos5Realm}"/>
+      </antcall>
+      <antcall target="zmprov">
+        <param name="args" value="-l md ${defaultdomain.name} +zimbraWebClientLoginURLAllowedUA '.*Windows NT.*Firefox/3.*'"/>
+      </antcall>
+      <antcall target="zmprov">
+        <param name="args" value="-l md ${defaultdomain.name} +zimbraWebClientLoginURLAllowedUA '.*MSIE.*Windows NT.*'"/>
+      </antcall>
+      <antcall target="zmprov">
+        <param name="args" value="-l md ${defaultdomain.name} +zimbraWebClientLoginURLAllowedUA '.*Windows NT.*Chrome.*'"/>
+      </antcall>
+      <antcall target="zmprov">
+        <param name="args" value="-l md ${defaultdomain.name} +zimbraWebClientLogoutURLAllowedUA '.*Windows NT.*Firefox/3.*'"/>
+      </antcall>
+      <antcall target="zmprov">
+        <param name="args" value="-l md ${defaultdomain.name} +zimbraWebClientLogoutURLAllowedUA '.*MSIE.*Windows NT.*'"/>
+      </antcall>
+      <antcall target="zmprov">
+        <param name="args" value="-l md ${defaultdomain.name} +zimbraWebClientLogoutURLAllowedUA '.*Windows NT.*Chrome.*'"/>
+      </antcall>    	
+      	
       <!-- copy spnego config files to jetty/etc -->
-        <echo/>
-        <echo>----- copying files -----</echo>
-        <echo/>
+      <echo/>
+      <echo>----- copying files -----</echo>
+      <echo/>
       <copy file="${spnego.dir}/etc/krb5.ini" todir="${jetty.conf.dir}" overwrite="true"/>
-        <copy file="${spnego.dir}/etc/spnego.conf" todir="${jetty.conf.dir}" overwrite="true"/>
-        <copy file="${spnego.dir}/etc/spnego.properties" todir="${jetty.conf.dir}" overwrite="true"/>
+      <copy file="${spnego.dir}/etc/spnego.conf" todir="${jetty.conf.dir}" overwrite="true"/>
+      <copy file="${spnego.dir}/etc/spnego.properties" todir="${jetty.conf.dir}" overwrite="true"/>
 
       <echo/>
       <echo>----- rewriting files -----</echo>
@@ -707,50 +716,48 @@
 
       <!-- replace the preauth key in spnego_preauth.jsp -->
       <echo>rewriting ${jetty.home.dir}/webapps/spnego/spnego_preauth.jsp</echo>
-        <replace file="${jetty.home.dir}/webapps/spnego/spnego_preauth.jsp">
-             <replacefilter token="REPLACE-ME-WITH-THE-PREAUTH-KEY" value="${zimbraPreAuthKey}"/>
-        </replace>
+      <replace file="${jetty.home.dir}/webapps/spnego/spnego_preauth.jsp">
+        <replacefilter token="REPLACE-ME-WITH-THE-PREAUTH-KEY" value="${zimbraPreAuthKey}"/>
+      </replace>
 
       <!-- mimic zmconfigd -->
       <echo>rewriting ${jetty.home.dir}/webapps/spnego/spnego_error.jsp</echo>
       <replace file="${jetty.home.dir}/webapps/spnego/spnego_error.jsp">
-            <replacefilter token="%%zimbraSpnegoAuthErrorURL%%" value="${zimbraSpnegoAuthErrorURL}"/>
-        </replace>
+        <replacefilter token="%%zimbraSpnegoAuthErrorURL%%" value="${zimbraSpnegoAuthErrorURL}"/>
+      </replace>
 
       <echo>rewriting ${jetty.home.dir}/webapps/spnego/WEB-INF/web.xml</echo>
       <replace file="${jetty.home.dir}/webapps/spnego/WEB-INF/web.xml">
-          <replacefilter token="%%zimbraSpnegoAuthRealm%%" value="${zimbraSpnegoAuthRealm}"/>
+        <replacefilter token="%%zimbraSpnegoAuthRealm%%" value="${zimbraSpnegoAuthRealm}"/>
       </replace>
 
       <echo>rewriting ${jetty.conf.dir}/krb5.ini</echo>
       <replace file="${jetty.conf.dir}/krb5.ini">
-            <replacefilter token="%%zimbraSpnegoAuthRealm%%" value="${zimbraSpnegoAuthRealm}"/>
-          <replacefilter token="%%zimbraSpnegoAuthKDC%%" value="${zimbraSpnegoAuthKDC}"/>
-          <replacefilter token="%%zimbraSpnegoAuthAdminServer%%" value="${zimbraSpnegoAuthAdminServer}"/>
-        </replace>
+        <replacefilter token="%%zimbraSpnegoAuthRealm%%" value="${zimbraSpnegoAuthRealm}"/>
+      </replace>
 
       <echo>rewriting ${jetty.conf.dir}/spnego.conf</echo>
-        <replace file="${jetty.conf.dir}/spnego.conf">
-            <replacefilter token="%%zimbraSpnegoAuthPrincipal%%" value="${zimbraSpnegoAuthPrincipal}"/>
-        </replace>
+      <replace file="${jetty.conf.dir}/spnego.conf">
+        <replacefilter token="%%zimbraSpnegoAuthPrincipal%%" value="${zimbraSpnegoAuthPrincipal}"/>
+      </replace>
 
       <echo>rewriting ${jetty.conf.dir}/spnego.properties</echo>
-        <replace file="${jetty.conf.dir}/spnego.properties">
-            <replacefilter token="%%zimbraSpnegoAuthTargetName%%" value="${zimbraSpnegoAuthTargetName}"/>
-        </replace>
+      <replace file="${jetty.conf.dir}/spnego.properties">
+        <replacefilter token="%%zimbraSpnegoAuthTargetName%%" value="${zimbraSpnegoAuthTargetName}"/>
+      </replace>
 
       <echo>rewriting ${zimbra.home.dir}/bin/jetty</echo>
-        <replace file="${zimbra.home.dir}/bin/jetty">
-            <replacefilter token="zimbraSpnegoAuthEnabled: FALSE" value="zimbraSpnegoAuthEnabled: TRUE"/>
-        </replace>
+      <replace file="${zimbra.home.dir}/bin/jetty">
+        <replacefilter token="zimbraSpnegoAuthEnabled: FALSE" value="zimbraSpnegoAuthEnabled: TRUE"/>
+      </replace>
       <!-- executable permission was removed by the above replace, set it back -->
       <chmod file="${zimbra.home.dir}/bin/jetty" perm="+x" />
 
       <echo>rewriting ${jetty.conf.dir}/jetty.xml</echo>
-        <replace file="${jetty.conf.dir}/jetty.xml">
-            <replacefilter token="&lt;!-- zimbraSpnegoAuthEnabled" value=""/>
-          <replacefilter token="zimbraSpnegoAuthEnabled --&gt;" value=""/>
-        </replace>
+      <replace file="${jetty.conf.dir}/jetty.xml">
+        <replacefilter token="&lt;!-- zimbraSpnegoAuthEnabled" value=""/>
+        <replacefilter token="zimbraSpnegoAuthEnabled --&gt;" value=""/>
+      </replace>
 
       <antcall target="start-webserver"/>
 
