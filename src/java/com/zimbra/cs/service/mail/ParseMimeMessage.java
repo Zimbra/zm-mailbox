@@ -103,7 +103,6 @@ public class ParseMimeMessage {
     extends MimeBodyPart {
         public ForceBase64MimeBodyPart()  { }
 
-        @Override protected void updateHeaders() throws MessagingException {
         protected void updateHeaders() throws MessagingException {
             super.updateHeaders();
             if (LC.text_attachments_base64.booleanValue()) {
