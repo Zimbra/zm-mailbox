@@ -1017,17 +1017,7 @@ public final class LC {
     
     @Supported
     public static final KnownKey out_of_disk_error_windows = KnownKey.newKey("There is not enough space on the disk");
->>>> ORIGINAL //depot/main/ZimbraCommon/src/java/com/zimbra/common/localconfig/LC.java#339
 
-    public static final KnownKey antispam_mysql_bind_address = KnownKey.newKey("127.0.0.1");
-
-==== THEIRS //depot/main/ZimbraCommon/src/java/com/zimbra/common/localconfig/LC.java#340
-
-==== YOURS //aint/HELIX/ZimbraCommon/src/java/com/zimbra/common/localconfig/LC.java
-    
-    public static final KnownKey antispam_mysql_bind_address = KnownKey.newKey("127.0.0.1");
-    
-<<<<
     public static final KnownKey antispam_mysql_directory = KnownKey.newKey("${zimbra_home}/mta/mysql");
     public static final KnownKey antispam_mysql_data_directory = KnownKey.newKey("${zimbra_home}/data/amavisd/mysql/data");
     public static final KnownKey antispam_mysql_errlogfile = KnownKey.newKey("${zimbra_home}/log/antispam-mysqld.log");
