@@ -149,10 +149,6 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
     
     /////////// PreparedStatement implementation ///////////////
 
-    public boolean isClosed() {
-        return super.isClosed();
-    }
-    
     public ResultSet executeQuery() throws SQLException {
         startTimer();
         ResultSet rs;
