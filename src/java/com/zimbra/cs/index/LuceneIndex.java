@@ -672,20 +672,15 @@ public final class LuceneIndex {
 
         ZimbraLog.index_lucene.debug("Closing IndexWriter %s", this);
 
-        boolean success = false;
         try {
             indexWriter.close();
-            success = true;
+            mailboxIndex.mailbox.index.indexingCompleted(numPendingDocs, mHighestUncomittedModContent);
         } catch (IOException e) {
             ZimbraLog.index_lucene.error("Failed to close IndexWriter %s", this, e);
-            // fall through to finally here with success=false
         } finally {
             indexWriter = null;
             unlockIndexWriter();
-            // TODO
-            // assert(mHighestUncomittedModContent.getChangeId() > 0);
 
-            mailboxIndex.indexingCompleted(numPendingDocs, mHighestUncomittedModContent, success);
             numPendingDocs = 0;
             mHighestUncomittedModContent = new SyncToken(0);
         }

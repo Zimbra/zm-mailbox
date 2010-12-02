@@ -39,7 +39,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.store.file.Volume;
 
 /**
@@ -51,7 +50,7 @@ public final class MailboxIndex {
 
     private final LuceneIndex luceneIndex;
     private final int mMailboxId;
-    private final Mailbox mailbox;
+    final Mailbox mailbox;
     private Analyzer mAnalyzer = null;
 
     public MailboxIndex(Mailbox mbox) throws ServiceException {
@@ -453,14 +452,6 @@ public final class MailboxIndex {
                     throw ServiceException.FAILURE("Failed to index", e);
                 }
             }
-        }
-    }
-
-    void indexingCompleted(int count, SyncToken highestToken, boolean succeeded) {
-        if (count > 0) {
-            ZimbraLog.indexing.debug("indexingCompleted count=%d highest=%s success=%b",
-                    count, highestToken, succeeded);
-            mailbox.index.indexingCompleted(count, highestToken, succeeded);
         }
     }
 

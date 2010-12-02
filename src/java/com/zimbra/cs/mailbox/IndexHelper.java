@@ -664,51 +664,37 @@ public final class IndexHelper {
 
     /**
      * Called by the indexing subsystem when indexing has completed for the specified items.
-     *
-     * Each call to this API results in one SQL transaction on the mailbox.
-     *
-     * The indexing subsystem should attempt to batch the completion callbacks if possible, to
-     * lessen the number of SQL transactions.
      */
-    public void indexingCompleted(int count, SyncToken newHighestModContent, boolean succeeded) {
-        synchronized (mailbox) {
-            try {
-                boolean success = false;
-                try {
-                    mailbox.beginTransaction("indexingCompleted", null);
-                    ZimbraLog.indexing.debug("IndexingCompletedTask(%d,%d,%b) deferred=%d",
-                            count, newHighestModContent, succeeded, mailbox.getIndexDeferredCount());
+    public void indexingCompleted(int count, SyncToken newHighestModContent) {
+        assert(Thread.holdsLock(mailbox));
 
-                    mailbox.getOperationConnection();
-
-                    // update high water mark in DB row
-                    SyncToken highestFlushedToIndex = mailbox.getHighestFlushedToIndex();
-                    assert(newHighestModContent.after(highestFlushedToIndex));
-                    if (!newHighestModContent.after(highestFlushedToIndex)) {
-                        ZimbraLog.mailbox.warn("invalid set for HighestModContentIndex " +
-                                "-highestFlushedToIndex=%d requested=%d", highestFlushedToIndex, newHighestModContent);
-                    } else {
-                        // DB index high water mark
-                        mailbox.setCurrentChangeHighestModContentIndexed(newHighestModContent);
-                    }
-
-                    // update indexDeferredCount in DB row
-                    int curIdxDeferred = mailbox.getIndexDeferredCount(); // current count
-                    int newCount = curIdxDeferred - count; // new value to set
-                    if (newCount < 0) {
-                        ZimbraLog.indexing.warn("Count out of whack during indexingCompleted " +
-                                "- completed %d entries but current indexDeferred is only %d", count, curIdxDeferred);
-                    }
-                    mailbox.setCurrentChangeIndexDeferredCount(Math.max(0, newCount));
-                    mHighestSubmittedToIndex = null;
-                    success = true;
-                } finally {
-                    mailbox.endTransaction(success);
-                }
-            } catch (ServiceException e) {
-                ZimbraLog.indexing.error("Failed to complete indexing", e);
-            }
+        if (count <= 0) {
+            return;
         }
+
+        ZimbraLog.indexing.debug("IndexingCompleted count=%d highest=%s deferred=%d",
+                count, newHighestModContent, mailbox.getIndexDeferredCount());
+
+        // update high water mark in DB row
+        SyncToken highestFlushedToIndex = mailbox.getHighestFlushedToIndex();
+        assert(newHighestModContent.after(highestFlushedToIndex));
+        if (!newHighestModContent.after(highestFlushedToIndex)) {
+            ZimbraLog.mailbox.warn("invalid set for HighestModContentIndex highestFlushedToIndex=%s requested=%s",
+                    highestFlushedToIndex, newHighestModContent);
+        } else {
+            // DB index high water mark
+            mailbox.setCurrentChangeHighestModContentIndexed(newHighestModContent);
+        }
+
+        // update indexDeferredCount in DB row
+        int curIdxDeferred = mailbox.getIndexDeferredCount(); // current count
+        int newCount = curIdxDeferred - count; // new value to set
+        if (newCount < 0) {
+            ZimbraLog.indexing.warn("Count out of whack during indexingCompleted " +
+                    "- completed %d entries but current indexDeferred is only %d", count, curIdxDeferred);
+        }
+        mailbox.setCurrentChangeIndexDeferredCount(Math.max(0, newCount));
+        mHighestSubmittedToIndex = null;
     }
 
     /**

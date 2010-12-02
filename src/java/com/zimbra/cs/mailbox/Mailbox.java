@@ -7164,8 +7164,16 @@ public class Mailbox {
 
         ServiceException exception = null;
 
-        // update mailbox size and folder unread/message counts
         if (success) {
+            List<IndexItemEntry> indexItems = mCurrentChange.indexItems;
+            if ((!indexItems.isEmpty() || !mCurrentChange.indexItemsToDelete.isEmpty())) {
+                // See bug 15072 - we need to clear mCurrentChange.indexItems (it is stored in a temporary) here, just
+                // in case item.reindex() recurses into a new transaction...
+                mCurrentChange.indexItems = new ArrayList<IndexItemEntry>();
+                index.indexingPartOfEndTransaction(indexItems, mCurrentChange.indexItemsToDelete);
+            }
+
+            // update mailbox size, folder unread/message counts, deferred index count
             try {
                 snapshotCounts();
             } catch (ServiceException e) {
@@ -7196,19 +7204,8 @@ public class Mailbox {
         if (redoRecorder != null && needRedo)
             redoRecorder.log(true);
 
-        List<IndexItemEntry> itemsToIndex = mCurrentChange.indexItems;
         boolean allGood = false;
         try {
-            if ((!itemsToIndex.isEmpty() || mCurrentChange.indexItemsToDelete.size()>0)
-                            && !DebugConfig.disableIndexing) {
-
-                // See bug 15072 - we need to clear mCurrentChange.indexItems (it is stored in a temporary)
-                // here, just in case item.reindex() recurses into a new transaction...
-                mCurrentChange.indexItems = new ArrayList<IndexItemEntry>();
-
-                index.indexingPartOfEndTransaction(itemsToIndex, mCurrentChange.indexItemsToDelete);
-            } // if indexing needed
-
             // 3. Commit the main transaction in database.
             if (conn != null) {
                 try {
@@ -7222,7 +7219,6 @@ public class Mailbox {
                     Zimbra.halt("Unable to commit database transaction.  Forcing server to abort.", t);
                 }
             }
-
             allGood = true;
         } finally {
             if (!allGood) {
