@@ -145,7 +145,8 @@ public class SoapSession extends Session {
         protected void cacheAccountAccess(String authedAcctId, String targetAcctId) throws ServiceException {
             Provisioning prov = Provisioning.getInstance();
             mParentHasFullAccess = AccessManager.getInstance().canAccessAccount(
-                prov.get(AccountBy.id, authedAcctId), prov.get(AccountBy.id, targetAcctId));
+                prov.get(AccountBy.id, authedAcctId), prov.get(AccountBy.id, targetAcctId),
+                getParentSession().asAdmin());
         }
 
         private boolean calculateVisibleFolders(boolean force) throws ServiceException {
@@ -418,6 +419,8 @@ public class SoapSession extends Session {
     private Map<String, DelegateSession> mDelegateSessions = new HashMap<String, DelegateSession>(3);
     private List<RemoteSessionInfo> mRemoteSessions;
 
+    private boolean mAsAdmin;
+    
     static final long SOAP_SESSION_TIMEOUT_MSEC = Math.max(5, LC.zimbra_session_timeout_soap.intValue()) * Constants.MILLIS_PER_SECOND;
 
     // if a keepalive request to a remote session failed, how long to wait before a new ping is permitted
@@ -429,8 +432,9 @@ public class SoapSession extends Session {
     /** Creates a <tt>SoapSession</tt> owned by the given account and
      *  listening on its {@link Mailbox}.
      * @see Session#register() */
-    public SoapSession(String authenticatedId) {
+    public SoapSession(String authenticatedId, boolean asAdmin) {
         super(authenticatedId, Session.Type.SOAP);
+        mAsAdmin = asAdmin;
     }
 
     @Override public SoapSession register() throws ServiceException {
@@ -503,7 +507,10 @@ public class SoapSession extends Session {
     public boolean isOfflineSoapSession()  { return mIsOffline; }
     public void setOfflineSoapSession()    { mIsOffline = true; }
 
-
+    private boolean asAdmin() {
+        return mAsAdmin;
+    }
+    
     public Session getDelegateSession(String targetAccountId) {
         if (mUnregistered || targetAccountId == null)
             return null;

@@ -24,8 +24,8 @@ public class RemoteSoapSession extends SoapSession {
     /** Creates a <tt>SoapSession</tt> owned by the given account homed on
      *  a different server.  It thus cannot listen on its own {@link Mailbox}.
      * @see Session#register() */
-    public RemoteSoapSession(String authenticatedId) {
-        super(authenticatedId);
+    public RemoteSoapSession(String authenticatedId, boolean asAdmin) {
+        super(authenticatedId, asAdmin);
     }
 
     @Override protected boolean isMailboxListener() {

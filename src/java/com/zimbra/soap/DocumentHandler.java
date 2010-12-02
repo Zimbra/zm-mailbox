@@ -335,7 +335,7 @@ public abstract class DocumentHandler {
         if (s == null) {
             try {
                 if (stype == Session.Type.SOAP) {
-                    s = SoapSessionFactory.getInstance().getSoapSession(authAccountId, isLocal).register();
+                    s = SoapSessionFactory.getInstance().getSoapSession(authAccountId, isLocal, zsc.isUsingAdminPrivileges()).register();
                 } else if (stype == Session.Type.ADMIN) {
                     s = new AdminSession(authAccountId).register();
                 }
