@@ -249,16 +249,22 @@ public class TestSendAndReceive extends TestCase {
     }
     
     /**
-     * Confirms that we preserve line endings of attached text files (bug 45858).
+     * Confirms that we preserve line endings of attached text files (bugs 45858 and 53405).
      */
     public void testTextAttachmentLineEnding()
     throws Exception {
-        // Test simple send.
         String content = "I used to think that the day would never come,\n" +
             "I'd see the light in the shade of the morning sun\n";
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        String attachId = mbox.uploadAttachment("text.txt", content.getBytes(), MimeConstants.CT_TEXT_PLAIN, 5000);
-        String subject = NAME_PREFIX + " testTextAttachmentLineEnding 1";
+        verifyTextAttachmentLineEnding(mbox, content, MimeConstants.CT_TEXT_PLAIN);
+        verifyTextAttachmentLineEnding(mbox, content, "application/x-shellscript");
+    }
+    
+    private void verifyTextAttachmentLineEnding(ZMailbox mbox, String content, String contentType)
+    throws Exception {
+        // Test simple send.
+        String attachId = mbox.uploadAttachment("text.txt", content.getBytes(), contentType, 5000);
+        String subject = NAME_PREFIX + " testTextAttachmentLineEnding " + contentType + " 1";
         TestUtil.sendMessage(mbox, USER_NAME, subject, "Testing text attachment", attachId);
 
         ZMessage msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");
@@ -267,8 +273,8 @@ public class TestSendAndReceive extends TestCase {
         assertEquals(content, attachContent);
         
         // Test save draft and send.
-        attachId = mbox.uploadAttachment("text.txt", content.getBytes(), MimeConstants.CT_TEXT_PLAIN, 5000);
-        subject = NAME_PREFIX + " testTextAttachmentLineEnding 2";
+        attachId = mbox.uploadAttachment("text.txt", content.getBytes(), contentType, 5000);
+        subject = NAME_PREFIX + " testTextAttachmentLineEnding " + contentType + " 2";
         TestUtil.saveDraftAndSendMessage(mbox, USER_NAME, subject, "Testing text attachment", attachId);
 
         msg = TestUtil.waitForMessage(mbox, "in:inbox subject:\"" + subject + "\"");

@@ -96,16 +96,21 @@ public class ParseMimeMessage {
     
     /**
      * Overrides the default transfer encoding and sets the encoding
-     * of text attachments to base64, so that we preserve line endings
-     * (bug 45858).
+     * of all non-message attachments to base64, so that we preserve line endings
+     * of text attachments (bugs 45858 and 53405).
      */
-    private static class Base64TextMimeBodyPart
+    private static class ForceBase64MimeBodyPart
     extends MimeBodyPart {
+        public ForceBase64MimeBodyPart()  { }
+
+        @Override protected void updateHeaders() throws MessagingException {
         protected void updateHeaders() throws MessagingException {
             super.updateHeaders();
-            if (LC.text_attachments_base64.booleanValue() &&
-                Mime.getContentType(this).startsWith(MimeConstants.CT_TEXT_PREFIX)) {
-                setHeader("Content-Transfer-Encoding", "base64");
+            if (LC.text_attachments_base64.booleanValue()) {
+                String ct = Mime.getContentType(this);
+                if (!(ct.startsWith(MimeConstants.CT_MESSAGE_PREFIX) || ct.startsWith(MimeConstants.CT_MULTIPART_PREFIX))) {
+                    setHeader("Content-Transfer-Encoding", "base64");
+                }
             }
         }
     }
@@ -622,7 +627,7 @@ public class ParseMimeMessage {
         String filename = up.getName();
 
         // create the part and override the DataSource's default ctype, if required
-        MimeBodyPart mbp = new Base64TextMimeBodyPart();
+        MimeBodyPart mbp = new ForceBase64MimeBodyPart();
         
         UploadDataSource uds = new UploadDataSource(up);
         if (ctypeOverride != null && !ctypeOverride.equals(""))
@@ -782,7 +787,7 @@ public class ParseMimeMessage {
         String filename = Mime.getFilename(mp);
         ctxt.incrementSize("part " + filename, mp.getSize());
 
-        MimeBodyPart mbp = new Base64TextMimeBodyPart();
+        MimeBodyPart mbp = new ForceBase64MimeBodyPart();
 
         String ctypeHdr = mp.getContentType();
         if (ctypeHdr != null) {
