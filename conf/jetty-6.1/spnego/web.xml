@@ -5,7 +5,7 @@
    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" 
    version="2.5"> 
 
-  <display-name>Test WebApp</display-name>
+  <display-name>Spnego WebApp</display-name>
 
   <filter>
     <filter-name>GzipFilter</filter-name>
@@ -39,54 +39,6 @@
     <filter-name>GzipFilter</filter-name>
     <url-pattern>/*</url-pattern>
   </filter-mapping>
-  
-  <servlet>
-    <servlet-name>JspSnoop</servlet-name>
-    <jsp-file>/snoop.jsp</jsp-file>
-    <load-on-startup>1</load-on-startup>
-  </servlet>
-  
-  <servlet-mapping>
-    <servlet-name>JspSnoop</servlet-name>
-    <url-pattern>/jspsnoop/*</url-pattern>
-  </servlet-mapping>
-  
-  <error-page>
-    <error-code>404</error-code>
-    <location>/jspsnoop/ERROR/404</location>
-  </error-page>
-  
-  <error-page>
-    <exception-type>java.io.IOException</exception-type>
-    <location>/jspsnoop/IOException</location>
-  </error-page>
-
-
-
-<!--
-  <login-config>
-    <auth-method>BASIC</auth-method>
-    <realm-name>Test Realm</realm-name>
-  </login-config>
--->
-
-<!--
-  <login-config>
-    <auth-method>DIGEST</auth-method>
-    <realm-name>Test Realm</realm-name>
-  </login-config>
--->
-
-<!--
-  <login-config>
-    <auth-method>FORM</auth-method>
-    <realm-name>Test Realm</realm-name>
-    <form-login-config>
-       <form-login-page>/logon.html?param=test</form-login-page>
-       <form-error-page>/logonError.html?param=test</form-error-page>
-    </form-login-config>
-  </login-config>
--->
 
   <security-constraint>
     <web-resource-collection>
