@@ -42,6 +42,7 @@ public class MimeConstants {
     public static final String CT_XML_ZIMBRA_SHARE = "xml/x-zimbra-share";
     public static final String CT_MULTIPART_PREFIX = "multipart/";
     public static final String CT_TEXT_PREFIX = "text/";
+    public static final String CT_MESSAGE_PREFIX = "message/";
     public static final String CT_APPLICATION_WILD = "application/.*";
     public static final String CT_IMAGE_WILD = "image/.*";
     public static final String CT_AUDIO_WILD = "audio/.*";
