@@ -675,7 +675,7 @@ public class ToXML {
         List<Message> msgs = null;
         boolean isDelegatedNonAccessible = false;
         if (octxt != null && octxt.isDelegatedRequest(mbox)) {
-            isDelegatedNonAccessible = !AccessManager.getInstance().canAccessAccount(octxt.getAuthenticatedUser(), conv.getAccount());
+            isDelegatedNonAccessible = !AccessManager.getInstance().canAccessAccount(octxt.getAuthenticatedUser(), conv.getAccount(), octxt.isUsingAdminPrivileges());
         }
         if (isDelegatedNonAccessible || conv.isTagged(Flag.ID_FLAG_DELETED))
             msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASCENDING);

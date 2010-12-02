@@ -47,11 +47,11 @@ public class SoapSessionFactory {
         return sSessionFactory;
     }
     
-    public SoapSession getSoapSession(String authAccountId, boolean isLocal) throws ServiceException {
+    public SoapSession getSoapSession(String authAccountId, boolean isLocal, boolean asAdmin) throws ServiceException {
         if (isLocal) {
-            return new SoapSession(authAccountId);
+            return new SoapSession(authAccountId, asAdmin);
         } else {
-            return new RemoteSoapSession(authAccountId);
+            return new RemoteSoapSession(authAccountId, asAdmin);
         }
     }
 }
