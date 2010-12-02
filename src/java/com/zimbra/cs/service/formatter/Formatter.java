@@ -307,12 +307,19 @@ public abstract class Formatter {
                 out.println("</pre>\n</body>\n</html>");
             }
         } else if (!"2".equals(context.params.get(PROGRESS))) {
-            if (exception == null && (w == null || w.size() == 0)) {
-                return;
+            String result;
+            if (exception != null) {
+                ZimbraLog.misc.warn(getType() + " formatter exception",
+                        exception);
+                result = "fail";
+            } else if (w == null || w.size() == 0) {
+                if (context.req.getMethod().equals("GET")) {
+                    return;
+                }
+                result = "success";
+            } else {
+                result = "warn";
             }
-
-            ZimbraLog.misc.warn(getType() + " formatter exception",
-                    exception);
             try {
                 out = updateClient(context, false);
             } catch (IllegalStateException ise) {
@@ -324,7 +331,6 @@ public abstract class Formatter {
             out.println("<body onload='onLoad()'>");
             out.println("<script>");
             out.println("function onLoad() {");
-            String result = exception != null ? "fail" : "warn";
 
             out.print("    window.parent." + callback + "('" + result + "'");
             if (exception != null) {
