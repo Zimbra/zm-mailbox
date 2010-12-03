@@ -431,7 +431,7 @@ RECURRENCE SPECIFIERS!
 ----------------------
 
 <CreateAppointmentResponse calItemId="APPOINTMENT-ID" invId="invite-message-id" ms="change-sequence" rev="revision">
-  [<m .../>]  // if echo="1" was specified in the request
+  [<echo><m .../></echo>]  // if echo="1" was specified in the request
 </CreateAppointmentResponse>
 
 
@@ -843,7 +843,7 @@ OR
 </ModifyAppointmentRequest>
 
 <ModifyAppointmentResponse calItemId="appointment-id" invId="invite-message-id" ms="change-sequence" rev="revision">
-  [<m .../>]  // if echo="1" was specified in the request
+  [<echo><m .../></echo>]  // if echo="1" was specified in the request
 </ModifyAppointmentResponse>
 
 "ms" and "rev" are used for conflict detection.  By setting these, the request indicates
