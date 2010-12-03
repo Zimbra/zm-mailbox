@@ -137,7 +137,8 @@ public final class ZimbraLog {
     /**
      * the "zimbra.index.add" logger. For the add-to-the-index part of indexing
      */
-    public static final Log indexing = LogFactory.getLog("zimbra.index.indexing");
+    public static final Log index_add = LogFactory.getLog("zimbra.index.indexadd");
+
 
     /**
      * Fhe "zimbra.searchstat" logger.  For logging statistics about what kinds of searches are run
