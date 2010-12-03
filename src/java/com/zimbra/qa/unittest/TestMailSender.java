@@ -24,6 +24,8 @@ import javax.mail.internet.MimeMessage;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -61,7 +63,7 @@ extends TestCase {
         server.setSmtpPort(TEST_SMTP_PORT);
 
         String content = TestUtil.getTestMessage(NAME_PREFIX + " testRejectSender", bogusAddress, SENDER_NAME, null);
-        MimeMessage msg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(content.getBytes()));
+        MimeMessage msg = new JavaMailMimeMessage(JMSession.getSession(), new ByteArrayInputStream(content.getBytes()));
         Mailbox mbox = TestUtil.getMailbox(SENDER_NAME);
 
         // Test reject first recipient, get partial send value from LDAP.
@@ -94,8 +96,8 @@ extends TestCase {
         sendFailed = false;
         String validAddress = TestUtil.getAddress(RECIPIENT_NAME);
         InternetAddress[] recipients = new InternetAddress[2];
-        recipients[0] = new InternetAddress(validAddress);
-        recipients[1] = new InternetAddress(bogusAddress);
+        recipients[0] = new JavaMailInternetAddress(validAddress);
+        recipients[1] = new JavaMailInternetAddress(bogusAddress);
         msg.setRecipients(MimeMessage.RecipientType.TO, recipients);
         server.setSmtpSendPartial(false);
         try {

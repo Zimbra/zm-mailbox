@@ -32,6 +32,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 
 public abstract class CalendarUser {
 
@@ -171,11 +172,9 @@ public abstract class CalendarUser {
             if (address == null || address.length() < 1)
                 throw MailServiceException.ADDRESS_PARSE_ERROR("No address value", null);
             if (hasCn())
-                addr = new InternetAddress(address,
-                                           getCn(),
-                                           MimeConstants.P_CHARSET_UTF8);
+                addr = new JavaMailInternetAddress(address, getCn(), MimeConstants.P_CHARSET_UTF8);
             else
-                addr = new InternetAddress(address);
+                addr = new JavaMailInternetAddress(address);
             return addr;
         } catch (UnsupportedEncodingException e) {
             throw MailServiceException.ADDRESS_PARSE_ERROR(e);
@@ -194,7 +193,7 @@ public abstract class CalendarUser {
         InternetAddress addr;
         try {
             if (hasSentBy()) {
-                addr = new InternetAddress(getSentBy());
+                addr = new JavaMailInternetAddress(getSentBy());
             } else {
                 addr = getFriendlyAddress();
             }

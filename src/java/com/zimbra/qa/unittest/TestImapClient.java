@@ -15,6 +15,7 @@
 
 package com.zimbra.qa.unittest;
 
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.util.Log;
 import com.zimbra.cs.datasource.imap.ImapAppender;
 import com.zimbra.cs.mailclient.imap.MailboxInfo;
@@ -402,7 +403,7 @@ public class TestImapClient {
     }
 
     private static MimeMessage newTestMessage(int num) throws MessagingException {
-        MimeMessage mm = new MimeMessage(JMSession.getSession());
+        MimeMessage mm = new JavaMailMimeMessage(JMSession.getSession());
         mm.setHeader("Message-Id", "<test-" + num + "@foo.com>");
         mm.setHeader("To", "nobody@foo.com");
         mm.setHeader("From", "nobody@bar.com");

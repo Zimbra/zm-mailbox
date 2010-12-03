@@ -50,6 +50,9 @@ import org.apache.commons.httpclient.params.HttpMethodParams;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
+import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.FileUtil;
@@ -260,7 +263,7 @@ public class FeedManager {
             Element channel = root.getElement("channel");
             String hrefChannel = channel.getAttribute("link");
             String subjChannel = channel.getAttribute("title");
-            InternetAddress addrChannel = new InternetAddress("", subjChannel, "utf-8");
+            InternetAddress addrChannel = new JavaMailInternetAddress("", subjChannel, "utf-8");
             Date dateChannel = DateUtil.parseRFC2822Date(channel.getAttribute("lastBuildDate", null), new Date());
 
             List<Enclosure> enclosures = new ArrayList<Enclosure>(3);
@@ -279,7 +282,7 @@ public class FeedManager {
                 // construct an address for the author
                 InternetAddress addr = addrChannel;
                 try {
-                    addr = new InternetAddress(item.getAttribute("author"));
+                    addr = new JavaMailInternetAddress(item.getAttribute("author"));
                 } catch (Exception e) {
                     addr = parseDublinCreator(item.getAttribute("creator", null), addr);
                 }
@@ -322,7 +325,7 @@ public class FeedManager {
             // get defaults from the <feed> element
             InternetAddress addrFeed = parseAtomAuthor(feed.getOptionalElement("author"), null);
             if (addrFeed == null)
-                addrFeed = new InternetAddress("", feed.getAttribute("title"), "utf-8");
+                addrFeed = new JavaMailInternetAddress("", feed.getAttribute("title"), "utf-8");
             Date dateFeed = DateUtil.parseISO8601Date(feed.getAttribute("updated", null), new Date());
             List<Enclosure> enclosures = new ArrayList<Enclosure>();
             SubscriptionData<ParsedMessage> sdata = new SubscriptionData<ParsedMessage>(dateFeed.getTime());
@@ -396,16 +399,16 @@ public class FeedManager {
         // create the MIME message and wrap it
         try {
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
-            MimePart body = (hasAttachments ? new MimeBodyPart() : (MimePart) mm);
+            MimePart body = (hasAttachments ? new JavaMailMimeBodyPart() : (MimePart) mm);
             body.setText(content, "utf-8");
             body.setHeader("Content-Type", ctype);
 
             if (hasAttachments) {
                 // encode each enclosure as an attachment with Content-Location set
-                MimeMultipart mmp = new MimeMultipart("mixed");
+                MimeMultipart mmp = new JavaMailMimeMultipart("mixed");
                 mmp.addBodyPart((BodyPart) body);
                 for (Enclosure enc : attach) {
-                    MimeBodyPart part = new MimeBodyPart();
+                    MimeBodyPart part = new JavaMailMimeBodyPart();
                     part.setText("");
                     part.addHeader("Content-Location", enc.getLocation());
                     part.addHeader("Content-Type", enc.getContentType());
@@ -451,8 +454,8 @@ public class FeedManager {
             }
         }
 
-        try { return new InternetAddress(address, personal, "utf-8"); } catch (UnsupportedEncodingException e) { }
-        try { return new InternetAddress("", creator, "utf-8"); }       catch (UnsupportedEncodingException e) { }
+        try { return new JavaMailInternetAddress(address, personal, "utf-8"); } catch (UnsupportedEncodingException e) { }
+        try { return new JavaMailInternetAddress("", creator, "utf-8"); }       catch (UnsupportedEncodingException e) { }
         return addrChannel;
     }
 
@@ -465,8 +468,8 @@ public class FeedManager {
         if (personal.equals("") && address.equals(""))
             return addrChannel;
 
-        try { return new InternetAddress(address, personal, "utf-8"); }      catch (UnsupportedEncodingException e) { }
-        try { return new InternetAddress("", address + personal, "utf-8"); } catch (UnsupportedEncodingException e) { }
+        try { return new JavaMailInternetAddress(address, personal, "utf-8"); }      catch (UnsupportedEncodingException e) { }
+        try { return new JavaMailInternetAddress("", address + personal, "utf-8"); } catch (UnsupportedEncodingException e) { }
         return addrChannel;
     }
 

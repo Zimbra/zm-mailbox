@@ -37,6 +37,9 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -358,9 +361,9 @@ public class ForwardCalendarItem extends CalendarRequest {
         ZOrganizer org = inv.getOrganizer();
         if (org != null) {
             if (org.hasCn())
-                from = new InternetAddress(org.getAddress(), org.getCn(), MimeConstants.P_CHARSET_UTF8);
+                from = new JavaMailInternetAddress(org.getAddress(), org.getCn(), MimeConstants.P_CHARSET_UTF8);
             else
-                from = new InternetAddress(org.getAddress());
+                from = new JavaMailInternetAddress(org.getAddress());
         } else {
             from = sender;
         }
@@ -399,7 +402,7 @@ public class ForwardCalendarItem extends CalendarRequest {
         try {
             String uid = inv.getUid();
             if (mmInv != null) {
-                MimeMessage mm = new MimeMessage(mmInv);  // Get a copy so we can modify it.
+                MimeMessage mm = new JavaMailMimeMessage(mmInv);  // Get a copy so we can modify it.
                 // Discard all old headers except Subject and Content-*.
                 Enumeration eh = mmInv.getAllHeaders();
                 while (eh.hasMoreElements()) {
@@ -581,7 +584,7 @@ public class ForwardCalendarItem extends CalendarRequest {
                     // We have a calendar part and we haven't replaced yet.  The calendar part must be
                     // a child of this multipart.
                     if (mp.removeBodyPart(mCalendarPart)) {
-                        MimeBodyPart newCalendarPart = new MimeBodyPart();
+                        MimeBodyPart newCalendarPart = new JavaMailMimeBodyPart();
                         setCalendarContent(newCalendarPart, mUid, mCalNew);
                         mp.addBodyPart(newCalendarPart);
                         mCalendarPartReplaced = true;

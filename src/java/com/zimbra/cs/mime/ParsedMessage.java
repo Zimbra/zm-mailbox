@@ -48,6 +48,7 @@ import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.EmailUtil;
@@ -558,7 +559,7 @@ public class ParsedMessage {
         if (envSenderString != null) {
             try {
                 // NB: 'strict' being 'true' causes <> to except
-                InternetAddress envSender = new InternetAddress(envSenderString, true);
+                InternetAddress envSender = new JavaMailInternetAddress(envSenderString, true);
                 if (envSender.getAddress() != null) {
                     String[] envSenderAddrParts = EmailUtil.getLocalPartAndDomain(envSender.getAddress());
                     if (envSenderAddrParts != null) {

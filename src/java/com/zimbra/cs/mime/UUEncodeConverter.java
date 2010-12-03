@@ -33,15 +33,25 @@ import javax.mail.util.ByteArrayDataSource;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
+import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.ByteUtil.PositionInputStream;
 
 public class UUEncodeConverter extends MimeVisitor {
-    protected boolean visitMultipart(MimeMultipart mmp, VisitPhase visitKind)  { return false; }
-    protected boolean visitBodyPart(MimeBodyPart bp)                           { return false; }
+    @Override
+    protected boolean visitMultipart(MimeMultipart mmp, VisitPhase visitKind) {
+        return false;
+    }
 
+    @Override
+    protected boolean visitBodyPart(MimeBodyPart bp) {
+        return false;
+    }
+
+    @Override
     protected boolean visitMessage(MimeMessage msg, VisitPhase visitKind) throws MessagingException {
         // do the decode in the exit phase
         if (visitKind != VisitPhase.VISIT_END)
@@ -106,9 +116,9 @@ public class UUEncodeConverter extends MimeVisitor {
                 return false;
 
             // create MimeParts for the extracted files
-            mmp = new MimeMultipart("mixed");
+            mmp = new JavaMailMimeMultipart("mixed");
             for (UUDecodedFile uu : uufiles) {
-                MimeBodyPart mbp = new MimeBodyPart();
+                MimeBodyPart mbp = new JavaMailMimeBodyPart();
                 mbp.setHeader("Content-Type", uu.getContentType());
                 mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT).setParameter("filename", uu.getFilename()).toString());
                 mbp.setDataHandler(new DataHandler(uu.getDataSource()));
@@ -134,7 +144,7 @@ public class UUEncodeConverter extends MimeVisitor {
                 }
                 ByteUtil.copy(isOrig, true, baos, true);
 
-                MimeBodyPart mbp = new MimeBodyPart();
+                MimeBodyPart mbp = new JavaMailMimeBodyPart();
                 mbp.setDataHandler(new DataHandler(new ByteArrayDataSource(baos.toByteArray(), MimeConstants.CT_TEXT_PLAIN)));
                 mmp.addBodyPart(mbp, 0);
             } finally {
@@ -159,7 +169,7 @@ public class UUEncodeConverter extends MimeVisitor {
         private long mStartOffset, mEndOffset;
         private byte[] mContent;
 
-        private UUDecodedFile(PositionInputStream is, String filename, long start) throws IOException {
+        UUDecodedFile(PositionInputStream is, String filename, long start) throws IOException {
             mFilename = filename;
             mStartOffset = start;
 
@@ -208,7 +218,7 @@ public class UUEncodeConverter extends MimeVisitor {
 
         long getStartOffset()  { return mStartOffset; }
         long getEndOffset()    { return mEndOffset; }
-        byte[] getContent()    { return mContent; }
+//        byte[] getContent()    { return mContent; }
         String getContentType() { return mContentType; }
         String getFilename()   { return mFilename; }
 
@@ -217,17 +227,5 @@ public class UUEncodeConverter extends MimeVisitor {
             bads.setName(mFilename);
             return bads;
         }
-    }
-
-    public static void main(String[] args) throws MessagingException, IOException {
-        MimeMessage mm = new MimeMessage(com.zimbra.cs.util.JMSession.getSession(), new java.io.FileInputStream("c:\\tmp\\uuencode-1"));
-        new UUEncodeConverter().accept(mm);
-        mm.saveChanges();
-        mm.writeTo(new java.io.FileOutputStream("c:\\tmp\\decoded-1"));
-
-        mm = new MimeMessage(com.zimbra.cs.util.JMSession.getSession(), new java.io.FileInputStream("c:\\tmp\\uuencode-2"));
-        new UUEncodeConverter().accept(mm);
-        mm.saveChanges();
-        mm.writeTo(new java.io.FileOutputStream("c:\\tmp\\decoded-2"));
     }
 }

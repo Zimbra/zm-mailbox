@@ -42,6 +42,7 @@ import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.mail.MailUtils;
 import org.apache.jsieve.mail.SieveMailException;
 
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -401,7 +402,7 @@ public class ZimbraMailAdapter implements MailAdapter
                     String address = st.nextToken();
                     String delim = st.hasMoreTokens()?st.nextToken():"";
                     try {
-                        InternetAddress inetAddr = new InternetAddress(address);
+                        InternetAddress inetAddr = new JavaMailInternetAddress(address);
                         String addr = inetAddr.getAddress();
                         String unicodeAddr = IDNUtil.toUnicode(addr);
                         if (unicodeAddr.equalsIgnoreCase(addr)) {

@@ -31,6 +31,7 @@ import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -58,17 +59,17 @@ public class AccountUtil {
         }
 
         try {
-            return new InternetAddress(address, personalPart, MimeConstants.P_CHARSET_UTF8);
+            return new JavaMailInternetAddress(address, personalPart, MimeConstants.P_CHARSET_UTF8);
         } catch (UnsupportedEncodingException e) { }
 
         // UTF-8 should *always* be supported (i.e. this is actually unreachable)
         try {
             // fall back to using the system's default charset (also pretty much guaranteed not to be "unsupported")
-            return new InternetAddress(address, personalPart);
+            return new JavaMailInternetAddress(address, personalPart);
         } catch (UnsupportedEncodingException e) { }
 
         // if we ever reached this point (which we won't), just return an address with no personal part
-        InternetAddress ia = new InternetAddress();
+        InternetAddress ia = new JavaMailInternetAddress();
         ia.setAddress(address);
         return ia;
     }
@@ -84,10 +85,10 @@ public class AccountUtil {
         String address = SystemUtil.coalesce(acct.getPrefFromAddress(), acct.getName());
         String personal = SystemUtil.coalesce(acct.getPrefFromDisplay(), acct.getDisplayName(), acct.getCn());
         try {
-            return new InternetAddress(address, personal, MimeConstants.P_CHARSET_UTF8);
+            return new JavaMailInternetAddress(address, personal, MimeConstants.P_CHARSET_UTF8);
         } catch (UnsupportedEncodingException e) {
             ZimbraLog.system.error("Unable to encode address %s <%s>", personal, address);
-            InternetAddress ia = new InternetAddress();
+            InternetAddress ia = new JavaMailInternetAddress();
             ia.setAddress(address);
             return ia;
         }
@@ -111,10 +112,10 @@ public class AccountUtil {
         }
         String personal = acct.getPrefReplyToDisplay();
         try {
-            return new InternetAddress(address, personal, MimeConstants.P_CHARSET_UTF8);
+            return new JavaMailInternetAddress(address, personal, MimeConstants.P_CHARSET_UTF8);
         } catch (UnsupportedEncodingException e) {
             ZimbraLog.system.error("Unable to encode address %s <%s>", personal, address);
-            InternetAddress ia = new InternetAddress();
+            InternetAddress ia = new JavaMailInternetAddress();
             ia.setAddress(address);
             return ia;
         }

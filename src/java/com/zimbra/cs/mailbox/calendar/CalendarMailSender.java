@@ -73,6 +73,10 @@ import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
+import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 
 public class CalendarMailSender {
 
@@ -163,7 +167,7 @@ public class CalendarMailSender {
         Address sender = null;
         if (onBehalfOf) {
             try {
-                sender = new InternetAddress(senderAddr);
+                sender = new JavaMailInternetAddress(senderAddr);
             } catch (AddressException e) {
                 throw MailServiceException.ADDRESS_PARSE_ERROR(e);
             }
@@ -391,7 +395,7 @@ public class CalendarMailSender {
         try {
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
 
-            MimeMultipart mmp = new MimeMultipart("alternative");
+            MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
             mm.setContent(mmp);
 
             // Add the text as DESCRIPTION property in the iCalendar part.
@@ -401,13 +405,13 @@ public class CalendarMailSender {
 
             // ///////
             // TEXT part (add me first!)
-            MimeBodyPart textPart = new MimeBodyPart();
+            MimeBodyPart textPart = new JavaMailMimeBodyPart();
             textPart.setText(desc, MimeConstants.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
 
             // HTML part is needed to keep Outlook happy as it doesn't know
             // how to deal with a message with only text/plain but no HTML.
-            MimeBodyPart htmlPart = new MimeBodyPart();
+            MimeBodyPart htmlPart = new JavaMailMimeBodyPart();
             if (descHtml != null) {
                 ContentType ct = new ContentType(MimeConstants.CT_TEXT_HTML);
                 ct.setParameter(MimeConstants.P_CHARSET, MimeConstants.P_CHARSET_UTF8);
@@ -500,7 +504,7 @@ public class CalendarMailSender {
                     // We have a calendar part and we haven't replaced yet.  The calendar part must be
                     // a child of this multipart.
                     if (mp.removeBodyPart(mCalendarPart)) {
-                        MimeBodyPart newCalendarPart = new MimeBodyPart();
+                        MimeBodyPart newCalendarPart = new JavaMailMimeBodyPart();
                         setCalendarContent(newCalendarPart, mUid, mCal);
                         mp.addBodyPart(newCalendarPart);
                         mReplaced = true;
@@ -522,7 +526,7 @@ public class CalendarMailSender {
         try {
             String uid = inv.getUid();
             if (srcMm != null) {
-                MimeMessage mm = new MimeMessage(srcMm);  // Get a copy so we can modify it.
+                MimeMessage mm = new JavaMailMimeMessage(srcMm);  // Get a copy so we can modify it.
                 // Discard all old headers except Subject and Content-*.
                 Enumeration eh = srcMm.getAllHeaders();
                 while (eh.hasMoreElements()) {
@@ -576,7 +580,7 @@ public class CalendarMailSender {
         List<Address> rcpts = new ArrayList<Address>();
         for (String to : forwardTo) {
             try {
-                rcpts.add(new InternetAddress(to));
+                rcpts.add(new JavaMailInternetAddress(to));
             } catch (AddressException e) {
                 ZimbraLog.calendar.warn("Ignoring invalid address \"" + to + "\" during invite forward");
             }
@@ -585,13 +589,13 @@ public class CalendarMailSender {
             return null;
         MimeMessage mm = null;
         try {
-            mm = new MimeMessage(mmOrig);
+            mm = new JavaMailMimeMessage(mmOrig);
             mm.removeHeader("To");
             mm.removeHeader("Cc");
             mm.removeHeader("Bcc");
             mm.addRecipients(RecipientType.TO, rcpts.toArray(new Address[0]));
             // Set Reply-To to the original sender.
-            mm.setReplyTo(new Address[] { new InternetAddress(origSenderEmail) });
+            mm.setReplyTo(new Address[] { new JavaMailInternetAddress(origSenderEmail) });
             mm.removeHeader("Date");
             mm.removeHeader("Message-ID");
             mm.removeHeader("Return-Path");
@@ -615,7 +619,7 @@ public class CalendarMailSender {
         List<Address> rcpts = new ArrayList<Address>();
         for (String to : forwardTo) {
             try {
-                rcpts.add(new InternetAddress(to));
+                rcpts.add(new JavaMailInternetAddress(to));
             } catch (AddressException e) {
                 ZimbraLog.calendar.warn("Ignoring invalid address \"" + to + "\" during invite forward");
             }
@@ -645,7 +649,7 @@ public class CalendarMailSender {
         MimeMessage mm = null;
         try {
             mm = new Mime.FixedMimeMessage(JMSession.getSession());
-            mm.setFrom(new InternetAddress(origSenderEmail));
+            mm.setFrom(new JavaMailInternetAddress(origSenderEmail));
             mm.addRecipients(RecipientType.TO, rcpts.toArray(new Address[0]));
             // Set special header to indicate the forwarding attendee.
             mm.setHeader(CalendarMailSender.X_ZIMBRA_CALENDAR_INTENDED_FOR, forwarderEmail);
@@ -726,7 +730,7 @@ public class CalendarMailSender {
     throws ServiceException {
         Address toAddr;
         try {
-            toAddr = new InternetAddress(toEmail);
+            toAddr = new JavaMailInternetAddress(toEmail);
         } catch (AddressException e) {
             throw ServiceException.FAILURE("Bad address: " + toEmail, e);
         }
@@ -945,7 +949,7 @@ public class CalendarMailSender {
 
     public static MimeBodyPart makeICalIntoMimePart(String uid, ZVCalendar cal) throws ServiceException {
         try {
-            MimeBodyPart mbp = new MimeBodyPart();
+            MimeBodyPart mbp = new JavaMailMimeBodyPart();
             setCalendarContent(mbp, uid, cal);
             return mbp;
         } catch (MessagingException e) {

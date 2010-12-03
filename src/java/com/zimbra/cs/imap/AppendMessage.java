@@ -27,6 +27,8 @@ import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailInternetHeaders;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -149,7 +151,7 @@ class AppendMessage {
         ParsedMessage pm = new ParsedMessage(content, receivedDate, idxAttach);
         try {
             if (!pm.getSender().equals("")) {
-                InternetAddress ia = new InternetAddress(pm.getSender());
+                InternetAddress ia = new JavaMailInternetAddress(pm.getSender());
                 if (AccountUtil.addressMatchesAccount(mbox.getAccount(), ia.getAddress()))
                     flags |= Flag.BITMASK_FROM_ME;
             }
@@ -235,7 +237,7 @@ class AppendMessage {
         InputStream is = new BufferedInputStream(content.getInputStream());
         try {
             // inefficient, but must be done before creating the ParsedMessage
-            return getSentDate(new InternetHeaders(is));
+            return getSentDate(new JavaMailInternetHeaders(is));
         } catch (MessagingException e) {
             return null;
         } finally {

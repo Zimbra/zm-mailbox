@@ -1,6 +1,7 @@
 package com.zimbra.cs.mailbox.alerts;
 
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -46,7 +47,7 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
             ZimbraLog.scheduler.info("Unable to send calendar reminder sms since %s is not set", Provisioning.A_zimbraCalendarReminderDeviceEmail);
             return;
         }
-        mm.setRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(to));
+        mm.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(to));
         mm.setText(getText(calItem, invite, locale, tz), MimeConstants.P_CHARSET_UTF8);
         mm.saveChanges();
         MailSender mailSender = calItem.getMailbox().getMailSender();

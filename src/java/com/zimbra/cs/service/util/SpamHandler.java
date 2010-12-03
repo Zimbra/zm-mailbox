@@ -35,6 +35,9 @@ import com.google.common.collect.Lists;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
+import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -88,10 +91,9 @@ public class SpamHandler {
         Message msg = mbox.getMessageById(null, sr.messageId);
 
         MimeMultipart mmp = null;
-        mmp = new MimeMultipart("mixed");
-        out.setContent(mmp);
+        mmp = new JavaMailMimeMultipart("mixed");
 
-        MimeBodyPart infoPart = new MimeBodyPart();
+        MimeBodyPart infoPart = new JavaMailMimeBodyPart();
         infoPart.setHeader("Content-Description", "Zimbra spam classification report");
         String body = String.format(
             "Classified-By: %s\r\n" +
@@ -107,11 +109,13 @@ public class SpamHandler {
         mmp.addBodyPart(infoPart);
 
         MailboxBlob blob = msg.getBlob();
-        MimeBodyPart mbp = new MimeBodyPart();
+        MimeBodyPart mbp = new JavaMailMimeBodyPart();
         mbp.setDataHandler(new DataHandler(new MailboxBlobDataSource(blob)));
         mbp.setHeader("Content-Type", MimeConstants.CT_MESSAGE_RFC822);
         mbp.setHeader("Content-Disposition", Part.ATTACHMENT);
         mmp.addBodyPart(mbp);
+
+        out.setContent(mmp);
 
         out.addHeader(config.getSpamReportSenderHeader(), sr.accountName);
         out.addHeader(config.getSpamReportTypeHeader(), isSpamString);
@@ -255,7 +259,7 @@ public class SpamHandler {
         }
 
         try {
-            report.reportRecipient = new InternetAddress(address, true);
+            report.reportRecipient = new JavaMailInternetAddress(address, true);
         } catch (MessagingException e) {
             throw ServiceException.INVALID_REQUEST("Invalid address: " + address, e);
         }

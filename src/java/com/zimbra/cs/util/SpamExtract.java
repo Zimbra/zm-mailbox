@@ -50,6 +50,7 @@ import org.apache.commons.httpclient.protocol.Protocol;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -341,9 +342,9 @@ public class SpamExtract {
             ByteUtil.copy(gm.getResponseBodyAsStream(), true, buffer, false);
             if (buffer.isSpooled()) {
                 sfis = new SharedFileInputStream(buffer.getFile());
-                mm = new MimeMessage(mJMSession, sfis);
+                mm = new JavaMailMimeMessage(mJMSession, sfis);
             } else {
-                mm = new MimeMessage(mJMSession, buffer.getInputStream());
+                mm = new JavaMailMimeMessage(mJMSession, buffer.getInputStream());
             }
             writeAttachedMessages(mm, outdir, gm.getPath());
         } finally {

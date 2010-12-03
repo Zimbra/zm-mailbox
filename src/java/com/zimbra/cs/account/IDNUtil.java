@@ -34,6 +34,7 @@ import gnu.inet.encoding.IDNAException;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.cs.account.AttributeManager.IDNType;
 
 public class IDNUtil {
@@ -383,11 +384,11 @@ public class IDNUtil {
             asciiName = m.group(1) + m.group(2) + asciiDomain + m.group(4);
         }
         try {
-            InternetAddress ia = new InternetAddress(asciiName);
+            InternetAddress ia = new JavaMailInternetAddress(asciiName);
             
             String personal = ia.getPersonal();
             if (personal != null)
-                ia =  new InternetAddress(ia.getAddress(), personal, MimeConstants.P_CHARSET_UTF8);
+                ia =  new JavaMailInternetAddress(ia.getAddress(), personal, MimeConstants.P_CHARSET_UTF8);
                 
             /*
              * note, if personal part contains non-ascii chars, it will be 
@@ -449,7 +450,7 @@ public class IDNUtil {
     
     private static String toUnicodeWithPersonalPart(String name) {
         try {
-            InternetAddress ia = new InternetAddress(name, true);
+            InternetAddress ia = new JavaMailInternetAddress(name, true);
             /*
              * InternetAddress.toUnicodeString only deals with 
              * non-ascii chars in personal part, it has nothing 
@@ -460,7 +461,7 @@ public class IDNUtil {
             String addr = ia.getAddress();
             String unicodeAddr = toUnicode(addr);
             try {
-                ia = new InternetAddress(unicodeAddr, ia.getPersonal(), MimeConstants.P_CHARSET_UTF8);
+                ia = new JavaMailInternetAddress(unicodeAddr, ia.getPersonal(), MimeConstants.P_CHARSET_UTF8);
                 
                 /*
                  *  call InternetAddress.toUnicodeString instead of 

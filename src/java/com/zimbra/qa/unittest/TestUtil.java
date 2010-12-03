@@ -40,6 +40,7 @@ import org.testng.TestListenerAdapter;
 import org.testng.TestNG;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -988,7 +989,7 @@ extends Assert {
             content = getContent(mbox, msg.getId());
         }
         assertNotNull("Content was not fetched from the server", content);
-        MimeMessage mimeMsg = new MimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content.getBytes()));
+        MimeMessage mimeMsg = new JavaMailMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content.getBytes()));
         return mimeMsg.getHeader(headerName, null);
     }
 

@@ -14,37 +14,39 @@
  */
 package com.zimbra.cs.datasource.imap;
 
-import com.zimbra.cs.datasource.SyncUtil;
-import com.zimbra.cs.mailclient.imap.ImapConnection;
-import com.zimbra.cs.mailclient.imap.Flags;
-import com.zimbra.cs.mailclient.imap.Literal;
-import com.zimbra.cs.mailclient.imap.AppendResult;
-import com.zimbra.cs.mailclient.imap.MessageData;
-import com.zimbra.cs.mailclient.imap.Envelope;
-import com.zimbra.cs.mailclient.imap.MailboxInfo;
-import com.zimbra.cs.mailclient.imap.ImapRequest;
-import com.zimbra.cs.mailclient.imap.CAtom;
-import com.zimbra.cs.mailclient.imap.MailboxName;
-import com.zimbra.cs.mailclient.imap.ResponseText;
-import com.zimbra.cs.mailclient.imap.ImapData;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.store.MailboxBlob;
-import com.zimbra.cs.store.StoreManager;
-import com.zimbra.common.service.ServiceException;
-
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MailDateFormat;
-import javax.mail.MessagingException;
-import java.util.List;
-import java.util.Date;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
-import java.io.InputStream;
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MailDateFormat;
+import javax.mail.internet.MimeMessage;
+
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.datasource.SyncUtil;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailclient.imap.AppendResult;
+import com.zimbra.cs.mailclient.imap.CAtom;
+import com.zimbra.cs.mailclient.imap.Envelope;
+import com.zimbra.cs.mailclient.imap.Flags;
+import com.zimbra.cs.mailclient.imap.ImapConnection;
+import com.zimbra.cs.mailclient.imap.ImapData;
+import com.zimbra.cs.mailclient.imap.ImapRequest;
+import com.zimbra.cs.mailclient.imap.Literal;
+import com.zimbra.cs.mailclient.imap.MailboxInfo;
+import com.zimbra.cs.mailclient.imap.MailboxName;
+import com.zimbra.cs.mailclient.imap.MessageData;
+import com.zimbra.cs.mailclient.imap.ResponseText;
+import com.zimbra.cs.store.MailboxBlob;
+import com.zimbra.cs.store.StoreManager;
 
 public class ImapAppender {
     private final ImapConnection connection;
@@ -89,15 +91,18 @@ public class ImapAppender {
 
     private static Data getData(final File file) {
         return new Data() {
+            @Override
             public InputStream getInputStream() throws IOException {
                 return new FileInputStream(file);
             }
+
+            @Override
             public int getSize() {
                 return (int) file.length();
             }
         };
     }
-    
+
     private long append(MessageInfo mi, Literal data) throws IOException {
         ImapRequest req = connection.newRequest(CAtom.APPEND, new MailboxName(mailbox));
         if (mi.flags != null) {
@@ -118,8 +123,7 @@ public class ImapAppender {
     }
 
     // Slow APPEND for servers lacking UIDPLUS capability
-    private long appendSlow(MessageInfo mi, Literal lit)
-        throws IOException, MessagingException {
+    private long appendSlow(MessageInfo mi, Literal lit) throws IOException, MessagingException {
         MailboxInfo mb = connection.getMailboxInfo();
         if (mdf == null) {
             mdf = new MailDateFormat();
@@ -194,8 +198,7 @@ public class ImapAppender {
         return sb.toString();
     }
 
-    private List<Long> findUids(String seq, final MessageInfo mi)
-        throws IOException, MessagingException {
+    private List<Long> findUids(String seq, final MessageInfo mi) throws IOException, MessagingException {
         final List<Long> uids = new ArrayList<Long>(1);
         Map<Long, MessageData> mds = connection.uidFetch(seq, "(RFC822.SIZE ENVELOPE)");
         for (MessageData md : mds.values()) {
@@ -206,16 +209,14 @@ public class ImapAppender {
         return uids;
     }
 
-    private boolean matches(MessageInfo mi, MessageData md)
-        throws IOException, MessagingException {
+    private boolean matches(MessageInfo mi, MessageData md) throws IOException, MessagingException {
         // Message size must match
         if (mi.data.getSize() == md.getRfc822Size()) {
             // Message-ID, and optional Subject must match
             Envelope env = md.getEnvelope();
             if (env != null) {
                 String subj = mi.mm.getSubject();
-                return mi.mm.getMessageID().equals(env.getMessageId()) &&
-                       (subj == null || subj.equals(env.getSubject()));
+                return mi.mm.getMessageID().equals(env.getMessageId()) && (subj == null || subj.equals(env.getSubject()));
             }
         }
         return false;
@@ -225,12 +226,14 @@ public class ImapAppender {
         return connection.status(mailbox, "UIDNEXT").getUidNext();
     }
 
-
     private static Data getData(final byte[] b) {
         return new Data() {
+            @Override
             public InputStream getInputStream() throws IOException {
                 return new ByteArrayInputStream(b);
             }
+
+            @Override
             public int getSize() {
                 return b.length;
             }
@@ -246,9 +249,12 @@ public class ImapAppender {
         MessageInfo(Message msg) throws ServiceException {
             final MailboxBlob mblob = msg.getBlob();
             data = new Data() {
+                @Override
                 public InputStream getInputStream() throws IOException {
                     return StoreManager.getInstance().getContent(mblob);
                 }
+
+                @Override
                 public int getSize() throws IOException {
                     return (int) mblob.getSize();
                 }
@@ -262,7 +268,7 @@ public class ImapAppender {
             this.data = data;
             InputStream is = data.getInputStream();
             try {
-                mm = new MimeMessage(null, is);
+                mm = new JavaMailMimeMessage(null, is);
                 this.flags = flags;
                 date = mm.getReceivedDate();
                 if (date == null) {
@@ -278,6 +284,7 @@ public class ImapAppender {
 
     private static interface Data {
         InputStream getInputStream() throws IOException;
+
         int getSize() throws IOException;
     }
 }

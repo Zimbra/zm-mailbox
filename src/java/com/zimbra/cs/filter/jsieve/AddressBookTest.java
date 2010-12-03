@@ -34,6 +34,7 @@ import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -139,7 +140,7 @@ public class AddressBookTest extends AbstractTest {
                         try {
                             String iaddrStr = headerVal;
                             try {
-                                InternetAddress iaddr = new InternetAddress(headerVal);
+                                InternetAddress iaddr = new JavaMailInternetAddress(headerVal);
                                 iaddrStr = iaddr.getAddress();
                             } catch (AddressException e1) {
                             }

@@ -61,6 +61,7 @@ import org.apache.commons.cli.ParseException;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
@@ -1772,7 +1773,7 @@ public class ZMailboxUtil implements DebugListener {
         
         try {
             if (date == -1) {
-                MimeMessage mm = new MimeMessage(mSession, new ByteArrayInputStream(data));
+                MimeMessage mm = new JavaMailMimeMessage(mSession, new ByteArrayInputStream(data));
                 Date d = mm.getSentDate();
                 if (d != null) date = d.getTime();
                 else date = 0;

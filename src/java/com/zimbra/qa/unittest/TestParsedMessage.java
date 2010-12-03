@@ -24,6 +24,7 @@ import javax.mail.internet.MimeMessage;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -45,10 +46,12 @@ extends TestCase {
         String convertedSubject;
         String rawContent;
         boolean wasMutated;
+
+        ExpectedResults()  { }
     }
-    
-    public void setUp()
-    throws Exception {
+
+    @Override
+    public void setUp() throws Exception {
         cleanUp();
     }
     
@@ -77,7 +80,7 @@ extends TestCase {
         verifyParsedMessage(pm, expected);
         
         // Test ParsedMessage created from MimeMessage. 
-        MimeMessage mimeMsg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(expected.rawContent.getBytes()));
+        MimeMessage mimeMsg = new JavaMailMimeMessage(JMSession.getSession(), new ByteArrayInputStream(expected.rawContent.getBytes()));
         pm = new ParsedMessage(mimeMsg, false);
         verifyParsedMessage(pm, expected);
         pm = new ParsedMessage(mimeMsg, true);
@@ -113,7 +116,7 @@ extends TestCase {
         
         // Test ParsedMessage created from MimeMessage.  Can't verify entire content
         // because JavaMail mangles the headers.
-        MimeMessage mimeMsg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(expected.rawContent.getBytes()));
+        MimeMessage mimeMsg = new JavaMailMimeMessage(JMSession.getSession(), new ByteArrayInputStream(expected.rawContent.getBytes()));
         pm = new ParsedMessage(mimeMsg, false);
         assertTrue((new String(pm.getRawData()).contains("oldsubject")));
         assertTrue(getContent(pm.getMimeMessage()).contains("newsubject"));
@@ -183,12 +186,12 @@ extends TestCase {
         verifyMutatedMessage(pm, substring, true);
         
         // Test ParsedMessage created from MimeMessage, attachment indexing off.
-        MimeMessage mimeMsg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(content.getBytes()));
+        MimeMessage mimeMsg = new JavaMailMimeMessage(JMSession.getSession(), new ByteArrayInputStream(content.getBytes()));
         pm = new ParsedMessage(mimeMsg, false);
         verifyMutatedMessage(pm, substring, true);
         
         // Test ParsedMessage created from MimeMessage, attachment indexing on.
-        mimeMsg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(content.getBytes()));
+        mimeMsg = new JavaMailMimeMessage(JMSession.getSession(), new ByteArrayInputStream(content.getBytes()));
         pm = new ParsedMessage(mimeMsg, true);
         verifyMutatedMessage(pm, substring, true);
     }
@@ -234,7 +237,7 @@ extends TestCase {
         runContentTests(msg, pm);
         
         // Test ParsedMessage from MimeMessage
-        MimeMessage mimeMsg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(msg.getBytes()));
+        MimeMessage mimeMsg = new JavaMailMimeMessage(JMSession.getSession(), new ByteArrayInputStream(msg.getBytes()));
         pm = new ParsedMessage(mimeMsg, true);
         runContentTests(msg, pm);
     }
@@ -271,7 +274,7 @@ extends TestCase {
         runAddMessageTest(msg, pm);
         
         // Test ParsedMessage from MimeMessage
-        MimeMessage mimeMsg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(msg.getBytes()));
+        MimeMessage mimeMsg = new JavaMailMimeMessage(JMSession.getSession(), new ByteArrayInputStream(msg.getBytes()));
         pm = new ParsedMessage(mimeMsg, true);
         runAddMessageTest(msg, pm);
     }

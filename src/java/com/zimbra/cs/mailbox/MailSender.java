@@ -36,6 +36,7 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ByteUtil;
@@ -698,14 +699,14 @@ public class MailSender {
                 String senderHdr = mm.getHeader("Sender", null);
                 if (senderHdr != null && !senderHdr.equals("")) {
                     // In send-on-behalf-of, Sender header must be an allowed address to send from.
-                    InternetAddress sender = new InternetAddress(senderHdr);
+                    InternetAddress sender = new JavaMailInternetAddress(senderHdr);
                     if (AccountUtil.allowFromAddress(acct, sender.getAddress()))
                         overrideFromHeader = false;
                 } else {
                     // In plain send, From header must be an allowed address to send from.
                     String fromHdr = mm.getHeader("From", null);
                     if (fromHdr != null && !fromHdr.equals("")) {
-                        InternetAddress from = new InternetAddress(fromHdr);
+                        InternetAddress from = new JavaMailInternetAddress(fromHdr);
                         if (AccountUtil.allowFromAddress(acct, from.getAddress())) {
                             overrideFromHeader = false;
                         }
@@ -799,7 +800,7 @@ public class MailSender {
             } else {
                 rcptAddresses = new Address[mRecipients.size()];
                 for (int i = 0; i < rcptAddresses.length; i++) {
-                    rcptAddresses[i] = new InternetAddress(mRecipients.get(i));
+                    rcptAddresses[i] = new JavaMailInternetAddress(mRecipients.get(i));
                 }
             }
 

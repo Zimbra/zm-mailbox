@@ -38,6 +38,7 @@ import net.fortuna.ical4j.data.ContentHandler;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Property;
 
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -307,7 +308,7 @@ public class TestMain {
             baosOut = new OutputStreamWriter(baos, UTF8);
     
             // Do the conversion.
-            MimeMessage mm = new MimeMessage(JMSession.getSession(), sfisMime);
+            MimeMessage mm = new JavaMailMimeMessage(JMSession.getSession(), sfisMime);
             TnefToICalendar converter = getConverter();
             doneConversion = doConversion(mm, baosOut, converter, tnefFile, verbose);
             if (recurInfoFile != null) {

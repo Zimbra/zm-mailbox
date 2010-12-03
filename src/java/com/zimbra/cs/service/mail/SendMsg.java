@@ -36,6 +36,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -208,7 +209,7 @@ public class SendMsg extends MailDocumentHandler {
         try {
             // if we may need to mutate the message, we can't use the "updateHeaders" hack...
             if (anySystemMutators || needCalendarSentByFixup) {
-                MimeMessage mm = new MimeMessage(JMSession.getSession(), up.getInputStream());
+                MimeMessage mm = new JavaMailMimeMessage(JMSession.getSession(), up.getInputStream());
                 if (anySystemMutators)
                     return mm;
 
@@ -222,9 +223,11 @@ public class SendMsg extends MailDocumentHandler {
             }
 
             // ... but in general, for most installs this is safe
-            return new MimeMessage(JMSession.getSession(), up.getInputStream()) {
+            return new JavaMailMimeMessage(JMSession.getSession(), up.getInputStream()) {
                 @Override protected void updateHeaders() throws MessagingException {
-                    setHeader("MIME-Version", "1.0");  if (getMessageID() == null) updateMessageID();
+                    setHeader("MIME-Version", "1.0");
+                    if (getMessageID() == null)
+                        updateMessageID();
                 }
             };
         } catch (MessagingException e) {

@@ -26,6 +26,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.tar.TarEntry;
 import com.zimbra.common.util.tar.TarInputStream;
@@ -75,7 +76,7 @@ extends TestCase {
             if (entry.getName().endsWith(".eml")) {
                 byte[] content = new byte[(int) entry.getSize()];
                 assertEquals(content.length, tarIn.read(content));
-                MimeMessage message = new MimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content));
+                MimeMessage message = new JavaMailMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content));
                 byte[] body = ByteUtil.getContent(message.getInputStream(), 0);
                 if (hasBody) {
                     assertTrue(entry.getName() + " has no body", body.length > 0);
@@ -112,7 +113,7 @@ extends TestCase {
                 ByteArrayOutputStream buf = new ByteArrayOutputStream();
                 ByteUtil.copy(zipIn, false, buf, true);
                 byte[] content = buf.toByteArray();
-                MimeMessage message = new MimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content));
+                MimeMessage message = new JavaMailMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content));
                 byte[] body = ByteUtil.getContent(message.getInputStream(), 0);
                 if (hasBody) {
                     assertTrue(entry.getName() + " has no body", body.length > 0);

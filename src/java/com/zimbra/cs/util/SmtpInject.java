@@ -27,6 +27,8 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.net.SocketFactories;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -197,9 +199,9 @@ public class SmtpInject {
 
         try {
             // create a message
-            MimeMessage msg = new MimeMessage(session, new FileInputStream(file));
-            InternetAddress[] address = { new InternetAddress(recipient) };
-            msg.setFrom(new InternetAddress(sender));
+            MimeMessage msg = new JavaMailMimeMessage(session, new FileInputStream(file));
+            InternetAddress[] address = { new JavaMailInternetAddress(recipient) };
+            msg.setFrom(new JavaMailInternetAddress(sender));
 
             // attach the file to the message
             Transport transport = session.getTransport("smtp");

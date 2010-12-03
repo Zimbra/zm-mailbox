@@ -35,6 +35,7 @@ import org.dom4j.Element;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -213,10 +214,10 @@ public class ScheduleOutbox extends Collection {
             from = AccountUtil.getFriendlyEmailAddress(target);
             if (originator.toLowerCase().startsWith("mailto:"))
                 originator = originator.substring(7);
-            sender = new InternetAddress(originator);
+            sender = new JavaMailInternetAddress(originator);
             if (rcpt.toLowerCase().startsWith("mailto:"))
                 rcpt = rcpt.substring(7);
-            to = new InternetAddress(rcpt);
+            to = new JavaMailInternetAddress(rcpt);
             recipients.add(to);
         } catch (AddressException e) {
             resp.addElement(DavElements.E_RECIPIENT).setText(rcpt);

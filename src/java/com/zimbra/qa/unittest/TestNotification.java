@@ -35,6 +35,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
@@ -300,8 +301,8 @@ extends TestCase {
         Account account = TestUtil.getAccount(TAPPED_NAME);
         
         // Compare headers
-        MimeMessage tappedMimeMsg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(tappedMsgContent.getBytes()));
-        MimeMessage interceptedMimeMsg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(interceptedMsgContent.getBytes()));
+        MimeMessage tappedMimeMsg = new JavaMailMimeMessage(JMSession.getSession(), new ByteArrayInputStream(tappedMsgContent.getBytes()));
+        MimeMessage interceptedMimeMsg = new JavaMailMimeMessage(JMSession.getSession(), new ByteArrayInputStream(interceptedMsgContent.getBytes()));
         
         boolean headersOnly = account.getBooleanAttr(Provisioning.A_zimbraInterceptSendHeadersOnly, false);
         Set<String> tappedHeaderLines = getHeaderLines(tappedMimeMsg);

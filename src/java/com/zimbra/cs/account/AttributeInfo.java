@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
@@ -395,7 +396,7 @@ public class AttributeInfo {
             throw AccountServiceException.INVALID_ATTR_VALUE("address '" + addr + "' does not include domain", null);
 
         try {
-            InternetAddress ia = new InternetAddress(addr, true);
+            InternetAddress ia = new JavaMailInternetAddress(addr, true);
             // is this even needed?
             ia.validate();
             if (!personal && ia.getPersonal() != null && !ia.getPersonal().equals(""))

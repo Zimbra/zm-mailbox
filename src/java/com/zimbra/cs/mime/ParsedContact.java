@@ -36,6 +36,8 @@ import com.google.common.base.Strings;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
+import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CalculatorStream;
@@ -209,13 +211,13 @@ public class ParsedContact {
     private static MimeMessage generateMimeMessage(List<Attachment> attachments)
     throws MessagingException {
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
-        MimeMultipart multi = new MimeMultipart("mixed");
+        MimeMultipart multi = new JavaMailMimeMultipart("mixed");
         int part = 1;
         for (Attachment attach : attachments) {
             ContentDisposition cdisp = new ContentDisposition(Part.ATTACHMENT);
             cdisp.setParameter("filename", attach.getFilename()).setParameter("field", attach.getName());
 
-            MimeBodyPart bp = new MimeBodyPart();
+            MimeBodyPart bp = new JavaMailMimeBodyPart();
             bp.addHeader("Content-Disposition", cdisp.toString());
             bp.addHeader("Content-Type", attach.getContentType());
             bp.addHeader("Content-Transfer-Encoding", MimeConstants.ET_8BIT);
