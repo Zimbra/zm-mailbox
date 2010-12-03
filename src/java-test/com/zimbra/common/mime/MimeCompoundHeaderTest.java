@@ -106,6 +106,9 @@ public class MimeCompoundHeaderTest {
         test(false, "encoded continuation split across partials",
                 "inline;\n filename*0*=ISO-2022-JP''%1B%24%42%24%33%24%73%24%4B%24%41%24%4F%21%22%40;\n filename*1*=%24%33%26%21%2A%1B%28%42%2E%70%64%66",
                 "inline", new String[] { "filename", "\u3053\u3093\u306b\u3061\u306f\u3001\u4e16\u754c\uff01.pdf" });
+        test(false, "bare 8-bit chars in filename",
+                "attachment; filename=\"About \u00E5 \u00E4 \u00F6 Downloads.pdf\"",
+                "attachment", new String[] { "filename", "About \u00E5 \u00E4 \u00F6 Downloads.pdf" });
     }
 
     // FIXME: add tests for serialization (2231 or not, various charsets, quoting, folding, etc.)

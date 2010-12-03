@@ -18,18 +18,17 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
+//import java.nio.charset.Charset;
 
 import com.zimbra.common.mime.HeaderUtils.ByteBuilder;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
-public class MimeHeader {
+public class MimeHeader implements Cloneable {
     protected final String mName;
     protected byte[] mContent;
     protected int mValueStart;
-    protected String mCharset = "utf-8";
 
     /** Constructor for pre-analyzed header line read from message source.
      * @param name    Header field name.
@@ -49,7 +48,6 @@ public class MimeHeader {
         mName = header.mName;
         mContent = header.getRawHeader();
         mValueStart = header.mValueStart;
-        mCharset = header.mCharset;
     }
 
     /** Creates a new {@code MimeHeader} with {@code value} as the field value.
@@ -58,7 +56,7 @@ public class MimeHeader {
      *  has been performed.  When generating encoded-words, <tt>utf-8</tt> will
      *  be used as the encoding charset.  <i>Note: No line folding is done at
      *  present.</i> */
-    MimeHeader(final String name, final String value) {
+    public MimeHeader(final String name, final String value) {
         this(name, value, null);
     }
 
@@ -70,18 +68,20 @@ public class MimeHeader {
      *  <tt>utf-8</tt>.  <i>Note: No line folding is done at present.</i> */
     MimeHeader(final String name, final String value, final String encodingCharset) {
         mName = name;
-        if (encodingCharset != null && !encodingCharset.equals("")) {
-            mCharset = encodingCharset;
-        }
-        updateContent(escape(value, mCharset, false).getBytes());
+        String charset = encodingCharset != null && !encodingCharset.equals("") ? encodingCharset : null;
+        updateContent(escape(value, charset, false).getBytes());
     }
 
     /** Creates a new {@code MimeHeader} serialized as "<tt>{name}:
      *  {bvalue}CRLF</tt>".  {@code bvalue} is copied verbatim; no charset
      *  transforms, encoded-word handling, or folding is performed. */
-    MimeHeader(final String name, final byte[] bvalue) {
+    public MimeHeader(final String name, final byte[] bvalue) {
         mName = name;
         updateContent(bvalue);
+    }
+
+    @Override protected MimeHeader clone() {
+        return new MimeHeader(this);
     }
 
 
@@ -131,35 +131,38 @@ public class MimeHeader {
     }
 
     /** Returns the header's value (the bit after the '<tt>:</tt>') as a
-     *  {@code String} with no line folding.  No decoding is performed other
-     *  than removing said line folding. */
-    public String getEncoded() {
-        reserialize();
-        try {
-            if (mCharset != null && !mCharset.isEmpty()) {
-                return unfold(new String(mContent, mValueStart, mContent.length - mValueStart, mCharset));
-            }
-        } catch (UnsupportedEncodingException e) {
-        }
-        return unfold(new String(mContent, mValueStart, mContent.length - mValueStart));
+     *  {@code String}.  No decoding is performed other than removing the
+     *  trailing CRLF. */
+    @Override public String toString() {
+        return getEncodedValue(null);
     }
 
     /** Returns the header's value (the bit after the '<tt>:</tt>') as a
      *  {@code String}.  No decoding is performed other than removing the
      *  trailing CRLF. */
-    @Override public String toString() {
+    public String getEncodedValue() {
+        return getEncodedValue(null);
+    }
+
+    /** Returns the header's value (the bit after the '<tt>:</tt>') as a
+     *  {@code String}.  If non-{@code null}, the {@code charset} is used when
+     *  converting the header bytes to a {@code String}.  No decoding is
+     *  performed other than removing the trailing CRLF. */
+    public String getEncodedValue(String charset) {
         reserialize();
         int end = mContent.length, c;
         while (end > mValueStart && ((c = mContent[end-1]) == '\n' || c == '\r')) {
             end--;
         }
+        return createString(mContent, mValueStart, end - mValueStart, charset);
+    }
+
+    private static String createString(byte[] bytes, int offset, int length, String charsetName) {
         try {
-            if (mCharset != null && !mCharset.isEmpty()) {
-                return new String(mContent, mValueStart, end - mValueStart, mCharset);
-            }
+            return new String(bytes, offset, length, decodingCharset(charsetName));
         } catch (UnsupportedEncodingException e) {
+            return new String(bytes, offset, length);
         }
-        return new String(mContent, mValueStart, end - mValueStart);
     }
 
     /** Marks the header as "dirty" and requiring reserialization.  To enforce
@@ -167,7 +170,7 @@ public class MimeHeader {
     protected void markDirty() {
         mContent = null;
         mValueStart = -1;
-        // FIXME: if header is in a header block, should mark that block as dirty
+        // XXX: if header is in a header block, should mark that block as dirty?
     }
 
     /** Returns whether the header has been marked as needing reserialization.
@@ -183,7 +186,12 @@ public class MimeHeader {
     protected void reserialize() {
     }
 
-    private static final String DEFAULT_CHARSET = Charset.defaultCharset().name();
+//    static final String DEFAULT_CHARSET = Charset.defaultCharset().name();
+    static final String DEFAULT_CHARSET = HeaderUtils.normalizeCharset("iso-8859-1");
+
+    static String decodingCharset(String charset) {
+        return charset != null && !charset.trim().isEmpty() ? charset.trim() : DEFAULT_CHARSET;
+    }
 
     public static String decode(final String content) {
         try {
@@ -197,27 +205,22 @@ public class MimeHeader {
         return decode(content, 0, content.length, charset);
     }
 
+    @SuppressWarnings("null")
     static String decode(final byte[] content, final int start, final int length, final String charset) {
         // short-circuit if there are only ASCII characters and no "=?"
         final int end = start + length;
         boolean complicated = false;
         for (int pos = start; pos < end && !complicated; pos++) {
             byte c = content[pos];
-            if (c < 0 || c > 0x7E || (c == '=' && pos < end - 1 && content[pos + 1] == '?')) {
+            if (c <= 0 || c >= 0x7F || (c == '=' && pos < end - 1 && content[pos + 1] == '?')) {
                 complicated = true;
             }
         }
         if (!complicated) {
-            try {
-                if (charset != null && !charset.trim().equals("")) {
-                    return unfold(new String(content, start, length, charset));
-                }
-            } catch (Exception e) {
-            }
-            return unfold(new String(content, start, length));
+            return unfold(createString(content, start, length, charset));
         }
 
-        ByteBuilder builder = new ByteBuilder(length, charset);
+        ByteBuilder builder = new ByteBuilder(length, decodingCharset(charset));
         String value = null;
         boolean encoded = false;
         Boolean encwspenc = Boolean.FALSE;
@@ -307,10 +310,11 @@ public class MimeHeader {
                     ZimbraLog.system.fatal("out of memory", e);
                 } finally {
                     Runtime.getRuntime().halt(1);
+                    content = new byte[0];  // never reachable, but averts compiler warnings
                 }
             } catch (Throwable t) {
                 content = value.getBytes();
-                charset = Charset.defaultCharset().displayName();
+                charset = DEFAULT_CHARSET;
             }
             sb.append("=?").append(charset);
 
@@ -383,7 +387,7 @@ public class MimeHeader {
             if (c > 0x7F || c == '\0' || c == '\r' || c == '\n') {
                 needs2047++;  cleanFrom = len;
             } else if (!phrase) {
-                // if we're not in an RFC 2822 phrase, there is no such thing as "quoting"
+                // if we're not in an RFC 5322 phrase, there is no such thing as "quoting"
             } else if (c == '"' || c == '\\') {
                 needsQuote = true;  needsEscape++;  cleanFrom = len;
             } else if ((c != ' ' && !ATEXT_VALID[c]) || (c == ' ' && wsp)) {

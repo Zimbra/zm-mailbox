@@ -32,33 +32,44 @@ public class MimeCompoundHeader extends MimeHeader {
     private boolean mUse2231Encoding;
     private String mPrimaryValue;
     private Map<String, String> mParams = new LinkedHashMap<String, String>();
+    private String mCharset;
 
-    public MimeCompoundHeader(String name, String value) {
+    protected MimeCompoundHeader(String name, String value) {
         this(name, value, false);
     }
 
-    public MimeCompoundHeader(String name, String value, boolean use2231) {
-        super(name, value == null ? null : value.getBytes());
+    protected MimeCompoundHeader(String name, String value, boolean use2231) {
+        super(name, value == null ? null : getBytes(value));
         mUse2231Encoding = use2231;
         parse();
     }
 
-    MimeCompoundHeader(MimeHeader header) {
+    protected MimeCompoundHeader(MimeHeader header) {
         super(header);
-        parse();
+        if (header instanceof MimeCompoundHeader) {
+            MimeCompoundHeader mch = (MimeCompoundHeader) header;
+            mUse2231Encoding = mch.mUse2231Encoding;
+            mPrimaryValue    = mch.mPrimaryValue;
+            mCharset         = mch.mCharset;
+            mParams.putAll(mch.mParams);
+        } else {
+            parse();
+        }
     }
 
-    MimeCompoundHeader(String name, byte[] content, int start) {
+    protected MimeCompoundHeader(String name, byte[] content, int start) {
         super(name, content, start);
         parse();
     }
 
-    public MimeCompoundHeader(MimeCompoundHeader mch) {
-        super(mch);
-        mUse2231Encoding = mch.mUse2231Encoding;
-        mPrimaryValue    = mch.mPrimaryValue;
-        mParams.putAll(mch.mParams);
+    private static byte[] getBytes(String value) {
+        try {
+            return value == null ? null : value.getBytes(DEFAULT_CHARSET);
+        } catch (UnsupportedEncodingException e) {
+            return value.getBytes();
+        }
     }
+
 
     private void parse() {
         if (mContent == null) {
@@ -357,8 +368,8 @@ public class MimeCompoundHeader extends MimeHeader {
             }
 
             if (position + bb.length() > LINE_WRAP_LENGTH) {
-                line.append('\r').append('\n').append('\t');
-                position = 8;
+                line.append('\r').append('\n').append(' ');
+                position = 1;
             } else {
                 line.append(' ');
                 position++;
@@ -392,7 +403,7 @@ public class MimeCompoundHeader extends MimeHeader {
         RFC2231State state = RFC2231State.EQUALS;
         RFC2231State precomment;
         ByteBuilder key = null;
-        ByteBuilder value = new ByteBuilder();
+        ByteBuilder value = new ByteBuilder(DEFAULT_CHARSET);
         int comment = 0;
         int continued = -1;
         private boolean encoded = false;
@@ -439,7 +450,7 @@ public class MimeCompoundHeader extends MimeHeader {
 
         void reset() {
             key = new ByteBuilder();
-            value = new ByteBuilder();
+            value = new ByteBuilder(DEFAULT_CHARSET);
             continued = -1;
             encoded = false;
         }
@@ -464,7 +475,8 @@ public class MimeCompoundHeader extends MimeHeader {
                     if (parts == null) {
                         partials.put(pname, parts = new TreeMap<Integer, ParameterContinuation>());
                     }
-                    parts.put(continued, new ParameterContinuation(charset == null || charset.isEmpty() ? "us-ascii" : charset.toString(), encoded, value.toString()));
+                    String encoding = charset == null || charset.isEmpty() ? DEFAULT_CHARSET : decodingCharset(charset.toString());
+                    parts.put(continued, new ParameterContinuation(encoding, encoded, value.toString()));
                     attrs.put(pname, null);
                 } else {
                     if (encoded) {

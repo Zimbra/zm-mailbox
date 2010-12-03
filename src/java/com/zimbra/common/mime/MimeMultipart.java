@@ -30,7 +30,7 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
     private List<MimePart> mChildren = new ArrayList<MimePart>(3);
 
     public MimeMultipart(String subtype) {
-        super(new ContentType("multipart/" + (subtype == null || subtype.trim().equals("") ? "mixed" : subtype) + "; boundary=\"" + generateBoundary() + '"'));
+        super(new ContentType("multipart/" + (subtype == null || subtype.trim().equals("") ? "mixed" : subtype)).setParameter("boundary", generateBoundary()));
     }
 
     MimeMultipart(ContentType ctype, MimePart parent, long start, long body, MimeHeaderBlock headers) {
@@ -38,6 +38,20 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
         setEffectiveBoundary(ctype.getParameter("boundary"));
     }
 
+    MimeMultipart(MimeMultipart mmp) {
+        super(mmp);
+        mBoundary = mmp.mBoundary;
+        mPreamble = mmp.mPreamble == null ? null : mmp.mPreamble.clone();
+        mEpilogue = mmp.mEpilogue == null ? null : mmp.mEpilogue.clone();
+        for (MimePart child : mmp.mChildren) {
+            mChildren.add(child.clone().setParent(this));
+        }
+    }
+
+
+    @Override protected MimeMultipart clone() {
+        return new MimeMultipart(this);
+    }
 
     /** Returns the number of child parts of this multipart. */
     public int getCount() {
@@ -48,7 +62,7 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
         return mPreamble;
     }
 
-    MimeMultipart setPreamble(MimeBodyPart preamble) {
+    public MimeMultipart setPreamble(MimeBodyPart preamble) {
         mPreamble = preamble;
         return this;
     }
@@ -57,14 +71,14 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
         return mEpilogue;
     }
 
-    MimeMultipart setEpilogue(MimeBodyPart epilogue) {
+    public MimeMultipart setEpilogue(MimeBodyPart epilogue) {
         mEpilogue = epilogue;
         return this;
     }
 
-    /** Returns the (1-based) <code>index</code>th child of this multipart. */
+    /** Returns the (0-based) {@code index}th child of this multipart. */
     public MimePart getSubpart(int index) {
-        return (index < 1 || index > mChildren.size() ? null : mChildren.get(index - 1));
+        return (index < 0 || index >= mChildren.size() ? null : mChildren.get(index));
     }
 
     @Override public MimePart getSubpart(String part) {
@@ -79,7 +93,7 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
 
         MimePart subpart = null;
         try {
-            subpart = getSubpart(Integer.valueOf(dot == -1 ? part : part.substring(0, dot)));
+            subpart = getSubpart(Integer.valueOf(dot == -1 ? part : part.substring(0, dot)) - 1);
         } catch (NumberFormatException nfe) { }
 
         if (dot == -1 || subpart == null) {
@@ -109,25 +123,38 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
     }
 
     public MimeMultipart addPart(MimePart mp) {
-        return addPart(mp, mChildren.size() + 1);
+        return addPart(mp, mChildren.size());
     }
 
     public MimeMultipart addPart(MimePart mp, int index) {
         if (mp == null) {
             throw new NullPointerException();
-        } else if (index < 1 || index > mChildren.size() + 1) {
+        } else if (index < 0 || index > mChildren.size()) {
             throw new IndexOutOfBoundsException(Integer.toString(index));
         }
 
         markDirty(Dirty.CONTENT);
         mp.setParent(this);
-        mChildren.add(index - 1, mp);
+        mChildren.add(index, mp);
         return this;
     }
 
+    public MimePart removePart(int index) {
+        return mChildren.get(index).setParent(null);
+    }
+
+    public boolean removePart(MimePart mp) {
+        boolean present = mChildren.contains(mp);
+        if (present) {
+            mp.setParent(null);
+        }
+        return present;
+    }
+
     @Override void removeChild(MimePart mp) {
-        markDirty(Dirty.CONTENT);
-        mChildren.remove(mp);
+        if (mChildren.remove(mp)) {
+            markDirty(Dirty.CONTENT);
+        }
     }
 
 
@@ -156,11 +183,12 @@ public class MimeMultipart extends MimePart implements Iterable<MimePart> {
         return mBoundary;
     }
 
-    void setEffectiveBoundary(String boundary) {
+    String setEffectiveBoundary(String boundary) {
         // can't change a real boundary
         if (mBoundary == UNSET_BOUNDARY || mBoundary == null) {
             mBoundary = normalizeBoundary(boundary);
         }
+        return mBoundary;
     }
 
     private static String normalizeBoundary(String bnd) {

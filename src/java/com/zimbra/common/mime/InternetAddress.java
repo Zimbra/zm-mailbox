@@ -17,7 +17,9 @@ package com.zimbra.common.mime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InternetAddress {
+import com.zimbra.common.mime.MimeAddressHeader;
+
+public class InternetAddress implements Cloneable {
     private String mDisplay;
     private String mEmail;
     private String mCharset;
@@ -27,7 +29,15 @@ public class InternetAddress {
     }
 
     public InternetAddress(String display, String email) {
-        mDisplay = display;  mEmail = email;  mCharset = "utf-8";
+        mDisplay = display;
+        mEmail = email;
+        mCharset = "utf-8";
+    }
+
+    public InternetAddress(InternetAddress iaddr) {
+        mDisplay = iaddr.mDisplay;
+        mEmail = iaddr.mEmail;
+        mCharset = iaddr.mCharset;
     }
 
     public InternetAddress(String content) {
@@ -50,6 +60,11 @@ public class InternetAddress {
         if (mCharset == null) {
             mCharset = "utf-8";
         }
+    }
+
+    @Override
+    protected InternetAddress clone() {
+        return new InternetAddress(this);
     }
 
 
@@ -80,7 +95,9 @@ public class InternetAddress {
         return this;
     }
 
-    @Override public String toString() {
+    /** Returns the address, properly MIME encoded for use in a message. */
+    @Override
+    public String toString() {
         if (mDisplay != null) {
             return MimeHeader.escape(mDisplay, mCharset, true) + (mEmail != null ? (" <" + mEmail + '>') : "");
         } else if (mEmail != null) {
@@ -90,12 +107,8 @@ public class InternetAddress {
         }
     }
 
-    /**
-     * Returns a properly formatted address (RFC 822 syntax) of Unicode
-     * characters.
-     *
-     * @return Unicode address string
-     */
+    /** Returns the address, formatted as a {@link String}.  No MIME encoding
+     *  is done, so this form cannot be used in a message header. */
     public String toUnicodeString() {
         if (mDisplay != null) {
             return MimeHeader.quote(mDisplay) + (mEmail != null ? (" <" + mEmail + '>') : "");
@@ -106,6 +119,22 @@ public class InternetAddress {
         }
     }
 
+    @Override public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        } else if (!(o instanceof InternetAddress)) {
+            return false;
+        } else {
+            String addr1 = ((InternetAddress) o).getAddress(), addr2 = getAddress();
+            return addr1 == addr2 || (addr1 != null && addr1.equalsIgnoreCase(addr2));
+        }
+    }
+
+    @Override public int hashCode() {
+        String addr = getAddress();
+        return addr == null ? 0 : addr.toLowerCase().hashCode();
+    }
+
     /**
      * Parse the given comma separated sequence of addresses into a list of
      * {@link InternetAddress} objects. Addresses must follow RFC822 syntax.
@@ -114,15 +143,28 @@ public class InternetAddress {
      * @return list of {@link InternetAddress}
      */
     public static List<InternetAddress> parseHeader(String raw) {
+        if (raw == null) {
+            return null;
+        }
         byte[] array = raw.getBytes();
         return parseHeader(array, 0, array.length);
     }
 
+    static List<InternetAddress> parseHeader(MimeHeader header) {
+        if (header instanceof MimeAddressHeader) {
+            return ((MimeAddressHeader) header).getAddresses();
+        } else {
+            byte[] content = header.getRawHeader();
+            return parseHeader(content, header.mValueStart, content.length);
+        }
+    }
+
     static List<InternetAddress> parseHeader(final byte[] content, final int start, final int length) {
         // FIXME: will split the header incorrectly if there's a ',' in the middle of a domain literal ("@[...]")
-        boolean quoted = false, escaped = false, group = false, empty = true;
+        boolean quoted = false, escaped = false, empty = true;
         int pos = start, astart = pos, end = start + length, clevel = 0;
-        List<InternetAddress> iaddrs = new ArrayList<InternetAddress>();
+        List<InternetAddress> iaddrs = new ArrayList<InternetAddress>(5);
+        Group group = null;
 
         while (pos < end) {
             byte c = content[pos++];
@@ -130,7 +172,7 @@ public class InternetAddress {
                 // ignore folding, even where it's not actually permitted
                 escaped = false;
             } else if (quoted) {
-                quoted = !escaped && c == '"';
+                quoted = escaped || c != '"';
                 escaped = !escaped && c == '\\';
             } else if (c == '(' || clevel > 0) {
                 // handle comments outside of quoted strings, even where they're not actually permitted
@@ -141,17 +183,27 @@ public class InternetAddress {
             } else if (c == '"') {
                 quoted = true;
                 empty = false;
-            } else if (c == ',' || (c == ';' && group)) {
+            } else if (c == ',' || (c == ';' && group != null)) {
                 // this concludes the address portion of our program
                 if (!empty) {
-                    iaddrs.add(new InternetAddress(content, astart, pos - astart - 1, null));
+                    if (group != null) {
+                        group.addMember(new InternetAddress(content, astart, pos - astart - 1, null));
+                    } else {
+                        iaddrs.add(new InternetAddress(content, astart, pos - astart - 1, null));
+                    }
                 }
-                group = c == ';';
+                if (c == ';') {
+                    group = null;
+                }
                 empty = true;
                 astart = pos;
-            } else if (c == ':' && !group) {
-                // ignore the group name that we've just passed
-                group = empty = true;
+            } else if (c == ':' && group == null) {
+                if (!empty) {
+                    // FIXME: using the address parser to handle decoding RFC 5322 phrases for now
+                    String name = new InternetAddress(content, astart, pos - astart - 1, null).toString();
+                    iaddrs.add(group = new Group(name));
+                }
+                empty = true;
                 astart = pos;
             } else if (c != ' ' && c != '\t' && empty) {
                 empty = false;
@@ -159,9 +211,91 @@ public class InternetAddress {
         }
         // don't forget the last address in the list
         if (!empty) {
-            iaddrs.add(new InternetAddress(content, astart, pos - astart, null));
+            if (group != null) {
+                group.addMember(new InternetAddress(content, astart, pos - astart, null));
+            } else {
+                iaddrs.add(new InternetAddress(content, astart, pos - astart, null));
+            }
         }
         return iaddrs;
+    }
+
+    public static class Group extends InternetAddress {
+        private List<InternetAddress> addresses = new ArrayList<InternetAddress>(5);
+
+        public Group(String name) {
+            super(name, null);
+        }
+
+        public Group(String name, List<InternetAddress> members) {
+            super(name, null);
+            if (addresses != null) {
+                for (InternetAddress addr : members) {
+                    addMember(addr);
+                }
+            }
+        }
+
+        @Override
+        public Group setPersonal(String name) {
+            if (name == null || name.trim().isEmpty()) {
+                throw new IllegalArgumentException();
+            }
+            super.setPersonal(name);
+            return this;
+        }
+
+        public Group setName(String name) {
+            return setPersonal(name);
+        }
+
+        public String getName() {
+            return getPersonal();
+        }
+
+        @Override
+        public String getAddress() {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0, len = addresses.size(); i < len; i++) {
+                sb.append(addresses.get(i)).append(i == len - 1 ? "" : ", ");
+            }
+            return sb.append(";").toString();
+        }
+
+        public Group addMember(InternetAddress addr) {
+            if (addr == null || addr instanceof Group) {
+                throw new IllegalArgumentException();
+            }
+            addresses.add(addr.clone());
+            return this;
+        }
+
+        public List<InternetAddress> getMembers() {
+            List<InternetAddress> members = new ArrayList<InternetAddress>(addresses.size());
+            for (InternetAddress addr : addresses) {
+                members.add(addr.clone());
+            }
+            return members;
+        }
+
+        @Override
+        protected Group clone() {
+            return new Group(getPersonal(), addresses);
+        }
+
+        @Override
+        public String toString() {
+            return MimeHeader.escape(getName(), getCharset(), true) + ": " + getAddress();
+        }
+
+        @Override
+        public String toUnicodeString() {
+            StringBuilder sb = new StringBuilder(MimeHeader.quote(getName())).append(": ");
+            for (int i = 0, len = addresses.size(); i < len; i++) {
+                sb.append(i == 0 ? "" : ", ").append(addresses.get(i).toUnicodeString());
+            }
+            return sb.toString();
+        }
     }
 
 
@@ -172,7 +306,8 @@ public class InternetAddress {
     private void parse(byte[] content, int start, int length, boolean angle) {
         HeaderUtils.ByteBuilder builder = new HeaderUtils.ByteBuilder(length, mCharset);
         String base = null, address = null, comment = null;
-        boolean quoted = false, dliteral = false, escaped = false, atsign = false, slop = false, wsp = true, cwsp = true, encoded = false;
+        boolean quoted = false, dliteral = false, escaped = false, atsign = false, route = false;
+        boolean slop = false, wsp = true, cwsp = true, encoded = false;
         Boolean encwspenc = Boolean.FALSE, cencwspenc = Boolean.FALSE;
         int clevel = 0, questions = 0;
 
@@ -280,22 +415,33 @@ public class InternetAddress {
                 if (!builder.isEmpty()) {
                     base = (base == null ? "" : base) + (wsp ? builder.pop() : builder).toString();
                 }
-                angle = true;  wsp = true;  atsign = false;  builder.reset();
+                angle = true;  wsp = true;  atsign = false;  route = false;  builder.reset();
             } else if (c == '>' && angle) {
                 address = builder.appendTo(address);
                 slop = true;  builder.reset();
             } else {
-                if (angle && !atsign && c == '@') {
-                    address = builder.appendTo(address);
-                    // quote the mailbox part of the address if necessary
-                    if (!isValidDotAtom(address)) {
-                        address = MimeHeader.quote(address);
+                if (c == '@') {
+                    boolean startRoute = angle && builder.isEmpty() && address == null;
+                    if (angle && !startRoute) {
+                        address = builder.appendTo(address);
+                        // quote the mailbox part of the address if necessary
+                        if (!isValidDotAtom(address))
+                            address = MimeHeader.quote(address);
+                        builder.reset();
                     }
+                    if (!startRoute) {
+                        atsign = true;
+                    } else {
+                        route = true;
+                    }
+                } else if (c == ':' && route) {
+                    address = builder.appendTo(address);
                     builder.reset();
+                    route = false;
                 }
                 // compress multiple whitespace chars to a single space
                 boolean isWhitespace = c == ' ' || c == '\t';
-                if (!wsp || !isWhitespace) {
+                if ((!wsp || !isWhitespace) && (c != '<' || !angle || !builder.isEmpty())) {
                     builder.write(isWhitespace ? ' ' : c);
                 }
                 wsp = angle || isWhitespace;
@@ -303,7 +449,6 @@ public class InternetAddress {
                 if (!encoded && encwspenc != Boolean.FALSE) {
                     encwspenc = isWhitespace;
                 }
-                atsign |= c == '@';
             }
         }
 

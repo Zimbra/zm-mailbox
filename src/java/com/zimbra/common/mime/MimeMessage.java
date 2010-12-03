@@ -14,22 +14,52 @@
  */
 package com.zimbra.common.mime;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
+import com.zimbra.common.mime.MimeAddressHeader;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.DateUtil;
 
 public class MimeMessage extends MimePart {
+    private static String sHostname = null;
+        static {
+            try {
+                sHostname = InetAddress.getLocalHost().getHostName();
+            } catch (Throwable t) { }
+            if (sHostname == null) {
+                sHostname = "localhost";
+            }
+        }
+
     private Properties mProperties;
     private MimePart mBody;
+
+    public MimeMessage(MimeMessage mm) {
+        super(mm);
+        mProperties = mm.mProperties == null ? null : (Properties) mm.mProperties.clone();
+        mBody = mm.mBody == null ? null : mm.mBody.clone().setParent(this);
+    }
+
+    public MimeMessage(Properties props) {
+        super(new ContentType(ContentType.MESSAGE_RFC822));
+        mProperties = props;
+
+        mBody = new MimeBodyPart((ContentType) null);
+        setHeader("Message-ID", '<' + UUID.randomUUID().toString() + '@' + sHostname + '>');
+        setHeader("MIME-Version", "1.0");
+    }
 
     MimeMessage(MimePart body, Properties props) {
         super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
@@ -39,21 +69,20 @@ public class MimeMessage extends MimePart {
     }
 
     /** Parses a MIME message from a file.  Only the structure of the message
-     *  is stored in memory, but a pointer to the original <code>File</code> is
+     *  is stored in memory, but a pointer to the original {@code File} is
      *  retained so that the content is accessible on demand. */
     public MimeMessage(File file) throws IOException {
         this(file, null);
     }
 
     /** Parses a MIME message from a file.  Only the structure of the message
-     *  is stored in memory, but a pointer to the original <code>File</code> is
+     *  is stored in memory, but a pointer to the original {@code File} is
      *  retained so that the content is accessible on demand. */
     public MimeMessage(File file, Properties props) throws IOException {
         super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
         mProperties = props;
 
-        InputStream is = new BufferedInputStream(new FileInputStream(file), 8192);
-        ByteUtil.drain(new MimeParserInputStream(is)).setSource(file).insertBodyPart(this);
+        parse(new PartSource(file));
     }
 
     /** Parses a MIME message from a byte array.  The structure of the message
@@ -70,28 +99,36 @@ public class MimeMessage extends MimePart {
         super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
         mProperties = props;
 
-        InputStream is = new ByteArrayInputStream(body);
         try {
-            ByteUtil.drain(new MimeParserInputStream(is)).setSource(body).insertBodyPart(this);
+            parse(new PartSource(body));
         } catch (IOException ioe) {
             throw new RuntimeException("completely unexpected IOException while reading from byte array", ioe);
         }
     }
 
-    /** Parses a MIME message from an <code>InputStream</code>.  The entire
-     *  stream is read into a byte array in memory before parsing so that the
-     *  message content is accessible.  If you only need the MIME structure,
-     *  use {@link #readStructure(InputStream, Properties)} instead. */
+    /** Parses a MIME message from an {@code InputStream}.  The entire stream
+     *  is read into a byte array in memory before parsing so that the message
+     *  content is accessible.  If you only need the MIME structure, use
+     *  {@link #readStructure(InputStream, Properties)} instead. */
     public MimeMessage(InputStream is) throws IOException {
         this(is, null);
     }
 
-    /** Parses a MIME message from an <code>InputStream</code>.  The entire
-     *  stream is read into a byte array in memory before parsing so that the
-     *  message content is accessible.  If you only need the MIME structure,
-     *  use {@link #readStructure(InputStream, Properties)} instead. */
+    /** Parses a MIME message from an {@code InputStream}.  Unless that stream
+     *  implements {@link InputStreamSource}, the entire stream is read into a
+     *  byte array in memory before parsing so that the message content is
+     *  subsequently accessible.  If you only need the MIME structure, use
+     *  {@link #readStructure(InputStream, Properties)} instead. */
     public MimeMessage(InputStream is, Properties props) throws IOException {
-        this(ByteUtil.getContent(is, -1), props);
+        super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
+        mProperties = props;
+
+        parse(is instanceof InputStreamSource ? new PartSource((InputStreamSource) is) : new PartSource(ByteUtil.getContent(is, -1)));
+    }
+
+    private void parse(PartSource psource) throws IOException {
+        MimeParserInputStream mpis = new MimeParserInputStream(psource.getContentStream(0, psource.getLength()));
+        ByteUtil.drain(mpis).insertBodyPart(this).attachSource(psource);
     }
 
     /** Constructor used internally to parse a message/rfc822 attachment. */
@@ -99,14 +136,18 @@ public class MimeMessage extends MimePart {
         super(ctype, parent, start, body, headers);
     }
 
-    /** Reads the MIME structure of a message from an <code>InputStream</code>.
+    /** Reads the MIME structure of a message from an {@code InputStream}.
      *  Does <u>not</u> retain a copy of the message content; if you need the
      *  content accessible after the parse, please use one of the standard
-     *  <code>MimeMessage</code> constructors. */
+     *  {@code MimeMessage} constructors. */
     public static MimeMessage readStructure(InputStream is, Properties props) throws IOException {
         return ByteUtil.drain(new MimeParserInputStream(is)).getMessage(props);
     }
 
+
+    @Override protected MimeMessage clone() {
+        return new MimeMessage(this);
+    }
 
     /** Returns the {@link MimePart} that forms the "body" of this message.  For
      *  a <tt>multipart/*<tt> message, this will be a {@link MimeMultipart}, and
@@ -116,19 +157,23 @@ public class MimeMessage extends MimePart {
         return mBody;
     }
 
-    /** Sets the given part as this <code>MimeMessage</code>'s body part.  The
-     *  part is removed from its previous parent, and its new parent is set to
-     *  this message.  The old body part is detached from this message, and its
+    /** Sets the given part as this {@code MimeMessage}'s body part.  The part
+     *  is removed from its previous parent, and its new parent is set to this
+     *  message.  The old body part is detached from this message, and its
      *  message headers (those other than the standard MIME "<tt>Content-*</tt>"
      *  headers) are transferred to the new one.
      * @see #getBodyPart() */
-    public MimeMessage setBodyPart(MimePart body) {
+    public MimeMessage setBodyPart(MimePart newBody) {
+        if (mBody == newBody) {
+            return this;
+        }
+
         if (mBody != null) {
-            transferMessageHeaders(body);
+            transferMessageHeaders(newBody);
             mBody.detach();
         }
-        body.setParent(this);
-        mBody = body;
+        newBody.setParent(this);
+        mBody = newBody;
         // almost certainly unnecessary due to header transfer, but don't cost nothin'
         markDirty(Dirty.CONTENT);
         return this;
@@ -136,7 +181,7 @@ public class MimeMessage extends MimePart {
 
     @Override void removeChild(MimePart mp) {
         if (mp == mBody) {
-            mBody = transferMessageHeaders(new MimeBodyPart(null));
+            mBody = transferMessageHeaders(new MimeBodyPart((ContentType) null));
         }
     }
 
@@ -145,7 +190,7 @@ public class MimeMessage extends MimePart {
             MimeHeader header = it.next();
             if (!header.getName().toLowerCase().startsWith("content-")) {
                 // FIXME: want to have the new body's old headers at the *end* of the resulting list, not at the beginning
-                newBody.addMimeHeader(header.getName(), header);
+                newBody.addMimeHeader(header);
                 it.remove();
             }
         }
@@ -181,9 +226,9 @@ public class MimeMessage extends MimePart {
 
     /** Does a recursive descent of the message's structure and returns a
      *  mapping of part names to the {@link MimePart}s that comprise it.  The
-     *  keys in the <code>Map</code> are IMAP-style part identifiers.  The
-     *  <code>MimeMessage</code> itself is included in the <code>Map</code>
-     *  with part name <tt>""</tt>. */
+     *  keys in the {@code Map} are IMAP-style part identifiers.  The
+     *  {@code MimeMessage} itself is included in the {@code Map} with part
+     *  name <tt>""</tt>. */
     public Map<String, MimePart> listMimeParts() {
         Map<String, MimePart> parts = new LinkedHashMap<String, MimePart>(6);
         parts.put("", this);
@@ -208,12 +253,59 @@ public class MimeMessage extends MimePart {
     }
 
     public void setHeader(String name, String value) {
+        setHeader(name, value, null);
+    }
+
+    public void setHeader(String name, String value, String charset) {
         mBody.setMimeHeader(name, value);
+    }
+
+    public void setHeader(String name, MimeHeader header) {
+        mBody.setMimeHeader(name, header);
     }
 
 //    public void addHeader(String name, String value) {
 //        mBody.addMimeHeader(name, value);
 //    }
+
+    public void setAddressHeader(String name, InternetAddress iaddr) {
+        setAddressHeader(name, iaddr == null ? null : Arrays.asList(iaddr));
+    }
+
+    public void setAddressHeader(String name, List<InternetAddress> iaddrs) {
+        setHeader(name, iaddrs == null ? null : new MimeAddressHeader(name, iaddrs));
+    }
+
+    public List<InternetAddress> getAddressHeader(String name) {
+        MimeHeader header = mBody.getMimeHeaderBlock().get(name);
+        if (header == null) {
+            return null;
+        } else if (header instanceof MimeAddressHeader) {
+            return ((MimeAddressHeader) header).getAddresses();
+        } else {
+            return new MimeAddressHeader(header).getAddresses();
+        }
+    }
+
+    public void setSubject(String subject) {
+        setSubject(subject, null);
+    }
+
+    public void setSubject(String subject, String charset) {
+        setHeader("Subject", subject, charset);
+    }
+
+    public String getSubject() {
+        return getHeader("Subject");
+    }
+
+    public void setSentDate(Date date) {
+        setHeader("Date", date == null ? null : DateUtil.toRFC822Date(date));
+    }
+
+    public Date getSentDate() {
+        return DateUtil.parseRFC2822Date(getHeader("Date"), null);
+    }
 
     @Override ContentType updateContentType(ContentType ctype) {
         if (ctype != null && !ctype.getContentType().equals(ContentType.MESSAGE_RFC822)) {
@@ -239,19 +331,46 @@ public class MimeMessage extends MimePart {
         return getParent() != null || isDirty() ? mBody.getInputStream() : super.getRawContentStream();
     }
 
+    public InputStream getRawContentStream(String[] omitHeaders) throws IOException {
+        MimeHeaderBlock headers = mBody.getMimeHeaderBlock();
+        for (String name : omitHeaders) {
+            if (headers.containsHeader(name)) {
+                MimeHeaderBlock trimmed = new MimeHeaderBlock(headers, omitHeaders);
+                return new VectorInputStream(trimmed.toByteArray(), mBody.getRawContentStream());
+            }
+        }
+        return getRawContentStream();
+    }
+
+    public MimeMessage setText(String text) throws IOException {
+        return setText(text, null, null, null);
+    }
+
+    public MimeMessage setText(String text, String charset, String subtype, ContentTransferEncoding cte) throws IOException {
+        if (mBody instanceof MimeBodyPart) {
+            ((MimeBodyPart) mBody).setText(text, charset, subtype, cte);
+        } else {
+            setBodyPart(new MimeBodyPart(new ContentType("text/plain")).setText(text, charset, subtype, cte));
+        }
+        return this;
+    }
+
 
     public static void main(String[] args) throws IOException {
         MimeMessage mm = new MimeMessage(new File(args[0] + File.separator + "toplevel-nested-message"));
         dumpParts(mm);
+        ByteUtil.copy(mm.getRawContentStream(new String[] { "x-originalArrivalTime" }), true, System.out, false);
+        ByteUtil.copy(mm.getRawContentStream(new String[] { "foo" }), true, System.out, false);
         mm.setHeader("X-Mailer", "Zimbra 5.0 RC2");
         dumpParts(mm);
         ((MimeBodyPart) mm.getSubpart("1.1")).setTransferEncoding(ContentTransferEncoding.BASE64);
         dumpParts(mm);
-//        ByteUtil.copy(mm.getSubpart("1").getRawContentStream(), true, System.out, false);
+        mm.getSubpart("1.1").setFilename("boogle");
+        ByteUtil.copy(mm.getSubpart("1").getRawContentStream(), true, System.out, false);
         ByteUtil.copy(mm.getInputStream(), true, System.out, false);
-//        System.out.write(mm.getSubpart("1").getRawContent());
-//        ByteUtil.copy(mm.getSubpart("1").getInputStream(), true, System.out, false);
-//        System.out.write(mm.getSubpart("1").getContent());
+        System.out.write(mm.getSubpart("1").getRawContent());
+        ByteUtil.copy(mm.getSubpart("1").getInputStream(), true, System.out, false);
+        System.out.write(mm.getSubpart("1").getContent());
 
         mm = new MimeMessage(new File(args[0] + File.separator + "digest-attachment-16771"));
         dumpParts(mm);
@@ -281,7 +400,7 @@ public class MimeMessage extends MimePart {
 //        InputStream in1 = mm.getSubpart("2").getContentStream(), in2 = null;
 //        try {
 //            javax.mail.Session jsession = javax.mail.Session.getInstance(new Properties());
-//            javax.mail.internet.MimeMessage jmm = new javax.mail.internet.MimeMessage(jsession, new FileInputStream("C:\\Temp\\blank-base64-ellen"));
+//            javax.mail.internet.MimeMessage jmm = new javax.mail.internet.MimeMessage(jsession, new FileInputStream(args[0] + File.separator + "blank-base64-ellen"));
 //            in2 = Mime.getMimePart(jmm, "2").getInputStream();
 //        } catch (javax.mail.MessagingException me) { }
 //        int pos = 0, c1 = 0, c2 = 0;
@@ -297,7 +416,7 @@ public class MimeMessage extends MimePart {
 //        InputStream in1 = mm.getSubpart("TEXT").getContentStream(), in2 = null;
 //        try {
 //            javax.mail.Session jsession = javax.mail.Session.getInstance(new Properties());
-//            javax.mail.internet.MimeMessage jmm = new javax.mail.internet.MimeMessage(jsession, new FileInputStream("C:\\Temp\\blank-base64-ellen"));
+//            javax.mail.internet.MimeMessage jmm = new javax.mail.internet.MimeMessage(jsession, new FileInputStream(args[0] + File.separator + "blank-base64-ellen"));
 //            java.util.List<MPartInfo> mpis = Mime.getParts(jmm);
 //            for (MPartInfo mpi : mpis)
 //                if (mpi.mPartName.equals("TEXT"))
@@ -369,6 +488,10 @@ public class MimeMessage extends MimePart {
 //        } catch (javax.mail.MessagingException e) {
 //            System.out.println("error during JavaMail parse");
 //        }
+
+        mm = new MimeMessage((Properties) null);
+        mm.setHeader("Subject", "testing \u00e9ncoding");
+        ByteUtil.copy(mm.getInputStream(), true, System.out, false);
     }
 
     static void dumpParts(MimeMessage mm) throws IOException {

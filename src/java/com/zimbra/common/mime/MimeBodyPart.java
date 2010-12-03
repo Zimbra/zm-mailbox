@@ -41,6 +41,16 @@ public class MimeBodyPart extends MimePart {
         mEncoding = mTargetEncoding = ContentTransferEncoding.forString(getMimeHeader("Content-Transfer-Encoding"));
     }
 
+    MimeBodyPart(MimeBodyPart mbp) {
+        super(mbp);
+        mEncoding = mbp.mEncoding;
+        mTargetEncoding = mbp.mTargetEncoding;
+    }
+
+
+    @Override protected MimeBodyPart clone() {
+        return new MimeBodyPart(this);
+    }
 
     @Override void removeChild(MimePart mp)  {}
 
@@ -208,6 +218,14 @@ public class MimeBodyPart extends MimePart {
         return setContent(ds == null ? null : new PartSource(ds), cte);
     }
 
+    public MimeBodyPart setContent(InputStreamSource iss) throws IOException {
+        return setContent(iss, null);
+    }
+
+    public MimeBodyPart setContent(InputStreamSource iss, ContentTransferEncoding cte) throws IOException {
+        return setContent(iss == null ? null : new PartSource(iss), cte);
+    }
+
     private MimeBodyPart setContent(PartSource psource, ContentTransferEncoding cte) throws IOException {
         super.setContent(psource);
         mEncoding = ContentTransferEncoding.BINARY;
@@ -223,6 +241,7 @@ public class MimeBodyPart extends MimePart {
             try {
                 is = is instanceof ByteArrayInputStream || is instanceof BufferedInputStream ? is : new BufferedInputStream(is);
                 for (int octet = is.read(), column = 0; octet != -1; octet = is.read()) {
+                    // FIXME: bytes under 0x20 (except NUL) are actually OK to transmit via "7bit"
                     if (octet >= 0x7F || (octet < 0x20 && octet != '\t' && octet != '\r' && octet != '\n')) {
                         encodeable++;
                     }

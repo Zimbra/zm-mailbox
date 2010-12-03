@@ -21,7 +21,9 @@ import org.junit.Test;
 
 public class MimeHeaderTest {
 
-    @Test public void addressHeader() {
+    @SuppressWarnings("deprecation")
+    @Test
+    public void addressHeader() {
         String src = "mine:=?us-ascii?Q?Bob_?=\t=?us-ascii?Q?the_Builder_1?= <bob@example.com>;,=?us-ascii?Q?Bob the Builder 2?= <bob@example.com>";
         MimeAddressHeader hdr = new MimeAddressHeader("To", src);
         List<InternetAddress> iaddrs = hdr.getAddresses();
@@ -32,7 +34,8 @@ public class MimeHeaderTest {
         Assert.assertEquals("bob@example.com", iaddrs.get(1).getAddress());
     }
 
-    @Test public void encode() {
+    @Test
+    public void encode() {
         String src = "Re: Pru\u00ee Loo";
         Assert.assertEquals("=?utf-8?Q?Re=3A_Pru=C3=AE?= Loo", MimeHeader.escape(src, null, true));
         Assert.assertEquals("Re: =?utf-8?B?UHJ1w64=?= Loo", MimeHeader.escape(src, null, false));
@@ -78,9 +81,11 @@ public class MimeHeaderTest {
         Assert.assertEquals("=?utf-8?B?UHJ1w64=?=", MimeHeader.escape(src, "iso-8859-7", false));
 
         src = "lskdhf lkshfl aksjhlfi ahslkfu Pru\u00ee uey liufhlasuifh haskjhf lkajshf lkajshflkajhslkfj hals\u00e4kjhf laskjhdflaksjh ksjfh ka";
-        Assert.assertEquals("lskdhf lkshfl aksjhlfi ahslkfu =?utf-8?Q?Pru=C3=AE_uey_liufhlasuifh_haskjhf_lkajshf_lkajshflkajhslkfj_hals=C3=A4kjhf?= laskjhdflaksjh ksjfh ka",
+        Assert.assertEquals(
+                "lskdhf lkshfl aksjhlfi ahslkfu =?utf-8?Q?Pru=C3=AE_uey_liufhlasuifh_haskjhf_lkajshf_lkajshflkajhslkfj_hals=C3=A4kjhf?= laskjhdflaksjh ksjfh ka",
                 MimeHeader.escape(src, null, true));
-        Assert.assertEquals("lskdhf lkshfl aksjhlfi ahslkfu =?utf-8?Q?Pru=C3=AE_uey_liufhlasuifh_haskjhf_lkajshf_lkajshflkajhslkfj_hals=C3=A4kjhf?= laskjhdflaksjh ksjfh ka",
+        Assert.assertEquals(
+                "lskdhf lkshfl aksjhlfi ahslkfu =?utf-8?Q?Pru=C3=AE_uey_liufhlasuifh_haskjhf_lkajshf_lkajshflkajhslkfj_hals=C3=A4kjhf?= laskjhdflaksjh ksjfh ka",
                 MimeHeader.escape(src, null, false));
 
         src = "\u00eb\u00ec\u00ed\u00ee";
@@ -93,9 +98,11 @@ public class MimeHeaderTest {
 
     }
 
-    @Test public void decode() {
+    @Test
+    public void decode() {
         String src = "RE: [Bug 30944]=?UTF-8?Q?=20Meeting=20invitation=20that=E2=80=99s=20created=20within=20exchange=20containing=20=C3=A5=C3=A4=C3=B6=20will=20show=20within=20the=20calendar=20and=20acceptance=20notification=20as=20?=?????";
-        Assert.assertEquals("RE: [Bug 30944] Meeting invitation that\u2019s created within exchange containing \u00e5\u00e4\u00f6 will show within the calendar and acceptance notification as ?????",
+        Assert.assertEquals(
+                "RE: [Bug 30944] Meeting invitation that\u2019s created within exchange containing \u00e5\u00e4\u00f6 will show within the calendar and acceptance notification as ?????",
                 MimeHeader.decode(src));
 
         src = "=?utf-8?Q?Hambone_x?=";
@@ -121,9 +128,13 @@ public class MimeHeaderTest {
 
         src = "test\r\n one";
         Assert.assertEquals("test one", MimeHeader.decode(src));
+
+        src = "1564 =?ISO-8859-1?Q?boo_1565_?=\n =?ISO-8859-1?Q?hoo?=";
+        Assert.assertEquals("1564 boo 1565 hoo", MimeHeader.decode(src));
     }
 
-    @Test public void unfold() {
+    @Test
+    public void unfold() {
         Assert.assertEquals("dog", MimeHeader.unfold("dog"));
         Assert.assertEquals("dog", MimeHeader.unfold("dog\n"));
         Assert.assertEquals("dog", MimeHeader.unfold("\ndog"));

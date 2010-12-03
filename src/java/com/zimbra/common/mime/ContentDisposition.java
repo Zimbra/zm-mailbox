@@ -40,6 +40,10 @@ public class ContentDisposition extends MimeCompoundHeader {
         normalizeDisposition();
     }
 
+    @Override protected ContentDisposition clone() {
+        return new ContentDisposition(this);
+    }
+
 
     public ContentDisposition setDisposition(String disposition) {
         return setPrimaryValue(disposition);

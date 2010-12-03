@@ -14,6 +14,7 @@
  */
 package com.zimbra.common.mime;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Assert;
@@ -143,6 +144,9 @@ public class InternetAddressTest {
         test("joining quoted strings with normal text and dropping extra comments",
                 "\"Bob the\" Builder <bob(Bob)@example.com> (Bobbles)",
                 "Bob the Builder", "bob@example.com");
+        test("RFC 2822 A.5 oddball example",
+                "Pete(A wonderful \\) chap) <pete(his account)@silly.test(his host)>",
+                "Pete", "pete@silly.test");
     }
 
     @Test
@@ -233,12 +237,15 @@ public class InternetAddressTest {
         String src = "mine:=?us-ascii?Q?Bob_?=\t=?us-ascii?Q?the_Builder_1?= <bob@example.com>;,=?us-ascii?Q?Bob the Builder 2?= <bob@example.com>";
         List<InternetAddress> iaddrs = InternetAddress.parseHeader(src);
         Assert.assertEquals(2, iaddrs.size());
-        Assert.assertEquals("Bob the Builder 1", iaddrs.get(0).getPersonal());
-        Assert.assertEquals("bob@example.com", iaddrs.get(0).getAddress());
+        Assert.assertTrue(iaddrs.get(0) instanceof InternetAddress.Group);
+        InternetAddress.Group group = (InternetAddress.Group) iaddrs.get(0);
+        Assert.assertEquals("mine", group.getName());
+        List<InternetAddress> members = group.getMembers();
+        Assert.assertEquals("Bob the Builder 1", members.get(0).getPersonal());
+        Assert.assertEquals("bob@example.com", members.get(0).getAddress());
         Assert.assertEquals("Bob the Builder 2", iaddrs.get(1).getPersonal());
         Assert.assertEquals("bob@example.com", iaddrs.get(1).getAddress());
     }
-
     /**
      * @see http://tools.ietf.org/html/rfc2822#appendix-A.1.2
      */
@@ -272,18 +279,28 @@ public class InternetAddressTest {
     public void rfc2822a13() {
         String raw = "A Group:Chris Jones <c@a.test>,joe@where.test,John <jdoe@one.test>";
         List<InternetAddress> iaddrs = InternetAddress.parseHeader(raw);
-        Assert.assertEquals(3, iaddrs.size());
-        Assert.assertEquals("Chris Jones", iaddrs.get(0).getPersonal());
-        Assert.assertEquals("c@a.test", iaddrs.get(0).getAddress());
-        Assert.assertNull(iaddrs.get(1).getPersonal());
-        Assert.assertEquals("joe@where.test", iaddrs.get(1).getAddress());
-        Assert.assertEquals("John", iaddrs.get(2).getPersonal());
-        Assert.assertEquals("jdoe@one.test", iaddrs.get(2).getAddress());
+        Assert.assertEquals(1, iaddrs.size());
+        Assert.assertTrue(iaddrs.get(0) instanceof InternetAddress.Group);
+        InternetAddress.Group group = (InternetAddress.Group) iaddrs.get(0);
+        Assert.assertEquals("A Group", group.getName());
+        List<InternetAddress> members = group.getMembers();
+        Assert.assertEquals("Chris Jones", members.get(0).getPersonal());
+        Assert.assertEquals("c@a.test", members.get(0).getAddress());
+        Assert.assertNull(members.get(1).getPersonal());
+        Assert.assertEquals("joe@where.test", members.get(1).getAddress());
+        Assert.assertEquals("John", members.get(2).getPersonal());
+        Assert.assertEquals("jdoe@one.test", members.get(2).getAddress());
 
         raw = "Undisclosed recipients:;";
         iaddrs = InternetAddress.parseHeader(raw);
-        Assert.assertEquals(0, iaddrs.size());
+        Assert.assertEquals(1, iaddrs.size());
+        Assert.assertTrue(iaddrs.get(0) instanceof InternetAddress.Group);
+        group = (InternetAddress.Group) iaddrs.get(0);
+        Assert.assertEquals("Undisclosed recipients", group.getName());
+        members = group.getMembers();
+        Assert.assertEquals(0, members.size());
     }
+
     /**
      * @see http://tools.ietf.org/html/rfc2822#appendix-A.5
      */
@@ -300,17 +317,26 @@ public class InternetAddressTest {
             "        joe@example.org,\n" +
             " John <jdoe@one.test> (my dear friend); (the end of the group)";
         iaddrs = InternetAddress.parseHeader(raw);
-        Assert.assertEquals(3, iaddrs.size());
-        Assert.assertEquals("Chris Jones", iaddrs.get(0).getPersonal());
-        Assert.assertEquals("c@public.example", iaddrs.get(0).getAddress());
-        Assert.assertNull(iaddrs.get(1).getPersonal());
-        Assert.assertEquals("joe@example.org", iaddrs.get(1).getAddress());
-        Assert.assertEquals("John", iaddrs.get(2).getPersonal());
-        Assert.assertEquals("jdoe@one.test", iaddrs.get(2).getAddress());
+        Assert.assertEquals(1, iaddrs.size());
+        Assert.assertTrue(iaddrs.get(0) instanceof InternetAddress.Group);
+        InternetAddress.Group group = (InternetAddress.Group) iaddrs.get(0);
+        Assert.assertEquals("A Group", group.getName());
+        List<InternetAddress> members = group.getMembers();
+        Assert.assertEquals("Chris Jones", members.get(0).getPersonal());
+        Assert.assertEquals("c@public.example", members.get(0).getAddress());
+        Assert.assertNull(members.get(1).getPersonal());
+        Assert.assertEquals("joe@example.org", members.get(1).getAddress());
+        Assert.assertEquals("John", members.get(2).getPersonal());
+        Assert.assertEquals("jdoe@one.test", members.get(2).getAddress());
 
         raw = "(Empty list)(start)Undisclosed recipients  :(nobody(that I know))  ;";
         iaddrs = InternetAddress.parseHeader(raw);
-        Assert.assertEquals(0, iaddrs.size());
+        Assert.assertEquals(1, iaddrs.size());
+        Assert.assertTrue(iaddrs.get(0) instanceof InternetAddress.Group);
+        group = (InternetAddress.Group) iaddrs.get(0);
+        Assert.assertEquals("Undisclosed recipients", group.getName());
+        members = group.getMembers();
+        Assert.assertEquals(0, members.size());
     }
 
     /**
@@ -351,5 +377,33 @@ public class InternetAddressTest {
         Assert.assertEquals(1, iaddrs.size());
         Assert.assertEquals("Mary Smith", iaddrs.get(0).getPersonal());
         Assert.assertEquals("mary@example.net", iaddrs.get(0).getAddress());
+    }
+
+    @Test
+    public void groups() {
+        String raw = "Mary Smith <mary@example.net>, friends: joe@where.test, John <jdoe@one.test>;, john.q.public@example.com";
+
+        List<InternetAddress> iaddrs = new ArrayList<InternetAddress>();
+        iaddrs.add(new InternetAddress("Mary Smith", "mary@example.net"));
+        iaddrs.add(new InternetAddress.Group("friends", InternetAddress.parseHeader("joe@where.test,John <jdoe@one.test>")));
+        iaddrs.add(new InternetAddress((String) null, "john.q.public@example.com"));
+        MimeAddressHeader ahdr = new MimeAddressHeader("To", iaddrs);
+        Assert.assertEquals(raw, ahdr.toString());
+        Assert.assertEquals(3, ahdr.getAddresses().size());
+
+        iaddrs = InternetAddress.parseHeader(raw);
+        Assert.assertEquals(3, iaddrs.size());
+        Assert.assertEquals("Mary Smith", iaddrs.get(0).getPersonal());
+        Assert.assertEquals("mary@example.net", iaddrs.get(0).getAddress());
+        Assert.assertTrue(iaddrs.get(1) instanceof InternetAddress.Group);
+        InternetAddress.Group group = (InternetAddress.Group) iaddrs.get(1);
+        Assert.assertEquals("friends", group.getName());
+        List<InternetAddress> members = group.getMembers();
+        Assert.assertNull(members.get(0).getPersonal());
+        Assert.assertEquals("joe@where.test", members.get(0).getAddress());
+        Assert.assertEquals("John", members.get(1).getPersonal());
+        Assert.assertEquals("jdoe@one.test", members.get(1).getAddress());
+        Assert.assertNull(iaddrs.get(2).getPersonal());
+        Assert.assertEquals("john.q.public@example.com", iaddrs.get(2).getAddress());
     }
 }

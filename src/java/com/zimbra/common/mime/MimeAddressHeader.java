@@ -25,21 +25,30 @@ public class MimeAddressHeader extends MimeHeader {
         mAddresses = new ArrayList<InternetAddress>(iaddrs);
     }
 
-    public MimeAddressHeader(final String name, final String value) {
-        super(name, value);
-        if (mValueStart > 0) {
-            mAddresses = InternetAddress.parseHeader(mContent, mValueStart, mContent.length - mValueStart);
-        } else {
-            mAddresses = new ArrayList<InternetAddress>();
-        }
+    @Deprecated public MimeAddressHeader(final String name, final String value) {
+        this(name, value.getBytes());
     }
 
     public MimeAddressHeader(final String name, final byte[] bvalue) {
         super(name, bvalue);
+        parseAddresses();
+    }
+
+    MimeAddressHeader(MimeHeader header) {
+        super(header);
+        if (header instanceof MimeAddressHeader) {
+            mAddresses = new ArrayList<InternetAddress>(((MimeAddressHeader) header).getAddresses());
+        } else {
+            parseAddresses();
+        }
+    }
+
+
+    private void parseAddresses() {
         if (mValueStart > 0) {
             mAddresses = InternetAddress.parseHeader(mContent, mValueStart, mContent.length - mValueStart);
         } else {
-            mAddresses = new ArrayList<InternetAddress>();
+            mAddresses = new ArrayList<InternetAddress>(3);
         }
     }
 

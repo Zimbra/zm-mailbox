@@ -33,6 +33,11 @@ public class MimeParserInputStream extends FilterInputStream {
         parser = new MimeParser();
     }
 
+    public MimeParserInputStream(InputStream in, MimeHeaderBlock headers) {
+        super(in);
+        parser = new MimeParser(headers);
+    }
+
     @Override public int read() throws IOException {
         int b = super.read();
         if (b != -1) {
@@ -78,6 +83,11 @@ public class MimeParserInputStream extends FilterInputStream {
 
     public MimeParserInputStream setSource(DataSource ds) {
         psource = ds == null ? null : new PartSource(ds);
+        return this;
+    }
+
+    public MimeParserInputStream setSource(MimePart.InputStreamSource iss) {
+        psource = iss == null ? null : new PartSource(iss);
         return this;
     }
 

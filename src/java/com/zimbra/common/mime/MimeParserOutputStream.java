@@ -65,6 +65,11 @@ public class MimeParserOutputStream extends FilterOutputStream {
         return this;
     }
 
+    public MimeParserOutputStream setSource(MimePart.InputStreamSource iss) {
+        psource = iss == null ? null : new PartSource(iss);
+        return this;
+    }
+
     public MimePart getPart() {
         return parser.getPart().attachSource(psource);
     }

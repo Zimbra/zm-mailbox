@@ -75,11 +75,11 @@ public class HeaderUtils {
     private static final String P_CHARSET_CP1252 = "windows-1252";
     private static final String P_CHARSET_EUC_CN = "euc_cn";
     private static final String P_CHARSET_GB2312 = "gb2312";
-    private static final String P_CHARSET_GBK = "gbk";
+    private static final String P_CHARSET_GBK    = "gbk";
     private static final String P_CHARSET_LATIN1 = "iso-8859-1";
 
     private static final boolean SUPPORTS_CP1252 = Charset.isSupported(P_CHARSET_CP1252);
-    private static final boolean SUPPORTS_GBK = Charset.isSupported(P_CHARSET_GBK);
+    private static final boolean SUPPORTS_GBK    = Charset.isSupported(P_CHARSET_GBK);
 
     static String normalizeCharset(String enc) {
         if (enc == null || enc.equals("")) {
@@ -98,6 +98,7 @@ public class HeaderUtils {
     private static class QP2047Decoder extends ContentTransferEncoding.QuotedPrintableDecoderStream {
         QP2047Decoder(ByteArrayInputStream bais) {
             super(bais);
+            disableTrimming();
         }
 
         @Override protected int nextByte() throws IOException {
@@ -125,6 +126,11 @@ public class HeaderUtils {
         ByteBuilder(int size, String charset) {
             this(size);
             mCharset = charset;
+        }
+
+        ByteBuilder(byte[] b) {
+            super((int) (b.length * 1.5 + 1));
+            append(b);
         }
 
         ByteBuilder pop() {
@@ -185,7 +191,7 @@ public class HeaderUtils {
 
         @Override public synchronized String toString() {
             try {
-                if (mCharset != null && !mCharset.trim().equals("")) {
+                if (mCharset != null && !mCharset.isEmpty()) {
                     return super.toString(mCharset);
                 }
             } catch (Exception e) {

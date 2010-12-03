@@ -25,9 +25,14 @@ class MimeParser {
         parts.add(new PartInfo(0, true));
     }
 
-    MimeParser(MimeMessage target) {
-        this();
-        parts.add(0, new PartInfo(target, 0, 0, PartInfo.Location.CONTENT));
+    MimeParser(MimeHeaderBlock headers) {
+        PartInfo current = new PartInfo(-1, false);
+        current.headers = headers;
+        parts.add(current);
+        // the following triggers recalc of the boundary list, so must come *after* adding the PartInfo
+        current.setContentType(new ContentType(headers.get("Content-Type"), "text/plain"));
+
+        state = bodyStart(0) ? ParserState.HEADER_LINESTART : ParserState.BODY_LINESTART;
     }
 
     private enum ParserState {
@@ -148,24 +153,24 @@ class MimeParser {
         }
     }
 
-    private static class PartInfo {
-        enum Location { PREAMBLE, CONTENT, EPILOGUE }
+    enum PartLocation { PREAMBLE, CONTENT, EPILOGUE }
 
+    private class PartInfo {
         MimePart part;
         int firstLine;
         long partStart;
         String boundary;  // value: part boundary | "": unspecified boundary | null: not a multipart
-        Location location;
+        PartLocation location;
         MimeHeaderBlock headers;
         ContentType ctype;
 
         PartInfo(long pos, boolean isMessage) {
             partStart = pos;
-            location = Location.CONTENT;
+            location = PartLocation.CONTENT;
             headers = new MimeHeaderBlock(isMessage);
         }
 
-        PartInfo(MimePart mp, int line, long pos, Location loc) {
+        PartInfo(MimePart mp, int line, long pos, PartLocation loc) {
             part = mp;
             firstLine = line;
             partStart = pos;
@@ -173,7 +178,17 @@ class MimeParser {
             ctype = mp.getContentType();
         }
 
-        @Override public String toString() {
+        void setContentType(ContentType ct) {
+            ctype = ct;
+            if (ctype.getPrimaryType().equals("multipart")) {
+                String bnd = ctype.getParameter("boundary");
+                boundary = bnd == null || bnd.trim().isEmpty() ? "" : bnd;
+                recalculateBoundaries();
+            }
+        }
+
+        @Override
+        public String toString() {
             return ctype == null ? null : ctype.getContentType();
         }
     }
@@ -492,7 +507,7 @@ class MimeParser {
             pcurrent.boundary = null;
             // create the epilogue, which encloses the remaining lines in its *body*
             MimeBodyPart epilogue = new MimeBodyPart(new ContentType(ContentType.TEXT_PLAIN), multi, position, position, null);
-            parts.add(pcurrent = new PartInfo(epilogue, lineNumber, position, PartInfo.Location.EPILOGUE));
+            parts.add(pcurrent = new PartInfo(epilogue, lineNumber, position, PartLocation.EPILOGUE));
             state = ParserState.BODY_LINESTART;
         } else {
             // new proper subpart of the multipart -- starting with its MIME headers
@@ -506,7 +521,7 @@ class MimeParser {
     /** Regenerates the list of valid MIME boundaries from the set of active
      *  enclosing parts.  Sets {@link #boundaries} appropriately, or to
      *  <tt>null</tt> if there are no valid boundaries. */
-    private void recalculateBoundaries() {
+    void recalculateBoundaries() {
         boundaries = new ArrayList<String>(parts.size());
         for (PartInfo pinfo : parts) {
             if (pinfo.boundary != null) {
@@ -528,9 +543,9 @@ class MimeParser {
         mp.recordEndpoint(partEnd, lineNumber - pinfo.firstLine);
 
         if (mp.getBodyOffset() > mp.getEndOffset()) {
-            if (pinfo.location == PartInfo.Location.PREAMBLE) {
+            if (pinfo.location == PartLocation.PREAMBLE) {
                 ((MimeMultipart) mp.getParent()).setPreamble((MimeBodyPart) mp);
-            } else if (pinfo.location == PartInfo.Location.EPILOGUE) {
+            } else if (pinfo.location == PartLocation.EPILOGUE) {
                 ((MimeMultipart) mp.getParent()).setEpilogue((MimeBodyPart) mp);
             }
         }
@@ -549,23 +564,17 @@ class MimeParser {
         if (colon != -1 && !key.equals("")) {
             // the actual content of the header starts after an optional space and/or CRLF
             int valueStart = colon + 1;
-            for (int wsp = 0, headerLength = content.size(); valueStart < headerLength; valueStart++) {
+            for (int headerLength = content.size(); valueStart < headerLength; valueStart++) {
                 byte b = content.byteAt(valueStart);
-                if (b != '\n' && b != '\r' && ((b != ' ' && b != '\t') || ++wsp >= 2))
+                if (b != '\n' && b != '\r' && b != ' ' && b != '\t')
                     break;
             }
 
             PartInfo pcurrent = currentPart();
             MimeHeader header = new MimeHeader(key, content.toByteArray(), valueStart);
             pcurrent.headers.addHeader(header);
-
             if (key.equalsIgnoreCase("Content-Type")) {
-                pcurrent.ctype = new ContentType(header, defaultContentType());
-                if (pcurrent.ctype.getPrimaryType().equals("multipart")) {
-                    String bnd = pcurrent.ctype.getParameter("boundary");
-                    pcurrent.boundary = bnd == null || bnd.trim().isEmpty() ? "" : bnd;
-                    recalculateBoundaries();
-                }
+                pcurrent.setContentType(new ContentType(header, defaultContentType()));
             }
         }
 
@@ -622,7 +631,7 @@ class MimeParser {
         if (mp instanceof MimeMultipart) {
             // create the preamble, which encloses the lines up to the first boundary in its *body*
             MimeBodyPart preamble = new MimeBodyPart(new ContentType(ContentType.TEXT_PLAIN), mp, pos, pos, null);
-            parts.add(new PartInfo(preamble, lineNumber, pos, PartInfo.Location.PREAMBLE));
+            parts.add(new PartInfo(preamble, lineNumber, pos, PartLocation.PREAMBLE));
         } else if (mp instanceof MimeMessage) {
             // message/rfc822 attachments are just wrappers around their topmost subpart
             parts.add(new PartInfo(pos, true));
@@ -663,6 +672,11 @@ class MimeParser {
         for (PartInfo pinfo : parts) {
             endPart(pinfo, position);
         }
+    }
+
+    @Override
+    public String toString() {
+        return state + " @ " + position + ": " + parts;
     }
 
 

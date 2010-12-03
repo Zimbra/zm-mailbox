@@ -30,10 +30,15 @@ import javax.activation.DataSource;
 
 import com.zimbra.common.util.ByteUtil;
 
-public abstract class MimePart {
+public abstract class MimePart implements Cloneable {
     /** The property specifying the default charset to use for both parsing
      *  and encoding 8-bit headers and message content. */
     public static final String PROP_CHARSET_DEFAULT = "charset.default";
+
+    public interface InputStreamSource {
+        public InputStream newStream(long start, long end);
+        public long getSize();
+    }
 
     enum Dirty {
         NONE, HEADERS, CTE, CONTENT;
@@ -51,6 +56,7 @@ public abstract class MimePart {
         }
     }
 
+    private Dirty mDirty;
     private MimePart mParent;
     private MimeHeaderBlock mMimeHeaders;
     private ContentType mContentType;
@@ -58,7 +64,6 @@ public abstract class MimePart {
     private long mSize = -1;
     private int mLineCount = -1;
     private PartSource mPartSource;
-    private Dirty mDirty;
 
     MimePart(ContentType ctype) {
         mDirty = Dirty.CONTENT;
@@ -66,24 +71,39 @@ public abstract class MimePart {
     }
 
     MimePart(ContentType ctype, MimePart parent, long start, long body, MimeHeaderBlock headers) {
-        mDirty = Dirty.NONE;
-        mParent = parent;
+        mDirty       = Dirty.NONE;
+        mParent      = parent;
         mContentType = ctype;
         mMimeHeaders = headers == null ? null : headers.setParent(this);
         mStartOffset = start;
-        mBodyOffset = body;
+        mBodyOffset  = body;
     }
 
+    MimePart(MimePart mp) {
+        mDirty       = mp.mDirty;
+        mMimeHeaders = mp.mMimeHeaders == null ? null : new MimeHeaderBlock(mp.mMimeHeaders).setParent(this);
+        mContentType = new ContentType(mp.mContentType);
+        mStartOffset = mp.mStartOffset;
+        mBodyOffset  = mp.mBodyOffset;
+        mEndOffset   = mp.mEndOffset;
+        mSize        = mp.mSize;
+        mLineCount   = mp.mLineCount;
+        mPartSource  = mp.mPartSource;
+    }
+
+
+    @Override protected abstract MimePart clone();
 
     MimePart getParent() {
         return mParent;
     }
 
-    void setParent(MimePart mp) {
+    MimePart setParent(MimePart mp) {
         if (mParent != mp) {
             detach();
             mParent = mp;
         }
+        return this;
     }
 
     public MimePart detach() {
@@ -112,35 +132,51 @@ public abstract class MimePart {
         return mParent == null ? null : mParent.getProperties();
     }
 
-    String getDefaultCharset() {
+    public String getDefaultCharset() {
         Properties props = getProperties();
         return props == null ? null : props.getProperty(PROP_CHARSET_DEFAULT);
     }
 
 
-    /** Returns the value of the first header matching the given
-     *  <code>name</code>. */
+    /** Returns the decoded value of the last MIME header matching the given
+     *  {@code name}, or {@code null} if none match.  If {@code name} is
+     *  {@code null}, returns the value of the last header in the part's
+     *  header block. */
     public String getMimeHeader(String name) {
-        return mMimeHeaders == null ? null : mMimeHeaders.getHeader(name, getDefaultCharset());
+        return mMimeHeaders == null ? null : mMimeHeaders.getValue(name, getDefaultCharset());
     }
 
-    /** Returns the raw (<code>byte[]</code>) value of the first header
-     *  matching the given <code>name</code>. */
+    /** Returns the value of the last MIME header matching the given {@code
+     *  name}, or {@code null} if none match.  No decoding is performed other
+     *  than removing the trailing CRLF.  If {@code name} is {@code null},
+     *  returns the value of the last header in the part's header block. */
+    public String getEncodedMimeHeader(String name) {
+        return mMimeHeaders == null ? null : mMimeHeaders.getEncodedValue(name, getDefaultCharset());
+    }
+
+    /** Returns the raw (byte array) content of the last MIME header matching
+     *  the given {@code name}, or {@code null} if none match.  If {@code name}
+     *  is {@code null}, returns the last header in the part's header block. */
     public byte[] getRawMimeHeader(String name) {
         return mMimeHeaders == null ? null : mMimeHeaders.getRawHeader(name);
     }
 
     public MimePart setMimeHeader(String name, String value) {
-        setMimeHeader(name, value == null ? null : new MimeHeader(name, value));
+        return setMimeHeader(name, value, null);
+    }
+
+    public MimePart setMimeHeader(String name, String value, String charset) {
+        return setMimeHeader(name, value == null ? null : new MimeHeader(name, value, charset));
+    }
+
+    public MimePart setMimeHeader(String name, MimeHeader header) {
+        getMimeHeaderBlock().setHeader(name, header);
         return this;
     }
 
-    public void setMimeHeader(String name, MimeHeader header) {
-        getMimeHeaderBlock().setHeader(name, header);
-    }
-
-    void addMimeHeader(String name, MimeHeader header) {
+    public MimePart addMimeHeader(MimeHeader header) {
         getMimeHeaderBlock().addHeader(header);
+        return this;
     }
 
     public MimeHeaderBlock getMimeHeaderBlock() {
@@ -172,9 +208,9 @@ public abstract class MimePart {
     }
 
     public String getFilename() {
-        String filename = mContentType.getParameter("name");
-        if (filename == null || filename.equals("")) {
-            filename = getContentDisposition().getParameter("filename");
+        String filename = getContentDisposition().getParameter("filename");
+        if (filename == null || filename.isEmpty()) {
+            filename = mContentType.getParameter("name");
         }
         return filename;
     }
@@ -186,6 +222,11 @@ public abstract class MimePart {
             setMimeHeader("Content-Disposition", getContentDisposition().setParameter("filename", name));
         }
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return mContentType == null ? null : mContentType.getContentType();
     }
 
 
@@ -227,7 +268,7 @@ public abstract class MimePart {
         return mPartSource != null || mParent == null ? mPartSource : mParent.getPartSource();
     }
 
-    /** Returns an <code>InputStream</code> whose content is the <u>entire</u>
+    /** Returns an {@code InputStream} whose content is the <u>entire</u>
      *  part, MIME headers and all.  If you only want the part body, try
      *  {@see #getContentStream()}. */
     public InputStream getInputStream() throws IOException {
@@ -239,7 +280,7 @@ public abstract class MimePart {
         }
     }
 
-    /** Returns an <code>InputStream</code> whose content is the raw, undecoded
+    /** Returns an {@code InputStream} whose content is the raw, undecoded
      *  body of the part.  If you want the body with the content transfer
      *  encoding removed, try {@see #getContentStream()}. */
     public InputStream getRawContentStream() throws IOException {
@@ -251,7 +292,7 @@ public abstract class MimePart {
         return source == null ? null : source.getContentStream(start, end);
     }
 
-    /** Returns a <code>byte[]</code> array whose content is the raw, undecoded
+    /** Returns a {@code byte[]} array whose content is the raw, undecoded
      *  body of the part.  If you want the body with the content transfer
      *  encoding removed, try {@see #getContent()}. */
     public byte[] getRawContent() throws IOException {
@@ -264,15 +305,15 @@ public abstract class MimePart {
         }
     }
 
-    /** Returns an <code>InputStream</code> whose content is the body of the
-     *  part after any content transfer has been decoded.  If you want the raw
-     *  part body with encoding intact, try {@see #getRawContentStream()()}. */
+    /** Returns an {@code InputStream} whose content is the body of the part
+     *  after decoding the content transfer encoding (if any).  If you want the
+     *  raw part body with encoding intact, try {@see #getRawContentStream()()}. */
     public InputStream getContentStream() throws IOException {
         return getRawContentStream();
     }
 
-    /** Returns a <code>byte[]</code> array whose content is the body of the
-     *  part after any content transfer has been decoded.  If you want the raw
+    /** Returns a {@code byte[]} array whose content is the body of the part
+     *  after any content transfer has been decoded.  If you want the raw
      *  part body with encoding intact, try {@see #getRawContent()}. */
     public byte[] getContent() throws IOException {
         return getRawContent();
@@ -324,12 +365,14 @@ public abstract class MimePart {
         private final byte[] mBodyContent;
         private final File mBodyFile;
         private final DataSource mBodySource;
+        private final InputStreamSource mBodyStream;
         private final long mLength;
 
         PartSource(byte[] content) {
             mBodyContent = content;
             mBodyFile    = null;
             mBodySource  = null;
+            mBodyStream  = null;
             mLength      = mBodyContent.length;
         }
 
@@ -337,6 +380,7 @@ public abstract class MimePart {
             mBodyContent = null;
             mBodyFile    = file;
             mBodySource  = null;
+            mBodyStream  = null;
             mLength      = mBodyFile.length();
         }
 
@@ -344,7 +388,16 @@ public abstract class MimePart {
             mBodyContent = null;
             mBodyFile    = null;
             mBodySource  = ds;
+            mBodyStream  = null;
             mLength      = -1;
+        }
+
+        PartSource(InputStreamSource iss) {
+            mBodyContent = null;
+            mBodyFile    = null;
+            mBodySource  = null;
+            mBodyStream  = iss;
+            mLength      = iss.getSize();
         }
 
         long getLength() {
@@ -373,6 +426,8 @@ public abstract class MimePart {
                     ByteUtil.closeStream(is);
                     throw ioe;
                 }
+            } else if (mBodyStream != null) {
+                return mBodyStream.newStream(sstart, send);
             } else {
                 return null;
             }
@@ -402,7 +457,7 @@ public abstract class MimePart {
                 } catch (FileNotFoundException fnfe) {
                     return null;
                 }
-            } else if (mBodySource != null) {
+            } else if (mBodySource != null || mBodyStream != null) {
                 InputStream is = getContentStream(sstart, send);
                 try {
                     int remaining = size;
@@ -429,7 +484,7 @@ public abstract class MimePart {
         private int mNextIndex;
         private InputStream mCurrentStream;
 
-        VectorInputStream(List<Object> items) throws IOException {
+        public VectorInputStream(List<? extends Object> items) throws IOException {
             mItems = new ArrayList<Object>(items);
             while (mItems.remove(null))
                 ;

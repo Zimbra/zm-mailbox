@@ -24,9 +24,7 @@ public class ContentType extends MimeCompoundHeader {
     public static final String DEFAULT = TEXT_PLAIN;
 
     public ContentType(String value) {
-        super("Content-Type", value);
-        mDefault = DEFAULT;
-        normalizeType();
+        this(value, DEFAULT);
     }
 
     public ContentType(String value, String defaultType) {
@@ -57,6 +55,10 @@ public class ContentType extends MimeCompoundHeader {
         super(header);
         mDefault = defaultType == null || defaultType.isEmpty() ? DEFAULT : defaultType;
         normalizeType();
+    }
+
+    @Override protected ContentType clone() {
+        return new ContentType(this);
     }
 
 

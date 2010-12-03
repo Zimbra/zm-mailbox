@@ -18,9 +18,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class MimeHeaderBlock implements Iterable<MimeHeader> {
-    private final ArrayList<MimeHeader> mHeaders;
+    private final List<MimeHeader> mHeaders;
     private MimePart mParent;
 
     public MimeHeaderBlock(boolean isMessage) {
@@ -32,8 +33,41 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
         mParent = parent;
     }
 
+    public MimeHeaderBlock(MimeHeader... headers) {
+        mHeaders = new ArrayList<MimeHeader>(Math.max(headers.length, 5));
+        for (MimeHeader header : headers) {
+            addHeader(header);
+        }
+    }
+
     public MimeHeaderBlock(MimeHeaderBlock headers) {
         mHeaders = new ArrayList<MimeHeader>(headers.mHeaders);
+    }
+
+    public MimeHeaderBlock(MimeHeaderBlock headers, String[] omitHeaders) {
+        mHeaders = new ArrayList<MimeHeader>(headers.mHeaders.size());
+        for (MimeHeader header : headers) {
+            boolean present = false;
+            for (String name : omitHeaders) {
+                if (header.getName().equalsIgnoreCase(name)) {
+                    present = true;
+                    break;
+                }
+            }
+            if (!present) {
+                addHeader(header);
+            }
+        }
+    }
+
+    public MimeHeaderBlock(InputStream is) throws IOException {
+        MimeParser.HeaderParser parser = new MimeParser.HeaderParser();
+        for (int b = is.read(); b != -1; b = is.read()) {
+            if (!parser.handleByte((byte) b)) {
+                break;
+            }
+        }
+        mHeaders = parser.getHeaders().mHeaders;
     }
 
 
@@ -43,35 +77,75 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
     }
 
 
-    /** Returns the value of the last header matching the given
-     *  <tt>name</tt>. */
-    public String getHeader(String name) {
-        return getHeader(name, null);
+    /** Returns the decoded value of the last header matching the given
+     *  {@code name}, or {@code null} if none match.  If {@code name} is
+     *  {@code null}, returns the value of the last header in the block. */
+    public String getValue(String name) {
+        return getValue(name, null);
     }
 
-    /** Returns the value of the last header matching the given <tt>name</tt>.
-     *  Header content not encoded with RFC 2047 encoded-words or RFC 2231
-     *  encoding is decoded using the specified default charset. */
-    public String getHeader(String name, String defaultCharset) {
-        for (int i = mHeaders.size() - 1; i >= 0; i--) {
-            MimeHeader hdr = mHeaders.get(i);
-            if (hdr.getName().equalsIgnoreCase(name)) {
-                return hdr.getValue(defaultCharset);
-            }
-        }
-        return null;
+    /** Returns the decoded value of the last header matching the given {@code
+     *  name}, or {@code null} if none match.  Header content not encoded with
+     *  RFC 2047 encoded-words or RFC 2231 encoding is decoded using the
+     *  specified default charset.  If {@code name} is {@code null}, returns
+     *  the value of the last header in the block. */
+    public String getValue(String name, String defaultCharset) {
+        MimeHeader header = get(name);
+        return header == null ? null : header.getValue(defaultCharset);
     }
 
-    /** Returns the raw (byte array) value of the last header matching
-     *  the given <tt>name</tt>. */
+    /** Returns the value of the last header matching the given {@code name},
+     *  or {@code null} if none match.  No decoding is performed other than
+     *  removing the trailing CRLF.  Header content not encoded with RFC 2047
+     *  encoded-words or RFC 2231 encoding is decoded using the specified
+     *  default charset.  If {@code name} is {@code null}, returns the value
+     *  of the last header in the block. */
+    public String getEncodedValue(String name, String defaultCharset) {
+        MimeHeader header = get(name);
+        return header == null ? null : header.getEncodedValue(defaultCharset);
+    }
+
+    /** Returns the raw (byte array) value of the last header matching the
+     *  given {@code name}, or {@code null} if none match.  If {@code name}
+     *  is {@code null}, returns the last header in the block. */
     public byte[] getRawHeader(String name) {
+        MimeHeader header = get(name);
+        return header == null ? null : header.getRawHeader();
+    }
+
+    /** Returns the last header matching the given {@code name}, or {@code
+     *  null} if none match.  If {@code name} is {@code null}, returns the
+     *  last header in the block. */
+    MimeHeader get(String name) {
         for (int i = mHeaders.size() - 1; i >= 0; i--) {
-            MimeHeader hdr = mHeaders.get(i);
-            if (hdr.getName().equalsIgnoreCase(name)) {
-                return hdr.getRawHeader();
+            MimeHeader header = mHeaders.get(i);
+            if (name == null || header.getName().equalsIgnoreCase(name)) {
+                return header;
             }
         }
         return null;
+    }
+
+    /** Returns all headers matching the given {@code name}, in order of their
+     *  appearance in the header block.  If none match, returns {@code null}. */
+    public List<MimeHeader> getAll(String name) {
+        if (name == null) {
+            return isEmpty() ? null : new ArrayList<MimeHeader>(mHeaders);
+        }
+
+        List<MimeHeader> matches = new ArrayList<MimeHeader>(2); 
+        for (MimeHeader header : mHeaders) {
+            if (header.getName().equalsIgnoreCase(name)) {
+                matches.add(header.clone());
+            }
+        }
+        return matches.isEmpty() ? null : matches;
+    }
+
+    /** Returns whether this header block contains any headers with the given
+     *  {@code name}. */
+    boolean containsHeader(String name) {
+        return get(name) != null;
     }
 
     private class HeaderIterator implements Iterator<MimeHeader> {
@@ -125,20 +199,21 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    public void setHeader(String name, String value) {
-        setHeader(name, value == null ? null : new MimeHeader(name, value));
+    public MimeHeaderBlock setHeader(String name, String value) {
+        return setHeader(name, value == null ? null : new MimeHeader(name, value));
     }
 
-    public void setHeader(String name, byte[] bvalue) {
-        setHeader(name, bvalue == null ? null : new MimeHeader(name, bvalue));
+    public MimeHeaderBlock setHeader(String name, byte[] bvalue) {
+        return setHeader(name, bvalue == null ? null : new MimeHeader(name, bvalue));
     }
 
-    void setHeader(String name, MimeHeader header) {
+    @SuppressWarnings("null")
+    public MimeHeaderBlock setHeader(String name, MimeHeader header) {
         String key = validateFieldName(name);
         if (header != null && !header.getName().equals(name)) {
             throw new IllegalArgumentException("name does not match header.getName()");
         } else if (key == null) {
-            return;
+            return this;
         }
 
         boolean dirty = false, replaced = header == null;
@@ -150,7 +225,7 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
                 }
                 if (!replaced) {
                     // replace the first old instance of the header
-                    mHeaders.set(index, header);
+                    mHeaders.set(index, header.clone());
                     replaced = true;
                 } else {
                     // all other old instances are cleared
@@ -165,27 +240,50 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
             // make sure the new value actually does get added
             addHeader(header);
         }
+        return this;
     }
 
-    public void addHeader(String name, String value) {
+    public MimeHeaderBlock addHeader(String name, String value) {
         if (value != null) {
             addHeader(new MimeHeader(name, value));
         }
+        return this;
     }
 
-    public void addHeader(String name, byte[] bvalue) {
+    public MimeHeaderBlock addHeader(String name, byte[] bvalue) {
         if (bvalue != null) {
             addHeader(new MimeHeader(name, bvalue));
         }
+        return this;
     }
 
-    void addHeader(MimeHeader header) {
+    public MimeHeaderBlock addHeader(MimeHeader header) {
         if (header != null && validateFieldName(header.getName()) != null) {
             announce(header.getName(), header);
-            mHeaders.add(header);
+            mHeaders.add(header.clone());
             markDirty();
         }
+        return this;
     }
+
+    public MimeHeaderBlock addAll(MimeHeaderBlock headers) {
+        for (MimeHeader header : headers) {
+            addHeader(header);
+        }
+        return this;
+    }
+
+    MimeHeaderBlock removeHeader(MimeHeader header) {
+        for (Iterator<MimeHeader> it = mHeaders.iterator(); it.hasNext(); ) {
+            if (it.next() == header) {
+                it.remove();
+                markDirty();
+                break;
+            }
+        }
+        return this;
+    }
+
 
 
     public boolean isEmpty() {
@@ -203,6 +301,10 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
         return length + 2;
     }
 
+    @Override public String toString() {
+        return new String(toByteArray());
+    }
+
     public byte[] toByteArray() {
         byte[] block = new byte[getLength()];
         int offset = 0;
@@ -215,20 +317,5 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
         }
         block[offset++] = '\r';  block[offset++] = '\n';
         return block;
-    }
-
-    @Override public String toString() {
-        return new String(toByteArray());
-    }
-
-
-    public static MimeHeaderBlock parse(InputStream is) throws IOException {
-        MimeParser.HeaderParser parser = new MimeParser.HeaderParser();
-        for (int b = is.read(); b != -1; b = is.read()) {
-            if (!parser.handleByte((byte) b)) {
-                break;
-            }
-        }
-        return parser.getHeaders();
     }
 }
