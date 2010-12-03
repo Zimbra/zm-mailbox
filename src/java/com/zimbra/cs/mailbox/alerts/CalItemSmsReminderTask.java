@@ -60,8 +60,8 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
         DateFormat onlyDateFormat = DateFormat.getDateInstance(DateFormat.SHORT, locale);
         onlyDateFormat.setTimeZone(tz);
 
-        String formattedStart = null;
-        String formattedEnd = null;
+        String formattedStart;
+        String formattedEnd;
         if (calItem.getType() == MailItem.TYPE_APPOINTMENT) {
             Date start = new Date(new Long(getProperty(NEXT_INST_START_PROP_NAME)));
             formattedStart = dateTimeFormat.format(start);
@@ -69,12 +69,8 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
             formattedEnd = dateTimeFormat.format(end);
         } else {
             // start date and due date is optional for tasks
-            if (calItem.getStartTime() != 0) {
-                formattedStart = onlyDateFormat.format(new Date(calItem.getStartTime()));
-            }
-            if (calItem.getEndTime() != 0) {
-                formattedEnd = onlyDateFormat.format(new Date(calItem.getEndTime()));
-            }
+            formattedStart = invite.getStartTime() == null ? "" : onlyDateFormat.format(invite.getStartTime().getDate());
+            formattedEnd = invite.getEndTime() == null ? "" : onlyDateFormat.format(invite.getEndTime().getDate());
         }
 
         String location = invite.getLocation();
