@@ -413,8 +413,9 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         if (inv != null && inv.getRecurId() != null)
             recurIdZ = inv.getRecurId().getDtZ();
         ItemId iid = new ItemId(calItem, aid.invId);
-        ToXML.encodeInviteAsMP(parent, ifmt, octxt, calItem, recurIdZ, iid, null, maxSize, wantHtml, neuter, null, false);
-        return parent;
+        Element echoElem = parent.addElement(MailConstants.E_CAL_ECHO);
+        ToXML.encodeInviteAsMP(echoElem, ifmt, octxt, calItem, recurIdZ, iid, null, maxSize, wantHtml, neuter, null, false);
+        return echoElem;
     }
 
     protected static Element sendOrganizerChangeMessage(
