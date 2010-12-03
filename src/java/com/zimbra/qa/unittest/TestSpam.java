@@ -29,6 +29,7 @@ import junit.framework.TestCase;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
@@ -59,8 +60,8 @@ public class TestSpam extends TestCase {
     private String mOriginalHamAccount;
     private String mOriginalSieveScript;
 
-    public void setUp()
-    throws Exception {
+    @Override
+    public void setUp() throws Exception {
         cleanUp();
 
         Config config = Provisioning.getInstance().getConfig();
@@ -78,20 +79,20 @@ public class TestSpam extends TestCase {
     public void xtestSpam()
     throws Exception {
         String coreContent = TestUtil.getTestMessage(NAME_PREFIX + " testSpam", USER_NAME, USER_NAME, null);
-        MimeMessage msg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(coreContent.getBytes()));
+        MimeMessage msg = new JavaMailMimeMessage(JMSession.getSession(), new ByteArrayInputStream(coreContent.getBytes()));
         assertFalse(SpamHandler.isSpam(msg));
         
         // Test single-line spam header (common case)
         String headerName = Provisioning.getInstance().getConfig().getSpamHeader();
         String singleLineSpamContent = headerName + ": YES\r\n" + coreContent;
-        msg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(singleLineSpamContent.getBytes()));
+        msg = new JavaMailMimeMessage(JMSession.getSession(), new ByteArrayInputStream(singleLineSpamContent.getBytes()));
         assertTrue(SpamHandler.isSpam(msg));
         
         // Test folded spam header (bug 24954).
         Provisioning.getInstance().getConfig().setSpamHeaderValue("spam.*");
         String folderSpamContent = headerName + ": spam, SpamAssassin (score=5.701, required 5,\r\n" +
             "   DCC_CHECK 1.37, FH_RELAY_NODNS 1.45, RATWARE_RCVD_PF 2.88)\r\n" + coreContent;
-        msg = new MimeMessage(JMSession.getSession(), new ByteArrayInputStream(folderSpamContent.getBytes()));
+        msg = new JavaMailMimeMessage(JMSession.getSession(), new ByteArrayInputStream(folderSpamContent.getBytes()));
         assertTrue(SpamHandler.isSpam(msg));
     }
     

@@ -45,6 +45,9 @@ import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.DataSourceWrapper;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
+import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -99,8 +102,7 @@ public class ParseMimeMessage {
      * of all non-message attachments to base64, so that we preserve line endings
      * of text attachments (bugs 45858 and 53405).
      */
-    private static class ForceBase64MimeBodyPart
-    extends MimeBodyPart {
+    private static class ForceBase64MimeBodyPart extends JavaMailMimeBodyPart {
         public ForceBase64MimeBodyPart()  { }
 
         @Override protected void updateHeaders() throws MessagingException {
@@ -302,7 +304,7 @@ public class ParseMimeMessage {
             boolean hasContent  = (partElem != null || inviteElem != null || additionalParts != null);
             boolean isMultipart = (attachElem != null); // || inviteElem != null || additionalParts!=null);
             if (isMultipart) {
-                mmp = new MimeMultipart("mixed");  // may need to change to "digest" later
+                mmp = new JavaMailMimeMultipart("mixed");  // may need to change to "digest" later
                 mm.setContent(mmp);
             }
 
@@ -520,11 +522,11 @@ public class ParseMimeMessage {
 
         if (alternatives != null) {
             // create a multipart/alternative to hold all the alternatives
-            MimeMultipart mmpNew = new MimeMultipart("alternative");
+            MimeMultipart mmpNew = new JavaMailMimeMultipart("alternative");
             if (mmp == null) {
                 mm.setContent(mmpNew);
             } else {
-                MimeBodyPart mbpWrapper = new MimeBodyPart();
+                MimeBodyPart mbpWrapper = new JavaMailMimeBodyPart();
                 mbpWrapper.setContent(mmpNew);
                 mmp.addBodyPart(mbpWrapper);
             }
@@ -542,7 +544,7 @@ public class ParseMimeMessage {
         ctype.setCharset(charset).setParameter(MimeConstants.P_CHARSET, charset);
 
         if (mmp != null) {
-            MimeBodyPart mbp = new MimeBodyPart();
+            MimeBodyPart mbp = new JavaMailMimeBodyPart();
             mbp.setText(data, charset);
             mbp.setHeader("Content-Type", ctype.toString());
             mmp.addBodyPart(mbp);
@@ -566,13 +568,13 @@ public class ParseMimeMessage {
             // no need to add an extra multipart/alternative!
 
             // create the MimeMultipart and attach it to the existing structure:
-            MimeMultipart mmpNew = new MimeMultipart(subType);
+            MimeMultipart mmpNew = new JavaMailMimeMultipart(subType);
             if (mmp == null) {
                 // there were no multiparts at all, we need to create one 
                 mm.setContent(mmpNew);
             } else {
                 // there was already a multipart/mixed at the top of the mm
-                MimeBodyPart mbpWrapper = new MimeBodyPart();
+                MimeBodyPart mbpWrapper = new JavaMailMimeBodyPart();
                 mbpWrapper.setContent(mmpNew);
                 mmp.addBodyPart(mbpWrapper);
             }
@@ -590,11 +592,11 @@ public class ParseMimeMessage {
             }
         } else {
             // create a multipart/alternative to hold all the client's struct + the alternatives
-            MimeMultipart mmpNew = new MimeMultipart("alternative");
+            MimeMultipart mmpNew = new JavaMailMimeMultipart("alternative");
             if (mmp == null) {
                 mm.setContent(mmpNew);
             } else {
-                MimeBodyPart mbpWrapper = new MimeBodyPart();
+                MimeBodyPart mbpWrapper = new JavaMailMimeBodyPart();
                 mbpWrapper.setContent(mmpNew);
                 mmp.addBodyPart(mbpWrapper);
             }
@@ -675,7 +677,7 @@ public class ParseMimeMessage {
         Message msg = mbox.getMessageById(ctxt.octxt, iid.getId());
         ctxt.incrementSize("attached message", msg.getSize());
 
-        MimeBodyPart mbp = new MimeBodyPart();
+        MimeBodyPart mbp = new JavaMailMimeBodyPart();
         mbp.setDataHandler(new DataHandler(new MailboxBlobDataSource(msg.getBlob())));
         mbp.setHeader("Content-Type", MimeConstants.CT_MESSAGE_RFC822);
         mbp.setHeader("Content-Disposition", Part.ATTACHMENT);
@@ -702,7 +704,7 @@ public class ParseMimeMessage {
         String filename = vcf.fn + ".vcf";
         String charset = StringUtil.checkCharset(vcf.formatted, ctxt.defaultCharset);
 
-        MimeBodyPart mbp = new MimeBodyPart();
+        MimeBodyPart mbp = new JavaMailMimeBodyPart();
         mbp.setText(vcf.formatted, charset);
         mbp.setHeader("Content-Type", new ContentType("text/x-vcard", ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("name", filename).setParameter("charset", charset).toString());
         mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT, ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("filename", filename).toString());
@@ -763,7 +765,7 @@ public class ParseMimeMessage {
         ctxt.incrementSize("attached document", (long) (doc.getSize() * 1.33));
         String ct = doc.getContentType();
 
-        MimeBodyPart mbp = new MimeBodyPart();
+        MimeBodyPart mbp = new JavaMailMimeBodyPart();
         mbp.setDataHandler(new DataHandler(new MailboxBlobDataSource(doc.getBlob(), ct)));
         mbp.setHeader("Content-Type", new ContentType(ct).cleanup().setParameter("name", doc.getName()).setCharset(ctxt.defaultCharset).toString());
         mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT).setParameter("filename", doc.getName()).toString());
@@ -802,7 +804,7 @@ public class ParseMimeMessage {
             // Clean up the content type and pass it to the new MimeBodyPart via DataSourceWrapper.
             // If we don't do this, JavaMail ignores the Content-Type header.  See bug 42452,
             // JavaMail bug 1650154.
-        	ContentType ctype = (ContentType) new ContentType(ctypeHdr, ctxt.use2231).cleanup().setCharset(ctxt.defaultCharset).setParameter("name", filename);
+            ContentType ctype = (ContentType) new ContentType(ctypeHdr, ctxt.use2231).cleanup().setCharset(ctxt.defaultCharset).setParameter("name", filename);
             String contentType = ctype.toString();
             DataHandler originalHandler = mp.getDataHandler();
             DataSourceWrapper wrapper = new DataSourceWrapper(originalHandler.getDataSource());
@@ -819,8 +821,9 @@ public class ParseMimeMessage {
         mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT, ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("filename", filename).toString());
 
         String desc = mp.getDescription();
-        if (desc != null)
+        if (desc != null) {
             mbp.setHeader("Content-Description", desc);
+        }
 
         mbp.setContentID(contentID);
 
@@ -842,7 +845,7 @@ public class ParseMimeMessage {
             String personalName = elem.getAttribute(MailConstants.A_PERSONAL, null);
             String addressType = elem.getAttribute(MailConstants.A_ADDRESS_TYPE);
 
-            InternetAddress addr = new InternetAddress(emailAddress, personalName, StringUtil.checkCharset(personalName, defaultCharset));
+            InternetAddress addr = new JavaMailInternetAddress(emailAddress, personalName, StringUtil.checkCharset(personalName, defaultCharset));
             if (elem.getAttributeBool(MailConstants.A_ADD_TO_AB, false))
                 newContacts.add(addr);
 

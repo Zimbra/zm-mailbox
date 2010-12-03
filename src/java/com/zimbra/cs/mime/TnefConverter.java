@@ -19,9 +19,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
@@ -42,11 +41,12 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
+import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 
 import net.freeutils.tnef.TNEFInputStream;
 import net.freeutils.tnef.TNEFUtils;
 import net.freeutils.tnef.mime.TNEFMime;
-
 
 /**
  * Converts each TNEF MimeBodyPart to a multipart/alternative that contains
@@ -80,45 +80,70 @@ import net.freeutils.tnef.mime.TNEFMime;
 public class TnefConverter extends MimeVisitor {
     private MimeMessage mMimeMessage;
 
+    @Override
     protected boolean visitBodyPart(MimeBodyPart bp)  { return false; }
 
+    @Override
     protected boolean visitMessage(MimeMessage msg, VisitPhase visitKind) throws MessagingException {
+        // do the decode in the exit phase
         if (visitKind == VisitPhase.VISIT_BEGIN) {
             mMimeMessage = msg;
             return false;
         }
 
-        // do the decode in the exit phase
-        MimeMultipart multi = null;
         try {
             // we only care about "application/ms-tnef" content
             if (!TNEFUtils.isTNEFMimeType(msg.getContentType()))
                 return false;
-    
-            Object content = msg.getContent();
-            if (!(content instanceof MimeBodyPart))
-                return false;
-            // try to expand the TNEF into a suitable Multipart
-            multi = expandTNEF((MimeBodyPart) content);
-            if (multi == null)
+
+            // check to make sure that the caller's OK with altering the message
+            if (mCallback != null && !mCallback.onModification())
                 return false;
         } catch (MessagingException e) {
-            ZimbraLog.extensions.warn("exception while uudecoding message part; skipping part", e);
-            return false;
-        } catch (IOException e) {
-            ZimbraLog.extensions.warn("exception while uudecoding message part; skipping part", e);
+            ZimbraLog.extensions.warn("exception while checking message for TNEF content; skipping part");
             return false;
         }
 
-        // check to make sure that the caller's OK with altering the message
-        if (mCallback != null && !mCallback.onModification())
+        MimeMultipart multi = null;
+        MimeBodyPart tnefPart = null;
+        try {
+            Object content = msg.getContent();
+            if (!(content instanceof MimeBodyPart))
+                return false;
+            tnefPart = (MimeBodyPart) content;
+
+            // try to expand the TNEF into a suitable multipart
+            multi = expandTNEF(tnefPart);
+            if (multi == null)
+                return false;
+
+            // add the TNEF to the expanded multipart
+            multi.addBodyPart(tnefPart, 0);
+        } catch (MessagingException e) {
+            ZimbraLog.extensions.warn("exception while decoding TNEF message content; skipping part", e);
             return false;
+        } catch (IOException e) {
+            ZimbraLog.extensions.warn("exception while decoding TNEF message content; skipping part", e);
+            return false;
+        }
+
         // and put the new multipart/alternative where the TNEF used to be
         msg.setContent(multi);
         msg.setHeader("Content-Type", multi.getContentType() + "; generated=true");
-        return false;
+        return true;
     }
 
+    private static class MultipartReplacement {
+        int partIndex;
+        MimeBodyPart tnefPart;
+        MimeMultipart converted;
+
+        MultipartReplacement(int idx, MimeBodyPart tnef, MimeMultipart multi) {
+            partIndex = idx;  tnefPart = tnef;  converted = multi;
+        }
+    }
+
+    @Override
     protected boolean visitMultipart(MimeMultipart mmp, VisitPhase visitKind) throws MessagingException {
         // do the decode in the exit phase
         if (visitKind != VisitPhase.VISIT_END)
@@ -127,7 +152,24 @@ public class TnefConverter extends MimeVisitor {
         if (MimeConstants.CT_MULTIPART_ALTERNATIVE.equals(mmp.getContentType()))
             return false;
 
-        Map<Integer, MimeBodyPart> changedParts = null;
+        try {
+            boolean found = false;
+            for (int i = 0; i < mmp.getCount() && !found; i++) {
+                BodyPart bp = mmp.getBodyPart(i);
+                found = bp instanceof MimeBodyPart && TNEFUtils.isTNEFMimeType(bp.getContentType());
+            }
+            if (!found)
+                return false;
+
+            // check to make sure that the caller's OK with altering the message
+            if (mCallback != null && !mCallback.onModification())
+                return false;
+        } catch (MessagingException e) {
+            ZimbraLog.extensions.warn("exception while traversing multipart; skipping", e);
+            return false;
+        }
+
+        List<MultipartReplacement> tnefReplacements = new ArrayList<MultipartReplacement>();
         try {
             for (int i = 0; i < mmp.getCount(); i++) {
                 BodyPart bp = mmp.getBodyPart(i);
@@ -143,13 +185,7 @@ public class TnefConverter extends MimeVisitor {
                     if (multi == null)
                         continue;
 
-                    // create a BodyPart to contain the new Multipart (JavaMail bookkeeping)
-                    MimeBodyPart replacement = new MimeBodyPart();
-                    replacement.setContent(multi);
-                    // and keep track of it for later
-                    if (changedParts == null)
-                        changedParts = new HashMap<Integer, MimeBodyPart>();
-                    changedParts.put(i, replacement);
+                    tnefReplacements.add(new MultipartReplacement(i, (MimeBodyPart) bp, multi));
                 }
             }
         } catch (MessagingException e) {
@@ -157,17 +193,19 @@ public class TnefConverter extends MimeVisitor {
             return false;
         }
 
-        if (changedParts == null || changedParts.isEmpty())
-            return false;
-        // check to make sure that the caller's OK with altering the message
-        if (mCallback != null && !mCallback.onModification())
-            return false;
-        // and put the new multipart/alternatives where the TNEF used to be
-        for (Map.Entry<Integer, MimeBodyPart> change : changedParts.entrySet()) {
-            mmp.removeBodyPart(change.getKey());
-            mmp.addBodyPart(change.getValue(), change.getKey());
+        for (MultipartReplacement change : tnefReplacements) {
+            // unhitch the old TNEF part from the parent multipart and add it to the new converted one
+            mmp.removeBodyPart(change.partIndex);
+            change.converted.addBodyPart(change.tnefPart, 0);
+
+            // create a BodyPart to contain the new Multipart (JavaMail bookkeeping)
+            MimeBodyPart replacementPart = new JavaMailMimeBodyPart();
+            replacementPart.setContent(change.converted);
+
+            // and put the new multipart/alternatives where the TNEF used to be
+            mmp.addBodyPart(replacementPart, change.partIndex);
         }
-        return true;
+        return !tnefReplacements.isEmpty();
     }
 
     /**
@@ -209,7 +247,7 @@ public class TnefConverter extends MimeVisitor {
         // Create a MimeBodyPart for the converted data.  Currently we're throwing
         // away the top-level message because its content shows up as blank after
         // the conversion.
-        MimeBodyPart convertedPart = new MimeBodyPart();
+        MimeBodyPart convertedPart = new JavaMailMimeBodyPart();
         convertedPart.setContent(convertedMulti);
 
         // If the TNEF object contains calendar data, create an iCalendar version.
@@ -229,7 +267,7 @@ public class TnefConverter extends MimeVisitor {
                                 method = cal.getMethod();
                         }
                         writer.close();
-                        icalPart = new MimeBodyPart();
+                        icalPart = new JavaMailMimeBodyPart();
                         icalPart.setText(writer.toString());
                         ContentType ct = new ContentType(MimeConstants.CT_TEXT_CALENDAR);
                         ct.setCharset(MimeConstants.P_CHARSET_UTF8);
@@ -244,8 +282,8 @@ public class TnefConverter extends MimeVisitor {
         }
 
         // create a multipart/alternative for the TNEF and its MIME version
-        MimeMultipart altMulti = new MimeMultipart("alternative");
-        altMulti.addBodyPart(bp);
+        MimeMultipart altMulti = new JavaMailMimeMultipart("alternative");
+//        altMulti.addBodyPart(bp);
         altMulti.addBodyPart(convertedPart);
         if (icalPart != null)
             altMulti.addBodyPart(icalPart);

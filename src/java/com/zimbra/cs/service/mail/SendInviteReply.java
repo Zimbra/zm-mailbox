@@ -29,6 +29,7 @@ import javax.mail.internet.MimeMessage;
 import com.zimbra.common.util.ZimbraLog;
 
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
@@ -140,7 +141,7 @@ public class SendInviteReply extends CalendarRequest {
                 Account intendedAcct = null;
                 if (intendedFor != null) {
                     try {
-                        InternetAddress intendedForAddr = new InternetAddress(intendedFor);
+                        InternetAddress intendedForAddr = new JavaMailInternetAddress(intendedFor);
                         intendedAcct = Provisioning.getInstance().get(AccountBy.name, intendedForAddr.getAddress());
                     } catch (AddressException e) {
                         throw ServiceException.INVALID_REQUEST("The intended account " + intendedFor + " is invalid", e);

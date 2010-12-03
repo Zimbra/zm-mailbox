@@ -1,6 +1,9 @@
 package com.zimbra.cs.mailbox.alerts;
 
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
+import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -37,6 +40,7 @@ public class CalItemEmailReminderTask extends CalItemReminderTaskBase {
         return TASK_NAME_PREFIX + getProperty(CAL_ITEM_ID_PROP_NAME);
     }
 
+    @Override
     protected void sendReminder(CalendarItem calItem, Invite invite) throws Exception {
         Account account = calItem.getAccount();
         Locale locale = account.getLocale();
@@ -49,21 +53,21 @@ public class CalItemEmailReminderTask extends CalItemReminderTaskBase {
             ZimbraLog.scheduler.info("Unable to send calendar reminder email since %s is not set", Provisioning.A_zimbraPrefCalendarReminderEmail);
             return;
         }
-        mm.setRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(to));
+        mm.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(to));
 
         mm.setSubject(L10nUtil.getMessage(calItem.getType() == MailItem.TYPE_APPOINTMENT ? L10nUtil.MsgKey.apptReminderEmailSubject : L10nUtil.MsgKey.taskReminderEmailSubject, 
                                           locale,
                                           calItem.getSubject()),
                       MimeConstants.P_CHARSET_UTF8);
 
-        MimeMultipart mmp = new MimeMultipart("alternative");
+        MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
         mm.setContent(mmp);
 
-        MimeBodyPart textPart = new MimeBodyPart();
+        MimeBodyPart textPart = new JavaMailMimeBodyPart();
         textPart.setText(getBody(calItem, invite, false, locale, tz), MimeConstants.P_CHARSET_UTF8);
         mmp.addBodyPart(textPart);
 
-        MimeBodyPart htmlPart = new MimeBodyPart();
+        MimeBodyPart htmlPart = new JavaMailMimeBodyPart();
         htmlPart.setContent(getBody(calItem, invite, true, locale, tz), MimeConstants.CT_TEXT_HTML + "; " + MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8);
         mmp.addBodyPart(htmlPart);
 

@@ -67,6 +67,10 @@ import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeHeader;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
+import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
+import com.zimbra.common.mime.shim.JavaMailShim;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -114,9 +118,9 @@ public class Mime {
 
     private static final Charset CP1252 = toCharset(MimeConstants.P_CHARSET_CP1252);
     private static final Charset GB2312 = toCharset(MimeConstants.P_CHARSET_GB2312);
-    private static final Charset GBK = toCharset(MimeConstants.P_CHARSET_GBK);
+    private static final Charset GBK    = toCharset(MimeConstants.P_CHARSET_GBK);
 
-    public static class FixedMimeMessage extends MimeMessage {
+    public static class FixedMimeMessage extends com.zimbra.common.mime.shim.JavaMailMimeMessage {
         public FixedMimeMessage(Session session)  {
             super(session);
         }
@@ -127,10 +131,6 @@ public class Mime {
 
         public FixedMimeMessage(MimeMessage source) throws MessagingException  {
             super(source);
-        }
-
-        public Session getSession() {
-            return session;
         }
 
         public FixedMimeMessage setSession(Session session) {
@@ -242,17 +242,26 @@ public class Mime {
         return mpart;
     }
 
+    private static boolean isZimbraJavaMailShim(Object o) {
+        return o instanceof JavaMailShim && JavaMailMimeMessage.usingZimbraParser();
+    }
+
     private static MimeMultipart validateMultipart(MimeMultipart multi, MimePart mp) throws MessagingException, IOException {
+        // our MIME parser preparses the multipart, so if an object exists then it's valid
+        if (isZimbraJavaMailShim(multi)) {
+            return multi;
+        }
+
         ContentType ctype = new ContentType(mp.getContentType());
         try {
             if (!ctype.containsParameter("generated") && !findStartBoundary(mp, ctype.getParameter("boundary"))) {
-                return new MimeMultipart(new RawContentMultipartDataSource(mp, ctype));
+                return new JavaMailMimeMultipart(new RawContentMultipartDataSource(mp, ctype));
             }
             multi.getCount();
         } catch (ParseException pe) {
-            multi = new MimeMultipart(new FixedMultipartDataSource(mp, ctype));
+            multi = new JavaMailMimeMultipart(new FixedMultipartDataSource(mp, ctype));
         } catch (MessagingException me) {
-            multi = new MimeMultipart(new FixedMultipartDataSource(mp, ctype));
+            multi = new JavaMailMimeMultipart(new FixedMultipartDataSource(mp, ctype));
         }
         return multi;
     }
@@ -496,7 +505,7 @@ public class Mime {
         } else if (content instanceof InputStream) {
             try {
                 // handle unparsed content due to miscapitalization of content-type value
-                mmp = new MimeMultipart(new InputStreamDataSource((InputStream) content, contentType));
+                mmp = new JavaMailMimeMultipart(new InputStreamDataSource((InputStream) content, contentType));
             } catch (Exception e) {
             } finally {
                 ByteUtil.closeStream((InputStream) content);
@@ -739,10 +748,10 @@ public class Mime {
 
         InternetAddress[] addresses;
         try {
-            addresses = InternetAddress.parseHeader(header, false);
+            addresses = JavaMailInternetAddress.parseHeader(header, false);
         } catch (AddressException e) {
             try {
-                return new InternetAddress[] { new InternetAddress(null, header, MimeConstants.P_CHARSET_UTF8) };
+                return new InternetAddress[] { new JavaMailInternetAddress(null, header, MimeConstants.P_CHARSET_UTF8) };
             } catch (UnsupportedEncodingException e1) {
                 return NO_ADDRESSES;
             }

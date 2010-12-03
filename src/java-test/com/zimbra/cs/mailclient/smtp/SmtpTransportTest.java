@@ -28,6 +28,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.cs.mailclient.MockTcpServer;
 import com.zimbra.cs.util.JMSession;
 
@@ -74,8 +75,7 @@ public class SmtpTransportTest {
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
             "Subject: test\n\ntest";
-        MimeMessage msg = new MimeMessage(session,
-                new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();
 
@@ -117,8 +117,7 @@ public class SmtpTransportTest {
         String raw = "From: sender@zimbra.com\n" +
             "To: rcpt1@zimbra.com, rcpt2@zimbra.com, rcpt3@zimbra.com\n" +
             "Subject: test\n\ntest";
-        MimeMessage msg = new MimeMessage(session,
-                new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         try {
             transport.sendMessage(msg, msg.getAllRecipients());
         } catch (SendFailedException e) {
@@ -155,8 +154,7 @@ public class SmtpTransportTest {
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
             "Subject: test\n\ntest";
-        MimeMessage msg = new MimeMessage(session,
-                new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         try {
             transport.sendMessage(msg, msg.getAllRecipients());
             Assert.fail();
@@ -198,8 +196,7 @@ public class SmtpTransportTest {
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
             "Subject: test\n\ntest";
-        MimeMessage msg = new MimeMessage(session,
-                new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();
 
@@ -241,8 +238,7 @@ public class SmtpTransportTest {
         transport.connect("localhost", PORT, "zimbra", "secret");
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
             "Subject: test\n\ntest";
-        MimeMessage msg = new MimeMessage(session,
-                new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();
 
@@ -281,8 +277,7 @@ public class SmtpTransportTest {
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
             "Subject: test\n\ntest";
-        MimeMessage msg = new MimeMessage(session,
-                new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         try {
             transport.sendMessage(msg, msg.getAllRecipients());
             Assert.fail();
@@ -327,8 +322,7 @@ public class SmtpTransportTest {
             ".\n" +
             "..\n" +
             ".\n";
-        MimeMessage msg = new MimeMessage(session,
-                new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();
 
@@ -368,8 +362,7 @@ public class SmtpTransportTest {
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
             "Subject: test\n\ntest";
-        MimeMessage msg = new MimeMessage(session,
-                new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         try {
             transport.sendMessage(msg, msg.getAllRecipients());
             Assert.fail();
@@ -440,8 +433,7 @@ public class SmtpTransportTest {
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
             "Subject: test\n\ntest";
-        MimeMessage msg = new MimeMessage(session,
-                new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();
 

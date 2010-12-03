@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.zclient;
 
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -114,7 +115,7 @@ public class ZEmailAddress implements ToZJSONObject {
             if (mPersonal == null)
                 return mAddress;
             else
-                return new InternetAddress(mAddress, mPersonal).toUnicodeString();
+                return new JavaMailInternetAddress(mAddress, mPersonal).toUnicodeString();
         } catch (UnsupportedEncodingException e) {
             if (mPersonal == null)
                 return mAddress;
@@ -134,6 +135,7 @@ public class ZEmailAddress implements ToZJSONObject {
     public boolean  isTo()         { return ZEmailAddress.EMAIL_TYPE_TO.equals(getType()); }
     public boolean  isReplyTo()    { return ZEmailAddress.EMAIL_TYPE_REPLY_TO.equals(getType()); }
     
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
         jo.put("address", mAddress);
@@ -144,6 +146,7 @@ public class ZEmailAddress implements ToZJSONObject {
         return jo;
     }
 
+    @Override
     public String toString() {
         return String.format("[ZEmailAddress %s]", getFullAddressQuoted());
     }
@@ -162,7 +165,7 @@ public class ZEmailAddress implements ToZJSONObject {
     public static List<ZEmailAddress> parseAddresses(String line, String type) throws ServiceException {
         try {
             line = line.replace(";", ",");
-            InternetAddress[] inetAddrs = InternetAddress.parseHeader(line, false);
+            InternetAddress[] inetAddrs = JavaMailInternetAddress.parseHeader(line, false);
             List<ZEmailAddress> result = new ArrayList<ZEmailAddress>(inetAddrs.length);
             for (InternetAddress ia : inetAddrs) {
                 result.add(new ZEmailAddress(ia.getAddress().replaceAll("\"",""), null, ia.getPersonal(), type));

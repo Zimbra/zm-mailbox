@@ -27,6 +27,7 @@ import javax.mail.internet.InternetHeaders;
 
 import org.apache.lucene.document.Document;
 
+import com.zimbra.common.mime.shim.JavaMailInternetHeaders;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.convert.AttachmentInfo;
 import com.zimbra.cs.mime.MimeHandler;
@@ -58,7 +59,7 @@ public class MessageRFC822Handler extends MimeHandler {
             if (is == null) {
                 return null;
             }
-            InternetHeaders headers = new InternetHeaders(is);
+            InternetHeaders headers = new JavaMailInternetHeaders(is);
             String[] subject = headers.getHeader("Subject");
             if (subject == null || subject.length == 0 || subject[0] == null) {
                 return null;

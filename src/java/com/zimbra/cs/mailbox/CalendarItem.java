@@ -89,6 +89,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
+import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 
 
 /**
@@ -2176,15 +2179,15 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
         try {
             // create the toplevel multipart/digest...
-            MimeMessage mm = new MimeMessage(JMSession.getSession());
-            MimeMultipart mmp = new MimeMultipart("digest");
+            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+            MimeMultipart mmp = new JavaMailMimeMultipart("digest");
             mm.setContent(mmp);
 
             // add the invite
-            MimeBodyPart mbp = new MimeBodyPart();
+            MimeBodyPart mbp = new JavaMailMimeBodyPart();
             mbp.setDataHandler(new DataHandler(new PMDataSource(invPm)));
-            mmp.addBodyPart(mbp);
             mbp.addHeader("invId", Integer.toString(firstInvite.getMailItemId()));
+            mmp.addBodyPart(mbp);
 
             mm.saveChanges();
 
@@ -2320,10 +2323,10 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                 if (replaceExceptionBodyWithSeriesBody) {
                     // Throw away the existing part.  Replace it with body from new invite.
                     mmp.removeBodyPart(mbpInv);
-                    mbpInv = new MimeBodyPart();
+                    mbpInv = new JavaMailMimeBodyPart();
                     mbpInv.setDataHandler(new DataHandler(new PMDataSource(invPm)));
-                    mmp.addBodyPart(mbpInv);
                     mbpInv.addHeader("invId", Integer.toString(inv.getMailItemId()));
+                    mmp.addBodyPart(mbpInv);
                     mm.saveChanges();  // required by JavaMail for some magical reason
                 }
 
@@ -2361,7 +2364,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             }
 
             if (newInv != null) {
-                MimeBodyPart mbp = new MimeBodyPart();
+                MimeBodyPart mbp = new JavaMailMimeBodyPart();
                 mbp.setDataHandler(new DataHandler(new PMDataSource(invPm)));
                 mmp.addBodyPart(mbp);
                 mbp.addHeader("invId", Integer.toString(newInv.getMailItemId()));
@@ -3027,7 +3030,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             is = getRawMessage();
             if (is == null)
                 return null;
-            mm = new MimeMessage(JMSession.getSession(), is);
+            mm = new JavaMailMimeMessage(JMSession.getSession(), is);
             ByteUtil.closeStream(is);
 
             try {
@@ -3038,7 +3041,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                 ZimbraLog.mailbox.warn(
                     "MIME converter failed for message " + getId(), e);
                 is = getRawMessage();
-                mm = new MimeMessage(JMSession.getSession(), is);
+                mm = new JavaMailMimeMessage(JMSession.getSession(), is);
                 ByteUtil.closeStream(is);
             }
 
@@ -3088,7 +3091,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             is = getRawMessage();
             if (is == null)
                 return null;
-            mm = new MimeMessage(JMSession.getSession(), is);
+            mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
             ByteUtil.closeStream(is);
 
             if (!DebugConfig.disableMimeConvertersForCalendarBlobs) {
@@ -3099,7 +3102,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                     // If the conversion bombs for any reason, revert to the original
                     ZimbraLog.mailbox.warn("MIME converter failed for message " + getId(), e);
                     is = getRawMessage();
-                    mm = new MimeMessage(JMSession.getSession(), is);
+                    mm = new JavaMailMimeMessage(JMSession.getSession(), is);
                     ByteUtil.closeStream(is);
                 }
             }

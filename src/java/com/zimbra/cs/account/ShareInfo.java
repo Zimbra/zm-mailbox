@@ -41,20 +41,19 @@ import javax.mail.internet.MimeMultipart;
 
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
+import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
-import com.zimbra.cs.account.Provisioning.PublishShareInfoAction;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
@@ -983,20 +982,20 @@ public class ShareInfo {
         public static MimeMultipart genNotifBody(ShareInfoData sid, MsgKey intro, String notes, Locale locale) throws MessagingException {
         
             // Body
-            MimeMultipart mmp = new MimeMultipart("alternative");
+            MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
     
             // TEXT part (add me first!)
-            MimeBodyPart textPart = new MimeBodyPart();
+            MimeBodyPart textPart = new JavaMailMimeBodyPart();
             textPart.setText(genTextPart(sid, intro, notes, locale, null), MimeConstants.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
     
             // HTML part 
-            MimeBodyPart htmlPart = new MimeBodyPart();
+            MimeBodyPart htmlPart = new JavaMailMimeBodyPart();
             htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(genHtmlPart(sid, intro, notes, locale, null))));
             mmp.addBodyPart(htmlPart);
             
             // XML part 
-            MimeBodyPart xmlPart = new MimeBodyPart();
+            MimeBodyPart xmlPart = new JavaMailMimeBodyPart();
             xmlPart.setDataHandler(new DataHandler(new XmlPartDataSource(genXmlPart(sid, notes, locale, null))));
             mmp.addBodyPart(xmlPart);
             
@@ -1315,7 +1314,7 @@ public class ShareInfo {
             String dlssmfa = dl.getAttr(Provisioning.A_zimbraDistributionListSendShareMessageFromAddress);
             try {
                 if (dlssmfa != null) {
-                    addr = new InternetAddress(dlssmfa);
+                    addr = new JavaMailInternetAddress(dlssmfa);
                     return new Pair<Address, Address>(addr, addr);
                 }
             } catch (AddressException e) {
@@ -1336,14 +1335,14 @@ public class ShareInfo {
                     Address replyToAddr = addr;
                     String replyTo = fromAcct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
                     if (replyTo != null)
-                        replyToAddr = new InternetAddress(replyTo);
+                        replyToAddr = new JavaMailInternetAddress(replyTo);
                     return new Pair<Address, Address>(addr, replyToAddr);
                 } catch (AddressException e) {
                 }
             }
 
             // 3. otherwise use the DL's address.
-            addr = new InternetAddress(dl.getName());
+            addr = new JavaMailInternetAddress(dl.getName());
             return new Pair<Address, Address>(addr, addr);
         }
         
@@ -1357,21 +1356,21 @@ public class ShareInfo {
                 shareInfoXml = visitor.genXml(dl.getName(), locale, idx);
             
             // Body
-            MimeMultipart mmp = new MimeMultipart("alternative");
+            MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
 
             // TEXT part (add me first!)
-            MimeBodyPart textPart = new MimeBodyPart();
+            MimeBodyPart textPart = new JavaMailMimeBodyPart();
             textPart.setText(shareInfoText, MimeConstants.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
 
             // HTML part 
-            MimeBodyPart htmlPart = new MimeBodyPart();
+            MimeBodyPart htmlPart = new JavaMailMimeBodyPart();
             htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(shareInfoHtml)));
             mmp.addBodyPart(htmlPart);
             
             // XML part 
             if (shareInfoXml != null) {
-                MimeBodyPart xmlPart = new MimeBodyPart();
+                MimeBodyPart xmlPart = new JavaMailMimeBodyPart();
                 xmlPart.setDataHandler(new DataHandler(new XmlPartDataSource(shareInfoXml)));
                 mmp.addBodyPart(xmlPart);
             }
@@ -1411,7 +1410,7 @@ public class ShareInfo {
                 out.setReplyTo(new Address[]{replyToAddr});
                 
                 // To
-                out.setRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(toAddr));
+                out.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(toAddr));
                 
                 // Date
                 out.setSentDate(new Date());

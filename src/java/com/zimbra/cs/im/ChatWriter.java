@@ -42,6 +42,10 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
+import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.html.HtmlEntityMapper;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -147,9 +151,8 @@ class ChatWriter {
     private static final String TAB_STR = "&nbsp;&nbsp;&nbsp;&nbsp;";
 
     static ParsedMessage writeChat(IMChat chat) throws MessagingException, ServiceException {
-        MimeMessage mm = new MimeMessage(JMSession.getSession());
-        MimeMultipart mmp = new MimeMultipart("alternative");
-        mm.setContent(mmp);
+        MimeMessage mm = new JavaMailMimeMessage(JMSession.getSession());
+        MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
 
         StringBuilder subject = new StringBuilder();
         StringBuilder plainText = new StringBuilder();
@@ -161,7 +164,7 @@ class ChatWriter {
         HashMap<String /*addr*/, String /*colorId*/> colorMap = new HashMap<String, String>();
 
         for (IMMessage msg : chat.messages()) {
-            InternetAddress ia = new InternetAddress(msg.getFrom().getAddr());
+            InternetAddress ia = new JavaMailInternetAddress(msg.getFrom().getAddr());
             if (!addrs.contains(ia))
                 addrs.add(ia);
 
@@ -234,22 +237,23 @@ class ChatWriter {
         mm.setSentDate(highestDate);
 
         // plain text part
-        MimeBodyPart textPart = new MimeBodyPart();
+        MimeBodyPart textPart = new JavaMailMimeBodyPart();
         mmp.addBodyPart(textPart);
         textPart.setText(plainText.toString(), MimeConstants.P_CHARSET_UTF8);
 
         // html
-        MimeBodyPart htmlPart = new MimeBodyPart();
+        MimeBodyPart htmlPart = new JavaMailMimeBodyPart();
         htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(html.toString())));
         mmp.addBodyPart(htmlPart);
         
         // xml part
         Element root = new Element.XMLElement("im");
         IMGetChat.chatToXml(chat, root);
-        MimeBodyPart xmlPart = new MimeBodyPart();
-        mmp.addBodyPart(xmlPart);
+        MimeBodyPart xmlPart = new JavaMailMimeBodyPart();
         xmlPart.setDataHandler(new DataHandler(new ImXmlPartDataSource(root)));
+        mmp.addBodyPart(xmlPart);
 
+        mm.setContent(mmp);
         mm.saveChanges(); // don't forget to call this, or bad things will happen!
 
         ParsedMessage pm  = new ParsedMessage(mm, true);

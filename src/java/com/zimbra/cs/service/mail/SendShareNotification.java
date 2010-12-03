@@ -37,6 +37,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.NamedEntry;
@@ -403,7 +404,7 @@ public class SendShareNotification extends MailDocumentHandler {
             
             // to the grantee
             String recipient = sid.getGranteeName();
-            mm.setRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(recipient));
+            mm.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(recipient));
             
             MimeMultipart mmp = ShareInfo.NotificationSender.genNotifBody(
                     sid, MsgKey.shareNotifBodyIntro, notes, locale);
@@ -413,10 +414,7 @@ public class SendShareNotification extends MailDocumentHandler {
             throw ServiceException.FAILURE(
                     "Messaging Exception while building share notification message", e);
         }
-        
-        if (mm == null)
-            throw ServiceException.FAILURE("Failed to build share notification message", null);
-        
+
         if (sLog.isDebugEnabled()) {
             // log4j.logger.com.zimbra.cs.service.mail=DEBUG
             
@@ -456,7 +454,7 @@ public class SendShareNotification extends MailDocumentHandler {
             
             // to the grantee
             String recipient = sid.getGranteeName();
-            notif.setRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(recipient));
+            notif.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(recipient));
 
             if (Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraAutoSubmittedNullReturnPath, true))
                 notif.setEnvelopeFrom("<>");
