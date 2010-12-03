@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
@@ -31,7 +32,7 @@ public class Bug47934 extends LdapUpgrade {
                     "zimbraAccounts:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(gn=*%s*)(zimbraPhoneticFirstName=*%s*)(zimbraPhoneticLastName=*%s*)(mail=*%s*)(zimbraMailDeliveryAddress=*%s*)(zimbraMailAlias=*%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(objectclass=zimbraCalendarResource)))"),
            
             new Pair<String, String>(
-                    "zimbraAccountAutoComplete:((|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(objectclass=zimbraCalendarResource)))",
+                    "zimbraAccountAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(objectclass=zimbraCalendarResource)))",
                     "zimbraAccountAutoComplete:(&(|(displayName=%s*)(cn=%s*)(sn=%s*)(gn=%s*)(zimbraPhoneticFirstName=%s*)(zimbraPhoneticLastName=%s*)(mail=%s*)(zimbraMailDeliveryAddress=%s*)(zimbraMailAlias=%s*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(objectclass=zimbraCalendarResource)))"),
                     
             new Pair<String, String>(
@@ -56,8 +57,8 @@ public class Bug47934 extends LdapUpgrade {
             String newValue = change.getSecond();
             
             if (curValues.contains(oldValue)) {
-                attrs.put("-" + Provisioning.A_zimbraGalLdapFilterDef, oldValue);
-                attrs.put("+" + Provisioning.A_zimbraGalLdapFilterDef, newValue);
+                StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraGalLdapFilterDef, oldValue);
+                StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraGalLdapFilterDef, newValue);
             }
         }
         
@@ -78,5 +79,4 @@ public class Bug47934 extends LdapUpgrade {
 
         modifyAttrs(config, attrs);
     }
-
 }
