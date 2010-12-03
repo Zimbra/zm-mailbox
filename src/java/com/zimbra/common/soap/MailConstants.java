@@ -813,6 +813,8 @@ public class MailConstants {
     public static final String E_CAL_XPROP = "xprop";
     public static final String E_CAL_XPARAM = "xparam";
 
+    public static final String E_CAL_ECHO = "echo";
+
     public static final String A_CAL_METHOD = "method";
     public static final String A_CAL_ALARM_DISMISSED_AT = "dismissedAt";
     public static final String A_CAL_NEXT_ALARM = "nextAlarm";
