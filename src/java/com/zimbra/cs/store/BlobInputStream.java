@@ -21,11 +21,12 @@ import java.io.InputStream;
 import javax.mail.internet.SharedInputStream;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.MimePart.InputStreamSource;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 
 public class BlobInputStream extends InputStream
-implements SharedInputStream {
+implements SharedInputStream, InputStreamSource {
     
     private static final Log sLog = LogFactory.getLog(BlobInputStream.class);
 
@@ -328,13 +329,17 @@ implements SharedInputStream {
 
     ////////////// SharedInputStream methods //////////////
 
-    public long getPosition() {
+    @Override public long getSize() {
+        return mEnd - mStart;
+    }
+
+    @Override public long getPosition() {
         // If this is a substream, return the position relative to the
         // starting point.  If this is the main stream, mStart = 0.
         return mPos - mStart;
     }
 
-    public InputStream newStream(long start, long end) {
+    @Override public InputStream newStream(long start, long end) {
         if (start < 0) {
             throw new IllegalArgumentException("start cannot be less than 0");
         }
