@@ -26,7 +26,7 @@ public class MimeHeaderTest {
     public void addressHeader() {
         String src = "mine:=?us-ascii?Q?Bob_?=\t=?us-ascii?Q?the_Builder_1?= <bob@example.com>;,=?us-ascii?Q?Bob the Builder 2?= <bob@example.com>";
         MimeAddressHeader hdr = new MimeAddressHeader("To", src);
-        List<InternetAddress> iaddrs = hdr.getAddresses();
+        List<InternetAddress> iaddrs = hdr.expandAddresses();
         Assert.assertEquals(2, iaddrs.size());
         Assert.assertEquals("Bob the Builder 1", iaddrs.get(0).getPersonal());
         Assert.assertEquals("bob@example.com", iaddrs.get(0).getAddress());

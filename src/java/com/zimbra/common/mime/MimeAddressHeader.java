@@ -52,8 +52,31 @@ public class MimeAddressHeader extends MimeHeader {
         }
     }
 
+    /** Returns copies of all the addresses from the header.  RFC 5322 groups
+     *  are included as individual unexpended members of this list.
+     * @see #expandAddresses() */
     public List<InternetAddress> getAddresses() {
-        return new ArrayList<InternetAddress>(mAddresses);
+        List<InternetAddress> addresses = new ArrayList<InternetAddress>(mAddresses.size());
+        for (InternetAddress addr : mAddresses) {
+            addresses.add(addr.clone());
+        }
+        return addresses;
+    }
+
+    /** Returns copies of all the addresses from the header, replacing RFC 5322
+     *  groups with their component addresses. */
+    public List<InternetAddress> expandAddresses() {
+        List<InternetAddress> addresses = new ArrayList<InternetAddress>(mAddresses.size());
+        for (InternetAddress addr : mAddresses) {
+            if (addr instanceof InternetAddress.Group) {
+                for (InternetAddress member : ((InternetAddress.Group) addr).getMembers()) {
+                    addresses.add(member.clone());
+                }
+            } else {
+                addresses.add(addr.clone());
+            }
+        }
+        return addresses;
     }
 
     public MimeAddressHeader addAddress(InternetAddress iaddr) {
