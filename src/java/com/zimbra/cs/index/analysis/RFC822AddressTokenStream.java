@@ -30,9 +30,9 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 
+import com.google.common.base.Strings;
 import com.google.common.net.InternetDomainName;
 import com.zimbra.common.mime.InternetAddress;
-import com.zimbra.common.util.StringUtil;
 
 /**
  * RFC822 address tokenizer.
@@ -64,7 +64,7 @@ public final class RFC822AddressTokenStream extends TokenStream {
     private final TermAttribute termAttr = addAttribute(TermAttribute.class);
 
     public RFC822AddressTokenStream(String raw) {
-        if (StringUtil.isNullOrEmpty(raw)) {
+        if (Strings.isNullOrEmpty(raw)) {
             return;
         }
 
@@ -136,11 +136,18 @@ public final class RFC822AddressTokenStream extends TokenStream {
     }
 
     private void tokenize(InternetAddress iaddr, Set<String> emails) {
-        String email = iaddr.getAddress();
-        if (!StringUtil.isNullOrEmpty(email)) {
-            email = email.toLowerCase();
-            if (!emails.contains(email)) { // skip if duplicate
-                tokenize(email, emails);
+        if (iaddr instanceof InternetAddress.Group) {
+            InternetAddress.Group group = (InternetAddress.Group) iaddr;
+            for (InternetAddress member : group.getMembers()) {
+                tokenize(member, emails);
+            }
+        } else {
+            String email = iaddr.getAddress();
+            if (!Strings.isNullOrEmpty(email)) {
+                email = email.toLowerCase();
+                if (!emails.contains(email)) { // skip if duplicate
+                    tokenize(email, emails);
+                }
             }
         }
     }
