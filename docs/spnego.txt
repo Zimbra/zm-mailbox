@@ -171,28 +171,37 @@ Repeat steps (A) to (D) for each zimbra server.
     Note: spnego_preauth.jsp will be over written after each upgrade.  So this step has to be performed 
           after each upgrade. 
 
-(B) Setup virtual host for the domain
-    zmprov md {domain} +zimbraVirtualHostname {virtual-hostname-1} +zimbraVirtualHostname {virtual-hostname-2}
-    
-    virtual-hostname-* are the hostnames you can browse to for the Zimbra WEB UI.
-    
-    
-(C) Setup login URL for the domain
-    zmprov md {domain} zimbraWebClientLoginURL {public URL for the domain}/spnego/spnego_preauth.jsp
-    
-    
-(D) Setup logout URL for the domain
-    zmprov md {domain} zimbraWebClientLogoutURL {public URL for the domain}/?sso=1
-    This is the URL to go to when user clicks on the :logout" button.
-
-
-(E) Setup kerberos Realm for the domain
+(B) Setup kerberos Realm for the domain
     zmprov md {domain} zimbraAuthKerberos5Realm {kerberos-realm}
 
     {kerberos-realm} should be the realm set in global config attribute zimbraSpnegoAuthRealm
     
     e.g. 
     zmprov md zimbra.com zimbraAuthKerberos5Realm SPNEGO.LOCAL
+    
+(C) Setup virtual host for the domain
+    zmprov md {domain} +zimbraVirtualHostname {virtual-hostname-1} +zimbraVirtualHostname {virtual-hostname-2}
+    
+    virtual-hostname-* are the hostnames you can browse to for the Zimbra WEB UI.
+    
+(D) Setup login URL and UAs allowed for the login URL for the domain
+    (This is the URL to be redirected to when user browses to the regular Zimbra login page) 
+    zmprov md {domain} zimbraWebClientLoginURL {public service URL for the domain}/spnego/spnego_preauth.jsp
+    
+    (Following will honor zimbraWebClientLoginURL only for Firefox/IE/Chrome on Windows)
+    zmprov md ${domain} +zimbraWebClientLoginURLAllowedUA '.*Windows NT.*Firefox/3.*'"/>
+    zmprov md ${domain} +zimbraWebClientLoginURLAllowedUA '.*MSIE.*Windows NT.*'"/>
+    zmprov md ${domain} +zimbraWebClientLoginURLAllowedUA '.*Windows NT.*Chrome.*'"/>
+    
+(E) Setup logout URL and UAs allowed for the logout URL for the domain
+    (This is the URL to be redirected to when user clicks on the :logout" button.)
+    zmprov md {domain} zimbraWebClientLogoutURL {public service URL for the domain}/?sso=1
+    
+    (Following will honor zimbraWebClientLogoutURL only for Firefox/IE/Chrome on Windows)
+    zmprov md ${domain} +zimbraWebClientLogoutURLAllowedUA '.*Windows NT.*Firefox/3.*'"/>
+    zmprov md ${domain} +zimbraWebClientLogoutURLAllowedUA '.*MSIE.*Windows NT.*'"/>
+    zmprov md ${domain} +zimbraWebClientLogoutURLAllowedUA '.*Windows NT.*Chrome.*'"/>
+
 
 
 2.2. Configure Global Config
