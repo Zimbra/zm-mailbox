@@ -25,9 +25,9 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.Zimbra;
@@ -61,8 +61,12 @@ public abstract class TcpServer implements Runnable, Server {
             numThreads = 10;
         }
 
-        mPooledExecutor = new ThreadPoolExecutor(numThreads, numThreads, 0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<Runnable>(), new TcpThreadFactory(mName, false, threadPriority));
+        // we'll build up to a pool of 10 worker threads as work arrives;
+        //   if more threads are needed at once, we'll allocate them up to numThreads
+        //   but then retire them if they're not reused within 2 minutes
+        int corePoolSize = Math.min(numThreads, 10);
+        mPooledExecutor = new ThreadPoolExecutor(corePoolSize, numThreads, 2, TimeUnit.MINUTES,
+                new LinkedBlockingQueue<Runnable>(), new TcpThreadFactory(mName, false, threadPriority));
 
         // TODO a linked list is probably the wrong datastructure here
         // TODO write tests with multiple concurrent client
@@ -70,6 +74,7 @@ public abstract class TcpServer implements Runnable, Server {
         mActiveHandlers = new LinkedList<ProtocolHandler>();
     }
 
+    @Override
     public ServerConfig getConfig() {
         return mConfig;
     }
@@ -77,7 +82,9 @@ public abstract class TcpServer implements Runnable, Server {
     public int getConfigMaxIdleMilliSeconds() {
         if (mConfig != null) {
             int secs = mConfig.getMaxIdleSeconds();
-            if (secs >= 0) return secs * 1000;
+            if (secs >= 0) {
+                return secs * 1000;
+            }
         }
         return -1;
     }
@@ -120,16 +127,21 @@ public abstract class TcpServer implements Runnable, Server {
         }
     }
 
+    @Override
     public void start() {
         Thread t = new Thread(this);
-        if (mName != null) t.setName(mName);
+        if (mName != null) {
+            t.setName(mName);
+        }
         t.start();
     }
 
+    @Override
     public void stop() {
         stop(mConfig.getShutdownGraceSeconds());
     }
-    
+
+    @Override
     public void stop(int forceShutdownAfterSeconds) {
         mLog.info(mName + " initiating shutdown");
         mShutdownRequested = true;
@@ -168,6 +180,7 @@ public abstract class TcpServer implements Runnable, Server {
         mLog.info(mName + " shutdown complete");
     }
 
+    @Override
     public void run() {
         Thread.currentThread().setName(mName);
 
