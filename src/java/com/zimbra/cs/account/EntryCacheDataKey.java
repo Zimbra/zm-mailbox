@@ -34,7 +34,8 @@ public enum EntryCacheDataKey {
     /*
      * domain
      */
-    DOMAIN_FOREIGN_NAME_HANDLERS;
+    DOMAIN_FOREIGN_NAME_HANDLERS,
+    DOMAIN_GROUP_CACHE_FULL_HAD_BEEN_WARNED;
     
     // all access of the key name must be through this, 
     // not calling name() or toString() directly
