@@ -467,6 +467,9 @@ public final class LC {
     
     @Supported
     public static final KnownKey gal_group_cache_maxsize_per_domain = KnownKey.newKey(0);
+	
+    @Supported
+    public static final KnownKey gal_group_cache_maxsize_domains = KnownKey.newKey(10);
     
     @Supported
     public static final KnownKey gal_group_cache_maxage = KnownKey.newKey(10080);  // 7 days
