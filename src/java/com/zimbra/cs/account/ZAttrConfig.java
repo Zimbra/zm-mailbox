@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101127-2344 */
+    /* build: 7.0.0_BETA1_1111 pshao 20101207-1337 */
 
     /**
      * RFC2256: descriptive information
@@ -8294,13 +8294,13 @@ public class ZAttrConfig extends Entry {
     /**
      * whether to indicate if an email address on a message is a GAL group
      *
-     * @return zimbraGalGroupIndicatorEnabled, or false if unset
+     * @return zimbraGalGroupIndicatorEnabled, or true if unset
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1153)
     public boolean isGalGroupIndicatorEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraGalGroupIndicatorEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraGalGroupIndicatorEnabled, true);
     }
 
     /**
