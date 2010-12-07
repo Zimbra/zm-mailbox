@@ -20,6 +20,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -46,6 +47,8 @@ public abstract class GalGroup {
         boolean isExternalGroup(String addr);
     }
 
+    private static class GalGroupCacheFullException extends Exception {
+    }
     
     public static GroupInfo getGroupInfo(String addr, Account requestedAcct, Account authedAcct) {
         Domain domain = null;
@@ -61,7 +64,14 @@ public abstract class GalGroup {
         if (!domain.isGalGroupIndicatorEnabled())
             return null;
         
-        GalGroupBin galGroup = getGalGroupForDomain(requestedAcct, domain);
+        GalGroupBin galGroup = null;
+        
+        try {
+            galGroup = GalGroup.getGalGroupForDomain(requestedAcct, domain);
+        } catch (GalGroupCacheFullException e) {
+            return null;
+        }
+        
         if (galGroup == null) {
             // GalGroup for the domain is still syncing, do a GAL search
             // this should not happen once the syncing is finished 
@@ -81,13 +91,35 @@ public abstract class GalGroup {
         return null;
     }
     
-    private static synchronized GalGroupBin getGalGroupForDomain(Account requestedAcct, Domain domain) {
+    private static synchronized GalGroupBin getGalGroupForDomain(Account requestedAcct, Domain domain) 
+    throws GalGroupCacheFullException{
         String domainName = domain.getName();
         DomainGalGroupBin galGroup = groups.get(domainName);
         
         if (galGroup == null) {
+            // see if there is room for a new domain
+            int maxDomains = LC.gal_group_cache_maxsize_domains.intValue();
+            if (groups.size() >= maxDomains) {
+                String msg = "GalGroup - group cache has reached maxsize of " + 
+                        maxDomains + " domains, group indicator for messages are temporiry unavailable " +
+                        "for domain " + domainName;
+                if (hadWarnedDomainForCacheFull(domain)) {
+                    // log at debug level so we don't flood the log
+                    ZimbraLog.gal.debug(msg);
+                } else {
+                    ZimbraLog.gal.warn(msg);
+                    setHadWarnedDomainForCacheFull(domain);
+                }
+                throw new GalGroupCacheFullException();
+            }
+            
+            //
+            // add group cache for the domain
+            // 
+            clearHadWarnedDomainForCacheFull(domain);
+            
             galGroup = new DomainGalGroupBin(domainName);
-            groups.put(domainName, galGroup);
+            GalGroup.putInCache(domainName, galGroup);
             DomainGalGroupBin.SyncThread syncThread = new DomainGalGroupBin.SyncThread(domain, galGroup);
             syncGalGroupThreadPool.execute(syncThread);
         }
@@ -103,8 +135,29 @@ public abstract class GalGroup {
         }
     }
     
+    private static boolean hadWarnedDomainForCacheFull(Domain domain) {
+        Boolean domainHadBeenWarned = (Boolean)domain.getCachedData(EntryCacheDataKey.DOMAIN_GROUP_CACHE_FULL_HAD_BEEN_WARNED.getKeyName());
+        if (domainHadBeenWarned == null)
+            return false;
+        else
+            return true;
+    }
+    
+    private static void setHadWarnedDomainForCacheFull(Domain domain) {
+        domain.setCachedData(EntryCacheDataKey.DOMAIN_GROUP_CACHE_FULL_HAD_BEEN_WARNED.getKeyName(), Boolean.TRUE);
+    }
+    
+    private static void clearHadWarnedDomainForCacheFull(Domain domain) {
+        domain.setCachedData(EntryCacheDataKey.DOMAIN_GROUP_CACHE_FULL_HAD_BEEN_WARNED.getKeyName(), null);
+    }
+    
+    private static synchronized void putInCache(String domainName, DomainGalGroupBin galGroup) {
+        ZimbraLog.gal.debug("GalGroup - adding GalGroup cache for domain " + domainName);
+        groups.put(domainName, galGroup);
+    }
+    
     private static synchronized void removeFromCache(String domainName, String reason) {
-        ZimbraLog.gal.debug("GalGroup - removing GalGroup for domain " + domainName + ", " + reason);
+        ZimbraLog.gal.debug("GalGroup - removing GalGroup cache for domain " + domainName + ", " + reason);
         groups.remove(domainName);
     }
     
