@@ -1,4 +1,5 @@
 I. SPNEGO SSO
+
    The SPNEGO SSO feature allows Windows domain users to enter their Zimbra mailbox without 
    having to re-authenticate themselves to Zimbra by entering their Zimbra credentials.
     
@@ -12,7 +13,7 @@ I. SPNEGO SSO
      - Chrome
      
    
-   A high level description of the Authentication Overview:
+   A high level description of the Authentication flow:
    (see http://msdn.microsoft.com/en-us/library/ms995329.aspx for more information)
    
    - User logon to a Windows domain.
@@ -30,9 +31,9 @@ II. Zimbra UI Flow
 
 1. user login to Windows as a domain user or a local user
 
-2. user browses to the regular Zimbra entry page, e.g. http://mail.company.com
+2. user browses to the regular Zimbra entry URL, e.g. http://dogfood.zimbra.com
 
-3. a domain(e.g. zimbra.com) gets resolved by virtual host name (mail.company.com)
+3. a domain(e.g. zimbra.com) gets resolved by virtual host name (dogfood.zimbra.com)
 
 4. zimbraWebClientLoginURL on domain redirects user to a preauth jsp under a spnego protected webapp/URL.
 
@@ -51,14 +52,15 @@ II. Zimbra UI Flow
 10. user clicks on the "logout" button, and gets redirected to the zimbraWebClientLogOutURL 
     configured on the domain.
 
-11. the logout URL points to the page UI, which has a "Launch" button
+11. the logout URL points to the page UI, which has a "Launch" button.  The only action user can take is clicking 
+    on the "Launch" button.
 
 12. user clicks on "Launch", and gets redirected to the regular Zimbra entry page (goto step 2)
  
-13. (spnego auth failed) user is redirected to the error URL, which we set to {regular-Zimbra_entry}/?igoreLoginURL=1
-    e.g. http://mail.company.com/?igoreLoginURL=1
+13. (spnego auth failed) user is redirected to the error URL, which we set to /zimbra/?ignoreLoginURL=1
+    User will be redirected to the regular Zimbra entry page (i.e. login.jsp), with query parameter "ignoreLoginURL=1".
 
-14. zimbraWebClientLoginURL is ignored because of the "?igoreLoginURL=1", and user sees the Zimbra user/pass page.
+14. zimbraWebClientLoginURL will be ignored in login.jsp, because of the "?igoreLoginURL=1", and user will see the Zimbra user/pass page.
 
 15. user enters his Zimbra user/pass to login, all is well.
 
@@ -68,7 +70,7 @@ III. Configuration
 1. Create and Set Up the Keytab File
 ======================================
 
-On the windows active domain controller:
+On the Windows AD domain controller:
 
 (A) Create an Active Directory service account.
     This is the account you use to generate the keytab.
@@ -79,69 +81,78 @@ On the windows active domain controller:
     
     - new -> User 
     
-    - enter HTTP/{zimbra mailbox server name} for the "User login name"
-      e.g. HTTP/server1.spnego.local
-      Note: this name is to go in the zimbraSpnegoAuthTargetName server attribute in LDAP
-      
-    - enter a short name for the "User loging name (pre-Windows 2000)"
-      e.g. server1
-      Note: this is the name you use for the {AD-user} in the setspn and ktpass commands (see below)
+    - Fill in the following:
+          Full name: {a display name}
+
+          User Logon Name: HTTP/{zimbra mailbox server name} (the domain is automatically filled)
+          (Note: this is the value to be set for the zimbraSpnegoAuthTargetName server attribute in LDAP.)
+
+          User Logon Name (pre-Windows 2000): {AD user name} 
+          (Note: this is the name you use for the -mapUser {AD-user} parameter in the setspn and ktpass commands (see below).)
+
+      e.g.
+          Full name: zimbra-dogfood
+
+          User Logon Name: HTTP/dogfood.zimbra.com
+
+          User Logon Name (pre-Windows 2000): zimbra-dogfood 
       
     - click on Next
-    
-    - enter and confirm the password (you may want to check "Password never expired") and click on Next
-      e.g. ca$hc0w
-      Note: this is the password you use for the {AD-user-password} in the ktpass command (see below)
+
+    - enter and confirm the password (e.g. test123)
+      (Note: this is the password you use for the -pass {AD-user-password} parameter in the ktpass command (see below))
+      
+      check "password never expires"
+      
+    - click on "Next"
     
     - click on "Finish" to create the user.   
 
 
 (B) Add the Service Principal Names (SPN) directory property for an Active Directory service account. 
 
-    setspn -A {target name for the http server} {AD-user}
+    setspn -A {Service-Principal-Name-for-the-http-server} {AD-user}
     
     e.g.
     - list registered SPNs (there is none)
-      C:\>setspn -L server1
-      Registered ServicePrincipalNames for CN=server1,CN=Users,DC=spnego,DC=local:
+      C:\>setspn -L zimbra-dogfood
+      Registered ServicePrincipalNames for CN=zimbra-dogfood,CN=Users,DC=vmware,DC=com:
 
     - add SPN for the service account
-      C:\>setspn -A HTTP/server1.spnego.local server1
-      Registering ServicePrincipalNames for CN=server1,CN=Users,DC=spnego,DC=local HTTP/server1.spnego.local
+      C:\>setspn -A HTTP/dogfood.zimbra.com zimbra-dogfood
+      Registering ServicePrincipalNames for CN=zimbra-dogfood,CN=Users,DC=vmware,DC=com HTTP/dogfood.zimbra.com
       Updated object
 
     - list registered SPNs (should see the one we just added)
-      C:\>setspn -L server1
-      Registered ServicePrincipalNames for CN=server1,CN=Users,DC=spnego,DC=local:
-      HTTP/server1.spnego.local
+      C:\>setspn -L zimbra-dogfood
+      Registered ServicePrincipalNames for CN=zimbra-dogfood,CN=Users,DC=vmware,DC=com:
+      HTTP/dogfood.zimbra.com
 
 
 (C) Create the keytab file
    
-    ktpass -out {keytab-file-to-produce} -princ {Service Principal Name}@{the kerberos realm} -mapUser {AD-user} -mapOp set -pass {AD-user-password} -crypto RC4-HMAC-NT -pType KRB5_NT_PRINCIPAL
+    ktpass -out {keytab-file-to-produce} -princ {Service-Principal-Name}@{the-kerberos-realm} -mapUser {AD-user} -mapOp set -pass {AD-user-password} -crypto RC4-HMAC-NT -pType KRB5_NT_PRINCIPAL
     
     e.g.
-    C:\>ktpass -out c:\Temp\spnego\jetty.keytab -princ HTTP/server1.spnego.local@SPNEGO.LOCAL -mapUser server1 -mapOp set -pass ca$hc0w -crypto RC4-HMAC-NT -pType KRB5_NT_PRINCIPAL
-    Targeting domain controller: jj-dc.spnego.local
+    The following will create jetty.keytab file under c:\Temp\spnego:
+    
+    C:\>ktpass -out c:\Temp\spnego\jetty.keytab -princ HTTP/dogfood.zimbra.com@VMWARE.COM -mapUser zimbra-dogfood -mapOp set -pass test123 -crypto RC4-HMAC-NT -pType KRB5_NT_PRINCIPAL
+    Targeting domain controller: test-dc.vmware.com
     Using legacy password setting method
-    Successfully mapped HTTP/server1.spnego.local to server1.
+    Successfully mapped HTTP/dogfood.zimbra.com to zimbra-dogfood.
     Key created.
     Output keytab to c:\Temp\spnego\jetty.keytab:
     Keytab version: 0x502
-    keysize 75 HTTP/server1.spnego.local@SPNEGO.LOCAL ptype 1 (KRB5_NT_PRINCIPAL)
-    vno 6 etype 0x17 (RC4-HMAC) keylength 16 (0xc383f6a25f1e195d5aef495c980c2bfe)
-    
-    The above creates jetty.keytab under c:\Temp\spnego
+    keysize 71 HTTP/dogfood.zimbra.com@VMWARE.COM ptype 1 (KRB5_NT_PRINCIPAL) vno3 etype 0x17 (RC4-HMAC) keylength 16 (0xc383f6a25f1e195d5aef495c980c2bfe)
     
     
-(D) Place the Keytab File    
-    copy jetty.keytab created in step (3) to the zimbra server under /opt/zimbra/jetty/etc.
+(D) Place the Keytab File on Zimbraserver   
+    copy jetty.keytab created in step (C) to the zimbra server (e.g. dogfood.zimbra.com) under /opt/zimbra/jetty/etc.
     
-    Note: Do not rename it, the name(jetty.keytab) is referenced from various configuration 
-          files setup by the Zimbra installer.
+    Note: Do not rename the keytab file, the name(jetty.keytab) is referenced from various configuration files.
 
 
-Repeat steps (A) to (D) for each zimbra server.
+Repeat steps (A) to (D) for each zimbra server(e.g. catfood.zimbra.com, corp.zimbra.com).
 
 
 =====================
@@ -157,50 +168,59 @@ Repeat steps (A) to (D) for each zimbra server.
 
 (A) Setup preauth for the domain.
     - Generate a preauth key using zmprov gdpak
+      zmprov gdpak {domain}
       e.g.
-      zmprov gdpak domain.com
+      zmprov gdpak zimbra.com
       preAuthKey: 4e2816f16c44fab20ecdee39fb850c3b0bb54d03f1d8e073aaea376a4f407f0c
 
     - Set the preauth key on the domain
-      mprov md domain.com zimbraPreAuthKey 4e2816f16c44fab20ecdee39fb850c3b0bb54d03f1d8e073aaea376a4f407f0c
+      mprov md {domain} zimbraPreAuthKey {the-preauth-key}
+      e.g.
+      mprov md zimbra.com zimbraPreAuthKey 4e2816f16c44fab20ecdee39fb850c3b0bb54d03f1d8e073aaea376a4f407f0c
       
     - Modify /opt/zimbra/jetty/webapps/spnego/spnego_preauth.jsp with the preauth key.
       edit the spnego_preauth.jsp
       replace the text REPLACE-ME-WITH-THE-PREAUTH-KEY with the real preauth key.  
 
-    Note: spnego_preauth.jsp will be over written after each upgrade.  So this step has to be performed 
-          after each upgrade. 
+    *** Note: spnego_preauth.jsp will be overwritten after each upgrade.  So this step has to be performed 
+              after each upgrade. 
+              
 
 (B) Setup kerberos Realm for the domain
     zmprov md {domain} zimbraAuthKerberos5Realm {kerberos-realm}
 
-    {kerberos-realm} should be the realm set in global config attribute zimbraSpnegoAuthRealm
+    {kerberos-realm} should be the same realm set in global config attribute zimbraSpnegoAuthRealm
     
     e.g. 
-    zmprov md zimbra.com zimbraAuthKerberos5Realm SPNEGO.LOCAL
+    zmprov md zimbra.com zimbraAuthKerberos5Realm VMWARE.COM
+    
     
 (C) Setup virtual host for the domain
     zmprov md {domain} +zimbraVirtualHostname {virtual-hostname-1} +zimbraVirtualHostname {virtual-hostname-2}
     
     virtual-hostname-* are the hostnames you can browse to for the Zimbra WEB UI.
+    e.g.
+    zmprov md zimbra.com +zimbraVirtualHostname dogfood.zimbra.com +zimbraVirtualHostname catfood.zimbra.com
     
-(D) Setup login URL and UAs allowed for the login URL for the domain
-    (This is the URL to be redirected to when user browses to the regular Zimbra login page) 
-    zmprov md {domain} zimbraWebClientLoginURL {public service URL for the domain}/spnego/spnego_preauth.jsp
+    
+(D) Setup login URL and UAs allowed for the login URL on the domain
+    (This is the URL to be redirected to when user browses to the regular Zimbra login page.) 
+    zmprov md {domain} zimbraWebClientLoginURL '../../spnego/spnego_preauth.jsp'
     
     (Following will honor zimbraWebClientLoginURL only for Firefox/IE/Chrome on Windows)
-    zmprov md ${domain} +zimbraWebClientLoginURLAllowedUA '.*Windows NT.*Firefox/3.*'"/>
-    zmprov md ${domain} +zimbraWebClientLoginURLAllowedUA '.*MSIE.*Windows NT.*'"/>
-    zmprov md ${domain} +zimbraWebClientLoginURLAllowedUA '.*Windows NT.*Chrome.*'"/>
+    zmprov md ${domain} +zimbraWebClientLoginURLAllowedUA '.*Windows NT.*Firefox/3.*'
+    zmprov md ${domain} +zimbraWebClientLoginURLAllowedUA '.*MSIE.*Windows NT.*'
+    zmprov md ${domain} +zimbraWebClientLoginURLAllowedUA '.*Windows NT.*Chrome.*'
     
-(E) Setup logout URL and UAs allowed for the logout URL for the domain
-    (This is the URL to be redirected to when user clicks on the :logout" button.)
-    zmprov md {domain} zimbraWebClientLogoutURL {public service URL for the domain}/?sso=1
+    
+(E) Setup logout URL and UAs allowed for the logout URL on the domain
+    (This is the URL to be redirected to when user clicks on "logout".)
+    zmprov md {domain} zimbraWebClientLogoutURL '../?sso=1'
     
     (Following will honor zimbraWebClientLogoutURL only for Firefox/IE/Chrome on Windows)
-    zmprov md ${domain} +zimbraWebClientLogoutURLAllowedUA '.*Windows NT.*Firefox/3.*'"/>
-    zmprov md ${domain} +zimbraWebClientLogoutURLAllowedUA '.*MSIE.*Windows NT.*'"/>
-    zmprov md ${domain} +zimbraWebClientLogoutURLAllowedUA '.*Windows NT.*Chrome.*'"/>
+    zmprov md ${domain} +zimbraWebClientLogoutURLAllowedUA '.*Windows NT.*Firefox/3.*'
+    zmprov md ${domain} +zimbraWebClientLogoutURLAllowedUA '.*MSIE.*Windows NT.*'
+    zmprov md ${domain} +zimbraWebClientLogoutURLAllowedUA '.*Windows NT.*Chrome.*'
 
 
 
@@ -216,17 +236,20 @@ zimbraSpnegoAuthEnabled     : TRUE
 zimbraSpnegoAuthErrorURL    : URL to redirect users to on spnego auth failure 
                               Setting it to "/zimbra/?ignoreLoginURL=1"
                               will redirect user to the regular Zimbra login page, where 
-                              zimbra user name and password are prompted.
+                              user will be prompted or the zimbra user name and password.
 
 zimbraSpnegoAuthRealm       : the kerberos realm
+                              e.g. VMWARE.COM
 
 
 2.3. Configure Servers
 ----------------------
 On each zimbra server:
-zimbraSpnegoAuthTargetName  : the name for the service user in 1. (A), e.g. HTTP/server1.spnego.local
+zimbraSpnegoAuthTargetName  : the name for the service user in III. 1. (A), 
+                              e.g. HTTP/dogfood.zimbra.com
 
 zimbraSpnegoAuthPrincipal   : {zimbraSpnegoAuthTargetName}@{zimbraSpnegoAuthRealm}
+                              e.g. HTTP/dogfood.zimbra.com@VMWARE.COM
   
 
 ===========================
@@ -260,8 +283,8 @@ IE and Chrome:
   Ths token will be picked up by the spnego aware browser and send in 
   the Authorization header to zimbra server.
   
-- Browse to the regualr WEB UI initial page:
-  e.g. http://myserver.com:7070
+- Browse to the regualr ZWC entry page:
+  e.g. http://dogfood.zimbra.com
   
 - You should be redirected to your inbox, without being prompted for user/pass.
 
@@ -283,7 +306,6 @@ What happens behind the scene in ZCS server:
     
   - if spnego auth succeeds, zimbra preauth sequence will happen, 
     user will be redirected to the preauth servlet and then finally landed 
-    on the mail app.
+    on the mailbox inbox.
     
-
 
