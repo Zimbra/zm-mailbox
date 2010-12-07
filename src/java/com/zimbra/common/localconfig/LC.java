@@ -184,6 +184,9 @@ public final class LC {
     public static final KnownKey zimbra_index_reindex_pool_size = KnownKey.newKey(10);
 
     @Supported
+    public static final KnownKey zimbra_index_merge_threads = KnownKey.newKey(10);
+
+    @Supported
     public static final KnownKey zimbra_index_max_readers = KnownKey.newKey(30);
 
     @Supported
@@ -211,7 +214,7 @@ public final class LC {
     public static final KnownKey zimbra_index_max_transaction_items = KnownKey.newKey(100);
 
     @Supported
-    public static final KnownKey zimbra_index_lucene_batch_use_doc_scheduler = KnownKey.newKey(true);
+    public static final KnownKey zimbra_index_lucene_batch_merge_policy = KnownKey.newKey(true);
 
     @Supported
     public static final KnownKey zimbra_index_lucene_batch_min_merge = KnownKey.newKey(1000);
@@ -224,9 +227,6 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_index_lucene_batch_use_compound_file = KnownKey.newKey(true);
-
-    @Supported
-    public static final KnownKey zimbra_index_lucene_batch_use_serial_merge_scheduler = KnownKey.newKey(true);
 
     @Supported
     public static final KnownKey zimbra_index_lucene_batch_max_buffered_docs = KnownKey.newKey(200);
@@ -244,7 +244,7 @@ public final class LC {
     public static final KnownKey zimbra_index_wildcard_max_terms_expanded = KnownKey.newKey(20000);
 
     @Supported
-    public static final KnownKey zimbra_index_lucene_nobatch_use_doc_scheduler = KnownKey.newKey(true);
+    public static final KnownKey zimbra_index_lucene_nobatch_merge_policy = KnownKey.newKey(true);
 
     @Supported
     public static final KnownKey zimbra_index_lucene_nobatch_min_merge = KnownKey.newKey(10);
@@ -257,9 +257,6 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_index_lucene_nobatch_use_compound_file = KnownKey.newKey(true);
-
-    @Supported
-    public static final KnownKey zimbra_index_lucene_nobatch_use_serial_merge_scheduler = KnownKey.newKey(true);
 
     @Supported
     public static final KnownKey zimbra_index_lucene_nobatch_max_buffered_docs = KnownKey.newKey(200);
@@ -453,13 +450,13 @@ public final class LC {
     public static final KnownKey acl_cache_target_maxage = KnownKey.newKey(15);
     public static final KnownKey acl_cache_credential_maxsize = KnownKey.newKey(512);
     public static final KnownKey acl_cache_enabled = KnownKey.newKey(true);
-    
+
     @Supported
     public static final KnownKey gal_group_cache_maxsize_per_domain = KnownKey.newKey(0);
-    
+
     @Supported
     public static final KnownKey gal_group_cache_maxage = KnownKey.newKey(10080);  // 7 days
-    
+
     public static final KnownKey calendar_resource_ldap_search_maxsize = KnownKey.newKey(1000);
 
     // This value is stored here for use by zmmycnf program. Changing this
@@ -1062,7 +1059,7 @@ public final class LC {
     public static final KnownKey ldap_dit_base_dn_admin         = KnownKey.newKey("");
 
     public static final KnownKey command_line_editing_enabled = KnownKey.newKey(true);
-    
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
