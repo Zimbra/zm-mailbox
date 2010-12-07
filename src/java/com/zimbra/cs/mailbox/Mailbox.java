@@ -252,7 +252,7 @@ public class Mailbox {
         Connection conn      = null;
         RedoableOp recorder  = null;
         List<IndexItemEntry> indexItems = new ArrayList<IndexItemEntry>();
-        List<Integer> indexItemsToDelete = new ArrayList<Integer>();
+        final List<Integer> indexItemsToDelete = new ArrayList<Integer>();
         Map<Integer, MailItem> itemCache = null;
         OperationContext octxt = null;
         TargetConstraint tcon  = null;
@@ -323,13 +323,6 @@ public class Mailbox {
          */
         void addIndexItem(IndexItemEntry item) {
             indexItems.add(item);
-        }
-
-        /**
-         * Add an item to the list of things to be deleted at the end of the current transaction
-         */
-        void addIndexDelete(Integer id) {
-            indexItemsToDelete.add(id);
         }
 
         void addPendingDelete(PendingDelete info) {
@@ -1060,7 +1053,7 @@ public class Mailbox {
 
         // currently we cannot defer index deletion
         if (deleteFirst)
-            mCurrentChange.addIndexDelete(item.getIndexId());
+            mCurrentChange.indexItemsToDelete.add(item.getIndexId());
 
         if (data != null && getIndexDeferredCount() > 0) {
             // can't submit immediately -- index is behind..
@@ -2276,16 +2269,16 @@ public class Mailbox {
     }
 
     /** Returns all the MailItems of a given type, optionally in a specified folder */
-    public synchronized <T extends MailItem> List<T> getItemList(OperationContext octxt, byte type) throws ServiceException {
+    public synchronized List<MailItem> getItemList(OperationContext octxt, byte type) throws ServiceException {
         return getItemList(octxt, type, -1);
     }
 
-    public synchronized <T extends MailItem> List<T> getItemList(OperationContext octxt, byte type, int folderId) throws ServiceException {
+    public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId) throws ServiceException {
         return getItemList(octxt, type, folderId, SortBy.NONE);
     }
 
-    public synchronized <T extends MailItem> List<T> getItemList(OperationContext octxt, byte type, int folderId, SortBy sort) throws ServiceException {
-        List<T> result;
+    public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId, SortBy sort) throws ServiceException {
+        List<MailItem> result;
         boolean success = false;
 
         if (type == MailItem.TYPE_UNKNOWN)
@@ -2304,28 +2297,28 @@ public class Mailbox {
             }
 
             if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER || type == MailItem.TYPE_MOUNTPOINT) {
-                result = new ArrayList<T>(mFolderCache.size());
+                result = new ArrayList<MailItem>(mFolderCache.size());
                 for (Folder subfolder : mFolderCache.values()) {
                     if (subfolder.getType() == type || type == MailItem.TYPE_FOLDER)
                         if (folder == null || subfolder.getFolderId() == folderId)
-                            result.add((T) subfolder);
+                            result.add(subfolder);
                 }
                 success = true;
             } else if (type == MailItem.TYPE_TAG) {
                 if (folderId != -1 && folderId != ID_FOLDER_TAGS)
                     return Collections.emptyList();
-                result = new ArrayList<T>(mTagCache.size() / 2);
+                result = new ArrayList<MailItem>(mTagCache.size() / 2);
                 for (Map.Entry<Object, Tag> entry : mTagCache.entrySet())
                     if (entry.getKey() instanceof String)
-                        result.add((T) entry.getValue());
+                        result.add(entry.getValue());
                 success = true;
             } else if (type == MailItem.TYPE_FLAG) {
                 if (folderId != -1 && folderId != ID_FOLDER_TAGS)
                     return Collections.emptyList();
                 List<Flag> allFlags = Flag.getAllFlags(this);
-                result = new ArrayList<T>(allFlags.size());
+                result = new ArrayList<MailItem>(allFlags.size());
                 for (Flag flag : allFlags) {
-                    result.add((T) flag);
+                    result.add(flag);
                 }
                 success = true;
             } else {
@@ -2337,10 +2330,10 @@ public class Mailbox {
                     dataList = DbMailItem.getByType(this, type, sort);
                 if (dataList == null)
                     return Collections.emptyList();
-                result = new ArrayList<T>(dataList.size());
+                result = new ArrayList<MailItem>(dataList.size());
                 for (MailItem.UnderlyingData data : dataList)
                     if (data != null)
-                        result.add((T) getItem(data));
+                        result.add(getItem(data));
                 // DbMailItem call handles all sorts except SORT_BY_NAME_NAT
                 if (sort.getCriterion() == SortBy.SortCriterion.NAME_NATURAL_ORDER)
                     sort = SortBy.NONE;
@@ -7145,6 +7138,12 @@ public class Mailbox {
         mCurrentChange.addIndexItem(item);
     }
 
+    void addIndexDeleteToCurrentChange(int id) {
+        assert(mCurrentChange.isActive());
+        assert(Thread.holdsLock(this));
+        mCurrentChange.indexItemsToDelete.add(id);
+    }
+
     /**
      * Be very careful when changing code in this method.  The order of almost
      * every line of code is important to ensure correct redo logging and crash
@@ -7170,7 +7169,7 @@ public class Mailbox {
                 // See bug 15072 - we need to clear mCurrentChange.indexItems (it is stored in a temporary) here, just
                 // in case item.reindex() recurses into a new transaction...
                 mCurrentChange.indexItems = new ArrayList<IndexItemEntry>();
-                index.indexingPartOfEndTransaction(indexItems, mCurrentChange.indexItemsToDelete);
+                index.update(indexItems, mCurrentChange.indexItemsToDelete);
             }
 
             // update mailbox size, folder unread/message counts, deferred index count
@@ -7222,9 +7221,6 @@ public class Mailbox {
             allGood = true;
         } finally {
             if (!allGood) {
-                // We will get here if indexing commit failed.
-                // (Database commit hasn't happened.)
-
                 // Write abort redo records to prevent the transactions from
                 // being redone during crash recovery.
 
@@ -7412,32 +7408,34 @@ public class Mailbox {
             if (change.highestModContentIndexed != null)
                 mData.highestModContentIndexed = change.highestModContentIndexed;
 
-            // delete any index entries associated with items deleted from db
             PendingDelete deletes = mCurrentChange.deletes;
-            if (deletes != null && deletes.indexIds != null && !deletes.indexIds.isEmpty()) {
-                try {
-                    List<Integer> idxDeleted = index.deleteDocuments(deletes.indexIds);
-                    if (idxDeleted.size() != deletes.indexIds.size()) {
-                        ZimbraLog.indexing.info("could not delete all index entries for items: %d",
-                                deletes.itemIds.getAll());
+            if (deletes != null) {
+                if (!deletes.indexIds.isEmpty()) {
+                    // delete any index entries associated with items deleted from db
+                    try {
+                        index.getMailboxIndex().beginWrite();
+                        try {
+                            index.getMailboxIndex().deleteDocuments(deletes.indexIds);
+                        } finally {
+                            index.getMailboxIndex().endWrite();
+                        }
+                    } catch (IOException e) {
+                        ZimbraLog.indexing.warn("Failed to delete index: %s", deletes.itemIds, e);
                     }
-                } catch (IOException e) {
-                    ZimbraLog.indexing.info("ignoring error while deleting index entries for items: %s",
-                            deletes.itemIds.getAll(), e);
                 }
-            }
 
-            // remove cached messages
-            if (deletes != null && deletes.blobs != null) {
-                for (String digest : deletes.blobDigests)
-                    MessageCache.purge(digest);
-            }
+                if (deletes.blobs != null) {
+                    // remove cached messages
+                    for (String digest : deletes.blobDigests) {
+                        MessageCache.purge(digest);
+                    }
 
-            // delete any blobs associated with items deleted from db/index
-            StoreManager sm = StoreManager.getInstance();
-            if (deletes != null && deletes.blobs != null) {
-                for (MailboxBlob mblob : deletes.blobs)
-                    sm.quietDelete(mblob);
+                    // delete any blobs associated with items deleted from db/index
+                    StoreManager sm = StoreManager.getInstance();
+                    for (MailboxBlob mblob : deletes.blobs) {
+                        sm.quietDelete(mblob);
+                    }
+                }
             }
         } catch (RuntimeException e) {
             ZimbraLog.mailbox.error("ignoring error during cache commit", e);

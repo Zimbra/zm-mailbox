@@ -68,9 +68,11 @@ public final class IndexHelper {
     // means that we've had failures without success.
     private long mLastIndexingFailureTimestamp = 0;
 
-    // special-case if we're doing a 'full reindex' of the mailbox -- don't block text
-    // searches while doing a full reindex...
-    private boolean mFullReindexInProgress = false;
+    /**
+     * Guarded by mailbox. This is a special-case where we're doing a 'full re-index' of the mailbox -- don't block text
+     * searches while doing a full re-index.
+     */
+    private boolean fullReIndexing = false;
 
     /**
      * Status of current reindexing operation for this mailbox,
@@ -130,7 +132,7 @@ public final class IndexHelper {
 
         try {
             boolean textIndexOutOfSync = mailbox.getIndexDeferredCount() > 0;
-            if (mFullReindexInProgress) {
+            if (fullReIndexing) {
                 // if we're doing a full index rebuild, then don't block us waiting for it to complete
                 textIndexOutOfSync = false;
             }
@@ -232,10 +234,6 @@ public final class IndexHelper {
 
     void deleteIndex() throws IOException {
         getMailboxIndex().deleteIndex();
-    }
-
-    List<Integer> deleteDocuments(List<Integer> indexIds) throws IOException {
-        return getMailboxIndex().deleteDocuments(indexIds);
     }
 
     /**
@@ -345,12 +343,14 @@ public final class IndexHelper {
                     int deferredCount = mailbox.getIndexDeferredCount();
 
                     if (items.size() != deferredCount) {
-                        ZimbraLog.mailbox.warn("IndexDeferredItems(%s,%d): Deferred count out of sync - found=%d deferred=%d",
-                                mHighestSubmittedToIndex, nr.lowest, items.size(), mailbox.getIndexDeferredCount());
+                        if (!fullReIndexing) {
+                            ZimbraLog.indexing.warn("Index deferred count out of sync high=%s,low=%d,actual=%d,expected=%d",
+                                    mHighestSubmittedToIndex, nr.lowest, items.size(), deferredCount);
+                        }
                         mailbox.setCurrentChangeIndexDeferredCount(items.size());
                     } else {
-                        ZimbraLog.mailbox.debug("IndexDeferredItems(%s,%d): found=%d deferred=%d",
-                                mHighestSubmittedToIndex, nr.lowest, items.size(), mailbox.getIndexDeferredCount());
+                        ZimbraLog.indexing.debug("Index deferred items high=%s,low=%d,count=%d",
+                                mHighestSubmittedToIndex, nr.lowest, items.size());
                     }
 
                     success = true;
@@ -358,12 +358,12 @@ public final class IndexHelper {
                     mailbox.endTransaction(success);
                 }
             } catch (ServiceException e) {
-                ZimbraLog.mailbox.info("Unable to index deferred items due to exception in step 1", e);
+                ZimbraLog.indexing.warn("Failed to index deferred items", e);
                 return;
             }
         }
 
-        BatchedIndexStatus status = mFullReindexInProgress ? mReIndexStatus : new BatchedIndexStatus();
+        BatchedIndexStatus status = fullReIndexing ? mReIndexStatus : new BatchedIndexStatus();
         status.mNumToProcess = items.size();
         try {
             indexItemList(items, status, false);
@@ -469,15 +469,13 @@ public final class IndexHelper {
                 // special case for reindexing WHOLE mailbox.  We do this differently so that we lean
                 // on the existing high-water-mark system (allows us to restart where we left off even
                 // if server restarts)
-                long start = 0;
-                if (ZimbraLog.mailbox.isInfoEnabled())
-                    start = System.currentTimeMillis();
+                long start = System.currentTimeMillis();
                 try {
                     synchronized (mailbox) {
                         boolean success = false;
                         try {
                             mailbox.beginTransaction("reIndex_all", octxt, null);
-                            mFullReindexInProgress = true;
+                            fullReIndexing = true;
                             // reindexing everything, just delete the index
                             getMailboxIndex().deleteIndex();
 
@@ -498,11 +496,10 @@ public final class IndexHelper {
                     indexDeferredItems();
                 } finally {
                     synchronized (mailbox) {
-                        mFullReindexInProgress = false;
+                        fullReIndexing = false;
                     }
                 }
-                ZimbraLog.mailbox.info("Re-Indexing: Mailbox %d COMPLETED in %d ms",
-                        mailbox.getId(), System.currentTimeMillis() - start);
+                ZimbraLog.indexing.info("Re-index completed elapsed=%d", System.currentTimeMillis() - start);
                 return;
             }
 
@@ -513,9 +510,7 @@ public final class IndexHelper {
                 // passed empty set.  do nothing
                 return;
 
-            long start = 0;
-            if (ZimbraLog.mailbox.isInfoEnabled())
-                start = System.currentTimeMillis();
+            long start = System.currentTimeMillis();
 
             if (typesOrNull != null && itemIdsOrNull != null)
                 throw ServiceException.INVALID_REQUEST("Must only specify one of Types, ItemIds to Mailbox.reIndex", null);
@@ -545,16 +540,9 @@ public final class IndexHelper {
                     DbSearch.search(msgs, mailbox.getOperationConnection(), c, mailbox, SortBy.NONE, SearchResult.ExtraData.MODCONTENT);
 
                     if (!skipDelete) {
-                        // if (!wholeMailbox) {
-                        // NOT reindexing everything: delete manually
-                        List<Integer> toDelete = new ArrayList<Integer>(msgs.size());
-                        for (SearchResult s : msgs) {
-                            toDelete.add(s.indexId);
-                        }
-                        try {
-                            getMailboxIndex().deleteDocuments(toDelete);
-                        } catch (IOException e) {
-                            throw ServiceException.FAILURE("Error deleting index before re-indexing", e);
+                        // Unless wholeMailbox, don't re-index everything, delete manually.
+                        for (SearchResult msg : msgs) {
+                            mailbox.addIndexDeleteToCurrentChange(msg.indexId);
                         }
                     }
                     success = true;
@@ -566,18 +554,15 @@ public final class IndexHelper {
 
             indexItemList(msgs, mStatus, true);
 
-            if (ZimbraLog.mailbox.isInfoEnabled()) {
-                long end = System.currentTimeMillis();
-                long avg = 0;
-                long mps = 0;
-                if (mStatus.mNumProcessed > 0) {
-                    avg = (end - start) / mStatus.mNumProcessed;
-                    mps = avg > 0 ? 1000 / avg : 0;
-                }
-                ZimbraLog.mailbox.info(
-                        "Re-Indexing COMPLETED mid=%d,items=%d,failed=%s,elapsed=%d (avg %d ms/item, %d items/sec)",
-                        mailbox.getId(), mStatus.mNumToProcess, mStatus.mNumFailed, end - start, avg, mps);
+            long end = System.currentTimeMillis();
+            long avg = 0;
+            long mps = 0;
+            if (mStatus.mNumProcessed > 0) {
+                avg = (end - start) / mStatus.mNumProcessed;
+                mps = avg > 0 ? 1000 / avg : 0;
             }
+            ZimbraLog.indexing.info("Re-index completed items=%d,failed=%s,elapsed=%d (avg %d ms/item, %d items/sec)",
+                    mStatus.mNumToProcess, mStatus.mNumFailed, end - start, avg, mps);
         }
     }
 
@@ -894,21 +879,25 @@ public final class IndexHelper {
     public void redoIndexItem(MailItem item, boolean deleteFirst, int itemId, List<IndexDocument> docList) {
         synchronized (mailbox) {
             try {
-                getMailboxIndex().indexMailItem(mailbox, deleteFirst, docList, item, NO_CHANGE);
+                mailboxIndex.beginWrite();
+                try {
+                    mailboxIndex.indexMailItem(mailbox, deleteFirst, docList, item, NO_CHANGE);
+                } finally {
+                    mailboxIndex.endWrite();
+                }
             } catch (Exception e) {
-                ZimbraLog.indexing.info("Skipping indexing; Unable to parse message %d", itemId, e);
+                ZimbraLog.indexing.warn("Skipping indexing; Unable to parse message %d", itemId, e);
             }
         }
     }
 
-    void indexingPartOfEndTransaction(List<IndexItemEntry> itemsToIndex, List<Integer> itemsToDelete) {
-        if (itemsToDelete != null && !itemsToDelete.isEmpty()) {
-            try {
-                getMailboxIndex().deleteDocuments(itemsToDelete);
-            } catch (IOException e) {
-                ZimbraLog.indexing.warn("Failed to delete index entries", e);
-            }
-        }
+    /**
+     * Adds and deletes index documents. Called by {@link Mailbox#endTransaction(boolean)}.
+     *
+     * @param add items to add
+     * @param del item IDs to delete
+     */
+    void update(List<IndexItemEntry> add, List<Integer> del) {
 
         try {
             getMailboxIndex().beginWrite();
@@ -920,7 +909,13 @@ public final class IndexHelper {
 
         int lastMailItemId = 0;
         try {
-            for (IndexItemEntry entry : itemsToIndex) {
+            try {
+                mailboxIndex.deleteDocuments(del);
+            } catch (IOException e) {
+                ZimbraLog.indexing.warn("Failed to delete index documents", e);
+            }
+
+            for (IndexItemEntry entry : add) {
                 MailItem item = entry.mMailItem;
                 lastMailItemId = item.getId();
                 if (entry.mDocuments == null) {
@@ -929,10 +924,8 @@ public final class IndexHelper {
                 }
 
                 // 2. Index the item before committing the main transaction.
-                if (ZimbraLog.mailbox.isDebugEnabled()) {
-                    ZimbraLog.mailbox.debug("indexMailItem(changeId=" + mailbox.getLastChangeID() + ", "
-                            + "token=" + entry.mModContent + "-" + entry.mMailItem.getId() + ")");
-                }
+                ZimbraLog.mailbox.debug("indexMailItem(changeId=%d,token=%d-%d)",
+                        mailbox.getLastChangeID(), entry.mModContent, entry.mMailItem.getId());
                 SyncToken old = mHighestSubmittedToIndex;
                 try {
                     if (entry.mModContent != NO_CHANGE) {
@@ -941,8 +934,7 @@ public final class IndexHelper {
                         // again
                         mHighestSubmittedToIndex = new SyncToken(entry.mModContent, item.getId());
                     }
-                    getMailboxIndex().indexMailItem(mailbox,
-                            entry.mDeleteFirst, entry.mDocuments, item, entry.mModContent);
+                    mailboxIndex.indexMailItem(mailbox, entry.mDeleteFirst, entry.mDocuments, item, entry.mModContent);
                 } catch (ServiceException e) {
                     if (entry.mModContent != NO_CHANGE) {
                         // backout!

@@ -17,7 +17,6 @@ package com.zimbra.cs.index;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -78,7 +77,6 @@ public final class LuceneIndex {
     private MailboxIndex mailboxIndex;
     private IndexWriterRef writerRef;
     private SyncToken mHighestUncomittedModContent = new SyncToken(0);
-    private int writeNestLevel = 0;
     private int numPendingDocs = 0;
 
     static void startup() {
@@ -180,87 +178,64 @@ public final class LuceneIndex {
             return;
         }
 
-        beginWrite();
-        try {
-            for (IndexDocument doc : docs) {
-                // doc can be shared by multiple threads if multiple mailboxes
-                // are referenced in a single email
-                synchronized (doc) {
-                    doc.removeSortSubject();
-                    doc.removeSortName();
+        for (IndexDocument doc : docs) {
+            // doc can be shared by multiple threads if multiple mailboxes
+            // are referenced in a single email
+            synchronized (doc) {
+                doc.removeSortSubject();
+                doc.removeSortName();
 
-                    doc.addSortSubject(sortSubject);
-                    doc.addSortName(sortSender);
+                doc.addSortSubject(sortSubject);
+                doc.addSortName(sortSender);
 
-                    doc.removeMailboxBlobId();
-                    doc.addMailboxBlobId(indexId);
+                doc.removeMailboxBlobId();
+                doc.addMailboxBlobId(indexId);
 
-                    // If this doc is shared by multi threads, then the date might just be wrong,
-                    // so remove and re-add the date here to make sure the right one gets written!
-                    doc.removeSortDate();
-                    doc.addSortDate(receivedDate);
+                // If this doc is shared by multi threads, then the date might just be wrong,
+                // so remove and re-add the date here to make sure the right one gets written!
+                doc.removeSortDate();
+                doc.addSortDate(receivedDate);
 
-                    doc.removeSortSize();
-                    doc.addSortSize(size);
-                    doc.addAll();
+                doc.removeSortSize();
+                doc.addSortSize(size);
+                doc.addAll();
 
-                    if (deleteFirst) {
-                        Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(indexId));
-                        writerRef.get().updateDocument(toDelete, doc.toDocument());
-                    } else {
-                        writerRef.get().addDocument(doc.toDocument());
-                    }
-                }
-            }
-
-            numPendingDocs++;
-
-            if (modContent > 0) {
-                SyncToken token = new SyncToken(modContent, itemId);
-                assert(token.after(mHighestUncomittedModContent));
-                if (token.after(mHighestUncomittedModContent)) {
-                    mHighestUncomittedModContent = token;
+                if (deleteFirst) {
+                    Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(indexId));
+                    writerRef.get().updateDocument(toDelete, doc.toDocument());
                 } else {
-                    ZimbraLog.indexing.info("Index items not submitted in order: curHighest=%s new highest=%d indexId=%s",
-                            mHighestUncomittedModContent, modContent, indexId);
+                    writerRef.get().addDocument(doc.toDocument());
                 }
             }
-        } finally {
-            endWrite();
+        }
+
+        numPendingDocs++;
+
+        if (modContent > 0) {
+            SyncToken token = new SyncToken(modContent, itemId);
+            assert(token.after(mHighestUncomittedModContent));
+            if (token.after(mHighestUncomittedModContent)) {
+                mHighestUncomittedModContent = token;
+            } else {
+                ZimbraLog.indexing.info("Index items not submitted in order: curHighest=%s new highest=%d indexId=%s",
+                        mHighestUncomittedModContent, modContent, indexId);
+            }
         }
     }
 
     /**
-     * Deletes all the documents from the index that have {@code indexIds} as specified.
+     * Deletes documents.
+     * <p>
+     * The document count may be more than you expect here, the document may already be deleted and just not be
+     * optimized out yet -- some Lucene APIs (e.g. docFreq) will still return the old count until the indexes are
+     * optimized.
      */
-    List<Integer> deleteDocuments(List<Integer> itemIds) throws IOException {
-        beginWrite();
-        try {
-            int i = 0;
-            for (Integer itemId : itemIds) {
-                try {
-                    Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, itemId.toString());
-                    writerRef.get().deleteDocuments(toDelete);
-                    // NOTE!  The numDeleted may be < you expect here, the document may
-                    // already be deleted and just not be optimized out yet -- some lucene
-                    // APIs (e.g. docFreq) will still return the old count until the indexes
-                    // are optimized...
-                    ZimbraLog.indexing.debug("Deleted index documents for itemId %d", itemId);
-                } catch (IOException e) {
-                    ZimbraLog.indexing.debug("deleteDocuments exception on index %d/%d (id=%d)",
-                            i, itemIds.size(), itemIds.get(i));
-                    List<Integer> toRet = new ArrayList<Integer>(i);
-                    for (int j = 0; j < i; j++) {
-                        toRet.add(itemIds.get(j));
-                    }
-                    return toRet;
-                }
-                i++;
-            }
-        } finally {
-            endWrite();
+    void deleteDocuments(List<Integer> ids) throws IOException {
+        for (Integer id : ids) {
+            Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, id.toString());
+            writerRef.get().deleteDocuments(term);
+            ZimbraLog.indexing.debug("Deleted documents id=%d", id);
         }
-        return itemIds; // success
     }
 
     /**
@@ -601,30 +576,23 @@ public final class LuceneIndex {
     }
 
     synchronized void beginWrite() throws IOException {
-        if (writeNestLevel == 0) {
-            if (writerRef != null) {
-                writerRef.inc();
-            } else {
-                WRITER_THROTTLE.acquireUninterruptibly();
-                try {
-                    writerRef = openWriter();
-                } finally {
-                    if (writerRef == null) {
-                        WRITER_THROTTLE.release();
-                    }
+        if (writerRef != null) {
+            writerRef.inc();
+        } else {
+            WRITER_THROTTLE.acquireUninterruptibly();
+            try {
+                writerRef = openWriter();
+            } finally {
+                if (writerRef == null) {
+                    WRITER_THROTTLE.release();
                 }
             }
         }
-        writeNestLevel++;
     }
 
     synchronized void endWrite() {
-        assert writeNestLevel > 0 : writeNestLevel;
-        writeNestLevel--;
-        if (writeNestLevel == 0) {
-            commitWriter();
-            readersCache.stale(this); // let the reader reopen
-        }
+        commitWriter();
+        readersCache.stale(this); // let the reader reopen
     }
 
     private IndexWriterRef openWriter() throws IOException {
@@ -822,7 +790,7 @@ public final class LuceneIndex {
      * In order to minimize delay caused by merges, merges are processed only in background threads. Writers triggered
      * by batch threshold or search commit the changes before processing merges, so that the changes are available to
      * readers without long delay that merges likely cause. Merge threads don't block other writer threads running in
-     * foreground. Another indexing using the same writer may start even while the merge is in process.
+     * foreground. Another indexing using the same writer may start even while the merge is in progress.
      */
     private static final class MergeTask implements Callable<Void> {
         private final IndexWriterRef ref;
@@ -834,6 +802,7 @@ public final class LuceneIndex {
         @Override
         public Void call() {
             try {
+                ZimbraLog.addMboxToContext(ref.getIndex().mailboxIndex.mailbox.getId());
                 ZimbraLog.addAccountNameToContext(ref.getIndex().mailboxIndex.mailbox.getAccount().getName());
             } catch (ServiceException ignore) {
             }

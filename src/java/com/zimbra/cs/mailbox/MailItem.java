@@ -2465,7 +2465,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         public Set<Integer> modifiedIds = new HashSet<Integer>(2);
 
         /** The document ids that need to be removed from the index. */
-        public List<Integer> indexIds = new ArrayList<Integer>(1);
+        public final List<Integer> indexIds = new ArrayList<Integer>(1);
 
         /** The ids of all items with the {@link Flag#BITMASK_COPIED} flag being
          *  deleted.  Items in <tt>sharedIndex</tt> whose last copies are

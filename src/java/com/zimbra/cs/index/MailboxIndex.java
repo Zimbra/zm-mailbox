@@ -260,15 +260,12 @@ public final class MailboxIndex {
     }
 
     /**
-     * @see LuceneIndex#deleteDocuments(List)
-     * @param itemIds array of itemIds to be deleted
-     * @return an array of itemIds which HAVE BEEN PROCESSED.
-     *  If {@code returned.length == itemIds.length} then you can assume the
-     *  operation was completely successful.
-     * @throws IOException on index open failure, nothing processed.
+     * Deletes index documents.
+     *
+     * @param ids list of Item IDs to delete
      */
-    public List<Integer> deleteDocuments(List<Integer> itemIds) throws IOException {
-        return luceneIndex.deleteDocuments(itemIds);
+    public void deleteDocuments(List<Integer> ids) throws IOException {
+        luceneIndex.deleteDocuments(ids);
     }
 
     @Override
