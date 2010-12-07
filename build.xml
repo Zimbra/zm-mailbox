@@ -646,8 +646,8 @@
       <!-- domain -->
       <property name="zimbraPreAuthKey"            value="4e2816f16c44fab20ecdee39fb850c3b0bb54d03f1d8e073aaea376a4f407f0c"/>
       <property name="zimbraVirtualHostname"       value="${SERVICE_PRINCIPAL_NAME}"/>
-      <property name="zimbraWebClientLoginURL"     value="http://${SERVICE_PRINCIPAL_NAME}:7070/spnego/spnego_preauth.jsp"/>
-      <property name="zimbraWebClientLogoutURL"    value="http://${SERVICE_PRINCIPAL_NAME}:7070/?sso=1"/>
+      <property name="zimbraWebClientLoginURL"     value="../../spnego/spnego_preauth.jsp"/>
+      <property name="zimbraWebClientLogoutURL"    value="../?sso=1"/>
       <property name="zimbraAuthKerberos5Realm"    value="${zimbraSpnegoAuthRealm}"/>
 
       <!-- modify ldap -->
