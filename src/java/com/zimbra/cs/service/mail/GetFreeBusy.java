@@ -51,7 +51,7 @@ public class GetFreeBusy extends MailDocumentHandler {
     private static final long MAX_PERIOD_SIZE_IN_DAYS = 200;
 
     protected static void validateRange(long rangeStart, long rangeEnd) throws ServiceException {
-        if (rangeEnd < rangeStart)
+        if (rangeEnd <= rangeStart)
             throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
         long days = (rangeEnd - rangeStart) / MSEC_PER_DAY;
         if (days > MAX_PERIOD_SIZE_IN_DAYS)
