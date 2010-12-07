@@ -5224,7 +5224,7 @@ TODO: delete them permerntly from here
 </attr>
 
 <attr id="1153" name="zimbraGalGroupIndicatorEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.0">
-  <globalConfigValue>FALSE</globalConfigValue>
+  <globalConfigValue>TRUE</globalConfigValue>
   <desc>whether to indicate if an email address on a message is a GAL group</desc>
 </attr>
 
