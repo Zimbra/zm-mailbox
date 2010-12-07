@@ -20,7 +20,11 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.index.CorruptIndexException;
@@ -38,9 +42,10 @@ import org.apache.lucene.util.Version;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+import com.google.common.io.NullOutputStream;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.service.util.SyncToken;
@@ -62,11 +67,16 @@ public final class LuceneIndex {
     private static final Semaphore READER_THROTTLE = new Semaphore(LC.zimbra_index_max_readers.intValue());
     private static final Semaphore WRITER_THROTTLE = new Semaphore(LC.zimbra_index_max_writers.intValue());
 
+    // The queue is practically bound by the writer throttle.
+    private static final ExecutorService MERGE_EXECUTOR = Executors.newFixedThreadPool(
+            LC.zimbra_index_merge_threads.intValue(),
+            new ThreadFactoryBuilder().setNameFormat("IndexMerge-%d").setDaemon(true).build());
+
     private static IndexReadersCache readersCache;
 
     private final LuceneDirectory luceneDirectory;
-    private IndexWriter indexWriter;
     private MailboxIndex mailboxIndex;
+    private IndexWriterRef writerRef;
     private SyncToken mHighestUncomittedModContent = new SyncToken(0);
     private int writeNestLevel = 0;
     private int numPendingDocs = 0;
@@ -196,9 +206,9 @@ public final class LuceneIndex {
 
                     if (deleteFirst) {
                         Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(indexId));
-                        indexWriter.updateDocument(toDelete, doc.toDocument());
+                        writerRef.get().updateDocument(toDelete, doc.toDocument());
                     } else {
-                        indexWriter.addDocument(doc.toDocument());
+                        writerRef.get().addDocument(doc.toDocument());
                     }
                 }
             }
@@ -230,7 +240,7 @@ public final class LuceneIndex {
             for (Integer itemId : itemIds) {
                 try {
                     Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, itemId.toString());
-                    indexWriter.deleteDocuments(toDelete);
+                    writerRef.get().deleteDocuments(toDelete);
                     // NOTE!  The numDeleted may be < you expect here, the document may
                     // already be deleted and just not be optimized out yet -- some lucene
                     // APIs (e.g. docFreq) will still return the old count until the indexes
@@ -257,7 +267,7 @@ public final class LuceneIndex {
      * Deletes this index completely.
      */
     synchronized void deleteIndex() throws IOException {
-        assert(indexWriter == null);
+        assert(writerRef == null);
         ZimbraLog.indexing.debug("Deleting index %s", luceneDirectory);
         readersCache.remove(this);
 
@@ -279,10 +289,8 @@ public final class LuceneIndex {
     private void enumerateTermsForField(String regex, Term firstTerm, TermEnumInterface callback) throws IOException {
         IndexReaderRef ref = getIndexReaderRef();
         try {
-            IndexReader reader = ref.getReader();
-
-            TermEnum terms = reader.terms(firstTerm);
-            boolean hasDeletions = reader.hasDeletions();
+            TermEnum terms = ref.get().terms(firstTerm);
+            boolean hasDeletions = ref.get().hasDeletions();
 
             // HACK!
             boolean stripAtBeforeRegex = false;
@@ -317,7 +325,7 @@ public final class LuceneIndex {
                         // NOTE: the term could exist in docs, but they might all be deleted. Unfortunately this means
                         // that we need to actually walk the TermDocs enumeration for this document to see if it is
                         // non-empty
-                        if (!hasDeletions || reader.termDocs(cur).next()) {
+                        if (!hasDeletions || ref.get().termDocs(cur).next()) {
                             callback.onTerm(cur, terms.docFreq());
                         }
                     }
@@ -340,8 +348,7 @@ public final class LuceneIndex {
         IndexReaderRef ref = getIndexReaderRef();
         try {
             Term firstTerm = new Term(field, token);
-            IndexReader reader = ref.getReader();
-            TermEnum terms = reader.terms(firstTerm);
+            TermEnum terms = ref.get().terms(firstTerm);
 
             do {
                 Term cur = terms.term();
@@ -445,10 +452,18 @@ public final class LuceneIndex {
     private IndexWriter openIndexWriter(boolean create, boolean tryRepair) throws IOException {
         try {
             IndexWriter writer = new IndexWriter(luceneDirectory, mailboxIndex.getAnalyzer(),
-                    create, IndexWriter.MaxFieldLength.LIMITED);
+                    create, IndexWriter.MaxFieldLength.LIMITED) {
+                /**
+                 * Redirect Lucene's logging to ZimbraLog.
+                 */
+                @Override
+                public void message(String message) {
+                    ZimbraLog.index_lucene.debug("IW: %s", message);
+                }
+            };
             if (ZimbraLog.index_lucene.isDebugEnabled()) {
-                writer.setInfoStream(new PrintStream(new LoggingOutputStream(
-                        ZimbraLog.index_lucene, Log.Level.debug)));
+                // Set a dummy PrintStream, otherwise Lucene suppresses logging.
+                writer.setInfoStream(new PrintStream(new NullOutputStream()));
             }
             return writer;
         } catch (AssertionError e) {
@@ -488,7 +503,7 @@ public final class LuceneIndex {
         try {
             IndexWriter.unlock(luceneDirectory);
         } catch (IOException e) {
-            ZimbraLog.index_lucene.warn("Failed to unlock", e);
+            ZimbraLog.index_lucene.warn("Failed to unlock IndexWriter %s", this, e);
         }
     }
 
@@ -503,7 +518,7 @@ public final class LuceneIndex {
         IndexReaderRef ref = readersCache.get(this);
         if (ref != null) {
             if (ref.isStale()) {
-                IndexReader oldReader = ref.getReader();
+                IndexReader oldReader = ref.get();
                 IndexReader newReader;
                 try {
                     newReader = oldReader.reopen();
@@ -534,8 +549,9 @@ public final class LuceneIndex {
             // closing. Index directory should get initialized as a result.
             File indexDir = luceneDirectory.getFile();
             if (isEmptyDirectory(indexDir)) {
-                openWriter();
-                closeWriter();
+                // create an empty index
+                IndexWriter writer = new IndexWriter(luceneDirectory, null, true, IndexWriter.MaxFieldLength.LIMITED);
+                writer.close();
                 reader = openIndexReader(false);
             } else {
                 throw e;
@@ -586,13 +602,16 @@ public final class LuceneIndex {
 
     synchronized void beginWrite() throws IOException {
         if (writeNestLevel == 0) {
-            WRITER_THROTTLE.acquireUninterruptibly();
-            readersCache.stale(this);
-            try {
-                openWriter();
-            } finally {
-                if (indexWriter == null) {
-                    WRITER_THROTTLE.release();
+            if (writerRef != null) {
+                writerRef.inc();
+            } else {
+                WRITER_THROTTLE.acquireUninterruptibly();
+                try {
+                    writerRef = openWriter();
+                } finally {
+                    if (writerRef == null) {
+                        WRITER_THROTTLE.release();
+                    }
                 }
             }
         }
@@ -603,14 +622,13 @@ public final class LuceneIndex {
         assert writeNestLevel > 0 : writeNestLevel;
         writeNestLevel--;
         if (writeNestLevel == 0) {
-            closeWriter();
-            WRITER_THROTTLE.release();
+            commitWriter();
+            readersCache.stale(this); // let the reader reopen
         }
     }
 
-    private void openWriter() throws IOException {
+    private IndexWriterRef openWriter() throws IOException {
         assert(Thread.holdsLock(this));
-        assert(indexWriter == null);
 
         boolean useBatchIndexing = true;
         try {
@@ -620,8 +638,9 @@ public final class LuceneIndex {
 
         LuceneConfig config = new LuceneConfig(useBatchIndexing);
 
+        IndexWriter writer;
         try {
-            indexWriter = openIndexWriter(false, true);
+            writer = openIndexWriter(false, true);
         } catch (IOException e) {
             // the index (the segments* file in particular) probably didn't exist
             // when new IndexWriter was called in the try block, we would get a
@@ -629,23 +648,20 @@ public final class LuceneIndex {
             // this is the very first index write for this this mailbox (or the
             // index might be deleted), the FileNotFoundException is benign.
             if (isEmptyDirectory(luceneDirectory.getFile())) {
-                indexWriter = openIndexWriter(true, false);
+                writer = openIndexWriter(true, false);
             } else {
                 throw e;
             }
         }
 
-        if (config.useSerialMergeScheduler) {
-            indexWriter.setMergeScheduler(new SerialMergeScheduler());
-        }
+        writer.setMergeScheduler(new MergeScheduler());
+        writer.setMaxBufferedDocs(config.maxBufferedDocs);
+        writer.setRAMBufferSizeMB(config.ramBufferSizeKB / 1024.0);
+        writer.setMergeFactor(config.mergeFactor);
 
-        indexWriter.setMaxBufferedDocs(config.maxBufferedDocs);
-        indexWriter.setRAMBufferSizeMB(config.ramBufferSizeKB / 1024.0);
-        indexWriter.setMergeFactor(config.mergeFactor);
-
-        if (config.useDocScheduler) {
-            LogDocMergePolicy policy = new LogDocMergePolicy(indexWriter);
-            indexWriter.setMergePolicy(policy);
+        if (config.mergePolicy) {
+            LogDocMergePolicy policy = new LogDocMergePolicy(writer);
+            writer.setMergePolicy(policy);
             policy.setUseCompoundDocStore(config.useCompoundFile);
             policy.setUseCompoundFile(config.useCompoundFile);
             policy.setMergeFactor(config.mergeFactor);
@@ -654,8 +670,8 @@ public final class LuceneIndex {
                 policy.setMaxMergeDocs((int) config.maxMerge);
             }
         } else {
-            LogByteSizeMergePolicy policy = new LogByteSizeMergePolicy(indexWriter);
-            indexWriter.setMergePolicy(policy);
+            LogByteSizeMergePolicy policy = new LogByteSizeMergePolicy(writer);
+            writer.setMergePolicy(policy);
             policy.setUseCompoundDocStore(config.useCompoundFile);
             policy.setUseCompoundFile(config.useCompoundFile);
             policy.setMergeFactor(config.mergeFactor);
@@ -664,30 +680,70 @@ public final class LuceneIndex {
                 policy.setMaxMergeMB(config.maxMerge / 1024.0);
             }
         }
+
+        return new IndexWriterRef(this, writer);
     }
 
-    private void closeWriter() {
+    private void commitWriter() {
         assert(Thread.holdsLock(this));
-        assert(indexWriter != null);
+        assert(writerRef != null);
 
-        ZimbraLog.index_lucene.debug("Closing IndexWriter %s", this);
+        ZimbraLog.index_lucene.debug("Commit IndexWriter %s", this);
 
+        boolean success = false;
         try {
-            indexWriter.close();
-            mailboxIndex.mailbox.index.indexingCompleted(numPendingDocs, mHighestUncomittedModContent);
+            writerRef.get().commit();
+            mailboxIndex.mailbox.index.commit(numPendingDocs, mHighestUncomittedModContent);
+            MERGE_EXECUTOR.submit(new MergeTask(writerRef));
+            success = true;
         } catch (IOException e) {
-            ZimbraLog.index_lucene.error("Failed to close IndexWriter %s", this, e);
+            ZimbraLog.index_lucene.error("Failed to commit IndexWriter %s", this, e);
         } finally {
-            indexWriter = null;
-            unlockIndexWriter();
-
+            if (!success) {
+                writerRef.dec();
+            }
             numPendingDocs = 0;
             mHighestUncomittedModContent = new SyncToken(0);
         }
     }
 
+    /**
+     * Called by {@link IndexWriterRef#dec()}. Can be called by the thread that opened the writer or the merge thread.
+     */
+    synchronized void closeWriter() {
+        assert(writerRef != null);
+
+        ZimbraLog.index_lucene.debug("Close IndexWriter %s", this);
+
+        try {
+            writerRef.get().close();
+        } catch (IOException e) {
+            ZimbraLog.index_lucene.error("Failed to close IndexWriter %s", this, e);
+        } finally {
+            unlockIndexWriter();
+            WRITER_THROTTLE.release();
+            writerRef = null;
+        }
+    }
+
+    /**
+     * Called by {@link IndexReaderRef#dec()}. Can be called by the thread that opened the reader or the cache sweeper
+     * thread.
+     */
+    void closeReader(IndexReader reader) {
+        ZimbraLog.index_lucene.debug("Close IndexReader %s", this);
+
+        try {
+            reader.close();
+        } catch (IOException e) {
+            ZimbraLog.index_lucene.warn("Failed to close IndexReader %s", this, e);
+        } finally {
+            READER_THROTTLE.release();
+        }
+    }
+
     interface TermEnumInterface {
-        abstract void onTerm(Term term, int docFreq);
+        void onTerm(Term term, int docFreq);
     }
 
     static class DomainEnumCallback implements TermEnumInterface {
@@ -723,46 +779,104 @@ public final class LuceneIndex {
     }
 
     /**
-     * Called when the reader is closed by the {@link IndexReadersCache}.
-     *
-     * @param ref reference to {@link IndexReader}
+     * Only one background thread that holds the lock may process a merge for the given writer. Other concurrent
+     * attempts simply skip the merge.
      */
-    void onCloseReader(IndexReaderRef ref) {
-        READER_THROTTLE.release();
+    private static final class MergeScheduler extends SerialMergeScheduler {
+        private AtomicReference<Thread> lock = new AtomicReference<Thread>();
+
+        /**
+         * Try to hold the lock.
+         *
+         * @return true if the lock is held, false the lock is currently held by the other thread.
+         */
+        boolean tryLock() {
+            return lock.compareAndSet(null, Thread.currentThread());
+        }
+
+        void release() {
+            lock.compareAndSet(Thread.currentThread(), null);
+        }
+
+        /**
+         * Skip the merge unless the lock is held.
+         */
+        @Override
+        public void merge(IndexWriter writer) throws CorruptIndexException, IOException {
+            if (lock.get() == Thread.currentThread()) {
+                super.merge(writer);
+            }
+        }
+
+        /**
+         * Removes the Thread-to-IndexWriter reference.
+         */
+        @Override
+        public void close() {
+            super.close();
+            lock.set(null);
+        }
     }
 
-    int getMailboxId() {
-        return mailboxIndex.getMailboxId();
+    /**
+     * In order to minimize delay caused by merges, merges are processed only in background threads. Writers triggered
+     * by batch threshold or search commit the changes before processing merges, so that the changes are available to
+     * readers without long delay that merges likely cause. Merge threads don't block other writer threads running in
+     * foreground. Another indexing using the same writer may start even while the merge is in process.
+     */
+    private static final class MergeTask implements Callable<Void> {
+        private final IndexWriterRef ref;
+
+        MergeTask(IndexWriterRef ref) {
+            this.ref = ref;
+        }
+
+        @Override
+        public Void call() {
+            try {
+                ZimbraLog.addAccountNameToContext(ref.getIndex().mailboxIndex.mailbox.getAccount().getName());
+            } catch (ServiceException ignore) {
+            }
+            try {
+                if (((MergeScheduler) ref.get().getMergeScheduler()).tryLock()) {
+                    ref.get().maybeMerge();
+                }
+            } catch (IOException e) {
+                ZimbraLog.index_lucene.error("Failed to merge IndexWriter %s", ref.getIndex(), e);
+            } finally {
+                ((MergeScheduler) ref.get().getMergeScheduler()).release();
+                ref.dec();
+                ZimbraLog.clearContext();
+            }
+            return null;
+        }
     }
 
     private static final class LuceneConfig {
 
-        final boolean useDocScheduler;
+        final boolean mergePolicy;
         final long minMerge;
         final long maxMerge;
         final int mergeFactor;
         final boolean useCompoundFile;
-        final boolean useSerialMergeScheduler;
         final int maxBufferedDocs;
         final int ramBufferSizeKB;
 
         LuceneConfig(boolean batchIndexing) {
             if (batchIndexing) {
-                useDocScheduler = LC.zimbra_index_lucene_batch_use_doc_scheduler.booleanValue();
+                mergePolicy = LC.zimbra_index_lucene_batch_merge_policy.booleanValue();
                 minMerge = LC.zimbra_index_lucene_batch_min_merge.longValue();
                 maxMerge = LC.zimbra_index_lucene_batch_max_merge.longValue();
                 mergeFactor = LC.zimbra_index_lucene_batch_merge_factor.intValue();
                 useCompoundFile = LC.zimbra_index_lucene_batch_use_compound_file.booleanValue();
-                useSerialMergeScheduler = LC.zimbra_index_lucene_batch_use_serial_merge_scheduler.booleanValue();
                 maxBufferedDocs = LC.zimbra_index_lucene_batch_max_buffered_docs.intValue();
                 ramBufferSizeKB = LC.zimbra_index_lucene_batch_ram_buffer_size_kb.intValue();
             } else {
-                useDocScheduler = LC.zimbra_index_lucene_nobatch_use_doc_scheduler.booleanValue();
+                mergePolicy = LC.zimbra_index_lucene_nobatch_merge_policy.booleanValue();
                 minMerge = LC.zimbra_index_lucene_nobatch_min_merge.longValue();
                 maxMerge = LC.zimbra_index_lucene_nobatch_max_merge.longValue();
                 mergeFactor = LC.zimbra_index_lucene_nobatch_merge_factor.intValue();
                 useCompoundFile = LC.zimbra_index_lucene_nobatch_use_compound_file.booleanValue();
-                useSerialMergeScheduler = LC.zimbra_index_lucene_nobatch_use_serial_merge_scheduler.booleanValue();
                 maxBufferedDocs = LC.zimbra_index_lucene_nobatch_max_buffered_docs.intValue();
                 ramBufferSizeKB = LC.zimbra_index_lucene_nobatch_ram_buffer_size_kb.intValue();
             }

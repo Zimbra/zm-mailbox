@@ -12,13 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on 2005. 4. 25.
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 package com.zimbra.cs.localconfig;
 
 import com.zimbra.common.localconfig.LC;
@@ -27,6 +20,8 @@ import com.zimbra.common.localconfig.LC;
  * Various switches to turn features on/off, mainly for measuring the
  * performance overhead.  Refer to the code that uses these keys to
  * see precisely which code paths are avoided by turning a feature off.
+ *
+ * @since 2005. 4. 25.
  */
 public class DebugConfig {
 
@@ -153,8 +148,6 @@ public class DebugConfig {
 
     public static boolean enableContactLocalizedSort;
 
-    public static boolean enableIndexReaderRefStats;
-
     public static boolean enableMigrateUserZimletPrefs;
 
     public static boolean disableGroupTargetForAdminRight;
@@ -171,7 +164,7 @@ public class DebugConfig {
     public static int imapNoninteractiveSessionLimit;
     public static boolean imapTerminateSessionOnClose;
     public static boolean imapSerializeSessionOnClose;
-    
+
     static {
         calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
         calendarAllowOrganizerSpecifiedAlarms = booleanValue("debug_calendar_allow_organizer_specified_alarms", false);
@@ -222,8 +215,6 @@ public class DebugConfig {
 
         enableContactLocalizedSort = booleanValue("debug_enable_contact_localized_sort", true);
 
-        enableIndexReaderRefStats = booleanValue("debug_enable_index_reader_ref_stats", false);
-
         enableMigrateUserZimletPrefs = booleanValue("migrate_user_zimlet_prefs", false);
 
         disableGroupTargetForAdminRight = booleanValue("disable_group_target_for_admin_right", false);
@@ -238,8 +229,8 @@ public class DebugConfig {
         imapNoninteractiveSessionLimit = intValue("debug_imap_noninteractive_session_limit", Integer.MAX_VALUE);
         imapTerminateSessionOnClose = booleanValue("imap_terminate_session_on_close", false);
         imapSerializeSessionOnClose = booleanValue("imap_serialize_session_on_close", true);
-        
-        disableCalendarReminderEmail = booleanValue("debug_disable_calendar_reminder_email", false);        
+
+        disableCalendarReminderEmail = booleanValue("debug_disable_calendar_reminder_email", false);
     }
 
     protected static boolean booleanValue(String key, boolean defaultValue) {

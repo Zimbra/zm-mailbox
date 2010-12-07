@@ -665,7 +665,7 @@ public final class IndexHelper {
     /**
      * Called by the indexing subsystem when indexing has completed for the specified items.
      */
-    public void indexingCompleted(int count, SyncToken newHighestModContent) {
+    public void commit(int count, SyncToken newHighestModContent) {
         assert(Thread.holdsLock(mailbox));
 
         if (count <= 0) {

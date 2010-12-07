@@ -28,30 +28,26 @@ import org.apache.lucene.search.TopDocs;
  * Reference to {@link IndexSearcher} that supports reference count.
  */
 class IndexSearcherRef {
-    private Searcher mSearcher;
-    private IndexReaderRef mReader;
-    private int mCount = 1;
-    private Sort mSort = null;
+    private final Searcher searcher;
+    private final IndexReaderRef reader;
+    private int count = 1;
+    private Sort sort = null;
 
     IndexSearcherRef(IndexReaderRef reader) {
-        mReader= reader;
-        mSearcher = new IndexSearcher(mReader.getReader());
+        this.reader = reader;
+        searcher = new IndexSearcher(reader.get());
     }
 
     synchronized void setSort(Sort sort) {
-        mSort = sort;
+        this.sort = sort;
     }
 
     synchronized Sort getSort() {
-        return mSort;
+        return sort;
     }
 
-    synchronized Searcher getSearcher() {
-        return mSearcher;
-    }
-
-    synchronized IndexReader getReader() {
-        return mReader.getReader();
+    Searcher getSearcher() {
+        return searcher;
     }
 
     /**
@@ -61,12 +57,11 @@ class IndexSearcherRef {
      * {@link IndexReader}.
      */
     synchronized void dec() {
-        mSort = null;
-        mCount--;
-        assert(mCount >= 0);
-        if (0 == mCount) {
-            mReader.dec();
-            mReader = null;
+        sort = null;
+        count--;
+        assert(count >= 0);
+        if (0 == count) {
+            reader.dec();
         }
     }
 
@@ -76,15 +71,15 @@ class IndexSearcherRef {
      * @return underlying {@link IndexSearcher} object
      */
     synchronized void inc() {
-        assert(mCount > 0);
-        mCount++;
+        assert(count > 0);
+        count++;
     }
 
     synchronized TopDocs search(Query query, Filter filter, int num) throws IOException {
-        if (mSort == null) {
+        if (sort == null) {
             return getSearcher().search(query, filter, num);
         } else {
-            return getSearcher().search(query, filter, num, mSort);
+            return getSearcher().search(query, filter, num, sort);
         }
     }
 }
