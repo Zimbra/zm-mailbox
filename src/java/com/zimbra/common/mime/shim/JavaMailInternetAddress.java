@@ -67,7 +67,7 @@ public class JavaMailInternetAddress extends InternetAddress implements JavaMail
     throws UnsupportedEncodingException {
         super();
         if (ZPARSER) {
-            mAddress = new com.zimbra.common.mime.InternetAddress(address, personal).setCharset(charset);
+            mAddress = new com.zimbra.common.mime.InternetAddress(personal, address).setCharset(charset);
         } else {
             setAddress(address);
             setPersonal(personal, charset);

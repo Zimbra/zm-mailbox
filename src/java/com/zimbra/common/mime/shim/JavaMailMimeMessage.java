@@ -41,11 +41,21 @@ import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
 public class JavaMailMimeMessage extends MimeMessage implements JavaMailShim {
-    static final boolean ZPARSER = false;
+    static final boolean ZPARSER = isZimbraParserEnabled();
+
+    private static boolean isZimbraParserEnabled() {
+        try {
+            String val = com.zimbra.common.localconfig.LC.get("debug_alternate_mime_parser");
+            return val.isEmpty() ? false : Boolean.valueOf(val).booleanValue();
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
     public static boolean usingZimbraParser() {
         return ZPARSER;
     }
+
 
     private com.zimbra.common.mime.MimeMessage mMessage;
     private Object mContent;  // JavaMailMimeMultipart or JavaMailMimeMessage or null
