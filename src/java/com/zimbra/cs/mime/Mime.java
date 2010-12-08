@@ -539,11 +539,16 @@ public class Mime {
     }
 
     public static void recursiveRepairTransferEncoding(MimeMessage mm) throws MessagingException, IOException {
-        for (MPartInfo mpi : listParts(mm))
+        for (MPartInfo mpi : listParts(mm)) {
             repairTransferEncoding(mpi.mPart);
+        }
     }
 
     public static void repairTransferEncoding(MimePart mp) throws MessagingException {
+        if (isZimbraJavaMailShim(mp)) {
+            return;
+        }
+
         String cte = mp.getHeader("Content-Transfer-Encoding", null);
         String ct = getContentType(mp);
         if (cte != null &&
@@ -695,8 +700,9 @@ public class Mime {
          // get a set of all the content types
          Set<String> set = new HashSet<String>();
          for (MPartInfo mpi : parts) {
-             if (mpi.isFilterableAttachment())
+             if (mpi.isFilterableAttachment()) {
                  set.add(mpi.getContentType());
+             }
          }
          return set;
      }
@@ -1182,14 +1188,14 @@ public class Mime {
     /** Returns the value of the <tt>From</tt> header.  If not available,
      *  returns the value of the <tt>Sender</tt> header.  Returns an empty
      *  {@code String} if neither header is available. */
-    public static String getSender(MimeMessage msg) {
+    public static String getSender(MimeMessage mm) {
         String sender = null;
         try {
-            sender = msg.getHeader("From", null);
+            sender = mm.getHeader("From", null);
         } catch (MessagingException e) {}
         if (sender == null) {
             try {
-                sender = msg.getHeader("Sender", null);
+                sender = mm.getHeader("Sender", null);
             } catch (MessagingException e) {}
         }
         if (sender == null) {
@@ -1310,24 +1316,26 @@ public class Mime {
         MimeMessage mm = new FixedMimeMessage(JMSession.getSession(), new java.io.FileInputStream("C:\\Temp\\mail\\24245"));
         InputStream is = new RawContentMultipartDataSource(mm, new ContentType(mm.getContentType())).getInputStream();
         int num;  byte buf[] = new byte[1024];
-        while ((num = is.read(buf)) != -1)
+        while ((num = is.read(buf)) != -1) {
             System.out.write(buf, 0, num);
+        }
     }
 
-    /**
-     * Returns an <tt>InputStream</tt> to the content of a <tt>MimeMessage</tt>
-     * by starting a thread that serves up its content to a <tt>PipedOutputStream</tt>.
-     * This workaround is necessary because JavaMail does not provide <tt>InputStream</tt>
-     * access to the content.
-     */
-    public static InputStream getInputStream(MimeMessage msg)
-    throws IOException {
+    /** Returns an {@code InputStream} to the content of a {@code MimeMessage}
+     *  by starting a thread that serves up its content to a {@code
+     *  PipedOutputStream}.  This workaround is necessary because JavaMail does
+     *  not provide {@code InputStream} access to the content. */
+    public static InputStream getInputStream(MimeMessage mm) throws IOException {
+        if (isZimbraJavaMailShim(mm)) {
+            return ((JavaMailMimeMessage) mm).getMessageStream();
+        }
+
         // Nasty hack because JavaMail doesn't provide an InputStream accessor
         // to the entire RFC 822 content of a MimeMessage.  Start a thread that
         // serves up the content of the MimeMessage via PipedOutputStream.
         PipedInputStream in = new PipedInputStream();
         PipedOutputStream out = new PipedOutputStream(in);
-        Thread thread = new Thread(new MimeMessageOutputThread(msg, out));
+        Thread thread = new Thread(new MimeMessageOutputThread(mm, out));
         thread.setName("MimeMessageThread");
         thread.start();
         return in;
