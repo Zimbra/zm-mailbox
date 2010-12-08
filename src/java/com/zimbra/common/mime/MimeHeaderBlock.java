@@ -257,18 +257,10 @@ public class MimeHeaderBlock implements Iterable<MimeHeader> {
         return this;
     }
 
-    private boolean isPrepended(MimeHeader header) {
-        if (header == null) {
-            return false;
-        }
-        String lcname = header.getName().toLowerCase();
-        return lcname.equals("received") || lcname.equals("return-path");
-    }
-
     public MimeHeaderBlock addHeader(MimeHeader header) {
         if (header != null && validateFieldName(header.getName()) != null) {
             announce(header.getName(), header);
-            mHeaders.add(isPrepended(header) ? 0 : mHeaders.size(), header.clone());
+            mHeaders.add(header.clone());
             markDirty();
         }
         return this;
