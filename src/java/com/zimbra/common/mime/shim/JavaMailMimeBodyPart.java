@@ -376,7 +376,7 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
 
         @Override public InputStream getInputStream() throws IOException {
-            return jmpart.getZimbraMimePart().getRawContentStream();
+            return jmpart.getZimbraMimePart().getContentStream();
         }
 
         @Override public OutputStream getOutputStream() throws IOException {
