@@ -136,7 +136,7 @@ extends TestCase {
         assertTrue(sendFailed);
     }
     
-    public void xtestRestrictEnvelopeSender()
+    public void testRestrictEnvelopeSender()
     throws Exception {
         Server server = Provisioning.getInstance().getLocalServer();
         server.setSmtpPort(TEST_SMTP_PORT);
