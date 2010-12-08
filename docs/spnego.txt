@@ -163,9 +163,40 @@ Repeat steps (A) to (D) for each zimbra server(e.g. catfood.zimbra.com, corp.zim
 - For dev system: do "ant spnego-dev-deploy" under ZimbraServer.
 
 
-2.1. Configure Domain
----------------------
+2.1. Configure Global Config
+----------------------------
+We support only one REALM per Zimbra installation.
 
+Modify the following global config attributes with "zmprov mcf" command.
+
+zimbraSpnegoAuthEnabled     : TRUE
+                              e.g. zmprov mcf zimbraSpnegoAuthEnabled TRUE
+
+zimbraSpnegoAuthErrorURL    : URL to redirect users to on spnego auth failure 
+                              Setting it to "/zimbra/?ignoreLoginURL=1"
+                              will redirect user to the regular Zimbra login page, where 
+                              user will be prompted or the zimbra user name and password.
+                              e.g. zmprov mcf zimbraSpnegoAuthErrorURL '/zimbra/?ignoreLoginURL=1'                    
+                     
+zimbraSpnegoAuthRealm       : the kerberos realm in the domain controller
+                              e.g. zmprov mcf zimbraSpnegoAuthRealm VMWARE.COM
+
+
+2.2. Configure Servers
+----------------------
+On each zimbra server, modify the following global config attributes with "zmprov ms" command.
+
+zimbraSpnegoAuthTargetName  : the name for the service user in III. 1. (A), 
+                              e.g. zmprov ms dogfood.zimbra.com zimbraSpnegoAuthTargetName HTTP/dogfood.zimbra.com
+                                   zmprov ms catfood.zimbra.com zimbraSpnegoAuthTargetName HTTP/catfood.zimbra.com
+
+zimbraSpnegoAuthPrincipal   : {zimbraSpnegoAuthTargetName}@{zimbraSpnegoAuthRealm}
+                              e.g. zmprov ms dogfood.zimbra.com zimbraSpnegoAuthPrincipal HTTP/dogfood.zimbra.com@VMWARE.COM
+                                   zmprov ms catfood.zimbra.com zimbraSpnegoAuthPrincipal HTTP/catfood.zimbra.com@VMWARE.COM
+  
+
+2.3. Configure Domain
+---------------------
 (A) Setup preauth for the domain.
     - Generate a preauth key using zmprov gdpak
       zmprov gdpak {domain}
@@ -208,9 +239,9 @@ Repeat steps (A) to (D) for each zimbra server(e.g. catfood.zimbra.com, corp.zim
     zmprov md {domain} zimbraWebClientLoginURL '../../spnego/spnego_preauth.jsp'
     
     (Following will honor zimbraWebClientLoginURL only for Firefox/IE/Chrome on Windows)
-    zmprov md ${domain} +zimbraWebClientLoginURLAllowedUA '.*Windows NT.*Firefox/3.*'
-    zmprov md ${domain} +zimbraWebClientLoginURLAllowedUA '.*MSIE.*Windows NT.*'
-    zmprov md ${domain} +zimbraWebClientLoginURLAllowedUA '.*Windows NT.*Chrome.*'
+    zmprov md {domain} +zimbraWebClientLoginURLAllowedUA '.*Windows NT.*Firefox/3.*'
+    zmprov md {domain} +zimbraWebClientLoginURLAllowedUA '.*MSIE.*Windows NT.*'
+    zmprov md {domain} +zimbraWebClientLoginURLAllowedUA '.*Windows NT.*Chrome.*'
     
     
 (E) Setup logout URL and UAs allowed for the logout URL on the domain
@@ -218,39 +249,11 @@ Repeat steps (A) to (D) for each zimbra server(e.g. catfood.zimbra.com, corp.zim
     zmprov md {domain} zimbraWebClientLogoutURL '../?sso=1'
     
     (Following will honor zimbraWebClientLogoutURL only for Firefox/IE/Chrome on Windows)
-    zmprov md ${domain} +zimbraWebClientLogoutURLAllowedUA '.*Windows NT.*Firefox/3.*'
-    zmprov md ${domain} +zimbraWebClientLogoutURLAllowedUA '.*MSIE.*Windows NT.*'
-    zmprov md ${domain} +zimbraWebClientLogoutURLAllowedUA '.*Windows NT.*Chrome.*'
+    zmprov md {domain} +zimbraWebClientLogoutURLAllowedUA '.*Windows NT.*Firefox/3.*'
+    zmprov md {domain} +zimbraWebClientLogoutURLAllowedUA '.*MSIE.*Windows NT.*'
+    zmprov md {domain} +zimbraWebClientLogoutURLAllowedUA '.*Windows NT.*Chrome.*'
 
 
-
-2.2. Configure Global Config
-----------------------------
-
-We support only one REALM per Zimbra installation.
-
-Modify the following global config keys with zmprov mcf
-
-zimbraSpnegoAuthEnabled     : TRUE
-
-zimbraSpnegoAuthErrorURL    : URL to redirect users to on spnego auth failure 
-                              Setting it to "/zimbra/?ignoreLoginURL=1"
-                              will redirect user to the regular Zimbra login page, where 
-                              user will be prompted or the zimbra user name and password.
-
-zimbraSpnegoAuthRealm       : the kerberos realm
-                              e.g. VMWARE.COM
-
-
-2.3. Configure Servers
-----------------------
-On each zimbra server:
-zimbraSpnegoAuthTargetName  : the name for the service user in III. 1. (A), 
-                              e.g. HTTP/dogfood.zimbra.com
-
-zimbraSpnegoAuthPrincipal   : {zimbraSpnegoAuthTargetName}@{zimbraSpnegoAuthRealm}
-                              e.g. HTTP/dogfood.zimbra.com@VMWARE.COM
-  
 
 ===========================
 3. Configure Your Browser
@@ -277,7 +280,7 @@ IE and Chrome:
 ================
 4. Test it out
 ================
-- On a Windows box, login to the domain as a domain user
+- On a Windows box, login to the domain as a domain user.
   
   Your ticket as a domain user will be saved on the computer.
   Ths token will be picked up by the spnego aware browser and send in 
@@ -309,3 +312,30 @@ What happens behind the scene in ZCS server:
     on the mailbox inbox.
     
 
+==========
+Appendix
+==========
+Scripts to setup spnego on dogfood.zimbra.com and catfood.zimbra.com:
+
+zmprov mcf zimbraSpnegoAuthEnabled TRUE
+zmprov mcf zimbraSpnegoAuthErrorURL '/zimbra/?ignoreLoginURL=1' 
+zmprov mcf zimbraSpnegoAuthRealm VMWARE.COM
+
+zmprov ms dogfood.zimbra.com zimbraSpnegoAuthTargetName HTTP/dogfood.zimbra.com
+zmprov ms catfood.zimbra.com zimbraSpnegoAuthTargetName HTTP/catfood.zimbra.com
+zmprov ms dogfood.zimbra.com zimbraSpnegoAuthPrincipal HTTP/dogfood.zimbra.com@VMWARE.COM
+zmprov ms catfood.zimbra.com zimbraSpnegoAuthPrincipal HTTP/catfood.zimbra.com@VMWARE.COM
+
+Do III 2.3 (A) to setup preauth key on the domain
+mprov md zimbra.com zimbraPreAuthKey {preauth-key}
+
+zmprov md zimbra.com zimbraAuthKerberos5Realm VMWARE.COM
+zmprov md zimbra.com +zimbraVirtualHostname dogfood.zimbra.com +zimbraVirtualHostname catfood.zimbra.com
+zmprov md zimbra.com zimbraWebClientLoginURL '../../spnego/spnego_preauth.jsp'
+zmprov md zimbra.com +zimbraWebClientLoginURLAllowedUA '.*Windows NT.*Firefox/3.*'
+zmprov md zimbra.com +zimbraWebClientLoginURLAllowedUA '.*MSIE.*Windows NT.*'
+zmprov md zimbra.com +zimbraWebClientLoginURLAllowedUA '.*Windows NT.*Chrome.*'
+zmprov md zimbra.com zimbraWebClientLogoutURL '../?sso=1'
+zmprov md zimbra.com +zimbraWebClientLogoutURLAllowedUA '.*Windows NT.*Firefox/3.*'
+zmprov md zimbra.com +zimbraWebClientLogoutURLAllowedUA '.*MSIE.*Windows NT.*'
+zmprov md zimbra.com +zimbraWebClientLogoutURLAllowedUA '.*Windows NT.*Chrome.*'
