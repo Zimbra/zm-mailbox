@@ -47,12 +47,12 @@ public class UUEncodeConverter extends MimeVisitor {
     }
 
     @Override
-    protected boolean visitBodyPart(MimeBodyPart bp) {
+    protected boolean visitBodyPart(MimeBodyPart mbp) {
         return false;
     }
 
     @Override
-    protected boolean visitMessage(MimeMessage msg, VisitPhase visitKind) throws MessagingException {
+    protected boolean visitMessage(MimeMessage mm, VisitPhase visitKind) throws MessagingException {
         // do the decode in the exit phase
         if (visitKind != VisitPhase.VISIT_END)
             return false;
@@ -60,11 +60,11 @@ public class UUEncodeConverter extends MimeVisitor {
         MimeMultipart mmp = null;
         try {
             // only check "text/plain" parts for uudecodeable attachments
-            if (!msg.isMimeType(MimeConstants.CT_TEXT_PLAIN))
+            if (!mm.isMimeType(MimeConstants.CT_TEXT_PLAIN))
                 return false;
 
             // don't check transfer-encoded parts for uudecodeable attachments
-            String cte = msg.getHeader("Content-Transfer-Encoding", null);
+            String cte = mm.getHeader("Content-Transfer-Encoding", null);
             if (cte != null) {
                 cte = cte.trim().toLowerCase();
                 if (!cte.equals(MimeConstants.ET_7BIT) && !cte.equals(MimeConstants.ET_8BIT) && !cte.equals(MimeConstants.ET_BINARY))
@@ -77,7 +77,7 @@ public class UUEncodeConverter extends MimeVisitor {
             PositionInputStream is = null;
             long size;
             try {
-                is = new PositionInputStream(new BufferedInputStream(msg.getInputStream()));
+                is = new PositionInputStream(new BufferedInputStream(mm.getInputStream()));
                 for (int c = is.read(); c != -1; ) {
                     long start = is.getPosition() - 1;
                     // check for uuencode header: "begin NNN filename"
@@ -130,7 +130,7 @@ public class UUEncodeConverter extends MimeVisitor {
             // take the remaining text and put it in as the first "related" part
             InputStream isOrig = null;
             try {
-                isOrig = msg.getInputStream();
+                isOrig = mm.getInputStream();
                 long offset = 0;
                 ByteArrayOutputStream baos = new ByteArrayOutputStream((int) size);
                 byte[] buffer = new byte[8192];
@@ -159,8 +159,8 @@ public class UUEncodeConverter extends MimeVisitor {
         }
 
         // replace the top-level part with a new multipart/related
-        msg.setContent(mmp);
-        msg.setHeader("Content-Type", mmp.getContentType() + "; generated=true");
+        mm.setContent(mmp);
+        mm.setHeader("Content-Type", mmp.getContentType() + "; generated=true");
         return true;
     }
 
@@ -175,8 +175,9 @@ public class UUEncodeConverter extends MimeVisitor {
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             int length = -1, bits = 0, acc = 0, c = is.read();
-            while (c == 'r' || c == '\n')
+            while (c == 'r' || c == '\n') {
                 c = is.read();
+            }
             while (c != -1) {
                 // handle already-read length byte, or "end" if it's after a 0-length line
                 if (length == 0 && c == 'e') {
@@ -204,14 +205,16 @@ public class UUEncodeConverter extends MimeVisitor {
                 // skip to EOL
                 while ((c = is.read()) != '\r' && c != '\n' && c != -1)
                     ;
-                while (c == '\r' || c == '\n')
+                while (c == '\r' || c == '\n') {
                     c = is.read();
+                }
             }
 
             mContent = baos.toByteArray();
             mContentType = MimeDetect.getMimeDetect().detect(mFilename, mContent);
-            if (mContentType == null)
+            if (mContentType == null) {
                 mContentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
+            }
 
             mEndOffset = is.getPosition();
         }
@@ -223,7 +226,7 @@ public class UUEncodeConverter extends MimeVisitor {
         String getFilename()   { return mFilename; }
 
         DataSource getDataSource() {
-            ByteArrayDataSource bads = new ByteArrayDataSource(mContent, MimeConstants.CT_APPLICATION_OCTET_STREAM);
+            ByteArrayDataSource bads = new ByteArrayDataSource(mContent, mContentType);
             bads.setName(mFilename);
             return bads;
         }
