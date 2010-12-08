@@ -2595,6 +2595,14 @@ public class Invite {
             }
         }
 
+        // Don't allow using different time zones in DTSTART and DTEND for a recurrence. (prevents future problems)
+        if (isRecurrence() && mStart != null && mEnd != null &&  !mStart.getTimeZone().equals(mEnd.getTimeZone())) {
+            ZimbraLog.calendar.warn(
+                    "recurrence uses different time zones in DTSTART and DTEND; forcing DTEND to DTSTART time zone; UID=" +
+                    mUid + ", subject=" + mName);
+            mEnd.toTimeZone(mStart.getTimeZone());
+        }
+
         mPercentComplete = limitIntegerRange(mPercentComplete, 0, 100, null);
         mPriority = limitIntegerRange(mPriority, 0, 9, null);
 
