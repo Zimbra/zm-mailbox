@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.service.admin;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -21,10 +23,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Log;
+import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.Log.Level;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -35,12 +37,14 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
- * Creates a custom logger for the given account.
+ * Adds a custom logger for the given account.
  * 
  * @author bburtin
  */
 public class AddAccountLogger extends AdminDocumentHandler {
 
+    static String CATEGORY_ALL = "all";
+    
     @Override
     public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
@@ -52,10 +56,11 @@ public class AddAccountLogger extends AdminDocumentHandler {
         // Look up account
         Account account = getAccountFromLoggerRequest(request);
         
-        // Add logger
         Element eLogger = request.getElement(AdminConstants.E_LOGGER);
         String category = eLogger.getAttribute(AdminConstants.A_CATEGORY);
         String sLevel = eLogger.getAttribute(AdminConstants.A_LEVEL);
+        
+        // Handle level.
         Level level = null;
         try {
             level = Level.valueOf(sLevel.toLowerCase());
@@ -64,16 +69,29 @@ public class AddAccountLogger extends AdminDocumentHandler {
                 sLevel, StringUtil.join(",", Level.values()));
             throw ServiceException.INVALID_REQUEST(error, null);
         }
-        if (!LogFactory.logExists(category)) {
-            throw ServiceException.INVALID_REQUEST("Log category " + category + " does not exist.", null);
+        
+        // Handle category.
+        Collection<Log> loggers;
+        if (category.equalsIgnoreCase(CATEGORY_ALL)) {
+            loggers = LogFactory.getAllLoggers();
+        } else {
+            if (!LogFactory.logExists(category)) {
+                throw ServiceException.INVALID_REQUEST("Log category " + category + " does not exist.", null);
+            }
+            loggers = Arrays.asList(LogFactory.getLog(category));
         }
-        ZimbraLog.misc.info("Adding custom logger: account=%s, category=%s, level=%s",
-            account.getName(), category, level);
-        Log log = LogFactory.getLog(category);
-        log.addAccountLogger(account.getName(), level);
 
-        // Send response
+        // Add custom loggers.
         Element response = zsc.createElement(AdminConstants.ADD_ACCOUNT_LOGGER_RESPONSE);
+        for (Log log : loggers) {
+            ZimbraLog.misc.info("Adding custom logger: account=%s, category=%s, level=%s",
+                account.getName(), category, level);
+            log.addAccountLogger(account.getName(), level);
+            response.addElement(AdminConstants.E_LOGGER)
+                .addAttribute(AdminConstants.A_CATEGORY, log.getCategory())
+                .addAttribute(AdminConstants.A_LEVEL, level.name());
+        }
+        
         return response;
     }
     

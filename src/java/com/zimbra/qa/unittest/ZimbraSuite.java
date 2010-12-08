@@ -94,6 +94,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestFileDescriptorCache.class);
         sClasses.add(TestMountpoint.class);
         sClasses.add(TestZClient.class);
+        sClasses.add(TestLog.class);
     };
 
     /**

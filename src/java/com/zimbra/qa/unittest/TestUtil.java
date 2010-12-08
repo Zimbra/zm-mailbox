@@ -551,13 +551,18 @@ extends Assert {
     throws ServiceException {
         if (!sIsCliInitialized) {
             CliUtil.toolSetup();
-            SoapProvisioning sp = new SoapProvisioning();
-            sp.soapSetURI("https://localhost:7071" + AdminConstants.ADMIN_SERVICE_URI);
-            sp.soapZimbraAdminAuthenticate();
-            Provisioning.setInstance(sp);
+            Provisioning.setInstance(newSoapProvisioning());
             SoapTransport.setDefaultUserAgent("Zimbra Unit Tests", BuildInfo.VERSION);
             sIsCliInitialized = true;
         }
+    }
+    
+    public static SoapProvisioning newSoapProvisioning()
+    throws ServiceException {
+        SoapProvisioning sp = new SoapProvisioning();
+        sp.soapSetURI("https://localhost:7071" + AdminConstants.ADMIN_SERVICE_URI);
+        sp.soapZimbraAdminAuthenticate();
+        return sp;
     }
 
     public static void runTest(Class<?> testClass) {
@@ -610,10 +615,7 @@ extends Assert {
         // If this code is running on the server, call SoapProvisioning explicitly
         // so that both the account and mailbox are deleted.
         if (!(prov instanceof SoapProvisioning)) {
-            SoapProvisioning sp = new SoapProvisioning();
-            sp.soapSetURI("https://localhost:7071" + AdminConstants.ADMIN_SERVICE_URI);
-            sp.soapZimbraAdminAuthenticate();
-            prov = sp;
+            prov = newSoapProvisioning();
         }
         Account account = prov.get(AccountBy.name, getAddress(username));
         if (account != null) {

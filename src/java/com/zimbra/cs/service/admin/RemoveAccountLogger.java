@@ -59,7 +59,9 @@ public class RemoveAccountLogger extends AdminDocumentHandler {
         String category = null;
         if (eLogger != null) {
             category = eLogger.getAttribute(AdminConstants.A_CATEGORY);
-            if (!LogFactory.logExists(category)) {
+            if (category.equalsIgnoreCase(AddAccountLogger.CATEGORY_ALL)) {
+                category = null;
+            } else if (!LogFactory.logExists(category)) {
                 throw ServiceException.INVALID_REQUEST("Log category " + category + " does not exist.", null);
             }
         }
