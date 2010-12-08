@@ -61,20 +61,7 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
     public JavaMailMimeMultipart(DataSource ds) throws MessagingException {
         super(new com.zimbra.common.mime.ContentType(ds.getContentType()).getSubType());
         if (ZPARSER) {
-            com.zimbra.common.mime.ContentType ctype = new com.zimbra.common.mime.ContentType(ds.getContentType());
-            com.zimbra.common.mime.MimeHeaderBlock zheaders = new com.zimbra.common.mime.MimeHeaderBlock(ctype);
-            com.zimbra.common.mime.MimeParserInputStream mpis = null;
-            try {
-                try {
-                    mpis = new com.zimbra.common.mime.MimeParserInputStream(ds.getInputStream(), zheaders);
-                    JavaMailMimeBodyPart.writeTo(mpis.setSource(ds), null);
-                    mMultipart = (com.zimbra.common.mime.MimeMultipart) mpis.getPart();
-                } finally {
-                    ByteUtil.closeStream(mpis);
-                }
-            } catch (IOException ioe) {
-                throw new MessagingException("error parsing body part data source", ioe);
-            }
+            mMultipart = (com.zimbra.common.mime.MimeMultipart) JavaMailMimeBodyPart.parsePart(ds);
         } else {
             parsed = false;
             this.ds = ds;
@@ -323,14 +310,26 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
     }
 
     @Override public synchronized Part getParent() {
-        return mParent;
+        if (ZPARSER) {
+            return mParent;
+        } else {
+            return super.getParent();
+        }
     }
 
     @Override public synchronized void setParent(Part parent) {
-        mParent = (MimePart) parent;
+        if (ZPARSER) {
+            mParent = (MimePart) parent;
+        } else {
+            super.setParent(parent);
+        }
     }
 
     @Override public String toString() {
-        return mMultipart.toString();
+        if (ZPARSER) {
+            return mMultipart.toString();
+        } else {
+            return super.toString();
+        }
     }
 }

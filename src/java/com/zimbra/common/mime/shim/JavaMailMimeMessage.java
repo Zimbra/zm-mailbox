@@ -40,8 +40,6 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import com.zimbra.common.util.ByteUtil;
-
 public class JavaMailMimeMessage extends MimeMessage implements JavaMailShim {
     static final boolean ZPARSER = false;
 
@@ -541,6 +539,17 @@ public class JavaMailMimeMessage extends MimeMessage implements JavaMailShim {
         }
     }
 
+    /** Returns an InputStream consisting of the entire message, as would
+     *  be written in a call to {@link #writeTo(OutputStream)}. */
+    public InputStream getMessageStream() throws IOException {
+        if (ZPARSER) {
+            return mMessage.getRawContentStream();
+        } else {
+            // warning: this goes via a PipedInputStream and a separate thread
+            return new DataHandler(this, "message/rfc822").getInputStream();
+        }
+    }
+
     @Override public InputStream getInputStream() throws MessagingException, IOException {
         if (ZPARSER) {
             return bodyDelegate().getInputStream();
@@ -590,20 +599,13 @@ public class JavaMailMimeMessage extends MimeMessage implements JavaMailShim {
         }
     }
 
-    public void setDataSource(DataSource ds) throws MessagingException {
-        com.zimbra.common.mime.ContentType ctype = new com.zimbra.common.mime.ContentType(ds.getContentType());
-        com.zimbra.common.mime.MimeHeaderBlock zheaders = new com.zimbra.common.mime.MimeHeaderBlock(ctype);
-        com.zimbra.common.mime.MimeParserInputStream mpis = null;
-        try {
-            mpis = new com.zimbra.common.mime.MimeParserInputStream(ds.getInputStream(), zheaders);
-            JavaMailMimeBodyPart.writeTo(mpis.setSource(ds), null);
-            mMessage.setBodyPart(mpis.getPart());
-            mContent = null;
-        } catch (IOException ioe) {
-            throw new MessagingException("error parsing message data source", ioe);
-        } finally {
-            ByteUtil.closeStream(mpis);
+    private void setDataSource(DataSource ds) throws MessagingException {
+        com.zimbra.common.mime.MimePart body = JavaMailMimeBodyPart.parsePart(ds);
+        mMessage.setBodyPart(body);
+        if (!(body instanceof com.zimbra.common.mime.MimeMultipart) && ds.getName() != null && !ds.getName().trim().isEmpty()) {
+            body.setFilename(ds.getName());
         }
+        mContent = null;
     }
 
     @Override public synchronized void setDataHandler(DataHandler dh) throws MessagingException {
@@ -861,6 +863,10 @@ public class JavaMailMimeMessage extends MimeMessage implements JavaMailShim {
     }
 
     @Override public String toString() {
-        return mMessage.toString();
+        if (ZPARSER) {
+            return mMessage.toString();
+        } else {
+            return super.toString();
+        }
     }
 }

@@ -117,7 +117,7 @@ public abstract class MimePart implements Cloneable {
     abstract void removeChild(MimePart mp);
 
     /** Fetches a subpart of this part, specified via the IMAP part naming
-     *  convention (see {@see http://tools.ietf.org/html/rfc3501#page-56}).
+     *  convention (see {@link http://tools.ietf.org/html/rfc3501#page-56}).
      *  If the part name is invalid or the requested part does not exist,
      *  returns <tt>null</tt>. */
     public MimePart getSubpart(String part) {
@@ -217,7 +217,7 @@ public abstract class MimePart implements Cloneable {
 
     public MimePart setFilename(String name) {
         String filename = getFilename();
-        if (filename != name && (filename == null || !filename.equals(name))) {
+        if (filename != null || name != null) {
             setContentType(getContentType().setParameter("name", name));
             setMimeHeader("Content-Disposition", getContentDisposition().setParameter("filename", name));
         }
@@ -270,7 +270,7 @@ public abstract class MimePart implements Cloneable {
 
     /** Returns an {@code InputStream} whose content is the <u>entire</u>
      *  part, MIME headers and all.  If you only want the part body, try
-     *  {@see #getContentStream()}. */
+     *  {@link #getContentStream()}. */
     public InputStream getInputStream() throws IOException {
         if (!isDirty() && getStartOffset() != -1) {
             return getRawContentStream(getStartOffset(), getEndOffset());
@@ -282,7 +282,7 @@ public abstract class MimePart implements Cloneable {
 
     /** Returns an {@code InputStream} whose content is the raw, undecoded
      *  body of the part.  If you want the body with the content transfer
-     *  encoding removed, try {@see #getContentStream()}. */
+     *  encoding removed, try {@link #getContentStream()}. */
     public InputStream getRawContentStream() throws IOException {
         return getRawContentStream(getBodyOffset(), getEndOffset());
     }
@@ -294,7 +294,7 @@ public abstract class MimePart implements Cloneable {
 
     /** Returns a {@code byte[]} array whose content is the raw, undecoded
      *  body of the part.  If you want the body with the content transfer
-     *  encoding removed, try {@see #getContent()}. */
+     *  encoding removed, try {@link #getContent()}. */
     public byte[] getRawContent() throws IOException {
         if (!isDirty()) {
             return getPartSource().getContent(getBodyOffset(), getEndOffset());
@@ -307,14 +307,14 @@ public abstract class MimePart implements Cloneable {
 
     /** Returns an {@code InputStream} whose content is the body of the part
      *  after decoding the content transfer encoding (if any).  If you want the
-     *  raw part body with encoding intact, try {@see #getRawContentStream()()}. */
+     *  raw part body with encoding intact, try {@link #getRawContentStream()}. */
     public InputStream getContentStream() throws IOException {
         return getRawContentStream();
     }
 
     /** Returns a {@code byte[]} array whose content is the body of the part
      *  after any content transfer has been decoded.  If you want the raw
-     *  part body with encoding intact, try {@see #getRawContent()}. */
+     *  part body with encoding intact, try {@link #getRawContent()}. */
     public byte[] getContent() throws IOException {
         return getRawContent();
     }

@@ -150,8 +150,8 @@ public class MimeMessage extends MimePart {
     }
 
     /** Returns the {@link MimePart} that forms the "body" of this message.  For
-     *  a <tt>multipart/*<tt> message, this will be a {@link MimeMultipart}, and
-     *  in almost all other cases it will be a {@link MimeBodyPart}.
+     *  a "<tt>multipart/*<tt>" message, this will be a {@link MimeMultipart},
+     *  and in almost all other cases it will be a {@link MimeBodyPart}.
      * @see #setBodyPart(MimePart) */
     public MimePart getBodyPart() {
         return mBody;
@@ -160,8 +160,8 @@ public class MimeMessage extends MimePart {
     /** Sets the given part as this {@code MimeMessage}'s body part.  The part
      *  is removed from its previous parent, and its new parent is set to this
      *  message.  The old body part is detached from this message, and its
-     *  message headers (those other than the standard MIME "<tt>Content-*</tt>"
-     *  headers) are transferred to the new one.
+     *  message headers (those other than "<tt>Content-Transfer-Encoding</tt>"
+     *  and "<tt>Content-Type</tt>") are transferred to the new one.
      * @see #getBodyPart() */
     public MimeMessage setBodyPart(MimePart newBody) {
         if (mBody == newBody) {
@@ -188,7 +188,8 @@ public class MimeMessage extends MimePart {
     private MimePart transferMessageHeaders(MimePart newBody) {
         for (Iterator<MimeHeader> it = mBody.getMimeHeaderBlock().iterator(); it.hasNext(); ) {
             MimeHeader header = it.next();
-            if (!header.getName().toLowerCase().startsWith("content-")) {
+            String lcname = header.getName().toLowerCase();
+            if (!lcname.equals("content-type") && !lcname.equals("content-transfer-encoding")) {
                 // FIXME: want to have the new body's old headers at the *end* of the resulting list, not at the beginning
                 newBody.addMimeHeader(header);
                 it.remove();

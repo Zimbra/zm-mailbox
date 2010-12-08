@@ -229,11 +229,12 @@ public class MimeBodyPart extends MimePart {
     private MimeBodyPart setContent(PartSource psource, ContentTransferEncoding cte) throws IOException {
         super.setContent(psource);
         mEncoding = ContentTransferEncoding.BINARY;
-        mTargetEncoding = cte == null ? pickEncoding() : cte;
+        // cascade: set header, which marks dirty, which sets the target encoding
+        setTransferEncoding(cte == null ? pickEncoding() : cte);
         return this;
     }
 
-    private ContentTransferEncoding pickEncoding() throws IOException {
+    ContentTransferEncoding pickEncoding() throws IOException {
         int encodeable = 0, toolong = 0, length = 0;
 
         InputStream is = getRawContentStream();
