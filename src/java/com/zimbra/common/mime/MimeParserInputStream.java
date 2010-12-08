@@ -27,15 +27,17 @@ import com.zimbra.common.mime.MimePart.PartSource;
 public class MimeParserInputStream extends FilterInputStream {
     private MimeParser parser;
     private MimePart.PartSource psource;
+    private MimeHeaderBlock headers;
 
     public MimeParserInputStream(InputStream in) {
         super(in);
         parser = new MimeParser();
     }
 
-    public MimeParserInputStream(InputStream in, MimeHeaderBlock headers) {
+    public MimeParserInputStream(InputStream in, MimeHeaderBlock hblock) {
         super(in);
-        parser = new MimeParser(headers);
+        parser = new MimeParser(hblock);
+        headers = hblock;
     }
 
     @Override public int read() throws IOException {
@@ -92,7 +94,16 @@ public class MimeParserInputStream extends FilterInputStream {
     }
 
     public MimePart getPart() {
-        return parser.getPart().attachSource(psource);
+        MimePart mp = parser.getPart().attachSource(psource);
+        if (mp instanceof MimeBodyPart && headers != null && !headers.containsHeader("Content-Transfer-Encoding")) {
+            MimeBodyPart mbp = (MimeBodyPart) mp;
+            try {
+                mbp.setTransferEncoding(mbp.pickEncoding());
+            } catch (IOException ioe) {
+                mbp.setTransferEncoding(ContentTransferEncoding.BASE64);
+            }
+        }
+        return mp;
     }
 
     <T extends MimeMessage> T insertBodyPart(T mm) {

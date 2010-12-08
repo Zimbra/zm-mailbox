@@ -58,9 +58,9 @@ public enum ContentTransferEncoding {
         void disableFolding()  { fold = false; }
 
         @Override public int read() throws IOException {
-            if (column < CHUNK_SIZE) {
-                int position = column % 4;
-                if (position == 0) {
+            if (column < CHUNK_SIZE || !fold) {
+                int index = column % 4;
+                if (index == 0) {
                     int c1 = nextByte(), c2 = nextByte(), c3 = nextByte();
                     if (c1 == -1) {
                         if (!fold || column == 0)
@@ -73,15 +73,8 @@ public enum ContentTransferEncoding {
                     buf[2] = c2 == -1 ? (byte) '=' : BASE64_TABLE[(accumulator >> 6) & 0x3F];
                     buf[3] = c3 == -1 ? (byte) '=' : BASE64_TABLE[accumulator & 0x3F];
                 }
-                int c = buf[position];
-                if (position == 3 && c == '=') {
-                    column = CHUNK_SIZE - 1;
-                }
                 column++;
-                if (!fold) {
-                    column %= 4;
-                }
-                return c;
+                return buf[index];
             } else if (column == CHUNK_SIZE) {
                 column++;  return '\r';
             } else {

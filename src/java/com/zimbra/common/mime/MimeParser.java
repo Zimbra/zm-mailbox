@@ -37,7 +37,8 @@ class MimeParser {
 
     private enum ParserState {
         HEADER_LINESTART, HEADER_NAME, HEADER_VALUE, HEADER_CR,
-        BODY_LINESTART, BODY, BODY_CR
+        BODY_LINESTART, BODY, BODY_CR,
+        TERMINATED
     }
 
     private enum LineEnding { CR, LF, CRLF }
@@ -402,9 +403,12 @@ class MimeParser {
                 }
                 // XXX: could decode the cte and figure out unencoded part lengths...
                 break;
+
+            case TERMINATED:
+                throw new IllegalStateException("parsing has already been terminated");
         }
 
-        // if there are active MIME boundaries, check whether this line may be one
+        // if there are active MIME boundaries, check whether this line could match one of them
         if (boundaries != null) {
             checkBoundary(b);
         }
@@ -646,6 +650,11 @@ class MimeParser {
      *  as ended.  Do <u>not</u> call this method until all message bytes have
      *  been passed through {@link #handleByte(byte)}. */
     void endParse() {
+        if (state == ParserState.TERMINATED) {
+            // if we've already ended the parse, don't rerun this method
+            return;
+        }
+
         // catch the case of a final MIME boundary without a newline
         processBoundary();
 
@@ -672,6 +681,9 @@ class MimeParser {
         for (PartInfo pinfo : parts) {
             endPart(pinfo, position);
         }
+
+        // and ignore all subsequent calls to this method
+        state = ParserState.TERMINATED;
     }
 
     @Override
