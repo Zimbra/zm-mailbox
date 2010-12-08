@@ -17,7 +17,6 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.JMSession;
 
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -114,6 +113,7 @@ public class CalItemEmailReminderTask extends CalItemReminderTaskBase {
         String folder = calItem.getMailbox().getFolderById(calItem.getFolderId()).getName();
 
         String description = html ? invite.getDescriptionHtml() : invite.getDescription();
+        if (description == null) description = "";
 
         return html ? L10nUtil.getMessage(calItem.getType() == MailItem.TYPE_APPOINTMENT ? L10nUtil.MsgKey.apptReminderEmailBodyHtml : L10nUtil.MsgKey.taskReminderEmailBodyHtml,
                                           locale,
