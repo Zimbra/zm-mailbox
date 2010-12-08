@@ -19,6 +19,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +28,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.httpclient.HttpURL;
 import org.apache.commons.httpclient.HttpsURL;
+
+import com.google.common.primitives.Bytes;
 
 public class HttpUtil {
 
@@ -246,26 +249,38 @@ public class HttpUtil {
      * decoding URL used in HTTP request.
      */
     public static String urlUnescape(String escaped) {
+        // all the encoded byte groups should be converted to
+        // string together
+        ArrayList<Byte> segment = new ArrayList<Byte>();
         StringBuilder buf = null;
         for (int i = 0; i < escaped.length(); i++) {
             char c = escaped.charAt(i);
             if (c == '%' && i < (escaped.length() - 2)) {
                 String bytes = escaped.substring(i+1, i+3);
-                String character = null;
                 try {
-                    Byte b = Byte.parseByte(bytes, 16);
-                    character = new String(new byte[] { b }, "UTF-8");
+                    // java Byte type is signed with range of -0x80 to 0x7F.
+                    // it cannot convert segment of encoded UTF-8 string 
+                    // with high bit set.  we'll parse using Integer
+                    // then cast the result back to signed Byte.
+                    // e.g. 0xED becomes 237 as Integer, then -19 as Byte
+                    int b = Integer.parseInt(bytes, 16);
+                    segment.add(Byte.valueOf((byte)b));
                 } catch (NumberFormatException e) {
-                } catch (UnsupportedEncodingException e) {
                 }
-                if (character != null) {
-                    if (buf == null) {
-                        buf = new StringBuilder(escaped.substring(0, i));
+                if (buf == null) {
+                    buf = new StringBuilder(escaped.substring(0, i));
+                }
+                i += 2;
+                // append to the buffer if we are at the end of the string,
+                // or if this is the last encoded character in the segment.
+                if (i + 1 == escaped.length() || escaped.charAt(i + 1) != '%') {
+                    try {
+                        buf.append(new String(Bytes.toArray(segment), "UTF-8"));
+                    } catch (UnsupportedEncodingException e) {
                     }
-                    buf.append(character);
-                    i += 2;
-                    continue;
+                    segment.clear();
                 }
+                continue;
             }
             if (buf != null) {
                 buf.append(c);
