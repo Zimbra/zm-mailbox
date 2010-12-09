@@ -33,7 +33,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.session.AdminSession;
-import com.zimbra.cs.session.RemoteSoapSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession;
@@ -56,7 +55,7 @@ public abstract class DocumentHandler {
     private QName mResponseQName;
     private static String LOCAL_HOST = "", LOCAL_HOST_ID = "";
 
-    void setResponseQName(QName response) { mResponseQName = response; }
+    protected void setResponseQName(QName response) { mResponseQName = response; }
 
     protected Element getResponseElement(ZimbraSoapContext zc) {
         return zc.createElement(mResponseQName);
