@@ -91,6 +91,9 @@ public class JavaMailInternetAddress extends InternetAddress implements JavaMail
             return null;
         } else if (address instanceof JavaMailInternetAddress) {
             return ((JavaMailInternetAddress) address).getZimbraInternetAddress();
+        } else if (address instanceof InternetAddress) {
+            InternetAddress addr = (InternetAddress) address;
+            return new com.zimbra.common.mime.InternetAddress(addr.getPersonal(), addr.getAddress());
         } else {
             return new com.zimbra.common.mime.InternetAddress(address.toString());
         }

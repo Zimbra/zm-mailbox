@@ -14,6 +14,7 @@
  */
 package com.zimbra.common.mime;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,7 +42,15 @@ public class InternetAddress implements Cloneable {
     }
 
     public InternetAddress(String content) {
-        this(content.getBytes());
+        byte[] bvalue;
+        try {
+            mCharset = "utf-8";
+            bvalue = content.getBytes(mCharset);
+        } catch (UnsupportedEncodingException e) {
+            mCharset = null;
+            bvalue = content.getBytes();
+        }
+        parse(bvalue, 0, bvalue.length);
     }
 
     public InternetAddress(byte[] content) {
@@ -53,8 +62,8 @@ public class InternetAddress implements Cloneable {
     }
 
     public InternetAddress(byte[] content, int start, int length, String charset) {
-        if (charset != null && !charset.trim().equals("")) {
-            mCharset = charset;
+        if (charset != null && !charset.trim().isEmpty()) {
+            mCharset = charset.trim();
         }
         parse(content, start, length);
         if (mCharset == null) {
@@ -119,7 +128,8 @@ public class InternetAddress implements Cloneable {
         }
     }
 
-    @Override public boolean equals(Object o) {
+    @Override
+    public boolean equals(Object o) {
         if (o == this) {
             return true;
         } else if (!(o instanceof InternetAddress)) {
@@ -130,7 +140,8 @@ public class InternetAddress implements Cloneable {
         }
     }
 
-    @Override public int hashCode() {
+    @Override
+    public int hashCode() {
         String addr = getAddress();
         return addr == null ? 0 : addr.toLowerCase().hashCode();
     }
@@ -146,8 +157,13 @@ public class InternetAddress implements Cloneable {
         if (raw == null) {
             return null;
         }
-        byte[] array = raw.getBytes();
-        return parseHeader(array, 0, array.length);
+        try {
+            byte[] array = raw.getBytes("utf-8");
+            return parseHeader(array, 0, array.length, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            byte[] array = raw.getBytes();
+            return parseHeader(array, 0, array.length);
+        }
     }
 
     static List<InternetAddress> parseHeader(MimeHeader header) {
@@ -160,6 +176,10 @@ public class InternetAddress implements Cloneable {
     }
 
     static List<InternetAddress> parseHeader(final byte[] content, final int start, final int length) {
+        return parseHeader(content, start, length, null);
+    }
+
+    public static List<InternetAddress> parseHeader(final byte[] content, final int start, final int length, final String charset) {
         // FIXME: will split the header incorrectly if there's a ',' in the middle of a domain literal ("@[...]")
         boolean quoted = false, escaped = false, empty = true;
         int pos = start, astart = pos, end = start + length, clevel = 0;
@@ -187,9 +207,9 @@ public class InternetAddress implements Cloneable {
                 // this concludes the address portion of our program
                 if (!empty) {
                     if (group != null) {
-                        group.addMember(new InternetAddress(content, astart, pos - astart - 1, null));
+                        group.addMember(new InternetAddress(content, astart, pos - astart - 1, charset));
                     } else {
-                        iaddrs.add(new InternetAddress(content, astart, pos - astart - 1, null));
+                        iaddrs.add(new InternetAddress(content, astart, pos - astart - 1, charset));
                     }
                 }
                 if (c == ';') {
@@ -200,7 +220,7 @@ public class InternetAddress implements Cloneable {
             } else if (c == ':' && group == null) {
                 if (!empty) {
                     // FIXME: using the address parser to handle decoding RFC 5322 phrases for now
-                    String name = new InternetAddress(content, astart, pos - astart - 1, null).toString();
+                    String name = new InternetAddress(content, astart, pos - astart - 1, charset).toString();
                     iaddrs.add(group = new Group(name));
                 }
                 empty = true;
@@ -212,9 +232,9 @@ public class InternetAddress implements Cloneable {
         // don't forget the last address in the list
         if (!empty) {
             if (group != null) {
-                group.addMember(new InternetAddress(content, astart, pos - astart, null));
+                group.addMember(new InternetAddress(content, astart, pos - astart, charset));
             } else {
-                iaddrs.add(new InternetAddress(content, astart, pos - astart, null));
+                iaddrs.add(new InternetAddress(content, astart, pos - astart, charset));
             }
         }
         return iaddrs;

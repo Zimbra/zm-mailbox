@@ -109,7 +109,7 @@ public class MimeBodyPart extends MimePart {
     }
 
     @Override public InputStream getContentStream() throws IOException {
-        InputStream raw = super.getContentStream();
+        InputStream raw = super.getRawContentStream();
         if (mEncoding == ContentTransferEncoding.BASE64) {
             return new ContentTransferEncoding.Base64DecoderStream(raw);
         } else if (mEncoding == ContentTransferEncoding.QUOTED_PRINTABLE) {
