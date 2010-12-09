@@ -36,9 +36,12 @@ class Soap11Protocol extends SoapProtocol {
     private static final String NS_STR =
         "http://schemas.xmlsoap.org/soap/envelope/";
     private static final Namespace NS = Namespace.get(NS_PREFIX, NS_STR);
-    private static final QName FAULTCODE = new QName("faultcode", NS);
-    private static final QName FAULTSTRING = new QName("faultstring", NS);
-    private static final QName DETAIL = new QName("detail", NS);
+    // com.sun.xml.internal.ws.fault.SOAP11Fault fails to unmarshall XML response containing a Fault
+    // if faultcode is namespace qualified.  i.e. <faultcode>soap:Client</faultcode> is OK
+    // but                                        <soap:faultcode>soap:Client</soap:faultcode> is not
+    private static final QName FAULTCODE = new QName("faultcode");
+    private static final QName FAULTSTRING = new QName("faultstring");
+    private static final QName DETAIL = new QName("detail");
     private static final QName SENDER_CODE = new QName("Client", NS);
     private static final QName RECEIVER_CODE = new QName("Server", NS);
     
