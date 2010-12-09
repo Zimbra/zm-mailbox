@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -609,17 +608,10 @@ public class ParsedMessage {
 
     public String getRecipients() {
         if (mRecipients == null) {
-            String recipients = null;
             try {
-                recipients = getMimeMessage().getHeader("To", ", ");
-            } catch (MessagingException e) { }
-            if (recipients == null)
-                recipients = "";
-
-            try {
-                mRecipients = MimeUtility.decodeText(recipients);
-            } catch (UnsupportedEncodingException e1) {
-                mRecipients = recipients;
+                mRecipients = getMimeMessage().getHeader("To", ", ");
+            } catch (MessagingException e) {
+                mRecipients = "";
             }
         }
         return mRecipients;
