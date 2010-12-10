@@ -619,7 +619,8 @@ public final class LC {
             " -verbose:gc" +
             " -XX:+PrintGCDetails" +
             " -XX:+PrintGCTimeStamps" +
-            " -XX:+PrintGCApplicationStoppedTime");
+            " -XX:+PrintGCApplicationStoppedTime" +
+            " -XX:-OmitStackTraceInFastThrow");
     @Supported
     public static final KnownKey mailboxd_pidfile = KnownKey.newKey("${zimbra_log_directory}/mailboxd.pid");
 
