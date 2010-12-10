@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
+import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -133,6 +134,7 @@ public class FolderAction extends ItemAction {
         } else if (operation.equals(OP_FREEBUSY)) {
             boolean fb = action.getAttributeBool(MailConstants.A_EXCLUDE_FREEBUSY, false);
             mbox.alterTag(octxt, iid.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, fb);
+            FreeBusyProvider.mailboxChanged(zsc.getRequestedAccountId());
         } else if (operation.equals(OP_CHECK) || operation.equals(OP_UNCHECK)) {
             mbox.alterTag(octxt, iid.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_CHECKED, operation.equals(OP_CHECK));
         } else if (operation.equals(OP_SET_URL)) {
