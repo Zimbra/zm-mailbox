@@ -200,9 +200,12 @@ public class RecurId
     }
     
     public Element toXml(Element parent) {
-        parent.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, mDateTime.getDateTimePartString());
-        parent.addAttribute(MailConstants.A_CAL_TIMEZONE, mDateTime.getTZName());
         parent.addAttribute(MailConstants.A_CAL_RECURRENCE_RANGE_TYPE, mRange);
+        parent.addAttribute(MailConstants.A_CAL_RECURRENCE_ID, mDateTime.getDateTimePartString(false));
+        if (mDateTime.hasTime()) {
+            parent.addAttribute(MailConstants.A_CAL_TIMEZONE, mDateTime.getTZName());
+            parent.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, getDtZ());
+        }
         return parent;
     }
     
