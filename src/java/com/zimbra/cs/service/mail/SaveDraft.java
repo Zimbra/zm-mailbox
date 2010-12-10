@@ -25,6 +25,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.AutoSendDraftTask;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -144,7 +145,12 @@ public class SaveDraft extends MailDocumentHandler {
             }
         }
 
-        if (scheduleAutoSendTask()) {
+        // for an auto-send-draft, save the new contacts now
+        if (autoSendTime != 0) {
+            MailSender.saveNewContacts(mimeData.newContacts, octxt, mbox);
+        }
+
+        if (schedulesAutoSendTask()) {
             if (id != Mailbox.ID_AUTO_INCREMENT) {
                 // Cancel any existing auto-send task for this draft
                 AutoSendDraftTask.cancelTask(id, mbox.getId());
@@ -161,7 +167,7 @@ public class SaveDraft extends MailDocumentHandler {
         return response;
     }
 
-    protected boolean scheduleAutoSendTask() {
+    protected boolean schedulesAutoSendTask() {
         return true;
     }
 }
