@@ -41,6 +41,8 @@ public class InternetAddressTest {
         test("bare non-ASCII character",
                 "_Bob_, the Build\u00ear == <bob@example.com>",
                 "_Bob_, the Build\u00ear ==", "bob@example.com");
+        test("bare non-ASCII character in DOT ATOM",
+                "Ivar H\u00FCtt ivar@example.com", null, "\"IvarH\u00FCttivar\"@example.com");
     }
 
     @Test
@@ -246,6 +248,7 @@ public class InternetAddressTest {
         Assert.assertEquals("Bob the Builder 2", iaddrs.get(1).getPersonal());
         Assert.assertEquals("bob@example.com", iaddrs.get(1).getAddress());
     }
+
     /**
      * @see http://tools.ietf.org/html/rfc2822#appendix-A.1.2
      */

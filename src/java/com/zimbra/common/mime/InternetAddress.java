@@ -498,7 +498,7 @@ public class InternetAddress implements Cloneable {
             char c = content.charAt(i);
             if (c == '.' && dot) {
                 return false;
-            } else if (c != '.' && (c < 0x00 || c > 0xFF || !MimeHeader.ATEXT_VALID[c])) {
+            } else if (c != '.' && (c < 0x00 || c >= MimeHeader.ATEXT_VALID.length || !MimeHeader.ATEXT_VALID[c])) {
                 return false;
             }
             dot = c == '.';
