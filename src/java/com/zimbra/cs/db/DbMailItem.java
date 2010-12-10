@@ -153,7 +153,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, data.parentId);
             }
             stmt.setInt(pos++, data.folderId);
-            if (data.indexId == -1) {
+            if (data.indexId <= 0) {
                 stmt.setNull(pos++, Types.INTEGER);
             } else {
                 stmt.setInt(pos++, data.indexId);
@@ -244,7 +244,7 @@ public class DbMailItem {
     public static void copy(MailItem item, int id, Folder folder, int indexId, int parentId, String locator, String metadata, boolean fromDumpster)
     throws ServiceException {
         Mailbox mbox = item.getMailbox();
-        if (id <= 0 || indexId == -1 || folder == null || parentId == 0)
+        if (id <= 0 || folder == null || parentId == 0)
             throw ServiceException.FAILURE("invalid data for DB item copy", null);
 
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
@@ -273,7 +273,10 @@ public class DbMailItem {
             else
                 stmt.setInt(pos++, parentId);                  //   or, PARENT_ID specified by caller
             stmt.setInt(pos++, folder.getId());                // FOLDER_ID
-            stmt.setInt(pos++, indexId);                       // INDEX_ID
+            if (indexId <= 0)                                  // INDEX_ID
+                stmt.setNull(pos++, Types.INTEGER);
+            else
+                stmt.setInt(pos++, indexId);
             stmt.setInt(pos++, id);                            // IMAP_ID is initially the same as ID
             if (locator != null)
                 stmt.setString(pos++, locator);      // VOLUME_ID specified by caller
@@ -415,7 +418,10 @@ public class DbMailItem {
             int pos = 1;
             stmt.setInt(pos++, data.id);                       // ID
             stmt.setInt(pos++, data.folderId);                 // FOLDER_ID
-            stmt.setInt(pos++, data.indexId);                  // INDEX_ID
+            if (data.indexId <= 0)                             // INDEX_ID
+                stmt.setNull(pos++, Types.INTEGER);
+            else
+                stmt.setInt(pos++, data.indexId);
             stmt.setInt(pos++, data.imapId);                   // IMAP_ID
             if (data.locator != null)
                 stmt.setString(pos++, data.locator);           // VOLUME_ID
