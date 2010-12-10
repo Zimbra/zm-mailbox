@@ -1857,8 +1857,7 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
   In op="dumpsterdelete" action, the item in the dumpster is permanently deleted.
 
   For op="recover", caller must specify l="{folder}".  The item is recovered from dumpster as a copy
-  in the specified folder.  Original item in dumpster remains and can be deleted separately with
-  a "deletedumpster" action.
+  in the specified folder.  The dumpster copy is then deleted.
 
   For op="tag" or op="!tag", caller must specify tag="{id}".  This changes the state of
     the specified tag without altering other tags.

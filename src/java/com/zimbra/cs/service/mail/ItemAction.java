@@ -62,7 +62,7 @@ public class ItemAction extends MailDocumentHandler {
     public static final String OP_READ        = "read";
     public static final String OP_COLOR       = "color";
     public static final String OP_HARD_DELETE = "delete";
-    public static final String OP_RECOVER     = "recover";  // recover by copying from dumpster
+    public static final String OP_RECOVER     = "recover";  // recover by copying then deleting from dumpster
     public static final String OP_DUMPSTER_DELETE = "dumpsterdelete";  // delete from dumpster
     public static final String OP_MOVE        = "move";
     public static final String OP_COPY        = "copy";
