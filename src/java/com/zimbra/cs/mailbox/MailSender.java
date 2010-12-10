@@ -45,7 +45,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -965,7 +964,7 @@ public class MailSender {
         return ret;
     }
 
-    public void saveNewContacts(Collection<InternetAddress> newContacts, OperationContext octxt, Object authMailbox) {
+    public static void saveNewContacts(Collection<InternetAddress> newContacts, OperationContext octxt, Object authMailbox) {
         for (InternetAddress inetaddr : newContacts) {
             ZimbraLog.smtp.debug("adding new contact: " + inetaddr);
             Map<String, String> fields = new ParsedAddress(inetaddr).getAttributes();

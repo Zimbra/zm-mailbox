@@ -3381,6 +3381,7 @@ public class ZMailbox implements ToZJSONObject {
 					e.addAttribute(MailConstants.A_TYPE, addr.getType());
 					e.addAttribute(MailConstants.A_ADDRESS, addr.getAddress());
 					e.addAttribute(MailConstants.A_PERSONAL, addr.getPersonal());
+					e.addAttribute(MailConstants.A_ADD_TO_AB, addr.isAdd());
 				}
             }
         }
@@ -3473,7 +3474,25 @@ public class ZMailbox implements ToZJSONObject {
      * 
      * @return the message
      */
-    public synchronized ZMessage saveDraft(ZOutgoingMessage message, String existingDraftId, String folderId) throws ServiceException {
+    public synchronized ZMessage saveDraft(ZOutgoingMessage message, String existingDraftId, String folderId)
+            throws ServiceException {
+        return saveDraft(message, existingDraftId, folderId, 0);
+    }
+
+    /**
+     * Saves a message draft.
+     *
+     * @param message the message
+     * @param existingDraftId id of existing draft or <tt>null</tt>
+     * @param folderId folder to save to or <tt>null</tt> to save to the <tt>Drafts</tt> folder
+     * @param autoSendTime time in UTC millis at which the draft should be auto-sent by the server.
+     *                     zero value implies a normal draft, i.e. no auto-send intended.
+     *
+     * @return the message
+     */
+    public synchronized ZMessage saveDraft(
+            ZOutgoingMessage message, String existingDraftId, String folderId, long autoSendTime)
+            throws ServiceException {
         Element req = newRequestElement(MailConstants.SAVE_DRAFT_REQUEST);
 
 		ZMountpoint mountpoint = getMountpoint(message);
@@ -3486,6 +3505,9 @@ public class ZMailbox implements ToZJSONObject {
 
         if (folderId != null)
             m.addAttribute(MailConstants.A_FOLDER, folderId);
+
+        if (autoSendTime != 0)
+            m.addAttribute(MailConstants.A_AUTO_SEND_TIME, autoSendTime);
 
 		String requestedAccountId = mountpoint == null ? null : mGetInfoResult.getId();
         return new ZMessage(invoke(req, requestedAccountId).getElement(MailConstants.E_MSG), this);
