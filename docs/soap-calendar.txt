@@ -1199,6 +1199,7 @@ creation, an INVITE_OUT_OF_DATE exception will be thrown.
               recurId="YYMMDD[THHMMSS[Z]]"
               [tz="timezonename"]
               rangeType="1"          // always 1
+              [ridZ="YYMMDDTHHMMSSZ"]  // recurrence-id in UTC time zone; used in non-all-day appointments only
              ]
      />]*
   </replies>] // one or more replies which we have sent out
