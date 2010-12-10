@@ -59,16 +59,20 @@ public class CalItemEmailReminderTask extends CalItemReminderTaskBase {
                                           calItem.getSubject()),
                       MimeConstants.P_CHARSET_UTF8);
 
-        MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
-        mm.setContent(mmp);
+        if (invite.getDescriptionHtml() == null) {
+            mm.setText(getBody(calItem, invite, false, locale, tz), MimeConstants.P_CHARSET_UTF8);            
+        } else {
+            MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
+            mm.setContent(mmp);
 
-        MimeBodyPart textPart = new JavaMailMimeBodyPart();
-        textPart.setText(getBody(calItem, invite, false, locale, tz), MimeConstants.P_CHARSET_UTF8);
-        mmp.addBodyPart(textPart);
+            MimeBodyPart textPart = new JavaMailMimeBodyPart();
+            textPart.setText(getBody(calItem, invite, false, locale, tz), MimeConstants.P_CHARSET_UTF8);
+            mmp.addBodyPart(textPart);
 
-        MimeBodyPart htmlPart = new JavaMailMimeBodyPart();
-        htmlPart.setContent(getBody(calItem, invite, true, locale, tz), MimeConstants.CT_TEXT_HTML + "; " + MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8);
-        mmp.addBodyPart(htmlPart);
+            MimeBodyPart htmlPart = new JavaMailMimeBodyPart();
+            htmlPart.setContent(getBody(calItem, invite, true, locale, tz), MimeConstants.CT_TEXT_HTML + "; " + MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8);
+            mmp.addBodyPart(htmlPart);
+        }
 
         mm.setSentDate(new Date());
 
