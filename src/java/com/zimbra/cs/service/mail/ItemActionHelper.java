@@ -383,6 +383,7 @@ public class ItemActionHelper {
                 break;
             case RECOVER:
                 getMailbox().copy(getOpCtxt(), mIds, mItemType, mIidFolder.getId(), true);
+                getMailbox().deleteFromDumpster(getOpCtxt(), mIds);
                 break;
             case DUMPSTER_DELETE:
                 getMailbox().deleteFromDumpster(getOpCtxt(), mIds);
