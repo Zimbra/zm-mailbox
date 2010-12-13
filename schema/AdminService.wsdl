@@ -1,0 +1,121 @@
+<?xml version='1.0' encoding='utf-8'?>
+<definitions xmlns:tns="urn:zimbraAdmin"
+             xmlns:zimbra="urn:zimbra"
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" 
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             xmlns="http://schemas.xmlsoap.org/wsdl/"
+             targetNamespace="urn:zimbraAdmin"
+             name="AdminService">
+
+  <types>
+    <xsd:schema>
+      <xsd:import namespace="urn:zimbra" schemaLocation="zimbra.xsd"/>
+      <xsd:import namespace="urn:zimbraAdmin" schemaLocation="zimbraAdmin.xsd"/>
+    </xsd:schema>
+  </types>
+
+  <message name="authRequest">
+    <part name="parameters" element="tns:AuthRequest"/>
+  </message>
+  <message name="authResponse">
+    <part name="parameters" element="tns:AuthResponse"/>
+  </message>
+
+  <message name="createAccountRequest">
+    <part name="parameters" element="tns:CreateAccountRequest"/>
+  </message>
+  <message name="createAccountResponse">
+    <part name="parameters" element="tns:CreateAccountResponse"/>
+  </message>
+
+  <message name="getAccountRequest">
+    <part name="parameters" element="tns:GetAccountRequest"/>
+  </message>
+  <message name="getAccountResponse">
+    <part name="parameters" element="tns:GetAccountResponse"/>
+  </message>
+
+  <message name="reloadLocalConfigRequest">
+    <part name="parameters" element="tns:ReloadLocalConfigRequest"/>
+  </message>
+  <message name="reloadLocalConfigResponse">
+    <part name="parameters" element="tns:ReloadLocalConfigResponse"/>
+  </message>
+
+  <message name="soapHdrContext">
+    <part name="context" element="zimbra:context"/>
+  </message>
+
+  <portType name="AdminService">
+    <operation name="authRequest">
+      <input message="tns:authRequest"/>
+      <output message="tns:authResponse"/>
+    </operation>
+    <operation name="createAccountRequest">
+      <input message="tns:createAccountRequest"/>
+      <output message="tns:createAccountResponse"/>
+    </operation>
+    <operation name="getAccountRequest">
+      <input message="tns:getAccountRequest"/>
+      <output message="tns:getAccountResponse"/>
+    </operation>
+    <operation name="reloadLocalConfigRequest">
+      <input message="tns:reloadLocalConfigRequest"/>
+      <output message="tns:reloadLocalConfigResponse"/>
+    </operation>
+  </portType>
+
+  <binding name="AdminServicePortBinding" type="tns:AdminService">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+
+    <operation name="authRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/Auth" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="createAccountRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/CreateAccount" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getAccountRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetAccount" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="reloadLocalConfigRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/ReloadLocalConfig" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+  </binding>
+
+  <service name="AdminService">
+    <port name="AdminServicePort" binding="tns:AdminServicePortBinding">
+      <soap:address location="https://localhost:7071/service/admin/soap"/>
+    </port>
+  </service>
+</definitions>

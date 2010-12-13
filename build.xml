@@ -109,6 +109,18 @@
     </wsimport>
   </target>
 
+  <target name="admin-service-client-support" depends="wsdl-files,generate-schema">
+    <mkdir dir="${wsdl.test.classes.dir}"/>
+    <delete dir="${wsdl.test.src.dir}/com/zimbra/soap/admin/wsimport/generated" />
+    <!-- extension="true|false" - allow vendor extensions -->
+    <wsimport   wsdl="${xml.schema.dir}/AdminService.wsdl"
+                destdir="${wsdl.test.classes.dir}"
+                sourcedestdir="${wsdl.test.src.dir}"
+                keep="false"
+                package="com.zimbra.soap.admin.wsimport.generated">
+    </wsimport>
+  </target>
+
   <target name="mail-service-client-support" depends="wsdl-files,generate-schema">
     <mkdir dir="${wsdl.test.classes.dir}"/>
     <delete dir="${wsdl.test.src.dir}/com/zimbra/soap/mail/wsimport/generated" />
@@ -122,7 +134,7 @@
   </target>
 
   <target name="wsdl-client-support"
-      depends="account-service-client-support,mail-service-client-support">
+      depends="account-service-client-support,admin-service-client-support,mail-service-client-support">
   </target>
 
   <target name="wsdl-test-compile" depends="compile,wsdl-client-support">
