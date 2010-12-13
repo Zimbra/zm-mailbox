@@ -609,26 +609,35 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                     }
                 }
             }
-            // Find the earliest DTSTART.  It is not necessarily the DTSTART of the recurrence series
-            // because an exception can move the first instance to an earlier time.
+            // Find the earliest DTSTART and latest DTEND.  We're just looking for the bounds, so we won't worry
+            // about cancelled instances.
             ParsedDateTime earliestStart = null;
+            ParsedDateTime latestEnd = null;
             for (Invite cur : mInvites) {
-                ParsedDateTime start = cur.getStartTime();
-                if (earliestStart == null) {
-                    earliestStart = start;
-                } else if (start != null && start.compareTo(earliestStart) < 1) {
-                    earliestStart = start;
+                if (!cur.isCancel()) {
+                    ParsedDateTime start = cur.getStartTime();
+                    if (earliestStart == null)
+                        earliestStart = start;
+                    else if (start != null && start.compareTo(earliestStart) < 0)
+                        earliestStart = start;
+                    ParsedDateTime end = cur.getEffectiveEndTime();
+                    if (latestEnd == null)
+                        latestEnd = end;
+                    else if (end != null && end.compareTo(latestEnd) > 0)
+                        latestEnd = end;
                 }
             }
+            // Take the later of latestEnd and recurrence's end time.
+            ParsedDateTime recurEnd = mRecurrence.getEndTime();
+            if (latestEnd == null)
+                latestEnd = recurEnd;
+            else if (recurEnd != null && recurEnd.compareTo(latestEnd) > 0)
+                latestEnd = recurEnd;
 
             // update the start and end time in the CalendarItem table if
             // necessary
-            ParsedDateTime dtStartTime = earliestStart;
-            ParsedDateTime dtEndTime = mRecurrence.getEndTime();
-
-            startTime = dtStartTime != null ? dtStartTime.getUtcTime() : 0;
-            endTime = dtEndTime != null ? dtEndTime.getUtcTime() : 0;
-            endTime = recomputeRecurrenceEndTime(mEndTime);
+            startTime = earliestStart != null ? earliestStart.getUtcTime() : 0;
+            endTime = latestEnd != null ? latestEnd.getUtcTime() : 0;
         } else {
             mRecurrence = null;
             startTime = 0; endTime = 0;
