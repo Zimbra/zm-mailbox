@@ -23,6 +23,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
@@ -47,7 +48,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.cs.service.util.SyncToken;
+import com.zimbra.cs.mailbox.MailItem;
 
 /**
  * Lucene index.
@@ -66,7 +67,6 @@ public final class LuceneIndex {
     private static final Semaphore READER_THROTTLE = new Semaphore(LC.zimbra_index_max_readers.intValue());
     private static final Semaphore WRITER_THROTTLE = new Semaphore(LC.zimbra_index_max_writers.intValue());
 
-    // The queue is practically bound by the writer throttle.
     private static final ExecutorService MERGE_EXECUTOR = Executors.newFixedThreadPool(
             LC.zimbra_index_merge_threads.intValue(),
             new ThreadFactoryBuilder().setNameFormat("IndexMerge-%d").setDaemon(true).build());
@@ -76,15 +76,13 @@ public final class LuceneIndex {
     private final LuceneDirectory luceneDirectory;
     private MailboxIndex mailboxIndex;
     private IndexWriterRef writerRef;
-    private SyncToken mHighestUncomittedModContent = new SyncToken(0);
-    private int numPendingDocs = 0;
 
     static void startup() {
         if (DebugConfig.disableIndexing) {
             ZimbraLog.index.info("Indexing is disabled by the localconfig 'debug_disable_indexing' flag");
             return;
         }
-
+        ((ThreadPoolExecutor) MERGE_EXECUTOR).prestartAllCoreThreads();
         BooleanQuery.setMaxClauseCount(LC.zimbra_index_lucene_max_terms_per_query.intValue());
         readersCache = new IndexReadersCache(
                 LC.zimbra_index_reader_cache_size.intValue(),
@@ -171,13 +169,7 @@ public final class LuceneIndex {
      * If {@code deleteFirst} is false, then we are sure that this item is not
      * already in the index, and so we can skip the check-update step.
      */
-    void addDocument(IndexDocument[] docs, int itemId, int indexId, int modContent, long receivedDate,
-            long size, String sortSubject, String sortSender, boolean deleteFirst) throws IOException {
-
-        if (docs.length == 0) {
-            return;
-        }
-
+    void addDocument(MailItem item, List<IndexDocument> docs, boolean deleteFirst) throws IOException {
         for (IndexDocument doc : docs) {
             // doc can be shared by multiple threads if multiple mailboxes
             // are referenced in a single email
@@ -185,40 +177,27 @@ public final class LuceneIndex {
                 doc.removeSortSubject();
                 doc.removeSortName();
 
-                doc.addSortSubject(sortSubject);
-                doc.addSortName(sortSender);
+                doc.addSortSubject(item.getSortSubject());
+                doc.addSortName(item.getSortSender());
 
                 doc.removeMailboxBlobId();
-                doc.addMailboxBlobId(indexId);
+                doc.addMailboxBlobId(item.getId());
 
                 // If this doc is shared by multi threads, then the date might just be wrong,
                 // so remove and re-add the date here to make sure the right one gets written!
                 doc.removeSortDate();
-                doc.addSortDate(receivedDate);
+                doc.addSortDate(item.getDate());
 
                 doc.removeSortSize();
-                doc.addSortSize(size);
+                doc.addSortSize(item.getSize());
                 doc.addAll();
 
                 if (deleteFirst) {
-                    Term toDelete = new Term(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(indexId));
-                    writerRef.get().updateDocument(toDelete, doc.toDocument());
+                    Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(item.getId()));
+                    writerRef.get().updateDocument(term, doc.toDocument());
                 } else {
                     writerRef.get().addDocument(doc.toDocument());
                 }
-            }
-        }
-
-        numPendingDocs++;
-
-        if (modContent > 0) {
-            SyncToken token = new SyncToken(modContent, itemId);
-            assert(token.after(mHighestUncomittedModContent));
-            if (token.after(mHighestUncomittedModContent)) {
-                mHighestUncomittedModContent = token;
-            } else {
-                ZimbraLog.indexing.info("Index items not submitted in order: curHighest=%s new highest=%d indexId=%s",
-                        mHighestUncomittedModContent, modContent, indexId);
             }
         }
     }
@@ -590,7 +569,7 @@ public final class LuceneIndex {
         }
     }
 
-    synchronized void endWrite() {
+    synchronized void endWrite() throws IOException {
         commitWriter();
         readersCache.stale(this); // let the reader reopen
     }
@@ -598,13 +577,7 @@ public final class LuceneIndex {
     private IndexWriterRef openWriter() throws IOException {
         assert(Thread.holdsLock(this));
 
-        boolean useBatchIndexing = true;
-        try {
-            useBatchIndexing = mailboxIndex.useBatchedIndexing();
-        } catch (ServiceException ignore) {
-        }
-
-        LuceneConfig config = new LuceneConfig(useBatchIndexing);
+        LuceneConfig config = new LuceneConfig(mailboxIndex.mailbox.index.getBatchThreshold() > 0);
 
         IndexWriter writer;
         try {
@@ -652,7 +625,7 @@ public final class LuceneIndex {
         return new IndexWriterRef(this, writer);
     }
 
-    private void commitWriter() {
+    private void commitWriter() throws IOException {
         assert(Thread.holdsLock(this));
         assert(writerRef != null);
 
@@ -661,17 +634,12 @@ public final class LuceneIndex {
         boolean success = false;
         try {
             writerRef.get().commit();
-            mailboxIndex.mailbox.index.commit(numPendingDocs, mHighestUncomittedModContent);
             MERGE_EXECUTOR.submit(new MergeTask(writerRef));
             success = true;
-        } catch (IOException e) {
-            ZimbraLog.index_lucene.error("Failed to commit IndexWriter %s", this, e);
         } finally {
             if (!success) {
                 writerRef.dec();
             }
-            numPendingDocs = 0;
-            mHighestUncomittedModContent = new SyncToken(0);
         }
     }
 

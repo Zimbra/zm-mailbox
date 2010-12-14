@@ -40,6 +40,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.zimbra.cs.upgrade.MailboxUpgrade;
 import com.zimbra.common.util.MapUtil;
@@ -128,7 +129,6 @@ import com.zimbra.cs.service.FeedManager;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.service.util.SpamHandler.SpamReport;
-import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.cs.session.AllAccountsRedoCommitCallback;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.Session;
@@ -197,11 +197,10 @@ public class Mailbox {
         public int     recentMessages;
         public int     trackSync;
         public boolean trackImap;
-        public int     idxDeferredCount;
-        public SyncToken highestModContentIndexed = new SyncToken(0);
         public Set<String> configKeys;
 
-        @Override protected MailboxData clone() {
+        @Override
+        protected MailboxData clone() {
             MailboxData mbd = new MailboxData();
             mbd.id             = id;
             mbd.schemaGroupId  = schemaGroupId;
@@ -216,8 +215,6 @@ public class Mailbox {
             mbd.recentMessages = recentMessages;
             mbd.trackSync      = trackSync;
             mbd.trackImap      = trackImap;
-            mbd.idxDeferredCount = idxDeferredCount;
-            mbd.highestModContentIndexed = highestModContentIndexed.clone();
             if (configKeys != null)
                 mbd.configKeys = new HashSet<String>(configKeys);
             return mbd;
@@ -225,21 +222,22 @@ public class Mailbox {
     }
 
     static final class IndexItemEntry {
-        final boolean mDeleteFirst;
-        final List<IndexDocument> mDocuments;
-        final MailItem mMailItem;
-        int mModContent;   // where to set the Mailbox's mod_content when this item has completed.  Can be NO_CHANGE
+        final boolean deleteFirst;
+        final List<IndexDocument> documents;
+        final MailItem item;
 
-        IndexItemEntry(boolean deleteFirst, MailItem mi, int modContent, List<IndexDocument> docList) {
-            mMailItem = mi;
-            mDeleteFirst = deleteFirst;
-            mDocuments = docList;
-            mModContent = modContent;
+        IndexItemEntry(boolean deleteFirst, MailItem item, List<IndexDocument> docs) {
+            this.item = item;
+            this.deleteFirst = deleteFirst;
+            this.documents = docs;
         }
 
-        @Override public String toString() {
-            return "IndexItemEntry(" + (mDeleteFirst ? "TRUE" : "FALSE")
-                + "," + mMailItem.getId() + "-" + mModContent + ")";
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this)
+                .add("id", item.getId())
+                .add("del", deleteFirst)
+                .toString();
         }
     }
 
@@ -252,7 +250,7 @@ public class Mailbox {
         Connection conn      = null;
         RedoableOp recorder  = null;
         List<IndexItemEntry> indexItems = new ArrayList<IndexItemEntry>();
-        final List<Integer> indexItemsToDelete = new ArrayList<Integer>();
+        final List<Integer> indexDeleteIds = new ArrayList<Integer>();
         Map<Integer, MailItem> itemCache = null;
         OperationContext octxt = null;
         TargetConstraint tcon  = null;
@@ -265,15 +263,11 @@ public class Mailbox {
         int     contacts = NO_CHANGE;
         int     accessed = NO_CHANGE;
         int     recent   = NO_CHANGE;
-        int     idxDeferred = NO_CHANGE;
-        SyncToken highestModContentIndexed = null;
         Pair<String, Metadata> config = null;
 
         PendingModifications mDirty = new PendingModifications();
         List<Object> mOtherDirtyStuff = new LinkedList<Object>();
         PendingDelete deletes = null;
-
-        MailboxChange()  { }
 
         void setTimestamp(long millis) {
             if (depth == 1)
@@ -333,7 +327,7 @@ public class Mailbox {
         }
 
         boolean isMailboxRowDirty(MailboxData data) {
-            if (recent != NO_CHANGE || size != NO_CHANGE || contacts != NO_CHANGE || idxDeferred != NO_CHANGE || highestModContentIndexed != null)
+            if (recent != NO_CHANGE || size != NO_CHANGE || contacts != NO_CHANGE)
                 return true;
             if (itemId != NO_CHANGE && itemId / DbMailbox.ITEM_CHECKPOINT_INCREMENT > data.lastItemId / DbMailbox.ITEM_CHECKPOINT_INCREMENT)
                 return true;
@@ -348,11 +342,12 @@ public class Mailbox {
             active = false;
             conn = null;  octxt = null;  tcon = null;
             depth = 0;
-            size = changeId = itemId = contacts = accessed = recent = idxDeferred = NO_CHANGE;
+            size = changeId = itemId = contacts = accessed = recent = NO_CHANGE;
             sync = null;  config = null;  deletes = null;
-            itemCache = null;  indexItems.clear(); indexItemsToDelete.clear();
+            itemCache = null;
+            indexItems.clear();
+            indexDeleteIds.clear();
             mDirty.clear();  mOtherDirtyStuff.clear();
-            highestModContentIndexed = null;
             if (ZimbraLog.mailbox.isDebugEnabled())
                 ZimbraLog.mailbox.debug("clearing change");
         }
@@ -379,7 +374,7 @@ public class Mailbox {
 
     private MailboxLock    mMaintenance = null;
     private IMPersona      mPersona = null;
-    private MailboxVersion mVersion = null;
+    private MailboxVersion version;
     private volatile boolean open = false;
 
     protected Mailbox(MailboxData data) {
@@ -419,7 +414,7 @@ public class Mailbox {
             if (!DebugConfig.disableIndexing)
                 index.instantiateMailboxIndex();
 
-            if (mVersion == null) {
+            if (version == null) {
                 // if we've just initialized() the mailbox, then the version will
                 // be set in the config, but it won't be comitted yet -- and unfortunately
                 // getConfig() won't return us the proper value in this case....so just
@@ -427,46 +422,60 @@ public class Mailbox {
                 // if we are initializing a new mailbox) and otherwise we'll read the
                 // mailbox version from config
                 Metadata md = getConfig(null, MD_CONFIG_VERSION);
-                mVersion = MailboxVersion.fromMetadata(md);
+                version = MailboxVersion.fromMetadata(md);
             }
 
-            // check for mailbox upgrade
-            if (!getVersion().atLeast(1, 2)) {
-                index.upgradeMailboxTo1_2();
-            }
+            if (!version.atLeast(MailboxVersion.CURRENT)) { // check for mailbox upgrade
+                if (!version.atLeast(1, 2)) {
+                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.2", getVersion());
+                    index.upgradeMailboxTo1_2();
+                }
 
-            // same prescription for both the 1.2 -> 1.3 and 1.3 -> 1.4 migrations
-            if (!getVersion().atLeast(1, 4)) {
-                recalculateFolderAndTagCounts();
-                updateVersion(new MailboxVersion((short) 1, (short) 4));
-            }
+                // same prescription for both the 1.2 -> 1.3 and 1.3 -> 1.4 migrations
+                if (!version.atLeast(1, 4)) {
+                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.4", getVersion());
+                    recalculateFolderAndTagCounts();
+                    updateVersion(new MailboxVersion((short) 1, (short) 4));
+                }
 
-            if (!getVersion().atLeast(1, 5)) {
-                index.indexAllDeferredFlagItems();
-            }
+                if (!version.atLeast(1, 5)) {
+                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.5", getVersion());
+                    index.indexAllDeferredFlagItems();
+                }
 
-            // bug 41893: revert folder colors back to mapped value
-            if (!getVersion().atLeast(1, 7)) {
-                MailboxUpgrade.upgradeTo1_7(this);
-                updateVersion(new MailboxVersion((short) 1, (short) 7));
-            }
+                // bug 41893: revert folder colors back to mapped value
+                if (!version.atLeast(1, 7)) {
+                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.7", getVersion());
+                    MailboxUpgrade.upgradeTo1_7(this);
+                    updateVersion(new MailboxVersion((short) 1, (short) 7));
+                }
 
-            // bug 41850: revert tag colors back to mapped value
-            if (!getVersion().atLeast(1, 8)) {
-                MailboxUpgrade.upgradeTo1_8(this);
-                updateVersion(new MailboxVersion((short) 1, (short) 8));
-            }
+                // bug 41850: revert tag colors back to mapped value
+                if (!version.atLeast(1, 8)) {
+                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.8", getVersion());
+                    MailboxUpgrade.upgradeTo1_8(this);
+                    updateVersion(new MailboxVersion((short) 1, (short) 8));
+                }
 
-            // bug 20620: track \Deleted counts separately
-            if (!getVersion().atLeast(1, 9)) {
-                purgeImapDeleted(null);
-                updateVersion(new MailboxVersion((short) 1, (short) 9));
-            }
+                // bug 20620: track \Deleted counts separately
+                if (!version.atLeast(1, 9)) {
+                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.9", getVersion());
+                    purgeImapDeleted(null);
+                    updateVersion(new MailboxVersion((short) 1, (short) 9));
+                }
 
-            // bug 39647: wiki to document migration
-            if (!getVersion().atLeast(1, 10)) {
-                migrateWikiFolders();
-                updateVersion(new MailboxVersion((short) 1, (short) 10));
+                // bug 39647: wiki to document migration
+                if (!version.atLeast(1, 10)) {
+                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.10", getVersion());
+                    migrateWikiFolders();
+                    updateVersion(new MailboxVersion((short) 1, (short) 10));
+                }
+
+                if (!version.atLeast(1, 11)) {
+                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.11", getVersion());
+                    MailboxUpgrade.upgradeTo1_11(this);
+                    updateVersion(new MailboxVersion((short) 1, (short) 11));
+                }
             }
 
             // done!
@@ -677,26 +686,6 @@ public class Mailbox {
      *  Note that this time is not persisted across server restart. */
     public long getLastChangeDate() {
         return mData.lastChangeDate;
-    }
-
-    /** Returns the current count of index items not yet flushed to the index.  Items in-flight
-     * (submitted but not flushed) are included in this count.
-     *
-     * @return
-     */
-    public int getIndexDeferredCount() {
-        int toRet = (mCurrentChange.idxDeferred == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferred);
-        return Math.max(toRet, 0);
-    }
-
-    /**
-     *
-     * @return the highest mod_content that's been FLUSHED to the index.  Note that
-     *         some items may have been submitted but not yet flushed
-     */
-    public SyncToken getHighestFlushedToIndex() {
-        return ((mCurrentChange.highestModContentIndexed == null)
-                        ? mData.highestModContentIndexed : mCurrentChange.highestModContentIndexed);
     }
 
     /** Returns the change sequence number for the most recent
@@ -1052,24 +1041,14 @@ public class Mailbox {
         }
 
         // currently we cannot defer index deletion
-        if (deleteFirst)
-            mCurrentChange.indexItemsToDelete.add(item.getIndexId());
-
-        if (data != null && getIndexDeferredCount() > 0) {
-            // can't submit immediately -- index is behind..
-            ZimbraLog.indexing.debug("Deferring indexing for item %d b/c index is not up-to-date deferred=%d",
-                    item.getId(), getIndexDeferredCount());
-            data = null; // continue down below so that we update the index deferred count
+        if (deleteFirst) {
+            mCurrentChange.indexDeleteIds.add(item.getId());
         }
 
-        // if no data is provided then we ALWAYS batch
         if (data != null && indexImmediately()) {
-            if (item.getIndexId() != -1)
-                mCurrentChange.addIndexItem(new IndexItemEntry(deleteFirst, item, item.getSavedSequence(), data));
-        } else {
-            // increment index deferred count
-            int oldCount = mCurrentChange.idxDeferred == MailboxChange.NO_CHANGE ? mData.idxDeferredCount : mCurrentChange.idxDeferred;
-            mCurrentChange.idxDeferred = Math.max(0, oldCount + 1);
+            mCurrentChange.addIndexItem(new IndexItemEntry(deleteFirst, item, data));
+        } else { // defer
+            index.addDeferredId(item.getType(), item.getId());
         }
     }
 
@@ -1077,7 +1056,7 @@ public class Mailbox {
      * @return TRUE if we are indexing items immediately, FALSE otherwise
      */
     private boolean indexImmediately() {
-        return index.getBatchedIndexingCount() == 0;
+        return index.getBatchThreshold() == 0;
     }
 
     public synchronized Connection getOperationConnection() throws ServiceException {
@@ -1434,8 +1413,8 @@ public class Mailbox {
 
         // set the version to CURRENT
         Metadata md = new Metadata();
-        mVersion = new MailboxVersion(MailboxVersion.CURRENT());
-        mVersion.writeToMetadata(md);
+        version = new MailboxVersion();
+        version.writeToMetadata(md);
         DbMailbox.updateConfig(this, MD_CONFIG_VERSION, md);
     }
 
@@ -1683,38 +1662,17 @@ public class Mailbox {
         }
     }
 
-    public synchronized MailboxVersion getVersion()  { return mVersion; }
+    public synchronized MailboxVersion getVersion()  { return version; }
 
     synchronized void updateVersion(MailboxVersion vers) throws ServiceException {
-        mVersion = new MailboxVersion(vers);
+        version = new MailboxVersion(vers);
         Metadata md = getConfig(null, Mailbox.MD_CONFIG_VERSION);
 
         if (md == null)
             md = new Metadata();
 
-        mVersion.writeToMetadata(md);
+        version.writeToMetadata(md);
         setConfig(null, Mailbox.MD_CONFIG_VERSION, md);
-    }
-
-    /** Status of current batched indexing operation. */
-    public static class BatchedIndexStatus {
-        public int mNumProcessed = 0;
-        public int mNumToProcess = 0;
-        public int mNumFailed = 0;
-        public boolean mCancel = false;
-
-        @Override public String toString() {
-            String status = "Completed " + mNumProcessed + " out of " + mNumToProcess + " (" + mNumFailed + " failures)";
-            return (mCancel ? "--CANCELLING--  " : "") + status;
-        }
-
-        @Override public Object clone() {
-            BatchedIndexStatus toRet = new BatchedIndexStatus();
-            toRet.mNumProcessed = mNumProcessed;
-            toRet.mNumToProcess = mNumToProcess;
-            toRet.mNumFailed = mNumFailed;
-            return toRet;
-        }
     }
 
     /** Recalculates the size, metadata, etc. for an existing MailItem and
@@ -2578,11 +2536,9 @@ public class Mailbox {
         return getModifiedItems(octxt, lastSync, type, null);
     }
 
-    private static final List<Integer> EMPTY_ITEMS = Collections.emptyList();
-
     public synchronized Pair<List<Integer>,TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, byte type, Set<Integer> folderIds) throws ServiceException {
         if (lastSync >= getLastChangeID())
-            return new Pair<List<Integer>,TypedIdList>(EMPTY_ITEMS, new TypedIdList());
+            return new Pair<List<Integer>,TypedIdList>(Collections.<Integer>emptyList(), new TypedIdList());
 
         boolean success = false;
         try {
@@ -7110,38 +7066,16 @@ public class Mailbox {
         }
     }
 
-    /**
-     * Hack: Helper so that the code in Index can twiddle the currentChange for the transaction
-     * @param count
-     */
-    void setCurrentChangeIndexDeferredCount(int count) {
-        assert(mCurrentChange.isActive());
-        assert(Thread.holdsLock(this));
-        mCurrentChange.idxDeferred = count;
-    }
-
-    void setCurrentChangeHighestModContentIndexed(SyncToken token) {
-        assert(mCurrentChange.isActive());
-        assert(Thread.holdsLock(this));
-        mCurrentChange.highestModContentIndexed = token;
-    }
-
-    SyncToken getCurrentChangeHighestModContentIndexed() {
-        assert(mCurrentChange.isActive());
-        assert(Thread.holdsLock(this));
-        return mCurrentChange.highestModContentIndexed;
-    }
-
     void addIndexItemToCurrentChange(IndexItemEntry item) {
         assert(mCurrentChange.isActive());
         assert(Thread.holdsLock(this));
         mCurrentChange.addIndexItem(item);
     }
 
-    void addIndexDeleteToCurrentChange(int id) {
+    void addIndexDeleteToCurrentChange(Collection<Integer> ids) {
         assert(mCurrentChange.isActive());
         assert(Thread.holdsLock(this));
-        mCurrentChange.indexItemsToDelete.add(id);
+        mCurrentChange.indexDeleteIds.addAll(ids);
     }
 
     /**
@@ -7165,14 +7099,14 @@ public class Mailbox {
 
         if (success) {
             List<IndexItemEntry> indexItems = mCurrentChange.indexItems;
-            if ((!indexItems.isEmpty() || !mCurrentChange.indexItemsToDelete.isEmpty())) {
-                // See bug 15072 - we need to clear mCurrentChange.indexItems (it is stored in a temporary) here, just
-                // in case item.reindex() recurses into a new transaction...
+            if ((!indexItems.isEmpty() || !mCurrentChange.indexDeleteIds.isEmpty())) {
+                //TODO: See bug 15072 - we need to clear mCurrentChange.indexItems (it is stored in a temporary) here,
+                // just in case item.reindex() recurses into a new transaction...
                 mCurrentChange.indexItems = new ArrayList<IndexItemEntry>();
-                index.update(indexItems, mCurrentChange.indexItemsToDelete);
+                index.update(indexItems, mCurrentChange.indexDeleteIds);
             }
 
-            // update mailbox size, folder unread/message counts, deferred index count
+            // update mailbox size, folder unread/message counts
             try {
                 snapshotCounts();
             } catch (ServiceException e) {
@@ -7403,24 +7337,15 @@ public class Mailbox {
                     mData.configKeys.add(change.config.getFirst());
                 }
             }
-            if (change.idxDeferred != MailboxChange.NO_CHANGE)
-                mData.idxDeferredCount = change.idxDeferred;
-            if (change.highestModContentIndexed != null)
-                mData.highestModContentIndexed = change.highestModContentIndexed;
-
             PendingDelete deletes = mCurrentChange.deletes;
             if (deletes != null) {
                 if (!deletes.indexIds.isEmpty()) {
                     // delete any index entries associated with items deleted from db
                     try {
-                        index.getMailboxIndex().beginWrite();
-                        try {
-                            index.getMailboxIndex().deleteDocuments(deletes.indexIds);
-                        } finally {
-                            index.getMailboxIndex().endWrite();
-                        }
-                    } catch (IOException e) {
-                        ZimbraLog.indexing.warn("Failed to delete index: %s", deletes.itemIds, e);
+                        index.update(Collections.<IndexItemEntry>emptyList(), deletes.indexIds);
+                        index.removeDeferredId(deletes.indexIds);
+                    } catch (ServiceException never) {
+                        assert false : never;
                     }
                 }
 

@@ -460,7 +460,7 @@ public class Conversation extends MailItem {
 
         List<Integer> markedRead = new ArrayList<Integer>();
         List<Message> moved = new ArrayList<Message>();
-        List<Message> indexUpdated = new ArrayList<Message>();
+        List<MailItem> indexUpdated = new ArrayList<MailItem>();
 
         for (Message msg : msgs) {
             Folder source = msg.getFolder();
@@ -536,7 +536,7 @@ public class Conversation extends MailItem {
 
             if (!indexUpdated.isEmpty()) {
                 DbMailItem.setIndexIds(mMailbox, indexUpdated);
-                for (Message msg : indexUpdated) {
+                for (MailItem msg : indexUpdated) {
                     mMailbox.queueForIndexing(msg, false, null);
                 }
             }

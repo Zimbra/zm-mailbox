@@ -93,7 +93,7 @@ public class IndexEditor {
             mLog.info("Mailbox "+ids[i]+"\n");
             try {
                 Mailbox mbx = mmgr.getMailboxById(ids[i]);
-                mbx.index.reIndexInBackgroundThread(null, null, null, false);
+                mbx.index.startReIndex(null);
             } catch (ServiceException e) {
                 mLog.info("Exception ReIndexing " + ids[i], e);
             }
@@ -103,7 +103,7 @@ public class IndexEditor {
     public void reIndex(int mailboxId) {
         try {
             Mailbox mbx = MailboxManager.getInstance().getMailboxById(mailboxId);
-            mbx.index.reIndexInBackgroundThread(null, null, null, false);
+            mbx.index.startReIndex(null);
         } catch(Exception e) {
             outputStream.println("Re-index FAILED with " + ExceptionToString.ToString(e));
         }

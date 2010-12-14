@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Splitter;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -32,12 +33,16 @@ import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.index.MailboxIndex;
+import com.zimbra.cs.mailbox.IndexHelper;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * Admin operation handler for {@code reIndexMailbox(rim)}.
+ *
+ * @author tim
+ * @author ysasaki
  */
 public final class ReIndex extends AdminDocumentHandler {
 
@@ -107,60 +112,60 @@ public final class ReIndex extends AdminDocumentHandler {
             if (mbox.index.isReIndexInProgress()) {
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_RUNNING);
             } else {
-                Set<Byte> types = null;
                 String typesStr = mreq.getAttribute(MailConstants.A_SEARCH_TYPES, null);
-                if (typesStr != null) {
-                    types = MailboxIndex.parseTypes(typesStr);
+                String idsStr = mreq.getAttribute(MailConstants.A_IDS, null);
+
+                if (typesStr != null && idsStr != null) {
+                    ServiceException.INVALID_REQUEST("Can't specify both 'types' and 'ids'", null);
                 }
 
-                Set<Integer> itemIds = null;
-                String idsStr = mreq.getAttribute(MailConstants.A_IDS, null);
-                if (idsStr != null) {
-                    itemIds = new HashSet<Integer>();
-                    String targets[] = idsStr.split(",");
-                    for (String target : targets) {
-                        itemIds.add(Integer.parseInt(target));
+                if (typesStr != null) {
+                    Set<Byte> types = MailboxIndex.parseTypes(typesStr);
+                    mbox.index.startReIndexByType(getOperationContext(zsc, context), types);
+                } else if (idsStr != null) {
+                    Set<Integer> ids = new HashSet<Integer>();
+                    for (String id : Splitter.on(',').trimResults().split(idsStr)) {
+                        try {
+                            ids.add(Integer.parseInt(id));
+                        } catch (NumberFormatException e) {
+                            ServiceException.INVALID_REQUEST("invalid item ID: " + id, e);
+                        }
                     }
+                    mbox.index.startReIndexById(getOperationContext(zsc, context), ids);
+                } else {
+                    mbox.index.startReIndex(getOperationContext(zsc, context));
                 }
-                mbox.index.reIndexInBackgroundThread(getOperationContext(zsc, context), types, itemIds, false);
+
                 response.addAttribute(AdminConstants.A_STATUS, STATUS_STARTED);
             }
         } else if (ACTION_STATUS.equalsIgnoreCase(action)) {
-            synchronized (mbox) {
-                if (mbox.index.isReIndexInProgress()) {
-                    Mailbox.BatchedIndexStatus status = mbox.index.getReIndexStatus();
-                    addProgressInfo(response, status);
-                    response.addAttribute(AdminConstants.A_STATUS, STATUS_RUNNING);
-                } else {
-                    response.addAttribute(AdminConstants.A_STATUS, STATUS_IDLE);
-                }
+            IndexHelper.ReIndexStatus status = mbox.index.getReIndexStatus();
+            if (status != null) {
+                addProgressInfo(response, status);
+                response.addAttribute(AdminConstants.A_STATUS, STATUS_RUNNING);
+            } else {
+                response.addAttribute(AdminConstants.A_STATUS, STATUS_IDLE);
             }
         } else if (ACTION_CANCEL.equalsIgnoreCase(action)) {
-            synchronized (mbox) {
-                if (mbox.index.isReIndexInProgress()) {
-                    Mailbox.BatchedIndexStatus status = mbox.index.getReIndexStatus();
-                    status.mCancel = true;
-                    response.addAttribute(AdminConstants.A_STATUS, STATUS_CANCELLED);
-                    addProgressInfo(response, status);
-                } else {
-                    response.addAttribute(AdminConstants.A_STATUS, STATUS_IDLE);
-                }
+            IndexHelper.ReIndexStatus status = mbox.index.cancelReIndex();
+            if (status != null) {
+                response.addAttribute(AdminConstants.A_STATUS, STATUS_CANCELLED);
+                addProgressInfo(response, status);
+            } else {
+                response.addAttribute(AdminConstants.A_STATUS, STATUS_IDLE);
             }
         } else {
-            throw ServiceException.INVALID_REQUEST(
-                    "Unknown action: " + action, null);
+            throw ServiceException.INVALID_REQUEST("Unknown action: " + action, null);
         }
 
         return response;
     }
 
-    private void addProgressInfo(Element response, Mailbox.BatchedIndexStatus status) {
+    private void addProgressInfo(Element response, IndexHelper.ReIndexStatus status) {
         Element prog = response.addElement(AdminConstants.E_PROGRESS);
-        prog.addAttribute(AdminConstants.A_NUM_SUCCEEDED,
-                status.mNumProcessed - status.mNumFailed);
-        prog.addAttribute(AdminConstants.A_NUM_FAILED, status.mNumFailed);
-        prog.addAttribute(AdminConstants.A_NUM_REMAINING,
-                status.mNumToProcess - status.mNumProcessed);
+        prog.addAttribute(AdminConstants.A_NUM_SUCCEEDED, status.getProcessed() - status.getFailed());
+        prog.addAttribute(AdminConstants.A_NUM_FAILED, status.getFailed());
+        prog.addAttribute(AdminConstants.A_NUM_REMAINING, status.getTotal() - status.getProcessed());
     }
 
     @Override

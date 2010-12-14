@@ -127,23 +127,19 @@ public abstract class Formatter {
         assert(context.target != null);
         String query = context.getQueryString();
         if (query != null) {
-            try {
-                if (context.target instanceof Folder) {
-                    Folder f = (Folder) context.target;
-                    if (f.getId() != Mailbox.ID_FOLDER_USER_ROOT)
-                        query = "in:" + f.getPath() + " " + query;
-                }
-                String searchTypes = context.getTypesString();
-                if (searchTypes == null) {
-                    searchTypes = getDefaultSearchTypes();
-                }
-                Set<Byte> types = MailboxIndex.parseTypes(searchTypes);
-                ZimbraQueryResults results = context.targetMailbox.index.search(context.opContext, query, types,
-                        SortBy.DATE_DESCENDING, context.getOffset() + context.getLimit());
-                return new QueryResultIterator(results);
-            } catch (IOException e) {
-                throw ServiceException.FAILURE("search error", e);
+            if (context.target instanceof Folder) {
+                Folder f = (Folder) context.target;
+                if (f.getId() != Mailbox.ID_FOLDER_USER_ROOT)
+                    query = "in:" + f.getPath() + " " + query;
             }
+            String searchTypes = context.getTypesString();
+            if (searchTypes == null) {
+                searchTypes = getDefaultSearchTypes();
+            }
+            Set<Byte> types = MailboxIndex.parseTypes(searchTypes);
+            ZimbraQueryResults results = context.targetMailbox.index.search(context.opContext, query, types,
+                    SortBy.DATE_DESCENDING, context.getOffset() + context.getLimit());
+            return new QueryResultIterator(results);
         } else if (context.target instanceof Folder) {
             Collection<? extends MailItem> items = getMailItemsFromFolder(context, (Folder) context.target, startTime, endTime, chunkSize);
             return items != null ? items.iterator() : null;

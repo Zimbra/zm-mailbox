@@ -406,7 +406,7 @@ public class MailSender {
             if (size == -1) {
                 size = (int) ByteUtil.getDataLength(Mime.getInputStream(mm));
             }
-            
+
             if (size > maxSize) {
                 throw MailServiceException.MESSAGE_TOO_BIG(maxSize, size);
             }
@@ -951,9 +951,6 @@ public class MailSender {
                 }
             }
         } catch (ServiceException e) {
-            ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
-            newContacts.clear();
-        } catch (IOException e) {
             ZimbraLog.smtp.warn("ignoring error while auto-adding contact", e);
             newContacts.clear();
         }

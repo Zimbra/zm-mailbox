@@ -34,9 +34,7 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.SortBy.SortDirection;
 import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.cs.mailbox.IndexHelper;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.store.file.Volume;
@@ -67,37 +65,16 @@ public final class MailboxIndex {
             mAnalyzer = ZimbraAnalyzer.getInstance();
         }
 
-        ZimbraLog.index.info("Initialized Index for mailbox " + mMailboxId +
-                " directory: " + luceneIndex + " Analyzer=" + mAnalyzer);
+        ZimbraLog.index.info("index opened mid=%d,dir=%s,analyzer=%s", mMailboxId, luceneIndex, mAnalyzer);
     }
 
-    /**
-     * Primary search API.
-     *
-     * @param proto
-     * @param octxt
-     * @param mbox
-     * @param params
-     * @param textIndexOutOfSync if set, then this API will throw {@link MailServiceException.TEXT_INDEX_OUT_OF_SYNC} if and only if the search
-     *        contains a text part.  Searches without a text part can be run even if the text index is behind.
-     * @return
-     * @throws IOException
-     * @throws ServiceException
-     */
-    public static ZimbraQueryResults search(SoapProtocol proto,
-            OperationContext octxt, Mailbox mbox, SearchParams params,
-            boolean textIndexOutOfSync) throws IOException, ServiceException {
 
-        if (ZimbraLog.index_search.isDebugEnabled()) {
-            ZimbraLog.index_search.debug("SearchRequest: " + params.getQueryStr());
-        }
-
+    public static ZimbraQuery compileQuery(SoapProtocol proto, OperationContext octx, Mailbox mbox,
+            SearchParams params) throws ServiceException {
         String qs = params.getQueryStr();
 
-        //
         // calendar expansions
-        //
-        if ((params.getCalItemExpandStart() > 0) || (params.getCalItemExpandEnd() > 0)) {
+        if (params.getCalItemExpandStart() > 0 || params.getCalItemExpandEnd() > 0) {
             StringBuilder toAdd = new StringBuilder();
             toAdd.append('(').append(qs).append(')');
             if (params.getCalItemExpandStart() > 0) {
@@ -109,6 +86,14 @@ public final class MailboxIndex {
             qs = toAdd.toString();
             params.setQueryStr(qs);
         }
+
+        return new ZimbraQuery(octx, proto, mbox, params);
+    }
+
+    public static ZimbraQueryResults search(ZimbraQuery zq) throws ServiceException {
+        SearchParams params = zq.getParams();
+        String qs = params.getQueryStr();
+        ZimbraLog.index_search.debug("query: %s",  qs);
 
         // handle special-case Task-only sorts: convert them to a "normal sort"
         //     and then re-sort them at the end
@@ -148,21 +133,16 @@ public final class MailboxIndex {
             case NAME_LOCALIZED_ASCENDING:
             case NAME_LOCALIZED_DESCENDING:
                 isLocalizedSort = true;
-        }
-
-        ZimbraQuery zq = new ZimbraQuery(octxt, proto, mbox, params);
-
-        if (zq.countSearchTextOperations() > 0 && textIndexOutOfSync) {
-            throw MailServiceException.TEXT_INDEX_OUT_OF_SYNC();
+                break;
         }
 
         if (ZimbraLog.searchstats.isDebugEnabled()) {
-            int textCount = zq.countSearchTextOperations();
+            int textCount = zq.countTextOperations();
             ZimbraLog.searchstats.debug("Executing search with [" + textCount + "] text parts");
         }
 
         try {
-            ZimbraQueryResults results = zq.execute(/*octxt, proto*/);
+            ZimbraQueryResults results = zq.execute();
 
             if (isTaskSort) {
                 results = new ReSortingQueryResults(results, originalSort, null);
@@ -195,23 +175,6 @@ public final class MailboxIndex {
      */
     public long getBytesRead() {
         return luceneIndex.getBytesRead();
-    }
-
-    /**
-     * This API should **ONLY** be used by the {@link IndexHelper} API. Don't
-     * call this API directly.
-     */
-    public int getBatchedIndexingCount() {
-        try {
-            return mailbox.getAccount().getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 0);
-        } catch (ServiceException e) {
-            ZimbraLog.index.debug("Eating ServiceException trying to lookup BatchedIndexSize", e);
-        }
-        return 0;
-    }
-
-    public boolean useBatchedIndexing() throws ServiceException {
-        return mailbox.getAccount().getIntAttr(Provisioning.A_zimbraBatchedIndexingSize, 0) > 0;
     }
 
     /**
@@ -248,7 +211,7 @@ public final class MailboxIndex {
         luceneIndex.beginWrite();
     }
 
-    public void endWrite() {
+    public void endWrite() throws IOException {
         luceneIndex.endWrite();
     }
 
@@ -426,28 +389,19 @@ public final class MailboxIndex {
         luceneIndex.deleteIndex();
     }
 
-    /**
-     * @param modContent passed-in, can't use the one from the MailItem because
-     *  it could potentially change underneath us and we need to guarantee that
-     *  we're submitting to the index in strict mod-content-order. Note that a
-     *  modContent of -1 means that this is an out-of-sequence index add (IE a
-     *  reindex of specific items or types).  Out-of-index adds SHOULD NOT BE
-     *  TRACKED -- do not call indexingCompleted for them.
-     */
-    public void indexMailItem(Mailbox mbox, boolean deleteFirst, List<IndexDocument> docList, MailItem mi,
-            int modContent) throws ServiceException {
+    public void indexMailItem(Mailbox mbox, boolean deleteFirst, List<IndexDocument> docs, MailItem item)
+            throws ServiceException {
+
+        if (docs == null || docs.isEmpty()) {
+            return;
+        }
 
         initAnalyzer(mbox);
-        synchronized(getLock()) {
-            if (docList != null) {
-                IndexDocument[] docs = new IndexDocument[docList.size()];
-                docs = docList.toArray(docs);
-                try {
-                    luceneIndex.addDocument(docs, mi.getId(), mi.getIndexId(), modContent, mi.getDate(), mi.getSize(),
-                            mi.getSortSubject(), mi.getSortSender(), deleteFirst);
-                } catch (IOException e) {
-                    throw ServiceException.FAILURE("Failed to index", e);
-                }
+        synchronized (mailbox) {
+            try {
+                luceneIndex.addDocument(item, docs, deleteFirst);
+            } catch (IOException e) {
+                throw ServiceException.FAILURE("Failed to index id=" + item.getId(), e);
             }
         }
     }

@@ -469,8 +469,9 @@ public class Message extends MailItem {
         if (conv != null)
             data.parentId = conv.getId();
         data.folderId    = folder.getId();
-        if (!folder.inSpam() || acct.getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
-            data.indexId = id;
+        if (!folder.inSpam() || acct.getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
+            data.indexId = 0;
+        }
         data.locator     = staged.getLocator();
         data.imapId      = id;
         data.date        = (int) (date / 1000);

@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -151,7 +150,6 @@ public class AddressBookTest extends AbstractTest {
                                 mLog.debug("found " + iaddrStr + " in contacts");
                                 return true;
                             }
-                        } catch (IOException e) {
                         } catch (ServiceException e) {
                         } finally {
                             if (results != null) {

@@ -65,13 +65,13 @@ import com.zimbra.common.soap.SoapProtocol;
  */
 public final class ZimbraQuery {
 
-    private List<Query> mClauses;
-    private ParseTree.Node mParseTree = null;
-    private QueryOperation mOp;
-    private Mailbox mMbox;
-    private ZimbraQueryResults mResults;
-    private SearchParams mParams;
-    private int mChunkSize;
+    private List<Query> clauses;
+    private ParseTree.Node parseTree;
+    private QueryOperation operation;
+    private final Mailbox mailbox;
+    private ZimbraQueryResults results;
+    private final SearchParams params;
+    private int chunkSize;
 
     /**
      * ParseTree's job is to take the LIST of query terms (BaseQuery's) and build them
@@ -84,8 +84,6 @@ public final class ZimbraQuery {
     private static class ParseTree {
         private static final int STATE_AND = 1;
         private static final int STATE_OR = 2;
-
-        private static final boolean SPEW = false;
 
         static abstract class Node {
             boolean mTruthFlag = true;
@@ -215,8 +213,6 @@ public final class ZimbraQuery {
             QueryOperation getQueryOperation() {
                 assert(mTruthFlag == true); // we should have pushed the NOT's down the tree already
                 if (mKind == STATE_AND) {
-                    if (ParseTree.SPEW) System.out.print(" AND(");
-
                     IntersectionQueryOperation intersect = new IntersectionQueryOperation();
 
                     for (Node n : mNodes) {
@@ -225,14 +221,8 @@ public final class ZimbraQuery {
                         intersect.addQueryOp(op);
                     }
 
-                    if (ParseTree.SPEW) {
-                        System.out.print(") ");
-                    }
                     return intersect;
                 } else {
-                    if (ParseTree.SPEW) {
-                        System.out.print(" OR(");
-                    }
 
                     UnionQueryOperation union = new UnionQueryOperation();
 
@@ -240,9 +230,6 @@ public final class ZimbraQuery {
                         QueryOperation op = n.getQueryOperation();
                         assert(op != null);
                         union.add(op);
-                    }
-                    if (ParseTree.SPEW) {
-                        System.out.print(") ");
                     }
                     return union;
                 }
@@ -313,23 +300,6 @@ public final class ZimbraQuery {
         }
     }
 
-    /**
-     * the query string can OPTIONALLY have a "sortby:" element which will override
-     * the sortBy specified in the <SearchRequest> xml...this is basically to allow
-     * people to do more with cut-and-pasted search strings
-     */
-    private SortBy mSortByOverride = null;
-
-    private void handleSortByOverride(String str) throws ServiceException {
-        SortBy sortBy = SortBy.lookup(str);
-        if (sortBy == null) {
-            throw ServiceException.FAILURE(
-                    "Unkown sortBy: specified in search string: " + str, null);
-        }
-
-        mSortByOverride = sortBy;
-    }
-
     private static final class CountTextOperations implements QueryOperation.RecurseCallback {
         int num = 0;
 
@@ -354,21 +324,21 @@ public final class ZimbraQuery {
     }
 
     /**
-     * @return number of Text parts of this query
+     * Returns the number of text parts of this query.
      */
-    int countSearchTextOperations() {
-        if (mOp == null) {
+    public int countTextOperations() {
+        if (operation == null) {
             return 0;
         }
         CountTextOperations count = new CountTextOperations();
-        mOp.depthFirstRecurse(count);
+        operation.depthFirstRecurse(count);
         return count.num;
     }
 
     /**
-     * @return number of Text parts of this query
+     * Returns number of text parts of this query.
      */
-    private static int countSearchTextOperations(QueryOperation op) {
+    private static int countTextOperations(QueryOperation op) {
         if (op == null) {
             return 0;
         }
@@ -381,11 +351,11 @@ public final class ZimbraQuery {
      * @return number of non-trivial (num sub-ops > 1) Combining operations (joins/unions)
      */
     int countNontrivialCombiningOperations() {
-        if (mOp == null) {
+        if (operation == null) {
             return 0;
         }
         CountCombiningOperations count =  new CountCombiningOperations();
-        mOp.depthFirstRecurse(count);
+        operation.depthFirstRecurse(count);
         return count.num;
     }
 
@@ -397,16 +367,16 @@ public final class ZimbraQuery {
      * @param params
      * @throws ServiceException
      */
-    public ZimbraQuery(OperationContext octxt, SoapProtocol proto,
-            Mailbox mbox, SearchParams params) throws ServiceException {
+    public ZimbraQuery(OperationContext octxt, SoapProtocol proto, Mailbox mbox, SearchParams params)
+            throws ServiceException {
 
-        mParams = params;
-        mMbox = mbox;
-        long chunkSize = (long) mParams.getOffset() + (long) mParams.getLimit();
+        this.params = params;
+        this.mailbox = mbox;
+        long chunkSize = (long) params.getOffset() + (long) params.getLimit();
         if (chunkSize > 1000) {
-            mChunkSize = 1000;
+            chunkSize = 1000;
         } else {
-            mChunkSize = (int)chunkSize;
+            chunkSize = (int) chunkSize;
         }
 
         Analyzer analyzer = null;
@@ -425,11 +395,15 @@ public final class ZimbraQuery {
             parser.setTypes(params.getTypes());
             parser.setTimeZone(params.getTimeZone());
             parser.setLocale(params.getLocale());
-            mClauses = parser.parse(params.getQueryStr());
+            clauses = parser.parse(params.getQueryStr());
 
-            String sortBy = parser.getSortBy();
-            if (sortBy != null) {
-                handleSortByOverride(sortBy);
+            String sortByStr = parser.getSortBy();
+            if (sortByStr != null) {
+                SortBy sortBy = SortBy.lookup(sortByStr);
+                if (sortBy == null) {
+                    throw ServiceException.PARSE_ERROR("INVALID_SORTBY: " + sortByStr, null);
+                }
+                params.setSortBy(sortBy);
             }
         } catch (Error e) {
             throw ServiceException.PARSE_ERROR("PARSER_ERROR", e);
@@ -438,89 +412,52 @@ public final class ZimbraQuery {
         if (ZimbraLog.index_search.isDebugEnabled()) {
             StringBuilder buf = new StringBuilder(toString());
             buf.append(" search([");
-            buf.append(mParams.getTypesStr());
+            buf.append(params.getTypesStr());
             buf.append("],");
-            buf.append(mParams.getSortBy());
+            buf.append(params.getSortBy());
             buf.append(')');
             ZimbraLog.index_search.debug(buf.toString());
         }
 
         // Step 2: build a parse tree and push all the "NOT's" down to the
         // bottom level -- this is because we cannot invert result sets
-        if (ParseTree.SPEW) {
-            System.out.println("QueryString: " + mParams.getQueryStr());
-        }
-        ParseTree.Node pt = ParseTree.build(mClauses);
-        if (ParseTree.SPEW) {
-            System.out.println("PT: " + pt.toString());
-        }
-        if (ParseTree.SPEW) {
-            System.out.println("Simplified:");
-        }
+        ParseTree.Node pt = ParseTree.build(clauses);
         pt = pt.simplify();
-        if (ParseTree.SPEW) {
-            System.out.println("PT: " + pt.toString());
-        }
-        if (ParseTree.SPEW) {
-            System.out.println("Pushing nots down:");
-        }
         pt.pushNotsDown();
-        if (ParseTree.SPEW) {
-            System.out.println("PT: " + pt.toString());
-        }
 
         // Store some variables that we'll need later
-        mParseTree = pt;
-        mOp = null;
-
-        // handle the special "sort:" tag in the search string
-        if (mSortByOverride != null) {
-            if (ZimbraLog.index_search.isDebugEnabled())
-                ZimbraLog.index_search.debug(
-                        "Overriding SortBy parameter to execute (" +
-                        params.getSortBy().toString() +
-                        ") w/ specification from QueryString: " +
-                        mSortByOverride.toString());
-
-            params.setSortBy(mSortByOverride);
-        }
+        parseTree = pt;
 
         // Step 3: Convert list of BaseQueries into list of QueryOperations, then Optimize the Ops
-        if (mClauses.size() > 0) {
+        if (clauses.size() > 0) {
             // this generates all of the query operations
-            mOp = mParseTree.getQueryOperation();
+            operation = parseTree.getQueryOperation();
 
-            if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("OP=%s", mOp);
-            }
+            ZimbraLog.index_search.debug("OP=%s", operation);
 
             // expand the is:local and is:remote parts into in:(LIST)'s
-            mOp = mOp.expandLocalRemotePart(mbox);
-            if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("AFTEREXP=%s", mOp);
-            }
+            operation = operation.expandLocalRemotePart(mbox);
+            ZimbraLog.index_search.debug("AFTEREXP=%s", operation);
 
             // optimize the query down
-            mOp = mOp.optimize(mMbox);
-            if (mOp == null)
-                mOp = new NoResultsQueryOperation();
-            if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("OPTIMIZED=%s", mOp);
+            operation = operation.optimize(mailbox);
+            if (operation == null) {
+                operation = new NoResultsQueryOperation();
             }
+            ZimbraLog.index_search.debug("OPTIMIZED=%s", operation);
         }
 
         // STEP 4: use the OperationContext to update the set of visible referenced folders, local AND remote
-        if (mOp != null) {
-            QueryTargetSet queryTargets = mOp.getQueryTargets();
-            assert(mOp instanceof UnionQueryOperation ||
-                    queryTargets.countExplicitTargets() <= 1);
+        if (operation != null) {
+            QueryTargetSet queryTargets = operation.getQueryTargets();
+            assert(operation instanceof UnionQueryOperation || queryTargets.countExplicitTargets() <= 1);
 
             // easiest to treat the query two unions: one the LOCAL and one REMOTE parts
             UnionQueryOperation remoteOps = new UnionQueryOperation();
             UnionQueryOperation localOps = new UnionQueryOperation();
 
-            if (mOp instanceof UnionQueryOperation) {
-                UnionQueryOperation union = (UnionQueryOperation) mOp;
+            if (operation instanceof UnionQueryOperation) {
+                UnionQueryOperation union = (UnionQueryOperation) operation;
                 // separate out the LOCAL vs REMOTE parts...
                 for (QueryOperation op : union.mQueryOperations) {
                     QueryTargetSet targets = op.getQueryTargets();
@@ -541,15 +478,15 @@ public final class ZimbraQuery {
             } else {
                 // single target: might be local, might be remote
 
-                QueryTargetSet targets = mOp.getQueryTargets();
+                QueryTargetSet targets = operation.getQueryTargets();
                 // this assertion OK because we have already distributed multi-target query ops
                 // during the optimize() step
                 assert(targets.countExplicitTargets() <= 1);
 
                 if (targets.hasExternalTargets()) {
-                    remoteOps.add(mOp);
+                    remoteOps.add(operation);
                 } else {
-                    localOps.add(mOp);
+                    localOps.add(operation);
                 }
             }
 
@@ -604,13 +541,9 @@ public final class ZimbraQuery {
                 }
             }
 
-            //
             // For the LOCAL parts of the query, do permission checks, do trash/spam exclusion
-            //
             if (!localOps.mQueryOperations.isEmpty()) {
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    ZimbraLog.index_search.debug("LOCAL_IN=" + localOps.toString());
-                }
+                ZimbraLog.index_search.debug("LOCAL_IN=%s", localOps);
 
                 Account authAcct = null;
                 if (octxt != null) {
@@ -619,9 +552,7 @@ public final class ZimbraQuery {
                     authAcct = mbox.getAccount();
                 }
 
-                //
                 // Now, for all the LOCAL PARTS of the query, add the trash/spam exclusion part
-                //
                 boolean includeTrash = false;
                 boolean includeSpam = false;
                 if (authAcct != null) {
@@ -671,7 +602,7 @@ public final class ZimbraQuery {
                 Set<Byte> types = params.getTypes();
                 boolean hasCalendarType =
                     types.contains(MailItem.TYPE_APPOINTMENT) || types.contains(MailItem.TYPE_TASK);
-                if (hasCalendarType && !allowPrivateAccess && countSearchTextOperations(localOps)>0) {
+                if (hasCalendarType && !allowPrivateAccess && countTextOperations(localOps) > 0) {
                     // the searcher is NOT allowed to see private items globally....lets check
                     // to see if there are any individual folders that they DO have rights to...
                     // if there are any, then we'll need to run special searches in those
@@ -697,44 +628,32 @@ public final class ZimbraQuery {
                 localOps = handleLocalPermissionChecks(localOps, visibleFolders,
                         allowPrivateAccess);
 
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    ZimbraLog.index_search.debug("LOCAL_AFTER_PERM_CHECKS=%s", localOps);
-                }
+                ZimbraLog.index_search.debug("LOCAL_AFTER_PERM_CHECKS=%s", localOps);
 
                 if (!hasFolderRightPrivateSet.isEmpty()) {
-                    if (ZimbraLog.index_search.isDebugEnabled()) {
-                        ZimbraLog.index_search.debug("CLONED_LOCAL_BEFORE_PERM=%s", clonedLocal);
-                    }
+                    ZimbraLog.index_search.debug("CLONED_LOCAL_BEFORE_PERM=%s", clonedLocal);
 
-                    //
                     // now we're going to setup the clonedLocal tree
                     // to run with private access ALLOWED, over the set of folders
                     // that have RIGHT_PRIVATE (note that we build this list from the visible
                     // folder list, so we are
-                    //
                     clonedLocal = handleLocalPermissionChecks(
                             clonedLocal, hasFolderRightPrivateSet, true);
 
-                    if (ZimbraLog.index_search.isDebugEnabled()) {
-                        ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_PERM=%s", clonedLocal);
-                    }
+                    ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_PERM=%s", clonedLocal);
 
                     // clonedLocal should only have the single INTERSECT in it
                     assert(clonedLocal.mQueryOperations.size() == 1);
 
                     QueryOperation optimizedClonedLocal = clonedLocal.optimize(mbox);
-                    if (ZimbraLog.index_search.isDebugEnabled()) {
-                        ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_OPTIMIZE=%s", optimizedClonedLocal);
-                    }
+                    ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_OPTIMIZE=%s", optimizedClonedLocal);
 
                     UnionQueryOperation withPrivateExcluded = localOps;
                     localOps = new UnionQueryOperation();
                     localOps.add(withPrivateExcluded);
                     localOps.add(optimizedClonedLocal);
 
-                    if (ZimbraLog.index_search.isDebugEnabled()) {
-                        ZimbraLog.index_search.debug("LOCAL_WITH_CLONED=%s", localOps);
-                    }
+                    ZimbraLog.index_search.debug("LOCAL_WITH_CLONED=%s", localOps);
 
                     //
                     // we should end up with:
@@ -757,20 +676,23 @@ public final class ZimbraQuery {
             if (ZimbraLog.index_search.isDebugEnabled()) {
                 ZimbraLog.index_search.debug("BEFORE_FINAL_OPT=%s", union);
             }
-            mOp = union.optimize(mbox);
+            operation = union.optimize(mbox);
             assert(union.mQueryOperations.size() > 0);
         }
-        if (ZimbraLog.index_search.isDebugEnabled()) {
-            ZimbraLog.index_search.debug("END_ZIMBRAQUERY_CONSTRUCTOR=%s", mOp);
-        }
+        ZimbraLog.index_search.debug("END_ZIMBRAQUERY_CONSTRUCTOR=%s", operation);
+    }
+
+    SearchParams getParams() {
+        return params;
     }
 
     public void doneWithQuery() throws ServiceException {
-        if (mResults != null)
-            mResults.doneWithSearchResults();
-
-        if (mOp != null)
-            mOp.doneWithSearchResults();
+        if (results != null) {
+            results.doneWithSearchResults();
+        }
+        if (operation != null) {
+            operation.doneWithSearchResults();
+        }
     }
 
     /**
@@ -785,36 +707,35 @@ public final class ZimbraQuery {
      */
     final public ZimbraQueryResults execute() throws ServiceException {
 
-        if (mOp != null) {
-            QueryTargetSet targets = mOp.getQueryTargets();
-            assert(mOp instanceof UnionQueryOperation || targets.countExplicitTargets() <=1);
-            assert(targets.size() >1 || !targets.hasExternalTargets() || mOp instanceof RemoteQueryOperation);
+        if (operation != null) {
+            QueryTargetSet targets = operation.getQueryTargets();
+            assert(operation instanceof UnionQueryOperation || targets.countExplicitTargets() <= 1);
+            assert(targets.size() >1 || !targets.hasExternalTargets() || operation instanceof RemoteQueryOperation);
+            assert(results == null);
 
-            if (ZimbraLog.index_search.isDebugEnabled())
-                ZimbraLog.index_search.debug("OPERATION:"+mOp.toString());
+            ZimbraLog.index_search.debug("OPERATION: %s", operation);
 
-            assert(mResults == null);
+            results = operation.run(mailbox, params, chunkSize);
+            results = HitIdGrouper.Create(results, params.getSortBy());
 
-            mResults = mOp.run(mMbox, mParams, mChunkSize);
-
-            mResults = HitIdGrouper.Create(mResults, mParams.getSortBy());
-
-            if ((!mParams.getIncludeTagDeleted() && mParams.getMode() != SearchResultMode.IDS)
-                            || mParams.getAllowableTaskStatuses()!=null) {
+            if ((!params.getIncludeTagDeleted() && params.getMode() != SearchResultMode.IDS)
+                    || params.getAllowableTaskStatuses()!=null) {
                 // we have to do some filtering of the result set
-                FilteredQueryResults filtered = new FilteredQueryResults(mResults);
+                FilteredQueryResults filtered = new FilteredQueryResults(results);
 
-                if (!mParams.getIncludeTagDeleted())
+                if (!params.getIncludeTagDeleted()) {
                     filtered.setFilterTagDeleted(true);
-                if (mParams.getAllowableTaskStatuses()!=null)
-                    filtered.setAllowedTaskStatuses(mParams.getAllowableTaskStatuses());
-                mResults = filtered;
+                }
+                if (params.getAllowableTaskStatuses() != null) {
+                    filtered.setAllowedTaskStatuses(params.getAllowableTaskStatuses());
+                }
+                results = filtered;
             }
 
-            return mResults;
+            return results;
         } else {
             ZimbraLog.index_search.debug("Operation optimized to nothing.  Returning no results");
-            return new EmptyQueryResults(mParams.getTypes(), mParams.getSortBy(), mParams.getMode());
+            return new EmptyQueryResults(params.getTypes(), params.getSortBy(), params.getMode());
         }
     }
 
@@ -894,17 +815,17 @@ public final class ZimbraQuery {
     @Override
     public String toString() {
         StringBuilder out = new StringBuilder("ZQ: ");
-        for (Query clause : mClauses) {
+        for (Query clause : clauses) {
             clause.toString(out);
         }
         return out.toString();
     }
 
     public String toQueryString() {
-        if (mOp == null) {
+        if (operation == null) {
             return "";
         } else {
-            return mOp.toQueryString();
+            return operation.toQueryString();
         }
     }
 

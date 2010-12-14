@@ -172,8 +172,9 @@ public class Document extends MailItem {
         data.id          = id;
         data.type        = type;
         data.folderId    = folder.getId();
-        if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
-            data.indexId = id;
+        if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
+            data.indexId = 0;
+        }
         data.imapId      = id;
         data.date        = (int) (pd.getCreatedDate() / 1000L);
         data.size        = pd.getSize();

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,12 +33,13 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetAllMailboxes extends AdminDocumentHandler {
 
     private static final String GET_ALL_MAILBOXES_CACHE_KEY = "GetAllMailboxes";
-    
+
     public static final String SORT_TOTAL_USED = "totalUsed";
-    
+
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        
+
         // allow only system admin for now
         checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
 
@@ -46,7 +47,7 @@ public class GetAllMailboxes extends AdminDocumentHandler {
         if (limit == 0)
             limit = Integer.MAX_VALUE;
         int offset = (int) request.getAttributeLong(AdminConstants.A_OFFSET, 0);
-        
+
         /* sorting not supported for now
         String sortBy = request.getAttribute(AdminConstants.A_SORT_BY, SORT_TOTAL_USED);
         final boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, false);
@@ -54,10 +55,10 @@ public class GetAllMailboxes extends AdminDocumentHandler {
         if (!sortBy.equals(SORT_TOTAL_USED))
             throw ServiceException.INVALID_REQUEST("sortBy must be " +  SORT_TOTAL_USED, null);
         */
-        
+
         MailboxesParams params = new MailboxesParams();
         List<Mailbox.MailboxData> mailboxes;
-        
+
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         if (session != null) {
             MailboxesParams cachedParams = (MailboxesParams) session.getData(GET_ALL_MAILBOXES_CACHE_KEY);
@@ -75,7 +76,7 @@ public class GetAllMailboxes extends AdminDocumentHandler {
         int i, limitMax = offset + limit;
         for (i = offset; i < limitMax && i < mailboxes.size(); i++) {
             Mailbox.MailboxData mailbox = mailboxes.get(i);
-            
+
             Element mbx = response.addElement(AdminConstants.E_MAILBOX);
             mbx.addAttribute(AdminConstants.A_MT_ID, mailbox.id);
             mbx.addAttribute(AdminConstants.A_MT_GROUPID, mailbox.schemaGroupId);
@@ -92,24 +93,22 @@ public class GetAllMailboxes extends AdminDocumentHandler {
             // mbx.addAttribute(AdminConstants.A_MT_COMMENT, mailbox.comment);
             mbx.addAttribute(AdminConstants.A_MT_LASTSOAPACCESS, mailbox.lastWriteDate);
             mbx.addAttribute(AdminConstants.A_MT_NEWNESSAGES, mailbox.recentMessages);
-            mbx.addAttribute(AdminConstants.A_MT_IDXDEFERREDCOUNT, mailbox.idxDeferredCount);
-            mbx.addAttribute(AdminConstants.A_MI_HIGHEST_INDEXED, mailbox.highestModContentIndexed.toString());
         }
         response.addAttribute(AdminConstants.A_MORE, i < mailboxes.size());
         response.addAttribute(AdminConstants.A_SEARCH_TOTAL, mailboxes.size());
         return response;
     }
 
-    protected class MailboxesParams {    
+    protected class MailboxesParams {
         String mSortBy;
         boolean mSortAscending;
-        
+
         List<Mailbox.MailboxData> mResult;
-        
+
         // sorting now supported for now
         MailboxesParams() {
         }
-        
+
         // sorting not supported for now, keep this signature to reinstate sorting if needed
         /*
         MailboxesParams(String sortBy, boolean sortAscending) {
@@ -117,15 +116,16 @@ public class GetAllMailboxes extends AdminDocumentHandler {
             mSortAscending = sortAscending;
         }
         */
-        
+
+        @Override
         public boolean equals(Object o) {
             if (!(o instanceof MailboxesParams)) return false;
             if (o == this) return true;
-            
+
             return true;
             /*
-            MailboxesParams other = (MailboxesParams) o; 
-            return 
+            MailboxesParams other = (MailboxesParams) o;
+            return
                 mSortBy.equals(other.mSortBy) &&
                 mSortAscending == other.mSortAscending;
             */
@@ -133,7 +133,7 @@ public class GetAllMailboxes extends AdminDocumentHandler {
 
         List<Mailbox.MailboxData> doSearch() throws ServiceException {
             if (mResult != null) return mResult;
-            
+
             List <Mailbox.MailboxData> result = null;
             synchronized (DbMailbox.getSynchronizer()) {
                 Connection conn = null;

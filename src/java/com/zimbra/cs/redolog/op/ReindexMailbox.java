@@ -33,7 +33,7 @@ public class ReindexMailbox extends RedoableOp {
     private Set<Byte> mTypes = null;
     private Set<Integer> mItemIds = null;
     private int mCompletionId = 0;
-    private boolean mSkipDelete = false;
+    @Deprecated private boolean mSkipDelete = false;
 
     public ReindexMailbox() { }
 
@@ -59,7 +59,13 @@ public class ReindexMailbox extends RedoableOp {
     @Override
     public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mbox.index.reIndexInBackgroundThread(new OperationContext(this), mTypes, mItemIds, mSkipDelete);
+        if (mTypes != null) {
+            mbox.index.startReIndexByType(new OperationContext(this), mTypes);
+        } else if (mItemIds != null) {
+            mbox.index.startReIndexById(new OperationContext(this), mItemIds);
+        } else {
+            mbox.index.startReIndex(new OperationContext(this));
+        }
     }
 
     @Override

@@ -15,7 +15,6 @@
 
 package com.zimbra.cs.pop3;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -86,8 +85,6 @@ class Pop3Mailbox {
                         mMessages.add(new Pop3Message(msg));
                     }
                 }
-            } catch (IOException e) {
-                throw ServiceException.FAILURE(e.getMessage(), e);
             } finally {
                 if (results != null)
                     results.doneWithSearchResults();

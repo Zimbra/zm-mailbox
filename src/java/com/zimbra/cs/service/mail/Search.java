@@ -15,7 +15,6 @@
 
 package com.zimbra.cs.service.mail;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -128,13 +127,7 @@ public class Search extends MailDocumentHandler  {
     }
 
     protected ZimbraQueryResults doSearch(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox, SearchParams params) throws ServiceException {
-        ZimbraQueryResults results;
-        try {
-            results = mbox.index.search(zsc.getResponseProtocol(), octxt, params);
-        } catch (IOException e) {
-            throw ServiceException.FAILURE("IO error", e);
-        }
-        return results;
+        return mbox.index.search(zsc.getResponseProtocol(), octxt, params);
     }
 
     protected static void putInfo(Element response, SearchParams params, ZimbraQueryResults results) {

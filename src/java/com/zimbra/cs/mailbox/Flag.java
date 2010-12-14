@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Oct 15, 2004
  */
 package com.zimbra.cs.mailbox;
 
@@ -27,6 +23,9 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 
+/**
+ * @since Oct 15, 2004
+ */
 public class Flag extends Tag {
 
     public static final byte FLAG_GENERIC      = 0x01;
@@ -51,6 +50,8 @@ public class Flag extends Tag {
     public static final int ID_FLAG_HIGH_PRIORITY = -11;
     public static final int ID_FLAG_LOW_PRIORITY  = -12;
     public static final int ID_FLAG_VERSIONED     = -13;
+    /** @deprecated Use indexId = 0 */
+    @Deprecated
     public static final int ID_FLAG_INDEXING_DEFERRED = -14;
     public static final int ID_FLAG_SUBSCRIBED    = -20;
     public static final int ID_FLAG_EXCLUDE_FREEBUSY = -21;
@@ -60,7 +61,8 @@ public class Flag extends Tag {
     public static final int ID_FLAG_SYNCFOLDER    = -25;
     public static final int ID_FLAG_SYNC          = -26;
     public static final int ID_FLAG_NO_INFERIORS  = -27;
-    @Deprecated //support for ZD 1.x local data migration
+    /** @deprecated support for ZD 1.x local data migration */
+    @Deprecated
     public static final int ID_FLAG_ARCHIVED      = -28;
     public static final int ID_FLAG_GLOBAL        = -29;
     public static final int ID_FLAG_IN_DUMPSTER   = -30;
@@ -96,7 +98,6 @@ public class Flag extends Tag {
             new FlagInfo("\\SyncFolder",  'y',    FLAG_FOLDER_ONLY,  false, ID_FLAG_SYNCFOLDER);
             new FlagInfo("\\Sync",        '~',    FLAG_FOLDER_ONLY,  false, ID_FLAG_SYNC);
             new FlagInfo("\\Noinferiors", 'o',    FLAG_FOLDER_ONLY,  false, ID_FLAG_NO_INFERIORS);
-            //deprecated flag; needed to support ZD 1.x local data migration
             new FlagInfo("\\Archived",    '@',    FLAG_GENERIC,      true,  ID_FLAG_ARCHIVED);
             new FlagInfo("\\Global",      'g',    FLAG_FOLDER_ONLY,  true,  ID_FLAG_GLOBAL);
             new FlagInfo("\\InDumpster",  HIDDEN, FLAG_GENERIC,      true,  ID_FLAG_IN_DUMPSTER);
@@ -250,6 +251,8 @@ public class Flag extends Tag {
     public static final int BITMASK_HIGH_PRIORITY = FlagInfo.getBitmask(ID_FLAG_HIGH_PRIORITY); // 1024
     public static final int BITMASK_LOW_PRIORITY  = FlagInfo.getBitmask(ID_FLAG_LOW_PRIORITY);  // 2048
     public static final int BITMASK_VERSIONED     = FlagInfo.getBitmask(ID_FLAG_VERSIONED);     // 4096
+    /** @deprecated Use indexId = 0 */
+    @Deprecated
     public static final int BITMASK_INDEXING_DEFERRED = FlagInfo.getBitmask(ID_FLAG_INDEXING_DEFERRED); // 8192
     public static final int BITMASK_SUBSCRIBED    = FlagInfo.getBitmask(ID_FLAG_SUBSCRIBED);    // 524288
     public static final int BITMASK_EXCLUDE_FREEBUSY = FlagInfo.getBitmask(ID_FLAG_EXCLUDE_FREEBUSY); // 1048576
@@ -259,7 +262,8 @@ public class Flag extends Tag {
     public static final int BITMASK_SYNCFOLDER    = FlagInfo.getBitmask(ID_FLAG_SYNCFOLDER);    // 16777216
     public static final int BITMASK_SYNC          = FlagInfo.getBitmask(ID_FLAG_SYNC);          // 33554432
     public static final int BITMASK_NO_INFERIORS  = FlagInfo.getBitmask(ID_FLAG_NO_INFERIORS);  // 67108864
-    @Deprecated //support for ZD 1.x local data migration
+    /** @deprecated support for ZD 1.x local data migration */
+    @Deprecated
     public static final int BITMASK_ARCHIVED      = FlagInfo.getBitmask(ID_FLAG_ARCHIVED);      // 134217728
     public static final int BITMASK_GLOBAL        = FlagInfo.getBitmask(ID_FLAG_GLOBAL);        // 268435456
     public static final int BITMASK_IN_DUMPSTER   = FlagInfo.getBitmask(ID_FLAG_IN_DUMPSTER);   // 536870912
@@ -335,7 +339,7 @@ public class Flag extends Tag {
     public static String bitmaskToFlags(int bitmask) {
         return FlagInfo.bitmaskToFlags(bitmask);
     }
-    
+
     public static List<Integer> bitmaskToFlagIds(int bitmask) {
         return FlagInfo.bitmaskToFlagIds(bitmask);
     }
@@ -381,8 +385,8 @@ public class Flag extends Tag {
 
     @Override void decodeMetadata(Metadata meta)     { }
     @Override Metadata encodeMetadata(Metadata meta) { return meta; }
-    
-    
+
+
     public static void main(String[] args) {
         List<Integer> flagIds = bitmaskToFlagIds(FLAGS_MESSAGE);
         int bitmask = 0;

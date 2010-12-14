@@ -2949,11 +2949,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         params.setMode(resultMode);
         params.setTimeZone(tz);
 
-        try {
-            return mbox.index.search(SoapProtocol.Soap12, getContext(), params);
-        } catch (IOException ioe) {
-            throw ServiceException.FAILURE("error during proxied query: " + search, ioe);
-        }
+        return mbox.index.search(SoapProtocol.Soap12, getContext(), params);
     }
 
     boolean doTHREAD(String tag, ImapSearch i4search, boolean byUID) throws IOException, ImapParseException {

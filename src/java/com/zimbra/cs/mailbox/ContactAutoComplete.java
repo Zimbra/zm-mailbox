@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -640,8 +639,6 @@ public class ContactAutoComplete {
                     return;
                 }
             }
-        } catch (IOException e) {
-            throw ServiceException.FAILURE(e.getMessage(), e);
         } finally {
             if (qres != null) {
                 qres.doneWithSearchResults();

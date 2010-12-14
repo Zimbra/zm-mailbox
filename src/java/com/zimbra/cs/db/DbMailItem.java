@@ -13,9 +13,6 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on Aug 13, 2004
- */
 package com.zimbra.cs.db;
 
 import java.io.UnsupportedEncodingException;
@@ -43,6 +40,8 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.BCodec;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.SetMultimap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Log;
@@ -74,6 +73,9 @@ import com.zimbra.cs.pop3.Pop3Message;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 
+/**
+ * @since Aug 13, 2004
+ */
 public class DbMailItem {
 
     public static final String TABLE_MAIL_ITEM = "mail_item";
@@ -153,7 +155,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, data.parentId);
             }
             stmt.setInt(pos++, data.folderId);
-            if (data.indexId <= 0) {
+            if (data.indexId < 0) {
                 stmt.setNull(pos++, Types.INTEGER);
             } else {
                 stmt.setInt(pos++, data.indexId);
@@ -418,7 +420,7 @@ public class DbMailItem {
             int pos = 1;
             stmt.setInt(pos++, data.id);                       // ID
             stmt.setInt(pos++, data.folderId);                 // FOLDER_ID
-            if (data.indexId <= 0)                             // INDEX_ID
+            if (data.indexId < 0)                             // INDEX_ID
                 stmt.setNull(pos++, Types.INTEGER);
             else
                 stmt.setInt(pos++, data.indexId);
@@ -664,8 +666,70 @@ public class DbMailItem {
         }
     }
 
-    public static void setIndexIds(Mailbox mbox, List<Message> msgs) throws ServiceException {
-        if (msgs == null || msgs.isEmpty())
+    public static SetMultimap<Byte, Integer> getIndexDeferredIds(Mailbox mbox) throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
+        Connection conn = DbPool.getConnection(mbox);
+        try {
+            PreparedStatement stmt = conn.prepareStatement("SELECT type, id FROM " + getMailItemTableName(mbox) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "index_id = 0");
+            try {
+                setMailboxId(stmt, mbox, 1);
+                ResultSet rs = stmt.executeQuery();
+                try {
+                    SetMultimap<Byte, Integer> result = HashMultimap.create();
+                    while (rs.next()) {
+                        result.put(rs.getByte(1), rs.getInt(2));
+                    }
+                    return result;
+                } finally {
+                    DbPool.closeResults(rs);
+                }
+            } finally {
+                DbPool.closeStatement(stmt);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Failed to query index deferred IDs", e);
+        } finally {
+            DbPool.quietClose(conn);
+        }
+    }
+
+    public static List<Integer> getReIndexIds(Mailbox mbox, Set<Byte> types) throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
+        Connection conn = DbPool.getConnection(mbox);
+        try {
+            PreparedStatement stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "index_id IS NOT NULL" +
+                    (types.isEmpty() ? "" : DbUtil.whereIn("type", types.size())));
+            try {
+                int pos = setMailboxId(stmt, mbox, 1);
+                for (byte type : types) {
+                    stmt.setByte(pos++, type);
+                }
+                ResultSet rs = stmt.executeQuery();
+                try {
+                    List<Integer> ids = new ArrayList<Integer>();
+                    while (rs.next()) {
+                        ids.add(rs.getInt(1));
+                    }
+                    return ids;
+                } finally {
+                    DbPool.closeResults(rs);
+                }
+            } finally {
+                DbPool.closeStatement(stmt);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Failed to query re-index IDs", e);
+        } finally {
+            DbPool.quietClose(conn);
+        }
+    }
+
+    public static void setIndexIds(Mailbox mbox, List<MailItem> items) throws ServiceException {
+        if (items == null || items.isEmpty())
             return;
 
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
@@ -673,30 +737,42 @@ public class DbMailItem {
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            for (int i = 0; i < msgs.size(); i += Db.getINClauseBatchSize()) {
-                int count = Math.min(Db.getINClauseBatchSize(), msgs.size() - i);
-                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
-                            " SET index_id = id" +
-                            " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
+            for (int i = 0; i < items.size(); i += Db.getINClauseBatchSize()) {
+                int count = Math.min(Db.getINClauseBatchSize(), items.size() - i);
+                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) + " SET index_id = id WHERE " +
+                        IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
                 for (int index = i; index < i + count; index++)
-                    stmt.setInt(pos++, msgs.get(index).getId());
+                    stmt.setInt(pos++, items.get(index).getId());
                 stmt.executeUpdate();
                 stmt.close();
                 stmt = null;
             }
         } catch (SQLException e) {
-            // catch item_id uniqueness constraint violation and return failure
-//            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
-//                throw MailServiceException.ALREADY_EXISTS(msgs.toString(), e);
-//            else
-            throw ServiceException.FAILURE("writing new folder data for messages", e);
+            throw ServiceException.FAILURE("Failed to set index_id", e);
         } finally {
             DbPool.closeStatement(stmt);
         }
     }
 
+    public static void resetIndexId(Mailbox mbox) throws ServiceException {
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
+        Connection conn = mbox.getOperationConnection();
+        try {
+            PreparedStatement stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
+                    " SET index_id = 0 WHERE " + IN_THIS_MAILBOX_AND + "index_id > 0");
+            try {
+                setMailboxId(stmt, mbox, 1);
+                stmt.executeUpdate();
+            } finally {
+                DbPool.closeStatement(stmt);
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Failed to reset index_id", e);
+        }
+    }
 
     public static void setParent(MailItem child, MailItem parent) throws ServiceException {
         setParent(new MailItem[] { child }, parent);
@@ -924,16 +1000,22 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET type = ?, imap_id = ?, parent_id = ?, date = ?, size = ?, flags = ?," +
+                        " SET type = ?, imap_id = ?, index_id = ?, parent_id = ?, date = ?, size = ?, flags = ?," +
                         "  blob_digest = ?, sender = ?, subject = ?, name = ?, metadata = ?," +
                         "  mod_metadata = ?, change_date = ?, mod_content = ?, volume_id = ?" +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setByte(pos++, item.getType());
-            if (item.getImapUid() >= 0)
+            if (item.getImapUid() >= 0) {
                 stmt.setInt(pos++, item.getImapUid());
-            else
+            } else {
                 stmt.setNull(pos++, Types.INTEGER);
+            }
+            if (item.getIndexId() >= 0) {
+                stmt.setInt(pos++, item.getIndexId());
+            } else {
+                stmt.setNull(pos++, Types.INTEGER);
+            }
             // messages in virtual conversations are stored with a null parent_id
             if (item.getParentId() <= 0)
                 stmt.setNull(pos++, Types.INTEGER);
@@ -2800,8 +2882,11 @@ public class DbMailItem {
                     if (info.sharedIndex == null)
                         info.sharedIndex = new HashSet<Integer>();
                     boolean shared = (flags & Flag.BITMASK_COPIED) != 0;
-                    if (!shared)  info.indexIds.add(indexId);
-                    else          info.sharedIndex.add(indexId);
+                    if (shared) {
+                        info.sharedIndex.add(indexId);
+                    } else {
+                        info.indexIds.add(indexId > 0 ? indexId : id);
+                    }
                 }
             }
         }

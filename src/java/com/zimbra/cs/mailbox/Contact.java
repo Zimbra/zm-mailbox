@@ -619,8 +619,9 @@ public class Contact extends MailItem {
         data.id          = id;
         data.type        = TYPE_CONTACT;
         data.folderId    = folder.getId();
-        if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false))
-            data.indexId = id;
+        if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
+            data.indexId = 0;
+        }
         data.imapId      = id;
         data.locator     = mblob == null ? null : mblob.getLocator();
         data.setBlobDigest(pc.getDigest());

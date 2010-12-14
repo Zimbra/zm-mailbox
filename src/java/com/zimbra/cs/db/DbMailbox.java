@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Oct 28, 2004
  */
 package com.zimbra.cs.db;
 
@@ -32,20 +28,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Strings;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.localconfig.DebugConfig;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.cs.service.util.SyncToken;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
-public class DbMailbox {
+/**
+ * @since Oct 28, 2004
+ */
+public final class DbMailbox {
 
     public static final int CI_ID;
     public static final int CI_GROUP_ID;
@@ -61,9 +60,7 @@ public class DbMailbox {
     public static final int CI_COMMENT;
     public static final int CI_LAST_SOAP_ACCESS;
     public static final int CI_NEW_MESSAGES;
-    public static final int CI_IDX_DEFERRED_COUNT;
-    public static final int CI_HIGHEST_INDEXED;    
-    
+
     static {
         int pos = 1;
         // Order must match the order of column definition in zimbra.mailbox
@@ -82,8 +79,6 @@ public class DbMailbox {
         CI_COMMENT = pos++;
         CI_LAST_SOAP_ACCESS = pos++;
         CI_NEW_MESSAGES = pos++;
-        CI_IDX_DEFERRED_COUNT = pos++;
-        CI_HIGHEST_INDEXED = pos++;
     }
 
     public static final int CI_METADATA_MAILBOX_ID = 1;
@@ -228,7 +223,7 @@ public class DbMailbox {
                     stmt.close();  stmt = null;
                 }
 
-                // finally, create the row in MBOXGROUPnn.MAILBOX for mutable state and counts 
+                // finally, create the row in MBOXGROUPnn.MAILBOX for mutable state and counts
                 stmt = conn.prepareStatement("INSERT INTO " + qualifyTableName(groupId, TABLE_MAILBOX) +
                         "(id, account_id, index_volume_id, item_id_checkpoint)" +
                         " VALUES (?, ?, ?, " + (Mailbox.FIRST_USER_ID - 1) + ")");
@@ -269,7 +264,7 @@ public class DbMailbox {
     }
 
     /** Create a database for the specified mailbox.
-     * 
+     *
      * @throws ServiceException if the database creation fails */
     public static void createMailboxDatabase(Connection conn, int mailboxId, int groupId)
     throws ServiceException {
@@ -455,16 +450,13 @@ public class DbMailbox {
         try {
             stmt = conn.prepareStatement("UPDATE " + qualifyZimbraTableName(mbox, TABLE_MAILBOX) +
                     " SET item_id_checkpoint = ?, contact_count = ?, change_checkpoint = ?," +
-                    "  size_checkpoint = ?, new_messages = ?, idx_deferred_count = ?, highest_indexed = ?" +
-                    " WHERE id = ?");
+                    "  size_checkpoint = ?, new_messages = ? WHERE id = ?");
             int pos = 1;
             stmt.setInt(pos++, mbox.getLastItemId());
             stmt.setInt(pos++, mbox.getContactCount());
             stmt.setInt(pos++, mbox.getLastChangeID());
             stmt.setLong(pos++, mbox.getSize());
             stmt.setInt(pos++, mbox.getRecentMessageCount());
-            stmt.setInt(pos++, mbox.getIndexDeferredCount());
-            stmt.setString(pos++, mbox.getHighestFlushedToIndex().toString());
             stmt.setInt(pos++, mbox.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -591,7 +583,7 @@ public class DbMailbox {
      *  system.  Note that mailboxes are created lazily, so there may be
      *  accounts homed on this system for whom there is is not yet a mailbox
      *  and hence are not included in the returned <code>Map</code>.
-     * 
+     *
      * @param conn  An open database connection.
      * @return A <code>Map</code> whose keys are zimbra IDs and whose values
      *         are the corresponding numeric mailbox IDs.
@@ -631,7 +623,7 @@ public class DbMailbox {
      *  and hence are not included in the returned <code>Map</code>.  Sizes
      *  are checkpointed frequently, but there is no guarantee that the
      *  approximate sizes are currently accurate.
-     * 
+     *
      * @param conn  An open database connection.
      * @return A <code>Map</code> whose keys are zimbra IDs and whose values
      *         are the corresponding approximate mailbox sizes.
@@ -696,8 +688,8 @@ public class DbMailbox {
             stmt = conn.prepareStatement(
                     "SELECT account_id," + (DebugConfig.disableMailboxGroups ? mailboxId : " group_id") + "," +
                     " size_checkpoint, contact_count, item_id_checkpoint, change_checkpoint, tracking_sync," +
-                    " tracking_imap, index_volume_id, last_soap_access, new_messages, idx_deferred_count, highest_indexed " +
-                    "FROM " + qualifyZimbraTableName(mailboxId, TABLE_MAILBOX) + " WHERE id = ?");
+                    " tracking_imap, index_volume_id, last_soap_access, new_messages" +
+                    " FROM " + qualifyZimbraTableName(mailboxId, TABLE_MAILBOX) + " WHERE id = ?");
             stmt.setInt(1, mailboxId);
             rs = stmt.executeQuery();
 
@@ -721,21 +713,6 @@ public class DbMailbox {
             mbd.indexVolumeId = rs.getShort(pos++);
             mbd.lastWriteDate = rs.getInt(pos++);
             mbd.recentMessages = rs.getInt(pos++);
-            mbd.idxDeferredCount = rs.getInt(pos++);
-
-            String highestModContentIndexed = rs.getString(pos++);
-            if (highestModContentIndexed == null || highestModContentIndexed.length() == 0)
-                mbd.highestModContentIndexed = new SyncToken(mbd.lastChangeId);
-            else {
-                try {
-                    mbd.highestModContentIndexed = new SyncToken(highestModContentIndexed);
-                } catch (MailServiceException e) {
-                    ZimbraLog.mailbox.warn("Exception loading index high water mark from DB.  " +
-                    		"Using current mod_content value: "+mbd.lastChangeId, e);
-                    mbd.highestModContentIndexed = new SyncToken(mbd.lastChangeId);
-                }
-            }
-            
             mbd.lastBackupDate = -1;
 
             // round lastItemId and lastChangeId up so that they get written on the next change
@@ -779,7 +756,7 @@ public class DbMailbox {
      *  database on.  When the underlying database supports row-level locking,
      *  this will be a new <code>Object</code> -- that is, effectively no
      *  synchronization, since none is necessary.  If synchronization is needed
-     *  but the code is not encapsulated in a 
+     *  but the code is not encapsulated in a
      *     <code>synchronized (DbMailbox.getSynchronizer()) { }</code>
      *  block, calls to DbMailbox methods will assert.
      * @see Db.Capability#ROW_LEVEL_LOCKING */
@@ -961,7 +938,7 @@ public class DbMailbox {
 
     /**
      * Deletes the row for the specified mailbox from the <code>mailbox</code> table.
-     *  
+     *
      * @throws ServiceException if the database operation failed
      */
     public static void deleteMailbox(Connection conn, Mailbox mbox) throws ServiceException {
@@ -1066,7 +1043,7 @@ public class DbMailbox {
 
         return accountIds;
     }
-  
+
     public static List<Mailbox.MailboxData> getMailboxRawData(Connection conn) throws ServiceException {
         List<Mailbox.MailboxData> results = new ArrayList<Mailbox.MailboxData>();
         if (DebugConfig.externalMailboxDirectory)
@@ -1081,9 +1058,7 @@ public class DbMailbox {
                 stmt = conn.prepareStatement(
                         "SELECT id, group_id, account_id, index_volume_id, item_id_checkpoint," +
                         " contact_count, size_checkpoint, change_checkpoint, tracking_sync," +
-                        " tracking_imap, last_backup_at, last_soap_access, new_messages," +
-                        " idx_deferred_count, highest_indexed " +
-                        "FROM mailbox");
+                        " tracking_imap, last_backup_at, last_soap_access, new_messages FROM mailbox");
                 rs = stmt.executeQuery();
                 readMailboxRawData(results, rs);
             } else {
@@ -1095,9 +1070,8 @@ public class DbMailbox {
 
                     stmt = conn.prepareStatement(
                             "SELECT id, id, account_id, index_volume_id, item_id_checkpoint, contact_count, size_checkpoint," +
-                            " change_checkpoint, tracking_sync, tracking_imap, -1, last_soap_access, new_messages," +
-                            " idx_deferred_count, highest_indexed" +
-                            "FROM " + qualifyZimbraTableName(mailboxId, TABLE_MAILBOX));
+                            " change_checkpoint, tracking_sync, tracking_imap, -1, last_soap_access, new_messages" +
+                            " FROM " + qualifyZimbraTableName(mailboxId, TABLE_MAILBOX));
                     rs = stmt.executeQuery();
                     readMailboxRawData(results, rs);
                     rs.close();    rs = null;
@@ -1121,7 +1095,7 @@ public class DbMailbox {
         assert(Thread.holdsLock(getZimbraSynchronizer(mbox)));
 
         String name = getDatabaseName(mbox);
-        
+
         try {
             Db.getInstance().optimize(conn, name, level);
         } catch (Exception e) {
@@ -1147,22 +1121,8 @@ public class DbMailbox {
             // data.comment = rs.getString(pos++);
             data.lastWriteDate = rs.getInt(pos++);
             data.recentMessages = rs.getInt(pos++);
-            data.idxDeferredCount = rs.getInt(pos++);
-            
-            String highestModContentIndexed = rs.getString(pos++);
-            if (highestModContentIndexed == null || highestModContentIndexed.length() == 0)
-                data.highestModContentIndexed = new SyncToken(data.lastChangeId);
-            else {
-                try {
-                    data.highestModContentIndexed = new SyncToken(highestModContentIndexed);
-                } catch (ServiceException e) {
-                    ZimbraLog.mailbox.warn("Exception loading index high water mark from DB.  " +
-                                           "Using current mod_content value: "+data.lastChangeId, e);
-                    data.highestModContentIndexed = new SyncToken(data.lastChangeId);
-                }
-            }
-            
             results.add(data);
         }
     }
+
 }
