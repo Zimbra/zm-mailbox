@@ -17,7 +17,7 @@ package com.zimbra.common.soap;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
-public class AdminConstants {
+public final class AdminConstants {
 
     public static final String ADMIN_SERVICE_URI = "/service/admin/soap/";
 
@@ -1068,8 +1068,6 @@ public class AdminConstants {
     public static final String A_MT_LASTBACKUPAT     = "lastbackupat";
     public static final String A_MT_LASTSOAPACCESS   = "lastSoapAccess";
     public static final String A_MT_NEWNESSAGES      = "newMessages";
-    public static final String A_MT_IDXDEFERREDCOUNT = "idxDeferredCount";
-    public static final String A_MI_HIGHEST_INDEXED  = "highestIndexed";
 
     // right
     public static final String E_ALL         = "all";
@@ -1134,8 +1132,8 @@ public class AdminConstants {
     public static final String A_ALLSERVERS = "allServers";
 
     public static final String A_SYNCHRONOUS = "synchronous";
-    
+
     public static final String E_MIGRATE = "migrate";
-    
+
     public static final String A_ERROR = "error";
 }

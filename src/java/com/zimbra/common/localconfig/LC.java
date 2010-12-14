@@ -202,9 +202,6 @@ public final class LC {
     public static final KnownKey zimbra_index_reader_cache_sweep_frequency = KnownKey.newKey(30);
 
     @Supported
-    public static final KnownKey zimbra_index_deferred_items_delay = KnownKey.newKey(10);
-
-    @Supported
     public static final KnownKey zimbra_index_deferred_items_failure_delay = KnownKey.newKey(300);
 
     @Supported
@@ -456,7 +453,7 @@ public final class LC {
 
     @Supported
     public static final KnownKey gal_group_cache_maxsize_domains = KnownKey.newKey(10);
-    
+
     @Supported
     public static final KnownKey gal_group_cache_maxage = KnownKey.newKey(10080);  // 7 days
 
