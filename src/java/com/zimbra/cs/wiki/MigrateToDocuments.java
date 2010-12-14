@@ -55,7 +55,7 @@ public class MigrateToDocuments {
         if (destRoot == null)
             destRoot = mbox.createFolder(octxt, path, (byte)0, MailItem.TYPE_DOCUMENT);
         if (destRoot == null) {
-            ZimbraLog.misc.warn("Can't create folder %s", path);
+            ZimbraLog.misc.warn("Can't create folder: %s", path);
             return;
         }
         moveToBackupFolder(root, destRoot);
@@ -74,9 +74,9 @@ public class MigrateToDocuments {
             } catch (MailServiceException e) {
                 if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
                     dest = mbox.getFolderByPath(octxt, path);
-                    ZimbraLog.misc.warn("Bakup folder already exists %s", source.getName());
+                    ZimbraLog.misc.warn("Backup folder already exists: %s", source.getName());
                 } else {
-                    ZimbraLog.misc.warn("Can't create backup folder %s", path);
+                    ZimbraLog.misc.warn("Can't create backup folder: %s", path);
                     continue;
                 }
             }
@@ -87,7 +87,7 @@ public class MigrateToDocuments {
                 mbox.move(octxt, item.getId(), MailItem.TYPE_WIKI, to.getId());
             } catch (MailServiceException e) {
                 if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
-                    ZimbraLog.misc.warn("Item already exists %s", item.getName());
+                    ZimbraLog.misc.warn("Item already exists: %s", item.getName());
                 } else {
                     ZimbraLog.misc.warn("Can't move item %s to backup folder %s", item.getName(), to.getPath());
                 }
@@ -110,7 +110,7 @@ public class MigrateToDocuments {
             try {
                 main = (Document) mbox.getItemByPath(octxt, to.getPath() + "/" + doc.getName());
             } catch (Exception e) {
-                ZimbraLog.misc.info("Creating new item " + doc.getName());
+                ZimbraLog.misc.info("Creating new item: " + doc.getName());
             }
             for (int rev = 1; rev < doc.getVersion(); rev++) {
                 Document revision = null;
