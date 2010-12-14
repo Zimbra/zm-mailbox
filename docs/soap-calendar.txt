@@ -1266,6 +1266,10 @@ creation, an INVITE_OUT_OF_DATE exception will be thrown.
 
 <GetMiniCalResponse>
   [<date>yyyymmdd</date>]*   // e.g. 20080221
+  [<error  // error for each calendar folder that couldn't be accessed
+     id="folder id"
+     code="ServiceException error code"  // e.g. service.PERM_DENIED, mail.NO_SUCH_FOLDER, account.NO_SUCH_ACCOUNT, etc.
+   >error message from the exception (but no stack trace)</error>]*
 </GetMiniCalResponse>
 
 Date is returned if there is at least one appointment on that date.  The date computation

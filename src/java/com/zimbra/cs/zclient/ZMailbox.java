@@ -3938,10 +3938,38 @@ public class ZMailbox implements ToZJSONObject {
         mApptSummaryCache.clear();
     }
 
-    public synchronized Set<String> getMiniCal(long startMsec, long endMsec, String folderIds[]) throws ServiceException {
-       Set<String> result = mApptSummaryCache.getMiniCal(startMsec, endMsec,folderIds);
+    public static class ZGetMiniCalResult {
+        private Set<String> mDates;
+        private List<ZMiniCalError> mErrors;
 
-        if (result == null) {
+        public ZGetMiniCalResult(Set<String> dates, List<ZMiniCalError> errors) {
+            mDates = dates;
+            mErrors = errors;
+        }
+
+        public Set<String> getDates() { return mDates; }
+        public List<ZMiniCalError> getErrors() { return mErrors; }
+    }
+
+    public static class ZMiniCalError {
+        private String mFolderId;
+        private String mErrCode;
+        private String mErrMsg;
+        public ZMiniCalError(String folderId, String errcode, String errmsg) {
+            mFolderId = folderId;
+            mErrCode = errcode;
+            mErrMsg = errmsg;
+        }
+        public String getFolderId() { return mFolderId; }
+        public String getErrCode() { return mErrCode; }
+        public String getErrMsg() { return mErrMsg; }
+    }
+
+    public synchronized ZGetMiniCalResult getMiniCal(long startMsec, long endMsec, String folderIds[]) throws ServiceException {
+        Set<String> dates = mApptSummaryCache.getMiniCal(startMsec, endMsec, folderIds);
+        List<ZMiniCalError> errors = null;
+
+        if (dates == null) {
             Element req = newRequestElement(MailConstants.GET_MINI_CAL_REQUEST);
             req.addAttribute(MailConstants.A_CAL_START_TIME, startMsec);
             req.addAttribute(MailConstants.A_CAL_END_TIME, endMsec);
@@ -3950,13 +3978,21 @@ public class ZMailbox implements ToZJSONObject {
                 folderElem.addAttribute(MailConstants.A_ID, folderId);
             }
             Element resp = invoke(req);
-            result = new HashSet<String>();
+            dates = new HashSet<String>();
             for (Element date : resp.listElements(MailConstants.E_CAL_MINICAL_DATE)) {
-                result.add(date.getTextTrim());
+                dates.add(date.getTextTrim());
             }
-            mApptSummaryCache.putMiniCal(result, startMsec, endMsec, folderIds);
+            mApptSummaryCache.putMiniCal(dates, startMsec, endMsec, folderIds);
+            for (Element error : resp.listElements(MailConstants.E_ERROR)) {
+                String fid = error.getAttribute(MailConstants.A_ID);
+                String code = error.getAttribute(MailConstants.A_CAL_CODE);
+                String msg = error.getTextTrim();
+                if (errors == null)
+                    errors = new ArrayList<ZMiniCalError>();
+                errors.add(new ZMiniCalError(fid, code, msg));
+            }
         }
-        return result;
+        return new ZGetMiniCalResult(dates, errors);
     }
 
     /**
