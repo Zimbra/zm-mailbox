@@ -1105,13 +1105,10 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 				if (title == null)
 					title = link;
 			}
-			WikiUrl wurl = (ctxt.item instanceof Folder) ?
-					new WikiUrl(link, ctxt.item.getId()) :
-					new WikiUrl(link, ctxt.item.getFolderId());
 			try {
 				StringBuffer buf = new StringBuffer();
 				buf.append("<a href='");
-				buf.append(wurl.getFullUrl(ctxt.wctxt, ctxt.item.getMailbox().getAccountId()));
+				buf.append(UserServlet.getRestUrl(ctxt.item));
 				buf.append("'>").append(title).append("</a>");
 				return buf.toString();
 			} catch (Exception e) {
