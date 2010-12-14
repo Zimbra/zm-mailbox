@@ -939,6 +939,7 @@ public class MailConstants {
     public static final String A_CAL_INTENDED_FOR = "cif";
     public static final String A_CAL_CHANGES = "changes";
     public static final String A_CAL_ECHO = "echo";
+    public static final String A_CAL_CODE = "code";
 
     // spell checking
     public static final String A_AVAILABLE = "available";
