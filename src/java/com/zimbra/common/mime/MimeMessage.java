@@ -258,7 +258,7 @@ public class MimeMessage extends MimePart {
     }
 
     public void setHeader(String name, String value, String charset) {
-        mBody.setMimeHeader(name, value);
+        mBody.setMimeHeader(name, value, charset);
     }
 
     public void setHeader(String name, MimeHeader header) {
