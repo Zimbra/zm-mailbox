@@ -1035,7 +1035,7 @@ public final class LC {
     public static final KnownKey antispam_mysql_user = KnownKey.newKey("zimbra");
     public static final KnownKey antispam_mysql_root_password = KnownKey.newKey("");
     public static final KnownKey antispam_mysql_password = KnownKey.newKey("");
-
+    
     // LDAP Custom DIT base DN for LDAP app admin entries
     public static final KnownKey ldap_dit_base_dn_appadmin      = KnownKey.newKey("");
     // LDAP Custom DIT base DN for config branch
@@ -1072,6 +1072,7 @@ public final class LC {
     // LDAP Custom DIT base DN for LDAP admin entries
     public static final KnownKey ldap_dit_base_dn_admin         = KnownKey.newKey("");
     public static final KnownKey command_line_editing_enabled = KnownKey.newKey(true);
+    public static final KnownKey thread_pool_warn_percent = KnownKey.newKey(100);
     
     static {
         // Automatically set the key name with the variable name.
