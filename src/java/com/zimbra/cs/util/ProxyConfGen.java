@@ -1150,12 +1150,12 @@ public class ProxyConfGen
             return(exitCode);
         }
 
-//        if (!isWorkableConf()) {
-//            mLog.error("Configuration is not valid because no route lookup handlers exist, or because no HTTP upstream servers were found");
-//            mLog.error("Please ensure that the output of 'zmprov garpu' and 'zmprov garpb' returns at least one entry");
-//            exitCode = 1;
-//            return(exitCode);
-//        }
+        if (!isWorkableConf()) {
+            mLog.error("Configuration is not valid because no route lookup handlers exist, or because no HTTP upstream servers were found");
+            mLog.error("Please ensure that the output of 'zmprov garpu' and 'zmprov garpb' returns at least one entry");
+            exitCode = 1;
+            return(exitCode);
+        }
 
         exitCode = 0;
 
