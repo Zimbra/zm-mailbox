@@ -25,6 +25,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -114,6 +115,10 @@ public abstract class TcpServer implements Runnable, Server {
             return mActiveHandlers.size();
         }
     }
+    
+    public int numThreads() {
+        return mPooledExecutor.getPoolSize();
+    }
 
     private void shutdownActiveHandlers(boolean graceful) {
         synchronized (mActiveHandlers) {
@@ -184,10 +189,12 @@ public abstract class TcpServer implements Runnable, Server {
     public void run() {
         Thread.currentThread().setName(mName);
 
-        mLog.info("starting accept loop");
+        mLog.info("Starting accept loop: %d core threads, %d max threads.",
+            mPooledExecutor.getCorePoolSize(), mPooledExecutor.getMaximumPoolSize());
         try {
             while (!mShutdownRequested) {
                 Socket connection = mServerSocket.accept();
+                warnIfNecessary();
                 ProtocolHandler handler = newProtocolHandler();
                 handler.setConnection(connection);
                 try {
@@ -202,6 +209,20 @@ public abstract class TcpServer implements Runnable, Server {
             }
         }
         mLog.info("finished accept loop");
+    }
+    
+    private void warnIfNecessary() {
+        if (mLog.isWarnEnabled()) {
+            int warnPercent = LC.thread_pool_warn_percent.intValue();
+            // Add 1 because the thread for this connection is not active yet.
+            int active =  mPooledExecutor.getActiveCount() + 1;
+            int max = mPooledExecutor.getMaximumPoolSize();
+            int utilization = active * 100 / max; 
+            if (utilization >= warnPercent) {
+                mLog.warn("Thread pool is %d%% utilized.  %d out of %d threads in use.",
+                    utilization, active, max);
+            }
+        }
     }
 
     protected abstract ProtocolHandler newProtocolHandler();
