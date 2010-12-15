@@ -59,6 +59,15 @@ public class ZModifyTagEvent implements ZModifyItemEvent, ToZJSONObject {
             } catch (ServiceException se) {
                 return defaultValue;
             }
+        } else {
+            String s = mTagEl.getAttribute(MailConstants.A_COLOR, null);
+            if (s != null) {
+                try {
+                    return Color.values()[(byte)Long.parseLong(s)];
+                } catch (NumberFormatException se) {
+                    return defaultValue;
+                }
+            }
         }
         return defaultValue;
     }
