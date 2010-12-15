@@ -911,7 +911,7 @@ public class ProxyConfGen
     public static void buildDefaultVars ()
     {
         mConfVars.put("core.workdir", new ProxyConfVar("core.workdir", null, mWorkingDir, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Working Directory for NGINX worker processes"));
-        mConfVars.put("core.includes", new ProxyConfVar("core.includes", null, mIncDir, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Include directory (relative to ${core.workdir}/conf)"));
+        mConfVars.put("core.includes", new ProxyConfVar("core.includes", null, mConfIncludesDir, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Include directory (relative to ${core.workdir}/conf)"));
         mConfVars.put("core.cprefix", new ProxyConfVar("core.cprefix", null, mConfPrefix, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Common config file prefix"));
         mConfVars.put("core.tprefix", new ProxyConfVar("core.tprefix", null, mTemplatePrefix, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Common template file prefix"));
         mConfVars.put("ssl.crt.default", new ProxyConfVar("ssl.crt.default", null, mDefaultSSLCrt, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "default nginx certificate file path"));
@@ -919,8 +919,8 @@ public class ProxyConfGen
         mConfVars.put("main.user", new ProxyConfVar("main.user", null, "zimbra", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "The user as which the worker processes will run"));
         mConfVars.put("main.group", new ProxyConfVar("main.group", null, "zimbra", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "The group as which the worker processes will run"));
         mConfVars.put("main.workers", new ProxyConfVar("main.workers", "zimbraReverseProxyWorkerProcesses", new Integer(4), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Number of worker processes"));
-        mConfVars.put("main.pidfile", new ProxyConfVar("main.pidfile", null, "log/nginx.pid", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "PID file path (relative to ${core.workdir})"));
-        mConfVars.put("main.logfile", new ProxyConfVar("main.logfile", null, "log/nginx.log", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Log file path (relative to ${core.workdir})"));
+        mConfVars.put("main.pidfile", new ProxyConfVar("main.pidfile", null, mWorkingDir + "/log/nginx.pid", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "PID file path (relative to ${core.workdir})"));
+        mConfVars.put("main.logfile", new ProxyConfVar("main.logfile", null, mWorkingDir + "/log/nginx.log", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Log file path (relative to ${core.workdir})"));
         mConfVars.put("main.loglevel", new ProxyConfVar("main.loglevel", "zimbraReverseProxyLogLevel", "info", ProxyConfValueType.STRING, ProxyConfOverride.SERVER, "Log level - can be debug|info|notice|warn|error|crit"));
         mConfVars.put("main.connections", new ProxyConfVar("main.connections", "zimbraReverseProxyWorkerConnections", new Integer(10240), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Maximum number of simultaneous connections per worker process"));
         mConfVars.put("main.krb5keytab", new ProxyConfVar("main.krb5keytab", "krb5_keytab", "/opt/zimbra/conf/krb5.keytab", ProxyConfValueType.STRING, ProxyConfOverride.LOCALCONFIG, "Path to kerberos keytab file used for GSSAPI authentication"));
@@ -1150,12 +1150,12 @@ public class ProxyConfGen
             return(exitCode);
         }
 
-        if (!isWorkableConf()) {
-            mLog.error("Configuration is not valid because no route lookup handlers exist, or because no HTTP upstream servers were found");
-            mLog.error("Please ensure that the output of 'zmprov garpu' and 'zmprov garpb' returns at least one entry");
-            exitCode = 1;
-            return(exitCode);
-        }
+//        if (!isWorkableConf()) {
+//            mLog.error("Configuration is not valid because no route lookup handlers exist, or because no HTTP upstream servers were found");
+//            mLog.error("Please ensure that the output of 'zmprov garpu' and 'zmprov garpb' returns at least one entry");
+//            exitCode = 1;
+//            return(exitCode);
+//        }
 
         exitCode = 0;
 
