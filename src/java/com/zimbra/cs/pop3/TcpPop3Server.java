@@ -41,14 +41,18 @@ public class TcpPop3Server extends TcpServer implements Pop3Server, RealtimeStat
     }
 
     /**
-     * Implementation of <code>RealtimeStatsCallback</code> that returns the number
-     * of active handlers for this server.
+     * Implementation of {@link RealtimeStatsCallback} that returns the number
+     * of active handlers and number of threads for this server.
      */
     public Map<String, Object> getStatData() {
         Map<String, Object> data = new HashMap<String, Object>();
-        String statName = getConfig().isSslEnabled() ?
-            ZimbraPerf.RTS_POP_SSL_CONN : ZimbraPerf.RTS_POP_CONN;
-        data.put(statName, numActiveHandlers());
+        if (getConfig().isSslEnabled()) {
+            data.put(ZimbraPerf.RTS_POP_SSL_CONN, numActiveHandlers());
+            data.put(ZimbraPerf.RTS_POP_SSL_THREADS, numThreads());
+        } else {
+            data.put(ZimbraPerf.RTS_POP_CONN, numActiveHandlers());
+            data.put(ZimbraPerf.RTS_POP_THREADS, numThreads());
+        }
         return data;
     }
 }

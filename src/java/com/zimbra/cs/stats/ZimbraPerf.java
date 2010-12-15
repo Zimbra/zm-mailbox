@@ -70,18 +70,36 @@ public class ZimbraPerf {
     @Description("InnoDB buffer pool hit rate")
     public static final String RTS_INNODB_BP_HIT_RATE = "innodb_bp_hit_rate";
     
+    @Description("Number of LMTP connections")
+    public static final String RTS_LMTP_CONN = "lmtp_conn";
+    
+    @Description("Number of LMTP handler threads")
+    public static final String RTS_LMTP_THREADS = "lmtp_threads";
+    
     @Description("Number of cleartext POP3 connections")
     public static final String RTS_POP_CONN = "pop_conn";
+    
+    @Description("Number of POP3 handler threads")
+    public static final String RTS_POP_THREADS = "pop_threads";
     
     @Description("Number of SSL POP3 connections")
     public static final String RTS_POP_SSL_CONN = "pop_ssl_conn";
     
+    @Description("Number of POP3 SSL handler threads")
+    public static final String RTS_POP_SSL_THREADS = "pop_ssl_threads";
+    
     @Description("Number of cleartext IMAP connections")
     public static final String RTS_IMAP_CONN = "imap_conn";
+    
+    @Description("Number of IMAP handler threads")
+    public static final String RTS_IMAP_THREADS = "imap_threads";
     
     @Description("Number of SSL IMAP connections")
     public static final String RTS_IMAP_SSL_CONN = "imap_ssl_conn";
     
+    @Description("Number of IMAP SSL handler threads")
+    public static final String RTS_IMAP_SSL_THREADS = "imap_ssl_threads";
+
     @Description("Number of SOAP sessions")
     public static final String RTS_SOAP_SESSIONS = "soap_sessions";
 
@@ -187,7 +205,10 @@ public class ZimbraPerf {
     private static RealtimeStats realtimeStats = 
         new RealtimeStats(new String[] {
             RTS_DB_POOL_SIZE, RTS_INNODB_BP_HIT_RATE,
-            RTS_POP_CONN, RTS_POP_SSL_CONN, RTS_IMAP_CONN, RTS_IMAP_SSL_CONN, RTS_SOAP_SESSIONS,
+            RTS_LMTP_CONN, RTS_LMTP_THREADS,
+            RTS_POP_CONN, RTS_POP_THREADS, RTS_POP_SSL_CONN, RTS_POP_SSL_THREADS, 
+            RTS_IMAP_CONN, RTS_IMAP_THREADS, RTS_IMAP_SSL_CONN, RTS_IMAP_SSL_THREADS,
+            RTS_SOAP_SESSIONS,
             RTS_MBOX_CACHE_SIZE, RTS_MSG_CACHE_SIZE,
             RTS_FD_CACHE_SIZE, RTS_FD_CACHE_HIT_RATE,
             RTS_ACL_CACHE_HIT_RATE,
@@ -197,7 +218,8 @@ public class ZimbraPerf {
             RTS_SERVER_CACHE_SIZE, RTS_SERVER_CACHE_HIT_RATE,
             RTS_ZIMLET_CACHE_SIZE, RTS_ZIMLET_CACHE_HIT_RATE,
             RTS_GROUP_CACHE_SIZE, RTS_GROUP_CACHE_HIT_RATE,
-            RTS_XMPP_CACHE_SIZE, RTS_XMPP_CACHE_HIT_RATE }
+            RTS_XMPP_CACHE_SIZE, RTS_XMPP_CACHE_HIT_RATE,
+            }
         );
 
     @Description("Number of messages received over LMTP")
