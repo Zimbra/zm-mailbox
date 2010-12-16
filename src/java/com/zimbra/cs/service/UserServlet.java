@@ -96,6 +96,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -1272,6 +1273,11 @@ public class UserServlet extends ZimbraServlet {
         }
     }
 
+    private static HashSet<String> ZIMBRA_DOC_CONTENT_TYPE = new HashSet<String>();
+    static {
+        ZIMBRA_DOC_CONTENT_TYPE.add("application/x-zimbra-doc");
+    }
+    
     private String defaultFormat(Context context) {
         if (context.hasPart())
             return "native";
@@ -1288,8 +1294,16 @@ public class UserServlet extends ZimbraServlet {
                 return "ics";
             case MailItem.TYPE_CONTACT:
                 return context.target instanceof Folder? "csv" : "vcf";
-            case MailItem.TYPE_DOCUMENT:   // use native formatter for Document
-                return context.target instanceof Folder? "html" : "native";
+            case MailItem.TYPE_DOCUMENT:
+                // Zimbra docs and folder rendering should use html formatter.
+                if (context.target instanceof Folder)
+                    return "html";
+                String contentType = ((Document)context.target).getContentType();
+                if (contentType != null && contentType.indexOf(';') > 0)
+                    contentType = contentType.substring(0, contentType.indexOf(';')).toLowerCase();
+                if (ZIMBRA_DOC_CONTENT_TYPE.contains(contentType))
+                    return "html";
+                return "native";
             default:
                 return "native";
         }

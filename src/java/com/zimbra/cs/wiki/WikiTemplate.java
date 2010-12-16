@@ -1108,7 +1108,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
 			try {
 				StringBuffer buf = new StringBuffer();
 				buf.append("<a href='");
-				buf.append(UserServlet.getRestUrl(ctxt.item));
+				buf.append(UserServlet.getRestUrl(ctxt.item.getAccount()) + link);
 				buf.append("'>").append(title).append("</a>");
 				return buf.toString();
 			} catch (Exception e) {
