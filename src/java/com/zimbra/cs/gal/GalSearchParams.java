@@ -131,8 +131,21 @@ public class GalSearchParams {
     public Domain getDomain() throws ServiceException {
         if (mDomain != null)
             return mDomain;
-        return Provisioning.getInstance().getDomain(mAccount);
+        
+        Domain domain = Provisioning.getInstance().getDomain(mAccount);
+        if (domain != null)
+            return domain;
+        
+        Account galSyncAcct = getGalSyncAccount();
+        if (galSyncAcct != null)
+            domain = Provisioning.getInstance().getDomain(galSyncAcct);
+        
+        if (domain != null)
+            return domain;
+        
+        throw ServiceException.FAILURE("Unable to get domain", null);
     }
+    
     public ZimbraSoapContext getSoapContext() {
         return mSoapContext;
     }

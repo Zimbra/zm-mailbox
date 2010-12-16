@@ -78,7 +78,7 @@ public abstract class GalGroup {
             galGroup = new EmailAddrGalGroupBin(addr, requestedAcct);
         }
         
-        // we have a fully synced GrlGroup object for the domain
+        // we have a fully synced GalGroup object for the domain
         if (galGroup.isInternalGroup(addr)) {
             if (canExpandGroup(prov, addr, authedAcct))
                 return GroupInfo.CAN_EXPAND;
@@ -360,7 +360,14 @@ public abstract class GalGroup {
                     
                     String email = contact.get(ContactConstants.A_email);
                     String zimbraId = contact.get(ContactConstants.A_zimbraId);
-                    addResult(email, zimbraId);
+                    
+                    if (email == null) {
+                        ZimbraLog.gal.info("GalGroup - handle Contact: contact " + 
+                                contact.getFileAsString() + "(" + contact.getId() + ")" + " does not have an email address." +
+                                " Not adding to gal group cache.");
+                    } else {
+                        addResult(email, zimbraId);
+                    }
                     return null;
                 }
                 
@@ -371,7 +378,14 @@ public abstract class GalGroup {
                     
                     String email = galContact.getSingleAttr(ContactConstants.A_email); 
                     String zimbraId = galContact.getSingleAttr(ContactConstants.A_zimbraId);
-                    addResult(email, zimbraId);
+                    
+                    if (email == null) {
+                        ZimbraLog.gal.info("GalGroup - handle GalContact: contact " + 
+                                galContact.getId() + " does not have an email address." +
+                                " Not adding to gal group cache.");
+                    } else {
+                        addResult(email, zimbraId);
+                    }
                 }
                 
                 @Override
@@ -382,7 +396,14 @@ public abstract class GalGroup {
                     
                     String email = getSingleAttr(contact, ContactConstants.A_email); 
                     String zimbraId = getSingleAttr(contact, ContactConstants.A_zimbraId);
-                    addResult(email, zimbraId);
+                    
+                    if (email == null) {
+                        ZimbraLog.gal.info("GalGroup - handle Element: contact " + 
+                                e.toString() + " does not have an email address." +
+                                " Not adding to gal group cache.");
+                    } else {
+                        addResult(email, zimbraId);
+                    }
                 }
                 
                 private String getSingleAttr(HashMap<String,Object> map, String attr) {
@@ -440,7 +461,7 @@ public abstract class GalGroup {
             
             GalSearchControl gal = new GalSearchControl(params);
             try {
-                gal.search(); 
+                gal.search();
             } catch (ServiceException e) {
                 ZimbraLog.gal.warn("GalGroup - unable to search GAL group for addr:" + addr, e);
             }
@@ -521,5 +542,5 @@ public abstract class GalGroup {
             
         }
     }
- 
+
 }
