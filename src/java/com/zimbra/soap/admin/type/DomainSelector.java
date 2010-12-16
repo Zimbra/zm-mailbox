@@ -16,44 +16,40 @@
 package com.zimbra.soap.admin.type;
 
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlRootElement(name=AdminConstants.E_A)
-@XmlType(propOrder = {})
-public class Attr
-{
-    @XmlAttribute(name=AdminConstants.A_N) private String n;
-    @XmlValue private String value;
+public class DomainSelector {
+    // From enum com.zimbra.cs.account.Provisioning.DomainBy;
+    @XmlEnum
+    public enum DomainBy { id, name, virtualHostname, krb5Realm, foreignName }
 
-    public Attr() {
+    @XmlValue private String key;
+    @XmlAttribute(name=AdminConstants.A_BY) private DomainBy domainBy;
+
+    public DomainSelector() {
     }
 
-    public Attr(String n, String value) {
-        this.n = n;
-        this.setValue(value);
+    public DomainSelector(DomainBy by, String key) {
+        setBy(by);
+        setKey(key);
     }
 
-    public Attr(String value) {
-        this.setValue(value);
+    public void setKey(String key) {
+        this.key = key;
     }
 
-    public void setN(String n) {
-        this.n = n;
+    public String getKey() {
+        return key;
     }
 
-    public String getN() {
-        return n;
+    public void setBy(DomainBy by) {
+        this.domainBy = by;
     }
 
-    public void setValue(String value) {
-        this.value = value;
-    }
-
-    public String getValue() {
-        return value;
+    public DomainBy getBy() {
+        return domainBy;
     }
 }

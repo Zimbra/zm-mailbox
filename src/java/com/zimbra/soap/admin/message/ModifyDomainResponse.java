@@ -13,47 +13,30 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.admin.message;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.XmlValue;
-
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.DomainInfo;
 
-@XmlRootElement(name=AdminConstants.E_A)
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlRootElement(name=AdminConstants.E_MODIFY_DOMAIN_RESPONSE)
 @XmlType(propOrder = {})
-public class Attr
-{
-    @XmlAttribute(name=AdminConstants.A_N) private String n;
-    @XmlValue private String value;
+public class ModifyDomainResponse {
 
-    public Attr() {
+    @XmlElement(name=AdminConstants.E_DOMAIN) private DomainInfo domain;
+    public ModifyDomainResponse() {
     }
 
-    public Attr(String n, String value) {
-        this.n = n;
-        this.setValue(value);
+    public void setDomain(DomainInfo domain) {
+        this.domain = domain;
     }
-
-    public Attr(String value) {
-        this.setValue(value);
-    }
-
-    public void setN(String n) {
-        this.n = n;
-    }
-
-    public String getN() {
-        return n;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
-    }
-
-    public String getValue() {
-        return value;
+    public DomainInfo getDomain() {
+        return domain;
     }
 }

@@ -1,11 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<definitions xmlns:tns="urn:zimbraAdmin"
-             xmlns:zimbra="urn:zimbra"
-             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" 
-             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-             xmlns="http://schemas.xmlsoap.org/wsdl/"
-             targetNamespace="urn:zimbraAdmin"
-             name="AdminService">
+<definitions xmlns:tns="urn:zimbraAdmin" xmlns:zimbra="urn:zimbra" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.xmlsoap.org/wsdl/" targetNamespace="urn:zimbraAdmin" name="AdminService">
 
   <types>
     <xsd:schema>
@@ -28,11 +22,88 @@
     <part name="parameters" element="tns:CreateAccountResponse"/>
   </message>
 
+  <message name="createDomainRequest">
+    <part name="parameters" element="tns:CreateDomainRequest"/>
+  </message>
+  <message name="createDomainResponse">
+    <part name="parameters" element="tns:CreateDomainResponse"/>
+  </message>
+
+  <message name="createServerRequest">
+    <part name="parameters" element="tns:CreateServerRequest"/>
+  </message>
+  <message name="createServerResponse">
+    <part name="parameters" element="tns:CreateServerResponse"/>
+  </message>
+
+  <message name="deleteDomainRequest">
+    <part name="parameters" element="tns:DeleteDomainRequest"/>
+  </message>
+  <message name="deleteDomainResponse">
+    <part name="parameters" element="tns:DeleteDomainResponse"/>
+  </message>
+
+  <message name="deleteServerRequest">
+    <part name="parameters" element="tns:DeleteServerRequest"/>
+  </message>
+  <message name="deleteServerResponse">
+    <part name="parameters" element="tns:DeleteServerResponse"/>
+  </message>
+
   <message name="getAccountRequest">
     <part name="parameters" element="tns:GetAccountRequest"/>
   </message>
   <message name="getAccountResponse">
     <part name="parameters" element="tns:GetAccountResponse"/>
+  </message>
+
+  <message name="getAllDomainsRequest">
+    <part name="parameters" element="tns:GetAllDomainsRequest"/>
+  </message>
+  <message name="getAllDomainsResponse">
+    <part name="parameters" element="tns:GetAllDomainsResponse"/>
+  </message>
+
+  <message name="getAllServersRequest">
+    <part name="parameters" element="tns:GetAllServersRequest"/>
+  </message>
+  <message name="getAllServersResponse">
+    <part name="parameters" element="tns:GetAllServersResponse"/>
+  </message>
+
+  <message name="getDomainInfoRequest">
+    <part name="parameters" element="tns:GetDomainInfoRequest"/>
+  </message>
+  <message name="getDomainInfoResponse">
+    <part name="parameters" element="tns:GetDomainInfoResponse"/>
+  </message>
+
+  <message name="getDomainRequest">
+    <part name="parameters" element="tns:GetDomainRequest"/>
+  </message>
+  <message name="getDomainResponse">
+    <part name="parameters" element="tns:GetDomainResponse"/>
+  </message>
+
+  <message name="getServerRequest">
+    <part name="parameters" element="tns:GetServerRequest"/>
+  </message>
+  <message name="getServerResponse">
+    <part name="parameters" element="tns:GetServerResponse"/>
+  </message>
+
+  <message name="modifyDomainRequest">
+    <part name="parameters" element="tns:ModifyDomainRequest"/>
+  </message>
+  <message name="modifyDomainResponse">
+    <part name="parameters" element="tns:ModifyDomainResponse"/>
+  </message>
+
+  <message name="modifyServerRequest">
+    <part name="parameters" element="tns:ModifyServerRequest"/>
+  </message>
+  <message name="modifyServerResponse">
+    <part name="parameters" element="tns:ModifyServerResponse"/>
   </message>
 
   <message name="reloadLocalConfigRequest">
@@ -55,9 +126,53 @@
       <input message="tns:createAccountRequest"/>
       <output message="tns:createAccountResponse"/>
     </operation>
+    <operation name="createDomainRequest">
+      <input message="tns:createDomainRequest"/>
+      <output message="tns:createDomainResponse"/>
+    </operation>
+    <operation name="createServerRequest">
+      <input message="tns:createServerRequest"/>
+      <output message="tns:createServerResponse"/>
+    </operation>
+    <operation name="deleteDomainRequest">
+      <input message="tns:deleteDomainRequest"/>
+      <output message="tns:deleteDomainResponse"/>
+    </operation>
+    <operation name="deleteServerRequest">
+      <input message="tns:deleteServerRequest"/>
+      <output message="tns:deleteServerResponse"/>
+    </operation>
     <operation name="getAccountRequest">
       <input message="tns:getAccountRequest"/>
       <output message="tns:getAccountResponse"/>
+    </operation>
+    <operation name="getAllDomainsRequest">
+      <input message="tns:getAllDomainsRequest"/>
+      <output message="tns:getAllDomainsResponse"/>
+    </operation>
+    <operation name="getAllServersRequest">
+      <input message="tns:getAllServersRequest"/>
+      <output message="tns:getAllServersResponse"/>
+    </operation>
+    <operation name="getDomainInfoRequest">
+      <input message="tns:getDomainInfoRequest"/>
+      <output message="tns:getDomainInfoResponse"/>
+    </operation>
+    <operation name="getDomainRequest">
+      <input message="tns:getDomainRequest"/>
+      <output message="tns:getDomainResponse"/>
+    </operation>
+    <operation name="getServerRequest">
+      <input message="tns:getServerRequest"/>
+      <output message="tns:getServerResponse"/>
+    </operation>
+    <operation name="modifyDomainRequest">
+      <input message="tns:modifyDomainRequest"/>
+      <output message="tns:modifyDomainResponse"/>
+    </operation>
+    <operation name="modifyServerRequest">
+      <input message="tns:modifyServerRequest"/>
+      <output message="tns:modifyServerResponse"/>
     </operation>
     <operation name="reloadLocalConfigRequest">
       <input message="tns:reloadLocalConfigRequest"/>
@@ -90,8 +205,129 @@
       </output>
     </operation>
 
+    <operation name="createDomainRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/CreateDomain" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="createServerRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/CreateServer" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="deleteDomainRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/DeleteDomain" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="deleteServerRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/DeleteServer" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="getAccountRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetAccount" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getAllDomainsRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetAllDomains" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getAllServersRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetAllServers" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getDomainInfoRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetDomainInfo" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getDomainRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetDomain" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getServerRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetServer" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="modifyDomainRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/ModifyDomain" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="modifyServerRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/ModifyServer" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>

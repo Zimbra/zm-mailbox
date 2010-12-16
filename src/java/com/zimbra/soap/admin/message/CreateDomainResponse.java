@@ -17,40 +17,28 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.Account;
-import com.zimbra.soap.admin.type.AttributeSelectorImpl;
-
+import com.zimbra.soap.admin.type.DomainInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_GET_ACCOUNT_REQUEST)
-@XmlType(propOrder = {AdminConstants.E_ACCOUNT})
-public class GetAccountRequest extends AttributeSelectorImpl {
+@XmlRootElement(name=AdminConstants.E_CREATE_DOMAIN_RESPONSE)
+@XmlType(propOrder = {AdminConstants.E_DOMAIN})
+public class CreateDomainResponse {
 
-    @XmlAttribute(name=AdminConstants.A_APPLY_COS, required=false) private boolean applyCos = true;
-    @XmlElement(name=AdminConstants.E_ACCOUNT)
-    private Account account;
-
-    public GetAccountRequest() {
+    @XmlElement(name=AdminConstants.E_DOMAIN) private DomainInfo domain;
+    public CreateDomainResponse() {
     }
 
-    public void setAccount(Account account) {
-        this.account = account;
-    }
-    public Account getAccount() {
-        return account;
+    public void setDomain(DomainInfo domain) {
+        this.domain = domain;
     }
 
-    public void setApplyCos(boolean applyCos) {
-        this.applyCos = applyCos;
+    public DomainInfo getDomain() {
+        return domain;
     }
 
-    public boolean isApplyCos() {
-        return applyCos;
-    }
 }

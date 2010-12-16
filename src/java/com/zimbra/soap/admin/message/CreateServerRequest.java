@@ -13,47 +13,34 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.admin.message;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.AdminAttrsImpl;
 
-@XmlRootElement(name=AdminConstants.E_A)
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlRootElement(name=AdminConstants.E_CREATE_SERVER_REQUEST)
 @XmlType(propOrder = {})
-public class Attr
-{
-    @XmlAttribute(name=AdminConstants.A_N) private String n;
-    @XmlValue private String value;
+public class CreateServerRequest extends AdminAttrsImpl {
 
-    public Attr() {
+    @XmlAttribute(name=AdminConstants.E_NAME, required=true)
+    private String name;
+
+    public CreateServerRequest() {
     }
 
-    public Attr(String n, String value) {
-        this.n = n;
-        this.setValue(value);
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public Attr(String value) {
-        this.setValue(value);
-    }
-
-    public void setN(String n) {
-        this.n = n;
-    }
-
-    public String getN() {
-        return n;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
-    }
-
-    public String getValue() {
-        return value;
+    public String getName() {
+        return name;
     }
 }

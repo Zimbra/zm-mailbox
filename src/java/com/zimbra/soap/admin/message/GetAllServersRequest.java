@@ -21,36 +21,35 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.Account;
-import com.zimbra.soap.admin.type.AttributeSelectorImpl;
-
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_GET_ACCOUNT_REQUEST)
-@XmlType(propOrder = {AdminConstants.E_ACCOUNT})
-public class GetAccountRequest extends AttributeSelectorImpl {
+@XmlRootElement(name=AdminConstants.E_GET_ALL_SERVERS_REQUEST)
+@XmlType(propOrder = {})
+public class GetAllServersRequest {
 
-    @XmlAttribute(name=AdminConstants.A_APPLY_COS, required=false) private boolean applyCos = true;
-    @XmlElement(name=AdminConstants.E_ACCOUNT)
-    private Account account;
+    @XmlAttribute(name=AdminConstants.A_SERVICE, required=false)
+    private String service = null;
 
-    public GetAccountRequest() {
+    @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
+    private boolean applyConfig = true;
+
+    public GetAllServersRequest() {
     }
 
-    public void setAccount(Account account) {
-        this.account = account;
-    }
-    public Account getAccount() {
-        return account;
+    public void setService(String service) {
+        this.service = service;
     }
 
-    public void setApplyCos(boolean applyCos) {
-        this.applyCos = applyCos;
+    public String getService() {
+        return service;
     }
 
-    public boolean isApplyCos() {
-        return applyCos;
+    public void setApplyConfig(boolean applyConfig) {
+        this.applyConfig = applyConfig;
+    }
+
+    public boolean isApplyConfig() {
+        return applyConfig;
     }
 }

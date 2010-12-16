@@ -15,45 +15,37 @@
 
 package com.zimbra.soap.admin.type;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.XmlValue;
-
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlRootElement(name=AdminConstants.E_A)
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlRootElement(name=AdminConstants.E_SERVER)
 @XmlType(propOrder = {})
-public class Attr
-{
-    @XmlAttribute(name=AdminConstants.A_N) private String n;
-    @XmlValue private String value;
+public class ServerInfo extends AdminAttrsImpl {
 
-    public Attr() {
+    @XmlAttribute(name=AdminConstants.A_NAME, required=true) private String name;
+    @XmlAttribute(name=AdminConstants.A_ID, required=true) private String id;
+
+    public ServerInfo() {
     }
 
-    public Attr(String n, String value) {
-        this.n = n;
-        this.setValue(value);
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public Attr(String value) {
-        this.setValue(value);
+    public String getName() {
+        return name;
     }
 
-    public void setN(String n) {
-        this.n = n;
+    public void setId(String id) {
+        this.id = id;
     }
 
-    public String getN() {
-        return n;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
-    }
-
-    public String getValue() {
-        return value;
+    public String getId() {
+        return id;
     }
 }
