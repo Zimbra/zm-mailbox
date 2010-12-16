@@ -7763,4 +7763,6 @@ public class Mailbox {
         } catch (ServiceException e) {}
         return enabled;
     }
+
+    public boolean useDumpsterForSpam() { return false; }
 }
