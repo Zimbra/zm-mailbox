@@ -256,13 +256,13 @@ public final class SoapEngine {
             if (doc.getQName().equals(ZimbraNamespace.E_BATCH_REQUEST)) {
                 boolean contOnError = doc.getAttribute(ZimbraNamespace.A_ONERROR, ZimbraNamespace.DEF_ONERROR).equals("continue");
                 responseBody = zsc.createElement(ZimbraNamespace.E_BATCH_RESPONSE);
-                ZimbraLog.soap.info(doc.getQualifiedName());
+                ZimbraLog.soap.info(doc.getName());
                 for (Element req : doc.listElements()) {
                     // if (mLog.isDebugEnabled())
                     //     mLog.debug("dispatch: multi " + req.getQualifiedName());
 
                     String id = req.getAttribute(A_REQUEST_CORRELATOR, null);
-                    ZimbraLog.soap.info("(batch) " + req.getQualifiedName());
+                    ZimbraLog.soap.info("(batch) " + req.getName());
                     Element br = dispatchRequest(req, context, zsc);
                     if (id != null)
                         br.addAttribute(A_REQUEST_CORRELATOR, id);
@@ -272,7 +272,7 @@ public final class SoapEngine {
                 }
             } else {
                 String id = doc.getAttribute(A_REQUEST_CORRELATOR, null);
-                ZimbraLog.soap.info(doc.getQualifiedName());
+                ZimbraLog.soap.info(doc.getName());
                 responseBody = dispatchRequest(doc, context, zsc);
                 if (id != null)
                     responseBody.addAttribute(A_REQUEST_CORRELATOR, id);
@@ -289,7 +289,7 @@ public final class SoapEngine {
                 // if we don't detach it first.
                 doc.detach();
                 ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, zsc.getRequestedAccountId()).disableNotifications();
-                ZimbraLog.soap.info(doc.getQualifiedName() + " (Proxying to " + zsc.getProxyTarget().toString() +")");
+                ZimbraLog.soap.info(doc.getName() + " (Proxying to " + zsc.getProxyTarget().toString() +")");
                 responseBody = zsc.getProxyTarget().dispatch(doc, zscTarget);
                 responseBody.detach();
             } catch (SoapFaultException e) {
