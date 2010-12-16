@@ -35,6 +35,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.SharedInputStream;
 
 import com.sun.mail.util.ASCIIUtility;
+import com.sun.mail.util.PropUtil;
 import com.zimbra.common.util.ByteUtil;
 
 public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
@@ -324,9 +325,15 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
+    private static boolean decodeFileName = PropUtil.getBooleanSystemProperty("mail.mime.decodefilename", false);
+
     @Override public String getFileName() throws MessagingException {
         if (ZPARSER) {
-            return mPart.getFilename();
+            String filename = mPart.getFilename();
+            if (filename != null && !decodeFileName) {
+                filename = com.zimbra.common.mime.MimeHeader.escape(filename, null, false);
+            }
+            return filename;
         } else {
             return super.getFileName();
         }
@@ -334,6 +341,7 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
 
     @Override public void setFileName(String filename) throws MessagingException {
         if (ZPARSER) {
+            // does the right thing regardless of whether the filename is encoded or not
             mPart.setFilename(filename);
         } else {
             super.setFileName(filename);

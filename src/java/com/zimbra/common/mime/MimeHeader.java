@@ -379,7 +379,7 @@ public class MimeHeader implements Cloneable {
         }
     }
 
-    static String escape(final String value, final String charset, final boolean phrase) {
+    public static String escape(final String value, final String charset, final boolean phrase) {
         boolean needsQuote = false, wsp = true;
         int needs2047 = 0, needsEscape = 0, cleanTo = 0, cleanFrom = value.length();
         for (int i = 0, len = value.length(); i < len; i++) {

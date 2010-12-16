@@ -204,7 +204,7 @@ public abstract class MimePart implements Cloneable {
     }
 
     public ContentDisposition getContentDisposition() {
-        return new ContentDisposition(getMimeHeader("Content-Disposition"));
+        return new ContentDisposition(getEncodedMimeHeader("Content-Disposition"));
     }
 
     public String getFilename() {
