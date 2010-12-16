@@ -1831,12 +1831,13 @@ public class DbMailItem {
         String command = Db.supports(Db.Capability.REPLACE_INTO) ? "REPLACE" : "INSERT";
         String whereIdIn = DbUtil.whereIn("id", count);
         String whereItemIdIn = DbUtil.whereIn("item_id", count);
+        String notSpam = !mbox.useDumpsterForSpam() ? " AND folder_id != " + Mailbox.ID_FOLDER_SPAM : "";
         PreparedStatement miCopyStmt = null;
         try {
             miCopyStmt = conn.prepareStatement(command + " INTO " + dumpsterMiTableName +
                     " (" + MAIL_ITEM_DUMPSTER_COPY_DEST_FIELDS + ")" +
                     " SELECT " + MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS + " FROM " + miTableName +
-                    " WHERE " + IN_THIS_MAILBOX_AND + whereIdIn + " AND type IN " + DUMPSTER_TYPES);
+                    " WHERE " + IN_THIS_MAILBOX_AND + whereIdIn + " AND type IN " + DUMPSTER_TYPES + notSpam);
             int pos = 1;
             miCopyStmt.setInt(pos++, mbox.getOperationTimestamp());
             pos = setMailboxId(miCopyStmt, mbox, pos);
@@ -2811,6 +2812,7 @@ public class DbMailItem {
      */
     private static List<Integer> accumulateLeafNodes(PendingDelete info, Mailbox mbox, ResultSet rs) throws SQLException, ServiceException {
         boolean dumpsterEnabled = mbox.dumpsterEnabled();
+        boolean useDumpsterForSpam = mbox.useDumpsterForSpam();
         StoreManager sm = StoreManager.getInstance();
         List<Integer> versioned = new ArrayList<Integer>();
 
@@ -2862,7 +2864,8 @@ public class DbMailItem {
             else
                 count.increment(1, isDeleted ? 1 : 0, size);
 
-            if (!dumpsterEnabled) {
+            if (!dumpsterEnabled ||
+                (folderId != null && folderId.intValue() == Mailbox.ID_FOLDER_SPAM && !useDumpsterForSpam)) {
                 String blobDigest = rs.getString(LEAF_CI_BLOB_DIGEST);
                 if (blobDigest != null) {
                     info.blobDigests.add(blobDigest);
@@ -2898,6 +2901,7 @@ public class DbMailItem {
             return;
         }
         boolean dumpsterEnabled = mbox.dumpsterEnabled();
+        boolean useDumpsterForSpam = mbox.useDumpsterForSpam();
         Connection conn = mbox.getOperationConnection();
         StoreManager sm = StoreManager.getInstance();
 
@@ -2922,7 +2926,8 @@ public class DbMailItem {
                 else
                     count.increment(0, 0, rs.getLong(3));
 
-                if (!dumpsterEnabled) {
+                if (!dumpsterEnabled ||
+                    (folderId != null && folderId.intValue() == Mailbox.ID_FOLDER_SPAM && !useDumpsterForSpam)) {
                     String blobDigest = rs.getString(6);
                     if (blobDigest != null) {
                         info.blobDigests.add(blobDigest);

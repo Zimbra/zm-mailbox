@@ -2723,7 +2723,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         // 1) deleting a regular item and dumpster is not in use, OR
         // 2) permantently deleting an item from dumpster
         // In other words, skip the blob/index deletes when soft-deleting item to dumpster.
-        if (!getMailbox().dumpsterEnabled() || inDumpster()) {
+        if (!getMailbox().dumpsterEnabled() || inDumpster() || (inSpam() && !getMailbox().useDumpsterForSpam())) {
             if (mData.indexId != -1) {
                 int indexId = mData.indexId > 0 ? mData.indexId : mData.id;
                 if (isTagged(Flag.ID_FLAG_COPIED)) {
