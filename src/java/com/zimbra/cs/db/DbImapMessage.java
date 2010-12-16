@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -425,7 +425,7 @@ public class DbImapMessage {
                 "  LEFT OUTER JOIN " + getTableName(mbox) + " imap " +
                 "  ON " +MBOX_JOIN+ " imap.item_id = mi.id " +
                 "WHERE " +IN_MI_MAILBOX_AND+ " mi.folder_id = ? AND imap.item_id IS NULL " +
-                "AND mi.type IN (" + MailItem.TYPE_MESSAGE + ", " + MailItem.TYPE_CHAT + ")");
+                "AND mi.type IN (" + MailItem.Type.MESSAGE.toByte() + ", " + MailItem.Type.CHAT.toByte() + ")");
             int pos = 1;
             pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos, folderId);

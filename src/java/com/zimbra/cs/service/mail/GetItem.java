@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -60,7 +60,7 @@ public class GetItem extends MailDocumentHandler {
         MailItem item;
         if (id != null) {
             // get item by id
-            item = mbox.getItemById(octxt, new ItemId(id, zsc).getId(), MailItem.TYPE_UNKNOWN);
+            item = mbox.getItemById(octxt, new ItemId(id, zsc).getId(), MailItem.Type.UNKNOWN);
         } else if (path != null) {
             // get item by name within containing folder id (from root by default)
             int folderId = folderStr == null ? Mailbox.ID_FOLDER_USER_ROOT : new ItemId(folderStr, zsc).getId();

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -44,9 +44,14 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class CompleteTaskInstance extends CalendarRequest {
 
     private static final String[] TARGET_PATH = new String[] { MailConstants.A_ID };
+
+    @Override
     protected String[] getProxiedIdPath(Element request)     { return TARGET_PATH; }
+
+    @Override
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
@@ -70,12 +75,12 @@ public class CompleteTaskInstance extends CalendarRequest {
             if (!inv.isRecurrence()) {
                 throw ServiceException.INVALID_REQUEST("Task is not a recurring task", null);
             }
-            
+
             ParsedDateTime recurStart = inv.getStartTime();
             if (recurStart == null) {
                 throw ServiceException.INVALID_REQUEST("Recurring task is missing start time", null);
             }
-    
+
             // the instance being marked complete
             TimeZoneMap tzmap = inv.getTimeZoneMap();
             Element tzElem = request.getOptionalElement(MailConstants.E_CAL_TZ);
@@ -130,10 +135,8 @@ public class CompleteTaskInstance extends CalendarRequest {
         return response;
     }
 
-    private Invite createCompletedInstanceInvite(Invite recur, ParsedDateTime dtStart)
-    throws ServiceException {
-        Invite inst = new Invite(MailItem.TYPE_TASK,
-                                 recur.getMethod(), recur.getTimeZoneMap(), recur.isOrganizer());
+    private Invite createCompletedInstanceInvite(Invite recur, ParsedDateTime dtStart) throws ServiceException {
+        Invite inst = new Invite(MailItem.Type.TASK, recur.getMethod(), recur.getTimeZoneMap(), recur.isOrganizer());
 
         long now = System.currentTimeMillis();
 

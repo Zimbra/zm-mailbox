@@ -498,12 +498,14 @@ public class ImapPath implements Comparable<ImapPath> {
 
         if (mFolder instanceof Folder) {
             Folder folder = (Folder) mFolder;
-            if (folder instanceof SearchFolder || folder.getDefaultView() == MailItem.TYPE_CONTACT)
+            if (folder instanceof SearchFolder || folder.getDefaultView() == MailItem.Type.CONTACT) {
                 return false;
+            }
         } else {
             ZFolder zfolder = (ZFolder) mFolder;
-            if (zfolder instanceof ZSearchFolder || zfolder.getDefaultView() == ZFolder.View.contact)
+            if (zfolder instanceof ZSearchFolder || zfolder.getDefaultView() == ZFolder.View.contact) {
                 return false;
+            }
         }
 
         // note that getFolderRights() operates on the referent folder...
@@ -564,9 +566,13 @@ public class ImapPath implements Comparable<ImapPath> {
             if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE)
                 return false;
             // calendars, briefcases, etc. are not surfaced in IMAP
-            byte view = folder.getDefaultView();
-            if (view == MailItem.TYPE_APPOINTMENT || view == MailItem.TYPE_TASK || view == MailItem.TYPE_WIKI || view == MailItem.TYPE_DOCUMENT)
+            switch (folder.getDefaultView()) {
+            case APPOINTMENT:
+            case TASK:
+            case WIKI:
+            case DOCUMENT:
                 return false;
+            }
             // hide subfolders of trashed mountpoints
             if (mReferent != this && folder.inTrash() && !((Mountpoint) folder).getTarget().equals(mReferent.asItemId()))
                 return false;

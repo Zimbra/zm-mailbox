@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,9 +22,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 
-/**
- * 
- */
 public class LocalizedSortBy extends SortBy {
     LocalizedSortBy(Type t, String str, SortCriterion criterion, SortDirection direction,
                     Locale locale) {
@@ -32,21 +29,23 @@ public class LocalizedSortBy extends SortBy {
         mLocale = locale;
         System.out.println(mLocale);
     }
-    
+
     public Comparator<ZimbraHit> getZimbraHitComparator() {
         Collator col = Collator.getInstance(mLocale);
         return new NameComparator(col);
     };
-    
+
     private Locale mLocale;
-    
+
     private class NameComparator implements Comparator<ZimbraHit> {
         private Collator mCol;
         NameComparator(Collator col) {
             mCol = col;
         }
+
+        @Override
         public int compare(ZimbraHit lhs, ZimbraHit rhs) {
-            int toRet = 0;            
+            int toRet = 0;
             try {
                 toRet = mCol.compare(lhs.getName(), rhs.getName());
                 if (toRet == 0) {
@@ -63,9 +62,8 @@ public class LocalizedSortBy extends SortBy {
             return toRet;
         }
     }
-    
-    public static class TestHit extends ZimbraHit
-    {
+
+    public static class TestHit extends ZimbraHit {
         private String mName;
         private int mItemId;
         TestHit(String name, int id) {
@@ -117,7 +115,8 @@ public class LocalizedSortBy extends SortBy {
         @Override
         void setItem(MailItem item) throws ServiceException {
         }
-        
+
+        @Override
         public String toString() {
             return mName+","+mItemId;
         }

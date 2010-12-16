@@ -16,6 +16,7 @@ package com.zimbra.cs.index;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -79,8 +80,8 @@ public class DBQueryOperation extends QueryOperation {
      *   -- ie there is no need to call getChunk() anymore
      */
     private boolean mEndOfHits = false;
-    private Set<Byte> mTypes = new HashSet<Byte>();
-    private Set<Byte> mExcludeTypes = new HashSet<Byte>();
+    private final Set<MailItem.Type> types = EnumSet.noneOf(MailItem.Type.class);
+    private final Set<MailItem.Type> excludeTypes = EnumSet.noneOf(MailItem.Type.class);
 
     /**
      * An attached Lucene constraint.
@@ -572,7 +573,7 @@ public class DBQueryOperation extends QueryOperation {
                         }
                     }
 
-                    if (docs == null || !ZimbraQueryResultsImpl.shouldAddDuplicateHits(sr.type)) {
+                    if (docs == null || !ZimbraQueryResultsImpl.shouldAddDuplicateHits(MailItem.Type.of(sr.type))) {
                         ZimbraHit toAdd = context.getResults().getZimbraHit(
                                 context.getMailbox(), score, sr, null, mExtra);
                         if (toAdd != null) {
@@ -652,46 +653,44 @@ public class DBQueryOperation extends QueryOperation {
         return toRet;
     }
 
-    private Set<Byte> convertTypesToDbQueryTypes(Set<Byte> types) {
-        Set<Byte> result = new HashSet<Byte>();
+    private Set<MailItem.Type> convertTypesToDbQueryTypes(Set<MailItem.Type> types) {
+        Set<MailItem.Type> result = EnumSet.noneOf(MailItem.Type.class);
 
-        for (Byte b : types) {
-            switch (b) {
-            case 0:
-                return result;
-            case MailItem.TYPE_FOLDER:
-            case MailItem.TYPE_SEARCHFOLDER:
-            case MailItem.TYPE_TAG:
-                result.add(MailItem.TYPE_UNKNOWN);
+        for (MailItem.Type type : types) {
+            switch (type) {
+            case FOLDER:
+            case SEARCHFOLDER:
+            case TAG:
+                result.add(MailItem.Type.UNKNOWN);
                 break;
-            case MailItem.TYPE_CONVERSATION:
-                result.add(MailItem.TYPE_MESSAGE);
-                result.add(MailItem.TYPE_CHAT);
+            case CONVERSATION:
+                result.add(MailItem.Type.MESSAGE);
+                result.add(MailItem.Type.CHAT);
                 break;
-            case MailItem.TYPE_MESSAGE:
-                result.add(MailItem.TYPE_MESSAGE);
-                result.add(MailItem.TYPE_CHAT);
+            case MESSAGE:
+                result.add(MailItem.Type.MESSAGE);
+                result.add(MailItem.Type.CHAT);
                 break;
-            case MailItem.TYPE_CONTACT:
-                result.add(MailItem.TYPE_CONTACT);
+            case CONTACT:
+                result.add(MailItem.Type.CONTACT);
                 break;
-            case MailItem.TYPE_APPOINTMENT:
-                result.add(MailItem.TYPE_APPOINTMENT);
+            case APPOINTMENT:
+                result.add(MailItem.Type.APPOINTMENT);
                 break;
-            case MailItem.TYPE_TASK:
-                result.add(MailItem.TYPE_TASK);
+            case TASK:
+                result.add(MailItem.Type.TASK);
                 break;
-            case MailItem.TYPE_DOCUMENT:
-                result.add(MailItem.TYPE_DOCUMENT);
+            case DOCUMENT:
+                result.add(MailItem.Type.DOCUMENT);
                 break;
-            case MailItem.TYPE_NOTE:
-                result.add(MailItem.TYPE_NOTE);
+            case NOTE:
+                result.add(MailItem.Type.NOTE);
                 break;
-            case MailItem.TYPE_FLAG:
-                result.add(MailItem.TYPE_FLAG);
+            case FLAG:
+                result.add(MailItem.Type.FLAG);
                 break;
-            case MailItem.TYPE_WIKI:
-                result.add(MailItem.TYPE_WIKI);
+            case WIKI:
+                result.add(MailItem.Type.WIKI);
                 break;
             }
         }
@@ -699,9 +698,9 @@ public class DBQueryOperation extends QueryOperation {
         return result;
     }
 
-    private Set<Byte> getDbQueryTypes() {
-        Set<Byte> result = convertTypesToDbQueryTypes(context.getResults().getTypes());
-        result.addAll(mTypes);
+    private Set<MailItem.Type> getDbQueryTypes() {
+        Set<MailItem.Type> result = convertTypesToDbQueryTypes(context.getResults().getTypes());
+        result.addAll(types);
         return result;
     }
 
@@ -711,8 +710,7 @@ public class DBQueryOperation extends QueryOperation {
      * @return FALSE if the search cannot be run (no results)
      */
     private boolean prepareSearchConstraints() {
-
-        Set<Byte> types = getDbQueryTypes();
+        Set<MailItem.Type> types = getDbQueryTypes();
         if (types.size() == 0)  {
             ZimbraLog.index_search.debug("NO RESULTS -- no known types requested");
             return false;
@@ -1109,21 +1107,17 @@ public class DBQueryOperation extends QueryOperation {
 
     private DBQueryOperation cloneInternal() {
         try {
-            DBQueryOperation toRet = (DBQueryOperation)super.clone();
+            DBQueryOperation result = (DBQueryOperation)super.clone();
 
             assert(mDBHits == null);
             assert(mDBHitsIter == null);
             assert(mLuceneChunk == null);
 
-
-            toRet.mConstraints = (IConstraints)mConstraints.clone();
-
-            toRet.mTypes = new HashSet<Byte>();  toRet.mTypes.addAll(mTypes);
-            toRet.mExcludeTypes = new HashSet<Byte>();  toRet.mExcludeTypes.addAll(mExcludeTypes);
-
-            toRet.mNextHits = new ArrayList<ZimbraHit>();
-
-            return toRet;
+            result.mConstraints = (IConstraints) mConstraints.clone();
+            result.types.addAll(types);
+            result.excludeTypes.addAll(excludeTypes);
+            result.mNextHits = new ArrayList<ZimbraHit>();
+            return result;
         } catch (CloneNotSupportedException e) {
             assert(false);
             return null;

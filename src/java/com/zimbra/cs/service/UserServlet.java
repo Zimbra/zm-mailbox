@@ -409,7 +409,7 @@ public class UserServlet extends ZimbraServlet {
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
                 return;
             }
-            
+
             checkTargetAccountStatus(context);
 
             if (proxyIfNecessary(req, resp, context))
@@ -461,19 +461,19 @@ public class UserServlet extends ZimbraServlet {
 
         return true;
     }
-    
+
     private void checkTargetAccountStatus(Context context) throws ServiceException {
         if (context.targetAccount != null) {
             String acctStatus = context.targetAccount.getAccountStatus(Provisioning.getInstance());
-            
+
             // no one can touch an account if it in maintenance mode
             if (Provisioning.ACCOUNT_STATUS_MAINTENANCE.equals(acctStatus))
                 throw AccountServiceException.MAINTENANCE_MODE();
-            
+
             // allow only admin access if the account is not active
-            if (!Provisioning.ACCOUNT_STATUS_ACTIVE.equals(acctStatus) && 
-                !(isAdminRequest(context.req) && 
-                  context.authToken != null && 
+            if (!Provisioning.ACCOUNT_STATUS_ACTIVE.equals(acctStatus) &&
+                !(isAdminRequest(context.req) &&
+                  context.authToken != null &&
                   (context.authToken.isDelegatedAuth() || AdminAccessControl.isAdequateAdminAccount(context.authAccount))))
                 throw AccountServiceException.ACCOUNT_INACTIVE(context.targetAccount.getName());
         }
@@ -567,7 +567,7 @@ public class UserServlet extends ZimbraServlet {
             }
 
             checkTargetAccountStatus(context);
-            
+
             if (proxyIfNecessary(req, resp, context))
                 return;
 
@@ -678,7 +678,7 @@ public class UserServlet extends ZimbraServlet {
 
         for (int id : context.reqListIds) {
             try {
-                context.respListItems.add(context.targetMailbox.getItemById(context.opContext, id, MailItem.TYPE_UNKNOWN));
+                context.respListItems.add(context.targetMailbox.getItemById(context.opContext, id, MailItem.Type.UNKNOWN));
             } catch (NoSuchItemException x) {
                 ZimbraLog.misc.info(x.getMessage());
             } catch (ServiceException x) {
@@ -724,7 +724,7 @@ public class UserServlet extends ZimbraServlet {
         }
 
         if (context.itemId != null) {
-            context.target = mbox.getItemById(context.opContext, context.itemId.getId(), MailItem.TYPE_UNKNOWN);
+            context.target = mbox.getItemById(context.opContext, context.itemId.getId(), MailItem.Type.UNKNOWN);
 
             context.itemPath = context.target.getPath();
             if (context.target instanceof Mountpoint || context.extraPath == null || context.extraPath.equals(""))
@@ -1277,35 +1277,35 @@ public class UserServlet extends ZimbraServlet {
     static {
         ZIMBRA_DOC_CONTENT_TYPE.add("application/x-zimbra-doc");
     }
-    
+
     private String defaultFormat(Context context) {
-        if (context.hasPart())
+        if (context.hasPart()) {
             return "native";
-
-        byte type = MailItem.TYPE_UNKNOWN;
-        if (context.target instanceof Folder)
+        }
+        MailItem.Type type = MailItem.Type.UNKNOWN;
+        if (context.target instanceof Folder) {
             type = ((Folder) context.target).getDefaultView();
-        else if (context.target != null)
+        } else if (context.target != null) {
             type = context.target.getType();
-
+        }
         switch (type) {
-            case MailItem.TYPE_APPOINTMENT:
-            case MailItem.TYPE_TASK:
-                return "ics";
-            case MailItem.TYPE_CONTACT:
-                return context.target instanceof Folder? "csv" : "vcf";
-            case MailItem.TYPE_DOCUMENT:
-                // Zimbra docs and folder rendering should use html formatter.
-                if (context.target instanceof Folder)
-                    return "html";
-                String contentType = ((Document)context.target).getContentType();
-                if (contentType != null && contentType.indexOf(';') > 0)
-                    contentType = contentType.substring(0, contentType.indexOf(';')).toLowerCase();
-                if (ZIMBRA_DOC_CONTENT_TYPE.contains(contentType))
-                    return "html";
-                return "native";
-            default:
-                return "native";
+        case APPOINTMENT:
+        case TASK:
+            return "ics";
+        case CONTACT:
+            return context.target instanceof Folder? "csv" : "vcf";
+        case DOCUMENT:
+            // Zimbra docs and folder rendering should use html formatter.
+            if (context.target instanceof Folder)
+                return "html";
+            String contentType = ((Document)context.target).getContentType();
+            if (contentType != null && contentType.indexOf(';') > 0)
+                contentType = contentType.substring(0, contentType.indexOf(';')).toLowerCase();
+            if (ZIMBRA_DOC_CONTENT_TYPE.contains(contentType))
+                return "html";
+            return "native";
+        default:
+            return "native";
         }
     }
 
@@ -1479,8 +1479,9 @@ public class UserServlet extends ZimbraServlet {
             Document doc = (Document) item;
             StringBuilder u = new StringBuilder(url);
             u.append("?").append(QP_AUTH).append('=').append(AUTH_COOKIE);
-            if (doc.getType() == MailItem.TYPE_WIKI)
+            if (doc.getType() == MailItem.Type.WIKI) {
                 u.append("&fmt=wiki");
+            }
             PutMethod method = new PutMethod(u.toString());
             String contentType = doc.getContentType();
             method.addRequestHeader("Content-Type", contentType);

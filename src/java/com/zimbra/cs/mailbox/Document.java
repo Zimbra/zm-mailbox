@@ -155,13 +155,14 @@ public class Document extends MailItem {
         saveData(null);
     }
 
-    protected static UnderlyingData prepareCreate(byte type, int id, Folder folder, String name, String mimeType,
-                                                  ParsedDocument pd, Metadata meta, CustomMetadata custom)
-    throws ServiceException {
-        if (folder == null || !folder.canContain(TYPE_DOCUMENT))
+    protected static UnderlyingData prepareCreate(MailItem.Type type, int id, Folder folder, String name,
+            String mimeType, ParsedDocument pd, Metadata meta, CustomMetadata custom) throws ServiceException {
+        if (folder == null || !folder.canContain(Type.DOCUMENT)) {
             throw MailServiceException.CANNOT_CONTAIN();
-        if (!folder.canAccess(ACL.RIGHT_INSERT))
+        }
+        if (!folder.canAccess(ACL.RIGHT_INSERT)) {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
+        }
         name = validateItemName(name);
 
         CustomMetadataList extended = (custom == null ? null : custom.asList());
@@ -170,7 +171,7 @@ public class Document extends MailItem {
 
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
-        data.type        = type;
+        data.type        = type.toByte();
         data.folderId    = folder.getId();
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
             data.indexId = 0;
@@ -190,7 +191,7 @@ public class Document extends MailItem {
         assert(id != Mailbox.ID_AUTO_INCREMENT);
 
         Mailbox mbox = folder.getMailbox();
-        UnderlyingData data = prepareCreate(TYPE_DOCUMENT, id, folder, filename, type, pd, null, custom);
+        UnderlyingData data = prepareCreate(Type.DOCUMENT, id, folder, filename, type, pd, null, custom);
         data.contentChanged(mbox);
 
         ZimbraLog.mailop.info("Adding Document %s: id=%d, folderId=%d, folderName=%s.", filename, data.id, folder.getId(), folder.getName());
@@ -255,7 +256,7 @@ public class Document extends MailItem {
     @Override
     public String toString() {
         Objects.ToStringHelper helper = Objects.toStringHelper(this);
-        helper.add("type", getNameForType(this));
+        helper.add("type", getType());
         helper.add(CN_FILE_NAME, getName());
         helper.add(CN_EDITOR, getCreator());
         helper.add(CN_MIME_TYPE, mContentType);

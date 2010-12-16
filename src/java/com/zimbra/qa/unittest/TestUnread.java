@@ -15,7 +15,7 @@
 
 package com.zimbra.qa.unittest;
 
-import java.util.Collections;
+import java.util.EnumSet;
 
 import junit.framework.TestCase;
 
@@ -117,11 +117,11 @@ public class TestUnread extends TestCase
         ZimbraLog.test.debug("Created conversation, id=" + mConvId);
 
         Folder folder = mMbox.createFolder(null, FOLDER1_NAME, Mailbox.ID_FOLDER_INBOX,
-            MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+            MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
         mFolder1Id = folder.getId();
 
         folder = mMbox.createFolder(null, FOLDER2_NAME, mFolder1Id,
-            MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+            MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
         mFolder2Id = folder.getId();
 
         Tag tag = mMbox.createTag(null, TAG1_NAME, (byte)0);
@@ -369,7 +369,7 @@ public class TestUnread extends TestCase
         verifySetUp();
 
         ZimbraQueryResults results = mMbox.index.search(new OperationContext(mMbox), "is:unread",
-                Collections.singleton(MailItem.TYPE_MESSAGE), SortBy.DATE_DESCENDING, 100);
+                EnumSet.of(MailItem.Type.MESSAGE), SortBy.DATE_DESCENDING, 100);
         assertTrue("No search results found", results.hasNext());
         results.doneWithSearchResults();
     }
@@ -463,7 +463,7 @@ public class TestUnread extends TestCase
         }
 
 //        if (item.getType() == MailItem.TYPE_MESSAGE || item.getType() == MailItem.TYPE_INVITE) {
-        if (item.getType() == MailItem.TYPE_MESSAGE) {
+        if (item.getType() == MailItem.Type.MESSAGE) {
             DbResults results = DbUtil.executeQuery(
                 "SELECT unread " +
                 "FROM " + DbMailItem.getMailItemTableName(item) +

@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Feb 17, 2005
  */
 package com.zimbra.cs.mailbox;
 
@@ -56,31 +52,34 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
  * An APPOINTMENT consists of one or more INVITES in the same series -- ie that
  * have the same UID. From the appointment you can get the INSTANCES which are
  * the start/end times of each occurence.
- * 
+ *
  * Sample Appointment: APPOINTMENT UID=1234 (two INVITES above) ...Instances on
  * every monday with name "Gorilla Discussion" EXCEPT for the 21st, where we
  * talk about lefties instead. CANCELED for the 28th
+ *
+ * @since Feb 17, 2005
  */
 public class Appointment extends CalendarItem {
 
     public Appointment(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
-        if (mData.type != TYPE_APPOINTMENT)
+        if (mData.type != Type.APPOINTMENT.toByte()) {
             throw new IllegalArgumentException();
+        }
     }
 
     /**
-     * Return this accounts "effective" FBA data -- ie the FBA that is the result of the most recent and 
-     * most specific (specific b/c some replies might be for just one instance, some might be for recurrence-id=0, 
+     * Return this accounts "effective" FBA data -- ie the FBA that is the result of the most recent and
+     * most specific (specific b/c some replies might be for just one instance, some might be for recurrence-id=0,
      * etc) given the requested Invite and Instance to check against.
-     * 
+     *
      * For example, imagine an appt with no exceptions, but two replies:
      *    RECUR=0, REPLY=accept (reply to the default invite, accept it)
      *    RECUR=20051010 REPLY=decline (reply to DECLINE the instance on 10/10/2005
-     * 
+     *
      * The FBA for the 10/10 instance will obviously be different than the one for any other instance.  If you
      * add Exceptions into the mix, then there are even more permutations.
-     * 
+     *
      * @param inv
      * @param inst
      * @return
@@ -304,11 +303,9 @@ public class Appointment extends CalendarItem {
         return new ConflictCheckResult(list, numConflicts > maxConflicts, hasMoreConflicts);
     }
 
-    protected String processPartStat(Invite invite,
-                                    MimeMessage mmInv,
-                                    boolean forCreate,
-                                    String defaultPartStat)
-    throws ServiceException {
+    @Override
+    protected String processPartStat(Invite invite, MimeMessage mmInv, boolean forCreate, String defaultPartStat)
+            throws ServiceException {
         Mailbox mbox = getMailbox();
         OperationContext octxt = mbox.getOperationContext();
         CreateCalendarItemPlayer player =
@@ -416,26 +413,26 @@ public class Appointment extends CalendarItem {
                                     Invite acceptInv = makeReplyInvite(
                                             account, authAcct, lc, onBehalfOf, allowPrivateAccess, invite, invite.getRecurId(),
                                             CalendarMailSender.VERB_ACCEPT);
-    
+
                                     for (Conflict conflict : conflicts) {
                                         Instance inst = conflict.getInstance();
                                         InviteInfo invInfo = inst.getInviteInfo();
                                         Invite inv = getInvite(invInfo.getMsgId(), invInfo.getComponentId());
                                         RecurId rid = inst.makeRecurId(inv);
-    
+
                                         // Record the decline status in reply list.
                                         getReplyList().modifyPartStat(
                                                 resource, rid, null, resource.getName(), null, null,
                                                 IcalXmlStrMap.PARTSTAT_DECLINED, false, invite.getSeqNo(), opTime);
                                         replyListUpdated = true;
-    
+
                                         // Make REPLY VEVENT for the declined instance.
                                         Invite replyInv = makeReplyInvite(
                                                 account, authAcct, lc, onBehalfOf, allowPrivateAccess, inv, rid,
                                                 CalendarMailSender.VERB_DECLINE);
                                         replyInvites.add(replyInv);
                                     }
-    
+
                                     if (needReplyEmail) {
                                         ICalTimeZone tz = chooseReplyTZ(invite);
                                         // Send one email to accept the series.

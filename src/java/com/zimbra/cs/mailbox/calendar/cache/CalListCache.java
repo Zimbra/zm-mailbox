@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -45,15 +45,16 @@ public class CalListCache {
     CalListCache() {
         ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
         CalListSerializer serializer = new CalListSerializer();
-        mMemcachedLookup = new MemcachedMap<AccountKey, CalList>(memcachedClient, serializer); 
+        mMemcachedLookup = new MemcachedMap<AccountKey, CalList>(memcachedClient, serializer);
     }
 
     private static class CalListSerializer implements MemcachedSerializer<CalList> {
-        
+        @Override
         public Object serialize(CalList value) {
             return value.encodeMetadata().toString();
         }
 
+        @Override
         public CalList deserialize(Object obj) throws ServiceException {
             Metadata meta = new Metadata((String) obj);
             return new CalList(meta);
@@ -119,8 +120,8 @@ public class CalListCache {
                 MailItem item = entry.getValue();
                 if (item instanceof Folder) {
                     Folder folder = (Folder) item;
-                    byte viewType = folder.getDefaultView();
-                    if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
+                    MailItem.Type viewType = folder.getDefaultView();
+                    if (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK) {
                         ChangedFolders changedFolders = changeMap.getAccount(entry.getKey().getAccountId());
                         changedFolders.created.add(folder.getId());
                     }
@@ -133,8 +134,8 @@ public class CalListCache {
                 Object whatChanged = change.what;
                 if (whatChanged instanceof Folder) {
                     Folder folder = (Folder) whatChanged;
-                    byte viewType = folder.getDefaultView();
-                    if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
+                    MailItem.Type viewType = folder.getDefaultView();
+                    if (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK) {
                         ChangedFolders changedFolders = changeMap.getAccount(entry.getKey().getAccountId());
                         int folderId = folder.getId();
                         if ((change.why & Change.MODIFIED_FOLDER) != 0) {
@@ -173,8 +174,8 @@ public class CalListCache {
                 Object deletedObj = entry.getValue();
                 if (deletedObj instanceof Folder) {
                     Folder folder = (Folder) deletedObj;
-                    byte viewType = folder.getDefaultView();
-                    if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
+                    MailItem.Type viewType = folder.getDefaultView();
+                    if (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK) {
                         ChangedFolders changedFolders = changeMap.getAccount(entry.getKey().getAccountId());
                         changedFolders.deleted.add(folder.getId());
                     }

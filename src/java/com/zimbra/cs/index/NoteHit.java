@@ -91,10 +91,6 @@ public final class NoteHit extends ZimbraHit {
         return mMailItemId;
     }
 
-    public byte getItemType() {
-        return MailItem.TYPE_NOTE;
-    }
-
     @Override
     public long getSize() throws ServiceException {
         return getNote().getSize();

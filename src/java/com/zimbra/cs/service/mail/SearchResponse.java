@@ -299,14 +299,12 @@ public class SearchResponse {
     }
 
     private Element add(DocumentHit hit) throws ServiceException {
-        if (hit.getItemType() == MailItem.TYPE_DOCUMENT) {
+        if (hit.getItemType() == MailItem.Type.DOCUMENT) {
             return ToXML.encodeDocument(element, ifmt, octxt, hit.getDocument());
-        } else if (hit.getItemType() == MailItem.TYPE_WIKI) {
-            return ToXML.encodeWiki(element, ifmt, octxt,
-                    (WikiItem) hit.getDocument());
+        } else if (hit.getItemType() == MailItem.Type.WIKI) {
+            return ToXML.encodeWiki(element, ifmt, octxt, (WikiItem) hit.getDocument());
         } else {
-            throw ServiceException.UNKNOWN_DOCUMENT(
-                    "invalid document type " + hit.getItemType(), null);
+            throw ServiceException.UNKNOWN_DOCUMENT("invalid document type " + hit.getItemType(), null);
         }
     }
 

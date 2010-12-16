@@ -12,9 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-/*
- * Created on Jul 3, 2005
- */
 package com.zimbra.cs.mailbox;
 
 import com.google.common.base.Objects;
@@ -24,6 +21,9 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.service.util.ItemId;
 
+/**
+ * @since Jul 3, 2005
+ */
 public class Mountpoint extends Folder {
 
     private String mOwnerId;
@@ -85,7 +85,7 @@ public class Mountpoint extends Folder {
     @Override boolean trackUnread()     { return false; }
     @Override boolean canParent(MailItem child)  { return false; }
     @Override boolean canContain(MailItem child) { return false; }
-    @Override boolean canContain(byte type)      { return false; }
+    @Override boolean canContain(MailItem.Type type) { return false; }
 
     /** Creates a new Mountpoint pointing at a remote item and persists it
      *  to the database.  A real nonnegative item ID must be supplied from
@@ -115,24 +115,26 @@ public class Mountpoint extends Folder {
      *        sufficient permissions</ul>
      * @see #validateItemName(String)
      * @see #canContain(byte) */
-    static Mountpoint create(int id, Folder parent, String name, String ownerId, int remoteId, byte view, int flags, Color color, CustomMetadata custom)
-    throws ServiceException {
-        if (parent == null || ownerId == null || remoteId <= 0)
+    static Mountpoint create(int id, Folder parent, String name, String ownerId, int remoteId, Type view, int flags,
+            Color color, CustomMetadata custom) throws ServiceException {
+        if (parent == null || ownerId == null || remoteId <= 0) {
             throw ServiceException.INVALID_REQUEST("invalid parameters when creating mountpoint", null);
-        if (!parent.canAccess(ACL.RIGHT_INSERT))
+        }
+        if (!parent.canAccess(ACL.RIGHT_INSERT)) {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
-        if (parent == null || !parent.canContain(TYPE_MOUNTPOINT))
+        }
+        if (parent == null || !parent.canContain(Type.MOUNTPOINT)) {
             throw MailServiceException.CANNOT_CONTAIN();
+        }
         name = validateItemName(name);
-        if (view != TYPE_UNKNOWN)
-            validateType(view);
-        if (parent.findSubfolder(name) != null)
+        if (parent.findSubfolder(name) != null) {
             throw MailServiceException.ALREADY_EXISTS(name);
+        }
         Mailbox mbox = parent.getMailbox();
 
         UnderlyingData data = new UnderlyingData();
         data.id       = id;
-        data.type     = TYPE_MOUNTPOINT;
+        data.type     = Type.MOUNTPOINT.toByte();
         data.folderId = parent.getId();
         data.parentId = data.folderId;
         data.date     = mbox.getOperationTimestamp();
@@ -150,29 +152,34 @@ public class Mountpoint extends Folder {
         return mpt;
     }
 
-    @Override void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
+    @Override
+    void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
         if (!getFolder().canAccess(ACL.RIGHT_DELETE))
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
         deleteSingleFolder(writeTombstones);
     }
 
 
-    @Override void decodeMetadata(Metadata meta) throws ServiceException {
+    @Override
+    void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
         mOwnerId = meta.get(Metadata.FN_ACCOUNT_ID);
         mRemoteId = (int) meta.getLong(Metadata.FN_REMOTE_ID);
     }
 
-    @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mAttributes, mDefaultView, mOwnerId, mRemoteId);
+    @Override
+    Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mAttributes, defaultView, mOwnerId, mRemoteId);
     }
 
-    private static String encodeMetadata(Color color, int version, CustomMetadata custom, byte view, String owner, int remoteId) {
+    private static String encodeMetadata(Color color, int version, CustomMetadata custom, Type view, String owner,
+            int remoteId) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
         return encodeMetadata(new Metadata(), color, version, extended, (byte) 0, view, owner, remoteId).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, byte attrs, byte view, String owner, int remoteId) {
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, byte attrs,
+            Type view, String owner, int remoteId) {
         meta.put(Metadata.FN_ACCOUNT_ID, owner);
         meta.put(Metadata.FN_REMOTE_ID, remoteId);
         return Folder.encodeMetadata(meta, color, version, extended, attrs, view, null, null, 0, 0, 0, 0, 0, 0, 0);

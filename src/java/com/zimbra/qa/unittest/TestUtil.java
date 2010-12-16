@@ -75,6 +75,7 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.lmtpserver.utils.LmtpClient;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -340,15 +341,15 @@ extends Assert {
     /**
      * Searches a mailbox and returns the id's of all matching items.
      */
-    public static List<Integer> search(Mailbox mbox, String query, byte type) throws ServiceException, IOException {
+    public static List<Integer> search(Mailbox mbox, String query, MailItem.Type type) throws ServiceException {
         return search(mbox, query, Collections.singleton(type));
     }
 
     /**
      * Searches a mailbox and returns the id's of all matching items.
      */
-    public static List<Integer> search(Mailbox mbox, String query, Set<Byte> types)
-            throws ServiceException, IOException {
+    public static List<Integer> search(Mailbox mbox, String query, Set<MailItem.Type> types)
+            throws ServiceException {
         List<Integer> ids = new ArrayList<Integer>();
         ZimbraQueryResults r = mbox.index.search(new OperationContext(mbox), query, types, SortBy.DATE_DESCENDING, 100);
         while (r.hasNext()) {
@@ -556,7 +557,7 @@ extends Assert {
             sIsCliInitialized = true;
         }
     }
-    
+
     public static SoapProvisioning newSoapProvisioning()
     throws ServiceException {
         SoapProvisioning sp = new SoapProvisioning();

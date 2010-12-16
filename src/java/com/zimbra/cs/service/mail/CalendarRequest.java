@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -69,14 +69,17 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class CalendarRequest extends MailDocumentHandler {
 
-    private byte mItemType = MailItem.TYPE_UNKNOWN;
-    protected byte getItemType() { return mItemType; }
+    private MailItem.Type type = MailItem.Type.UNKNOWN;
+    protected MailItem.Type getItemType() {
+        return type;
+    }
 
     public CalendarRequest() {
-        if (this instanceof AppointmentRequest)
-            mItemType = MailItem.TYPE_APPOINTMENT;
-        else if (this instanceof TaskRequest)
-            mItemType = MailItem.TYPE_TASK;
+        if (this instanceof AppointmentRequest) {
+            type = MailItem.Type.APPOINTMENT;
+        } else if (this instanceof TaskRequest) {
+            type = MailItem.Type.TASK;
+        }
     }
 
     protected static class CalSendData extends ParseMimeMessage.MimeMessageData {
@@ -90,9 +93,9 @@ public abstract class CalendarRequest extends MailDocumentHandler {
     }
 
     /**
-     * 
+     *
      * parses an <m> element using the passed-in InviteParser
-     * 
+     *
      * @param zsc
      * @param octxt
      * @param msgElem
@@ -109,7 +112,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
         assert(inviteParser.getResult() == null);
 
-        // check to see if this message is a reply -- if so, then we'll want to note that so 
+        // check to see if this message is a reply -- if so, then we'll want to note that so
         // we can more-correctly match the conversations up
         String origId = msgElem.getAttribute(MailConstants.A_ORIG_ID, null);
         csd.mOrigId = origId == null ? null : new ItemId(origId, zsc);
@@ -118,7 +121,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
         // parse the data
         csd.mMm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, null, inviteParser, csd);
-        
+
         // FIXME FIXME FIXME -- need to figure out a way to get the FRAGMENT data out of the initial
         // message here, so that we can copy it into the DESCRIPTION field in the iCalendar data that
         // goes out...will make for much better interop!
@@ -126,7 +129,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         assert(inviteParser.getResult() != null);
 
         csd.mInvite = inviteParser.getResult().mInvite;
-        
+
         return csd;
     }
 
@@ -143,32 +146,32 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             throw ServiceException.FAILURE("MessagingException "+e, e);
         }
     }
-        
+
     protected static void patchCalendarURLs(MimeMessage mm, String htmlStr, String localURL, String orgAddress, String uid, String attendee, String invId) throws ServiceException
     {
         try {
             boolean changed = false;
-            
+
             String accept = buildUrl(localURL, orgAddress, uid, attendee, invId, "ACCEPT");
             String decline = buildUrl(localURL, orgAddress, uid, attendee, invId, "DECLINE");
             String tentative = buildUrl(localURL, orgAddress, uid, attendee, invId, "TENTATIVE");
-            
+
             for (MPartInfo mpi : Mime.getParts(mm)) {
                 if (mpi.getContentType().equals(MimeConstants.CT_TEXT_HTML)) {
                     String str = htmlStr;
-                    
+
                     str = str.replaceFirst("href=\"@@ACCEPT@@\"", accept);
                     str = str.replaceFirst("href=\"@@DECLINE@@\"", decline);
                     str = str.replaceFirst("href=\"@@TENTATIVE@@\"", tentative);
-                    
+
                     System.out.println(str);
                     mpi.getMimePart().setContent(str, MimeConstants.CT_TEXT_HTML);
                     changed = true;
-                    
+
                     break; // only match one part
                 }
             }
-            
+
             if (changed) {
                 mm.saveChanges();
             }
@@ -178,7 +181,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             throw ServiceException.FAILURE("MessagingException "+e, e);
         }
     }
-    
+
     protected static String buildUrl(String localURL, String orgAddress, String uid, String attendee, String invId, String verb)
     {
         StringBuffer toRet = new StringBuffer("href=\"").append(localURL);
@@ -188,7 +191,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         toRet.append("&v=").append(verb);
         toRet.append("&invId=").append(invId);
         toRet.append('\"');
-        
+
         return toRet.toString();
     }
 
@@ -244,7 +247,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         CalSendData csd,
         boolean cancelOwnAppointment)
     throws ServiceException {
-    	return sendCalendarMessageInternal(zsc, octxt, apptFolderId, acct, mbox, csd,
+        return sendCalendarMessageInternal(zsc, octxt, apptFolderId, acct, mbox, csd,
                                            null, cancelOwnAppointment);
     }
 
@@ -321,8 +324,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         InputStream is = null;
         File tempMmFile = null;
         try {
-        	tempMmFile = File.createTempFile("zcal", "tmp");
-        	tempMmFile.deleteOnExit();
+            tempMmFile = File.createTempFile("zcal", "tmp");
+            tempMmFile.deleteOnExit();
 
             os = new FileOutputStream(tempMmFile);
             csd.mMm.writeTo(os);
@@ -400,7 +403,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             if (msgId != null)
                 response.addUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, ifmt.formatItemId(msgId));
         }
-        
+
         return response;
     }
 
@@ -418,12 +421,10 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         return echoElem;
     }
 
-    protected static Element sendOrganizerChangeMessage(
-            final ZimbraSoapContext zsc, final OperationContext octxt,
-            final CalendarItem calItem, final Account acct, final Mailbox mbox,
-            Element response)
-    throws ServiceException {
+    protected static Element sendOrganizerChangeMessage(final ZimbraSoapContext zsc, final OperationContext octxt,
+            final CalendarItem calItem, final Account acct, final Mailbox mbox, Element response) {
         Runnable r = new Runnable() {
+            @Override
             public void run() {
                 try {
                     Account authAccount = getAuthenticatedAccount(zsc);
@@ -498,7 +499,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             // Refresh the cal item so we see the latest blob, whose path may have been changed
             // earlier in the current request.
             calItem = mbox.getCalendarItemById(octxt, calItem.getId());
-    
+
             boolean onBehalfOf = isOnBehalfOfRequest(zsc);
             Account authAcct = getAuthenticatedAccount(zsc);
             boolean hidePrivate =
@@ -508,9 +509,9 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             if (onBehalfOf)
                 sender = AccountUtil.getFriendlyEmailAddress(authAcct);
             List<Address> rcpts = CalendarMailSender.toListFromAttendees(toAdd);
-    
+
             long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
-    
+
             Invite[] invites = calItem.getInvites();
 
             // Update invites to add the new attendees.
@@ -519,7 +520,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 // Ignore exceptions in the past.
                 if (inv.hasRecurId() && !inviteIsAfterTime(inv, now))
                     continue;
-    
+
                 // Make a copy of the invite and add the new attendees if necessary.
                 boolean addedAttendees = false;
                 Invite modify = inv.newCopy();
@@ -531,7 +532,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                         addedAttendees = true;
                     }
                 }
-    
+
                 // Save the modified invite.
                 if (addedAttendees) {  // No need to re-save the series that was already updated in this request.
                     // If invite had no attendee before, its method is set to PUBLISH.  It must be changed to
@@ -600,7 +601,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             // Refresh the cal item so we see the latest blob, whose path may have been changed
             // earlier in the current request.
             calItem = mbox.getCalendarItemById(octxt, calItem.getId());
-    
+
             // If removing attendees from the series, also remove those attendees from all exceptions.
             if (invToCancel.isRecurrence()) {
                 long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
@@ -633,7 +634,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                             }
                         }
                     }
-        
+
                     // Save the modified invite.
                     if (removedAttendees) {  // No need to re-save the series that was already updated in this request.
                         // DTSTAMP - Rev it.
@@ -649,24 +650,24 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     }
                 }
             }
-    
+
             boolean onBehalfOf = isOnBehalfOfRequest(zsc);
             Account authAcct = getAuthenticatedAccount(zsc);
             Locale locale = !onBehalfOf ? acct.getLocale() : authAcct.getLocale();
-    
+
             CalSendData dat = new CalSendData();
             dat.mOrigId = new ItemId(mbox, invToCancel.getMailItemId());
             dat.mReplyType = MailSender.MSGTYPE_REPLY;
-    
+
             String text = L10nUtil.getMessage(MsgKey.calendarCancelRemovedFromAttendeeList, locale);
-    
+
             if (ZimbraLog.calendar.isDebugEnabled()) {
                 StringBuilder sb = new StringBuilder("Sending cancellation message for \"");
                 sb.append(invToCancel.getName()).append("\" to ");
                 sb.append(getAttendeesAddressList(toCancel));
                 ZimbraLog.calendar.debug(sb.toString());
             }
-    
+
             List<Address> rcpts = CalendarMailSender.toListFromAttendees(toCancel);
             try {
                 dat.mInvite = CalendarUtils.buildCancelInviteCalendar(
@@ -674,11 +675,11 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 ZVCalendar cal = dat.mInvite.newToICalendar(true);
                 dat.mMm = CalendarMailSender.createCancelMessage(
                         acct, authAcct, zsc.isUsingAdminPrivileges(), onBehalfOf, rcpts, calItem, invToCancel, text, cal);
-    
+
                 // If we are sending this cancellation to other people, then we MUST be the organizer!
                 if (!dat.mInvite.isOrganizer() && rcpts != null && !rcpts.isEmpty())
                     throw MailServiceException.MUST_BE_ORGANIZER("updateRemovedInvitees");
-    
+
                 sendCalendarCancelMessage(zsc, octxt, calItem.getFolderId(), acct, mbox, dat, false);
             } catch (ServiceException ex) {
                 String to = getAttendeesAddressList(toCancel);

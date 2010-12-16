@@ -14,7 +14,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
@@ -52,7 +52,7 @@ public class AddressBookTest extends AbstractTest {
     static final String IN = ":in";
     static final String CONTACTS = "contacts";
     static final String GAL = "GAL";
-    static final Set<Byte> SEARCH_TYPE = Collections.singleton(MailItem.TYPE_CONTACT);
+    static final Set<MailItem.Type> SEARCH_TYPE = EnumSet.of(MailItem.Type.CONTACT);
     private static Log mLog = LogFactory.getLog(AddressBookTest.class);
 
     @Override

@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on 2004. 12. 13.
  */
 package com.zimbra.cs.redolog.op;
 
@@ -26,50 +22,58 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
+/**
+ * @since 2004. 12. 13.
+ */
 public class RenameItem extends RedoableOp {
 
-    int mId;
-    byte mType;
-    int mFolderId;
-    String mName;
+    protected int mId;
+    protected MailItem.Type type;
+    protected int mFolderId;
+    protected String mName;
 
     public RenameItem() {
         mId = mFolderId = UNKNOWN_ID;
-        mType = MailItem.TYPE_UNKNOWN;
+        type = MailItem.Type.UNKNOWN;
     }
 
-    public RenameItem(int mailboxId, int id, byte type, String name, int folderId) {
+    public RenameItem(int mailboxId, int id, MailItem.Type type, String name, int folderId) {
         setMailboxId(mailboxId);
         mId = id;
-        mType = type;
+        this.type = type;
         mFolderId = folderId;
         mName = name != null ? name : "";
     }
 
-    @Override public int getOpCode() {
+    @Override
+    public int getOpCode() {
         return OP_RENAME_ITEM;
     }
 
-    @Override protected String getPrintableData() {
-        return "id=" + mId + ", type=" + mType + ", name=" + mName + ",parent=" + mFolderId;
+    @Override
+    protected String getPrintableData() {
+        return "id=" + mId + ", type=" + type + ", name=" + mName + ",parent=" + mFolderId;
     }
 
-    @Override protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeInt(mFolderId);
         out.writeUTF(mName);
-        out.writeByte(mType);
+        out.writeByte(type.toByte());
     }
 
-    @Override protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mFolderId = in.readInt();
         mName = in.readUTF();
-        mType = in.readByte();
+        type = MailItem.Type.of(in.readByte());
     }
 
-    @Override public void redo() throws Exception {
+    @Override
+    public void redo() throws Exception {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mailbox.rename(getOperationContext(), mId, mType, mName, mFolderId);
+        mailbox.rename(getOperationContext(), mId, type, mName, mFolderId);
     }
 }

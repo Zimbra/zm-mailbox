@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -68,14 +68,14 @@ public class SendDeliveryReport extends MailDocumentHandler {
         Message msg = mbox.getMessageById(octxt, msgid);
 
         // sending a read receipt requires write access to the message
-        if ((mbox.getEffectivePermissions(octxt, msgid, MailItem.TYPE_MESSAGE) & ACL.RIGHT_WRITE) == 0)
+        if ((mbox.getEffectivePermissions(octxt, msgid, MailItem.Type.MESSAGE) & ACL.RIGHT_WRITE) == 0) {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the message");
-
+        }
         // first, send the notification
         sendReport(getSenderAccount(zsc), msg, false, zsc.getRequestIP(), zsc.getUserAgent());
 
         // then mark the message as \Notified
-        mbox.alterTag(octxt, msgid, MailItem.TYPE_MESSAGE, Flag.ID_FLAG_NOTIFIED, true);
+        mbox.alterTag(octxt, msgid, MailItem.Type.MESSAGE, Flag.ID_FLAG_NOTIFIED, true);
 
         Element response = zsc.createElement(MailConstants.SEND_REPORT_RESPONSE);
         return response;

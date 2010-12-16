@@ -16,7 +16,6 @@ package com.zimbra.cs.index.query.parser;
 
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -147,7 +146,7 @@ public final class QueryParser {
     private Locale locale = Locale.ENGLISH;
     private int defaultField = CONTENT;
     private String sortBy;
-    private Set<Byte> types = Collections.emptySet();
+    private Set<MailItem.Type> types = EnumSet.noneOf(MailItem.Type.class);
 
     /**
      * Constructs a new {@link QueryParser}.
@@ -192,7 +191,7 @@ public final class QueryParser {
         defaultField = jj;
     }
 
-    public void setTypes(Set<Byte> value) {
+    public void setTypes(Set<MailItem.Type> value) {
         types = value;
     }
 
@@ -605,7 +604,7 @@ public final class QueryParser {
         case CONTACT:
             return createContactQuery(text);
         case CONTENT:
-            if (types.contains(MailItem.TYPE_CONTACT)) { // combine with CONTACT query
+            if (types.contains(MailItem.Type.CONTACT)) { // combine with CONTACT query
                 List<Query> clauses = new ArrayList<Query>(3);
                 clauses.add(createContactQuery(text));
                 clauses.add(new ConjQuery(ConjQuery.Conjunction.OR));

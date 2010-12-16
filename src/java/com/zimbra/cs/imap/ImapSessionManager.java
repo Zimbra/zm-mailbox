@@ -46,6 +46,7 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -274,9 +275,10 @@ public class ImapSessionManager {
     private static List<ImapMessage> loadVirtualFolder(OperationContext octxt, SearchFolder search) throws ServiceException {
         List<ImapMessage> i4list = new ArrayList<ImapMessage>();
 
-        Set<Byte> types = ImapFolder.getTypeConstraint(search);
-        if (types.isEmpty())
+        Set<MailItem.Type> types = ImapFolder.getTypeConstraint(search);
+        if (types.isEmpty()) {
             return i4list;
+        }
 
         SearchParams params = new SearchParams();
         params.setQueryStr(search.getQuery());

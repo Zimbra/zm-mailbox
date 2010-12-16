@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -36,7 +37,8 @@ final class ConvQueryResults extends ZimbraQueryResultsImpl {
     private List<ZimbraHit> mCachedResults = new ArrayList<ZimbraHit>();
     private Set<Integer> mSeenConvIDs = new HashSet<Integer>();
 
-    ConvQueryResults(ZimbraQueryResults results, Set<Byte> types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
+    ConvQueryResults(ZimbraQueryResults results, Set<MailItem.Type> types, SortBy searchOrder,
+            Mailbox.SearchResultMode mode) {
         super(types, searchOrder, mode);
         mResults = results;
     }

@@ -12,10 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Aug 18, 2004
- */
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
@@ -23,6 +19,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,6 +38,9 @@ import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 
+/**
+ * @since Aug 18, 2004
+ */
 public class Folder extends MailItem {
 
     public static final class SyncData {
@@ -70,7 +70,7 @@ public class Folder extends MailItem {
     public static final byte FOLDER_DONT_TRACK_COUNTS = 0x02;
 
     protected byte    mAttributes;
-    protected byte    mDefaultView;
+    protected MailItem.Type defaultView;
     private List<Folder> mSubfolders;
     private long      mTotalSize;
     private Folder    mParent;
@@ -85,8 +85,15 @@ public class Folder extends MailItem {
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
-        if (mData.type != TYPE_FOLDER && mData.type != TYPE_SEARCHFOLDER && mData.type != TYPE_MOUNTPOINT)
+
+        switch (getType()) {
+        case FOLDER:
+        case SEARCHFOLDER:
+        case MOUNTPOINT:
+            break;
+        default:
             throw new IllegalArgumentException();
+        }
     }
 
     @Override public String getSender() {
@@ -104,13 +111,13 @@ public class Folder extends MailItem {
         return parentPath + (parentPath.equals("/") ? "" : "/") + getName();
     }
 
-    /** Returns the "hint" as to which view to use to display the folder's
-     *  contents.  For instance, if the default view for the folder is
-     *  {@link MailItem#TYPE_APPOINTMENT}, the client would render the
-     *  contents using the calendar app.<p>
-     *  Defaults to {@link MailItem#TYPE_UNKNOWN}. */
-    public byte getDefaultView() {
-        return mDefaultView;
+    /**
+     * Returns the "hint" as to which view to use to display the folder's contents. For instance, if the default view
+     * for the folder is {@link Type#APPOINTMENT}, the client would render the  contents using the calendar app.
+     * Defaults to {@link Type#UNKNOWN}.
+     */
+    public Type getDefaultView() {
+        return defaultView;
     }
 
     /** Returns the folder's set of special attributes.
@@ -460,7 +467,7 @@ public class Folder extends MailItem {
     }
 
     private static final class SortByName implements Comparator<Folder> {
-        SortByName()  { }
+        @Override
         public int compare(Folder f1, Folder f2) {
             String n1 = f1.getName();
             String n2 = f2.getName();
@@ -649,13 +656,14 @@ public class Folder extends MailItem {
      *  (and vice versa), and the Spam folder can't have subfolders.
      *
      * @param type  The type of object, e.g. {@link MailItem#TYPE_TAG}. */
-    boolean canContain(byte type) {
-        if ((type == TYPE_TAG) != (mId == Mailbox.ID_FOLDER_TAGS))
+    boolean canContain(Type type) {
+        if ((type == Type.TAG) != (mId == Mailbox.ID_FOLDER_TAGS)) {
             return false;
-        else if ((type == TYPE_CONVERSATION) != (mId == Mailbox.ID_FOLDER_CONVERSATIONS))
+        } else if ((type == Type.CONVERSATION) != (mId == Mailbox.ID_FOLDER_CONVERSATIONS)) {
             return false;
-        else if (type == TYPE_FOLDER && mId == Mailbox.ID_FOLDER_SPAM)
+        } else if (type == Type.FOLDER && mId == Mailbox.ID_FOLDER_SPAM) {
             return false;
+        }
         return true;
     }
 
@@ -681,7 +689,7 @@ public class Folder extends MailItem {
      * @see #validateItemName(String)
      * @see #canContain(byte) */
     static Folder create(int id, Mailbox mbox, Folder parent, String name) throws ServiceException {
-        return create(id, mbox, parent, name, (byte) 0, TYPE_UNKNOWN, 0, DEFAULT_COLOR_RGB, null, null);
+        return create(id, mbox, parent, name, (byte) 0, Type.UNKNOWN, 0, DEFAULT_COLOR_RGB, null, null);
     }
 
     /** Creates a new Folder with optional attributes and persists it
@@ -712,24 +720,25 @@ public class Folder extends MailItem {
      * @see #canContain(byte)
      * @see #FOLDER_IS_IMMUTABLE
      * @see #FOLDER_DONT_TRACK_COUNTS */
-    public static Folder create(int id, Mailbox mbox, Folder parent, String name, byte attributes,
-                                byte view, int flags, Color color, String url, CustomMetadata custom)
-    throws ServiceException {
+    public static Folder create(int id, Mailbox mbox, Folder parent, String name, byte attributes, Type view, int flags,
+            Color color, String url, CustomMetadata custom) throws ServiceException {
         if (id != Mailbox.ID_FOLDER_ROOT) {
-            if (parent == null || !parent.canContain(TYPE_FOLDER))
-                throw MailServiceException.CANNOT_CONTAIN(parent, TYPE_FOLDER);
+            if (parent == null || !parent.canContain(Type.FOLDER)) {
+                throw MailServiceException.CANNOT_CONTAIN(parent, Type.FOLDER);
+            }
             name = validateItemName(name);
             if (parent.findSubfolder(name) != null)
                 throw MailServiceException.ALREADY_EXISTS(name);
             if (!parent.canAccess(ACL.RIGHT_SUBFOLDER))
                 throw ServiceException.PERM_DENIED("you do not have the required rights on the parent folder");
         }
-        if (view != TYPE_UNKNOWN)
-            validateType(view);
+        if (view == Type.INVITE) {
+            throw MailServiceException.INVALID_TYPE(view.toString());
+        }
 
         UnderlyingData data = new UnderlyingData();
         data.id       = id;
-        data.type     = TYPE_FOLDER;
+        data.type     = Type.FOLDER.toByte();
         data.folderId = (id == Mailbox.ID_FOLDER_ROOT ? id : parent.getId());
         data.parentId = data.folderId;
         data.date     = mbox.getOperationTimestamp();
@@ -753,15 +762,18 @@ public class Folder extends MailItem {
      * @param view the new default view of this folder
      * @throws ServiceException
      */
-    void setDefaultView(byte view) throws ServiceException {
-        if (!isMutable())
+    void setDefaultView(Type view) throws ServiceException {
+        if (!isMutable()) {
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        if (!canAccess(ACL.RIGHT_WRITE))
+        }
+        if (!canAccess(ACL.RIGHT_WRITE)) {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
-        if (view == mDefaultView)
+        }
+        if (view == defaultView) {
             return;
+        }
         markItemModified(Change.MODIFIED_VIEW);
-        mDefaultView = view;
+        defaultView = view;
         saveMetadata();
     }
 
@@ -870,7 +882,7 @@ public class Folder extends MailItem {
                 if (data.parentId > 0)
                     conversations.add(data.parentId);
             }
-            mMailbox.getItemById(conversations, TYPE_CONVERSATION);
+            mMailbox.getItemById(conversations, Type.CONVERSATION);
         }
 
         // mark all messages in this folder as read in memory; this implicitly
@@ -1112,22 +1124,26 @@ public class Folder extends MailItem {
         return DbMailItem.getLeafNodes(this);
     }
 
-    @Override void propagateDeletion(PendingDelete info) throws ServiceException {
-        if (info.incomplete)
-            info.cascadeIds = DbMailItem.markDeletionTargets(mMailbox, info.itemIds.getIds(TYPE_MESSAGE, TYPE_CHAT), info.modifiedIds);
-        else
+    @Override
+    void propagateDeletion(PendingDelete info) throws ServiceException {
+        if (info.incomplete) {
+            info.cascadeIds = DbMailItem.markDeletionTargets(mMailbox,
+                    info.itemIds.getIds(EnumSet.of(Type.MESSAGE, Type.CHAT)), info.modifiedIds);
+        } else {
             info.cascadeIds = DbMailItem.markDeletionTargets(this, info.modifiedIds);
-
-        if (info.cascadeIds != null)
+        }
+        if (info.cascadeIds != null) {
             info.modifiedIds.removeAll(info.cascadeIds);
+        }
         super.propagateDeletion(info);
     }
 
-    @Override void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
+    @Override
+    void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
         // when deleting a folder, need to purge conv cache!
-        mMailbox.purge(TYPE_CONVERSATION);
+        mMailbox.purge(Type.CONVERSATION);
         // fault modified conversations back in, thereby marking them dirty
-        mMailbox.getItemById(ArrayUtil.toIntArray(info.modifiedIds), MailItem.TYPE_CONVERSATION);
+        mMailbox.getItemById(ArrayUtil.toIntArray(info.modifiedIds), Type.CONVERSATION);
         // remove this folder from the cache if needed
         super.purgeCache(info, purgeItem);
     }
@@ -1156,38 +1172,55 @@ public class Folder extends MailItem {
             }
         }
 
-        List<Integer> ids = info.itemIds.getIds(MailItem.TYPE_MESSAGE);
+        List<Integer> ids = info.itemIds.getIds(Type.MESSAGE);
         return (ids == null ? 0 : ids.size());
     }
 
     /** To be used for special situation such as migration. */
-    void migrateDefaultView(byte view) throws ServiceException {
-        if (!canAccess(ACL.RIGHT_WRITE))
+    void migrateDefaultView(MailItem.Type view) throws ServiceException {
+        if (!canAccess(ACL.RIGHT_WRITE)) {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
-        if (view == mDefaultView)
+        }
+        if (view == defaultView) {
             return;
+        }
         markItemModified(Change.MODIFIED_VIEW);
-        mDefaultView = view;
+        defaultView = view;
         saveMetadata();
     }
 
-    @Override void decodeMetadata(Metadata meta) throws ServiceException {
+    @Override
+    void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
 
         // avoid a painful data migration...
-        byte view = TYPE_UNKNOWN;
+        Type view;
         switch (mId) {
-            case Mailbox.ID_FOLDER_INBOX:
-            case Mailbox.ID_FOLDER_SPAM:
-            case Mailbox.ID_FOLDER_SENT:
-            case Mailbox.ID_FOLDER_DRAFTS:    view = MailItem.TYPE_MESSAGE;      break;
-            case Mailbox.ID_FOLDER_CALENDAR:  view = MailItem.TYPE_APPOINTMENT;  break;
-            case Mailbox.ID_FOLDER_TASKS:     view = MailItem.TYPE_TASK;         break;
-            case Mailbox.ID_FOLDER_AUTO_CONTACTS:
-            case Mailbox.ID_FOLDER_CONTACTS:  view = MailItem.TYPE_CONTACT;      break;
-            case Mailbox.ID_FOLDER_IM_LOGS:   view = MailItem.TYPE_MESSAGE;      break;
+        case Mailbox.ID_FOLDER_INBOX:
+        case Mailbox.ID_FOLDER_SPAM:
+        case Mailbox.ID_FOLDER_SENT:
+        case Mailbox.ID_FOLDER_DRAFTS:
+            view = Type.MESSAGE;
+            break;
+        case Mailbox.ID_FOLDER_CALENDAR:
+            view = Type.APPOINTMENT;
+            break;
+        case Mailbox.ID_FOLDER_TASKS:
+            view = Type.TASK;
+            break;
+        case Mailbox.ID_FOLDER_AUTO_CONTACTS:
+        case Mailbox.ID_FOLDER_CONTACTS:
+            view = Type.CONTACT;
+            break;
+        case Mailbox.ID_FOLDER_IM_LOGS:
+            view = Type.MESSAGE;
+            break;
+        default:
+            view = Type.UNKNOWN;
+            break;
         }
-        mDefaultView = (byte) meta.getLong(Metadata.FN_VIEW, view);
+        byte bview = (byte) meta.getLong(Metadata.FN_VIEW, -1);
+        defaultView = bview >= 0 ? Type.of(bview) : view;
         mAttributes  = (byte) meta.getLong(Metadata.FN_ATTRS, 0);
         mTotalSize   = meta.getLong(Metadata.FN_TOTAL_SIZE, 0L);
         mImapUIDNEXT = (int) meta.getLong(Metadata.FN_UIDNEXT, 0);
@@ -1209,22 +1242,27 @@ public class Folder extends MailItem {
         }
     }
 
-    @Override Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mAttributes, mDefaultView, mRights, mSyncData, mImapUIDNEXT,
-                              mTotalSize, mImapMODSEQ, mImapRECENT, mImapRECENTCutoff, mDeletedCount, mDeletedUnreadCount);
+    @Override
+    Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, mAttributes, defaultView, mRights, mSyncData,
+                mImapUIDNEXT, mTotalSize, mImapMODSEQ, mImapRECENT, mImapRECENTCutoff, mDeletedCount,
+                mDeletedUnreadCount);
     }
 
-    private static String encodeMetadata(Color color, int version, CustomMetadata custom, byte attributes, byte view, ACL rights, SyncData fsd, int uidnext,
-                                         long totalSize, int modseq, int imapRecent, int imapRecentCutoff, int deleted, int deletedUnread) {
+    private static String encodeMetadata(Color color, int version, CustomMetadata custom, byte attributes, Type view,
+            ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff,
+            int deleted, int deletedUnread) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
         return encodeMetadata(new Metadata(), color, version, extended, attributes, view, rights, fsd, uidnext,
                               totalSize, modseq, imapRecent, imapRecentCutoff, deleted, deletedUnread).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, byte attributes, byte view, ACL rights,
-                                   SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff, int deleted, int deletedUnread) {
-        if (view != TYPE_UNKNOWN)
-            meta.put(Metadata.FN_VIEW, view);
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended,
+            byte attributes, Type view, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq,
+            int imapRecent, int imapRecentCutoff, int deleted, int deletedUnread) {
+        if (view != Type.UNKNOWN) {
+            meta.put(Metadata.FN_VIEW, view.toByte());
+        }
         if (attributes != 0)
             meta.put(Metadata.FN_ATTRS, attributes);
         if (totalSize > 0)

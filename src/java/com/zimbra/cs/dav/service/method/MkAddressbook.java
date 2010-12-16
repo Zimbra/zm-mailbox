@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -32,10 +32,13 @@ import com.zimbra.cs.mailbox.MailItem;
 
 public class MkAddressbook extends DavMethod {
     public static final String MKADDRESSBOOK = "MKADDRESSBOOK";
+
+    @Override
     public String getName() {
         return MKADDRESSBOOK;
     }
 
+    @Override
     public void handle(DavContext ctxt) throws DavException, IOException {
         String user = ctxt.getUser();
         String name = ctxt.getItem();
@@ -51,7 +54,7 @@ public class MkAddressbook extends DavMethod {
         }
 
         Collection col = UrlNamespace.getCollectionAtUrl(ctxt, ctxt.getPath());
-        Collection newone = col.mkCol(ctxt, name, MailItem.TYPE_CONTACT);
+        Collection newone = col.mkCol(ctxt, name, MailItem.Type.CONTACT);
         boolean success = false;
         try {
             PropPatch.handlePropertyUpdate(ctxt, top, newone);
@@ -64,18 +67,20 @@ public class MkAddressbook extends DavMethod {
         ctxt.getResponse().addHeader(DavProtocol.HEADER_CACHE_CONTROL, DavProtocol.NO_CACHE);
     }
 
+    @Override
     public void checkPrecondition(DavContext ctxt) throws DavException {
-        // (DAV:resource-must-be-null): A resource MUST NOT exist at the 
+        // (DAV:resource-must-be-null): A resource MUST NOT exist at the
         // Request-URI.
 
-        // (CARDDAV:addressbook-collection-location-bad): The Request-URI 
-        // MUST identify a location where an address book collection can be 
+        // (CARDDAV:addressbook-collection-location-bad): The Request-URI
+        // MUST identify a location where an address book collection can be
         // created.
 
-        // (DAV:needs-privilege): The DAV:bind privilege MUST be granted to 
+        // (DAV:needs-privilege): The DAV:bind privilege MUST be granted to
         // the current user.
     }
 
+    @Override
     public void checkPostcondition(DavContext ctxt) throws DavException {
         // (CARDDAV:initialize-addressbook-collection): A new address book
         // collection exists at the Request-URI.  The DAV:resourcetype of the

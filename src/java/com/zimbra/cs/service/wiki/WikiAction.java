@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,8 +29,9 @@ import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class WikiAction extends ItemAction {
-    
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
+
+    @Override
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element action = request.getElement(MailConstants.E_ACTION);
@@ -38,22 +39,22 @@ public class WikiAction extends ItemAction {
 
         String successes;
         if (operation.equals(OP_RENAME)) {
-    		Account author = getAuthenticatedAccount(zsc);
-    		String id = action.getAttribute(MailConstants.A_ID);
-    		if (id.indexOf(",") > 0)
-    			throw WikiServiceException.ERROR("cannot use more than one id for rename");
-    		String name = action.getAttribute(MailConstants.A_NAME);
-			Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(author);
-			mbox.rename(getOperationContext(zsc, context), Integer.parseInt(id), MailItem.TYPE_DOCUMENT, name);
-    		successes = id;
+            Account author = getAuthenticatedAccount(zsc);
+            String id = action.getAttribute(MailConstants.A_ID);
+            if (id.indexOf(",") > 0)
+                throw WikiServiceException.ERROR("cannot use more than one id for rename");
+            String name = action.getAttribute(MailConstants.A_NAME);
+            Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(author);
+            mbox.rename(getOperationContext(zsc, context), Integer.parseInt(id), MailItem.Type.DOCUMENT, name);
+            successes = id;
         } else {
-        	successes = handleCommon(context, request, operation, MailItem.TYPE_WIKI);
+            successes = handleCommon(context, request, operation, MailItem.Type.WIKI);
         }
-        
+
         Element response = zsc.createElement(MailConstants.WIKI_ACTION_RESPONSE);
         Element act = response.addUniqueElement(MailConstants.E_ACTION);
         act.addAttribute(MailConstants.A_ID, successes);
         act.addAttribute(MailConstants.A_OPERATION, operation);
         return response;
-	}
+    }
 }

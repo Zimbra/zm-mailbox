@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -35,9 +35,9 @@ public class Metadata {
      *  been updated to check the version number, so make sure to look at
      *  the code if you depend on this. */
     public static final int CURRENT_METADATA_VERSION = 10;
-    
+
     // MetaData attributes used in toplevel metadata for MailItems.
-    
+
     // ****PLEASE KEEP THESE IN SORTED ORDER TO MAKE IT EASIER TO AVOID DUPS****
 
     // FIXME: FRAGMENT and FIRST conflict.
@@ -134,8 +134,8 @@ public class Metadata {
                 mMap = BlobMetaData.decodeRecursive(encoded);
                 return;
             } catch (BlobMetaDataEncodingException e1) { }
-            String message = "error decoding " + (item == null ? "" : MailItem.getNameForType(item) + ' ' + item.getId() + ' ') + "metadata: " + encoded;
-            throw ServiceException.FAILURE(message, e);
+            throw ServiceException.FAILURE("error decoding " +
+                    (item == null ? "" : item.getType() + " " + item.getId() + ' ') + "metadata: " + encoded, e);
         } finally {
             if (mMap != null && mMap.containsKey(FN_MD_VERSION)) {
                 try {
@@ -143,11 +143,11 @@ public class Metadata {
                     mMap.remove(FN_MD_VERSION);
                 } catch (Exception e) { }
             } else {
-                mVersion = 1; // if no version is encoded, assume oldest version, or "1" 
+                mVersion = 1; // if no version is encoded, assume oldest version, or "1"
             }
         }
     }
-    
+
     public boolean containsKey(String key) {
         return mMap.containsKey(key);
     }

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -29,7 +30,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 class UngroupedQueryResults extends ZimbraQueryResultsImpl {
     ZimbraQueryResults mResults;
 
-    UngroupedQueryResults(ZimbraQueryResults results, Set<Byte> types,
+    UngroupedQueryResults(ZimbraQueryResults results, Set<MailItem.Type> types,
             SortBy searchOrder, Mailbox.SearchResultMode mode) {
         super(types, searchOrder, mode);
         mResults = results;

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -64,7 +64,7 @@ public class CreateMountpoint extends MailDocumentHandler {
         if (ownerId == null) {
             String ownerName = t.getAttribute(MailConstants.A_OWNER_NAME);
             target = Provisioning.getInstance().get(AccountBy.name, ownerName, zsc.getAuthToken());
-            
+
             // prevent directory harvest attack, mask no such account as permission denied
             if (target == null)
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
@@ -81,7 +81,8 @@ public class CreateMountpoint extends MailDocumentHandler {
 
         Mountpoint mpt;
         try {
-            mpt = mbox.createMountpoint(octxt, iidParent.getId(), name, ownerId, remoteId, MailItem.getTypeForName(view), Flag.flagsToBitmask(flags), color);
+            mpt = mbox.createMountpoint(octxt, iidParent.getId(), name, ownerId, remoteId, MailItem.Type.of(view),
+                    Flag.flagsToBitmask(flags), color);
         } catch (ServiceException se) {
             if (se.getCode() == MailServiceException.ALREADY_EXISTS && fetchIfExists) {
                 Folder folder = mbox.getFolderByName(octxt, iidParent.getId(), name);

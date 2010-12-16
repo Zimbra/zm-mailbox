@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -113,7 +114,7 @@ public class IndexEditor {
     }
 
     public interface QueryRunner {
-        ZimbraQueryResults runQuery(String qstr, Set<Byte> types, SortBy sortBy)
+        ZimbraQueryResults runQuery(String qstr, Set<MailItem.Type> types, SortBy sortBy)
             throws IOException, MailServiceException, ServiceException;
     }
 
@@ -125,7 +126,7 @@ public class IndexEditor {
         }
 
         @Override
-        public ZimbraQueryResults runQuery(String qstr, Set<Byte> types, SortBy sortBy)
+        public ZimbraQueryResults runQuery(String qstr, Set<MailItem.Type> types, SortBy sortBy)
                 throws IOException, MailServiceException, ServiceException {
             Mailbox mbox = MailboxManager.getInstance().getMailboxById(mMailboxId);
             SearchParams params = new SearchParams();
@@ -159,7 +160,7 @@ public class IndexEditor {
         }
 
         @Override
-        public ZimbraQueryResults runQuery(String qstr, Set<Byte> types, SortBy sortBy)
+        public ZimbraQueryResults runQuery(String qstr, Set<MailItem.Type> types, SortBy sortBy)
             throws IOException, MailServiceException, ServiceException {
 
             MultiQueryResults all = new MultiQueryResults(100, sortBy);
@@ -198,16 +199,16 @@ public class IndexEditor {
             outputStream.println("\n\nTest 1: "+qstr);
             long startTime = System.currentTimeMillis();
 
-            Set<Byte> types;
+            Set<MailItem.Type> types;
             switch (groupBy) {
             case SEARCH_RETURN_CONVERSATIONS:
-                types = Collections.singleton(MailItem.TYPE_CONVERSATION);
+                types = EnumSet.of(MailItem.Type.CONVERSATION);
                 break;
             case SEARCH_RETURN_MESSAGES:
-                types = Collections.singleton(MailItem.TYPE_MESSAGE);
+                types = EnumSet.of(MailItem.Type.MESSAGE);
                 break;
             default:
-                types = Collections.singleton((byte) 0);
+                types = EnumSet.noneOf(MailItem.Type.class);
                 break;
             }
             ZimbraQueryResults res = runner.runQuery(qstr, types, sortOrder);

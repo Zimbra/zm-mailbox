@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on August 9, 2010
  */
 package com.zimbra.cs.mailbox;
 
@@ -30,10 +26,13 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 
+/**
+ * @since August 9, 2010
+ */
 class MailboxErrorUtil {
     /**
      * Attempt to delete a list of ids whih previously failed due to foreign key constraint violation. Intended to find which items had the FK issue, and provide a bit more detail about them.
-     * Throws the original exception argument, or wraps it with additional details if individual deletes fail 
+     * Throws the original exception argument, or wraps it with additional details if individual deletes fail
      */
     static void handleCascadeFailure(Mailbox mbox, List<Integer> cascadeIds, ServiceException e) throws ServiceException {
         if (causeMatchesFKFailure(e)) {
@@ -43,7 +42,7 @@ class MailboxErrorUtil {
               try {
                   List<Integer> singleItemList = Collections.singletonList(id);
                   ZimbraLog.mailbox.debug("attempting to delete id ["+id+"]");
-                  DbMailItem.delete(mbox, singleItemList, false);   
+                  DbMailItem.delete(mbox, singleItemList, false);
                   ZimbraLog.mailbox.debug("deleted ["+id+"] OK");
               } catch (ServiceException se) {
                   ZimbraLog.mailbox.error("deleted FAILED for ["+id+"] due to exception",se);
@@ -54,11 +53,11 @@ class MailboxErrorUtil {
                 StringBuilder sb = new StringBuilder();
                 //find the id,type,subject for each entry. this should help us figure out what's not being removed correctly...
                 for (Integer id: failures) {
-                    MailItem item = mbox.getItemById(id, MailItem.TYPE_UNKNOWN);
+                    MailItem item = mbox.getItemById(id, MailItem.Type.UNKNOWN);
                     String logMsg = "failure item id["+id+"] type["+item.getType()+":"+
                         item.getClass().getSimpleName()+"] subject["+item.getSubject()+"] size["+
                         item.getSize()+"] folder["+item.getFolderId()+"] parent["+
-                        item.getParentId()+"]"; 
+                        item.getParentId()+"]";
                     sb.append(logMsg).append("\r\n");
                     ZimbraLog.mailbox.error(logMsg);
                     if (item instanceof Conversation) {
@@ -75,7 +74,7 @@ class MailboxErrorUtil {
                         }
                     } else if (item instanceof Folder) {
                         Folder folder = (Folder) item;
-                        List<UnderlyingData> children = DbMailItem.getByFolder(folder, MailItem.TYPE_UNKNOWN, SortBy.NONE);
+                        List<UnderlyingData> children = DbMailItem.getByFolder(folder, MailItem.Type.UNKNOWN, SortBy.NONE);
                         if (children != null && children.size() > 0) {
                             ZimbraLog.mailbox.error("folder["+folder.getId()+"] still has "+children.size()+" children.");
                             for (UnderlyingData data: children) {
@@ -93,13 +92,13 @@ class MailboxErrorUtil {
                 throw ServiceException.FAILURE(e.getMessage()+"--- no additional data available from attempting individual deletes.",e);
             }
         } else {
-            throw e;    
+            throw e;
         }
     }
-    
+
     private static boolean causeMatchesFKFailure(Throwable t) {
         if (t instanceof SQLException && (Db.errorMatches(((SQLException)t),Db.Error.FOREIGN_KEY_CHILD_EXISTS))) {
-            return true; 
+            return true;
         } else if (t.getCause() != null) {
             return causeMatchesFKFailure(t.getCause());
         }

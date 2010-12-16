@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -69,7 +69,7 @@ import com.zimbra.common.mime.MimeConstants;
 
 /**
  * draft-dusseault-caldav-15 section 4.2
- * 
+ *
  * @author jylee
  *
  */
@@ -79,12 +79,12 @@ public class CalendarCollection extends Collection {
         super(ctxt, f);
         Account acct = f.getAccount();
 
-        if (f.getDefaultView() == MailItem.TYPE_APPOINTMENT || f.getDefaultView() == MailItem.TYPE_TASK)
+        if (f.getDefaultView() == MailItem.Type.APPOINTMENT || f.getDefaultView() == MailItem.Type.TASK) {
             addResourceType(DavElements.E_CALENDAR);
-
-        if (f.getId() == Provisioning.getInstance().getLocalServer().getCalendarCalDavDefaultCalendarId())
+        }
+        if (f.getId() == Provisioning.getInstance().getLocalServer().getCalendarCalDavDefaultCalendarId()) {
             addResourceType(DavElements.E_DEFAULT_CALENDAR);
-
+        }
         // the display name can be a user friendly string like "John Smith's Calendar".
         // but the problem is the name may be too long to fit into the field in UI.
         Locale lc = acct.getLocale();
@@ -125,7 +125,7 @@ public class CalendarCollection extends Collection {
     /* Returns all the appointments specified in hrefs */
     public java.util.Collection<DavResource> getChildren(DavContext ctxt, TimeRange range) throws DavException {
         Map<String,DavResource> requestedAppts = null;
-        boolean fetchAppts = 
+        boolean fetchAppts =
             range != null || // ranged request
             mAppts == null; // hasn't fetched before
         if (fetchAppts) {
@@ -236,8 +236,8 @@ public class CalendarCollection extends Collection {
         String uid = null;
         LinkedList<Invite> inviteList = new LinkedList<Invite>();
         for (Invite i : invites) {
-            byte type = i.getItemType();
-            if (type == MailItem.TYPE_APPOINTMENT || type == MailItem.TYPE_TASK) {
+            MailItem.Type type = i.getItemType();
+            if (type == MailItem.Type.APPOINTMENT || type == MailItem.Type.TASK) {
                 if (uid != null && uid.compareTo(i.getUid()) != 0)
                     throw new DavException("too many events", HttpServletResponse.SC_BAD_REQUEST, null);
                 uid = i.getUid();
@@ -264,12 +264,12 @@ public class CalendarCollection extends Collection {
         /*
          * some of the CalDAV clients do not behave very well when it comes to
          * etags.
-         * 
-         * chandler doesn't set User-Agent header, doesn't understand 
+         *
+         * chandler doesn't set User-Agent header, doesn't understand
          * If-None-Match or If-Match headers.
-         * 
+         *
          * evolution 2.8 always sets If-None-Match although we return etag in REPORT.
-         * 
+         *
          * ical correctly understands etag and sets If-Match for existing etags, but
          * does not use If-None-Match for new resource creation.
          */
@@ -294,8 +294,8 @@ public class CalendarCollection extends Collection {
             try {
                 ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(is, MimeConstants.P_CHARSET_UTF8);
                 invites = Invite.createFromCalendar(account,
-                        findSummary(vcalendar), 
-                        vcalendar, 
+                        findSummary(vcalendar),
+                        vcalendar,
                         true);
             } catch (ServiceException se) {
                 throw new DavException("cannot parse ics", HttpServletResponse.SC_BAD_REQUEST, se);
@@ -354,25 +354,25 @@ public class CalendarCollection extends Collection {
                     /*
                      * this hack was to work around iCal setting ORGANIZER field
                      * with principalURL.  iCal seemed to have fixed that bug.
-                     * 
-					String addr = i.getOrganizer().getAddress();
-					String newAddr = getAddressFromPrincipalURL(addr);
-					if (!addr.equals(newAddr)) {
-						i.setOrganizer(new ZOrganizer(newAddr, null));
-						ZProperty href = null;
-						Iterator<ZProperty> xprops = i.xpropsIterator();
-						while (xprops.hasNext()) {
-							href = xprops.next();
-							if (href.getName().equals(DavElements.ORGANIZER_HREF))
-								break;
-							href = null;
-						}
-						if (href == null) {
-							href = new ZProperty(DavElements.ORGANIZER_HREF);
-							i.addXProp(href);
-						}
-						href.setValue(addr);
-					}
+                     *
+                    String addr = i.getOrganizer().getAddress();
+                    String newAddr = getAddressFromPrincipalURL(addr);
+                    if (!addr.equals(newAddr)) {
+                        i.setOrganizer(new ZOrganizer(newAddr, null));
+                        ZProperty href = null;
+                        Iterator<ZProperty> xprops = i.xpropsIterator();
+                        while (xprops.hasNext()) {
+                            href = xprops.next();
+                            if (href.getName().equals(DavElements.ORGANIZER_HREF))
+                                break;
+                            href = null;
+                        }
+                        if (href == null) {
+                            href = new ZProperty(DavElements.ORGANIZER_HREF);
+                            i.addXProp(href);
+                        }
+                        href.setValue(addr);
+                    }
                      */
                 }
                 if (first) {

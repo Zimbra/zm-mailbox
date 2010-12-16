@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -95,7 +95,7 @@ public class CalSummaryCache {
             boolean rangeValid = (rangeStart >= 0 && rangeEnd > 0 && rangeStart < rangeEnd);
             if (!rangeValid)
                 return null;
-            
+
             Invite defaultInvite = calItem.getDefaultInviteOrNull();
             if (defaultInvite == null) {
                 ZimbraLog.calendar.info(
@@ -216,9 +216,8 @@ public class CalSummaryCache {
     }
 
     private static CalendarData reloadCalendarOverRange(OperationContext octxt, Mailbox mbox, int folderId,
-                                                        byte itemType, long rangeStart, long rangeEnd,
-                                                        CalendarData prevCalData, boolean incrementalUpdate)
-    throws ServiceException {
+            MailItem.Type type, long rangeStart, long rangeEnd, CalendarData prevCalData, boolean incrementalUpdate)
+            throws ServiceException {
         if (rangeEnd < rangeStart)
             throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
         long days = (rangeEnd - rangeStart) / MSEC_PER_DAY;
@@ -229,12 +228,12 @@ public class CalSummaryCache {
         if (prevCalData == null || (rangeStart < prevCalData.getRangeStart() || rangeEnd > prevCalData.getRangeEnd())) {
             // Ignore existing data if its range doesn't include the entire requested range.
             // We have to scan the calendar folder.
-            return reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, null);
+            return reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, type, rangeStart, rangeEnd, null);
         }
         if (!incrementalUpdate || prevCalData.getNumStaleItems() > sMaxStaleItems) {
             // If incremental update of stale items is disabled, do it with folder scan.
             // If there are too many stale items, do it with folder scan as that may be faster.
-            return reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, prevCalData);
+            return reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, type, rangeStart, rangeEnd, prevCalData);
         }
 
         Set<Integer> staleItemIds = new HashSet<Integer>();
@@ -302,11 +301,9 @@ public class CalSummaryCache {
     }
 
     // Reload by first calling Mailbox.getCalendarItemsForRange(), which runs a query on appointment table.
-    private static CalendarData reloadCalendarOverRangeWithFolderScan(
-            OperationContext octxt, Mailbox mbox, int folderId,
-            byte itemType, long rangeStart, long rangeEnd,
-            CalendarData prevCalData)
-    throws ServiceException {
+    private static CalendarData reloadCalendarOverRangeWithFolderScan(OperationContext octxt, Mailbox mbox,
+            int folderId, MailItem.Type type, long rangeStart, long rangeEnd, CalendarData prevCalData)
+            throws ServiceException {
         if (rangeEnd < rangeStart)
             throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
         long days = (rangeEnd - rangeStart) / MSEC_PER_DAY;
@@ -321,8 +318,8 @@ public class CalSummaryCache {
 
         Folder folder = mbox.getFolderById(octxt, folderId);
         CalendarData calData = new CalendarData(folderId, folder.getImapMODSEQ(), rangeStart, rangeEnd);
-        Collection<CalendarItem> calItems =
-            mbox.getCalendarItemsForRange(octxt, itemType, rangeStart, rangeEnd, folderId, null);
+        Collection<CalendarItem> calItems = mbox.getCalendarItemsForRange(octxt, type, rangeStart, rangeEnd,
+                folderId, null);
         for (CalendarItem calItem : calItems) {
             if (prevCalData != null) {
                 // Reuse the appointment if it didn't change.
@@ -402,7 +399,7 @@ public class CalSummaryCache {
                 deregisterFromAccount(k);
             }
             return prevVal;
-        }        
+        }
 
         @Override
         protected boolean removeEldestEntry(Map.Entry<CalSummaryKey, CalendarData> eldest) {
@@ -493,9 +490,7 @@ public class CalSummaryCache {
 
     // get summary for all appts/tasks in a calendar folder
     public CalendarDataResult getCalendarSummary(OperationContext octxt, String targetAcctId, int folderId,
-    									   byte itemType, long rangeStart, long rangeEnd,
-    									   boolean computeSubRange)
-    throws ServiceException {
+            MailItem.Type type, long rangeStart, long rangeEnd, boolean computeSubRange) throws ServiceException {
         if (rangeStart > rangeEnd)
             throw ServiceException.INVALID_REQUEST("End time must be after Start time", null);
 
@@ -516,7 +511,7 @@ public class CalSummaryCache {
             Account authAcct = octxt != null ? octxt.getAuthenticatedUser() : null;
             boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
             result.allowPrivateAccess = CalendarItem.allowPrivateAccess(folder, authAcct, asAdmin);
-            result.data = reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, itemType, rangeStart, rangeEnd, null);
+            result.data = reloadCalendarOverRangeWithFolderScan(octxt, mbox, folderId, type, rangeStart, rangeEnd, null);
             return result;
         }
 
@@ -599,9 +594,9 @@ public class CalSummaryCache {
         if (calData != null) {
             if (calData.getModSeq() != currentModSeq || calData.getNumStaleItems() > 0) {
                 // Cached data is stale.
-            	// Something changed on the calendar, but most of the data is probably still current.
-            	// Let's keep a reference to the current data and reuse what we can, but only if the
-            	// current data's range covers the requested range.
+                // Something changed on the calendar, but most of the data is probably still current.
+                // Let's keep a reference to the current data and reuse what we can, but only if the
+                // current data's range covers the requested range.
                 if (rangeStart >= calData.getRangeStart() && rangeEnd <= calData.getRangeEnd())
                     reusableCalData = calData;
                 calData = null;  // force recompute further down
@@ -622,8 +617,8 @@ public class CalSummaryCache {
             if (defaultRange == null)
                 defaultRange = Util.getMonthsRange(System.currentTimeMillis(),
                                                    sRangeMonthFrom, sRangeNumMonths);
-            calData = reloadCalendarOverRange(ownerOctxt, mbox, folderId, itemType,
-                                              defaultRange.getFirst(), defaultRange.getSecond(), reusableCalData, incrementalUpdate);
+            calData = reloadCalendarOverRange(ownerOctxt, mbox, folderId, type,
+                    defaultRange.getFirst(), defaultRange.getSecond(), reusableCalData, incrementalUpdate);
             synchronized (mSummaryCache) {
                 if (mLRUCapacity > 0) {
                     mSummaryCache.put(key, calData);
@@ -655,7 +650,8 @@ public class CalSummaryCache {
         } else {
             // Requested range is outside the currently cached range.
             dataFrom = CacheLevel.Miss;
-            result.data = reloadCalendarOverRange(ownerOctxt, mbox, folderId, itemType, rangeStart, rangeEnd, reusableCalData, incrementalUpdate);
+            result.data = reloadCalendarOverRange(ownerOctxt, mbox, folderId, type, rangeStart, rangeEnd,
+                    reusableCalData, incrementalUpdate);
         }
 
         // hit/miss tracking

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20,22 +20,23 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
 
 // an appointment/task and expanded instances over a time range
 public class CalendarItemData {
     // ZCS-specific meta data
-    private byte mType;  // MailItem.TYPE_APPOINTMENT or MailItem.TYPE_TASK
+    private MailItem.Type type;  // APPOINTMENT or TASK
     private int mFolderId;
     private int mCalItemId;
     private String mFlags;
     private String mTags;
     private boolean mIsPublic;
-	private int mModMetadata; // mod_metadata db column; this serves the function of last-modified-time
-	private int mModContent;  // mod_content db column
-	private long mDate;       // date db column; unix time in millis
-	private long mChangeDate; // change_date db column; unix time in millis
-	private long mSize;       // size db column
+    private int mModMetadata; // mod_metadata db column; this serves the function of last-modified-time
+    private int mModContent;  // mod_content db column
+    private long mDate;       // date db column; unix time in millis
+    private long mChangeDate; // change_date db column; unix time in millis
+    private long mSize;       // size db column
 
     // change management info
     private String mUid;
@@ -56,7 +57,10 @@ public class CalendarItemData {
     private long mActualRangeStart;
     private long mActualRangeEnd;
 
-    public byte getType()     { return mType; }
+    public MailItem.Type getType() {
+        return type;
+    }
+
     public int getFolderId()  { return mFolderId; }
     public int getCalItemId() { return mCalItemId; }
     public String getFlags()  { return mFlags; }
@@ -85,19 +89,22 @@ public class CalendarItemData {
         mActualRangeEnd = end;
     }
 
-    CalendarItemData(
-            byte type, int folderId, int calItemId, String flags, String tags,
-            int modMetadata, int modContent, long date, long changeDate, long size,
-            String uid,
-            boolean isRecurring, boolean isPublic,
-            AlarmData alarm,
-            FullInstanceData defaultData) {
-        mType = type; mFolderId = folderId; mCalItemId = calItemId;
-        mFlags = flags; mTags = tags;
-        mModMetadata = modMetadata; mModContent = modContent;
-        mDate = date; mChangeDate = changeDate; mSize = size;
+    CalendarItemData(MailItem.Type type, int folderId, int calItemId, String flags, String tags, int modMetadata,
+            int modContent, long date, long changeDate, long size, String uid, boolean isRecurring, boolean isPublic,
+            AlarmData alarm, FullInstanceData defaultData) {
+        this.type = type;
+        mFolderId = folderId;
+        mCalItemId = calItemId;
+        mFlags = flags;
+        mTags = tags;
+        mModMetadata = modMetadata;
+        mModContent = modContent;
+        mDate = date;
+        mChangeDate = changeDate;
+        mSize = size;
         mUid = uid;
-        mIsRecurring = isRecurring; mIsPublic = isPublic;
+        mIsRecurring = isRecurring;
+        mIsPublic = isPublic;
         mAlarm = alarm;
         mDefaultData = defaultData;
         mInstances = new ArrayList<InstanceData>();
@@ -114,11 +121,8 @@ public class CalendarItemData {
     public CalendarItemData getSubRange(long rangeStart, long rangeEnd) {
         if (rangeStart <= mActualRangeStart && rangeEnd >= mActualRangeEnd)
             return this;
-        CalendarItemData calItemData = new CalendarItemData(
-                mType, mFolderId, mCalItemId, mFlags, mTags,
-                mModMetadata, mModContent, mDate, mChangeDate, mSize,
-                mUid, mIsRecurring, mIsPublic, mAlarm,
-                mDefaultData);
+        CalendarItemData calItemData = new CalendarItemData(type, mFolderId, mCalItemId, mFlags, mTags, mModMetadata,
+                mModContent, mDate, mChangeDate, mSize, mUid, mIsRecurring, mIsPublic, mAlarm, mDefaultData);
         long defaultDuration =
             mDefaultData.getDuration() != null ? mDefaultData.getDuration().longValue() : 0;
         for (InstanceData inst : mInstances) {
@@ -168,7 +172,7 @@ public class CalendarItemData {
     private static final String FN_RANGE_END = "rgEnd";
 
     CalendarItemData(Metadata meta) throws ServiceException {
-        mType = (byte) meta.getLong(FN_TYPE);
+        type = MailItem.Type.of((byte) meta.getLong(FN_TYPE));
         mFolderId = (int) meta.getLong(FN_FOLDER_ID);
         mCalItemId = (int) meta.getLong(FN_CALITEM_ID);
         mFlags = meta.get(FN_FLAGS, null);
@@ -211,7 +215,7 @@ public class CalendarItemData {
 
     Metadata encodeMetadata() {
         Metadata meta = new Metadata();
-        meta.put(FN_TYPE, mType);
+        meta.put(FN_TYPE, type.toByte());
         meta.put(FN_FOLDER_ID, mFolderId);
         meta.put(FN_CALITEM_ID, mCalItemId);
         meta.put(FN_FLAGS, mFlags);

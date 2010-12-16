@@ -16,14 +16,17 @@ import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.session.PendingModifications;
 
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author vmahajan
  */
 public class CalItemReminderService extends MailboxListener {
 
+    @Override
     public void handleMailboxChange(String accountId, PendingModifications mods, OperationContext octxt, int lastChangeId) {
         Account account = null;
         try {
@@ -173,7 +176,8 @@ public class CalItemReminderService extends MailboxListener {
         ScheduledTaskManager.schedule(reminderTask);
     }
 
-    public int registerForItemTypes() {
-        return MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT) | MailItem.typeToBitmask(MailItem.TYPE_TASK);
+    @Override
+    public Set<MailItem.Type> registerForItemTypes() {
+        return EnumSet.of(MailItem.Type.APPOINTMENT, MailItem.Type.TASK);
     }
 }

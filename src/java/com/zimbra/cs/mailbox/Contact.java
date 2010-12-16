@@ -243,9 +243,9 @@ public class Contact extends MailItem {
 
     public Contact(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
-        if (mData.type != TYPE_CONTACT)
+        if (mData.type != Type.CONTACT.toByte()) {
             throw new IllegalArgumentException();
-
+        }
         mEmailFields = getEmailFields(getAccount());
     }
 
@@ -607,17 +607,18 @@ public class Contact extends MailItem {
      * @see #canContain(byte) */
     static Contact create(int id, Folder folder, MailboxBlob mblob, ParsedContact pc, int flags, String tags, CustomMetadata custom)
     throws ServiceException {
-        if (folder == null || !folder.canContain(TYPE_CONTACT))
+        if (folder == null || !folder.canContain(Type.CONTACT)) {
             throw MailServiceException.CANNOT_CONTAIN();
-        if (!folder.canAccess(ACL.RIGHT_INSERT))
+        }
+        if (!folder.canAccess(ACL.RIGHT_INSERT)) {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
-
+        }
         Mailbox mbox = folder.getMailbox();
         mbox.updateContactCount(1);
 
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
-        data.type        = TYPE_CONTACT;
+        data.type        = Type.CONTACT.toByte();
         data.folderId    = folder.getId();
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
             data.indexId = 0;

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -33,10 +33,10 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class DiffDocument extends WikiDocumentHandler {
 
-	@Override
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext zsc = getZimbraSoapContext(context);
-		Mailbox mbox = getRequestedMailbox(zsc);
+    @Override
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
 
         Element doc = request.getElement(MailConstants.E_DOC);
@@ -45,28 +45,31 @@ public class DiffDocument extends WikiDocumentHandler {
         int v2 = (int) doc.getAttributeLong(MailConstants.A_V2, -1);
 
         ItemId id = new ItemId(idStr, zsc);
-    	Document r1 = (Document) mbox.getItemRevision(octxt, id.getId(), MailItem.TYPE_UNKNOWN, v1);
-    	Document r2 = (Document) mbox.getItemRevision(octxt, id.getId(), MailItem.TYPE_UNKNOWN, v2);
-    	
-        byte view = mbox.getFolderById(octxt, r1.getFolderId()).getDefaultView();
-        if (view == MailItem.TYPE_WIKI)
-    		checkNotebookEnabled(zsc);
-        else if (view == MailItem.TYPE_DOCUMENT)
-    		checkBriefcaseEnabled(zsc);
-        
+        Document r1 = (Document) mbox.getItemRevision(octxt, id.getId(), MailItem.Type.UNKNOWN, v1);
+        Document r2 = (Document) mbox.getItemRevision(octxt, id.getId(), MailItem.Type.UNKNOWN, v2);
+
+        MailItem.Type view = mbox.getFolderById(octxt, r1.getFolderId()).getDefaultView();
+        switch (view) {
+        case WIKI:
+            checkNotebookEnabled(zsc);
+            break;
+        case DOCUMENT:
+            checkBriefcaseEnabled(zsc);
+            break;
+        }
         Element response = zsc.createElement(MailConstants.DIFF_DOCUMENT_RESPONSE);
-        
-    	try {
-        	Collection<Chunk> diffResult = Diff.getResult(r1.getContentStream(), r2.getContentStream());
-        	for (Chunk c : diffResult) {
-        		Element chunk = response.addElement(MailConstants.E_CHUNK);
-    			chunk.addAttribute(MailConstants.A_DISP, c.disposition.toString());
-    			chunk.setText(StringUtil.join("\n", c.content));
-        	}
-    	} catch (IOException e) {
-			throw ServiceException.FAILURE("can't diff documents", e);
-    	}
-    	
+
+        try {
+            Collection<Chunk> diffResult = Diff.getResult(r1.getContentStream(), r2.getContentStream());
+            for (Chunk c : diffResult) {
+                Element chunk = response.addElement(MailConstants.E_CHUNK);
+                chunk.addAttribute(MailConstants.A_DISP, c.disposition.toString());
+                chunk.setText(StringUtil.join("\n", c.content));
+            }
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("can't diff documents", e);
+        }
+
         return response;
-	}
+    }
 }

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,24 +28,27 @@ public class CreateFolder extends RedoableOp {
     private String mName;
     private int mParentId;
     private byte mAttrs;
-    private byte mDefaultView;
+    private MailItem.Type defaultView;
     private int mFlags;
     private long mColor;
     private String mUrl;
     private int mFolderId;
 
-    public CreateFolder()  { }
-
-    public CreateFolder(int mailboxId, String name, int parentId, byte view, int flags, MailItem.Color color, String url) {
-        this(mailboxId, name, parentId, (byte)0, view, flags, color, url);
+    public CreateFolder() {
     }
 
-    public CreateFolder(int mailboxId, String name, int parentId, byte attrs, byte view, int flags, MailItem.Color color, String url) {
+    public CreateFolder(int mailboxId, String name, int parentId, MailItem.Type view, int flags,
+            MailItem.Color color, String url) {
+        this(mailboxId, name, parentId, (byte) 0, view, flags, color, url);
+    }
+
+    public CreateFolder(int mailboxId, String name, int parentId, byte attrs, MailItem.Type view, int flags,
+            MailItem.Color color, String url) {
         setMailboxId(mailboxId);
         mName = name == null ? "" : name;
         mParentId = parentId;
         mAttrs = attrs;
-        mDefaultView = view;
+        defaultView = view;
         mFlags = flags;
         mColor = color.getValue();
         mUrl = url == null ? "" : url;
@@ -69,7 +72,7 @@ public class CreateFolder extends RedoableOp {
         StringBuilder sb = new StringBuilder("name=").append(mName);
         sb.append(", parent=").append(mParentId);
         sb.append(", attrs=").append(mAttrs);
-        sb.append(", view=").append(mDefaultView);
+        sb.append(", view=").append(defaultView);
         sb.append(", flags=").append(mFlags).append(", color=").append(mColor);
         sb.append(", url=").append(mUrl).append(", id=").append(mFolderId);
         return sb.toString();
@@ -80,7 +83,7 @@ public class CreateFolder extends RedoableOp {
         out.writeUTF(mName);
         out.writeInt(mParentId);
         if (getVersion().atLeast(1, 19)) out.writeByte(mAttrs);
-        out.writeByte(mDefaultView);
+        out.writeByte(defaultView.toByte());
         out.writeInt(mFlags);
         // mColor from byte to long in Version 1.27
         out.writeLong(mColor);
@@ -92,13 +95,16 @@ public class CreateFolder extends RedoableOp {
     protected void deserializeData(RedoLogInput in) throws IOException {
         mName = in.readUTF();
         mParentId = in.readInt();
-        if (getVersion().atLeast(1, 19)) mAttrs = in.readByte();
-        mDefaultView = in.readByte();
+        if (getVersion().atLeast(1, 19)) {
+            mAttrs = in.readByte();
+        }
+        defaultView = MailItem.Type.of(in.readByte());
         mFlags = in.readInt();
-        if (getVersion().atLeast(1, 27))
+        if (getVersion().atLeast(1, 27)) {
             mColor = in.readLong();
-        else
+        } else {
             mColor = in.readByte();
+        }
         mUrl = in.readUTF();
         mFolderId = in.readInt();
     }
@@ -109,7 +115,8 @@ public class CreateFolder extends RedoableOp {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
         try {
-            mailbox.createFolder(getOperationContext(), mName, mParentId, mAttrs, mDefaultView, mFlags, MailItem.Color.fromMetadata(mColor), mUrl);
+            mailbox.createFolder(getOperationContext(), mName, mParentId, mAttrs, defaultView, mFlags,
+                    MailItem.Color.fromMetadata(mColor), mUrl);
         } catch (MailServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {

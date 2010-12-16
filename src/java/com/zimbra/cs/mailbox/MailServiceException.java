@@ -327,7 +327,7 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("invalid name: " + name, INVALID_NAME, SENDERS_FAULT, new Argument(NAME, name, Argument.Type.STR));
     }
 
-    public static MailServiceException INVALID_TYPE(byte type) {
+    public static MailServiceException INVALID_TYPE(String type) {
         return new MailServiceException("invalid item type: " + type, INVALID_TYPE, SENDERS_FAULT, new Argument(TYPE, type, Argument.Type.NUM));
     }
 
@@ -351,9 +351,9 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("cannot put object in that folder", CANNOT_CONTAIN, SENDERS_FAULT);
     }
 
-    public static MailServiceException CANNOT_CONTAIN(Folder parent, byte type) {
+    public static MailServiceException CANNOT_CONTAIN(Folder parent, MailItem.Type type) {
         String parentName = (parent == null ? "null parent folder" : "folder " + parent.getPath());
-        return new MailServiceException(parentName + " cannot contain an item of type " + MailItem.getNameForType(type), CANNOT_CONTAIN, SENDERS_FAULT);
+        return new MailServiceException(parentName + " cannot contain an item of type " + type, CANNOT_CONTAIN, SENDERS_FAULT);
     }
 
     public static MailServiceException CANNOT_COPY(int id) {
@@ -364,8 +364,8 @@ public class MailServiceException extends ServiceException {
         return new MailServiceException("cannot make object a child of that parent", CANNOT_PARENT, SENDERS_FAULT);
     }
 
-    public static MailServiceException CANNOT_RENAME(byte type) {
-        return new MailServiceException("cannot set the name on a " + MailItem.getNameForType(type), CANNOT_RENAME, SENDERS_FAULT);
+    public static MailServiceException CANNOT_RENAME(MailItem.Type type) {
+        return new MailServiceException("cannot set the name on a " + type, CANNOT_RENAME, SENDERS_FAULT);
     }
 
     public static MailServiceException IS_NOT_CHILD() {

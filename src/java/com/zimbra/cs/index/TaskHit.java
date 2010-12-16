@@ -17,17 +17,14 @@ package com.zimbra.cs.index;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Task;
 import com.zimbra.cs.mailbox.calendar.Invite;
 
 public final class TaskHit extends CalendarItemHit {
 
-    TaskHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId,
-            float score, Task task) {
-        super(results, mbx, mailItemId, score, task,
-                task != null ? task.getType() : MailItem.TYPE_TASK);
+    TaskHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId, float score, Task task) {
+        super(results, mbx, mailItemId, score, task);
     }
 
     public long getDueTime() throws ServiceException {

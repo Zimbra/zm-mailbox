@@ -2,20 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Nov 10, 2004
- *
  */
 package com.zimbra.cs.filter;
 
@@ -54,9 +49,10 @@ import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 
 /**
- * @author kchen
- *
  * Rewrites a parsed Sieve tree to XML or vice versa.
+ *
+ * @since Nov 10, 2004
+ * @author kchen
  */
 public class RuleRewriter {
     final static Set<String> MATCH_TYPES = new HashSet<String>();
@@ -74,14 +70,14 @@ public class RuleRewriter {
 
     private Element mRoot;
     private List<String> mRuleNames;
-    
+
     private Mailbox mMailbox;
-    
+
     RuleRewriter() {}
-    
+
     /**
      * Initializes rewriter to convert from Sieve parse tree to an XML DOM tree.
-     * 
+     *
      * @param factory the <tt>ElementFactory</tt> used to create XML elements
      * @param node the Sieve parse tree root node
      * @see #getElement()
@@ -94,7 +90,7 @@ public class RuleRewriter {
 
     /**
      * Initializes rewriter to convert from an XML document to a Sieve script
-     * 
+     *
      * @param xmlRules
      * @see RuleRewriter#getScript()
      */
@@ -106,22 +102,22 @@ public class RuleRewriter {
     Element getElement() {
         return mRoot;
     }
-    
+
     private void traverse(Node node) {
         int numChildren = node.jjtGetNumChildren();
         int nameIndex = 0;
         for (int i = 0; i < numChildren; i++) {
             Node childNode = node.jjtGetChild(i);
             String name = ((SieveNode) childNode).getName();
-            if (childNode instanceof ASTcommand && 
+            if (childNode instanceof ASTcommand &&
                 ("if".equals(name) || "elsif".equals(name) || "disabled_if".equals(name))) {
                 String ruleName = "";
                 if (mRuleNames != null && nameIndex < mRuleNames.size()) {
                     ruleName = mRuleNames.get(nameIndex);
                     nameIndex++;
                 }
-                
-                Element ruleElem = 
+
+                Element ruleElem =
                     mRoot.addElement(MailConstants.E_RULE).addAttribute(MailConstants.A_NAME, ruleName);
                 ruleElem.addAttribute(MailConstants.A_ACTIVE, !"disabled_if".equals(name));
                 rule(ruleElem, childNode);
@@ -132,30 +128,30 @@ public class RuleRewriter {
     }
 
     private void rule(Element elem, Node parent) {
-        
+
         int numChildren = parent.jjtGetNumChildren();
         for (int i=0; i<numChildren; i++) {
             Node node = parent.jjtGetChild(i);
             String name = ((SieveNode) node).getName();
             if (node instanceof ASTtest) {
                 if ("anyof".equals(name) || "allof".equals(name)) {
-                    Element condsElem = 
+                    Element condsElem =
                         elem.addElement(MailConstants.E_CONDITION_GROUP).addAttribute(MailConstants.A_OPERATION, name);
                     rule(condsElem, node);
-                } else if ("not".equals(name)){ 
+                } else if ("not".equals(name)){
                     mStack.push(name);
                     rule(elem, node);
                 } else {
                     if ("exists".equals(name) && !mStack.isEmpty()) {
                         name = mStack.pop() + " " + name;
                     }
-                    Element cElem = 
+                    Element cElem =
                         elem.addElement(MailConstants.E_CONDITION).addAttribute(MailConstants.A_NAME, name);
                     x = 0;
                     test(cElem, node);
                 }
             } else if (node instanceof ASTcommand) {
-                Element actionElem = 
+                Element actionElem =
                     elem.addElement(MailConstants.E_ACTION).addAttribute(MailConstants.A_NAME, ((SieveNode) node).getName());
                 action(actionElem, node);
             } else {
@@ -163,7 +159,7 @@ public class RuleRewriter {
             }
         }
     }
-    
+
     private void test(Element elem, Node node) {
         int numChildren = node.jjtGetNumChildren();
         for (int i = 0; i < numChildren; i++) {
@@ -194,11 +190,11 @@ public class RuleRewriter {
                 else
                     param = PARAM_PREFIX + String.valueOf(x++);
                 elem.addAttribute(param, toString(val));
-            } 
+            }
             test(elem, childNode);
         }
     }
-    
+
     /**
      * Returns the string representation of a value list.  Values are surrounded
      * with quotes, to maintain backward compatibility.  See bug 39911.
@@ -208,7 +204,7 @@ public class RuleRewriter {
         buf.append("[");
         if (list != null) {
             boolean isFirst = true;
-            
+
             for (Object val : list) {
                 if (isFirst) {
                     isFirst = false;
@@ -232,10 +228,10 @@ public class RuleRewriter {
         buf.append("]");
         return buf.toString();
     }
-    
+
     private static final int K = 1024;
     private static final int M = K * K;
-    
+
     /**
      * @param string
      * @return
@@ -251,9 +247,9 @@ public class RuleRewriter {
     }
 
     private static final char PARAM_PREFIX = MailConstants.A_LHS.charAt(0);
-    
+
     private int x = 0;
-    
+
     private List<Object> getStringList(Node node) {
         int n = node.jjtGetNumChildren();
         List<Object> a = new ArrayList<Object>(n);
@@ -283,7 +279,7 @@ public class RuleRewriter {
                     if (!val.endsWith("\"")) {
                         buf.append('"');
                     }
-                    
+
                     elem.addElement(MailConstants.E_FILTER_ARG).setText(buf.toString());
                 }
             } else {
@@ -291,7 +287,7 @@ public class RuleRewriter {
             }
         }
     }
-    
+
     /**
      * Walks the element tree and removes surrounding quotes and brackets from:
      * <ul>
@@ -310,7 +306,7 @@ public class RuleRewriter {
         for (Element child : element.listElements()) {
             sanitizeRules(child);
         }
-        
+
         if (element.getName().equals(MailConstants.E_CONDITION)) {
             String k0 = element.getAttribute("k0", null);
             if (k0 != null) {
@@ -358,7 +354,7 @@ public class RuleRewriter {
             }
         }
     }
-    
+
     /**
      * @throws ServiceException
      */
@@ -412,7 +408,7 @@ public class RuleRewriter {
                         sb.append("\"");
                 }
                 sb.append(" ");
-                
+
                 // Don't allow more than four stars for :matches (bug 35983).
                 if (":matches".equals(op) && k1 != null && k1.contains("*****")) {
                     throw ServiceException.INVALID_REQUEST(
@@ -431,12 +427,12 @@ public class RuleRewriter {
         if (actionOpenBrace)
             sb.append("}\n");
     }
-    
+
     // ["value"]
-    private static final Pattern PAT_BRACKET_QUOTES = Pattern.compile("\\[\"(.*)\"\\]"); 
+    private static final Pattern PAT_BRACKET_QUOTES = Pattern.compile("\\[\"(.*)\"\\]");
     // "value"
     private static final Pattern PAT_QUOTES = Pattern.compile("\"(.*)\"");
-    
+
     /**
      * If <tt>k</tt> matches one of the following patterns:
      * <ul>
@@ -445,8 +441,8 @@ public class RuleRewriter {
      * </ul>
      * strips the surrounding brackets and quotes.  Used to address limitations in the old
      * mail filtering code and bug 42320.
-     * 
-     * @return the stripped value 
+     *
+     * @return the stripped value
      */
     public static String stripBracketsAndQuotes(String s) {
         if (s != null) {
@@ -500,7 +496,7 @@ public class RuleRewriter {
         }
         sb.append(";\n");
     }
-    
+
     private void createFolderIfNecessary(String path, String ruleName)
     throws ServiceException {
         Pair<Folder, String> folderAndRemotePath =
@@ -538,7 +534,7 @@ public class RuleRewriter {
         } else if (remotePath != null) {
             // Create local folder path
             ZimbraLog.filter.info("Creating folder %s for rule %s.", path, ruleName);
-            mMailbox.createFolder(null, path, (byte) 0, MailItem.TYPE_MESSAGE);
+            mMailbox.createFolder(null, path, (byte) 0, MailItem.Type.MESSAGE);
         }
     }
 }

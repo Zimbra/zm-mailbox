@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -96,7 +96,7 @@ public class ParseMimeMessage {
     static Log mLog = LogFactory.getLog(ParseMimeMessage.class);
 
     private static final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
-    
+
     /**
      * Overrides the default transfer encoding and sets the encoding
      * of all non-message attachments to base64, so that we preserve line endings
@@ -143,8 +143,8 @@ public class ParseMimeMessage {
 
     /**
      * Callback routine for parsing the <inv> element and building a iCal4j Calendar from it
-     * 
-     *  We use a callback b/c there are differences in the parsing depending on the operation: 
+     *
+     *  We use a callback b/c there are differences in the parsing depending on the operation:
      *  Replying to an invite is different than Creating or Modifying one, etc etc...
      *
      */
@@ -240,7 +240,7 @@ public class ParseMimeMessage {
         String defaultCharset;
         long size;
         long maxSize;
-        
+
         ParseMessageContext() {
             try {
                 Config config = Provisioning.getInstance().getConfig();
@@ -252,7 +252,7 @@ public class ParseMimeMessage {
                 maxSize = Long.MAX_VALUE;
             }
         }
-        
+
         void incrementSize(String name, long numBytes) throws MailServiceException {
             size += numBytes;
             mLog.debug("Adding %s, incrementing size by %d to %d.", name, numBytes, size);
@@ -263,8 +263,8 @@ public class ParseMimeMessage {
     }
 
     /**
-     * Given an <m> element from SOAP, return us a parsed MimeMessage, 
-     * and also fill in the MimeMessageData structure with information we parsed out of it (e.g. contained 
+     * Given an <m> element from SOAP, return us a parsed MimeMessage,
+     * and also fill in the MimeMessageData structure with information we parsed out of it (e.g. contained
      * Invite, msgids, etc etc)
      * @param zsc TODO
      * @param octxt TODO
@@ -320,7 +320,7 @@ public class ParseMimeMessage {
 
                 // goes into the "content" subpart
                 InviteParserResult result = inviteParser.parse(zsc, octxt, mbox.getAccount(), inviteElem);
-                
+
                 if (partElem != null && result.mCal != null) {
                     // If textual content is provided and there's an invite,
                     // set the text as DESCRIPTION of the iCalendar.  This helps
@@ -397,7 +397,7 @@ public class ParseMimeMessage {
             // can have no addresses specified if it's a draft...
             if (!maddrs.isEmpty())
                 addAddressHeaders(mm, maddrs, ctxt.defaultCharset);
-            	
+
             if (!hasContent && !isMultipart)
                 mm.setText("", MimeConstants.P_CHARSET_DEFAULT);
 
@@ -410,7 +410,7 @@ public class ParseMimeMessage {
                 mm.addHeader("Importance", "low");
             }
 
-            // JavaMail tip: don't forget to call this, it is REALLY confusing.  
+            // JavaMail tip: don't forget to call this, it is REALLY confusing.
             mm.saveChanges();
 
             if (mLog.isDebugEnabled())
@@ -489,15 +489,15 @@ public class ParseMimeMessage {
      * of this MimeMessage.  The alternatives[] all need to be "alternative" to whatever the client sends
      * us....but we want to be careful so that we do NOT create a nested multipart/alternative structure
      * within another one (that would be very tacky)....so this is a bit complicated.
-     * 
+     *
      * @param mm
      * @param mmp
      * @param elem
      * @param alternatives
      * @param defaultCharset TODO
      * @throws MessagingException
-     * @throws IOException 
-     * @throws ServiceException 
+     * @throws IOException
+     * @throws ServiceException
      */
     private static void setContent(MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives, ParseMessageContext ctxt)
     throws MessagingException, ServiceException, IOException {
@@ -533,7 +533,7 @@ public class ParseMimeMessage {
             mmp = mmpNew;
         }
 
-        // once we get here, mmp is either NULL, a multipart/mixed from the toplevel, 
+        // once we get here, mmp is either NULL, a multipart/mixed from the toplevel,
         // or a multipart/alternative created just above....either way we are safe to stick
         // the client's nice and simple body right here
         String data = elem.getAttribute(MailConstants.E_CONTENT, "");
@@ -570,7 +570,7 @@ public class ParseMimeMessage {
             // create the MimeMultipart and attach it to the existing structure:
             MimeMultipart mmpNew = new JavaMailMimeMultipart(subType);
             if (mmp == null) {
-                // there were no multiparts at all, we need to create one 
+                // there were no multiparts at all, we need to create one
                 mm.setContent(mmpNew);
             } else {
                 // there was already a multipart/mixed at the top of the mm
@@ -628,7 +628,7 @@ public class ParseMimeMessage {
 
         // create the part and override the DataSource's default ctype, if required
         MimeBodyPart mbp = new ForceBase64MimeBodyPart();
-        
+
         UploadDataSource uds = new UploadDataSource(up);
         if (ctypeOverride != null && !ctypeOverride.equals(""))
             uds.setContentType(ctypeOverride);
@@ -713,7 +713,7 @@ public class ParseMimeMessage {
     }
 
     @SuppressWarnings("unchecked")
-    private static void attachDocument(MimeMultipart mmp, ItemId iid, int version, String contentID, ParseMessageContext ctxt) 
+    private static void attachDocument(MimeMultipart mmp, ItemId iid, int version, String contentID, ParseMessageContext ctxt)
     throws MessagingException, ServiceException {
         if (!iid.isLocal()) {
             Map<String,String> params = Collections.EMPTY_MAP;
@@ -727,14 +727,15 @@ public class ParseMimeMessage {
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
         Document doc;
-        if (version > 0)
-            doc = (Document)mbox.getItemRevision(ctxt.octxt, iid.getId(), MailItem.TYPE_DOCUMENT, version);
-        else
+        if (version > 0) {
+            doc = (Document)mbox.getItemRevision(ctxt.octxt, iid.getId(), MailItem.Type.DOCUMENT, version);
+        } else {
             doc = mbox.getDocumentById(ctxt.octxt, iid.getId());
+        }
         attachDocument(mmp, doc, contentID, ctxt);
     }
 
-    private static void attachDocument(MimeMultipart mmp, String path, String contentID, ParseMessageContext ctxt) 
+    private static void attachDocument(MimeMultipart mmp, String path, String contentID, ParseMessageContext ctxt)
     throws MessagingException, ServiceException {
         MailItem item = null;
         try {
@@ -760,7 +761,7 @@ public class ParseMimeMessage {
         attachDocument(mmp, (Document) item, contentID, ctxt);
     }
 
-    private static void attachDocument(MimeMultipart mmp, Document doc, String contentID, ParseMessageContext ctxt) 
+    private static void attachDocument(MimeMultipart mmp, Document doc, String contentID, ParseMessageContext ctxt)
     throws MessagingException, ServiceException {
         ctxt.incrementSize("attached document", (long) (doc.getSize() * 1.33));
         String ct = doc.getContentType();
@@ -925,7 +926,7 @@ public class ParseMimeMessage {
     }
 
     private static void dumpMessage(MimeMessage mm) {
-        /* 
+        /*
          * Dump the outgoing message to stdout for now...
          */
         mLog.debug("--------------------------------------");

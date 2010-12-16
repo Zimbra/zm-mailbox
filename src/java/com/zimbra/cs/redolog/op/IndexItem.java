@@ -12,10 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on 2004. 7. 21.
- */
 package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
@@ -30,58 +26,68 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
+/**
+ * @since 2004. 7. 21.
+ */
 public class IndexItem extends RedoableOp {
 
     private int mId;
-    private byte mType;
+    private MailItem.Type type;
     private boolean mDeleteFirst;
     private boolean mCommitAllowed;
     private boolean mCommitAbortDone;
 
     public IndexItem() {
         mId = UNKNOWN_ID;
-        mType = MailItem.TYPE_UNKNOWN;
+        type = MailItem.Type.UNKNOWN;
         mCommitAllowed = false;
         mCommitAbortDone = false;
     }
 
-    public IndexItem(int mailboxId, int id, byte type, boolean deleteFirst) {
+    public IndexItem(int mailboxId, int id, MailItem.Type type, boolean deleteFirst) {
         setMailboxId(mailboxId);
         mId = id;
-        mType = type;
+        this.type = type;
         mDeleteFirst = deleteFirst;
         mCommitAllowed = false;
         mCommitAbortDone = false;
     }
 
-    @Override public int getOpCode() {
+    @Override
+    public int getOpCode() {
         return OP_INDEX_ITEM;
     }
 
-    @Override public boolean deferCrashRecovery() {
+    @Override
+    public boolean deferCrashRecovery() {
         return true;
     }
 
-    @Override protected String getPrintableData() {
+    @Override
+    protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("id=");
-        sb.append(mId).append(", type=").append(mType);
+        sb.append(mId).append(", type=").append(type);
         return sb.toString();
     }
 
-    @Override protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
-        out.writeByte(mType);
-        if (getVersion().atLeast(1,8))
+        out.writeByte(type.toByte());
+        if (getVersion().atLeast(1,8)) {
             out.writeBoolean(mDeleteFirst);
+        }
     }
 
-    @Override protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
-        mType = in.readByte();
-        if (getVersion().atLeast(1,8))
+        type = MailItem.Type.of(in.readByte());
+        if (getVersion().atLeast(1,8)) {
             mDeleteFirst = in.readBoolean();
-        else
+        } else {
             mDeleteFirst = false;
+        }
     }
 
     @Override
@@ -89,7 +95,7 @@ public class IndexItem extends RedoableOp {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         MailItem item;
         try {
-            item = mbox.getItemById(null, mId, mType);
+            item = mbox.getItemById(null, mId, type);
         } catch (MailServiceException.NoSuchItemException e) {
             // Because index commits are batched, during mailbox restore
             // it's possible to see the commit record of indexing operation

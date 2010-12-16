@@ -12,10 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Jul 12, 2004
- */
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
@@ -29,14 +25,18 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
+/**
+ * @since Jul 12, 2004
+ */
 public class Tag extends MailItem {
 
     private int mDeletedUnreadCount;
 
     Tag(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
-        if (mData.type != TYPE_TAG && mData.type != TYPE_FLAG)
+        if (mData.type != Type.TAG.toByte() && mData.type != Type.FLAG.toByte()) {
             throw new IllegalArgumentException();
+        }
     }
 
     @Override public String getSender() {
@@ -163,7 +163,7 @@ public class Tag extends MailItem {
 
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
-        data.type        = MailItem.TYPE_TAG;
+        data.type        = Type.TAG.toByte();
         data.folderId    = tagFolder.getId();
         data.date        = mbox.getOperationTimestamp();
         data.name        = name;
@@ -241,13 +241,14 @@ public class Tag extends MailItem {
         }
     }
 
-    @Override void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
+    @Override
+    void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
         if (ZimbraLog.mailop.isDebugEnabled())
             ZimbraLog.mailop.debug("Removing %s from all items.", getMailopContext(this));
         // remove the tag from all items in the database
         DbMailItem.clearTag(this);
         // dump entire item cache (necessary now because we reuse tag ids)
-        mMailbox.purge(TYPE_MESSAGE);
+        mMailbox.purge(Type.MESSAGE);
         // remove tag from tag cache
         super.purgeCache(info, purgeItem);
     }

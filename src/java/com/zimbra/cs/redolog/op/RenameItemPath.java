@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on 2004. 12. 13.
  */
 package com.zimbra.cs.redolog.op;
 
@@ -26,21 +22,25 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
+/**
+ * @since 2004. 12. 13.
+ */
 public class RenameItemPath extends RedoableOp {
 
-    int mId;
-    byte mType;
-    String mPath;
-    int mParentIds[];
+    protected int mId;
+    protected MailItem.Type type;
+    protected String mPath;
+    protected int mParentIds[];
 
     public RenameItemPath() {
         mId = UNKNOWN_ID;
-        mType = MailItem.TYPE_UNKNOWN;
+        type = MailItem.Type.UNKNOWN;
     }
 
-    public RenameItemPath(int mailboxId, int id, byte type, String path) {
+    public RenameItemPath(int mailboxId, int id, MailItem.Type type, String path) {
         setMailboxId(mailboxId);
         mId = id;
+        this.type = type;
         mPath = path != null ? path : "";
     }
 
@@ -52,52 +52,60 @@ public class RenameItemPath extends RedoableOp {
         mParentIds = parentIds;
     }
 
-    @Override public int getOpCode() {
+    @Override
+    public int getOpCode() {
         return OP_RENAME_ITEM_PATH;
     }
 
-    @Override protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer("id=");
-        sb.append(mId).append(", type=").append(mType).append(", path=").append(mPath);
+    @Override
+    protected String getPrintableData() {
+        StringBuilder sb = new StringBuilder("id=");
+        sb.append(mId).append(", type=").append(type).append(", path=").append(mPath);
         if (mParentIds != null) {
             sb.append(", destParentIds=[");
             for (int i = 0; i < mParentIds.length; i++) {
                 sb.append(mParentIds[i]);
-                if (i < mParentIds.length - 1)
+                if (i < mParentIds.length - 1) {
                     sb.append(", ");
+                }
             }
             sb.append("]");
         }
         return sb.toString();
     }
 
-    @Override protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeUTF(mPath);
         if (mParentIds != null) {
             out.writeInt(mParentIds.length);
-            for (int i = 0; i < mParentIds.length; i++)
+            for (int i = 0; i < mParentIds.length; i++) {
                 out.writeInt(mParentIds[i]);
+            }
         } else {
             out.writeInt(0);
         }
-        out.writeByte(mType);
+        out.writeByte(type.toByte());
     }
 
-    @Override protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mId = in.readInt();
         mPath = in.readUTF();
         int numParentIds = in.readInt();
         if (numParentIds > 0) {
             mParentIds = new int[numParentIds];
-            for (int i = 0; i < numParentIds; i++)
+            for (int i = 0; i < numParentIds; i++) {
                 mParentIds[i] = in.readInt();
+            }
         }
-        mType = in.readByte();
+        type = MailItem.Type.of(in.readByte());
     }
 
-    @Override public void redo() throws Exception {
+    @Override
+    public void redo() throws Exception {
         Mailbox mailbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mailbox.rename(getOperationContext(), mId, mType, mPath);
+        mailbox.rename(getOperationContext(), mId, type, mPath);
     }
 }

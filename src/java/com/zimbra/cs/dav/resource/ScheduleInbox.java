@@ -17,6 +17,7 @@ package com.zimbra.cs.dav.resource;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -55,6 +56,7 @@ public class ScheduleInbox extends CalendarCollection {
         addProperty(CalDavProperty.getCalendarFreeBusySet(user, getCalendarFolders(ctxt)));
     }
 
+    @Override
     public java.util.Collection<DavResource> getChildren(DavContext ctxt, TimeRange tr) throws DavException {
         try {
             return getAppointmentsByUids(ctxt, null);
@@ -64,7 +66,7 @@ public class ScheduleInbox extends CalendarCollection {
         }
     }
 
-    protected static final Set<Byte> SEARCH_TYPES = Collections.singleton(MailItem.TYPE_MESSAGE);
+    protected static final Set<MailItem.Type> SEARCH_TYPES = EnumSet.of(MailItem.Type.MESSAGE);
 
     @Override
     public java.util.Collection<DavResource> getAppointmentsByUids(DavContext ctxt, List<String> hrefs) throws ServiceException, DavException {
@@ -169,12 +171,12 @@ public class ScheduleInbox extends CalendarCollection {
             if ((f.getFlagBitmask() & Flag.BITMASK_EXCLUDE_FREEBUSY) == 0)
                 continue;
             ZimbraLog.dav.debug("clearing EXCLUDE_FREEBUSY for "+path);
-            mbox.alterTag(ctxt.getOperationContext(), f.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, false);
+            mbox.alterTag(ctxt.getOperationContext(), f.getId(), MailItem.Type.FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, false);
         }
         if (!folders.isEmpty()) {
             for (Folder f : folders.values()) {
                 ZimbraLog.dav.debug("setting EXCLUDE_FREEBUSY for "+f.getPath());
-                mbox.alterTag(ctxt.getOperationContext(), f.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, true);
+                mbox.alterTag(ctxt.getOperationContext(), f.getId(), MailItem.Type.FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, true);
             }
         }
     }
@@ -182,11 +184,12 @@ public class ScheduleInbox extends CalendarCollection {
     private java.util.Collection<Folder> getCalendarFolders(DavContext ctxt) throws ServiceException, DavException {
         ArrayList<Folder> calendars = new ArrayList<Folder>();
         Mailbox mbox = getMailbox(ctxt);
-        for (Folder f : mbox.getFolderList(ctxt.getOperationContext(), SortBy.NONE))
+        for (Folder f : mbox.getFolderList(ctxt.getOperationContext(), SortBy.NONE)) {
             if (!(f instanceof Mountpoint) &&
-                    (f.getDefaultView() == MailItem.TYPE_APPOINTMENT ||
-                     f.getDefaultView() == MailItem.TYPE_TASK))
+                    (f.getDefaultView() == MailItem.Type.APPOINTMENT || f.getDefaultView() == MailItem.Type.TASK)) {
                 calendars.add(f);
+            }
+        }
         return calendars;
     }
 }

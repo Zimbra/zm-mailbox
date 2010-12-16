@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -100,7 +100,8 @@ public class DbSearch {
                 result.extraData = DbMailItem.constructItem(rs, offset, inDumpster);
             } else if (extra == ExtraData.IMAP_MSG) {
                 int flags = rs.getBoolean(offset + 2) ? Flag.BITMASK_UNREAD | rs.getInt(offset + 3) : rs.getInt(offset + 3);
-                result.extraData = new ImapMessage(result.id, result.type, rs.getInt(offset + 1), flags, rs.getLong(offset + 4));
+                result.extraData = new ImapMessage(result.id, MailItem.Type.of(result.type), rs.getInt(offset + 1),
+                        flags, rs.getLong(offset + 4));
             } else if (extra == ExtraData.MODSEQ || extra == ExtraData.PARENT || extra==ExtraData.MODCONTENT) {
                 int value = rs.getInt(offset + 1);
                 result.extraData = rs.wasNull() ? -1 : value;
@@ -120,7 +121,7 @@ public class DbSearch {
             SearchResult other = (SearchResult) obj;
             return other.id == id;
         }
-        
+
         private static class SearchResultComparator implements Comparator<SearchResult> {
             private SortBy mSort;
             SearchResultComparator(SortBy sort)  { mSort = sort; }
@@ -147,7 +148,7 @@ public class DbSearch {
                     default:
                         throw new UnsupportedOperationException("SearchResultComparator not implemented " +
                                                                 " for anything except for DATE and SIZE right now. " +
-                                                                " Feel free to fix it!"); 
+                                                                " Feel free to fix it!");
                 }
                 if (mSort.getDirection() == SortDirection.DESCENDING) {
                     return o2.id - o1.id;
@@ -156,17 +157,17 @@ public class DbSearch {
                 }
             }
         }
-        
+
         public static Comparator<SearchResult> getComparator(SortBy sort) {
             return new SearchResultComparator(sort);
         }
     }
 
-    // alias the sort column b/c of ambiguity problems (the sort column is included twice in the 
+    // alias the sort column b/c of ambiguity problems (the sort column is included twice in the
     // result set, and MySQL chokes on the ORDER BY when we do a UNION query (doesn't know
     // which 2 of the 4 sort columns are the "right" ones to use)
     public static final String SORT_COLUMN_ALIAS = "sortcol";
-    
+
     /**
      * @param fieldName
      * @return TRUE if this field is case-sensitive for search/sort -- ie do we need to
@@ -175,16 +176,16 @@ public class DbSearch {
     private static boolean isCaseSensitiveField(String fieldName) {
         // we need to handle things like "mi.sender" for the sender column, etc
         // so look for the last . in the fieldname, return the string after that.
-        String colNameAfterPeriod; 
+        String colNameAfterPeriod;
         int periodOffset = fieldName.lastIndexOf('.');
         if (periodOffset <= 0 && periodOffset < (fieldName.length()+1))
             colNameAfterPeriod = fieldName;
         else
             colNameAfterPeriod = fieldName.substring(periodOffset+1);
-        
-        return (colNameAfterPeriod.equals("sender") || 
+
+        return (colNameAfterPeriod.equals("sender") ||
                         colNameAfterPeriod.equals("subject") ||
-                        colNameAfterPeriod.equals("name")); 
+                        colNameAfterPeriod.equals("name"));
     }
 
     private static String sortField(SortBy sort, boolean useAlias, boolean includeCollation) {
@@ -198,25 +199,25 @@ public class DbSearch {
             case ID:       str = "mi.id";    break;
             case SIZE:     str = "mi.size";  break;
             case DATE:
-            default:       str = "mi.date";  break; 
+            default:       str = "mi.date";  break;
             case NONE:     return null;
         }
-        
+
         if (useAlias) {
             str = SORT_COLUMN_ALIAS; // still need the stringVal setting above!
         } else {
-            if (stringVal && Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON)) 
+            if (stringVal && Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON))
                 str = "UPPER(" + str + ")";
         }
 
         // tim: back this out for now, but leave code stub here until I deal with it
         // see bugs 22665, 36579
-        //if (Db.supports(Db.Capability.REQUEST_UTF8_UNICODE_COLLATION) && stringVal && includeCollation) 
+        //if (Db.supports(Db.Capability.REQUEST_UTF8_UNICODE_COLLATION) && stringVal && includeCollation)
         //    str += " COLLATE utf8_unicode_ci";
 
         return str;
     }
-    
+
     /**
      * generate a column-reference for the sort-by column.  This column reference
      * goes at the beginning of the SELECT statement (the ORDER BY part is generated
@@ -261,7 +262,7 @@ public class DbSearch {
         statement.append(" FROM " + DbMailItem.getMailItemTableName(mbox, "mi", inDumpster));
         statement.append(" WHERE ").append(DbMailItem.IN_THIS_MAILBOX_AND);
         int num = DebugConfig.disableMailboxGroups ? 0 : 1;
-        
+
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -275,7 +276,7 @@ public class DbSearch {
             if (sLog.isDebugEnabled())
                 sLog.debug("SQL: " + statement);
 
-            assert(pos == num + 1); 
+            assert(pos == num + 1);
             rs = stmt.executeQuery();
             rs.next();
             return rs.getInt(1);
@@ -308,7 +309,7 @@ public class DbSearch {
 
         if (!Db.supports(Db.Capability.FORCE_INDEX_EVEN_IF_NO_SORT) && sort.getCriterion() == SortCriterion.NONE)
             return NO_HINT;
-        
+
         String index = null;
 
         DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
@@ -349,7 +350,7 @@ public class DbSearch {
          * "SELECT mi.id,mi.date, [extrafields] FROM mail_item AS mi [, appointment AS ap]
          *    [FORCE INDEX (...)]
          *    WHERE mi.mailboxid=? [AND ap.mailboxId=? AND mi.id = ap.id ] AND
-         * 
+         *
          *  If you change the first for parameters, you must change the COLUMN_* values above!
          */
         StringBuilder select = new StringBuilder("SELECT mi.id, mi.index_id, mi.type").append(sortKey(sort));
@@ -365,15 +366,15 @@ public class DbSearch {
             select.append(", mi.mod_content");
 
         select.append(" FROM " + DbMailItem.getMailItemTableName(mbox, "mi", inDumpster));
-        if (includeCalTable) 
+        if (includeCalTable)
             select.append(", ").append(DbMailItem.getCalendarItemTableName(mbox, "ap", inDumpster));
-        
+
         /*
          * FORCE INDEX (...)
          */
         if (!includeCalTable) // can't force index when selecting from two tables?
             select.append(getForceIndexClause(node, sort, validLIMIT));
-        
+
         /*
          *  WHERE mi.mailboxId=? [AND ap.mailboxId=? AND mi.id = ap.id ] AND "
          */
@@ -381,10 +382,10 @@ public class DbSearch {
         select.append(DbMailItem.getInThisMailboxAnd(mbox.getId(), "mi", includeCalTable ? "ap" : null));
         if (includeCalTable)
             select.append(" mi.id = ap.item_id AND ");
-        
+
         return select.toString();
     }
-    
+
     /**
      * @param mbox
      * @param node
@@ -392,21 +393,20 @@ public class DbSearch {
      * @param inCalTable
      * @param statement
      * @param conn
-     * @return Number of constraints encoded 
+     * @return Number of constraints encoded
      * @throws ServiceException
      */
     private static final int encodeConstraint(Mailbox mbox, DbSearchConstraintsNode node,
-        byte[] calTypes, boolean inCalTable, StringBuilder statement, Connection conn) 
-    throws ServiceException {
+            byte[] calTypes, boolean inCalTable, StringBuilder statement, Connection conn) throws ServiceException {
         /*
          *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
-         *    ( 
+         *    (
          *       one of: [type NOT IN (...)]  || [type = ?] || [type IN ( ...)]
          *       [ AND tags != 0]
          *       [ AND tags IN ( ... ) ]
-         *       [ AND flags IN (...) ] 
+         *       [ AND flags IN (...) ]
          *       ..etc
-         *    )   
+         *    )
          */
         int num = 0;
         DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
@@ -423,20 +423,20 @@ public class DbSearch {
             statement.append(") ");
             return num;
         }
-        
+
         // we're here, so we must be in a DbSearchConstraints leaf node
         DbSearchConstraints c = node.getSearchConstraints();
         assert(ntype == DbSearchConstraintsNode.NodeType.LEAF && c != null);
         c.checkDates();
-        
+
         // if there are no possible matches, short-circuit here...
         TagConstraints tc = TagConstraints.getTagConstraints(mbox, c, conn);
         if (c.automaticEmptySet() || tc.noMatches) {
             statement.append(Db.supports(Db.Capability.BOOLEAN_DATATYPE) ?
-                "FALSE" : "0=1"); 
+                "FALSE" : "0=1");
             return num;
         }
-        
+
         statement.append('(');
 
         // special-case this one, since there can't be a leading AND here...
@@ -446,7 +446,7 @@ public class DbSearch {
             statement.append(DbUtil.whereIn("type", c.types.size()));
             num += c.types.size();
         }
-        
+
         num += encode(statement, "mi.type", false, c.excludeTypes);
         num += encode(statement, "mi.type", inCalTable, calTypes);
 
@@ -459,7 +459,7 @@ public class DbSearch {
             else
                 statement.append(" AND mi.tags = 0");
         }
-        
+
         num += encode(statement, "mi.tags", true, tc.searchTagsets);
         num += encode(statement, "mi.flags", true, tc.searchFlagsets);
         num += encode(statement, "unread", true, tc.unread);
@@ -478,7 +478,7 @@ public class DbSearch {
         num += encodeRangeWithMinimum(statement, "mi.size", c.sizes, 0);
         num += encodeRange(statement, "mi.subject", c.subjectRanges);
         num += encodeRange(statement, "mi.sender", c.senderRanges);
-        
+
         Boolean isSoloPart = node.getSearchConstraints().getIsSoloPart();
         if (isSoloPart != null) {
             if (isSoloPart.booleanValue()) {
@@ -487,7 +487,7 @@ public class DbSearch {
                 statement.append(" AND mi.parent_id is NOT NULL ");
             }
         }
-        
+
         if (c.hasIndexId != null) {
             if (c.hasIndexId.booleanValue()) {
                 statement.append(" AND mi.index_id is NOT NULL ");
@@ -495,19 +495,19 @@ public class DbSearch {
                 statement.append(" AND mi.index_id is NULL ");
             }
         }
-        
+
         if (inCalTable) {
             num += encodeRangeWithMinimum(statement, "ap.start_time", c.calStartDates, 1);
             num += encodeRangeWithMinimum(statement, "ap.end_time", c.calEndDates, 1);
         }
 
         statement.append(')');
-        
+
         return num;
     }
-    
+
     /**
-     * @return TRUE if some part of this query has a non-appointment select (ie 'type not in (11,15)' non-null 
+     * @return TRUE if some part of this query has a non-appointment select (ie 'type not in (11,15)' non-null
      */
     private static final boolean hasMailItemOnlyConstraints(DbSearchConstraintsNode node) {
         DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
@@ -520,7 +520,7 @@ public class DbSearch {
         }
         return node.getSearchConstraints().hasNonAppointmentTypes();
     }
-    
+
     /**
      * @return TRUE if this constraint needs to do a join with the Appointment table in order to be evaluated
      */
@@ -535,16 +535,18 @@ public class DbSearch {
         }
         return node.getSearchConstraints().hasAppointmentTableConstraints();
     }
-    
-    
-    static final byte[] APPOINTMENT_TABLE_TYPES = new byte[] { MailItem.TYPE_APPOINTMENT, MailItem.TYPE_TASK };
+
+
+    static final byte[] APPOINTMENT_TABLE_TYPES = new byte[] {
+        MailItem.Type.APPOINTMENT.toByte(), MailItem.Type.TASK.toByte()
+    };
 
     public static List<SearchResult> search(List<SearchResult> result, Connection conn, DbSearchConstraints c,
                                             Mailbox mbox, SortBy sort, SearchResult.ExtraData extra)
     throws ServiceException {
         return search(result, conn, c, mbox, sort, extra, false);
     }
-    
+
     public static List<SearchResult> search(List<SearchResult> result, Connection conn, DbSearchConstraints c,
             Mailbox mbox, SortBy sort, SearchResult.ExtraData extra, boolean inDumpster)
     throws ServiceException {
@@ -557,16 +559,16 @@ public class DbSearch {
         for (List<T> l : lists) {
             totalNumValues += l.size();
         }
-        
+
         for (List<T> l : lists) {
             toRet.addAll(l);
         }
-        
+
         Collections.sort(toRet, comparator);
-        
+
         return toRet;
     }
-    
+
     public static List<SearchResult> search(List<SearchResult> result, Connection conn,
                                             DbSearchConstraintsNode node, Mailbox mbox, SortBy sort,
                                             int offset, int limit, SearchResult.ExtraData extra, boolean inDumpster)
@@ -575,7 +577,7 @@ public class DbSearch {
 
         // this monstrosity for bug 31343
         if (!Db.supports(Db.Capability.AVOID_OR_IN_WHERE_CLAUSE) ||
-                        (sort.getCriterion() != SortCriterion.DATE && sort.getCriterion() != SortCriterion.SIZE) || 
+                        (sort.getCriterion() != SortCriterion.DATE && sort.getCriterion() != SortCriterion.SIZE) ||
                         NodeType.OR != node.getNodeType()) {
             // do it the old way
             return searchInternal(result, conn, node, mbox, sort, offset, limit, extra, inDumpster);
@@ -583,7 +585,7 @@ public class DbSearch {
             // run each toplevel ORed part as a separate SQL query, then merge
             // the results in memory
             List<List<SearchResult>> resultLists = new ArrayList<List<SearchResult>>();
-            
+
             for (DbSearchConstraintsNode subNode : node.getSubNodes()) {
                 List<SearchResult> subNodeResults = new ArrayList<SearchResult>();
                 search(subNodeResults, conn, subNode, mbox, sort, offset, limit, extra, inDumpster);
@@ -595,7 +597,7 @@ public class DbSearch {
             return result;
         }
     }
-        
+
     public static List<SearchResult> searchInternal(List<SearchResult> result, Connection conn,
                                                     DbSearchConstraintsNode node, Mailbox mbox, SortBy sort,
                                                     int offset, int limit, SearchResult.ExtraData extra,
@@ -613,93 +615,93 @@ public class DbSearch {
         if (hasAppointmentTableConstraints)
             hasMailItemOnlyConstraints = hasMailItemOnlyConstraints(node);
         boolean requiresUnion = hasMailItemOnlyConstraints && hasAppointmentTableConstraints;
-        
+
         try {
             if (hasMailItemOnlyConstraints) {
                 if (requiresUnion) {
                     statement.append("(");
                 }
-                
+
                 /*
-                 * "SELECT mi.id,mi.date, [extrafields] FROM mail_item AS mi 
+                 * "SELECT mi.id,mi.date, [extrafields] FROM mail_item AS mi
                  *    [FORCE INDEX (...)]
                  *    WHERE mi.mailboxid=? AND
                  */
                 statement.append(encodeSelect(mbox, sort, extra, false, node, hasValidLIMIT, inDumpster));
-                
+
                 /*
                  *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
-                 *    ( 
+                 *    (
                  *       one of: [type NOT IN (...)]  || [type = ?] || [type IN ( ...)]
                  *       [ AND tags != 0]
                  *       [ AND tags IN ( ... ) ]
-                 *       [ AND flags IN (...) ] 
+                 *       [ AND flags IN (...) ]
                  *       ..etc
-                 *    )   
+                 *    )
                  */
-                numParams += encodeConstraint(mbox, node, 
-                    (hasAppointmentTableConstraints ? APPOINTMENT_TABLE_TYPES : null), 
+                numParams += encodeConstraint(mbox, node,
+                        (hasAppointmentTableConstraints ? APPOINTMENT_TABLE_TYPES : null),
                     false, statement, conn);
-                
+
                 if (requiresUnion) {
                     /*
-                     * ORDER BY (sortField) 
+                     * ORDER BY (sortField)
                      */
                     statement.append(sortQuery(sort, true));
-                    
+
                     /*
-                     * LIMIT ?, ? 
+                     * LIMIT ?, ?
                      */
                     if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                         statement.append(" LIMIT ").append(offset).append(',').append(limit);
                     }
                 }
             }
-            
+
             if (requiresUnion) {
                 /*
                  * UNION
                  */
                 statement.append(" ) UNION ALL (");
             }
-            
+
             if (hasAppointmentTableConstraints) {
                 /*
                  * SELECT...again...(this time with "appointment as ap")...WHERE...
                  */
                 statement.append(encodeSelect(mbox, sort, extra, true, node, hasValidLIMIT, inDumpster));
                 numParams += encodeConstraint(mbox, node, APPOINTMENT_TABLE_TYPES, true, statement, conn);
-                
+
                 if (requiresUnion) {
                     /*
-                     * ORDER BY (sortField) 
+                     * ORDER BY (sortField)
                      */
                     statement.append(sortQuery(sort, true));
-                    
+
                     /*
-                     * LIMIT ?, ? 
+                     * LIMIT ?, ?
                      */
                     if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                         statement.append(" LIMIT ").append(offset).append(',').append(limit);
                     }
-                    
+
                     if (requiresUnion) {
                         statement.append(")");
                     }
                 }
             }
-            
+
             //
             // TODO FIXME: include COLLATION for sender/subject sort
             //
-            
+
             /*
-             * ORDER BY (sortField) 
+             * ORDER BY (sortField)
              */
             statement.append(sortQuery(sort, true));
-            
+
             /*
-             * LIMIT ?, ? 
+             * LIMIT ?, ?
              */
             if (hasValidLIMIT && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
                 statement.append(" LIMIT ").append(offset).append(',').append(limit);
@@ -714,21 +716,21 @@ public class DbSearch {
              */
             if (sLog.isDebugEnabled())
                 sLog.debug("SQL: ("+numParams+" parameters): "+statement.toString());
-            
+
             long startTime = LC.zimbra_slow_logging_enabled.booleanValue() ? System.currentTimeMillis() : 0;
-            
+
             stmt = conn.prepareStatement(statement.toString());
             int param = 1;
-            
-            
+
+
             if (hasMailItemOnlyConstraints) {
                 param = setSearchVars(stmt, node, param, (hasAppointmentTableConstraints ? APPOINTMENT_TABLE_TYPES : null), false);
             }
-            
+
             if (hasAppointmentTableConstraints) {
                 param = setSearchVars(stmt, node, param, APPOINTMENT_TABLE_TYPES, true);
             }
-            
+
             /*
              * Limit query if DB doesn't support LIMIT clause
              */
@@ -736,15 +738,15 @@ public class DbSearch {
                 stmt.setMaxRows(offset + limit + 1);
 
             long prepTime = startTime > 0 ? System.currentTimeMillis() - startTime : 0;
-            
+
             /*
              * EXECUTE!
              */
             assert(param == numParams+1);
             rs = stmt.executeQuery();
-            
+
             long execTime = startTime > 0 ? System.currentTimeMillis() - startTime - prepTime : 0;
-            
+
             /*
              * Return results
              */
@@ -757,13 +759,13 @@ public class DbSearch {
                 }
                 result.add(SearchResult.createResult(rs, sort, extra, inDumpster));
             }
-            
+
             long fetchTime = startTime > 0 ? System.currentTimeMillis() - startTime - prepTime - execTime: 0;
             if (prepTime + execTime + fetchTime > LC.zimbra_slow_logging_threshold.longValue()) {
                 sLog.warn("Slow SQL (start=%d prep=%d exec=%d fetch=%d rows=%d):\n" + statement.toString(),
                         startTime, prepTime, execTime, fetchTime, result.size());
             }
-            
+
             return result;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching search metadata", e);
@@ -796,12 +798,12 @@ public class DbSearch {
         }
         return param;
     }
-    
+
     private static final int setDateRange(PreparedStatement stmt, int param, Collection<NumericRange> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
-            for (NumericRange date : c) { 
+            for (NumericRange date : c) {
                 if (date.lowest >= 1)
-                    stmt.setInt(param++, (int) Math.min(date.lowest / 1000, Integer.MAX_VALUE)); 
+                    stmt.setInt(param++, (int) Math.min(date.lowest / 1000, Integer.MAX_VALUE));
                 if (date.highest >= 1)
                     stmt.setInt(param++, (int) Math.min(date.highest / 1000, Integer.MAX_VALUE));
             }
@@ -811,7 +813,7 @@ public class DbSearch {
 
     private static final int setTimestampRange(PreparedStatement stmt, int param, Collection<NumericRange> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
-            for (NumericRange date : c) { 
+            for (NumericRange date : c) {
                 if (date.lowest >= 1)
                     stmt.setTimestamp(param++, new Timestamp(date.lowest));
                 if (date.highest >= 1)
@@ -823,7 +825,7 @@ public class DbSearch {
 
     private static final int setLongRangeWithMinimum(PreparedStatement stmt, int param, Collection<NumericRange> c, int minimum) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
-            for (NumericRange r : c) { 
+            for (NumericRange r : c) {
                 if (r.lowest >= minimum)
                     stmt.setLong(param++, r.lowest);
                 if (r.highest >= minimum)
@@ -835,7 +837,7 @@ public class DbSearch {
 
     private static final int setIntRangeWithMinimum(PreparedStatement stmt, int param, Collection<NumericRange> c, int minimum) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
-            for (NumericRange r : c) { 
+            for (NumericRange r : c) {
                 if (r.lowest >= minimum)
                     stmt.setInt(param++, (int)r.lowest);
                 if (r.highest >= minimum)
@@ -847,8 +849,8 @@ public class DbSearch {
 
     private static final int setStringRange(PreparedStatement stmt, int param, Collection<StringRange> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
-            for (StringRange r: c) { 
-                if (r.lowest != null) 
+            for (StringRange r: c) {
+                if (r.lowest != null)
                     stmt.setString(param++, r.lowest.replace("\\\"", "\""));
                 if (r.highest != null)
                     stmt.setString(param++, r.highest.replace("\\\"", "\""));
@@ -867,7 +869,7 @@ public class DbSearch {
 
     private static final int setFolders(PreparedStatement stmt, int param, Collection<Folder> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
-            for (Folder f : c) 
+            for (Folder f : c)
                 stmt.setInt(param++, f.getId());
         }
         return param;
@@ -879,12 +881,12 @@ public class DbSearch {
         }
         return param;
     }
-    
+
     /**
      * @param statement
      * @param column
      * @param truthiness
-     *           if FALSE then sense is reversed (!=) 
+     *           if FALSE then sense is reversed (!=)
      * @return number of parameters bound (always 0 in this case)
      */
     private static final int encode(StringBuilder statement, String column, boolean truthiness) {
@@ -896,7 +898,7 @@ public class DbSearch {
      * @param statement
      * @param column
      * @param truthiness
-     *           if FALSE then sense is reversed (!=) 
+     *           if FALSE then sense is reversed (!=)
      * @param o
      *            if NULL, this function is a NoOp, otherwise puts ? to bind one value
      * @return number of parameters bound
@@ -913,7 +915,7 @@ public class DbSearch {
      * @param statement
      * @param column
      * @param truthiness
-     *           if FALSE then sense is reversed (!=) 
+     *           if FALSE then sense is reversed (!=)
      * @param c
      * @return number of parameters bound
      */
@@ -924,12 +926,12 @@ public class DbSearch {
         }
         return 0;
     }
-    
+
     /**
      * @param statement
      * @param column
      * @param truthiness
-     *           if FALSE then sense is reversed (!=) 
+     *           if FALSE then sense is reversed (!=)
      * @param c
      * @return number of parameters bound
      */
@@ -940,7 +942,7 @@ public class DbSearch {
         }
         return 0;
     }
-    
+
     /**
      * @param statement
      * @param column
@@ -951,7 +953,7 @@ public class DbSearch {
     private static final int encodeRangeWithMinimum(StringBuilder statement, String column, Collection<? extends DbSearchConstraints.NumericRange> ranges, long lowestValue) {
         if (ListUtil.isEmpty(ranges))
             return 0;
-        
+
         if (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) && isCaseSensitiveField(column) ) {
             column = "UPPER("+column+")";
         }
@@ -993,11 +995,11 @@ public class DbSearch {
      */
     private static final int encodeRange(StringBuilder statement, String column, Collection<? extends DbSearchConstraints.StringRange> ranges) {
         int retVal = 0;
-        
+
         if (Db.supports(Db.Capability.CASE_SENSITIVE_COMPARISON) && isCaseSensitiveField(column)) {
             column = "UPPER("+column+")";
         }
-        
+
         if (!ListUtil.isEmpty(ranges)) {
             for (DbSearchConstraints.StringRange r : ranges) {
                 statement.append(r.negated ? " AND NOT (" : " AND (");
@@ -1041,7 +1043,7 @@ public class DbSearch {
             if (!ListUtil.isEmpty(c.tags)) {
                 for (Tag tag : c.tags) {
                     if (tag.getId() == Flag.ID_FLAG_UNREAD) {
-                        tc.unread = Boolean.TRUE; 
+                        tc.unread = Boolean.TRUE;
                     } else if (tag instanceof Flag) {
                         setFlagMask |= tag.getBitmask();
                     } else {
@@ -1100,21 +1102,20 @@ public class DbSearch {
             return tc;
         }
     }
-    
-    private static int setSearchVars(PreparedStatement stmt, 
-        DbSearchConstraintsNode node, int param, 
-        byte[] calTypes, boolean inCalTable) throws SQLException {
+
+    private static int setSearchVars(PreparedStatement stmt, DbSearchConstraintsNode node, int param,
+            byte[] calTypes, boolean inCalTable) throws SQLException {
         /*
          *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
-         *    ( 
+         *    (
          *       one of: [type NOT IN (...)]  || [type = ?] || [type IN ( ...)]
          *       [ AND tags != 0]
          *       [ AND tags IN ( ... ) ]
-         *       [ AND flags IN (...) ] 
+         *       [ AND flags IN (...) ]
          *       ..etc
-         *    )   
+         *    )
          */
-        
+
         DbSearchConstraintsNode.NodeType ntype = node.getNodeType();
         if (ntype == DbSearchConstraintsNode.NodeType.AND || ntype == DbSearchConstraintsNode.NodeType.OR) {
             for (DbSearchConstraintsNode subnode : node.getSubNodes())
@@ -1125,15 +1126,19 @@ public class DbSearch {
         // we're here, so we must be in a DbSearchConstraints leaf node
         DbSearchConstraints c = node.getSearchConstraints();
         assert(ntype == DbSearchConstraintsNode.NodeType.LEAF && c != null);
-        
+
         // if there are no possible matches, short-circuit here...
         if (c.automaticEmptySet() || c.tagConstraints.noMatches)
             return param;
 
-        param = setBytes(stmt, param, c.types);
-        param = setBytes(stmt, param, c.excludeTypes);
+        for (MailItem.Type type : c.types) {
+            stmt.setByte(param++, type.toByte());
+        }
+        for (MailItem.Type type : c.excludeTypes) {
+            stmt.setByte(param++, type.toByte());
+        }
         param = setBytes(stmt, param, calTypes);
-        
+
         param = setLongs(stmt, param, c.tagConstraints.searchTagsets);
         param = setLongs(stmt, param, c.tagConstraints.searchFlagsets);
         param = setBooleanAsInt(stmt, param, c.tagConstraints.unread);
@@ -1152,12 +1157,12 @@ public class DbSearch {
         param = setIntRangeWithMinimum(stmt, param, c.sizes, 0);
         param = setStringRange(stmt, param, c.subjectRanges);
         param = setStringRange(stmt, param, c.senderRanges);
-        
+
         if (inCalTable) {
             param = setTimestampRange(stmt, param, c.calStartDates);
             param = setTimestampRange(stmt, param, c.calEndDates);
         }
-        
+
         return param;
     }
 

@@ -12,10 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Jun 13, 2004
- */
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
@@ -35,14 +31,18 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
+/**
+ * @since Jun 13, 2004
+ */
 public class Conversation extends MailItem {
     private   String     mEncodedSenders;
     protected SenderList mSenderList;
 
     Conversation(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
-        if (mData.type != TYPE_CONVERSATION && mData.type != TYPE_VIRTUAL_CONVERSATION)
+        if (mData.type != Type.CONVERSATION.toByte() && mData.type != Type.VIRTUAL_CONVERSATION.toByte()) {
             throw new IllegalArgumentException();
+        }
     }
 
     /** Returns the normalized subject of the conversation.  This is done by
@@ -227,7 +227,7 @@ public class Conversation extends MailItem {
 
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
-        data.type        = TYPE_CONVERSATION;
+        data.type        = Type.CONVERSATION.toByte();
         data.folderId    = Mailbox.ID_FOLDER_CONVERSATIONS;
         data.subject     = msgs.length > 0 ? DbMailItem.truncateSubjectToMaxAllowedLength(msgs[0].getSubject()) : "";
         data.date        = date;
@@ -441,9 +441,11 @@ public class Conversation extends MailItem {
      *
      * @perms {@link ACL#RIGHT_INSERT} on the target folder,
      *        {@link ACL#RIGHT_DELETE} on the messages' source folders */
-    @Override boolean move(Folder target) throws ServiceException {
-        if (!target.canContain(TYPE_MESSAGE))
+    @Override
+    boolean move(Folder target) throws ServiceException {
+        if (!target.canContain(Type.MESSAGE)) {
             throw MailServiceException.CANNOT_CONTAIN();
+        }
         markItemModified(Change.UNMODIFIED);
 
         List<Message> msgs = getMessages();

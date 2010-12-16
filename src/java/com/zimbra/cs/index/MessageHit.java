@@ -109,10 +109,6 @@ public final class MessageHit extends ZimbraHit {
         return mMessageId;
     }
 
-    public byte getItemType() {
-        return MailItem.TYPE_MESSAGE;
-    }
-
     @Override
     public String toString() {
         int convId = 0;

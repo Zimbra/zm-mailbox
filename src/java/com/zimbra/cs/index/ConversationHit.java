@@ -86,10 +86,6 @@ public final class ConversationHit extends ZimbraHit {
         return mConversationId;
     }
 
-    public byte getItemType() {
-        return MailItem.TYPE_CONVERSATION;
-    }
-
     @Override
     void setItem(MailItem item) {
         mConversation = (Conversation) item;

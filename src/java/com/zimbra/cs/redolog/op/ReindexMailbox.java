@@ -15,6 +15,7 @@
 package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,18 +31,18 @@ import com.zimbra.cs.redolog.RedoLogOutput;
  */
 public class ReindexMailbox extends RedoableOp {
 
-    private Set<Byte> mTypes = null;
+    private Set<MailItem.Type> types = null;
     private Set<Integer> mItemIds = null;
     private int mCompletionId = 0;
     @Deprecated private boolean mSkipDelete = false;
 
     public ReindexMailbox() { }
 
-    public ReindexMailbox(int mailboxId, Set<Byte> typesOrNull, Set<Integer> itemIdsOrNull, int completionId, boolean skipDelete) {
+    public ReindexMailbox(int mailboxId, Set<MailItem.Type> types, Set<Integer> itemIds, int completionId, boolean skipDelete) {
         setMailboxId(mailboxId);
-        assert(typesOrNull == null || itemIdsOrNull == null);
-        mTypes = typesOrNull;
-        mItemIds = itemIdsOrNull;
+        assert(types == null || itemIds == null);
+        this.types = types;
+        mItemIds = itemIds;
         mCompletionId = completionId;
         mSkipDelete = skipDelete;
     }
@@ -59,8 +60,8 @@ public class ReindexMailbox extends RedoableOp {
     @Override
     public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        if (mTypes != null) {
-            mbox.index.startReIndexByType(new OperationContext(this), mTypes);
+        if (types != null) {
+            mbox.index.startReIndexByType(new OperationContext(this), types);
         } else if (mItemIds != null) {
             mbox.index.startReIndexById(new OperationContext(this), mItemIds);
         } else {
@@ -85,16 +86,9 @@ public class ReindexMailbox extends RedoableOp {
             sb.append(']');
 
             return sb.toString();
-        } else if (mTypes != null) {
+        } else if (types != null) {
             sb.append(" TYPES[");
-            boolean atStart = true;
-            for (Byte b : mTypes) {
-                if (!atStart)
-                    sb.append(',');
-                else
-                    atStart = false;
-                sb.append(MailItem.getNameForType(b));
-            }
+            sb.append(types);
             sb.append(']');
 
             return sb.toString();
@@ -110,12 +104,12 @@ public class ReindexMailbox extends RedoableOp {
             out.writeInt(mCompletionId);
 
             // types
-            if (mTypes != null) {
+            if (types != null) {
                 out.writeBoolean(true);
-                int count = mTypes.size();
+                int count = types.size();
                 out.writeInt(count);
-                for (Byte b : mTypes) {
-                    out.writeByte(b);
+                for (MailItem.Type type : types) {
+                    out.writeByte(type.toByte());
                     count--;
                 }
                 assert(count == 0);
@@ -154,12 +148,12 @@ public class ReindexMailbox extends RedoableOp {
 
             // types
             if (in.readBoolean()) {
-                mTypes = new HashSet<Byte>();
+                types = EnumSet.noneOf(MailItem.Type.class);
                 for (int count = in.readInt(); count > 0; count--) {
-                    mTypes.add(in.readByte());
+                    types.add(MailItem.Type.of(in.readByte()));
                 }
             } else {
-                mTypes = null;
+                types = null;
             }
 
             // itemIds

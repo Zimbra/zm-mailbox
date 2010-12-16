@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -229,7 +230,7 @@ public class ContactAutoComplete {
     private boolean mIncludeGal;
     private boolean mNeedCanExpand; // whether the canExpand info is needed for GAL groups
 
-    private static final Set<Byte> CONTACT_TYPES = Collections.singleton(MailItem.TYPE_CONTACT);
+    private static final Set<MailItem.Type> CONTACT_TYPES = EnumSet.of(MailItem.Type.CONTACT);
 
     private boolean mIncludeSharedFolders;
     private Collection<String> mEmailKeys;
@@ -573,8 +574,7 @@ public class ContactAutoComplete {
             Map<ItemId, Mountpoint> mountpoints = new HashMap<ItemId, Mountpoint>();
             if (folderIDs == null) {
                 for (Folder folder : mbox.getFolderList(octxt, SortBy.NONE)) {
-                    if (folder.getDefaultView() != MailItem.TYPE_CONTACT ||
-                            folder.inTrash()) {
+                    if (folder.getDefaultView() != MailItem.Type.CONTACT || folder.inTrash()) {
                         continue;
                     } else if (folder instanceof Mountpoint) {
                         Mountpoint mp = (Mountpoint) folder;

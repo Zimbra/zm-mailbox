@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Mar 2, 2005
  */
 package com.zimbra.cs.service.mail;
 
@@ -69,16 +65,21 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
+ * @since Mar 2, 2005
  * @author tim
  */
 public class SendInviteReply extends CalendarRequest {
 
     private static final String[] TARGET_PATH = new String[] { MailConstants.A_ID };
+
+    @Override
     protected String[] getProxiedIdPath(Element request)     { return TARGET_PATH; }
+
+    @Override
     protected boolean checkMountpointProxy(Element request)  { return false; }
 
-    public Element handle(Element request, Map<String, Object> context)
-    throws ServiceException {
+    @Override
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         Account acct = getRequestedAccount(zsc);
@@ -90,7 +91,7 @@ public class SendInviteReply extends CalendarRequest {
 
         ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), zsc);
         int compNum = (int) request.getAttributeLong(MailConstants.A_CAL_COMPONENT_NUM);
-        
+
         String verbStr = request.getAttribute(MailConstants.A_VERB);
         Verb verb = CalendarMailSender.parseVerb(verbStr);
         boolean isDecline = CalendarMailSender.VERB_DECLINE.equals(verb);
@@ -109,12 +110,12 @@ public class SendInviteReply extends CalendarRequest {
         }
 
         Element response = getResponseElement(zsc);
-        
+
         //synchronized (mbox) {
 
             boolean intendedForMe = true;
             Invite oldInv = null;
-            int calItemId; 
+            int calItemId;
             int inviteMsgId;
             CalendarItem calItem = null;
             boolean wasInTrash = false;
@@ -127,7 +128,7 @@ public class SendInviteReply extends CalendarRequest {
                 inviteMsgId = iid.getSubpartId();
                 calItem = safeGetCalendarItemById(mbox, octxt, calItemId);
                 if (calItem == null)
-                	throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
+                    throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
                 oldInv = calItem.getInvite(inviteMsgId, compNum);
             } else {
                 // accepting the message: go find the calendar item and then the invite
@@ -135,7 +136,7 @@ public class SendInviteReply extends CalendarRequest {
                 Message msg = mbox.getMessageById(octxt, inviteMsgId);
                 Message.CalendarItemInfo info = msg.getCalendarItemInfo(compNum);
                 if (info == null)
-                	throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
+                    throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
 
                 String intendedFor = msg.getCalendarIntendedFor();
                 Account intendedAcct = null;
@@ -238,17 +239,18 @@ public class SendInviteReply extends CalendarRequest {
             if (intendedForMe) {
                 if (oldInv == null)
                     throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
-                
-                if (calItem != null && (mbox.getEffectivePermissions(octxt, calItemId, MailItem.TYPE_UNKNOWN) & ACL.RIGHT_ACTION) == 0)
+
+                if (calItem != null && (mbox.getEffectivePermissions(octxt, calItemId, MailItem.Type.UNKNOWN) & ACL.RIGHT_ACTION) == 0) {
                     throw ServiceException.PERM_DENIED("You do not have ACTION rights for CalendarItem "+calItemId);
-    
+                }
+
                 // Don't allow creating/editing a private appointment on behalf of another user,
                 // unless that other user is a calendar resource.
                 boolean allowPrivateAccess = calItem != null ? calItem.allowPrivateAccess(authAcct, isAdmin) : true;
                 boolean isCalendarResource = acct instanceof CalendarResource;
                 if (!allowPrivateAccess && !oldInv.isPublic() && !isCalendarResource)
                     throw ServiceException.PERM_DENIED("Cannot reply to a private appointment/task on behalf of another user");
-    
+
                 // see if there is a specific Exception being referenced by this reply...
                 Element exc = request.getOptionalElement(MailConstants.E_CAL_EXCEPTION_ID);
                 ParsedDateTime exceptDt = null;
@@ -283,13 +285,13 @@ public class SendInviteReply extends CalendarRequest {
                     Invite localException = oldInv.makeInstanceInvite(exceptDt);
                     long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
                     localException.setDtStamp(now);
-    
+
                     String partStat = verb.getXmlPartStat();
                     localException.setPartStat(partStat);
                     ZAttendee at = localException.getMatchingAttendee(acct, identityId);
                     if (at != null)
                         at.setPartStat(partStat);
-    
+
                     // Carry over the MimeMessage/ParsedMessage to preserve any attachments.
                     MimeMessage mmInv = calItem.getSubpartMessage(oldInv.getMailItemId());
                     ParsedMessage pm = mmInv != null ? new ParsedMessage(mmInv, false) : null;
@@ -304,7 +306,7 @@ public class SendInviteReply extends CalendarRequest {
                         folder = calItem.getFolderId();
                     }
                     mbox.addInvite(octxt, localException, folder, pm, true, untrashing, true);
-    
+
                     // Refetch the updated calendar item and set oldInv to refetched local exception instance.
                     calItem = safeGetCalendarItemById(mbox, octxt, calItemId);
                     if (calItem == null)
@@ -326,30 +328,30 @@ public class SendInviteReply extends CalendarRequest {
                         subject = oldInv.getName();
                     String replySubject =
                         CalendarMailSender.getReplySubject(verb, subject, locale);
-    
+
                     CalSendData csd = new CalSendData();
                     csd.mOrigId = new ItemId(mbox, oldInv.getMailItemId());
                     csd.mReplyType = MailSender.MSGTYPE_REPLY;
                     csd.mInvite = CalendarMailSender.replyToInvite(acct, identityId, authAcct, onBehalfOf, allowPrivateAccess, oldInv, verb, replySubject, exceptDt);
-    
+
                     ZVCalendar iCal = csd.mInvite.newToICalendar(true);
-                    
+
                     ParseMimeMessage.MimeMessageData parsedMessageData = new ParseMimeMessage.MimeMessageData();
-                    
+
                     // did they specify a custom <m> message?  If so, then we don't have to build one...
                     Element msgElem = request.getOptionalElement(MailConstants.E_MSG);
                     if (msgElem != null) {
                         String text = ParseMimeMessage.getTextPlainContent(msgElem);
                         String html = ParseMimeMessage.getTextHtmlContent(msgElem);
                         iCal.addDescription(text, html);
-    
+
                         MimeBodyPart[] mbps = new MimeBodyPart[1];
                         mbps[0] = CalendarMailSender.makeICalIntoMimePart(oldInv.getUid(), iCal);
-    
+
                         // the <inv> element is *NOT* allowed -- we always build it manually
-                        // based on the params to the <SendInviteReply> and stick it in the 
+                        // based on the params to the <SendInviteReply> and stick it in the
                         // mbps (additionalParts) parameter...
-                        csd.mMm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, 
+                        csd.mMm = ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem,
                             mbps, ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
                     } else {
                         // build a default "Accepted" response
@@ -370,7 +372,7 @@ public class SendInviteReply extends CalendarRequest {
                                     calItem, oldInv, new Invite[] { replyInv }, mmInv);
                         }
                     }
-    
+
                     int apptFolderId;
                     if (calItem != null)
                         apptFolderId = calItem.getFolderId();
@@ -378,7 +380,7 @@ public class SendInviteReply extends CalendarRequest {
                         apptFolderId = oldInv.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
                     sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response);
                 }
-    
+
                 RecurId recurId = null;
                 if (exceptDt != null) {
                     recurId = new RecurId(exceptDt, RecurId.RANGE_NONE);
@@ -389,7 +391,7 @@ public class SendInviteReply extends CalendarRequest {
                 String role = IcalXmlStrMap.ROLE_OPT_PARTICIPANT;
                 int seqNo = oldInv.getSeqNo();
                 long dtStamp = oldInv.getDTStamp();
-                if (me != null) { 
+                if (me != null) {
                     if (me.hasCn()) {
                         cnStr = me.getCn();
                     }
@@ -398,11 +400,11 @@ public class SendInviteReply extends CalendarRequest {
                         role = me.getRole();
                     }
                 }
-    
+
                 if (calItem != null)
                     mbox.modifyPartStat(octxt, calItemId, recurId, cnStr, addressStr, null, role, verb.getXmlPartStat(), Boolean.FALSE, seqNo, dtStamp);
             }
-            
+
             // move the invite to the Trash if the user wants it
             if (deleteInviteOnReply(acct)) {
                 try {
@@ -412,13 +414,13 @@ public class SendInviteReply extends CalendarRequest {
                         // have rights on Inbox and Trash folders.
                         octxt = new OperationContext(mbox);
                     }
-                    mbox.move(octxt, inviteMsgId, MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
+                    mbox.move(octxt, inviteMsgId, MailItem.Type.MESSAGE, Mailbox.ID_FOLDER_TRASH);
                 } catch (MailServiceException.NoSuchItemException nsie) {
                     ZimbraLog.calendar.debug("can't move nonexistent invite to Trash: " + inviteMsgId);
                 }
             }
         //}  // synchronized (mbox)
-        
+
         return response;
     }
 
@@ -442,14 +444,14 @@ public class SendInviteReply extends CalendarRequest {
 
     private static ZMailbox getRemoteZMailbox(OperationContext octxt, Account authAcct, Account targetAcct)
     throws ServiceException {
-        AuthToken authToken = null;        
+        AuthToken authToken = null;
         if (octxt != null)
-            authToken = octxt.getAuthToken();        
+            authToken = octxt.getAuthToken();
         if (authToken == null)
             authToken = AuthProvider.getAuthToken(authAcct);
         String pxyAuthToken = authToken.getProxyAuthToken();
         ZAuthToken zat = pxyAuthToken == null ? authToken.toZAuthToken() : new ZAuthToken(pxyAuthToken);
-        
+
         ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(targetAcct));
         zoptions.setNoSession(true);
         zoptions.setTargetAccount(targetAcct.getId());
@@ -475,7 +477,7 @@ public class SendInviteReply extends CalendarRequest {
     private static void remoteSendInviteReply(ZMailbox zmbx, Element origRequest, AddInviteResult ids)
     throws ServiceException {
         ItemIdFormatter ifmt = new ItemIdFormatter();
-        Element req = (Element) origRequest.clone();
+        Element req = origRequest.clone();
         req.detach();
         String idStr = ifmt.formatItemId(ids.getCalItemId(), ids.getInvId());
         req.addAttribute(MailConstants.A_ID, idStr);

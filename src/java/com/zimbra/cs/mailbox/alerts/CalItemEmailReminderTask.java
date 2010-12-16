@@ -54,13 +54,12 @@ public class CalItemEmailReminderTask extends CalItemReminderTaskBase {
         }
         mm.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(to));
 
-        mm.setSubject(L10nUtil.getMessage(calItem.getType() == MailItem.TYPE_APPOINTMENT ? L10nUtil.MsgKey.apptReminderEmailSubject : L10nUtil.MsgKey.taskReminderEmailSubject, 
-                                          locale,
-                                          calItem.getSubject()),
-                      MimeConstants.P_CHARSET_UTF8);
+        mm.setSubject(L10nUtil.getMessage(calItem.getType() == MailItem.Type.APPOINTMENT ?
+                L10nUtil.MsgKey.apptReminderEmailSubject : L10nUtil.MsgKey.taskReminderEmailSubject,
+                locale, calItem.getSubject()), MimeConstants.P_CHARSET_UTF8);
 
         if (invite.getDescriptionHtml() == null) {
-            mm.setText(getBody(calItem, invite, false, locale, tz), MimeConstants.P_CHARSET_UTF8);            
+            mm.setText(getBody(calItem, invite, false, locale, tz), MimeConstants.P_CHARSET_UTF8);
         } else {
             MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
             mm.setContent(mmp);
@@ -91,7 +90,7 @@ public class CalItemEmailReminderTask extends CalItemReminderTaskBase {
 
         String formattedStart;
         String formattedEnd;
-        if (calItem.getType() == MailItem.TYPE_APPOINTMENT) {
+        if (calItem.getType() == MailItem.Type.APPOINTMENT) {
             Date start = new Date(new Long(getProperty(NEXT_INST_START_PROP_NAME)));
             formattedStart = dateTimeFormat.format(start);
             Date end = invite.getEffectiveDuration().addToDate(start);
@@ -119,21 +118,11 @@ public class CalItemEmailReminderTask extends CalItemReminderTaskBase {
         String description = html ? invite.getDescriptionHtml() : invite.getDescription();
         if (description == null) description = "";
 
-        return html ? L10nUtil.getMessage(calItem.getType() == MailItem.TYPE_APPOINTMENT ? L10nUtil.MsgKey.apptReminderEmailBodyHtml : L10nUtil.MsgKey.taskReminderEmailBodyHtml,
-                                          locale,
-                                          formattedStart,
-                                          formattedEnd,
-                                          location,
-                                          organizer,
-                                          folder,
-                                          description) :
-                      L10nUtil.getMessage(calItem.getType() == MailItem.TYPE_APPOINTMENT ? L10nUtil.MsgKey.apptReminderEmailBody : L10nUtil.MsgKey.taskReminderEmailBody,
-                                          locale,
-                                          formattedStart,
-                                          formattedEnd,
-                                          location,
-                                          organizer,
-                                          folder,
-                                          description);
+        return html ? L10nUtil.getMessage(calItem.getType() == MailItem.Type.APPOINTMENT ?
+                L10nUtil.MsgKey.apptReminderEmailBodyHtml : L10nUtil.MsgKey.taskReminderEmailBodyHtml,
+                locale, formattedStart, formattedEnd, location, organizer, folder, description) :
+                    L10nUtil.getMessage(calItem.getType() == MailItem.Type.APPOINTMENT ?
+                            L10nUtil.MsgKey.apptReminderEmailBody : L10nUtil.MsgKey.taskReminderEmailBody,
+                            locale, formattedStart, formattedEnd, location, organizer, folder, description);
     }
 }

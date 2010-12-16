@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -41,19 +41,19 @@ import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 
 public class LocalFreeBusyProvider {
 
-	/**
-	 * 
-	 * @param mbox
-	 * @param start
-	 * @param end
-	 * @param folder folder to run free/busy search on; FreeBusyQuery.CALENDAR_FOLDER_ALL (-1) for all folders
-	 * @param exAppt appointment to exclude; calculate free/busy assuming
-	 *               the specified appointment wasn't there
-	 * @return
-	 * @throws ServiceException
-	 */
-	public static FreeBusy getFreeBusyList(
-	        Account authAcct, boolean asAdmin, Mailbox mbox, String name, long start, long end, int folder, Appointment exAppt)
+    /**
+     *
+     * @param mbox
+     * @param start
+     * @param end
+     * @param folder folder to run free/busy search on; FreeBusyQuery.CALENDAR_FOLDER_ALL (-1) for all folders
+     * @param exAppt appointment to exclude; calculate free/busy assuming
+     *               the specified appointment wasn't there
+     * @return
+     * @throws ServiceException
+     */
+    public static FreeBusy getFreeBusyList(
+            Account authAcct, boolean asAdmin, Mailbox mbox, String name, long start, long end, int folder, Appointment exAppt)
     throws ServiceException {
         AccessManager accessMgr = AccessManager.getInstance();
         boolean accountAceAllowed = accessMgr.canDo(authAcct, mbox.getAccount(), User.R_viewFreeBusy, asAdmin);
@@ -65,10 +65,10 @@ public class LocalFreeBusyProvider {
 
         List<CalendarDataResult> calDataResultList;
         if (folder == FreeBusyQuery.CALENDAR_FOLDER_ALL) {
-            calDataResultList = mbox.getAllCalendarsSummaryForRange(null, MailItem.TYPE_APPOINTMENT, start, end);
+            calDataResultList = mbox.getAllCalendarsSummaryForRange(null, MailItem.Type.APPOINTMENT, start, end);
         } else {
             calDataResultList = new ArrayList<CalendarDataResult>(1);
-            calDataResultList.add(mbox.getCalendarSummaryForRange(null, folder, MailItem.TYPE_APPOINTMENT, start, end));
+            calDataResultList.add(mbox.getCalendarSummaryForRange(null, folder, MailItem.Type.APPOINTMENT, start, end));
         }
         for (CalendarDataResult result : calDataResultList) {
             int folderId = result.data.getFolderId();
@@ -140,9 +140,9 @@ public class LocalFreeBusyProvider {
     public static void main(String[] args) {
         IntervalList l = new IntervalList(0, 100);
         Interval toAdd;
-        
+
         System.out.println("List: "+ l.toString());
-        
+
         toAdd = new Interval(50, 60, IcalXmlStrMap.FBTYPE_BUSY);
         l.addInterval(toAdd);
         System.out.println("Added: "+toAdd+l.toString());
@@ -164,6 +164,6 @@ public class LocalFreeBusyProvider {
             System.out.println("EXCEPTION: "+e);
             e.printStackTrace();
         }
-            
+
     }
 }

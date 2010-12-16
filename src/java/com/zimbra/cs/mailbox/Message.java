@@ -188,10 +188,12 @@ public class Message extends MailItem {
      */
     Message(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
-        if (mData.type != TYPE_MESSAGE  && mData.type != TYPE_CHAT)
+        if (mData.type != Type.MESSAGE.toByte()  && mData.type != Type.CHAT.toByte()) {
             throw new IllegalArgumentException();
-        if (mData.parentId < 0)
+        }
+        if (mData.parentId < 0) {
             mData.parentId = -mId;
+        }
     }
 
     /** Returns whether the Message was created as a draft.  Note that this
@@ -404,8 +406,8 @@ public class Message extends MailItem {
             return new Message(mbox, data);
         }
 
-        byte getType() {
-            return TYPE_MESSAGE;
+        Type getType() {
+            return Type.MESSAGE;
         }
     }
 
@@ -421,11 +423,12 @@ public class Message extends MailItem {
                                             boolean unread, int flags, long tags, DraftInfo dinfo,
                                             boolean noICal, ZVCalendar cal, CustomMetadataList extended, MessageCreateFactory fact)
     throws ServiceException {
-        if (folder == null || !folder.canContain(TYPE_MESSAGE))
-            throw MailServiceException.CANNOT_CONTAIN(folder, TYPE_MESSAGE);
-        if (!folder.canAccess(ACL.RIGHT_INSERT))
+        if (folder == null || !folder.canContain(Type.MESSAGE)) {
+            throw MailServiceException.CANNOT_CONTAIN(folder, Type.MESSAGE);
+        }
+        if (!folder.canAccess(ACL.RIGHT_INSERT)) {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
-
+        }
         Mailbox mbox = folder.getMailbox();
         Account acct = mbox.getAccount();
 
@@ -465,7 +468,7 @@ public class Message extends MailItem {
 
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
-        data.type        = fact.getType();
+        data.type        = fact.getType().toByte();
         if (conv != null)
             data.parentId = conv.getId();
         data.folderId    = folder.getId();
@@ -802,10 +805,11 @@ public class Message extends MailItem {
                                 int calFolderId = calItem.getFolderId();
                                 if (!cur.isCancel() && calFolderId == Mailbox.ID_FOLDER_TRASH) {
                                     discardExistingInvites = true;
-                                    if (calItem.getType() == MailItem.TYPE_TASK)
+                                    if (calItem.getType() == MailItem.Type.TASK) {
                                         calFolderId = Mailbox.ID_FOLDER_TASKS;
-                                    else
+                                    } else {
                                         calFolderId = Mailbox.ID_FOLDER_CALENDAR;
+                                    }
                                 }
 
                                 // If organizer didn't provide X-ZIMBRA-CHANGES, calculate what changed by comparing

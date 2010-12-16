@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -40,14 +40,14 @@ import com.zimbra.cs.service.FileUploadServlet;
 
 /**
  * RFC 2518bis section 5.
- * 
+ *
  * Collections map to mailbox folders.
  *
  */
 public class Collection extends MailItemResource {
 
-    protected byte mView;
-    protected byte mType;
+    protected MailItem.Type view;
+    protected MailItem.Type type;
     protected int mMailboxId;
 
     public Collection(DavContext ctxt, Folder f) throws DavException, ServiceException {
@@ -57,8 +57,8 @@ public class Collection extends MailItemResource {
         setProperty(DavElements.P_DISPLAYNAME, f.getName());
         setProperty(DavElements.P_GETCONTENTLENGTH, "0");
         mId = f.getId();
-        mView = f.getDefaultView();
-        mType = f.getType();
+        this.view = f.getDefaultView();
+        this.type = f.getType();
         addProperties(Acl.getAclProperties(this, f));
         mMailboxId = f.getMailboxId();
     }
@@ -82,19 +82,19 @@ public class Collection extends MailItemResource {
             return MimeConstants.CT_TEXT_PLAIN;
         return MimeConstants.CT_TEXT_XML;
     }
-    
+
     @Override
     public boolean hasContent(DavContext ctxt) {
         return true;
     }
-    
+
     @Override
     public InputStream getContent(DavContext ctxt) throws IOException, DavException {
         if (ctxt.isWebRequest())
             return new ByteArrayInputStream(getTextContent(ctxt).getBytes("UTF-8"));
         return new ByteArrayInputStream(getPropertiesAsText(ctxt).getBytes("UTF-8"));
     }
-    
+
     @Override
     public boolean isCollection() {
         return true;
@@ -128,18 +128,18 @@ public class Collection extends MailItemResource {
         List<MailItem> ret = new ArrayList<MailItem>();
 
         // XXX aggregate into single call
-        ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_FOLDER, mId));
-        ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_DOCUMENT, mId));
-        ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_WIKI, mId));
-        ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.TYPE_CONTACT, mId));
+        ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.Type.FOLDER, mId));
+        ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.Type.DOCUMENT, mId));
+        ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.Type.WIKI, mId));
+        ret.addAll(mbox.getItemList(ctxt.getOperationContext(), MailItem.Type.CONTACT, mId));
         return ret;
     }
 
     public Collection mkCol(DavContext ctxt, String name) throws DavException {
-        return mkCol(ctxt, name, mView);
+        return mkCol(ctxt, name, view);
     }
 
-    public Collection mkCol(DavContext ctxt, String name, byte view) throws DavException {
+    public Collection mkCol(DavContext ctxt, String name, MailItem.Type view) throws DavException {
         try {
             Mailbox mbox = getMailbox(ctxt);
             Folder f = mbox.createFolder(ctxt.getOperationContext(), name, mId, view, 0, (byte)0, null);
@@ -165,7 +165,7 @@ public class Collection extends MailItemResource {
 
         FileUploadServlet.Upload upload = ctxt.getUpload();
         String ctype = upload.getContentType();
-        if (ctype != null && 
+        if (ctype != null &&
                 (ctype.startsWith(DavProtocol.VCARD_CONTENT_TYPE) ||
                  ctype.startsWith(MimeConstants.CT_TEXT_VCARD_LEGACY) ||
                  ctype.startsWith(MimeConstants.CT_TEXT_VCARD_LEGACY2))) {
@@ -177,8 +177,9 @@ public class Collection extends MailItemResource {
         try {
             // add a revision if the resource already exists
             MailItem item = mbox.getItemByPath(ctxt.getOperationContext(), ctxt.getPath());
-            if (item.getType() != MailItem.TYPE_DOCUMENT && item.getType() != MailItem.TYPE_WIKI)
-                throw new DavException("no DAV resource for " + MailItem.getNameForType(item.getType()), HttpServletResponse.SC_NOT_ACCEPTABLE, null);
+            if (item.getType() != MailItem.Type.DOCUMENT && item.getType() != MailItem.Type.WIKI) {
+                throw new DavException("no DAV resource for " + item.getType(), HttpServletResponse.SC_NOT_ACCEPTABLE, null);
+            }
             Document doc = mbox.addDocumentRevision(ctxt.getOperationContext(), item.getId(), author, name, null, upload.getInputStream());
             return new Notebook(ctxt, doc);
         } catch (ServiceException e) {
@@ -196,19 +197,20 @@ public class Collection extends MailItemResource {
             throw new DavException("cannot create ", HttpServletResponse.SC_INTERNAL_SERVER_ERROR, se);
         }
     }
-    
+
     protected DavResource createVCard(DavContext ctxt, String name) throws DavException, IOException {
         return AddressObject.create(ctxt, name, this);
     }
-    
-    @Override public void delete(DavContext ctxt) throws DavException {
+
+    @Override
+    public void delete(DavContext ctxt) throws DavException {
         String user = ctxt.getUser();
         String path = ctxt.getPath();
         if (user == null || path == null)
             throw new DavException("invalid uri", HttpServletResponse.SC_NOT_FOUND, null);
         try {
             Mailbox mbox = getMailbox(ctxt);
-            mbox.delete(ctxt.getOperationContext(), mId, mType);
+            mbox.delete(ctxt.getOperationContext(), mId, type);
         } catch (ServiceException e) {
             throw new DavException("cannot get item", HttpServletResponse.SC_NOT_FOUND, e);
         }

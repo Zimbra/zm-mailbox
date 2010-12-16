@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -44,7 +44,7 @@ public class TestFolders extends TestCase
     private static String NAME_PREFIX = "TestFolders";
 
     private String mOriginalEmptyFolderBatchSize;
-    
+
     @BeforeMethod
     @Override
     protected void setUp()
@@ -60,13 +60,13 @@ public class TestFolders extends TestCase
     public void testDeleteParent()
     throws Exception {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        Folder parent = mbox.createFolder(null, "/" + NAME_PREFIX + " - parent", (byte) 0, MailItem.TYPE_UNKNOWN);
+        Folder parent = mbox.createFolder(null, "/" + NAME_PREFIX + " - parent", (byte) 0, MailItem.Type.UNKNOWN);
         int parentId = parent.getId();
         Folder child = mbox.createFolder(
-            null, "NAME_PREFIX" + " - child", parent.getId(), MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+            null, "NAME_PREFIX" + " - child", parent.getId(), MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
         int childId = child.getId();
         mbox.delete(null, parent.getId(), parent.getType());
-        
+
         // Look up parent by id
         try {
             mbox.getFolderById(null, parentId);
@@ -81,7 +81,7 @@ public class TestFolders extends TestCase
             " WHERE mailbox_id = " + mbox.getId() + " AND id = " + parentId;
         DbResults results = DbUtil.executeQuery(sql);
         assertEquals("Parent folder query returned data.  id=" + parentId, 0, results.size());
-        
+
         // Look up child by id
         try {
             mbox.getFolderById(null, childId);
@@ -105,13 +105,13 @@ public class TestFolders extends TestCase
     public void testEmptyFolderNonrecursive()
     throws Exception {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        Folder parent = mbox.createFolder(null, "/" + NAME_PREFIX + " - parent", (byte) 0, MailItem.TYPE_UNKNOWN);
+        Folder parent = mbox.createFolder(null, "/" + NAME_PREFIX + " - parent", (byte) 0, MailItem.Type.UNKNOWN);
         int parentId = parent.getId();
         Folder child = mbox.createFolder(
-            null, "NAME_PREFIX" + " - child", parent.getId(), MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+            null, "NAME_PREFIX" + " - child", parent.getId(), MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
         int childId = child.getId();
         mbox.emptyFolder(null, parent.getId(), false);
-        
+
         // Look up parent by id
         mbox.getFolderById(null, parentId);
 
@@ -122,7 +122,7 @@ public class TestFolders extends TestCase
             " WHERE mailbox_id = " + mbox.getId() + " AND id = " + parentId;
         DbResults results = DbUtil.executeQuery(sql);
         assertEquals("Parent folder query returned no data.  id=" + parentId, 1, results.size());
-        
+
         // Look up child by id
         mbox.getFolderById(null, childId);
 
@@ -142,13 +142,13 @@ public class TestFolders extends TestCase
     public void testEmptyFolderRecursive()
     throws Exception {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        Folder parent = mbox.createFolder(null, "/" + NAME_PREFIX + " - parent", (byte) 0, MailItem.TYPE_UNKNOWN);
+        Folder parent = mbox.createFolder(null, "/" + NAME_PREFIX + " - parent", (byte) 0, MailItem.Type.UNKNOWN);
         int parentId = parent.getId();
         Folder child = mbox.createFolder(
-            null, "NAME_PREFIX" + " - child", parent.getId(), MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+            null, "NAME_PREFIX" + " - child", parent.getId(), MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
         int childId = child.getId();
         mbox.emptyFolder(null, parent.getId(), true);
-        
+
         // Look up parent by id
         mbox.getFolderById(null, parentId);
 
@@ -159,7 +159,7 @@ public class TestFolders extends TestCase
             " WHERE mailbox_id = " + mbox.getId() + " AND id = " + parentId;
         DbResults results = DbUtil.executeQuery(sql);
         assertEquals("Parent folder query returned no data.  id=" + parentId, 1, results.size());
-        
+
         // Look up child by id
         try {
             mbox.getFolderById(null, childId);
@@ -175,7 +175,7 @@ public class TestFolders extends TestCase
         results = DbUtil.executeQuery(sql);
         assertEquals("Child folder query returned data.  id=" + childId, 0, results.size());
     }
-    
+
     /**
      * Creates a hierarchy twenty folders deep.
      */
@@ -186,18 +186,18 @@ public class TestFolders extends TestCase
         final int NUM_LEVELS = 20;
         int parentId = Mailbox.ID_FOLDER_INBOX;
         Folder top = null;
-        
+
         for (int i = 1; i <= NUM_LEVELS; i++) {
-            Folder folder = mbox.createFolder(null, NAME_PREFIX + i, parentId, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+            Folder folder = mbox.createFolder(null, NAME_PREFIX + i, parentId, MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
             if (i == 1) {
                 top = folder;
             }
             parentId = folder.getId();
         }
-        
+
         mbox.delete(null, top.getId(), top.getType());
     }
-    
+
     /**
      * Deletes a folder that contains messages in a conversation.  Confirms
      * that the conversation size was correctly decremented.
@@ -215,11 +215,11 @@ public class TestFolders extends TestCase
         ZimbraLog.test.debug("Created message 2, id=" + m2.getId());
         Message m3 = TestUtil.addMessage(mbox, "RE: " + name);
         ZimbraLog.test.debug("Created message 3, id=" + m3.getId());
-        
-        Folder f = mbox.createFolder(null, name, Mailbox.ID_FOLDER_INBOX, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+
+        Folder f = mbox.createFolder(null, name, Mailbox.ID_FOLDER_INBOX, MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
         mbox.move(null, m1.getId(), m1.getType(), f.getId());
         mbox.move(null, m2.getId(), m2.getType(), f.getId());
-        
+
         // Verify conversation size
         Conversation conv = mbox.getConversationById(null, m1.getConversationId());
         int convId = conv.getId();
@@ -230,7 +230,7 @@ public class TestFolders extends TestCase
         conv = mbox.getConversationById(null, convId);
         assertEquals("Conversation size after folder delete", 1, conv.getSize());
     }
-    
+
     /**
      * Confirms that deleting a subfolder correctly updates the subfolder hierarchy.
      */
@@ -238,9 +238,9 @@ public class TestFolders extends TestCase
     public void testHierarchy()
     throws Exception {
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        Folder f1 = mbox.createFolder(null, "/f1", (byte) 0, MailItem.TYPE_UNKNOWN);
-        Folder f2 = mbox.createFolder(null, "/f1/f2", (byte) 0, MailItem.TYPE_UNKNOWN);
-        mbox.createFolder(null, "/f1/f2/f3", (byte) 0, MailItem.TYPE_UNKNOWN);
+        Folder f1 = mbox.createFolder(null, "/f1", (byte) 0, MailItem.Type.UNKNOWN);
+        Folder f2 = mbox.createFolder(null, "/f1/f2", (byte) 0, MailItem.Type.UNKNOWN);
+        mbox.createFolder(null, "/f1/f2/f3", (byte) 0, MailItem.Type.UNKNOWN);
         assertEquals("Hierarchy size before delete", 3, f1.getSubfolderHierarchy().size());
         mbox.delete(null, f2.getId(), f2.getType());
         List<Folder> hierarchy = f1.getSubfolderHierarchy();
@@ -252,13 +252,13 @@ public class TestFolders extends TestCase
     public void testEmptyLargeFolder()
     throws Exception {
         TestUtil.setServerAttr(Provisioning.A_zimbraMailEmptyFolderBatchSize, Integer.toString(3));
-        
+
         // Create folders.
         String parentPath = "/" + NAME_PREFIX + "-parent";
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZFolder parent = TestUtil.createFolder(mbox, parentPath);
         ZFolder child = TestUtil.createFolder(mbox, parent.getId(), "child");
-        
+
         // Add messages.
         for (int i = 1; i <= 5; i++) {
             TestUtil.addMessage(mbox, NAME_PREFIX + " parent " + i, parent.getId());
@@ -273,7 +273,7 @@ public class TestFolders extends TestCase
         mbox.noOp();
         assertEquals(0, parent.getMessageCount());
         assertEquals(5, child.getMessageCount());
-        
+
         // Add more messages to the parent folder.
         for (int i = 6; i <= 10; i++) {
             TestUtil.addMessage(mbox, NAME_PREFIX + " parent " + i, parent.getId());
@@ -281,7 +281,7 @@ public class TestFolders extends TestCase
         mbox.noOp();
         assertEquals(5, parent.getMessageCount());
         assertEquals(5, child.getMessageCount());
-        
+
         // Empty parent folder and delete subfolders.
         String childPath = child.getPath();
         assertNotNull(mbox.getFolderByPath(childPath));
@@ -300,7 +300,7 @@ public class TestFolders extends TestCase
             mbox.deleteFolder(f.getId());
         }
     }
-    
+
     @AfterMethod
     @Override
     protected void tearDown() throws Exception {

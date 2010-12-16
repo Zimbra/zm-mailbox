@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on May 26, 2004
  */
 package com.zimbra.cs.service.mail;
 
@@ -42,15 +38,17 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
+ * @since May 26, 2004
  * @author schemers
  */
 public class ContactAction extends ItemAction {
 
-    private static final Set CONTACT_OPS = new HashSet<String>(Arrays.asList(new String[] {
+    private static final Set<String> CONTACT_OPS = new HashSet<String>(Arrays.asList(new String[] {
         OP_UPDATE
     }));
 
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
+    @Override
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element action = request.getElement(MailConstants.E_ACTION);
@@ -59,11 +57,11 @@ public class ContactAction extends ItemAction {
         if (operation.endsWith(OP_READ) || operation.endsWith(OP_SPAM))
             throw ServiceException.INVALID_REQUEST("invalid operation on contact: " + operation, null);
         String successes;
-        if (CONTACT_OPS.contains(operation))
+        if (CONTACT_OPS.contains(operation)) {
             successes = handleContact(context, request, operation);
-        else
-            successes = handleCommon(context, request, operation, MailItem.TYPE_CONTACT);
-
+        } else {
+            successes = handleCommon(context, request, operation, MailItem.Type.CONTACT);
+        }
         Element response = zsc.createElement(MailConstants.CONTACT_ACTION_RESPONSE);
         Element actionOut = response.addUniqueElement(MailConstants.E_ACTION);
         actionOut.addAttribute(MailConstants.A_ID, successes);

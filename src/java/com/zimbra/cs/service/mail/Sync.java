@@ -2,22 +2,20 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Aug 31, 2004
- */
 package com.zimbra.cs.service.mail;
 
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -43,11 +41,15 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
+/**
+ * @since Aug 31, 2004
+ */
 public class Sync extends MailDocumentHandler {
 
-	protected static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
-	@Override protected String[] getProxiedIdPath(Element request)  { return TARGET_FOLDER_PATH; }
+    protected static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
+    @Override protected String[] getProxiedIdPath(Element request)  { return TARGET_FOLDER_PATH; }
 
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
@@ -92,14 +94,14 @@ public class Sync extends MailDocumentHandler {
 
         FolderNode rootNode = null;
         if (root == null || iidFolder == null) {
-            // resolve grantee names of all ACLs on the mailbox 
+            // resolve grantee names of all ACLs on the mailbox
             rootNode = mbox.getFolderTree(octxt, null, true);
         } else {
-            // resolve grantee names of all ACLs on all sub-folders of the requested folder 
+            // resolve grantee names of all ACLs on all sub-folders of the requested folder
             rootNode = mbox.getFolderTree(octxt, iidFolder, true);
         }
         OperationContextData.addGranteeNames(octxt, rootNode);
-        
+
         // actually perform the sync
         synchronized (mbox) {
             mbox.beginTrackingSync();
@@ -118,10 +120,10 @@ public class Sync extends MailDocumentHandler {
                 response.addAttribute(MailConstants.A_TOKEN, newToken);
             }
         }
-        
+
         return response;
     }
-    
+
     private static final int DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_ROOT;
     private static enum SyncPhase { INITIAL, DELTA };
 
@@ -142,19 +144,19 @@ public class Sync extends MailDocumentHandler {
         // write this folder's data to the response
         boolean initial = phase == SyncPhase.INITIAL;
         Element f = ToXML.encodeFolder(response, ifmt, octxt, folder, Change.ALL_FIELDS);
-        if (initial && isVisible && folder.getType() == MailItem.TYPE_FOLDER) {
+        if (initial && isVisible && folder.getType() == MailItem.Type.FOLDER) {
             // we're in the middle of an initial sync, so serialize the item ids
             if (folder.getId() == Mailbox.ID_FOLDER_TAGS) {
                 initialTagSync(f, octxt, ifmt, mbox);
             } else {
                 TypedIdList idlist = mbox.getItemIds(octxt, folder.getId());
-                initialItemSync(f, MailConstants.E_MSG, idlist.getIds(MailItem.TYPE_MESSAGE));
-                initialItemSync(f, MailConstants.E_CHAT, idlist.getIds(MailItem.TYPE_CHAT));
-                initialItemSync(f, MailConstants.E_CONTACT, idlist.getIds(MailItem.TYPE_CONTACT));
-                initialItemSync(f, MailConstants.E_NOTE, idlist.getIds(MailItem.TYPE_NOTE));
+                initialItemSync(f, MailConstants.E_MSG, idlist.getIds(MailItem.Type.MESSAGE));
+                initialItemSync(f, MailConstants.E_CHAT, idlist.getIds(MailItem.Type.CHAT));
+                initialItemSync(f, MailConstants.E_CONTACT, idlist.getIds(MailItem.Type.CONTACT));
+                initialItemSync(f, MailConstants.E_NOTE, idlist.getIds(MailItem.Type.NOTE));
                 initialCalendarSync(f, idlist, octxt, mbox, folder, calendarStart);
-                initialItemSync(f, MailConstants.E_DOC, idlist.getIds(MailItem.TYPE_DOCUMENT));
-                initialItemSync(f, MailConstants.E_WIKIWORD, idlist.getIds(MailItem.TYPE_WIKI));
+                initialItemSync(f, MailConstants.E_DOC, idlist.getIds(MailItem.Type.DOCUMENT));
+                initialItemSync(f, MailConstants.E_WIKIWORD, idlist.getIds(MailItem.Type.WIKI));
             }
         }
 
@@ -181,16 +183,15 @@ public class Sync extends MailDocumentHandler {
         }
     }
 
-    private static final int CALENDAR_TYPES_BITMASK = MailItem.typeToBitmask(MailItem.TYPE_APPOINTMENT) |
-                                                      MailItem.typeToBitmask(MailItem.TYPE_TASK);
+    private static final Set<MailItem.Type> CALENDAR_TYPES = EnumSet.of(MailItem.Type.APPOINTMENT, MailItem.Type.TASK);
 
-    private static void initialCalendarSync(Element f, TypedIdList idlist, OperationContext octxt, Mailbox mbox, Folder folder, long calendarStart)
-    throws ServiceException {
-        if (calendarStart > 0 && (idlist.getTypesMask() & CALENDAR_TYPES_BITMASK) != 0)
-            idlist = mbox.listCalendarItemsForRange(octxt, MailItem.TYPE_UNKNOWN, calendarStart, -1, folder.getId());
-
-        initialItemSync(f, MailConstants.E_APPOINTMENT, idlist.getIds(MailItem.TYPE_APPOINTMENT));
-        initialItemSync(f, MailConstants.E_TASK, idlist.getIds(MailItem.TYPE_TASK));
+    private static void initialCalendarSync(Element f, TypedIdList idlist, OperationContext octxt, Mailbox mbox,
+            Folder folder, long calendarStart) throws ServiceException {
+        if (calendarStart > 0 && !Collections.disjoint(idlist.types(), CALENDAR_TYPES)) {
+            idlist = mbox.listCalendarItemsForRange(octxt, MailItem.Type.UNKNOWN, calendarStart, -1, folder.getId());
+        }
+        initialItemSync(f, MailConstants.E_APPOINTMENT, idlist.getIds(MailItem.Type.APPOINTMENT));
+        initialItemSync(f, MailConstants.E_TASK, idlist.getIds(MailItem.Type.TASK));
     }
 
     private static void initialItemSync(Element f, String ename, List<Integer> items) {
@@ -208,12 +209,12 @@ public class Sync extends MailDocumentHandler {
                                               Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION |
                                               Change.MODIFIED_DATE;
 
-    private static final int FOLDER_TYPES_BITMASK = MailItem.typeToBitmask(MailItem.TYPE_FOLDER) |
-                                                    MailItem.typeToBitmask(MailItem.TYPE_SEARCHFOLDER) |
-                                                    MailItem.typeToBitmask(MailItem.TYPE_MOUNTPOINT);
+    private static final Set<MailItem.Type> FOLDER_TYPES = EnumSet.of(MailItem.Type.FOLDER,
+            MailItem.Type.SEARCHFOLDER, MailItem.Type.MOUNTPOINT);
 
-    private static String deltaSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, int begin, int itemCutoff, boolean typedDeletes, Folder root, Set<Folder> visible)
-    throws ServiceException {
+    private static String deltaSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox,
+            int begin, int itemCutoff, boolean typedDeletes, Folder root, Set<Folder> visible)
+            throws ServiceException {
         String newToken = mbox.getLastChangeID() + "";
         if (begin >= mbox.getLastChangeID())
             return newToken;
@@ -232,7 +233,8 @@ public class Sync extends MailDocumentHandler {
         // then, handle created/modified folders
         if (octxt.isDelegatedRequest(mbox)) {
             // first, make sure that something changed...
-            if (!mbox.getModifiedFolders(begin).isEmpty() || (tombstones != null && (tombstones.getTypesMask() & FOLDER_TYPES_BITMASK) != 0)) {
+            if (!mbox.getModifiedFolders(begin).isEmpty() ||
+                    (tombstones != null && !Collections.disjoint(tombstones.types(), FOLDER_TYPES))) {
                 // special-case the folder hierarchy for delegated delta sync
                 boolean anyFolders = folderSync(response, octxt, ifmt, mbox, root, visible, -1, SyncPhase.DELTA);
                 // if no folders are visible, add an empty "<folder/>" as a hint
@@ -254,11 +256,11 @@ public class Sync extends MailDocumentHandler {
 
         // finally, handle created/modified "other items"
         int itemCount = 0;
-        Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, begin, MailItem.TYPE_UNKNOWN, targetIds);
+        Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, begin, MailItem.Type.UNKNOWN, targetIds);
         List<Integer> modified = changed.getFirst();
         delta: while (!modified.isEmpty()) {
             List<Integer> batch = modified.subList(0, Math.min(modified.size(), FETCH_BATCH_SIZE));
-            for (MailItem item : mbox.getItemById(octxt, batch, MailItem.TYPE_UNKNOWN)) {
+            for (MailItem item : mbox.getItemById(octxt, batch, MailItem.Type.UNKNOWN)) {
                 // detect interrupted sync and resume from the appropriate place
                 if (item.getModifiedSequence() == begin + 1 && item.getId() < itemCutoff)
                     continue;
@@ -270,9 +272,9 @@ public class Sync extends MailDocumentHandler {
                     break delta;
                 }
 
-                // For items in the system, if the content has changed since the user last sync'ed 
+                // For items in the system, if the content has changed since the user last sync'ed
                 // (because it was edited or created), just send back the folder ID and saved date --
-                // the client will request the whole object out of band -- potentially using the 
+                // the client will request the whole object out of band -- potentially using the
                 // content servlet's "include metadata in headers" hack.
                 // If it's just the metadata that changed, send back the set of mutable attributes.
                 boolean created = item.getSavedSequence() > begin;
@@ -291,7 +293,7 @@ public class Sync extends MailDocumentHandler {
             eDeleted.detach();
         } else {
             StringBuilder deleted = new StringBuilder(), typed = new StringBuilder();
-            for (Map.Entry<Byte,List<Integer>> entry : tombstones) {
+            for (Map.Entry<MailItem.Type, List<Integer>> entry : tombstones) {
                 typed.setLength(0);
                 for (Integer id : entry.getValue()) {
                     deleted.append(deleted.length() == 0 ? "" : ",").append(id);
@@ -311,42 +313,71 @@ public class Sync extends MailDocumentHandler {
         return newToken;
     }
 
-    public static String elementNameForType(byte type) {
+    public static String elementNameForType(MailItem.Type type) {
         switch (type) {
-            case MailItem.TYPE_FOLDER:       return MailConstants.E_FOLDER;
-            case MailItem.TYPE_SEARCHFOLDER: return MailConstants.E_SEARCH;
-            case MailItem.TYPE_MOUNTPOINT:   return MailConstants.E_MOUNT;
-            case MailItem.TYPE_FLAG:
-            case MailItem.TYPE_TAG:          return MailConstants.E_TAG;
-            case MailItem.TYPE_VIRTUAL_CONVERSATION:
-            case MailItem.TYPE_CONVERSATION: return MailConstants.E_CONV;
-            case MailItem.TYPE_CHAT:         return MailConstants.E_CHAT;
-            case MailItem.TYPE_MESSAGE:      return MailConstants.E_MSG;
-            case MailItem.TYPE_CONTACT:      return MailConstants.E_CONTACT;
-            case MailItem.TYPE_APPOINTMENT:  return MailConstants.E_APPOINTMENT;
-            case MailItem.TYPE_TASK:         return MailConstants.E_TASK;
-            case MailItem.TYPE_NOTE:         return MailConstants.E_NOTE;
-            case MailItem.TYPE_WIKI:         return MailConstants.E_WIKIWORD;
-            case MailItem.TYPE_DOCUMENT:     return MailConstants.E_DOC;
-            default:                         return null;
+            case FOLDER:
+                return MailConstants.E_FOLDER;
+            case SEARCHFOLDER:
+                return MailConstants.E_SEARCH;
+            case MOUNTPOINT:
+                return MailConstants.E_MOUNT;
+            case FLAG:
+            case TAG:
+                return MailConstants.E_TAG;
+            case VIRTUAL_CONVERSATION:
+            case CONVERSATION:
+                return MailConstants.E_CONV;
+            case CHAT:
+                return MailConstants.E_CHAT;
+            case MESSAGE:
+                return MailConstants.E_MSG;
+            case CONTACT:
+                return MailConstants.E_CONTACT;
+            case APPOINTMENT:
+                return MailConstants.E_APPOINTMENT;
+            case TASK:
+                return MailConstants.E_TASK;
+            case NOTE:
+                return MailConstants.E_NOTE;
+            case WIKI:
+                return MailConstants.E_WIKIWORD;
+            case DOCUMENT:
+                return MailConstants.E_DOC;
+            default:
+                return null;
         }
     }
 
-    public static byte typeForElementName(String name) {
-        if (name.equals(MailConstants.E_FOLDER))            return MailItem.TYPE_FOLDER;
-        else if (name.equals(MailConstants.E_SEARCH))       return MailItem.TYPE_SEARCHFOLDER;
-        else if (name.equals(MailConstants.E_MOUNT))        return MailItem.TYPE_MOUNTPOINT;
-        else if (name.equals(MailConstants.E_TAG))          return MailItem.TYPE_TAG;
-        else if (name.equals(MailConstants.E_CONV))         return MailItem.TYPE_CONVERSATION;
-        else if (name.equals(MailConstants.E_MSG))          return MailItem.TYPE_MESSAGE;
-        else if (name.equals(MailConstants.E_CHAT))         return MailItem.TYPE_CHAT;
-        else if (name.equals(MailConstants.E_CONTACT))      return MailItem.TYPE_CONTACT;
-        else if (name.equals(MailConstants.E_APPOINTMENT))  return MailItem.TYPE_APPOINTMENT;
-        else if (name.equals(MailConstants.E_TASK))         return MailItem.TYPE_TASK;
-        else if (name.equals(MailConstants.E_NOTE))         return MailItem.TYPE_NOTE;
-        else if (name.equals(MailConstants.E_WIKIWORD))     return MailItem.TYPE_WIKI;
-        else if (name.equals(MailConstants.E_DOC))          return MailItem.TYPE_DOCUMENT;
-        else                                                return MailItem.TYPE_UNKNOWN;
+    public static MailItem.Type typeForElementName(String name) {
+        if (name.equals(MailConstants.E_FOLDER)) {
+            return MailItem.Type.FOLDER;
+        } else if (name.equals(MailConstants.E_SEARCH)) {
+            return MailItem.Type.SEARCHFOLDER;
+        } else if (name.equals(MailConstants.E_MOUNT)) {
+            return MailItem.Type.MOUNTPOINT;
+        } else if (name.equals(MailConstants.E_TAG)) {
+            return MailItem.Type.TAG;
+        } else if (name.equals(MailConstants.E_CONV)) {
+            return MailItem.Type.CONVERSATION;
+        } else if (name.equals(MailConstants.E_MSG)) {
+            return MailItem.Type.MESSAGE;
+        } else if (name.equals(MailConstants.E_CHAT)) {
+            return MailItem.Type.CHAT;
+        } else if (name.equals(MailConstants.E_CONTACT)) {
+            return MailItem.Type.CONTACT;
+        } else if (name.equals(MailConstants.E_APPOINTMENT)) {
+            return MailItem.Type.APPOINTMENT;
+        } else if (name.equals(MailConstants.E_TASK)) {
+            return MailItem.Type.TASK;
+        } else if (name.equals(MailConstants.E_NOTE)) {
+            return MailItem.Type.NOTE;
+        } else if (name.equals(MailConstants.E_WIKIWORD)) {
+            return MailItem.Type.WIKI;
+        } else if (name.equals(MailConstants.E_DOC)) {
+            return MailItem.Type.DOCUMENT;
+        } else {
+            return MailItem.Type.UNKNOWN;
+        }
     }
 
 }

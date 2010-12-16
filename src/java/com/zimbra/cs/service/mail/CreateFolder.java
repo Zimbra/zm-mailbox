@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Aug 27, 2004
  */
 package com.zimbra.cs.service.mail;
 
@@ -35,6 +31,9 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
+/**
+ * @since Aug 27, 2004
+ */
 public class CreateFolder extends MailDocumentHandler {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_FOLDER, MailConstants.A_FOLDER };
@@ -43,6 +42,7 @@ public class CreateFolder extends MailDocumentHandler {
     @Override protected boolean checkMountpointProxy(Element request)  { return true; }
     @Override protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
@@ -67,11 +67,13 @@ public class CreateFolder extends MailDocumentHandler {
 
         try {
             MailItem.Color itemColor = rgb != null ? new MailItem.Color(rgb) : new MailItem.Color(color);
-            if (iidParent != null)
-                folder = mbox.createFolder(octxt, name, iidParent.getId(), (byte)0, MailItem.getTypeForName(view), Flag.flagsToBitmask(flags), itemColor, url);
-            else
-                folder = mbox.createFolder(octxt, name, (byte) 0, MailItem.getTypeForName(view), Flag.flagsToBitmask(flags), itemColor, url);
-
+            if (iidParent != null) {
+                folder = mbox.createFolder(octxt, name, iidParent.getId(), (byte) 0, MailItem.Type.of(view),
+                        Flag.flagsToBitmask(flags), itemColor, url);
+            } else {
+                folder = mbox.createFolder(octxt, name, (byte) 0, MailItem.Type.of(view), Flag.flagsToBitmask(flags),
+                        itemColor, url);
+            }
             if (!folder.getUrl().equals("") && syncToUrl) {
                 try {
                     mbox.synchronizeFolder(octxt, folder.getId());
@@ -101,7 +103,7 @@ public class CreateFolder extends MailDocumentHandler {
             } catch (ServiceException e) {
                 try {
                     // roll back folder creation
-                    mbox.delete(null, folder.getId(), MailItem.TYPE_FOLDER);
+                    mbox.delete(null, folder.getId(), MailItem.Type.FOLDER);
                 } catch (ServiceException nse) {
                     ZimbraLog.soap.warn("error ignored while rolling back folder create", nse);
                 }
@@ -117,7 +119,7 @@ public class CreateFolder extends MailDocumentHandler {
 
     private void rollbackFolder(Folder folder) {
         try {
-            folder.getMailbox().delete(null, folder.getId(), MailItem.TYPE_FOLDER);
+            folder.getMailbox().delete(null, folder.getId(), MailItem.Type.FOLDER);
         } catch (ServiceException nse) {
             ZimbraLog.mailbox.warn("error ignored while rolling back folder create", nse);
         }

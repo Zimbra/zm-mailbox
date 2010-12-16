@@ -1,6 +1,6 @@
 /*
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  *
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -12,10 +12,6 @@
  *
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Aug 12, 2004
- */
 package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
@@ -25,6 +21,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -33,7 +30,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -56,123 +57,122 @@ import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
 
+/**
+ * @since Aug 12, 2004
+ */
 public abstract class MailItem implements Comparable<MailItem> {
 
-    /** Item is a standard {@link Folder}. */
-    public static final byte TYPE_FOLDER       = 1;
-    /** Item is a saved search {@link SearchFolder}. */
-    public static final byte TYPE_SEARCHFOLDER = 2;
-    /** Item is a user-created {@link Tag}. */
-    public static final byte TYPE_TAG          = 3;
-    /** Item is a real, persisted {@link Conversation}. */
-    public static final byte TYPE_CONVERSATION = 4;
-    /** Item is a mail {@link Message}. */
-    public static final byte TYPE_MESSAGE      = 5;
-    /** Item is a {@link Contact}. */
-    public static final byte TYPE_CONTACT      = 6;
-    // /** Item is a {@link InviteMessage} with a <tt>text/calendar</tt> MIME part. */
-    // public static final byte TYPE_INVITE       = 7;   // SKIP 7 FOR NOW!
-    /** Item is a bare {@link Document}. */
-    public static final byte TYPE_DOCUMENT     = 8;
-    /** Item is a {@link Note}. */
-    public static final byte TYPE_NOTE         = 9;
-    /** Item is a memory-only system {@link Flag}. */
-    public static final byte TYPE_FLAG         = 10;
-    /** Item is a calendar {@link Appointment}. */
-    public static final byte TYPE_APPOINTMENT  = 11;
-    /** Item is a memory-only, 1-message {@link VirtualConversation}. */
-    public static final byte TYPE_VIRTUAL_CONVERSATION = 12;
-    /** Item is a {@link Mountpoint} pointing to a {@link Folder},
-     *  possibly in another user's {@link Mailbox}. */
-    public static final byte TYPE_MOUNTPOINT   = 13;
-    /** Item is a {@link WikiItem} */
-    public static final byte TYPE_WIKI         = 14;
-    /** Item is a {@link Task} */
-    public static final byte TYPE_TASK         = 15;
-    /** Item is a {@link Chat} */
-    public static final byte TYPE_CHAT         = 16;
+    public enum Type {
+        UNKNOWN(-1),
+        /** Item is a standard {@link Folder}. */
+        FOLDER(1),
+        /** Item is a saved search {@link SearchFolder}. */
+        SEARCHFOLDER(2),
+        /** Item is a user-created {@link Tag}. */
+        TAG(3),
+        /** Item is a real, persisted {@link Conversation}. */
+        CONVERSATION(4),
+        /** Item is a mail {@link Message}. */
+        MESSAGE(5),
+        /** Item is a {@link Contact}. */
+        CONTACT(6),
+        /** Item is a {@link InviteMessage} with a {@code text/calendar} MIME part. */
+        @Deprecated INVITE(7),
+        /** Item is a bare {@link Document}. */
+        DOCUMENT(8),
+        /** Item is a {@link Note}. */
+        NOTE(9),
+        /** Item is a memory-only system {@link Flag}. */
+        FLAG(10),
+        /** Item is a calendar {@link Appointment}. */
+        APPOINTMENT(11),
+        /** Item is a memory-only, 1-message {@link VirtualConversation}. */
+        VIRTUAL_CONVERSATION(12),
+        /** Item is a {@link Mountpoint} pointing to a {@link Folder}, possibly in another user's {@link Mailbox}. */
+        MOUNTPOINT(13),
+        /** Item is a {@link WikiItem} */
+        WIKI(14),
+        /** Item is a {@link Task} */
+        TASK(15),
+        /** Item is a {@link Chat} */
+        CHAT(16);
 
-    public static final byte TYPE_MAX = TYPE_CHAT;
-
-    public static final byte TYPE_UNKNOWN = -1;
-
-    private static String[] TYPE_NAMES = {
-        null,
-        "folder",
-        "search folder",
-        "tag",
-        "conversation",
-        "message",
-        "contact",
-        "invite",
-        "document",
-        "note",
-        "flag",
-        "appointment",
-        "virtual conversation",
-        "remote folder",
-        "wiki",
-        "task",
-        "chat",
-    };
-
-    /**
-     * @param mailItemType
-     * @return the mail item type mapped to a bitmask, useful in places
-     *         as a substitute for passing around a Set<Byte> for a list
-     *         of MailItem types
-     */
-    public static final int typeToBitmask(byte mailItemType) {
-        switch (mailItemType) {
-            case MailItem.TYPE_FOLDER:               return 0x000001;
-            case MailItem.TYPE_SEARCHFOLDER:         return 0x000002;
-            case MailItem.TYPE_TAG:                  return 0x000004;
-            case MailItem.TYPE_CONVERSATION:         return 0x000008;
-            case MailItem.TYPE_MESSAGE:              return 0x000010;
-            case MailItem.TYPE_CONTACT:              return 0x000020;
-            case MailItem.TYPE_DOCUMENT:             return 0x000040;
-            case MailItem.TYPE_NOTE:                 return 0x000080;
-            case MailItem.TYPE_FLAG:                 return 0x000100;
-            case MailItem.TYPE_APPOINTMENT:          return 0x000200;
-            case MailItem.TYPE_VIRTUAL_CONVERSATION: return 0x000400;
-            case MailItem.TYPE_MOUNTPOINT:           return 0x000800;
-            case MailItem.TYPE_WIKI:                 return 0x001000;
-            case MailItem.TYPE_TASK:                 return 0x002000;
-            case MailItem.TYPE_CHAT:                 return 0x004000;
+        private static final Map<Byte, Type> BYTE2TYPE;
+        static {
+            ImmutableMap.Builder<Byte, Type> builder = ImmutableMap.builder();
+            for (Type type : Type.values()) {
+                builder.put(type.toByte(), type);
+            }
+            BYTE2TYPE = builder.build();
         }
-        assert(false);
-        return 0;
-    }
 
-    /** Throws {@link ServiceException} <tt>mail.INVALID_TYPE</tt> if the
-     *  specified internal Zimbra item type is not supported.  At present, all
-     *  types from 1 to {@link #TYPE_MAX} <b>except 7</b> are supported. */
-    static byte validateType(byte type) throws ServiceException {
-        if (type <= 0 || type > TYPE_MAX || type == 7)
-            throw MailServiceException.INVALID_TYPE(type);
-        return type;
-    }
+        private final byte btype;
 
-    /** Returns the human-readable name (e.g. <tt>"tag"</tt>) for the
-     *  item's type.  Returns <tt>null</tt> if parameter is null. */
-    public static String getNameForType(MailItem item) {
-        return getNameForType(item == null ? TYPE_UNKNOWN : item.getType());
-    }
+        private Type(int b) {
+            btype = (byte) b;
+        }
 
-    /** Returns the human-readable name (e.g. <tt>"tag"</tt>) for the
-     *  specified item type.  Returns <tt>null</tt> for unknown types. */
-    public static String getNameForType(byte type) {
-        return (type <= 0 || type > TYPE_MAX ? null : TYPE_NAMES[type]);
-    }
+        public byte toByte() {
+            return btype;
+        }
 
-    /** Returns the internal Zimbra item type (e.g. {@link #TYPE_TAG}) for
-     *  the specified human-readable type name (e.g. <tt>"tag"</tt>). */
-    public static byte getTypeForName(String name) {
-        if (name != null && !name.trim().equals(""))
-            for (byte i = 1; i < TYPE_NAMES.length; i++)
-                if (name.equals(TYPE_NAMES[i]))
-                    return i;
-        return TYPE_UNKNOWN;
+        /**
+         * Returns the human-readable name (e.g. "tag") for the item type.
+         */
+        @Override
+        public String toString() {
+            return name().toLowerCase();
+        }
+
+        public static String toString(Set<Type> types) {
+            return Joiner.on(',').skipNulls().join(types);
+        }
+
+        public static Type of(byte b) {
+            Type result = BYTE2TYPE.get(b);
+            return result != null ? result : UNKNOWN;
+        }
+
+        /**
+         * Returns the item type for the specified human-readable type name.
+         *
+         * @param name string representation of a type
+         * @return type
+         */
+        public static Type of(String name) {
+            if (Strings.isNullOrEmpty(name)) {
+                return UNKNOWN;
+            }
+            try {
+                return Type.valueOf(name.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                if ("briefcase".equalsIgnoreCase(name)) { // synonym of document
+                    return DOCUMENT;
+                } else {
+                    return UNKNOWN;
+                }
+            }
+        }
+
+        /**
+         * Parses a CSV of type names.
+         *
+         * @param csv comma-separated types
+         * @return set of types
+         * @throws IllegalArgumentException if the CSV contains an invalid type name
+         */
+        public static Set<Type> setOf(String csv) {
+            Set<Type> result = EnumSet.noneOf(Type.class);
+            for (String token : Splitter.on(',').trimResults().split(csv)) {
+                Type type = Type.of(token);
+                if (type != UNKNOWN) {
+                    result.add(type);
+                } else {
+                    throw new IllegalArgumentException(token);
+                }
+            }
+            return result;
+        }
     }
 
     public static final int FLAG_UNCHANGED = 0x80000000;
@@ -249,8 +249,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         void metadataChanged(Mailbox mbox) throws ServiceException {
             modMetadata = mbox.getOperationChangeID();
             dateChanged = mbox.getOperationTimestamp();
-            if (!isAcceptableType(TYPE_FOLDER, type))
+            if (!isAcceptableType(Type.FOLDER, Type.of(type))) {
                 mbox.getFolderById(folderId).updateHighestMODSEQ();
+            }
         }
 
         void contentChanged(Mailbox mbox) throws ServiceException {
@@ -570,9 +571,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         return mData.id;
     }
 
-    /** Returns the item's type (e.g. {@link #TYPE_MESSAGE}). */
-    public byte getType() {
-        return mData.type;
+    /** Returns the item's type. */
+    public Type getType() {
+        return Type.of(mData.type);
     }
 
     /** Returns the numeric ID of the {@link Mailbox} this item belongs to. */
@@ -1215,7 +1216,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     MailItem getParent() throws ServiceException {
         if (mData.parentId == -1 || inDumpster())
             return null;
-        return mMailbox.getItemById(mData.parentId, TYPE_UNKNOWN);
+        return mMailbox.getItemById(mData.parentId, Type.UNKNOWN);
     }
 
     /** Returns the item's {@link Folder}.  All items in the system must
@@ -1241,18 +1242,18 @@ public abstract class MailItem implements Comparable<MailItem> {
 
 
     static MailItem getById(Mailbox mbox, int id) throws ServiceException {
-        return getById(mbox, id, TYPE_UNKNOWN);
+        return getById(mbox, id, Type.UNKNOWN);
     }
 
-    static MailItem getById(Mailbox mbox, int id, byte type) throws ServiceException {
+    static MailItem getById(Mailbox mbox, int id, Type type) throws ServiceException {
         return getById(mbox, id, type, false);
     }
 
-    static MailItem getById(Mailbox mbox, int id, byte type, boolean fromDumpster) throws ServiceException {
+    static MailItem getById(Mailbox mbox, int id, Type type, boolean fromDumpster) throws ServiceException {
         return mbox.getItem(DbMailItem.getById(mbox, id, type, fromDumpster));
     }
 
-    static List<MailItem> getById(Mailbox mbox, Collection<Integer> ids, byte type) throws ServiceException {
+    static List<MailItem> getById(Mailbox mbox, Collection<Integer> ids, Type type) throws ServiceException {
         if (ids == null || ids.isEmpty())
             return Collections.emptyList();
         List<MailItem> items = new ArrayList<MailItem>();
@@ -1274,22 +1275,22 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @param data  The contents of a <tt>MAIL_ITEM</tt> database row. */
     public static MailItem constructItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
         if (data == null)
-            throw noSuchItem(-1, TYPE_UNKNOWN);
-        switch (data.type) {
-            case TYPE_FOLDER:       return new Folder(mbox, data);
-            case TYPE_SEARCHFOLDER: return new SearchFolder(mbox, data);
-            case TYPE_TAG:          return new Tag(mbox, data);
-            case TYPE_CONVERSATION: return new Conversation(mbox,data);
-            case TYPE_MESSAGE:      return new Message(mbox, data);
-            case TYPE_CONTACT:      return new Contact(mbox,data);
-            case TYPE_DOCUMENT:     return new Document(mbox, data);
-            case TYPE_NOTE:         return new Note(mbox, data);
-            case TYPE_APPOINTMENT:  return new Appointment(mbox, data);
-            case TYPE_TASK:         return new Task(mbox, data);
-            case TYPE_MOUNTPOINT:   return new Mountpoint(mbox, data);
-            case TYPE_WIKI:         return new WikiItem(mbox, data);
-            case TYPE_CHAT:         return new Chat(mbox, data);
-            default:                return null;
+            throw noSuchItem(-1, Type.UNKNOWN);
+        switch (Type.of(data.type)) {
+        case FOLDER:       return new Folder(mbox, data);
+        case SEARCHFOLDER: return new SearchFolder(mbox, data);
+        case TAG:          return new Tag(mbox, data);
+        case CONVERSATION: return new Conversation(mbox,data);
+        case MESSAGE:      return new Message(mbox, data);
+        case CONTACT:      return new Contact(mbox,data);
+        case DOCUMENT:     return new Document(mbox, data);
+        case NOTE:         return new Note(mbox, data);
+        case APPOINTMENT:  return new Appointment(mbox, data);
+        case TASK:         return new Task(mbox, data);
+        case MOUNTPOINT:   return new Mountpoint(mbox, data);
+        case WIKI:         return new WikiItem(mbox, data);
+        case CHAT:         return new Chat(mbox, data);
+        default:           return null;
         }
     }
 
@@ -1299,59 +1300,70 @@ public abstract class MailItem implements Comparable<MailItem> {
      *
      * @param id    The id of the missing item.
      * @param type  The type of the missing item (e.g. {@link #TYPE_TAG}). */
-    public static MailServiceException noSuchItem(int id, byte type) {
+    public static MailServiceException noSuchItem(int id, Type type) {
         switch (type) {
-            case TYPE_SEARCHFOLDER:
-            case TYPE_MOUNTPOINT:
-            case TYPE_FOLDER:       return MailServiceException.NO_SUCH_FOLDER(id);
-            case TYPE_FLAG:
-            case TYPE_TAG:          return MailServiceException.NO_SUCH_TAG(id);
-            case TYPE_VIRTUAL_CONVERSATION:
-            case TYPE_CONVERSATION: return MailServiceException.NO_SUCH_CONV(id);
-            case TYPE_CHAT:
-            case TYPE_MESSAGE:      return MailServiceException.NO_SUCH_MSG(id);
-            case TYPE_CONTACT:      return MailServiceException.NO_SUCH_CONTACT(id);
-            case TYPE_WIKI:
-            case TYPE_DOCUMENT:     return MailServiceException.NO_SUCH_DOC(id);
-            case TYPE_NOTE:         return MailServiceException.NO_SUCH_NOTE(id);
-            case TYPE_APPOINTMENT:  return MailServiceException.NO_SUCH_APPT(id);
-            case TYPE_TASK:         return MailServiceException.NO_SUCH_TASK(id);
-            default:                return MailServiceException.NO_SUCH_ITEM(id);
+        case SEARCHFOLDER:
+        case MOUNTPOINT:
+        case FOLDER:
+            return MailServiceException.NO_SUCH_FOLDER(id);
+        case FLAG:
+        case TAG:
+            return MailServiceException.NO_SUCH_TAG(id);
+        case VIRTUAL_CONVERSATION:
+        case CONVERSATION:
+            return MailServiceException.NO_SUCH_CONV(id);
+        case CHAT:
+        case MESSAGE:
+            return MailServiceException.NO_SUCH_MSG(id);
+        case CONTACT:
+            return MailServiceException.NO_SUCH_CONTACT(id);
+        case WIKI:
+        case DOCUMENT:
+            return MailServiceException.NO_SUCH_DOC(id);
+        case NOTE:
+            return MailServiceException.NO_SUCH_NOTE(id);
+        case APPOINTMENT:
+            return MailServiceException.NO_SUCH_APPT(id);
+        case TASK:
+            return MailServiceException.NO_SUCH_TASK(id);
+        default:
+            return MailServiceException.NO_SUCH_ITEM(id);
         }
     }
 
-    /** Returns whether an item type is a "subclass" of another item type.
-     *  For instance, returns <tt>true</tt> if you have an item of type
-     *  {@link #TYPE_FLAG} and you wanted things of type {@link #TYPE_TAG}.
-     *  The exception to this rule is that a desired {@link #TYPE_UNKNOWN}
-     *  matches any actual item type.
+    /**
+     * Returns whether an item type is a "subclass" of another item type.
+     * <p>
+     * For instance, returns {@code true} if you have an item of {@link Type#FLAG} and you wanted things of
+     * {@link Type#TAG}. The exception to this rule is that a desired {@link Type#UNKNOWN} matches any actual item type.
      *
      * @param desired  The type of item that you wanted.
      * @param actual   The type of item that you've got.
-     * @return <tt>true</tt> if the types match, if <tt>desired</tt> is
-     *         {@link #TYPE_UNKNOWN}, or if the <tt>actual</tt> class is a
-     *         subclass of the <tt>desired</tt> class. */
-    public static boolean isAcceptableType(byte desired, byte actual) {
+     * @return {@code true} if the types match, if {@code desired} is {@link Type#UNKNOWN}, or if the {@code actual}
+     * class is a subclass of the {@code desired} class.
+     */
+    public static boolean isAcceptableType(Type desired, Type actual) {
         // standard case: exactly what we're asking for
-        if (desired == actual || desired == TYPE_UNKNOWN)
+        if (desired == actual || desired == Type.UNKNOWN) {
             return true;
         // exceptions: ask for Tag and get Flag, ask for Folder and get SearchFolder or Mountpoint,
         //             ask for Conversation and get VirtualConversation, ask for Document and get Wiki
-        else if (desired == TYPE_FOLDER && actual == TYPE_SEARCHFOLDER)
+        } else if (desired == Type.FOLDER && actual == Type.SEARCHFOLDER) {
             return true;
-        else if (desired == TYPE_FOLDER && actual == TYPE_MOUNTPOINT)
+        } else if (desired == Type.FOLDER && actual == Type.MOUNTPOINT) {
             return true;
-        else if (desired == TYPE_TAG && actual == TYPE_FLAG)
+        } else if (desired == Type.TAG && actual == Type.FLAG) {
             return true;
-        else if (desired == TYPE_CONVERSATION && actual == TYPE_VIRTUAL_CONVERSATION)
+        } else if (desired == Type.CONVERSATION && actual == Type.VIRTUAL_CONVERSATION) {
             return true;
-        else if (desired == TYPE_DOCUMENT && actual == TYPE_WIKI)
+        } else if (desired == Type.DOCUMENT && actual == Type.WIKI) {
             return true;
-        else if (desired == TYPE_MESSAGE && actual == TYPE_CHAT)
+        } else if (desired == Type.MESSAGE && actual == Type.CHAT) {
             return true;
         // failure: found something, but it's not the type you were looking for
-        else
+        } else {
             return false;
+        }
     }
 
     /** Returns whether the item is a "subclass" of another item type.  For
@@ -1363,7 +1375,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @return <tt>true</tt> if the types match, if <tt>desired</tt> is
      *         {@link #TYPE_UNKNOWN}, or if the item is a subclass of the
      *         <tt>desired</tt> class. */
-    public boolean isAcceptableType(byte desired) {
+    public boolean isAcceptableType(Type desired) {
         return isAcceptableType(desired, getType());
     }
 
@@ -1728,7 +1740,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @param data  The (optional) extra item data for indexing (e.g.
      *              a Message's {@link com.zimbra.cs.index.ParsedMessage}. */
     void reanalyze(Object data, long newSize) throws ServiceException {
-        throw ServiceException.FAILURE("reanalysis of " + getNameForType(this) + "s not supported", null);
+        throw ServiceException.FAILURE("reanalysis of " + getType() + "s not supported", null);
     }
 
     @SuppressWarnings("unused") void detach() throws ServiceException  { }
@@ -2184,7 +2196,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             markItemModified(Change.MODIFIED_PARENT);
             parent.markItemModified(Change.MODIFIED_CHILDREN);
             mData.metadataChanged(mMailbox);
-            mData.parentId = mData.type == TYPE_MESSAGE ? -mId : -1;
+            mData.parentId = mData.type == Type.MESSAGE.toByte() ? -mId : -1;
         }
 
         return copy;
@@ -2564,7 +2576,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (info.itemIds.isEmpty())
             return;
 
-        mbox.markItemDeleted(info.itemIds.getTypesMask(), info.itemIds.getAll());
+        mbox.markItemDeleted(info.itemIds.types(), info.itemIds.getAll());
 
         MailItem parent = null;
         // when applicable, record the deleted MailItem (rather than just its id)
@@ -2583,7 +2595,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 item.propagateDeletion(info);
             } else {
                 // update message counts
-                List<UnderlyingData> unreadData = DbMailItem.getById(mbox, info.unreadIds, TYPE_MESSAGE);
+                List<UnderlyingData> unreadData = DbMailItem.getById(mbox, info.unreadIds, Type.MESSAGE);
                 for (UnderlyingData data : unreadData) {
                     MailItem unread = mbox.getItem(data);
                     unread.updateUnread(-data.unreadCount, unread.isTagged(Flag.ID_FLAG_DELETED) ? -data.unreadCount : 0);
@@ -2641,14 +2653,17 @@ public abstract class MailItem implements Comparable<MailItem> {
                 parent.removeChild(item);
         } else if (!info.itemIds.isEmpty()) {
             // we're doing an old-item expunge or the like rather than a single delete/empty op
-            info.cascadeIds = DbMailItem.markDeletionTargets(mbox, info.itemIds.getIds(TYPE_MESSAGE, TYPE_CHAT), info.modifiedIds);
-            if (info.cascadeIds != null)
+            info.cascadeIds = DbMailItem.markDeletionTargets(mbox,
+                    info.itemIds.getIds(EnumSet.of(Type.MESSAGE, Type.CHAT)), info.modifiedIds);
+            if (info.cascadeIds != null) {
                 info.modifiedIds.removeAll(info.cascadeIds);
-            mbox.purge(TYPE_CONVERSATION);
+            }
+            mbox.purge(Type.CONVERSATION);
             // if there are SOAP listeners, instantiate all modified conversations for notification purposes
             if (!info.modifiedIds.isEmpty() && mbox.hasListeners(Session.Type.SOAP)) {
-                for (MailItem conv : mbox.getItemById(info.modifiedIds, TYPE_CONVERSATION))
+                for (MailItem conv : mbox.getItemById(info.modifiedIds, Type.CONVERSATION)) {
                     ((Conversation) conv).getSenderList();
+                }
             }
         }
 
@@ -2659,8 +2674,8 @@ public abstract class MailItem implements Comparable<MailItem> {
             } catch (ServiceException se) {
                 MailboxErrorUtil.handleCascadeFailure(mbox, info.cascadeIds, se);
             }
-            mbox.markItemDeleted(MailItem.typeToBitmask(TYPE_CONVERSATION), info.cascadeIds);
-            info.itemIds.add(TYPE_CONVERSATION, info.cascadeIds);
+            mbox.markItemDeleted(EnumSet.of(Type.CONVERSATION), info.cascadeIds);
+            info.itemIds.add(Type.CONVERSATION, info.cascadeIds);
         }
 
         // deal with index sharing
@@ -2753,7 +2768,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (!info.unreadIds.isEmpty()) {
             for (int i = 0, count = info.unreadIds.size(); i < count; i += UNREAD_ITEM_BATCH_SIZE) {
                 List<Integer> batch = info.unreadIds.subList(i, Math.min(i + UNREAD_ITEM_BATCH_SIZE, count));
-                for (UnderlyingData data : DbMailItem.getById(mMailbox, batch, TYPE_MESSAGE)) {
+                for (UnderlyingData data : DbMailItem.getById(mMailbox, batch, Type.MESSAGE)) {
                     Message msg = (Message) mMailbox.getItem(data);
                     if (msg.isUnread())
                         msg.updateUnread(-1, msg.isTagged(Flag.ID_FLAG_DELETED) ? -1 : 0);

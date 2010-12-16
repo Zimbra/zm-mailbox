@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -72,6 +72,7 @@ public class SpamHandler {
 
     public SpamHandler() {
         Runnable r = new Runnable() {
+            @Override
             public void run() {
                 reportLoop();
             }
@@ -136,11 +137,11 @@ public class SpamHandler {
         private final boolean isSpam;
         private final String action;
         private final String destFolder;
-        
+
         // These fields are optionally set by the caller.
         private String sourceFolder;
         private String destAccountName;
-        
+
         // These fields are set internally.
         private String accountName;
         private InternetAddress reportRecipient;
@@ -153,7 +154,7 @@ public class SpamHandler {
             this.action = action;
             this.destFolder = destFolder;
         }
-        
+
         SpamReport(SpamReport report) {
             this.isSpam = report.isSpam;
             this.action = report.action;
@@ -166,11 +167,11 @@ public class SpamHandler {
             this.messageId = report.messageId;
             this.mailboxId = report.mailboxId;
         }
-        
+
         public void setSourceFolderPath(String path) {
             sourceFolder = path;
         }
-        
+
         public void setDestAccountName(String name) {
             destAccountName = name;
         }
@@ -189,7 +190,7 @@ public class SpamHandler {
                 add("reportRecipient", reportRecipient).toString();
         }
     }
-    
+
     private static final int mSpamReportQueueSize = LC.zimbra_spam_report_queue_size.intValue();
 
     private Object mSpamReportQueueLock = new Object();
@@ -198,7 +199,7 @@ public class SpamHandler {
 
     void reportLoop() {
         while (true) {
-            List<SpamReport> workQueue = null; 
+            List<SpamReport> workQueue = null;
             synchronized (mSpamReportQueueLock) {
                 while (mSpamReportQueue.size() == 0) {
                     try {
@@ -240,7 +241,7 @@ public class SpamHandler {
         }
     }
 
-    public void handle(OperationContext octxt, Mailbox mbox, int itemId, byte type, SpamReport report)
+    public void handle(OperationContext octxt, Mailbox mbox, int itemId, MailItem.Type type, SpamReport report)
     throws ServiceException {
         Config config = Provisioning.getInstance().getConfig();
         String address = null;
@@ -263,35 +264,38 @@ public class SpamHandler {
         } catch (MessagingException e) {
             throw ServiceException.INVALID_REQUEST("Invalid address: " + address, e);
         }
-        
+
         report.accountName = mbox.getAccount().getName();
         report.mailboxId = mbox.getId();
         if (octxt != null) {
             report.origIp = octxt.getRequestIP();
         }
-        
+
         List<SpamReport> reports = Lists.newArrayList();
-        if (type == MailItem.TYPE_MESSAGE) {
+        switch (type) {
+        case MESSAGE:
             report.messageId = itemId;
             reports.add(report);
-        } else if (type == MailItem.TYPE_CONVERSATION) {
+            break;
+        case CONVERSATION:
             for (Message msg : mbox.getMessagesByConversation(null, itemId)) {
                 SpamReport msgReport = new SpamReport(report);
                 msgReport.messageId = msg.getId();
                 reports.add(report);
             }
-        } else {
-            ZimbraLog.misc.warn("SpamHandler called on unhandled item type=" + MailItem.getNameForType(type) +
-                " account=" + report.accountName +  " id=" + itemId);
+            break;
+        default:
+            ZimbraLog.misc.warn("SpamHandler called on unhandled item type=" + type +
+                    " account=" + report.accountName + " id=" + itemId);
             return;
         }
-        
+
         enqueue(reports);
     }
 
     /**
      * Stores the last known value of <tt>zimbraSpamHeaderValue</tt>.  Used
-     * for determining whether {@link #sSpamPattern} needs to be recompiled. 
+     * for determining whether {@link #sSpamPattern} needs to be recompiled.
      */
     private static String sSpamHeaderValue;
 

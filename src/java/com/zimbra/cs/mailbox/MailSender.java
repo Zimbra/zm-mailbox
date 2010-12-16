@@ -368,10 +368,11 @@ public class MailSender {
 
         public void rollback() {
             try {
-                if (mbox != null)
-                    mbox.delete(null, msgId.getId(), MailItem.TYPE_MESSAGE);
-                else
+                if (mbox != null) {
+                    mbox.delete(null, msgId.getId(), MailItem.Type.MESSAGE);
+                } else {
                     zmbox.deleteMessage("" + msgId);
+                }
             } catch (ServiceException e) {
                 ZimbraLog.smtp.warn("ignoring error while deleting saved sent message: " + msgId, e);
             }
@@ -764,16 +765,18 @@ public class MailSender {
 
             if (target instanceof Mailbox) {
                 Mailbox mbox = (Mailbox) target;
-                if (MSGTYPE_REPLY.equals(mReplyType))
-                    mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_REPLIED, true);
-                else if (MSGTYPE_FORWARD.equals(mReplyType))
-                    mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_FORWARDED, true);
+                if (MSGTYPE_REPLY.equals(mReplyType)) {
+                    mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.Type.MESSAGE, Flag.ID_FLAG_REPLIED, true);
+                } else if (MSGTYPE_FORWARD.equals(mReplyType)) {
+                    mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.Type.MESSAGE, Flag.ID_FLAG_FORWARDED, true);
+                }
             } else if (target instanceof ZMailbox) {
                 ZMailbox zmbx = (ZMailbox) target;
-                if (MSGTYPE_REPLY.equals(mReplyType))
+                if (MSGTYPE_REPLY.equals(mReplyType)) {
                     zmbx.tagMessage(mOriginalMessageId.toString(), "" + Flag.ID_FLAG_REPLIED, true);
-                else if (MSGTYPE_FORWARD.equals(mReplyType))
+                } else if (MSGTYPE_FORWARD.equals(mReplyType)) {
                     zmbx.tagMessage(mOriginalMessageId.toString(), "" + Flag.ID_FLAG_FORWARDED, true);
+                }
             }
         } catch (ServiceException e) {
             // this is not an error case:
@@ -906,7 +909,7 @@ public class MailSender {
                 Mailbox mbox = (Mailbox) authmbox;
                 ZimbraQueryResults qres = null;
                 try {
-                    qres = mbox.index.search(octxt, query, Collections.singleton(MailItem.TYPE_CONTACT),
+                    qres = mbox.index.search(octxt, query, Collections.singleton(MailItem.Type.CONTACT),
                             SortBy.NONE, contacts.size());
                     while (qres.hasNext()) {
                         ZimbraHit hit = qres.getNext();

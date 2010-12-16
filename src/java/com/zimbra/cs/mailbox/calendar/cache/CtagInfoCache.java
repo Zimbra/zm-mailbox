@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -24,13 +24,11 @@ import java.util.Set;
 
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.memcached.MemcachedMap;
 import com.zimbra.common.util.memcached.MemcachedSerializer;
 import com.zimbra.common.util.memcached.ZimbraMemcachedClient;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.index.SortBy;
@@ -57,11 +55,11 @@ public class CtagInfoCache {
     CtagInfoCache() {
         ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
         CtagInfoSerializer serializer = new CtagInfoSerializer();
-        mMemcachedLookup = new MemcachedMap<CalendarKey, CtagInfo>(memcachedClient, serializer); 
+        mMemcachedLookup = new MemcachedMap<CalendarKey, CtagInfo>(memcachedClient, serializer);
     }
 
     private static class CtagInfoSerializer implements MemcachedSerializer<CtagInfo> {
-        
+
         public Object serialize(CtagInfo value) {
             return value.encodeMetadata().toString();
         }
@@ -239,8 +237,8 @@ public class CtagInfoCache {
                 Object whatChanged = change.what;
                 if (whatChanged instanceof Folder) {
                     Folder folder = (Folder) whatChanged;
-                    byte viewType = folder.getDefaultView();
-                    if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
+                    MailItem.Type viewType = folder.getDefaultView();
+                    if (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK) {
                         CalendarKey key = new CalendarKey(folder.getMailbox().getAccountId(), folder.getId());
                         keysToInvalidate.add(key);
                     }
@@ -266,8 +264,8 @@ public class CtagInfoCache {
                 Object deletedObj = entry.getValue();
                 if (deletedObj instanceof Folder) {
                     Folder folder = (Folder) deletedObj;
-                    byte viewType = folder.getDefaultView();
-                    if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
+                    MailItem.Type viewType = folder.getDefaultView();
+                    if (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK) {
                         CalendarKey key = new CalendarKey(folder.getMailbox().getAccountId(), folder.getId());
                         keysToInvalidate.add(key);
                     }

@@ -54,7 +54,7 @@ public final class DocumentHit extends ZimbraHit {
         return mMessageId;
     }
 
-    public byte getItemType() {
+    public MailItem.Type getItemType() {
         return mDocItem.getType();
     }
 

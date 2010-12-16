@@ -15,7 +15,7 @@
 package com.zimbra.cs.dav.resource;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -42,7 +42,7 @@ public abstract class PhantomResource extends DavResource {
     protected List<String> mTokens;
     protected long mNow;
 
-    protected static final Set<Byte> SEARCH_TYPES = Collections.singleton(MailItem.TYPE_MESSAGE);
+    protected static final Set<MailItem.Type> SEARCH_TYPES = EnumSet.of(MailItem.Type.MESSAGE);
 
     PhantomResource(String uri, String owner, List<String> tokens) {
         super(uri, owner);

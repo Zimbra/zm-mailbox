@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -71,8 +71,7 @@ public abstract class WikiUtil {
 
     private static final String sDEFAULTFOLDER = "Notebook";
     private static final String sDEFAULTTEMPLATEFOLDER = "Template";
-
-    private static final String sDEFAULTVIEW = "wiki";
+    private static final MailItem.Type DEFAULT_VIEW = MailItem.Type.WIKI;
 
     protected String mUsername;
     protected Provisioning mProv;
@@ -92,26 +91,27 @@ public abstract class WikiUtil {
                 if (f.getName().startsWith(".")) { continue;    }
 
                 if (f.isDirectory()) {
-                    Folder sub = mbox.createFolder(octxt, f.getName(), where.getId(), MailItem.getTypeForName(sDEFAULTVIEW), 0, MailItem.DEFAULT_COLOR, null);
+                    Folder sub = mbox.createFolder(octxt, f.getName(), where.getId(), DEFAULT_VIEW, 0, MailItem.DEFAULT_COLOR, null);
                     populateFolders(octxt, mbox, sub, f);
                 } else {
-                    byte type = 0;
+                    MailItem.Type type;
                     FileInputStream in = new FileInputStream(f);
                     String name = f.getName();
                     String contentType;
 
                     // XXX use .wiki extension to distinguish wiki vs documents.
                     if (name.endsWith(".wiki") || name.startsWith("_")) {
-                        if (name.endsWith(".wiki"))
+                        if (name.endsWith(".wiki")) {
                             name = name.substring(0, name.length() - 5);
+                        }
                         contentType = WikiItem.WIKI_CONTENT_TYPE;
-                        type = MailItem.TYPE_WIKI;
+                        type = MailItem.Type.WIKI;
                     } else {
                         contentType = URLConnection.getFileNameMap().getContentTypeFor(name);
                         if (contentType == null) {
                             contentType = "application/octet-stream";
                         }
-                        type = MailItem.TYPE_DOCUMENT;
+                        type = MailItem.Type.DOCUMENT;
                     }
                     /*
                     if (f.getName().indexOf('.') != -1) {
@@ -119,7 +119,7 @@ public abstract class WikiUtil {
                     } else {
                         contentType = WikiItem.WIKI_CONTENT_TYPE;
                     }
-                    
+
                     if (contentType == null || !contentType.startsWith("text")) {
                         type = MailItem.TYPE_DOCUMENT;
                     } else {
@@ -133,7 +133,7 @@ public abstract class WikiUtil {
         }
 
         private void deleteItems(OperationContext octxt, Mailbox mbox, Folder where) throws ServiceException {
-            if (where.getDefaultView() == MailItem.TYPE_WIKI) {
+            if (where.getDefaultView() == MailItem.Type.WIKI) {
                 mbox.emptyFolder(octxt, where.getId(), true);
                 return;
             }
@@ -144,11 +144,13 @@ public abstract class WikiUtil {
             List<Folder> folders = where.getSubfolders(octxt);
             for (Folder f : folders) {
                 deleteItems(octxt, mbox, f);
-                if (f.getDefaultView() == MailItem.TYPE_WIKI)
-                	mbox.delete(octxt, f, null);
+                if (f.getDefaultView() == MailItem.Type.WIKI) {
+                    mbox.delete(octxt, f, null);
+                }
             }
         }
 
+        @Override
         protected void emptyNotebooks(String where) throws ServiceException {
             Account acct = mProv.get(AccountBy.name, mUsername);
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
@@ -158,10 +160,11 @@ public abstract class WikiUtil {
                 Folder f = mbox.getFolderByPath(octxt, where);
                 deleteItems(octxt, mbox, f);
             } catch (ServiceException se) {
-            	ZimbraLog.wiki.error("error emptying Notebook folders", se);
+                ZimbraLog.wiki.error("error emptying Notebook folders", se);
             }
         }
 
+        @Override
         public void startImport(String username, String where, File what) throws ServiceException, IOException {
             mUsername = username;
             emptyNotebooks(where);
@@ -173,11 +176,13 @@ public abstract class WikiUtil {
             try {
                 f = mbox.getFolderByPath(octxt, where);
             } catch (ServiceException se) {
-                f = mbox.createFolder(octxt, where, Mailbox.ID_FOLDER_USER_ROOT, MailItem.TYPE_WIKI, 0, MailItem.DEFAULT_COLOR, null);
+                f = mbox.createFolder(octxt, where, Mailbox.ID_FOLDER_USER_ROOT, MailItem.Type.WIKI, 0,
+                        MailItem.DEFAULT_COLOR, null);
             }
             populateFolders(octxt, mbox, f, what);
         }
 
+        @Override
         protected void setFolderPermission(Account account, String grantee, String name, String id) throws ServiceException {
             Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
             OperationContext octxt = new OperationContext(account);
@@ -185,41 +190,32 @@ public abstract class WikiUtil {
             try {
                 template = mbox.getFolderByPath(octxt, sDEFAULTTEMPLATEFOLDER);
             } catch (ServiceException se) {
-                template = mbox.createFolder(octxt,
-                        sDEFAULTTEMPLATEFOLDER,
-                        Mailbox.ID_FOLDER_USER_ROOT,
-                        MailItem.getTypeForName(sDEFAULTVIEW),
-                        0, MailItem.DEFAULT_COLOR, null);
+                template = mbox.createFolder(octxt, sDEFAULTTEMPLATEFOLDER, Mailbox.ID_FOLDER_USER_ROOT,
+                        DEFAULT_VIEW, 0, MailItem.DEFAULT_COLOR, null);
             }
-            mbox.grantAccess(octxt,
-                    Mailbox.ID_FOLDER_NOTEBOOK,
-                    id,
+            mbox.grantAccess(octxt, Mailbox.ID_FOLDER_NOTEBOOK, id,
                     grantee.equals("pub") ? ACL.GRANTEE_PUBLIC : ACL.GRANTEE_DOMAIN,
-                    ACL.stringToRights("rwid"),
-                    null);
-            mbox.grantAccess(octxt,
-                    template.getId(),
-                    GuestAccount.GUID_PUBLIC,
-                    ACL.GRANTEE_PUBLIC,
-                    ACL.stringToRights("r"),
-                    null);
+                    ACL.stringToRights("rwid"), null);
+            mbox.grantAccess(octxt, template.getId(), GuestAccount.GUID_PUBLIC, ACL.GRANTEE_PUBLIC,
+                    ACL.stringToRights("r"), null);
         }
-        
+
+        @Override
         public void updateTemplates(Server server, File templateDir) throws ServiceException {
-        	throw WikiServiceException.ERROR("use soap based utility.");
+            throw WikiServiceException.ERROR("use soap based utility.");
         }
     }
 
     private static class WikiSoapUtil extends WikiUtil {
         private ZMailbox mMbox;
 
-        public WikiSoapUtil(Provisioning soapProv) throws ServiceException {
+        public WikiSoapUtil(Provisioning soapProv) {
             mProv = soapProv;
         }
 
         private void auth() throws ServiceException {
-        	if (!(mProv instanceof SoapProvisioning))
-        		return;
+            if (!(mProv instanceof SoapProvisioning))
+                return;
             SoapProvisioning prov = (SoapProvisioning) mProv;
             DelegateAuthResponse dar = prov.delegateAuth(AccountBy.name, mUsername, 60*60*24);
             ZMailbox.Options options = new ZMailbox.Options(dar.getAuthToken(), prov.soapGetURI());
@@ -231,9 +227,9 @@ public abstract class WikiUtil {
             if (root == null)
                 return null;
             if (dir.equals("/"))
-            	dir = "USER_ROOT";
+                dir = "USER_ROOT";
             if (root.getName().equals(dir))
-            	return root;
+                return root;
             List<ZFolder> list = root.getSubFolders();
             if (list == null)
                 return null;
@@ -246,21 +242,22 @@ public abstract class WikiUtil {
         }
 
         private ZFolder createFolder(ZFolder parent, String dir) throws ServiceException {
-            System.out.println("Creating folder " + dir);
-            return mMbox.createFolder(parent.getId(), dir, ZFolder.View.valueOf(sDEFAULTVIEW), null, null, null);
+            return mMbox.createFolder(parent.getId(), dir, ZFolder.View.valueOf(DEFAULT_VIEW.toString()),
+                    null, null, null);
         }
 
         private ZFolder getRootFolder() throws ServiceException {
             return mMbox.getUserRoot();
         }
 
+        @Override
         protected void setFolderPermission(Account account, String grantee, String name, String id) throws ServiceException {
             System.out.println("Initializing folders ");
             auth();
             ZFolder root = getRootFolder();
             ZFolder f = findFolder(root, sDEFAULTFOLDER);
             if (f == null)
-            	throw WikiServiceException.ERROR("can't open mailbox for " + account.getName() + " (wrong host?)");
+                throw WikiServiceException.ERROR("can't open mailbox for " + account.getName() + " (wrong host?)");
             mMbox.modifyFolderGrant(f.getId(), GranteeType.fromString(grantee), name, "rwid", null);
             f = findFolder(root, sDEFAULTTEMPLATEFOLDER);
             if (f == null)
@@ -272,7 +269,7 @@ public abstract class WikiUtil {
             if (folder == null)
                 return true;
             if (folder.getDefaultView() == null ||
-                !folder.getDefaultView().equals(View.valueOf(sDEFAULTVIEW))) {
+                !folder.getDefaultView().equals(View.valueOf(DEFAULT_VIEW.toString()))) {
                 return false;
             }
             mMbox.emptyFolder(folder.getId());
@@ -292,14 +289,16 @@ public abstract class WikiUtil {
                 buf.append(hit.getId());
             }
             if (buf.length() > 0)
-            	mMbox.deleteItem(buf.toString(), null);
+                mMbox.deleteItem(buf.toString(), null);
             for (ZFolder f : new ArrayList<ZFolder>(folder.getSubFolders())) {
-            	int fid = Integer.valueOf(f.getId());
-            	View v = f.getDefaultView();
-            	if (fid == Mailbox.ID_FOLDER_NOTEBOOK || fid >= Mailbox.FIRST_USER_ID)
-            		deleteAllItemsInFolder(f);
-            	if (v != null && v.equals(View.valueOf(sDEFAULTVIEW)) && fid >= Mailbox.FIRST_USER_ID)
-            		mMbox.deleteFolder(f.getId());
+                int fid = Integer.valueOf(f.getId());
+                View v = f.getDefaultView();
+                if (fid == Mailbox.ID_FOLDER_NOTEBOOK || fid >= Mailbox.FIRST_USER_ID) {
+                    deleteAllItemsInFolder(f);
+                }
+                if (v != null && v.equals(View.valueOf(DEFAULT_VIEW.toString())) && fid >= Mailbox.FIRST_USER_ID) {
+                    mMbox.deleteFolder(f.getId());
+                }
             }
         }
 
@@ -346,12 +345,14 @@ public abstract class WikiUtil {
             }
         }
 
+        @Override
         protected void emptyNotebooks(String where) throws IOException, ServiceException {
-        	ZFolder root = getRootFolder();
-        	ZFolder f = findFolder(root, where);
-        	deleteAllItemsInFolder(f);
+            ZFolder root = getRootFolder();
+            ZFolder f = findFolder(root, where);
+            deleteAllItemsInFolder(f);
         }
 
+        @Override
         public void startImport(String username, String where, File what) throws IOException, ServiceException {
             mUsername = username;
 
@@ -359,53 +360,54 @@ public abstract class WikiUtil {
             auth();
 
             if (where.startsWith("/") && where.length() > 1)
-            	where = where.substring(1);
+                where = where.substring(1);
             if (where == null)
-            	where = sDEFAULTFOLDER;
+                where = sDEFAULTFOLDER;
 
             emptyNotebooks(where);
             ZFolder root = getRootFolder();
             ZFolder f;
             if (where.equals("/"))
-            	f = root;
+                f = root;
             else {
-            	f = findFolder(root, where);
-            	if (f == null)
-            		f = createFolder(root, where);
+                f = findFolder(root, where);
+                if (f == null)
+                    f = createFolder(root, where);
             }
 
             // start populating directories and files.
             populateFolders(f, what);
 
         }
-        
+
+        @Override
         public void updateTemplates(Server server, File templateDir) throws IOException, ServiceException {
-        	if (!templateDir.exists())
+            if (!templateDir.exists())
                 throw WikiServiceException.ERROR("template dir "+templateDir.getCanonicalPath()+" doesn't exist");
 
             Config globalConfig = mProv.getConfig();
             String wikiAccount = globalConfig.getAttr(Provisioning.A_zimbraNotebookAccount, null);
             if (isAccountOnServer(wikiAccount, server)) {
-            	System.out.println("updating global wiki account "+wikiAccount);
-            	startImport(wikiAccount, WikiUtil.sDEFAULTTEMPLATEFOLDER, templateDir);
+                System.out.println("updating global wiki account "+wikiAccount);
+                startImport(wikiAccount, WikiUtil.sDEFAULTTEMPLATEFOLDER, templateDir);
             }
             for (Domain d : mProv.getAllDomains()) {
-            	wikiAccount = d.getAttr(Provisioning.A_zimbraNotebookAccount, null);
+                wikiAccount = d.getAttr(Provisioning.A_zimbraNotebookAccount, null);
                 if (isAccountOnServer(wikiAccount, server)) {
-                	System.out.println("updating wiki account "+wikiAccount+" for domain "+d.getName());
-                	startImport(wikiAccount, WikiUtil.sDEFAULTTEMPLATEFOLDER, templateDir);
+                    System.out.println("updating wiki account "+wikiAccount+" for domain "+d.getName());
+                    startImport(wikiAccount, WikiUtil.sDEFAULTTEMPLATEFOLDER, templateDir);
                 }
             }
         }
-        
+
         private boolean isAccountOnServer(String acct, Server server) throws ServiceException {
-        	if (acct == null)
-        		return false;
-        	Account a = mProv.get(AccountBy.name, acct);
-        	if (a == null)
-        		return false;
-        	if (server == null)
-        		return true;
+            if (acct == null)
+                return false;
+            Account a = mProv.get(AccountBy.name, acct);
+            if (a == null)
+                return false;
+            if (server == null)
+                return true;
             String target = a.getAttr(Provisioning.A_zimbraMailHost);
             String host = server.getAttr(Provisioning.A_zimbraServiceHostname);
             return (target != null && target.equalsIgnoreCase(host));
@@ -462,7 +464,7 @@ public abstract class WikiUtil {
     }
 
     public void initWiki(Entry entry, String username) throws ServiceException {
-    	String defaultUsername = entry.getAttr(Provisioning.A_zimbraNotebookAccount, null);
+        String defaultUsername = entry.getAttr(Provisioning.A_zimbraNotebookAccount, null);
 
         if (username == null && defaultUsername == null) {
             String errStr = (entry instanceof Config) ?
@@ -470,26 +472,26 @@ public abstract class WikiUtil {
             throw WikiServiceException.ERROR(
                     Provisioning.A_zimbraNotebookAccount + " must be set" + errStr);
         }
-        
-    	if (username != null && !username.equals(defaultUsername)) {
-    		Map<String,String> attrMap = new HashMap<String,String>();
-    		attrMap.put(Provisioning.A_zimbraNotebookAccount, username);
-    		mProv.modifyAttrs(entry, attrMap);
-    	} else if (username == null) {
-    		username = defaultUsername;
-    	}
 
-		if (mProv.get(AccountBy.name, username) == null)
-			throw AccountServiceException.NO_SUCH_ACCOUNT(username);
-		
-		mUsername = username;
+        if (username != null && !username.equals(defaultUsername)) {
+            Map<String,String> attrMap = new HashMap<String,String>();
+            attrMap.put(Provisioning.A_zimbraNotebookAccount, username);
+            mProv.modifyAttrs(entry, attrMap);
+        } else if (username == null) {
+            username = defaultUsername;
+        }
+
+        if (mProv.get(AccountBy.name, username) == null)
+            throw AccountServiceException.NO_SUCH_ACCOUNT(username);
+
+        mUsername = username;
         Account acct = mProv.get(Provisioning.AccountBy.name, mUsername);
         if (!acct.getBooleanAttr(Provisioning.A_zimbraHideInGal, false) ||
-        		!acct.getBooleanAttr(Provisioning.A_zimbraIsSystemResource, false)) {
-        	Map<String,Object> attrs = new HashMap<String, Object>();
-        	attrs.put(Provisioning.A_zimbraHideInGal, Provisioning.TRUE);
-        	attrs.put(Provisioning.A_zimbraIsSystemResource, Provisioning.TRUE);
-        	mProv.modifyAttrs(acct, attrs, true);
+                !acct.getBooleanAttr(Provisioning.A_zimbraIsSystemResource, false)) {
+            Map<String,Object> attrs = new HashMap<String, Object>();
+            attrs.put(Provisioning.A_zimbraHideInGal, Provisioning.TRUE);
+            attrs.put(Provisioning.A_zimbraIsSystemResource, Provisioning.TRUE);
+            mProv.modifyAttrs(acct, attrs, true);
         }
         try {
             initFolders(acct, entry);
@@ -508,7 +510,7 @@ public abstract class WikiUtil {
     /*
     * returns soap based implementation.  used for command line based usage.
     */
-    public static WikiUtil getInstance(Provisioning prov) throws ServiceException {
+    public static WikiUtil getInstance(Provisioning prov) {
         return new WikiSoapUtil(prov);
     }
 

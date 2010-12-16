@@ -14,7 +14,7 @@
  */
 package com.zimbra.cs.gal;
 
-import java.util.Collections;
+import java.util.EnumSet;
 
 import org.dom4j.QName;
 
@@ -235,7 +235,7 @@ public class GalSearchParams {
         mSearchParams.setLimit(mLimit + 1);
         mSearchParams.setSortBy(SortBy.NAME_ASCENDING);
         mSearchParams.setQueryStr(searchQuery);
-        mSearchParams.setTypes(Collections.singleton(MailItem.TYPE_CONTACT));
+        mSearchParams.setTypes(EnumSet.of(MailItem.Type.CONTACT));
     }
 
     public void parseSearchParams(Element request, String searchQuery) throws ServiceException {
@@ -245,7 +245,7 @@ public class GalSearchParams {
         }
         setRequest(request);
         mSearchParams = SearchParams.parse(request, mSoapContext, searchQuery);
-        mSearchParams.setTypes(Collections.singleton(MailItem.TYPE_CONTACT));
+        mSearchParams.setTypes(EnumSet.of(MailItem.Type.CONTACT));
         setLimit(mSearchParams.getLimit());
     }
 

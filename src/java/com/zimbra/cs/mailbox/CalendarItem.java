@@ -160,8 +160,9 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
     protected CalendarItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
-        if (mData.type != TYPE_APPOINTMENT && mData.type != TYPE_TASK)
+        if (mData.type != Type.APPOINTMENT.toByte() && mData.type != Type.TASK.toByte()) {
             throw new IllegalArgumentException();
+        }
     }
 
     public Recurrence.IRecurrence getRecurrence() {
@@ -437,7 +438,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         else
             flags &= ~Flag.BITMASK_LOW_PRIORITY;
 
-        byte type = firstInvite.isEvent() ? TYPE_APPOINTMENT : TYPE_TASK;
+        MailItem.Type type = firstInvite.isEvent() ? Type.APPOINTMENT : Type.TASK;
 
         String sender = null;
         ZOrganizer org = firstInvite.getOrganizer();
@@ -472,7 +473,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
         UnderlyingData data = new UnderlyingData();
         data.id       = id;
-        data.type     = type;
+        data.type     = type.toByte();
         data.folderId = folder.getId();
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
             data.indexId  = 0;
@@ -499,7 +500,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                     firstInvite.getUid(), firstInvite.getRecurId().getDtZ());
         DbMailItem.create(mbox, data, sender);
 
-        CalendarItem item = type == TYPE_APPOINTMENT ? new Appointment(mbox, data) : new Task(mbox, data);
+        CalendarItem item = type == Type.APPOINTMENT ? new Appointment(mbox, data) : new Task(mbox, data);
 
         // If we're creating an invite during email delivery, always default to NEEDS_ACTION state.
         // If not email delivery, we assume the requesting client knows what it's doing and has set the

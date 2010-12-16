@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -54,7 +54,7 @@ public class ImapSync extends MailItemImport {
     private boolean fullSync;
     private Authenticator authenticator;
     private boolean reuseConnections;
-    
+
     private static final Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[:\\*\\?\"<>\\|]");
     private static final Log LOG = ZimbraLog.datasource;
 
@@ -66,6 +66,7 @@ public class ImapSync extends MailItemImport {
         reuseConnections = ds.isOffline();
     }
 
+    @Override
     public synchronized void test() throws ServiceException {
         // In case datasource was modified, make sure we close any open
         // connection as well as remove cached synchronization state
@@ -93,7 +94,7 @@ public class ImapSync extends MailItemImport {
         }
         return false;
     }
-    
+
     protected void setAuthenticator(Authenticator auth) {
         authenticator = auth;
     }
@@ -129,6 +130,7 @@ public class ImapSync extends MailItemImport {
     }
 
     // TODO Deprecate folderIds - it's better to determine which folders to sync here
+    @Override
     public void importData(List<Integer> folderIds, boolean fullSync)
         throws ServiceException {
         importData(fullSync);
@@ -174,7 +176,7 @@ public class ImapSync extends MailItemImport {
     public ImapFolderSync getInboxFolderSync() {
         return syncedFolders.get(Mailbox.ID_FOLDER_INBOX);
     }
-    
+
     /*
      * For ZDesktop, force a full sync of all folders if requested or INBOX
      * not yet fully sync'd. For ZCS import we always do a full sync.
@@ -223,7 +225,7 @@ public class ImapSync extends MailItemImport {
                 "Import aborted because data source has been deleted or disabled", null);
         }
     }
-    
+
     private void syncFolders(Set<Integer> folderIds) throws ServiceException, IOException {
         // For offline full sync automatically re-enable sync on INBOX
         if (dataSource.isImportOnly() || (dataSource.isOffline() && fullSync)) {
@@ -234,9 +236,9 @@ public class ImapSync extends MailItemImport {
         delimiter = connection.getDelimiter();
         syncRemoteFolders(ImapUtil.listFolders(connection, "*"));
         if(!dataSource.isImportOnly()) {
-        	syncLocalFolders(getLocalFolders());
+            syncLocalFolders(getLocalFolders());
         } else {
-        	purgeLocalFolders(getLocalFolders());
+            purgeLocalFolders(getLocalFolders());
         }
         syncMessages(folderIds);
         finishSync();
@@ -246,8 +248,9 @@ public class ImapSync extends MailItemImport {
         List<Folder> folders = localRootFolder.getSubfolderHierarchy();
         List<Folder> mailFolders = new ArrayList<Folder>(folders.size());
         for (Folder f : folders)
-            if (f.getDefaultView() == MailItem.TYPE_MESSAGE)
+            if (f.getDefaultView() == MailItem.Type.MESSAGE) {
                 mailFolders.add(f);
+            }
         // Reverse order of local folders to ensure that children are
         // processed before parent folders. This avoids problems when
         // deleting folders.
@@ -255,10 +258,10 @@ public class ImapSync extends MailItemImport {
         return mailFolders;
     }
 
-	public boolean isFullSync() {
+    public boolean isFullSync() {
         return fullSync;
     }
-    
+
     private void syncRemoteFolders(List<ListData> folders) throws ServiceException {
         for (ListData ld : folders) {
             checkIsEnabled();
@@ -294,7 +297,7 @@ public class ImapSync extends MailItemImport {
             }
         }
     }
-    
+
     private void syncLocalFolders(List<Folder> folders) throws ServiceException {
         for (Folder folder : folders) {
             checkIsEnabled();
@@ -407,7 +410,7 @@ public class ImapSync extends MailItemImport {
             return e instanceof CommandFailedException;
         }
     }
-    
+
     /*
      * Returns the path to the Zimbra folder that stores messages for the given
      * IMAP folder. The Zimbra folder has the same path as the IMAP folder,
@@ -417,7 +420,7 @@ public class ImapSync extends MailItemImport {
         String remotePath = ld.getMailbox();
         char localDelimiter = ld.getDelimiter();
         String relativePath = ld.getMailbox();
-        
+
         if (localDelimiter != '/' && (remotePath.indexOf(localDelimiter) >= 0 ||
                                  remotePath.indexOf('/') >= 0)) {
             // Change remote path to use our separator
@@ -461,7 +464,7 @@ public class ImapSync extends MailItemImport {
         child = removeLeadingSlashes(child);
         return parent.endsWith("/") ? parent + child : parent + "/" + child;
     }
-    
+
     /*
      * When mapping a new remote folder, check if original local path can be
      * used or a new unique name must be generated. A unique name must be

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -88,7 +88,7 @@ public class RemoveAttachments extends MailDocumentHandler {
                 // FIXME: copy custom metadata to new item
                 msg = mbox.addMessage(octxt, pm, dopt);
                 // and clean up the existing message...
-                mbox.delete(octxt, iid.getId(), MailItem.TYPE_MESSAGE);
+                mbox.delete(octxt, iid.getId(), MailItem.Type.MESSAGE);
             }
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("error reading existing message blob", ioe);
@@ -105,8 +105,8 @@ public class RemoveAttachments extends MailDocumentHandler {
     }
 
     private static class PartIdComparator implements Comparator<String> {
-        PartIdComparator()  { }
 
+        @Override
         public int compare(String o1, String o2) {
             // short-circuit simple comparisons
             if (o1.equalsIgnoreCase(o2))  return 0;

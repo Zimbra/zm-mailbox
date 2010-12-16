@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on May 29, 2005
  */
 package com.zimbra.cs.service.mail;
 
@@ -51,6 +47,9 @@ import com.zimbra.cs.zclient.ZMountpoint;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.ZimbraSoapContext;
 
+/**
+ * @since May 29, 2005
+ */
 public class ItemAction extends MailDocumentHandler {
 
     protected static final String[] OPERATION_PATH = new String[] { MailConstants.E_ACTION, MailConstants.A_OPERATION };
@@ -73,14 +72,14 @@ public class ItemAction extends MailDocumentHandler {
     public static final String OP_LOCK        = "lock";
     public static final String OP_UNLOCK      = "unlock";
 
-    @Override public Element handle(Element request, Map<String, Object> context)
-    throws ServiceException, SoapFaultException {
+    @Override
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         Element action = request.getElement(MailConstants.E_ACTION);
         String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
 
-        String successes = handleCommon(context, request, operation, MailItem.TYPE_UNKNOWN);
+        String successes = handleCommon(context, request, operation, MailItem.Type.UNKNOWN);
 
         Element response = zsc.createElement(MailConstants.ITEM_ACTION_RESPONSE);
         Element act = response.addUniqueElement(MailConstants.E_ACTION);
@@ -89,7 +88,8 @@ public class ItemAction extends MailDocumentHandler {
         return response;
     }
 
-    protected String handleCommon(Map<String,Object> context, Element request, String opAttr, byte type) throws ServiceException {
+    protected String handleCommon(Map<String,Object> context, Element request, String opAttr, MailItem.Type type)
+            throws ServiceException {
         Element action = request.getElement(MailConstants.E_ACTION);
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
@@ -172,7 +172,7 @@ public class ItemAction extends MailDocumentHandler {
                 String flags = action.getAttribute(MailConstants.A_FLAGS, null);
                 String tags  = action.getAttribute(MailConstants.A_TAGS, null);
                 MailItem.Color color = getColor(action);
-                localResults = ItemActionHelper.UPDATE(octxt, mbox, responseProto, local, type, tcon, name, iidFolder, flags, 
+                localResults = ItemActionHelper.UPDATE(octxt, mbox, responseProto, local, type, tcon, name, iidFolder, flags,
                         tags, color).getResult();
             } else if (opStr.equals(OP_LOCK)) {
                 localResults = ItemActionHelper.LOCK(octxt, mbox, responseProto, local, type, tcon).getResult();
@@ -201,7 +201,7 @@ public class ItemAction extends MailDocumentHandler {
         else
             return new MailItem.Color(rgb);
     }
-    
+
     private Account forceRemoteSession(ZimbraSoapContext zsc, Map<String, Object> context, OperationContext octxt, String op, Element action)
     throws ServiceException {
         // only proxying notification from the user's home-server master session

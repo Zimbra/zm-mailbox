@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20,7 +20,6 @@ import com.zimbra.common.util.FileBufferedWriter;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.HttpUtil.Browser;
 import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -44,31 +43,37 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 public class IcsFormatter extends Formatter {
 
+    @Override
     public String getType() {
         return "ics";
     }
 
+    @Override
     public String[] getDefaultMimeTypes() {
         return new String[] { MimeConstants.CT_TEXT_CALENDAR, "text/x-vcalendar" };
     }
 
-    public String getDefaultSearchTypes() {
-        return MailboxIndex.SEARCH_FOR_APPOINTMENTS;
+    @Override
+    public Set<MailItem.Type> getDefaultSearchTypes() {
+        return EnumSet.of(MailItem.Type.APPOINTMENT);
     }
 
+    @Override
     public void formatCallback(Context context) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         List<CalendarItem> calItems = new ArrayList<CalendarItem>();
         //ZimbraLog.mailbox.info("start = "+new Date(context.getStartTime()));
         //ZimbraLog.mailbox.info("end = "+new Date(context.getEndTime()));
         try {
-        	long start = context.getStartTime();
-        	long end = context.getEndTime();
+            long start = context.getStartTime();
+            long end = context.getEndTime();
             boolean hasTimeRange = start != TIME_UNSPECIFIED && end != TIME_UNSPECIFIED;
             iterator = getMailItems(context, start, end, Integer.MAX_VALUE);
 
@@ -76,14 +81,14 @@ public class IcsFormatter extends Formatter {
             while (iterator.hasNext()) {
                 MailItem item = iterator.next();
                 if (item instanceof CalendarItem) {
-                	CalendarItem calItem = (CalendarItem) item;
-                	if (hasTimeRange) {
-                    	Collection<Instance> instances = calItem.expandInstances(start, end, false);
-                    	if (!instances.isEmpty())
-                    		calItems.add(calItem);
-                	} else {
-                	    calItems.add(calItem);
-                	}
+                    CalendarItem calItem = (CalendarItem) item;
+                    if (hasTimeRange) {
+                        Collection<Instance> instances = calItem.expandInstances(start, end, false);
+                        if (!instances.isEmpty())
+                            calItems.add(calItem);
+                    } else {
+                        calItems.add(calItem);
+                    }
                 }
             }
         } finally {
@@ -97,7 +102,7 @@ public class IcsFormatter extends Formatter {
         if (mayAttach(context)) {
             if (filename == null || filename.length() == 0)
                 filename = "contacts";
-			
+
             String requestFilename = context.req.getParameter("filename"); // Let the client specify the filename to save as
             if (requestFilename != null)
                 filename = requestFilename;
@@ -114,7 +119,7 @@ public class IcsFormatter extends Formatter {
 
         context.resp.setCharacterEncoding(MimeConstants.P_CHARSET_UTF8);
         context.resp.setContentType(htmlFormat ? MimeConstants.CT_TEXT_HTML : getContentType(context, MimeConstants.CT_TEXT_CALENDAR));
-        
+
         OperationContext octxt = new OperationContext(context.authAccount, context.isUsingAdminPrivileges());
         FileBufferedWriter fileBufferedWriter = new FileBufferedWriter(
                 context.resp.getWriter(),
@@ -132,14 +137,17 @@ public class IcsFormatter extends Formatter {
         }
     }
 
+    @Override
     public boolean canBeBlocked() {
         return false;
     }
 
+    @Override
     public boolean supportsSave() {
         return true;
     }
 
+    @Override
     public void saveCallback(UserServlet.Context context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException, ServletException {
         boolean continueOnError = context.ignoreAndContinueOnError();
@@ -174,5 +182,5 @@ public class IcsFormatter extends Formatter {
             is.close();
         }
     }
-    
+
 }

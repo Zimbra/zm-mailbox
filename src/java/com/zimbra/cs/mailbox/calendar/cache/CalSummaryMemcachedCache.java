@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -44,11 +44,11 @@ public class CalSummaryMemcachedCache {
     CalSummaryMemcachedCache() {
         ZimbraMemcachedClient memcachedClient = MemcachedConnector.getClient();
         CalSummarySerializer serializer = new CalSummarySerializer();
-        mMemcachedLookup = new BigByteArrayMemcachedMap<CalSummaryKey, CalendarData>(memcachedClient, serializer); 
+        mMemcachedLookup = new BigByteArrayMemcachedMap<CalSummaryKey, CalendarData>(memcachedClient, serializer);
     }
 
     private static class CalSummarySerializer implements ByteArraySerializer<CalendarData> {
-        
+        @Override
         public byte[] serialize(CalendarData value) {
             try {
                 return value.encodeMetadata().toString().getBytes("utf-8");
@@ -58,6 +58,7 @@ public class CalSummaryMemcachedCache {
             }
         }
 
+        @Override
         public CalendarData deserialize(byte[] bytes) throws ServiceException {
             if (bytes != null) {
                 String encoded;
@@ -107,8 +108,8 @@ public class CalSummaryMemcachedCache {
                 Object whatChanged = change.what;
                 if (whatChanged instanceof Folder) {
                     Folder folder = (Folder) whatChanged;
-                    byte viewType = folder.getDefaultView();
-                    if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
+                    MailItem.Type viewType = folder.getDefaultView();
+                    if (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK) {
                         CalSummaryKey key = new CalSummaryKey(folder.getMailbox().getAccountId(), folder.getId());
                         keysToInvalidate.add(key);
                     }
@@ -123,8 +124,8 @@ public class CalSummaryMemcachedCache {
                 Object deletedObj = entry.getValue();
                 if (deletedObj instanceof Folder) {
                     Folder folder = (Folder) deletedObj;
-                    byte viewType = folder.getDefaultView();
-                    if (viewType == MailItem.TYPE_APPOINTMENT || viewType == MailItem.TYPE_TASK) {
+                    MailItem.Type viewType = folder.getDefaultView();
+                    if (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK) {
                         CalSummaryKey key = new CalSummaryKey(folder.getMailbox().getAccountId(), folder.getId());
                         keysToInvalidate.add(key);
                     }

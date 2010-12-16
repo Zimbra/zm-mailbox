@@ -333,10 +333,6 @@ public final class ResultsPager {
             return mItemId;
         }
 
-        public byte getItemType() {
-            return 0;
-        }
-
         @Override
         void setItem(MailItem item) {
         }

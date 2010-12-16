@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,10 +31,10 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class ListDocumentRevisions extends WikiDocumentHandler {
 
-	@Override
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-		ZimbraSoapContext zsc = getZimbraSoapContext(context);
-		Mailbox mbox = getRequestedMailbox(zsc);
+    @Override
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
@@ -49,23 +49,28 @@ public class ListDocumentRevisions extends WikiDocumentHandler {
 
         ItemId iid = new ItemId(id, zsc);
         item = mbox.getDocumentById(octxt, iid.getId());
-        
-        byte view = mbox.getFolderById(octxt, item.getFolderId()).getDefaultView();
-        if (view == MailItem.TYPE_WIKI)
-    		checkNotebookEnabled(zsc);
-        else if (view == MailItem.TYPE_DOCUMENT)
-    		checkBriefcaseEnabled(zsc);
 
-        if (version < 0)
-        	version = item.getVersion();
-        byte type = item.getType();
+        MailItem.Type view = mbox.getFolderById(octxt, item.getFolderId()).getDefaultView();
+        switch (view) {
+        case WIKI:
+            checkNotebookEnabled(zsc);
+            break;
+        case DOCUMENT:
+            checkBriefcaseEnabled(zsc);
+            break;
+        }
+
+        if (version < 0) {
+            version = item.getVersion();
+        }
+        MailItem.Type type = item.getType();
         while (version > 0 && count > 0) {
-        	item = (Document) mbox.getItemRevision(octxt, iid.getId(), type, version);
-        	if (item != null)
-        	    ToXML.encodeDocument(response, ifmt, octxt, item);
-        	version--; count--;
+            item = (Document) mbox.getItemRevision(octxt, iid.getId(), type, version);
+            if (item != null)
+                ToXML.encodeDocument(response, ifmt, octxt, item);
+            version--; count--;
         }
 
         return response;
-	}
+    }
 }

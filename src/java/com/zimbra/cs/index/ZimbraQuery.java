@@ -412,7 +412,7 @@ public final class ZimbraQuery {
         if (ZimbraLog.index_search.isDebugEnabled()) {
             StringBuilder buf = new StringBuilder(toString());
             buf.append(" search([");
-            buf.append(params.getTypesStr());
+            buf.append(params.getTypes());
             buf.append("],");
             buf.append(params.getSortBy());
             buf.append(')');
@@ -599,9 +599,9 @@ public final class ZimbraQuery {
                 Set<Folder> hasFolderRightPrivateSet = new HashSet<Folder>();
 
                 // ...don't do any of this if they aren't asking for a calendar type...
-                Set<Byte> types = params.getTypes();
+                Set<MailItem.Type> types = params.getTypes();
                 boolean hasCalendarType =
-                    types.contains(MailItem.TYPE_APPOINTMENT) || types.contains(MailItem.TYPE_TASK);
+                        types.contains(MailItem.Type.APPOINTMENT) || types.contains(MailItem.Type.TASK);
                 if (hasCalendarType && !allowPrivateAccess && countTextOperations(localOps) > 0) {
                     // the searcher is NOT allowed to see private items globally....lets check
                     // to see if there are any individual folders that they DO have rights to...
@@ -613,7 +613,7 @@ public final class ZimbraQuery {
                         allVisibleFolders.addAll(mbox.getFolderList(octxt, SortBy.NONE));
                     }
                     for (Folder f : allVisibleFolders) {
-                        if (f.getType() == MailItem.TYPE_FOLDER &&
+                        if (f.getType() == MailItem.Type.FOLDER &&
                                 CalendarItem.allowPrivateAccess(f, authAcct, false)) {
                             hasFolderRightPrivateSet.add(f);
                         }

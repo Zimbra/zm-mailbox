@@ -16,6 +16,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -38,7 +39,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.im.provider.ZimbraRoutingTableImpl;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.QueryInfo;
 import com.zimbra.cs.index.ResultsPager;
 import com.zimbra.cs.index.SearchParams;
@@ -69,7 +69,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class Search extends MailDocumentHandler  {
     protected static Log mLog = LogFactory.getLog(Search.class);
 
-    public static final String DEFAULT_SEARCH_TYPES = MailboxIndex.GROUP_BY_CONVERSATION;
+    public static final Set<MailItem.Type> DEFAULT_SEARCH_TYPES = EnumSet.of(MailItem.Type.CONVERSATION);
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -88,8 +88,7 @@ public class Search extends MailDocumentHandler  {
         }
         SearchParams params = SearchParams.parse(request, zsc, acct.getAttr(Provisioning.A_zimbraPrefMailInitialSearch));
         if (params.inDumpster()) {
-            Set<Byte> types = params.getTypes();
-            if (types.contains(MailItem.TYPE_CONVERSATION)) {
+            if (params.getTypes().contains(MailItem.Type.CONVERSATION)) {
                 throw ServiceException.INVALID_REQUEST("cannot search for conversations in dumpster", null);
             }
         }
@@ -176,12 +175,12 @@ public class Search extends MailDocumentHandler  {
     // Otherwise returns null.
     private static List<String> getFolderIdListIfSimpleAppointmentsQuery(SearchParams params) {
         // types = "appointment"
-        Set<Byte> types = params.getTypes();
+        Set<MailItem.Type> types = params.getTypes();
         if (types.size() != 1) {
             return null;
         }
-        byte type = Iterables.getOnlyElement(types);
-        if (type != MailItem.TYPE_APPOINTMENT && type != MailItem.TYPE_TASK) {
+        MailItem.Type type = Iterables.getOnlyElement(types);
+        if (type != MailItem.Type.APPOINTMENT && type != MailItem.Type.TASK) {
             return null;
         }
         // has time range
@@ -239,8 +238,8 @@ public class Search extends MailDocumentHandler  {
 
     private static void runSimpleAppointmentQuery(Element parent, SearchParams params, OperationContext octxt,
             ZimbraSoapContext zsc, Account authAcct, Mailbox mbox, List<String> folderIdStrs) throws ServiceException {
-        Set<Byte> types = params.getTypes();
-        byte itemType = types.size() == 1 ? Iterables.getOnlyElement(types) : MailItem.TYPE_APPOINTMENT;
+        Set<MailItem.Type> types = params.getTypes();
+        MailItem.Type type = types.size() == 1 ? Iterables.getOnlyElement(types) : MailItem.Type.APPOINTMENT;
 
         parent.addAttribute(MailConstants.A_SORTBY, params.getSortByStr());
         parent.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
@@ -278,7 +277,8 @@ public class Search extends MailDocumentHandler  {
                     for (Iterator<Integer> iterFolderId = folderIds.iterator(); iterFolderId.hasNext(); ) {
                         int folderId = iterFolderId.next();
                         try {
-                            CalendarDataResult result = calCache.getCalendarSummary(octxt, acctId, folderId, itemType, rangeStart, rangeEnd, true);
+                            CalendarDataResult result = calCache.getCalendarSummary(octxt, acctId, folderId, type,
+                                    rangeStart, rangeEnd, true);
                             if (result != null) {
                                 // Found data in cache.
                                 iterFolderId.remove();
@@ -324,7 +324,7 @@ public class Search extends MailDocumentHandler  {
                         continue;
                     }
                     Mailbox targetMbox = mboxMgr.getMailboxByAccount(targetAcct);
-                    searchLocalAccountCalendars(parent, params, octxt, zsc, authAcct, targetMbox, folderIds, itemType);
+                    searchLocalAccountCalendars(parent, params, octxt, zsc, authAcct, targetMbox, folderIds, type);
                 }
             } else {  // remote server
                 searchRemoteAccountCalendars(parent, params, zsc, authAcct, accountFolders);
@@ -345,18 +345,19 @@ public class Search extends MailDocumentHandler  {
         }
     }
 
-    private static void searchLocalAccountCalendars(
-            Element parent, SearchParams params, OperationContext octxt, ZimbraSoapContext zsc,
-            Account authAcct, Mailbox targetMbox, List<Integer> folderIds, byte itemType)
-    throws ServiceException {
+    private static void searchLocalAccountCalendars(Element parent, SearchParams params, OperationContext octxt,
+            ZimbraSoapContext zsc, Account authAcct, Mailbox targetMbox, List<Integer> folderIds, MailItem.Type type)
+            throws ServiceException {
         ItemIdFormatter ifmt = new ItemIdFormatter(authAcct.getId(), targetMbox.getAccountId(), false);
         long rangeStart = params.getCalItemExpandStart();
         long rangeEnd = params.getCalItemExpandEnd();
         for (int folderId : folderIds) {
             try {
-                CalendarDataResult result = targetMbox.getCalendarSummaryForRange(octxt, folderId, itemType, rangeStart, rangeEnd);
-                if (result != null)
+                CalendarDataResult result = targetMbox.getCalendarSummaryForRange(octxt, folderId, type,
+                        rangeStart, rangeEnd);
+                if (result != null) {
                     addCalendarDataToResponse(parent, zsc, ifmt, result.data, result.allowPrivateAccess);
+                }
             } catch (ServiceException e) {
                 String ecode = e.getCode();
                 if (ecode.equals(ServiceException.PERM_DENIED)) {
@@ -394,7 +395,7 @@ public class Search extends MailDocumentHandler  {
             }
         }
         Element req = zsc.createElement(MailConstants.SEARCH_REQUEST);
-        req.addAttribute(MailConstants.A_SEARCH_TYPES, params.getTypesStr());
+        req.addAttribute(MailConstants.A_SEARCH_TYPES, MailItem.Type.toString(params.getTypes()));
         req.addAttribute(MailConstants.A_SORTBY, params.getSortByStr());
         req.addAttribute(MailConstants.A_QUERY_OFFSET, params.getOffset());
         if (params.getLimit() != 0)

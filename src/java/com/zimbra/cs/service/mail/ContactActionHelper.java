@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -45,35 +45,40 @@ public class ContactActionHelper extends ItemActionHelper {
     private ParsedContact mParsedContact;
 
 
-    public void setParsedContact(ParsedContact pc) {                        
+    public void setParsedContact(ParsedContact pc) {
         assert(mOperation == Op.UPDATE);
         mParsedContact = pc;
     }
 
     ContactActionHelper(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto, List<Integer> ids, Op op) throws ServiceException {
-        super(octxt, mbox, responseProto, ids, op, MailItem.TYPE_CONTACT, true, null);
+        super(octxt, mbox, responseProto, ids, op, MailItem.Type.CONTACT, true, null);
     }
 
     @Override
     protected void schedule() throws ServiceException {
         // iterate over the local items and perform the requested operation
         switch (mOperation) {
-            case UPDATE:
-                if (!mIidFolder.belongsTo(getMailbox()))
-                    throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
+        case UPDATE:
+            if (!mIidFolder.belongsTo(getMailbox()))
+                throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
 
-                if (mIidFolder.getId() > 0)
-                    getMailbox().move(getOpCtxt(), mIds, mItemType, mIidFolder.getId(), mTargetConstraint);
-                if (mTags != null || mFlags != null)
-                    getMailbox().setTags(getOpCtxt(), mIds, mItemType, mFlags, mTags, mTargetConstraint);
-                if (mColor != null)
-                    getMailbox().setColor(getOpCtxt(), mIds, mItemType, mColor);
-                if (mParsedContact != null)
-                    for (int id : mIds)
-                        getMailbox().modifyContact(getOpCtxt(), id, mParsedContact);
-                break;
-            default:
-                throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);
+            if (mIidFolder.getId() > 0) {
+                getMailbox().move(getOpCtxt(), mIds, type, mIidFolder.getId(), mTargetConstraint);
+            }
+            if (mTags != null || mFlags != null) {
+                getMailbox().setTags(getOpCtxt(), mIds, type, mFlags, mTags, mTargetConstraint);
+            }
+            if (mColor != null) {
+                getMailbox().setColor(getOpCtxt(), mIds, type, mColor);
+            }
+            if (mParsedContact != null) {
+                for (int id : mIds) {
+                    getMailbox().modifyContact(getOpCtxt(), id, mParsedContact);
+                }
+            }
+            break;
+        default:
+            throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);
         }
 
         StringBuilder successes = new StringBuilder();
@@ -82,8 +87,9 @@ public class ContactActionHelper extends ItemActionHelper {
         mResult = successes.toString();
     }
 
+    @Override
     public String toString() {
-        StringBuffer toRet = new StringBuffer(super.toString());
+        StringBuilder toRet = new StringBuilder(super.toString());
         if (mOperation == Op.UPDATE) {
             if (mParsedContact != null)
                 toRet.append(" Fields=").append(mParsedContact.getFields());

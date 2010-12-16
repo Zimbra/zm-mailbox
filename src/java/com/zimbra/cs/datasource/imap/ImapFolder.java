@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -39,15 +39,15 @@ public class ImapFolder extends DataSourceFolderMapping {
     public ImapFolder(DataSource ds, DataSourceItem dsi) throws ServiceException {
         super(ds, dsi);
     }
-    
+
     public ImapFolder(DataSource ds, int itemId) throws ServiceException {
         super(ds, itemId);
     }
-    
+
     public ImapFolder(DataSource ds, String remoteId) throws ServiceException {
         super(ds, remoteId);
     }
-    
+
     public ImapFolder(DataSource ds, int itemId, String remoteId, String localPath,
         Long uidValidity) throws ServiceException {
         super(ds, itemId, remoteId);
@@ -56,17 +56,18 @@ public class ImapFolder extends DataSourceFolderMapping {
     }
 
     public String getLocalPath() { return localPath; }
-    
+
     public long getUidValidity() { return uidValidity; }
-    
+
     public void setLocalPath(String localPath) {
         dsi.md.put(METADATA_KEY_LOCAL_PATH, this.localPath = localPath);
     }
-    
+
     public void setUidValidity(Long uidValidity) {
         dsi.md.put(METADATA_KEY_UID_VALIDITY, this.uidValidity = uidValidity);
     }
 
+    @Override
     protected void parseMetaData() throws ServiceException {
         localPath = dsi.md.get(METADATA_KEY_LOCAL_PATH, "");
         uidValidity = dsi.md.getLong(METADATA_KEY_UID_VALIDITY, -1);
@@ -75,11 +76,11 @@ public class ImapFolder extends DataSourceFolderMapping {
     public ImapMessage getMessage(int itemId) throws ServiceException {
         return new ImapMessage(ds, itemId);
     }
-    
+
     public ImapMessage getMessage(long uid) throws ServiceException {
         return new ImapMessage(ds, getItemId(), uid);
     }
-    
+
     public ImapMessageCollection getMessages() throws ServiceException {
         Collection<DataSourceItem> mappings = getMappingsAndFlags(ds, getItemId());
         ImapMessageCollection imc = new ImapMessageCollection();
@@ -88,14 +89,13 @@ public class ImapFolder extends DataSourceFolderMapping {
             imc.add(new ImapMessage(ds, mapping));
         return imc;
     }
-    
+
     public List<Integer> getNewMessageIds() throws ServiceException {
         Collection<DataSourceItem> mappings = getMappingsAndFlags(ds, getItemId());
         Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
-        List<Integer> allIds = mbox.listItemIds(mbox.getOperationContext(),
-            MailItem.TYPE_MESSAGE, getItemId());
+        List<Integer> allIds = mbox.listItemIds(mbox.getOperationContext(), MailItem.Type.MESSAGE, getItemId());
         List<Integer> newIds = new ArrayList<Integer>();
-        
+
         loop:
         for (Integer id : allIds) {
             for (DataSourceItem mapping : mappings) {
@@ -115,7 +115,7 @@ public class ImapFolder extends DataSourceFolderMapping {
 
         if (mappings.size() == 0) {
             Mailbox mbox = DataSourceManager.getInstance().getMailbox(ds);
-            
+
             ZimbraLog.datasource.info("Upgrading IMAP data for %s", ds.getName());
             DbDataSource.deleteAllMappings(ds);
             try {
@@ -140,6 +140,7 @@ public class ImapFolder extends DataSourceFolderMapping {
         return ifc;
     }
 
+    @Override
     public String toString() {
         return String.format("ImapFolder: { itemId=%d, dataSourceId=%s, localPath=%s, remotePath=%s, uidValidity=%d }",
             dsi.itemId, ds.getId(), localPath, dsi.remoteId, uidValidity);

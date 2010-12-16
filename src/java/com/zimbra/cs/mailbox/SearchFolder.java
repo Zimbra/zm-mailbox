@@ -41,8 +41,9 @@ public class SearchFolder extends Folder {
 
     public SearchFolder(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
-        if (mData.type != TYPE_SEARCHFOLDER)
+        if (mData.type != Type.SEARCHFOLDER.toByte()) {
             throw new IllegalArgumentException();
+        }
     }
 
     /** Returns the query associated with this search folder. */
@@ -76,10 +77,10 @@ public class SearchFolder extends Folder {
 
     /** Returns whether the folder can contain objects of the given type.
      *  Search folders may only contain other search folders. */
-    @Override boolean canContain(byte type) {
-        return (type == TYPE_SEARCHFOLDER);
+    @Override
+    boolean canContain(MailItem.Type type) {
+        return (type == Type.SEARCHFOLDER);
     }
-
 
     /** Creates a new SearchFolder and persists it to the database.  A
      *  real nonnegative item ID must be supplied from a previous call to
@@ -109,12 +110,14 @@ public class SearchFolder extends Folder {
      * @see #validateItemName(String)
      * @see #validateQuery(String)
      * @see #canContain(byte) */
-    static SearchFolder create(int id, Folder parent, String name, String query, String types, String sort, int flags, Color color, CustomMetadata custom)
-    throws ServiceException {
-        if (parent == null || !parent.canContain(TYPE_SEARCHFOLDER))
+    static SearchFolder create(int id, Folder parent, String name, String query, String types, String sort, int flags,
+            Color color, CustomMetadata custom) throws ServiceException {
+        if (parent == null || !parent.canContain(Type.SEARCHFOLDER)) {
             throw MailServiceException.CANNOT_CONTAIN();
-        if (!parent.canAccess(ACL.RIGHT_INSERT))
+        }
+        if (!parent.canAccess(ACL.RIGHT_INSERT)) {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the parent folder");
+        }
         name = validateItemName(name);
         query = validateQuery(query);
         if (parent.findSubfolder(name) != null)
@@ -127,7 +130,7 @@ public class SearchFolder extends Folder {
         Mailbox mbox = parent.getMailbox();
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
-        data.type        = TYPE_SEARCHFOLDER;
+        data.type        = Type.SEARCHFOLDER.toByte();
         data.folderId    = parent.getId();
         data.parentId    = parent.getId();
         data.date        = mbox.getOperationTimestamp();

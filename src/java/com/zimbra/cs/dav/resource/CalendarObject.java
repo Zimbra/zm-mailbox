@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -53,7 +53,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 /**
  * CalendarObject is a single instance of iCalendar (RFC 2445) object, such as
  * VEVENT or VTODO.
- * 
+ *
  * @author jylee
  *
  */
@@ -200,7 +200,7 @@ public interface CalendarObject {
         @Override public void delete(DavContext ctxt) throws DavException {
             try {
                 Mailbox mbox = getMailbox(ctxt);
-                mbox.alterTag(ctxt.getOperationContext(), mId, MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
+                mbox.alterTag(ctxt.getOperationContext(), mId, MailItem.Type.MESSAGE, Flag.ID_FLAG_UNREAD, false);
             } catch (ServiceException se) {
                 int resCode = se instanceof MailServiceException.NoSuchItemException ?
                         HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_FORBIDDEN;
@@ -340,6 +340,7 @@ public interface CalendarObject {
         /* Returns iCalendar representation of events that matches
          * the supplied filter.
          */
+        @Override
         public String getVcalendar(DavContext ctxt, Filter filter) throws IOException, DavException {
             StringBuilder buf = new StringBuilder();
 
@@ -381,10 +382,12 @@ public interface CalendarObject {
             return false;
         }
 
+        @Override
         public String getUid() {
             return mUid;
         }
 
+        @Override
         public boolean hasContent(DavContext ctxt) {
             return true;
         }

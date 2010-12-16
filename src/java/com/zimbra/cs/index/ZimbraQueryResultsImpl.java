@@ -68,11 +68,11 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
     private Map<Integer, NoteHit>  mNoteHits;
     private Map<Integer, CalendarItemHit> mCalItemHits;
 
-    private final Set<Byte> types;
+    private final Set<MailItem.Type> types;
     private final SortBy mSearchOrder;
     private final Mailbox.SearchResultMode mMode;
 
-    ZimbraQueryResultsImpl(Set<Byte> types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
+    ZimbraQueryResultsImpl(Set<MailItem.Type> types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
         this.types = types;
         mMode = mode;
         mSearchOrder = searchOrder;
@@ -107,7 +107,7 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
         return mSearchOrder;
     }
 
-    Set<Byte> getTypes() {
+    Set<MailItem.Type> getTypes() {
         return types;
     }
 
@@ -206,8 +206,8 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
      *          hits (e.g. if multiple document parts match) -- currently only true for MessageParts,
      *          false for all other kinds of result
      */
-    static final boolean shouldAddDuplicateHits(byte type) {
-        return (type == MailItem.TYPE_CHAT || type == MailItem.TYPE_MESSAGE);
+    static final boolean shouldAddDuplicateHits(MailItem.Type type) {
+        return (type == MailItem.Type.CHAT || type == MailItem.Type.MESSAGE);
     }
 
     /**
@@ -242,35 +242,34 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
         }
 
         ZimbraHit toRet = null;
-        switch (sr.type) {
-            case MailItem.TYPE_CHAT:
-            case MailItem.TYPE_MESSAGE:
-                if (doc != null) {
-                    toRet = getMessagePartHit(mbox, sr.id, doc, score, (Message) item);
-                } else {
-                    toRet = getMessageHit(mbox, sr.id, null, score, (Message) item);
-                }
-                toRet.cacheSortField(getSortBy(), sr.sortkey);
-                break;
-            case MailItem.TYPE_CONTACT:
-                toRet = getContactHit(mbox, sr.id, score, (Contact) item);
-                break;
-            case MailItem.TYPE_NOTE:
-                toRet = getNoteHit(mbox, sr.id, score, (Note) item);
-                break;
-            case MailItem.TYPE_APPOINTMENT:
-                toRet = getAppointmentHit(mbox, sr.id, score, (CalendarItem) item);
-                break;
-            case MailItem.TYPE_TASK:
-                toRet = getTaskHit(mbox, sr.id, score, (Task) item);
-                break;
-            case MailItem.TYPE_DOCUMENT:
-            case MailItem.TYPE_WIKI:
-                toRet = getDocumentHit(mbox, sr.id, doc, score,
-                        (com.zimbra.cs.mailbox.Document) item);
-                break;
-            default:
-                assert(false);
+        switch (MailItem.Type.of(sr.type)) {
+        case CHAT:
+        case MESSAGE:
+            if (doc != null) {
+                toRet = getMessagePartHit(mbox, sr.id, doc, score, (Message) item);
+            } else {
+                toRet = getMessageHit(mbox, sr.id, null, score, (Message) item);
+            }
+            toRet.cacheSortField(getSortBy(), sr.sortkey);
+            break;
+        case CONTACT:
+            toRet = getContactHit(mbox, sr.id, score, (Contact) item);
+            break;
+        case NOTE:
+            toRet = getNoteHit(mbox, sr.id, score, (Note) item);
+            break;
+        case APPOINTMENT:
+            toRet = getAppointmentHit(mbox, sr.id, score, (CalendarItem) item);
+            break;
+        case TASK:
+            toRet = getTaskHit(mbox, sr.id, score, (Task) item);
+            break;
+        case DOCUMENT:
+        case WIKI:
+            toRet = getDocumentHit(mbox, sr.id, doc, score, (com.zimbra.cs.mailbox.Document) item);
+            break;
+        default:
+            assert(false);
         }
 
         if (i4msg != null) {

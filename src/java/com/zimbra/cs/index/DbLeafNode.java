@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,25 +23,24 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
 
 class DbLeafNode extends DbSearchConstraints implements IConstraints {
-    
+
     /**
      * Set by the forceHasSpamTrashSetting() API
-     * 
-     * True if we have a SETTING pertaining to Spam/Trash.  This doesn't 
-     * necessarily mean we actually have "in trash" or something, it just 
-     * means that we've got something set which means we shouldn't add 
+     *
+     * True if we have a SETTING pertaining to Spam/Trash.  This doesn't
+     * necessarily mean we actually have "in trash" or something, it just
+     * means that we've got something set which means we shouldn't add
      * the default "not in:trash and not in:junk" thing.
      */
     protected boolean mHasSpamTrashSetting = false;
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.db.DbSearchConstraints#clone()
-     */
+    @Override
     public Object clone() throws CloneNotSupportedException {
         DbLeafNode toRet = (DbLeafNode)super.clone();
 
@@ -51,11 +50,8 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         return toRet;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.IConstraints#ensureSpamTrashSetting(com.zimbra.cs.mailbox.Mailbox, java.util.List)
-     */
-    public void ensureSpamTrashSetting(Mailbox mbox, List<Folder> trashSpamFolders)
-    {
+    @Override
+    public void ensureSpamTrashSetting(Mailbox mbox, List<Folder> trashSpamFolders) {
         if (!mHasSpamTrashSetting) {
             for (Folder f : trashSpamFolders) {
                 excludeFolders.add(f);
@@ -64,35 +60,29 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         }
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.IConstraints#andIConstraints(com.zimbra.cs.index.IConstraints)
-     */
-    public IConstraints andIConstraints(IConstraints other) 
-    {
+    @Override
+    public IConstraints andIConstraints(IConstraints other) {
         switch(other.getNodeType()) {
-            case AND:
-                return other.andIConstraints(this);
-            case OR:
-                return other.andIConstraints(this);
-            case LEAF:
-                if (other.hasSpamTrashSetting()) 
-                    forceHasSpamTrashSetting();
+        case AND:
+            return other.andIConstraints(this);
+        case OR:
+            return other.andIConstraints(this);
+        case LEAF:
+            if (other.hasSpamTrashSetting())
+                forceHasSpamTrashSetting();
 
-                if (other.hasNoResults()) {
-                    noResults = true;
-                }
-                andConstraints((DbLeafNode)other);
-                return this;
+            if (other.hasNoResults()) {
+                noResults = true;
+            }
+            andConstraints((DbLeafNode)other);
+            return this;
         }
         assert(false);
         return null;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.IConstraints#orIConstraints(com.zimbra.cs.index.IConstraints)
-     */
-    public IConstraints orIConstraints(IConstraints other)
-    {
+    @Override
+    public IConstraints orIConstraints(IConstraints other) {
         if (other.getNodeType() == NodeType.OR) {
             return other.orIConstraints(this);
         } else {
@@ -103,39 +93,29 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         }
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.IConstraints#hasSpamTrashSetting()
-     */
+    @Override
     public boolean hasSpamTrashSetting() {
         return mHasSpamTrashSetting;
     }
-    
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.IConstraints#forceHasSpamTrashSetting()
-     */
+
+    @Override
     public void forceHasSpamTrashSetting() {
         mHasSpamTrashSetting = true;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.IConstraints#hasNoResults()
-     */
+    @Override
     public boolean hasNoResults() {
         return noResults;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.IConstraints#tryDbFirst(com.zimbra.cs.mailbox.Mailbox)
-     */
+    @Override
     public boolean tryDbFirst(Mailbox mbox) throws ServiceException {
-        return (convId != 0 || (tags != null && tags.contains(mbox.getFlagById(Flag.ID_FLAG_UNREAD)))); 
+        return (convId != 0 || (tags != null && tags.contains(mbox.getFlagById(Flag.ID_FLAG_UNREAD))));
     }
-    
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.IConstraints#setTypes(java.util.Set)
-     */
-    public void setTypes(Set<Byte> _types) {
-        this.types = _types;
+
+    @Override
+    public void setTypes(Set<MailItem.Type> types) {
+        this.types = types;
     }
 
     /* (non-Javadoc)
@@ -165,7 +145,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         if (truth) {
             if (!itemIds.contains(itemId)) {
                 //
-                // {1} AND {-1} AND {1} == no-results 
+                // {1} AND {-1} AND {1} == no-results
                 //  ... NOT {1} (which could happen if you removed from both arrays on combining!)
                 if (prohibitedItemIds== null || !prohibitedItemIds.contains(itemId)) {
                     itemIds.add(itemId);
@@ -174,7 +154,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         } else {
             if (!prohibitedItemIds.contains(itemId)) {
                 //
-                // {1} AND {-1} AND {1} == no-results 
+                // {1} AND {-1} AND {1} == no-results
                 //  ... NOT {1} (which could happen if you removed from both arrays on combining!)
                 if (itemIds != null && itemIds.contains(itemId)) {
                     itemIds.remove(itemId);
@@ -183,7 +163,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
             }
         }
     }
-    
+
     /**
      * @param itemId
      * @param truth
@@ -192,7 +172,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         if (truth) {
             if (!remoteItemIds.contains(itemId)) {
                 //
-                // {1} AND {-1} AND {1} == no-results 
+                // {1} AND {-1} AND {1} == no-results
                 //  ... NOT {1} (which could happen if you removed from both arrays on combining!)
                 if (prohibitedRemoteItemIds== null || !prohibitedRemoteItemIds.contains(itemId)) {
                     remoteItemIds.add(itemId);
@@ -201,7 +181,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         } else {
             if (!prohibitedRemoteItemIds.contains(itemId)) {
                 //
-                // {1} AND {-1} AND {1} == no-results 
+                // {1} AND {-1} AND {1} == no-results
                 //  ... NOT {1} (which could happen if you removed from both arrays on combining!)
                 if (remoteItemIds != null && remoteItemIds.contains(itemId)) {
                     remoteItemIds.remove(itemId);
@@ -210,7 +190,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
             }
         }
     }
-    
+
 
     /**
      * @param lowest
@@ -228,7 +208,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
 
         dates.add(intv);
     }
-    
+
     /**
      * @param lowest
      * @param highest
@@ -262,7 +242,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
 
         calEndDates.add(intv);
     }
-    
+
     void addModSeqClause(long lowest, boolean lowestEqual, long highest, boolean highestEqual, boolean truth)  {
         DbSearchConstraints.NumericRange intv = new DbSearchConstraints.NumericRange();
         intv.lowest = lowest;
@@ -270,11 +250,11 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         intv.highest = highest;
         intv.highestEqual = highestEqual;
         intv.negated = !truth;
-        
+
         this.modified.add(intv);
     }
-    
-    
+
+
     void addConvCountClause(long lowest, boolean lowestEqual, long highest, boolean highestEqual, boolean truth)  {
         DbSearchConstraints.NumericRange intv = new DbSearchConstraints.NumericRange();
         intv.lowest = lowest;
@@ -282,11 +262,11 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         intv.highest = highest;
         intv.highestEqual = highestEqual;
         intv.negated = !truth;
-        
+
         convCounts.add(intv);
     }
 
-    
+
     /**
      * @param lowest
      * @param highest
@@ -301,7 +281,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
 
         sizes.add(intv);
     }
-    
+
     /**
      * @param lowest
      * @param highest
@@ -315,10 +295,10 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         intv.highest = highest;
         intv.highestEqual = highestEqual;
         intv.negated = !truth;
-        
+
         subjectRanges.add(intv);
     }
-    
+
     /**
      * @param lowest
      * @param highest
@@ -332,7 +312,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         intv.highest = highest;
         intv.highestEqual = highestEqual;
         intv.negated = !truth;
-        
+
         senderRanges.add(intv);
     }
 
@@ -341,7 +321,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
      * @param prohibited
      */
     void addConvId(int cid, boolean truth) {
-        
+
         if (truth) {
             if (prohibitedConvIds.contains(cid)) {
                 noResults = true;
@@ -363,13 +343,13 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
             prohibitedConvIds.add(cid);
         }
     }
-    
+
     /**
      * @param convId
      * @param prohibited
      */
     void addRemoteConvId(ItemId cid, boolean truth) {
-        
+
         if (truth) {
             if (prohibitedRemoteConvIds.contains(cid)) {
                 noResults = true;
@@ -391,15 +371,15 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
             prohibitedRemoteConvIds.add(cid);
         }
     }
-    
-    
+
+
     /**
      * For remote folder
      */
     void addInRemoteFolderClause(ItemId id, String subfolderPath, boolean includeSubfolders, boolean truth)
     {
         if (truth) {
-            if ((remoteFolders.size() > 0 && !remoteFolders.contains(id)) 
+            if ((remoteFolders.size() > 0 && !remoteFolders.contains(id))
                         || excludeRemoteFolders.contains(id)) {
                 if (ZimbraLog.index_search.isDebugEnabled()) {
                     ZimbraLog.index_search.debug("AND of conflicting remote folders, no-results-query");
@@ -422,15 +402,15 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
             excludeRemoteFolders.add(new DbSearchConstraints.RemoteFolderDescriptor(id, subfolderPath, includeSubfolders));
         }
     }
-    
+
     /**
      * @param folder
      * @param truth
      */
-    void addInClause(Folder folder, boolean truth) 
+    void addInClause(Folder folder, boolean truth)
     {
         if (truth) {
-            if ((folders.size() > 0 && !folders.contains(folder)) 
+            if ((folders.size() > 0 && !folders.contains(folder))
                         || excludeFolders.contains(folder)) {
                 if (ZimbraLog.index_search.isDebugEnabled()) {
                     ZimbraLog.index_search.debug("AND of conflicting folders, no-results-query");
@@ -490,7 +470,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
                 }
                 noResults = true;
             }
-            if (tags == null) 
+            if (tags == null)
                 tags = new HashSet<Tag>();
             tags.add(tag);
         } else {

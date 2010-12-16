@@ -94,14 +94,6 @@ public class ProxiedHit extends ZimbraHit  {
         return mProxiedMsgId;
     }
 
-    byte getItemType() throws ServiceException {
-        if (mProxiedItemType <= 0) {
-            mProxiedItemType = (byte) mElement.getAttributeLong(
-                    MailConstants.A_ITEM_TYPE);
-        }
-        return mProxiedItemType;
-    }
-
     @Override
     void setItem(MailItem item) {
         assert(false); // can't preload a proxied hit!

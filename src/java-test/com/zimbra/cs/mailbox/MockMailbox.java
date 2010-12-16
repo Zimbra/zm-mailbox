@@ -67,7 +67,7 @@ class MockMailbox extends Mailbox {
     @Override
     public Folder getFolderById(int id) throws ServiceException {
         MailItem.UnderlyingData data = new MailItem.UnderlyingData();
-        data.type = MailItem.TYPE_FOLDER;
+        data.type = MailItem.Type.FOLDER.toByte();
         data.id = id;
         data.name = String.valueOf(id);
         return new Folder(this, data);
@@ -76,7 +76,7 @@ class MockMailbox extends Mailbox {
     @Override
     public Tag getTagByName(String name) throws ServiceException {
         MailItem.UnderlyingData data = new MailItem.UnderlyingData();
-        data.type = MailItem.TYPE_TAG;
+        data.type = MailItem.Type.TAG.toByte();
         data.name = name;
         return new Tag(this, data);
     }

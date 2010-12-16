@@ -27,24 +27,11 @@ public class CalendarItemHit extends ZimbraHit {
 
     protected int mId;
     protected CalendarItem mCalItem;
-    private byte mType = MailItem.TYPE_UNKNOWN;
 
-    CalendarItemHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id,
-            float score, CalendarItem cal) {
+    CalendarItemHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id, float score, CalendarItem cal) {
         super(results, mbx, score);
         mId = id;
         mCalItem = cal;
-        if (cal != null) {
-            mType = cal.getType();
-        }
-    }
-
-    CalendarItemHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id,
-            float score, CalendarItem cal, byte type) {
-        super(results, mbx, score);
-        mId = id;
-        mCalItem = cal;
-        mType = type;
     }
 
     @Override
@@ -80,18 +67,9 @@ public class CalendarItemHit extends ZimbraHit {
         return mId;
     }
 
-    public byte getItemType() {
-        return mType;
-    }
-
     @Override
     void setItem(MailItem item) {
-        mCalItem = (CalendarItem)item;
-        if (mCalItem != null) {
-            mType = mCalItem.getType();
-        } else {
-            mType = MailItem.TYPE_UNKNOWN;
-        }
+        mCalItem = (CalendarItem) item;
     }
 
     @Override

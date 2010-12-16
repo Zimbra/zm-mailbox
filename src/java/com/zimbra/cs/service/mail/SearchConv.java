@@ -16,7 +16,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
@@ -81,7 +81,7 @@ public class SearchConv extends Search {
         params.setQueryStr(queryBuffer.toString());
 
         // force to group-by-message
-        params.setTypes(Collections.singleton(MailItem.TYPE_MESSAGE));
+        params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
 
         Element response = null;
         if (cid.belongsTo(mbox)) { // local

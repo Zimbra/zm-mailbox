@@ -17,14 +17,15 @@ package com.zimbra.cs.service.formatter;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.mail.Part;
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -51,8 +52,8 @@ public class CsvFormatter extends Formatter {
     }
 
     @Override
-    public String getDefaultSearchTypes() {
-        return MailboxIndex.SEARCH_FOR_CONTACTS;
+    public Set<MailItem.Type> getDefaultSearchTypes() {
+        return EnumSet.of(MailItem.Type.CONTACT);
     }
 
     @Override

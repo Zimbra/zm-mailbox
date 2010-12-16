@@ -508,7 +508,7 @@ public class ImapSession extends Session {
         }
 
         private synchronized void queueDelete(int changeId, int itemId) {
-            getQueuedNotifications(changeId).recordDeleted(getTargetAccountId(), itemId, MailItem.TYPE_UNKNOWN);
+            getQueuedNotifications(changeId).recordDeleted(getTargetAccountId(), itemId, MailItem.Type.UNKNOWN);
         }
 
         private synchronized void queueCreate(int changeId, MailItem item) {

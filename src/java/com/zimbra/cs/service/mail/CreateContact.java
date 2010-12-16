@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -97,7 +97,7 @@ public class CreateContact extends MailDocumentHandler  {
         Contact con = null;
         if (contacts.size() > 0)
             con = contacts.get(0);
-        
+
         Element response = zsc.createElement(MailConstants.CREATE_CONTACT_RESPONSE);
         if (con != null) {
             if (verbose)
@@ -143,7 +143,7 @@ public class CreateContact extends MailDocumentHandler  {
         int itemId = (int) elt.getAttributeLong(MailConstants.A_ID, -1);
         String part = elt.getAttribute(MailConstants.A_PART, null);
         if (itemId != -1 || (part != null && existing != null)) {
-            MailItem item = itemId == -1 ? existing : getRequestedMailbox(zsc).getItemById(octxt, itemId, MailItem.TYPE_UNKNOWN);
+            MailItem item = itemId == -1 ? existing : getRequestedMailbox(zsc).getItemById(octxt, itemId, MailItem.Type.UNKNOWN);
 
             try {
                 if (item instanceof Contact) {
@@ -228,14 +228,14 @@ public class CreateContact extends MailDocumentHandler  {
             pclist.add(vcf.asParsedContact());
         return pclist;
     }
-    
-    public static List<Contact> createContacts(OperationContext oc, Mailbox mbox, 
+
+    public static List<Contact> createContacts(OperationContext oc, Mailbox mbox,
         ItemId iidFolder, List<ParsedContact> list, String tagsStr) throws ServiceException {
-        
+
         List<Contact> toRet = new ArrayList<Contact>();
-        
+
         synchronized(mbox) {
-            for (ParsedContact pc : list) 
+            for (ParsedContact pc : list)
                 toRet.add(mbox.createContact(oc, pc, iidFolder.getId(), tagsStr));
         }
         return toRet;

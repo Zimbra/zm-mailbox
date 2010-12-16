@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on May 26, 2004
  */
 package com.zimbra.cs.service.mail;
 
@@ -43,12 +39,21 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 /**
  * @author schemers
+ * @since May 26, 2004
  */
 public class GetMsg extends MailDocumentHandler {
 
     private static final String[] TARGET_MSG_PATH = new String[] { MailConstants.E_MSG, MailConstants.A_ID };
-    protected String[] getProxiedIdPath(Element request)     { return TARGET_MSG_PATH; }
-    protected boolean checkMountpointProxy(Element request)  { return false; }
+
+    @Override
+    protected String[] getProxiedIdPath(Element request) {
+        return TARGET_MSG_PATH;
+    }
+
+    @Override
+    protected boolean checkMountpointProxy(Element request) {
+        return false;
+    }
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -102,10 +107,10 @@ public class GetMsg extends MailDocumentHandler {
                 ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers, false);
             }
         }
-        
+
         if (eMsg.getAttributeBool(MailConstants.A_NEED_EXP, false))
             ToXML.encodeMsgAddrsWithGroupInfo(response, getRequestedAccount(zsc), getAuthenticatedAccount(zsc));
-        
+
         return response;
     }
 
@@ -113,18 +118,18 @@ public class GetMsg extends MailDocumentHandler {
     public boolean isReadOnly() {
         return RedoLogProvider.getInstance().isSlave();
     }
-    
+
     public static CalendarItem getCalendarItem(OperationContext octxt, Mailbox mbox, ItemId iid) throws ServiceException {
         assert(iid.hasSubpart());
         return mbox.getCalendarItemById(octxt, iid.getId());
     }
-    
+
     public static Message getMsg(OperationContext octxt, Mailbox mbox, ItemId iid, boolean read) throws ServiceException {
         assert(!iid.hasSubpart());
         Message msg = mbox.getMessageById(octxt, iid.getId());
         if (read && msg.isUnread() && !RedoLogProvider.getInstance().isSlave()) {
             try {
-                mbox.alterTag(octxt, msg.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
+                mbox.alterTag(octxt, msg.getId(), MailItem.Type.MESSAGE, Flag.ID_FLAG_UNREAD, false);
             } catch (ServiceException e) {
                 if (e.getCode().equals(ServiceException.PERM_DENIED))
                     ZimbraLog.mailbox.info("no permissions to mark message as read (ignored): " + msg.getId());
@@ -134,18 +139,19 @@ public class GetMsg extends MailDocumentHandler {
         }
         return msg;
     }
-    
+
     public static List<Message> getMsgs(OperationContext octxt, Mailbox mbox, List<Integer> iids, boolean read) throws ServiceException {
         int i = 0;
         int[] msgIdArray = new int[iids.size()];
         for (int id : iids)
             msgIdArray[i++] = id;
-        
+
         List<Message> toRet = new ArrayList<Message>(msgIdArray.length);
-        for (MailItem item : mbox.getItemById(octxt, msgIdArray, MailItem.TYPE_MESSAGE)) {
+        for (MailItem item : mbox.getItemById(octxt, msgIdArray, MailItem.Type.MESSAGE)) {
             toRet.add((Message) item);
-            if (read && item.isUnread() && !RedoLogProvider.getInstance().isSlave())
-                mbox.alterTag(octxt, item.getId(), MailItem.TYPE_MESSAGE, Flag.ID_FLAG_UNREAD, false);
+            if (read && item.isUnread() && !RedoLogProvider.getInstance().isSlave()) {
+                mbox.alterTag(octxt, item.getId(), MailItem.Type.MESSAGE, Flag.ID_FLAG_UNREAD, false);
+            }
         }
         return toRet;
     }

@@ -36,7 +36,7 @@ import org.apache.jsieve.parser.generated.ParseException;
 import org.dom4j.QName;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
@@ -106,7 +106,7 @@ public class ApplyFilterRules extends MailDocumentHandler {
             ZimbraQueryResults results = null;
             try {
                 results = mbox.index.search(new OperationContext(mbox), query,
-                        Collections.singleton(MailItem.TYPE_MESSAGE), SortBy.NONE, Integer.MAX_VALUE);
+                        EnumSet.of(MailItem.Type.MESSAGE), SortBy.NONE, Integer.MAX_VALUE);
                 while (results.hasNext()) {
                     ZimbraHit hit = results.getNext();
                     messageIds.add(hit.getItemId());

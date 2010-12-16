@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -71,7 +71,7 @@ import javax.mail.MessagingException;
 
 public class ZimbraLmtpBackend implements LmtpBackend {
 
-    private static List<LmtpCallback> sCallbacks = new CopyOnWriteArrayList<LmtpCallback>(); 
+    private static List<LmtpCallback> sCallbacks = new CopyOnWriteArrayList<LmtpCallback>();
     private static LruMap<String, Set<Integer>> sReceivedMessageIDs = MapUtil.newLruMap(0);
     private static final Map<Integer, Object> sMailboxDeliveryLocks = createMailboxDeliveryLocks();
 
@@ -83,7 +83,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
     /**
      * Adds an instance of an LMTP callback class that will be triggered
-     * before and after a message is added to a user mailbox. 
+     * before and after a message is added to a user mailbox.
      */
     public static void addCallback(LmtpCallback callback) {
         if (callback == null) {
@@ -106,7 +106,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                 return new Object();
             }
         };
-        return new MapMaker().makeComputingMap(objCreator);        
+        return new MapMaker().makeComputingMap(objCreator);
     }
 
     @Override public LmtpReply getAddressStatus(LmtpAddress address) {
@@ -153,7 +153,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
             if (acctStatus.equals(Provisioning.ACCOUNT_STATUS_ACTIVE) ||
                 acctStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKOUT) ||
-                acctStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKED)) 
+                acctStatus.equals(Provisioning.ACCOUNT_STATUS_LOCKED))
             {
                 return LmtpReply.RECIPIENT_OK;
             }
@@ -201,10 +201,10 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
         return false;
     }
-    
+
     /**
      * Returns the value of the {@code Message-ID} header, or the most
-     * recent {@code Resent-Message-ID} header, if set. 
+     * recent {@code Resent-Message-ID} header, if set.
      */
     private String getMessageID(ParsedMessage pm) {
         try {
@@ -220,7 +220,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         ZimbraLog.lmtp.debug("Resent-Message-ID not found.  Message-ID=%s", id);
         return id;
     }
-    
+
     /**
      * If the configured Message-ID cache size has changed, create a new cache and copy
      * values from the old one.
@@ -294,6 +294,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
         }
     }
 
+    @Override
     public void deliver(LmtpEnvelope env, InputStream in, int sizeHint) throws UnrecoverableLmtpException {
         CopyInputStream cis;
         Blob blob;
@@ -503,7 +504,8 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                             folderId = folder.getId();
                                         } catch (ServiceException se) {
                                             if (se.getCode().equals(MailServiceException.NO_SUCH_FOLDER)) {
-                                                Folder folder = mbox.createFolder(null, recipient.getFolder(), (byte) 0, MailItem.TYPE_MESSAGE);
+                                                Folder folder = mbox.createFolder(null, recipient.getFolder(), (byte) 0,
+                                                        MailItem.Type.MESSAGE);
                                                 folderId = folder.getId();
                                             } else {
                                                 throw se;
@@ -534,7 +536,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 if (addedMessageIds != null && addedMessageIds.size() > 0)
                                     addToDedupeCache(pm, mbox);
                             }
-                                
+
                             if (addedMessageIds != null && addedMessageIds.size() > 0) {
                                 // Execute callbacks
                                 for (LmtpCallback callback : sCallbacks) {

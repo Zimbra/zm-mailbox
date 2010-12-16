@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -122,7 +122,7 @@ public class SaveDocument extends WikiDocumentHandler {
                     if (revSource == 0) {
                         docRev = mbox.getDocumentById(octxt, iid.getId());
                     } else {
-                        docRev = (Document) mbox.getItemRevision(octxt, iid.getId(), MailItem.TYPE_DOCUMENT, revSource);
+                        docRev = (Document) mbox.getItemRevision(octxt, iid.getId(), MailItem.Type.DOCUMENT, revSource);
                     }
                     doc = new Doc(docRev.getContentStream(), null, docRev.getName(), docRev.getContentType());
                 } else {
@@ -153,7 +153,8 @@ public class SaveDocument extends WikiDocumentHandler {
                     throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_CONTENT_TYPE, null);
                 }
                 try {
-                    docItem = mbox.createDocument(octxt, fid.getId(), doc.name, doc.contentType, getAuthor(zsc), description, is, MailItem.TYPE_DOCUMENT);
+                    docItem = mbox.createDocument(octxt, fid.getId(), doc.name, doc.contentType, getAuthor(zsc),
+                            description, is, MailItem.Type.DOCUMENT);
                 } catch (ServiceException e) {
                     if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
                         MailItem item = mbox.getItemByPath(octxt, doc.name, fid.getId());

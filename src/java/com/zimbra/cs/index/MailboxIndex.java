@@ -16,14 +16,11 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.util.ZimbraLog;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.search.Sort;
@@ -332,55 +329,9 @@ public final class MailboxIndex {
         }
     }
 
-    // Index Search Results
-    public static final String GROUP_BY_CONVERSATION = "conversation";
-    public static final String GROUP_BY_MESSAGE      = "message";
-    public static final String GROUP_BY_NONE         = "none";
-
-    public static final String SEARCH_FOR_APPOINTMENTS = "appointment";
-    public static final String SEARCH_FOR_CHATS = "chat";
-    public static final String SEARCH_FOR_CONTACTS = "contact";
-    public static final String SEARCH_FOR_CONVERSATIONS = "conversation";
-    public static final String SEARCH_FOR_DOCUMENTS = "document";
-    public static final String SEARCH_FOR_BRIEFCASE = "briefcase";
-    public static final String SEARCH_FOR_MESSAGES = "message";
-    public static final String SEARCH_FOR_NOTES = "note";
-    public static final String SEARCH_FOR_TAGS = "tag";
-    public static final String SEARCH_FOR_TASKS = "task";
-    public static final String SEARCH_FOR_WIKI = "wiki";
-
-    public static final String SEARCH_FOR_EVERYTHING =
-        SEARCH_FOR_APPOINTMENTS + ',' + SEARCH_FOR_CONTACTS + ',' +
-        SEARCH_FOR_DOCUMENTS + ',' + SEARCH_FOR_BRIEFCASE + ',' +
-        SEARCH_FOR_MESSAGES + ',' + SEARCH_FOR_NOTES + ',' +
-        SEARCH_FOR_TASKS + ',' + SEARCH_FOR_WIKI;
-
-    private static final Map<String, Byte> TYPE_MAP = new ImmutableMap.Builder<String, Byte>()
-        .put(GROUP_BY_NONE, (byte) 0)
-        .put(SEARCH_FOR_CONVERSATIONS, MailItem.TYPE_CONVERSATION)
-        .put(SEARCH_FOR_MESSAGES, MailItem.TYPE_MESSAGE)
-        .put(SEARCH_FOR_CHATS, MailItem.TYPE_CHAT)
-        .put(SEARCH_FOR_CONTACTS, MailItem.TYPE_CONTACT)
-        .put(SEARCH_FOR_DOCUMENTS, MailItem.TYPE_DOCUMENT)
-        .put(SEARCH_FOR_BRIEFCASE, MailItem.TYPE_DOCUMENT)
-        .put(SEARCH_FOR_APPOINTMENTS, MailItem.TYPE_APPOINTMENT)
-        .put(SEARCH_FOR_NOTES, MailItem.TYPE_NOTE)
-        .put(SEARCH_FOR_TAGS, MailItem.TYPE_TAG)
-        .put(SEARCH_FOR_TASKS, MailItem.TYPE_TASK)
-        .put(SEARCH_FOR_WIKI, MailItem.TYPE_WIKI)
-        .build();
-
-    public static Set<Byte> parseTypes(String types) throws ServiceException {
-        Set<Byte> result = new HashSet<Byte>();
-        for (String type : Splitter.on(',').trimResults().split(types)) {
-            Byte b = TYPE_MAP.get(type);
-            if (b == null) {
-                throw ServiceException.INVALID_REQUEST("unknown groupBy: " + type, null);
-            }
-            result.add(b);
-        }
-        return result;
-    }
+    public static final Set<MailItem.Type> SEARCH_FOR_EVERYTHING = EnumSet.of(MailItem.Type.APPOINTMENT,
+            MailItem.Type.CONTACT, MailItem.Type.DOCUMENT, MailItem.Type.MESSAGE, MailItem.Type.NOTE,
+            MailItem.Type.TASK, MailItem.Type.WIKI);
 
     /**
      * @see LuceneIndex#deleteIndex()

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -105,10 +105,10 @@ public class WikiDigestFixup {
         }
         OperationContext octxt = new OperationContext(mbox);
         List<MailItem> items = new ArrayList<MailItem>();
-        List<MailItem> wikis = mbox.getItemList(octxt, MailItem.TYPE_WIKI);
+        List<MailItem> wikis = mbox.getItemList(octxt, MailItem.Type.WIKI);
         if (wikis != null && wikis.size() > 0)
             items.addAll(wikis);
-        List<MailItem> documents = mbox.getItemList(octxt, MailItem.TYPE_DOCUMENT);
+        List<MailItem> documents = mbox.getItemList(octxt, MailItem.Type.DOCUMENT);
         if (documents != null && documents.size() > 0)
             items.addAll(documents);
         int len = items.size();
@@ -146,9 +146,9 @@ public class WikiDigestFixup {
         StringBuilder sql = new StringBuilder("UPDATE ");
         sql.append("mailbox" + mboxId + ".mail_item");
         sql.append(" SET blob_digest = ? WHERE id = ? AND type in (");
-        sql.append(MailItem.TYPE_WIKI);
+        sql.append(MailItem.Type.WIKI.toByte());
         sql.append(", ");
-        sql.append(MailItem.TYPE_DOCUMENT);
+        sql.append(MailItem.Type.DOCUMENT.toByte());
         sql.append(")");
         String sqlStr = sql.toString();
 

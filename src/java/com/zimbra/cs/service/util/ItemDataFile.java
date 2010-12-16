@@ -40,6 +40,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.tar.*;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.util.ItemData;
 
 public class ItemDataFile {
@@ -47,7 +48,7 @@ public class ItemDataFile {
         create(path, null, "UTF-8", os);
     }
 
-    public static void create(String path, Set<Byte> types, String cset, OutputStream os) throws IOException {
+    public static void create(String path, Set<MailItem.Type> types, String cset, OutputStream os) throws IOException {
         File f = new File(path);
         TarOutputStream tos = new TarOutputStream(new GZIPOutputStream(os),
             cset == null ? "UTF-8" : cset);
@@ -67,7 +68,8 @@ public class ItemDataFile {
         extract(is, true, null, null, "UTF-8");
     }
 
-    public static void extract(InputStream is, boolean meta, Set<Byte> types, String cset, String dir) throws IOException {
+    public static void extract(InputStream is, boolean meta, Set<MailItem.Type> types, String cset, String dir)
+            throws IOException {
         byte[] buf = new byte[TarBuffer.DEFAULT_BLKSIZE];
         TarEntry te;
         TarInputStream tis = new TarInputStream(new GZIPInputStream(is),
@@ -77,8 +79,9 @@ public class ItemDataFile {
             dir = ".";
         try {
             while ((te = tis.getNextEntry()) != null) {
-                if (skip(types, (byte)te.getMajorDeviceId()))
+                if (skip(types, MailItem.Type.of((byte) te.getMajorDeviceId()))) {
                     continue;
+                }
 
                 File f = new File(dir + File.separator + te.getName());
                 FileOutputStream out;
@@ -112,42 +115,34 @@ public class ItemDataFile {
         list(is, null, "UTF-8", os);
     }
 
-    public static void list(InputStream is, Set<Byte> types, String cset, PrintStream os) throws IOException {
-        DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT,
-            DateFormat.SHORT);
+    public static void list(InputStream is, Set<MailItem.Type> types, String cset, PrintStream os) throws IOException {
+        DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
         TarEntry te;
-        TarInputStream tis = new TarInputStream(new GZIPInputStream(is),
-            cset == null ? "UTF-8" : cset);
+        TarInputStream tis = new TarInputStream(new GZIPInputStream(is), cset == null ? "UTF-8" : cset);
 
-        os.format("%-13s %17s %10s %6s %s\n", "TYPE", "DATE", "SIZE", "METASZ",
-        "PATH");
+        os.format("%-13s %17s %10s %6s %s\n", "TYPE", "DATE", "SIZE", "METASZ", "PATH");
         try {
             TarEntry idEntry = null;
 
             while ((te = tis.getNextEntry()) != null) {
                 if (te.getName().endsWith(".meta")) {
-                    if (idEntry != null && !skip(types,
-                        (byte)idEntry.getMajorDeviceId()))
-                        os.format("%-13s %17s %10s %6d %s\n",
-                            idEntry.getGroupName(),
-                            df.format(idEntry.getModTime()), 0,
-                            idEntry.getSize(), idEntry.getName().substring(0,
-                                idEntry.getName().indexOf(".meta")));
+                    if (idEntry != null && !skip(types, MailItem.Type.of((byte) idEntry.getMajorDeviceId()))) {
+                        os.format("%-13s %17s %10s %6d %s\n", idEntry.getGroupName(), df.format(idEntry.getModTime()),
+                                0, idEntry.getSize(), idEntry.getName().substring(0, idEntry.getName().indexOf(".meta")));
+                    }
                     idEntry = te;
                 } else {
-                    if (!skip(types, (byte)te.getMajorDeviceId()))
-                        os.format("%-13s %17s %10s %6d %s\n", te.getGroupName(),
-                            df.format(te.getModTime()), te.getSize(),
-                            idEntry == null ? 0 : idEntry.getSize(), te.getName());
+                    if (!skip(types, MailItem.Type.of((byte) te.getMajorDeviceId()))) {
+                        os.format("%-13s %17s %10s %6d %s\n", te.getGroupName(), df.format(te.getModTime()),
+                                te.getSize(), idEntry == null ? 0 : idEntry.getSize(), te.getName());
+                    }
                     idEntry = null;
                 }
             }
-            if (idEntry != null && !skip(types,
-                (byte)idEntry.getMajorDeviceId()))
-                os.format("%-13s %17s %10s %6d %s\n", idEntry.getGroupName(),
-                    df.format(idEntry.getModTime()), 0,
-                    idEntry.getSize(), idEntry.getName().substring(0,
-                    idEntry.getName().indexOf(".meta")));
+            if (idEntry != null && !skip(types, MailItem.Type.of((byte) idEntry.getMajorDeviceId()))) {
+                os.format("%-13s %17s %10s %6d %s\n", idEntry.getGroupName(), df.format(idEntry.getModTime()), 0,
+                    idEntry.getSize(), idEntry.getName().substring(0, idEntry.getName().indexOf(".meta")));
+            }
         } finally {
             tis.close();
         }
@@ -162,11 +157,11 @@ public class ItemDataFile {
         return data;
     }
 
-    static boolean skip(Set<Byte> types, byte type) {
+    static boolean skip(Set<MailItem.Type> types, MailItem.Type type) {
         return types != null && !types.contains(type);
     }
 
-    static void addDir(File f, String topdir, Set<Byte> types, TarOutputStream tos) throws IOException {
+    static void addDir(File f, String topdir, Set<MailItem.Type> types, TarOutputStream tos) throws IOException {
         String path = f.getPath();
         String[] all = f.list();
         List<File>dirs = new ArrayList<File>();
@@ -196,12 +191,12 @@ public class ItemDataFile {
             addDir(dir, topdir, types, tos);
     }
 
-    static void addFile(File f, String topdir, Set<Byte> types, TarOutputStream tos) throws IOException {
+    static void addFile(File f, String topdir, Set<MailItem.Type> types, TarOutputStream tos) throws IOException {
         ItemData id = null;
         String path = f.getPath();
         File mf = new File(path + ".meta");
         TarEntry te;
-        byte type;
+        MailItem.Type type;
 
         if (path.indexOf(topdir) == 0)
             path = path.substring(topdir.length() + 1);
@@ -210,16 +205,18 @@ public class ItemDataFile {
             byte[] meta = new byte[(int)mf.length()];
             FileInputStream fis = new FileInputStream(mf);
 
-            if (fis.read(meta) != mf.length())
+            if (fis.read(meta) != mf.length()) {
                throw new IOException("meta read err: " + f.getPath());
+            }
             fis.close();
             id = new ItemData(meta);
-            type = id.ud.type;
-            if (skip(types, type))
+            type = MailItem.Type.of(id.ud.type);
+            if (skip(types, type)) {
                 return;
+            }
             te = new TarEntry(path + ".meta");
             System.out.println(te.getName());
-            te.setGroupName(MailItem.getNameForType(id.ud.type));
+            te.setGroupName(MailItem.Type.of(id.ud.type).toString());
             te.setMajorDeviceId(id.ud.type);
             te.setModTime(mf.lastModified());
             te.setSize(meta.length);
@@ -228,21 +225,23 @@ public class ItemDataFile {
             tos.closeEntry();
         } else {
             if (path.endsWith(".csv") || path.endsWith(".vcf")) {
-                type = MailItem.TYPE_CONTACT;
+                type = MailItem.Type.CONTACT;
             } else if (path.endsWith(".eml")) {
-                type = MailItem.TYPE_MESSAGE;
+                type = MailItem.Type.MESSAGE;
             } else if (path.endsWith(".ics")) {
                 if (path.startsWith("Tasks/")) {
-                    type = MailItem.TYPE_TASK;
+                    type = MailItem.Type.TASK;
                 } else {
-                    type = MailItem.TYPE_APPOINTMENT;
+                    type = MailItem.Type.APPOINTMENT;
                 }
             } else if (path.endsWith(".wiki")) {
-                type = MailItem.TYPE_WIKI;
+                type = MailItem.Type.WIKI;
             } else {
-                type = MailItem.TYPE_DOCUMENT;
+                type = MailItem.Type.DOCUMENT;
             }
-            if (skip(types, type))
+            if (skip(types, type)) {
+
+            }
                 return;
         }
         if (f.exists() && !f.isDirectory() && (id != null || types == null)) {
@@ -252,7 +251,7 @@ public class ItemDataFile {
 
             te = new TarEntry(path);
             System.out.println(te.getName());
-            te.setGroupName(MailItem.getNameForType(id.ud.type));
+            te.setGroupName(MailItem.Type.of(id.ud.type).toString());
             te.setMajorDeviceId(id.ud.type);
             te.setModTime(mf.lastModified());
             te.setSize(f.length());
@@ -289,18 +288,27 @@ public class ItemDataFile {
             String path = ".";
             String file = null;
             boolean meta = true;
-            Set<Byte> types = null;
+            Set<MailItem.Type> types = null;
 
-            if (cl.hasOption('c'))
+            if (cl.hasOption('c')) {
                 cset = cl.getOptionValue('c');
-            if (cl.hasOption('n'))
+            }
+            if (cl.hasOption('n')) {
                 meta = false;
-            if (cl.hasOption('p'))
+            }
+            if (cl.hasOption('p')) {
                 path = cl.getOptionValue('p');
-            if (cl.hasOption('t'))
-                types = MailboxIndex.parseTypes(cl.getOptionValue('t'));
-            if (cl.hasOption('h') || cl.getArgs().length != 1)
+            }
+            if (cl.hasOption('t')) {
+                try {
+                    types = MailItem.Type.setOf(cl.getOptionValue('t'));
+                } catch (IllegalArgumentException e) {
+                    throw MailServiceException.INVALID_TYPE(e.getMessage());
+                }
+            }
+            if (cl.hasOption('h') || cl.getArgs().length != 1) {
                 usage(opts);
+            }
             file = cl.getArgs()[0];
             if (cl.hasOption('a')) {
                 create(path, types, cset, new FileOutputStream(file));

@@ -16,12 +16,14 @@ package com.zimbra.cs.service.formatter;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+
 import javax.mail.Part;
 import javax.servlet.http.HttpServletResponse;
 
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -49,8 +51,8 @@ public class VcfFormatter extends Formatter {
     }
 
     @Override
-    public String getDefaultSearchTypes() {
-        return MailboxIndex.SEARCH_FOR_CONTACTS;
+    public Set<MailItem.Type> getDefaultSearchTypes() {
+        return EnumSet.of(MailItem.Type.CONTACT);
     }
 
     @Override

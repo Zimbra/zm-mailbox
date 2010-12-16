@@ -189,7 +189,7 @@ public class Flag extends Tag {
         Flag instantiate(Mailbox mbox) throws ServiceException {
             UnderlyingData data = new UnderlyingData();
             data.id       = mId;
-            data.type     = MailItem.TYPE_FLAG;
+            data.type     = MailItem.Type.FLAG.toByte();
             data.folderId = Mailbox.ID_FOLDER_TAGS;
             data.flags    = BITMASK_UNCACHED;
             data.name     = mName;
@@ -287,8 +287,9 @@ public class Flag extends Tag {
 
     Flag(Mailbox mbox, UnderlyingData ud) throws ServiceException {
         super(mbox, ud);
-        if (mData.type != TYPE_FLAG)
+        if (mData.type != Type.FLAG.toByte()) {
             throw new IllegalArgumentException();
+        }
     }
 
     @Override public byte getIndex() {

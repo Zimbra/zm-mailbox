@@ -1331,7 +1331,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         try {
             Object mboxobj = path.getOwnerMailbox();
             if (mboxobj instanceof Mailbox) {
-                ((Mailbox) mboxobj).createFolder(getContext(), path.asResolvedPath(), (byte) 0, MailItem.TYPE_MESSAGE);
+                ((Mailbox) mboxobj).createFolder(getContext(), path.asResolvedPath(), (byte) 0, MailItem.Type.MESSAGE);
             } else if (mboxobj instanceof ZMailbox) {
                 ((ZMailbox) mboxobj).createFolder(null, path.asResolvedPath(), ZFolder.View.message, ZFolder.Color.defaultColor, null, null);
             } else {
@@ -1391,7 +1391,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 }
 
                 if (!folder.hasSubfolders()) {
-                    mbox.delete(getContext(), folder.getId(), MailItem.TYPE_FOLDER);
+                    mbox.delete(getContext(), folder.getId(), MailItem.Type.FOLDER);
                     // deleting the folder also unsubscribes from it...
                     mCredentials.unsubscribe(path);
                 } else {
@@ -1466,7 +1466,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 if (folderId == Mailbox.ID_FOLDER_INBOX)
                     throw ImapServiceException.CANT_RENAME_INBOX();
                 Mailbox mbox = (Mailbox) mboxobj;
-                mbox.rename(getContext(), folderId, MailItem.TYPE_FOLDER, "/" + newPath.asResolvedPath());
+                mbox.rename(getContext(), folderId, MailItem.Type.FOLDER, "/" + newPath.asResolvedPath());
             } else if (mboxobj instanceof ZMailbox) {
                 if (oldPath.asItemId().getId() == Mailbox.ID_FOLDER_INBOX)
                     throw ImapServiceException.CANT_RENAME_INBOX();
@@ -1516,7 +1516,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 Mailbox mbox = (Mailbox) path.getOwnerMailbox();
                 Folder folder = (Folder) path.getFolder();
                 if (!folder.isTagged(Flag.ID_FLAG_SUBSCRIBED))
-                    mbox.alterTag(getContext(), folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, true);
+                    mbox.alterTag(getContext(), folder.getId(), MailItem.Type.FOLDER, Flag.ID_FLAG_SUBSCRIBED, true);
             } else {
                 mCredentials.subscribe(path);
             }
@@ -1547,8 +1547,9 @@ public abstract class ImapHandler extends ProtocolHandler {
                 try {
                     Mailbox mbox = mCredentials.getMailbox();
                     Folder folder = (Folder) path.getFolder();
-                    if (folder.isTagged(Flag.ID_FLAG_SUBSCRIBED))
-                        mbox.alterTag(getContext(), folder.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SUBSCRIBED, false);
+                    if (folder.isTagged(Flag.ID_FLAG_SUBSCRIBED)) {
+                        mbox.alterTag(getContext(), folder.getId(), MailItem.Type.FOLDER, Flag.ID_FLAG_SUBSCRIBED, false);
+                    }
                 } catch (NoSuchItemException nsie) { }
             }
 
@@ -2140,7 +2141,7 @@ public abstract class ImapHandler extends ProtocolHandler {
         for (int id : ids) {
             try {
                 if (mboxobj instanceof Mailbox) {
-                    ((Mailbox) mboxobj).delete(getContext(), id, MailItem.TYPE_MESSAGE);
+                    ((Mailbox) mboxobj).delete(getContext(), id, MailItem.Type.MESSAGE);
                 } else {
                     ((ZMailbox) mboxobj).deleteMessage(String.valueOf(id));
                 }
@@ -2750,14 +2751,14 @@ public abstract class ImapHandler extends ProtocolHandler {
             if (ids.size() >= (i == max ? 1 : SUGGESTED_DELETE_BATCH_SIZE)) {
                 try {
                     ZimbraLog.imap.debug("  ** deleting: " + ids);
-                    mSelectedFolder.getMailbox().delete(getContext(), ArrayUtil.toIntArray(ids), MailItem.TYPE_UNKNOWN, null);
+                    mSelectedFolder.getMailbox().delete(getContext(), ArrayUtil.toIntArray(ids), MailItem.Type.UNKNOWN, null);
                 } catch (MailServiceException.NoSuchItemException e) {
                     // FIXME: strongly suspect this is dead code (see Mailbox.delete() implementation)
                     // something went wrong, so delete *this* batch one at a time
                     for (int id : ids) {
                         try {
                             ZimbraLog.imap.debug("  ** fallback deleting: " + id);
-                            i4folder.getMailbox().delete(getContext(), new int[] {id}, MailItem.TYPE_UNKNOWN, null);
+                            i4folder.getMailbox().delete(getContext(), new int[] {id}, MailItem.Type.UNKNOWN, null);
                         } catch (MailServiceException.NoSuchItemException nsie) {
                             i4msg = i4folder.getById(id);
                             if (i4msg != null)
@@ -2785,7 +2786,7 @@ public abstract class ImapHandler extends ProtocolHandler {
     private static final int RETURN_SAVE  = 0x10;
 
     private static final int LARGEST_FOLDER_BATCH = 600;
-    public static final Set<Byte> ITEM_TYPES = ImapMessage.SUPPORTED_TYPES;
+    public static final Set<MailItem.Type> ITEM_TYPES = ImapMessage.SUPPORTED_TYPES;
 
     boolean doSEARCH(String tag, ImapSearch i4search, boolean byUID, Integer options) throws IOException, ImapParseException {
         return search(tag, "SEARCH", i4search, byUID, options, null);
@@ -3146,7 +3147,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                 // get a list of all the messages modified since the checkpoint
                 Set<Integer> folderId = new HashSet<Integer>(Arrays.asList(i4folder.getId()));
                 ImapMessageSet modified = new ImapMessageSet();
-                for (int id : mbox.getModifiedItems(getContext(), changedSince, MailItem.TYPE_UNKNOWN, folderId).getFirst()) {
+                for (int id : mbox.getModifiedItems(getContext(), changedSince, MailItem.Type.UNKNOWN, folderId).getFirst()) {
                     ImapMessage i4msg = i4folder.getById(id);
                     if (i4msg != null)
                         modified.add(i4msg);
@@ -3434,7 +3435,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
                 synchronized (mbox) {
                     if (modseq >= 0) {
-                        MailItem[] items = mbox.getItemById(getContext(), idlist, MailItem.TYPE_UNKNOWN);
+                        MailItem[] items = mbox.getItemById(getContext(), idlist, MailItem.Type.UNKNOWN);
                         for (int idx = items.length - 1; idx >= 0; idx--) {
                             ImapMessage i4msg = i4list.get(idx);
                             if (i4msg.getModseq(items[idx], i4folder.getTagset()) > modseq) {
@@ -3452,7 +3453,7 @@ public abstract class ImapHandler extends ProtocolHandler {
 
                         if (operation == StoreAction.REPLACE) {
                             // replace real tags and flags on all messages
-                            mbox.setTags(getContext(), ArrayUtil.toIntArray(idlist), MailItem.TYPE_UNKNOWN, flags, tags, null);
+                            mbox.setTags(getContext(), ArrayUtil.toIntArray(idlist), MailItem.Type.UNKNOWN, flags, tags, null);
                             // replace session tags on all messages
                             for (ImapMessage i4msg : i4list)
                                 i4msg.setSessionFlags(sflags, i4folder);
@@ -3461,7 +3462,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                                 boolean add = operation == StoreAction.ADD ^ !i4flag.mPositive;
                                 if (i4flag.mPermanent) {
                                     // real tag; do a batch update to the DB
-                                    mbox.alterTag(getContext(), ArrayUtil.toIntArray(idlist), MailItem.TYPE_UNKNOWN, i4flag.mId, add, null);
+                                    mbox.alterTag(getContext(), ArrayUtil.toIntArray(idlist), MailItem.Type.UNKNOWN, i4flag.mId, add, null);
                                 } else {
                                     // session tag; update one-by-one in memory only
                                     for (ImapMessage i4msg : i4list)
@@ -3601,15 +3602,16 @@ public abstract class ImapHandler extends ProtocolHandler {
                 if (sameMailbox) {
                     List<MailItem> copyMsgs;
                     try {
-                        byte type = MailItem.TYPE_UNKNOWN;
+                        MailItem.Type type = MailItem.Type.UNKNOWN;
                         int[] mItemIds = new int[i4list.size()];
                         int counter  = 0;
                         for (ImapMessage curMsg : i4list) {
                             mItemIds[counter++] = curMsg.msgId;
-                            if (counter == 1)
+                            if (counter == 1) {
                                 type = curMsg.getType();
-                            else if (curMsg.getType() != type)
-                                type = MailItem.TYPE_UNKNOWN;
+                            } else if (curMsg.getType() != type) {
+                                type = MailItem.Type.UNKNOWN;
+                            }
                         }
                         copyMsgs = mbox.imapCopy(getContext(), mItemIds, type, iidTarget.getId());
                     } catch (IOException e) {
@@ -3620,7 +3622,7 @@ public abstract class ImapHandler extends ProtocolHandler {
                     for (MailItem target : copyMsgs)
                         createdList.add(target.getImapUid());
                 } else {
-                    ItemActionHelper op = ItemActionHelper.COPY(getContext(), mbox, null, idlist, MailItem.TYPE_UNKNOWN, null, iidTarget);
+                    ItemActionHelper op = ItemActionHelper.COPY(getContext(), mbox, null, idlist, MailItem.Type.UNKNOWN, null, iidTarget);
                     for (String target : op.getCreatedIds())
                         createdList.add(new ItemId(target, mSelectedFolder.getAuthenticatedAccountId()).getId());
                 }

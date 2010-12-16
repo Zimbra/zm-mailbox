@@ -17,6 +17,7 @@ package com.zimbra.cs.dav.carddav;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -233,6 +234,8 @@ public abstract class Filter {
                 this.ctxt = ctxt;
                 this.result = result;
             }
+
+            @Override
             public com.zimbra.common.soap.Element handleContact(Contact c) {
                 try {
                     result.add(new AddressObject(ctxt, c));
@@ -287,7 +290,7 @@ public abstract class Filter {
                     return result;
                 }
                 zqr = mbox.index.search(ctxt.getOperationContext(), filter,
-                        Collections.singleton(MailItem.TYPE_CONTACT), SortBy.NAME_ASCENDING, 100);
+                        EnumSet.of(MailItem.Type.CONTACT), SortBy.NAME_ASCENDING, 100);
                 while (zqr.hasNext()) {
                     ZimbraHit hit = zqr.getNext();
                     if (hit instanceof ContactHit) {
@@ -337,7 +340,11 @@ public abstract class Filter {
         public boolean match(String prop) {
             return runTextMatch(prop);
         }
+
+        @Override
         protected boolean canHavePropFilter()  { return false; }
+
+        @Override
         protected boolean canHaveParamFilter() { return false; }
     }
     public static class PropFilter extends Filter {
@@ -354,6 +361,8 @@ public abstract class Filter {
             matched &= runTextMatch(val);
             return matched;
         }
+
+        @Override
         public Collection<AddressObject> match(DavContext ctxt, AddressbookCollection folder) {
             if (mIsNotDefinedSet) {
                 // go through all the contacts and return the ones that do not
@@ -368,6 +377,8 @@ public abstract class Filter {
             }
             return null;
         }
+
+        @Override
         protected boolean canHavePropFilter()  { return false; }
     }
 }

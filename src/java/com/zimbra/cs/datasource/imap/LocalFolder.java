@@ -74,7 +74,7 @@ final class LocalFolder {
 
     public void create() throws ServiceException {
         debug("creating folder");
-        folder = mbox.createFolder(null, path, (byte) 0, MailItem.TYPE_MESSAGE);
+        folder = mbox.createFolder(null, path, (byte) 0, MailItem.Type.MESSAGE);
     }
 
     public void updateFlags(ListData ld) throws ServiceException {
@@ -94,18 +94,18 @@ final class LocalFolder {
             alterTag(Flag.ID_FLAG_SYNCFOLDER, sync);
             alterTag(Flag.ID_FLAG_SYNC, sync);
         }
-        if (folder.getDefaultView() != MailItem.TYPE_MESSAGE) {
+        if (folder.getDefaultView() != MailItem.Type.MESSAGE) {
             debug("Setting default view to TYPE_MESSAGE");
-            mbox.setFolderDefaultView(null, folder.getId(), MailItem.TYPE_MESSAGE);
+            mbox.setFolderDefaultView(null, folder.getId(), MailItem.Type.MESSAGE);
         }
     }
 
     public void alterTag(int flagId, boolean value) throws ServiceException {
-        mbox.alterTag(null, getFolder().getId(), MailItem.TYPE_FOLDER, flagId, value);
+        mbox.alterTag(null, getFolder().getId(), MailItem.Type.FOLDER, flagId, value);
     }
 
     public void setMessageFlags(int id, int flagMask) throws ServiceException {
-        mbox.setTags(null, id, MailItem.TYPE_MESSAGE, flagMask, MailItem.TAG_UNCHANGED);
+        mbox.setTags(null, id, MailItem.Type.MESSAGE, flagMask, MailItem.TAG_UNCHANGED);
     }
 
     public boolean exists() throws ServiceException {
@@ -131,7 +131,7 @@ final class LocalFolder {
     public void deleteMessage(int id) throws ServiceException {
         debug("deleting message with id %d", id);
         try {
-            mbox.delete(null, id, MailItem.TYPE_UNKNOWN);
+            mbox.delete(null, id, MailItem.Type.UNKNOWN);
         } catch (MailServiceException.NoSuchItemException e) {
             debug("message with id %d not found", id);
         }
@@ -142,8 +142,7 @@ final class LocalFolder {
     }
 
     public Set<Integer> getMessageIds() throws ServiceException {
-        return new HashSet<Integer>(
-            mbox.listItemIds(null, MailItem.TYPE_MESSAGE, folder.getId()));
+        return new HashSet<Integer>(mbox.listItemIds(null, MailItem.Type.MESSAGE, folder.getId()));
     }
 
     public Folder getFolder() throws ServiceException {

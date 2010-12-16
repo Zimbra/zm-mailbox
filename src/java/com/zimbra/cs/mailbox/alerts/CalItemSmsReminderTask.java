@@ -16,15 +16,12 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.JMSession;
 
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-/**
- */
 public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
 
     static final String TASK_NAME_PREFIX = "smsReminderTask";
@@ -37,6 +34,7 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
         return TASK_NAME_PREFIX + getProperty(CAL_ITEM_ID_PROP_NAME);
     }
 
+    @Override
     protected void sendReminder(CalendarItem calItem, Invite invite) throws Exception {
         Account account = calItem.getAccount();
         Locale locale = account.getLocale();
@@ -63,7 +61,7 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
 
         String formattedStart;
         String formattedEnd;
-        if (calItem.getType() == MailItem.TYPE_APPOINTMENT) {
+        if (calItem.getType() == MailItem.Type.APPOINTMENT) {
             Date start = new Date(new Long(getProperty(NEXT_INST_START_PROP_NAME)));
             formattedStart = dateTimeFormat.format(start);
             Date end = invite.getEffectiveDuration().addToDate(start);
@@ -88,13 +86,8 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
 
         String folder = calItem.getMailbox().getFolderById(calItem.getFolderId()).getName();
 
-        return L10nUtil.getMessage(calItem.getType() == MailItem.TYPE_APPOINTMENT ? L10nUtil.MsgKey.apptReminderSmsText : L10nUtil.MsgKey.taskReminderSmsText,
-                                   locale,
-                                   calItem.getSubject(),
-                                   formattedStart,
-                                   formattedEnd,
-                                   location,
-                                   organizer,
-                                   folder);
+        return L10nUtil.getMessage(calItem.getType() == MailItem.Type.APPOINTMENT ?
+                L10nUtil.MsgKey.apptReminderSmsText : L10nUtil.MsgKey.taskReminderSmsText,
+                locale, calItem.getSubject(), formattedStart, formattedEnd, location, organizer, folder);
     }
 }

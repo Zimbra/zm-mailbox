@@ -18,8 +18,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -33,7 +33,6 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
 import com.zimbra.cs.imap.ImapMessage.ImapMessageSet;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -63,7 +62,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
     private int mUIDValidityValue;
 
     private String mQuery;
-    private Set<Byte> mTypeConstraint = ImapHandler.ITEM_TYPES;
+    private Set<MailItem.Type> typeConstraint = ImapHandler.ITEM_TYPES;
 
     private List<ImapMessage>                   mSequence;
     private transient Map<Integer, ImapMessage> mMessageIds;
@@ -110,7 +109,7 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         mUIDValidityValue = getUIDValidity(folder);
         if (folder instanceof SearchFolder) {
             mQuery = ((SearchFolder) folder).getQuery();
-            mTypeConstraint = getTypeConstraint((SearchFolder) folder);
+            typeConstraint = getTypeConstraint((SearchFolder) folder);
         }
 
         if (handler != null)
@@ -205,27 +204,34 @@ public class ImapFolder implements Iterable<ImapMessage>, ImapSession.ImapFolder
         return mQuery == null ? "" : mQuery;
     }
 
-    static Set<Byte> getTypeConstraint(SearchFolder search) {
-        // constrain the search to the actually-requested types
-        Set<Byte> types = new HashSet<Byte>();
+    /**
+     * Constrain the search to the actually-requested types.
+     */
+    static Set<MailItem.Type> getTypeConstraint(SearchFolder search) {
         String typestr = search.getReturnTypes().toLowerCase();
-        if (typestr.equals(""))
-            typestr = Search.DEFAULT_SEARCH_TYPES;
-        for (String type : typestr.split("\\s+,\\s+")) {
-            if (type.equals(MailboxIndex.SEARCH_FOR_CONVERSATIONS) || type.equals(MailboxIndex.SEARCH_FOR_MESSAGES))
-                types.add(MailItem.TYPE_MESSAGE);
-            else if (type.equals(MailboxIndex.SEARCH_FOR_CONTACTS))
-                types.add(MailItem.TYPE_CONTACT);
-            else if (type.equals(MailboxIndex.SEARCH_FOR_CHATS))
-                types.add(MailItem.TYPE_CHAT);
+        Set<MailItem.Type> types;
+        if (!typestr.isEmpty()) {
+            try {
+                types = MailItem.Type.setOf(typestr);
+            } catch (IllegalArgumentException e) {
+                ZimbraLog.imap.warn("invalid item type: " + typestr, e);
+                return EnumSet.noneOf(MailItem.Type.class);
+            }
+        } else {
+            types = EnumSet.copyOf(Search.DEFAULT_SEARCH_TYPES);
         }
+
+        if (types.remove(MailItem.Type.CONVERSATION)) {
+            types.add(MailItem.Type.MESSAGE);
+        }
+        types.retainAll(ImapMessage.SUPPORTED_TYPES);
         return types;
     }
 
     /** Returns the types of items exposed in this IMAP folder.  Defaults to
      *  {@link ImapHandler#ITEM_TYPES} except for search folders. */
-    Set<Byte> getTypeConstraint() {
-        return mTypeConstraint;
+    Set<MailItem.Type> getTypeConstraint() {
+        return typeConstraint;
     }
 
     /** Returns the folder's IMAP UID validity value.

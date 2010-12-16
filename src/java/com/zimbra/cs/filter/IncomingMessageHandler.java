@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -46,7 +46,7 @@ extends FilterHandler {
     private int mDefaultFolderId;
     private String mRecipientAddress;
     private int mSize;
-    
+
     public IncomingMessageHandler(DeliveryContext context, Mailbox mbox,
                                   String recipientAddress, ParsedMessage pm, int size,
                                   int defaultFolderId) {
@@ -57,17 +57,19 @@ extends FilterHandler {
         mSize = size;
         mDefaultFolderId = defaultFolderId;
     }
-    
+
+    @Override
     public MimeMessage getMimeMessage() {
         return mParsedMessage.getMimeMessage();
     }
 
+    @Override
     public ParsedMessage getParsedMessage() {
         return mParsedMessage;
     }
 
-    public String getDefaultFolderPath()
-    throws ServiceException {
+    @Override
+    public String getDefaultFolderPath() throws ServiceException {
         return mMailbox.getFolderById(null, mDefaultFolderId).getPath();
     }
 
@@ -83,14 +85,14 @@ extends FilterHandler {
         ItemId id = FilterUtil.addMessage(mContext, mMailbox, mParsedMessage, mRecipientAddress, folderPath,
                                           false, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mMailbox),
                                           tags, Mailbox.ID_AUTO_INCREMENT, null);
-        
+
         // Do spam training if the user explicitly filed the message into
         // the spam folder (bug 37164).
         try {
             Folder folder = mMailbox.getFolderByPath(null, folderPath);
             if (folder.getId() == Mailbox.ID_FOLDER_SPAM && id.isLocal()) {
                 SpamReport report = new SpamReport(true, "filter", folderPath);
-                SpamHandler.getInstance().handle(null, mMailbox, id.getId(), MailItem.TYPE_MESSAGE, report);
+                SpamHandler.getInstance().handle(null, mMailbox, id.getId(), MailItem.Type.MESSAGE, report);
             }
         } catch (NoSuchItemException e) {
             ZimbraLog.filter.debug("Unable to do spam training for message %s because folder path %s does not exist.",
@@ -98,7 +100,7 @@ extends FilterHandler {
         } catch (ServiceException e) {
             ZimbraLog.filter.warn("Unable to do spam training for message %s.", id, e);
         }
-        
+
         return id;
     }
 

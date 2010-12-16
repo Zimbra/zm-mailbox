@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -39,7 +40,7 @@ class MsgQueryResults extends ZimbraQueryResultsImpl {
      */
     private final Set<Integer> mSeenMsgs = new HashSet<Integer>();
 
-    MsgQueryResults(ZimbraQueryResults topLevelQueryOperation, Set<Byte> types,
+    MsgQueryResults(ZimbraQueryResults topLevelQueryOperation, Set<MailItem.Type> types,
             SortBy searchOrder, Mailbox.SearchResultMode mode) {
         super(types, searchOrder, mode);
         mResults = topLevelQueryOperation;

@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -981,19 +982,24 @@ public class Mailbox {
         mCurrentChange.mDirty.recordDeleted(item);
     }
 
-    /** Adds the item id to the current change's list of items deleted during
-     *  the transaction.
-     * @param itemId  The deleted item's id. */
-    void markItemDeleted(byte type, int itemId) {
+    /**
+     * Adds the item id to the current change's list of items deleted during the transaction.
+     *
+     * @param type item type
+     * @param itemId  The deleted item's id.
+     */
+    void markItemDeleted(MailItem.Type type, int itemId) {
         mCurrentChange.mDirty.recordDeleted(mData.accountId, itemId, type);
     }
 
-    /** Adds the item ids to the current change's list of items deleted during
-     *  the transaction.
-     * @param typesMask Mask of all MailItem types listed in itemIds.  see {@link MailItem#typeToBitmask}a
-     * @param itemIds  The list of deleted items' ids. */
-    void markItemDeleted(int typesMask, List<Integer> itemIds) {
-        mCurrentChange.mDirty.recordDeleted(mData.accountId, itemIds, typesMask);
+    /**
+     * Adds the item ids to the current change's list of items deleted during the transaction.
+     *
+     * @param types set of all MailItem types listed in itemIds
+     * @param itemIds  The list of deleted items' ids
+     */
+    void markItemDeleted(Set<MailItem.Type> types, List<Integer> itemIds) {
+        mCurrentChange.mDirty.recordDeleted(mData.accountId, itemIds, types);
     }
 
     /** Adds the item to the current change's list of items modified during
@@ -1273,8 +1279,7 @@ public class Mailbox {
             getItemCache().put(item.getId(), item);
         }
 
-        if (ZimbraLog.cache.isDebugEnabled())
-            ZimbraLog.cache.debug("cached " + MailItem.getNameForType(item) + " " + item.getId() + " in mailbox " + getId());
+        ZimbraLog.cache.debug("cached %s %d in mailbox %d", item.getType(), item.getId(), getId());
     }
 
     protected void uncache(MailItem item) throws ServiceException {
@@ -1295,8 +1300,7 @@ public class Mailbox {
             MessageCache.purge(item);
         }
 
-        if (ZimbraLog.cache.isDebugEnabled())
-            ZimbraLog.cache.debug("uncached " + MailItem.getNameForType(item) + " " + item.getId() + " in mailbox " + getId());
+        ZimbraLog.cache.debug("uncached %s %d in mailbox %d", item.getType(), item.getId(), getId());
 
         uncacheChildren(item);
     }
@@ -1351,19 +1355,29 @@ public class Mailbox {
      *
      * @param type  The type of item to completely uncache.  {@link MailItem#TYPE_UNKNOWN}
      * uncaches all items. */
-    public synchronized void purge(byte type) {
+    public synchronized void purge(MailItem.Type type) {
         switch (type) {
-            case MailItem.TYPE_FOLDER:
-            case MailItem.TYPE_MOUNTPOINT:
-            case MailItem.TYPE_SEARCHFOLDER:  mFolderCache = null;  break;
-            case MailItem.TYPE_FLAG:
-            case MailItem.TYPE_TAG:           mTagCache = null;     break;
-            default:                          clearItemCache();     break;
-            case MailItem.TYPE_UNKNOWN:       mFolderCache = null;  mTagCache = null;  clearItemCache();  break;
+        case FOLDER:
+        case MOUNTPOINT:
+        case SEARCHFOLDER:
+            mFolderCache = null;
+            break;
+        case FLAG:
+        case TAG:
+            mTagCache = null;
+            break;
+        default:
+            clearItemCache();
+            break;
+        case UNKNOWN:
+            mFolderCache = null;
+            mTagCache = null;
+            clearItemCache();
+            break;
         }
 
         if (ZimbraLog.cache.isDebugEnabled())
-            ZimbraLog.cache.debug("purged " + MailItem.getNameForType(type) + " cache in mailbox " + getId());
+            ZimbraLog.cache.debug("purged " + type + " cache in mailbox " + getId());
     }
 
 
@@ -1389,24 +1403,38 @@ public class Mailbox {
         // loaded by the earlier call to loadFoldersAndTags in beginTransaction
 
         byte hidden = Folder.FOLDER_IS_IMMUTABLE | Folder.FOLDER_DONT_TRACK_COUNTS;
-        Folder root = Folder.create(ID_FOLDER_ROOT, this, null, "ROOT",     hidden, MailItem.TYPE_UNKNOWN,      0, MailItem.DEFAULT_COLOR_RGB, null, null);
-        Folder.create(ID_FOLDER_TAGS,          this, root, "Tags",          hidden, MailItem.TYPE_TAG,          0, MailItem.DEFAULT_COLOR_RGB, null, null);
-        Folder.create(ID_FOLDER_CONVERSATIONS, this, root, "Conversations", hidden, MailItem.TYPE_CONVERSATION, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder root = Folder.create(ID_FOLDER_ROOT, this, null, "ROOT", hidden, MailItem.Type.UNKNOWN, 0,
+                MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_TAGS, this, root, "Tags", hidden, MailItem.Type.TAG, 0,
+                MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_CONVERSATIONS, this, root, "Conversations", hidden, MailItem.Type.CONVERSATION, 0,
+                MailItem.DEFAULT_COLOR_RGB, null, null);
 
         byte system = Folder.FOLDER_IS_IMMUTABLE;
-        Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, this, root, "USER_ROOT", system, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
-        Folder.create(ID_FOLDER_INBOX,    this, userRoot, "Inbox",    system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
-        Folder.create(ID_FOLDER_TRASH,    this, userRoot, "Trash",    system, MailItem.TYPE_UNKNOWN, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
-        Folder.create(ID_FOLDER_SPAM,     this, userRoot, "Junk",     system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
-        Folder.create(ID_FOLDER_SENT,     this, userRoot, "Sent",     system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
-        Folder.create(ID_FOLDER_DRAFTS,   this, userRoot, "Drafts",   system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
-        Folder.create(ID_FOLDER_CONTACTS, this, userRoot, "Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
-        Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.TYPE_APPOINTMENT, Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR_RGB, null, null);
-        Folder.create(ID_FOLDER_TASKS,    this, userRoot, "Tasks",    system, MailItem.TYPE_TASK,        Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR_RGB, null, null);
-        Folder.create(ID_FOLDER_AUTO_CONTACTS, this, userRoot, "Emailed Contacts", system, MailItem.TYPE_CONTACT, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
-        Folder.create(ID_FOLDER_IM_LOGS,  this, userRoot, "Chats",    system, MailItem.TYPE_MESSAGE, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
-        Folder.create(ID_FOLDER_BRIEFCASE, this, userRoot, "Briefcase", system, MailItem.TYPE_DOCUMENT, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
-
+        Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, this, root, "USER_ROOT", system, MailItem.Type.UNKNOWN, 0,
+                MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_INBOX, this, userRoot, "Inbox", system, MailItem.Type.MESSAGE, 0,
+                MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_TRASH, this, userRoot, "Trash", system, MailItem.Type.UNKNOWN, 0,
+                MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_SPAM, this, userRoot, "Junk", system, MailItem.Type.MESSAGE, 0,
+                MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_SENT, this, userRoot, "Sent", system, MailItem.Type.MESSAGE, 0,
+                MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_DRAFTS, this, userRoot, "Drafts", system, MailItem.Type.MESSAGE, 0,
+                MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_CONTACTS, this, userRoot, "Contacts", system, MailItem.Type.CONTACT, 0,
+                MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_CALENDAR, this, userRoot, "Calendar", system, MailItem.Type.APPOINTMENT,
+                Flag.BITMASK_CHECKED, MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_TASKS, this, userRoot, "Tasks", system, MailItem.Type.TASK, Flag.BITMASK_CHECKED,
+                MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_AUTO_CONTACTS, this, userRoot, "Emailed Contacts", system, MailItem.Type.CONTACT, 0,
+                MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_IM_LOGS,  this, userRoot, "Chats", system, MailItem.Type.MESSAGE, 0,
+                MailItem.DEFAULT_COLOR_RGB, null, null);
+        Folder.create(ID_FOLDER_BRIEFCASE, this, userRoot, "Briefcase", system, MailItem.Type.DOCUMENT, 0,
+                MailItem.DEFAULT_COLOR_RGB, null, null);
 
         mCurrentChange.itemId = getInitialItemId();
         DbMailbox.updateMailboxStats(this);
@@ -1683,7 +1711,7 @@ public class Mailbox {
      * @param type  The item's type (e.g. {@link MailItem#TYPE_MESSAGE}).
      * @param data  The (optional) extra item data for indexing (e.g.
      *              a Message's {@link ParsedMessage}. */
-    synchronized void reanalyze(int id, byte type, Object data, long size) throws ServiceException {
+    synchronized void reanalyze(int id, MailItem.Type type, Object data, long size) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("reanalyze", null);
@@ -1728,7 +1756,8 @@ public class Mailbox {
      *        LDAP error, or other internal error</ul>
      * @see ACL
      * @see MailItem#checkRights(short, Account, boolean) */
-    public synchronized short getEffectivePermissions(OperationContext octxt, int itemId, byte type) throws ServiceException {
+    public synchronized short getEffectivePermissions(OperationContext octxt, int itemId, MailItem.Type type)
+            throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getEffectivePermissions", octxt);
@@ -1747,18 +1776,12 @@ public class Mailbox {
     }
 
     /**
-     * See Mailbox.getEffectivePermissions(OperationContext octxt, int itemId, byte type)
-     *
      * This API uses the credentials in authedAcct/asAdmin parameters.
      *
-     * @param authedAcct
-     * @param asAdmin
-     * @param itemId
-     * @param type
-     * @return
-     * @throws ServiceException
+     * @see #getEffectivePermissions(OperationContext, int, com.zimbra.cs.mailbox.MailItem.Type)
      */
-    public synchronized short getEffectivePermissions(Account authedAcct, boolean asAdmin, int itemId, byte type) throws ServiceException {
+    public synchronized short getEffectivePermissions(Account authedAcct, boolean asAdmin, int itemId,
+            MailItem.Type type) throws ServiceException {
 
         boolean success = false;
         try {
@@ -1778,18 +1801,25 @@ public class Mailbox {
     }
 
 
-    /** Returns whether this type of {@link MailItem} is definitely preloaded
-     *  in one of the <tt>Mailbox</tt>'s caches.
+    /**
+     * Returns whether this type of {@link MailItem} is definitely preloaded in one of the {@link Mailbox}'s caches.
      *
      * @param type  The type of <tt>MailItem</tt>.
-     * @return <tt>true</tt> if the item is a {@link Folder} or {@link Tag}
-     *         or one of their subclasses.
+     * @return <tt>true</tt> if the item is a {@link Folder} or {@link Tag} or one of their subclasses.
      * @see #mTagCache
-     * @see #mFolderCache */
-    public static boolean isCachedType(byte type) {
-        return type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER ||
-               type == MailItem.TYPE_TAG    || type == MailItem.TYPE_FLAG ||
-               type == MailItem.TYPE_MOUNTPOINT;
+     * @see #mFolderCache
+     */
+    public static boolean isCachedType(MailItem.Type type) {
+        switch (type) {
+        case FOLDER:
+        case SEARCHFOLDER:
+        case TAG:
+        case FLAG:
+        case MOUNTPOINT:
+            return true;
+        default:
+            return false;
+        }
     }
 
     protected <T extends MailItem> T checkAccess(T item) throws ServiceException {
@@ -1802,7 +1832,7 @@ public class Mailbox {
      * Returns the <tt>MailItem</tt> with the specified id.
      * @throws NoSuchItemException if the item does not exist
      */
-    public synchronized MailItem getItemById(OperationContext octxt, int id, byte type) throws ServiceException {
+    public synchronized MailItem getItemById(OperationContext octxt, int id, MailItem.Type type) throws ServiceException {
         boolean success = false;
         try {
             // tag/folder caches are populated in beginTransaction...
@@ -1815,11 +1845,11 @@ public class Mailbox {
         }
     }
 
-    MailItem getItemById(int id, byte type) throws ServiceException {
+    MailItem getItemById(int id, MailItem.Type type) throws ServiceException {
         return getItemById(id, type, false);
     }
 
-    MailItem getItemById(int id, byte type, boolean fromDumpster) throws ServiceException {
+    MailItem getItemById(int id, MailItem.Type type, boolean fromDumpster) throws ServiceException {
         if (fromDumpster)
             return MailItem.getById(this, id, type, true);
 
@@ -1834,8 +1864,9 @@ public class Mailbox {
 
         if (id <= -FIRST_USER_ID) {
             // special-case virtual conversations
-            if (type != MailItem.TYPE_CONVERSATION && type != MailItem.TYPE_UNKNOWN)
+            if (type != MailItem.Type.CONVERSATION && type != MailItem.Type.UNKNOWN) {
                 throw MailItem.noSuchItem(id, type);
+            }
             Message msg = getCachedMessage(new Integer(-id));
             if (msg == null)
                 msg = getMessageById(-id);
@@ -1854,7 +1885,8 @@ public class Mailbox {
      * Returns <tt>MailItem</tt>s with the specified ids.
      * @throws NoSuchItemException any item does not exist
      */
-    public synchronized MailItem[] getItemById(OperationContext octxt, Collection<Integer> ids, byte type) throws ServiceException {
+    public synchronized MailItem[] getItemById(OperationContext octxt, Collection<Integer> ids, MailItem.Type type)
+            throws ServiceException {
         return getItemById(octxt, ArrayUtil.toIntArray(ids), type);
     }
 
@@ -1862,11 +1894,13 @@ public class Mailbox {
      * Returns <tt>MailItem</tt>s with the specified ids.
      * @throws NoSuchItemException any item does not exist
      */
-    public synchronized MailItem[] getItemById(OperationContext octxt, int[] ids, byte type) throws ServiceException {
+    public synchronized MailItem[] getItemById(OperationContext octxt, int[] ids, MailItem.Type type)
+            throws ServiceException {
         return getItemById(octxt, ids, type, false);
     }
 
-    public synchronized MailItem[] getItemById(OperationContext octxt, int[] ids, byte type, boolean fromDumpster) throws ServiceException {
+    public synchronized MailItem[] getItemById(OperationContext octxt, int[] ids, MailItem.Type type,
+            boolean fromDumpster) throws ServiceException {
         boolean success = false;
         try {
             // tag/folder caches are populated in beginTransaction...
@@ -1882,15 +1916,15 @@ public class Mailbox {
         }
     }
 
-    MailItem[] getItemById(Collection<Integer> ids, byte type) throws ServiceException {
+    MailItem[] getItemById(Collection<Integer> ids, MailItem.Type type) throws ServiceException {
         return getItemById(ArrayUtil.toIntArray(ids), type);
     }
 
-    MailItem[] getItemById(int[] ids, byte type) throws ServiceException {
+    MailItem[] getItemById(int[] ids, MailItem.Type type) throws ServiceException {
         return getItemById(ids, type, false);
     }
 
-    MailItem[] getItemById(int[] ids, byte type, boolean fromDumpster) throws ServiceException {
+    MailItem[] getItemById(int[] ids, MailItem.Type type, boolean fromDumpster) throws ServiceException {
         if (!mCurrentChange.active)
             throw ServiceException.FAILURE("must be in transaction", null);
         if (ids == null)
@@ -1921,8 +1955,9 @@ public class Mailbox {
                 MailItem item = getCachedItem(key, type);
                 // special-case virtual conversations
                 if (item == null && ids[i] <= -FIRST_USER_ID) {
-                    if (!MailItem.isAcceptableType(type, MailItem.TYPE_CONVERSATION))
+                    if (!MailItem.isAcceptableType(type, MailItem.Type.CONVERSATION)) {
                         throw MailItem.noSuchItem(ids[i], type);
+                    }
                     Message msg = getCachedMessage(-ids[i]);
                     if (msg != null) {
                         if (msg.getConversationId() == ids[i])
@@ -1948,7 +1983,7 @@ public class Mailbox {
             throw MailItem.noSuchItem(miss.intValue(), type);
 
         // cache miss, so fetch from the database
-        MailItem.getById(this, uncached, relaxType ? MailItem.TYPE_UNKNOWN : type);
+        MailItem.getById(this, uncached, relaxType ? MailItem.Type.UNKNOWN : type);
 
         uncached.clear();
         for (int i = 0; i < ids.length; i++) {
@@ -1974,7 +2009,7 @@ public class Mailbox {
 
         // special case asking for VirtualConversation but having it be a real Conversation
         if (!uncached.isEmpty()) {
-            MailItem.getById(this, uncached, MailItem.TYPE_CONVERSATION);
+            MailItem.getById(this, uncached, MailItem.Type.CONVERSATION);
             for (int i = 0; i < ids.length; i++) {
                 if (ids[i] <= -FIRST_USER_ID && items[i] == null) {
                     MailItem item = getCachedItem(-ids[i]);
@@ -2002,35 +2037,38 @@ public class Mailbox {
         if (item == null)
             item = getItemCache().get(key);
 
-        logCacheActivity(key, item == null ? MailItem.TYPE_UNKNOWN : item.getType(), item);
+        logCacheActivity(key, item == null ? MailItem.Type.UNKNOWN : item.getType(), item);
         return item;
     }
 
-    MailItem getCachedItem(Integer key, byte type) throws ServiceException {
+    MailItem getCachedItem(Integer key, MailItem.Type type) throws ServiceException {
         MailItem item = null;
         switch (type) {
-            case MailItem.TYPE_UNKNOWN:
-                return getCachedItem(key);
-            case MailItem.TYPE_FLAG:
-            case MailItem.TYPE_TAG:
-                if (key < 0)
-                    item = Flag.getFlag(this, key);
-                else if (mTagCache != null)
-                    item = mTagCache.get(key);
-                break;
-            case MailItem.TYPE_MOUNTPOINT:
-            case MailItem.TYPE_SEARCHFOLDER:
-            case MailItem.TYPE_FOLDER:
-                if (mFolderCache != null)
-                    item = mFolderCache.get(key);
-                break;
-            default:
-                item = getItemCache().get(key);
+        case UNKNOWN:
+            return getCachedItem(key);
+        case FLAG:
+        case TAG:
+            if (key < 0) {
+                item = Flag.getFlag(this, key);
+            } else if (mTagCache != null) {
+                item = mTagCache.get(key);
+            }
+            break;
+        case MOUNTPOINT:
+        case SEARCHFOLDER:
+        case FOLDER:
+            if (mFolderCache != null) {
+                item = mFolderCache.get(key);
+            }
+            break;
+        default:
+            item = getItemCache().get(key);
             break;
         }
 
-        if (item != null && !MailItem.isAcceptableType(type, item.mData.type))
+        if (item != null && !MailItem.isAcceptableType(type, MailItem.Type.of(item.mData.type))) {
             item = null;
+        }
 
         logCacheActivity(key, type, item);
         return item;
@@ -2083,7 +2121,7 @@ public class Mailbox {
     MailItem getItem(MailItem.UnderlyingData data) throws ServiceException {
         if (data == null)
             return null;
-        MailItem item = getCachedItem(data.id, data.type);
+        MailItem item = getCachedItem(data.id, MailItem.Type.of(data.type));
         // XXX: should we sanity-check the cached version to make sure all the data matches?
         if (item != null) {
             return item;
@@ -2097,7 +2135,8 @@ public class Mailbox {
      *  revision does not exist, either because the version number is out of
      *  range or because the requested revision has not been retained, returns
      *  <tt>null</tt>. */
-    public synchronized MailItem getItemRevision(OperationContext octxt, int id, byte type, int version) throws ServiceException {
+    public synchronized MailItem getItemRevision(OperationContext octxt, int id, MailItem.Type type, int version)
+            throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getItemRevision", octxt);
@@ -2115,7 +2154,8 @@ public class Mailbox {
      *  order of their 1-based "version", with the current revision always
      *  present and listed last. */
     @SuppressWarnings("unchecked")
-    public synchronized <T extends MailItem> List<T> getAllRevisions(OperationContext octxt, int id, byte type) throws ServiceException {
+    public synchronized <T extends MailItem> List<T> getAllRevisions(OperationContext octxt, int id,
+            MailItem.Type type) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getAllRevisions", octxt);
@@ -2196,7 +2236,7 @@ public class Mailbox {
             // tag/folder caches are populated in beginTransaction...
             beginTransaction("getItemByPath", octxt);
 
-            Folder parent = (Folder) getItemById(folderId, MailItem.TYPE_FOLDER);
+            Folder parent = (Folder) getItemById(folderId, MailItem.Type.FOLDER);
 
             int slash = name.lastIndexOf('/');
             if (slash != -1) {
@@ -2214,7 +2254,7 @@ public class Mailbox {
                 // check for the specified item -- folder first, then document
                 item = parent.findSubfolder(name);
                 if (item == null)
-                    item = getItem(DbMailItem.getByName(this, parent.getId(), name, MailItem.TYPE_DOCUMENT));
+                    item = getItem(DbMailItem.getByName(this, parent.getId(), name, MailItem.Type.DOCUMENT));
             }
             // make sure the item is visible to the requester
             if (checkAccess(item) == null)
@@ -2227,20 +2267,23 @@ public class Mailbox {
     }
 
     /** Returns all the MailItems of a given type, optionally in a specified folder */
-    public synchronized List<MailItem> getItemList(OperationContext octxt, byte type) throws ServiceException {
+    public synchronized List<MailItem> getItemList(OperationContext octxt, MailItem.Type type) throws ServiceException {
         return getItemList(octxt, type, -1);
     }
 
-    public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId) throws ServiceException {
+    public synchronized List<MailItem> getItemList(OperationContext octxt, MailItem.Type type, int folderId)
+            throws ServiceException {
         return getItemList(octxt, type, folderId, SortBy.NONE);
     }
 
-    public synchronized List<MailItem> getItemList(OperationContext octxt, byte type, int folderId, SortBy sort) throws ServiceException {
+    public synchronized List<MailItem> getItemList(OperationContext octxt, MailItem.Type type, int folderId,
+            SortBy sort) throws ServiceException {
         List<MailItem> result;
         boolean success = false;
 
-        if (type == MailItem.TYPE_UNKNOWN)
+        if (type == MailItem.Type.UNKNOWN) {
             return Collections.emptyList();
+        }
         try {
             // tag/folder caches are populated in beginTransaction...
             beginTransaction("getItemList", octxt);
@@ -2254,48 +2297,65 @@ public class Mailbox {
                     throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             }
 
-            if (type == MailItem.TYPE_FOLDER || type == MailItem.TYPE_SEARCHFOLDER || type == MailItem.TYPE_MOUNTPOINT) {
+            switch (type) {
+            case FOLDER:
+            case SEARCHFOLDER:
+            case MOUNTPOINT:
                 result = new ArrayList<MailItem>(mFolderCache.size());
                 for (Folder subfolder : mFolderCache.values()) {
-                    if (subfolder.getType() == type || type == MailItem.TYPE_FOLDER)
-                        if (folder == null || subfolder.getFolderId() == folderId)
+                    if (subfolder.getType() == type || type == MailItem.Type.FOLDER) {
+                        if (folder == null || subfolder.getFolderId() == folderId) {
                             result.add(subfolder);
+                        }
+                    }
                 }
                 success = true;
-            } else if (type == MailItem.TYPE_TAG) {
-                if (folderId != -1 && folderId != ID_FOLDER_TAGS)
+                break;
+            case TAG:
+                if (folderId != -1 && folderId != ID_FOLDER_TAGS) {
                     return Collections.emptyList();
+                }
                 result = new ArrayList<MailItem>(mTagCache.size() / 2);
-                for (Map.Entry<Object, Tag> entry : mTagCache.entrySet())
-                    if (entry.getKey() instanceof String)
+                for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
+                    if (entry.getKey() instanceof String) {
                         result.add(entry.getValue());
+                    }
+                }
                 success = true;
-            } else if (type == MailItem.TYPE_FLAG) {
-                if (folderId != -1 && folderId != ID_FOLDER_TAGS)
+                break;
+            case FLAG:
+                if (folderId != -1 && folderId != ID_FOLDER_TAGS) {
                     return Collections.emptyList();
+                }
                 List<Flag> allFlags = Flag.getAllFlags(this);
                 result = new ArrayList<MailItem>(allFlags.size());
                 for (Flag flag : allFlags) {
                     result.add(flag);
                 }
                 success = true;
-            } else {
+                break;
+            default:
                 List<MailItem.UnderlyingData> dataList;
-
-                if (folder != null)
+                if (folder != null) {
                     dataList = DbMailItem.getByFolder(folder, type, sort);
-                else
+                } else {
                     dataList = DbMailItem.getByType(this, type, sort);
-                if (dataList == null)
+                }
+                if (dataList == null) {
                     return Collections.emptyList();
+                }
                 result = new ArrayList<MailItem>(dataList.size());
-                for (MailItem.UnderlyingData data : dataList)
-                    if (data != null)
+                for (MailItem.UnderlyingData data : dataList) {
+                    if (data != null) {
                         result.add(getItem(data));
+                    }
+                }
                 // DbMailItem call handles all sorts except SORT_BY_NAME_NAT
-                if (sort.getCriterion() == SortBy.SortCriterion.NAME_NATURAL_ORDER)
+                if (sort.getCriterion() == SortBy.SortCriterion.NAME_NATURAL_ORDER) {
                     sort = SortBy.NONE;
+                }
                 success = true;
+                break;
             }
         } finally {
             endTransaction(success);
@@ -2309,7 +2369,8 @@ public class Mailbox {
 
     /** returns the list of IDs of items of the given type in the given folder
      * @param octxt TODO*/
-    public synchronized List<Integer> listItemIds(OperationContext octxt, byte type, int folderId) throws ServiceException {
+    public synchronized List<Integer> listItemIds(OperationContext octxt, MailItem.Type type, int folderId)
+            throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("listItemIds", octxt);
@@ -2449,21 +2510,25 @@ public class Mailbox {
     }
 
     public synchronized List<Folder> getModifiedFolders(final int lastSync) throws ServiceException {
-        return getModifiedFolders(lastSync, MailItem.TYPE_UNKNOWN);
+        return getModifiedFolders(lastSync, MailItem.Type.UNKNOWN);
     }
 
-    public synchronized List<Folder> getModifiedFolders(final int lastSync, final byte type) throws ServiceException {
-        if (lastSync >= getLastChangeID())
+    public synchronized List<Folder> getModifiedFolders(final int lastSync, final MailItem.Type type)
+            throws ServiceException {
+        if (lastSync >= getLastChangeID()) {
             return Collections.emptyList();
+        }
 
         List<Folder> modified = new ArrayList<Folder>();
         boolean success = false;
         try {
             beginTransaction("getModifiedFolders", null);
             for (Folder subfolder : getFolderById(ID_FOLDER_ROOT).getSubfolderHierarchy()) {
-                if (type == MailItem.TYPE_UNKNOWN || subfolder.getType() == type)
-                    if (subfolder.getModifiedSequence() > lastSync)
+                if (type == MailItem.Type.UNKNOWN || subfolder.getType() == type) {
+                    if (subfolder.getModifiedSequence() > lastSync) {
                         modified.add(subfolder);
+                    }
+                }
             }
             success = true;
             return modified;
@@ -2511,7 +2576,7 @@ public class Mailbox {
      *         <li>a List of the IDs of all items modified since the checkpoint
      *             but not currently visible to the caller</ul> */
     public synchronized Pair<List<Integer>,TypedIdList> getModifiedItems(OperationContext octxt, int lastSync) throws ServiceException {
-        return getModifiedItems(octxt, lastSync, MailItem.TYPE_UNKNOWN, null);
+        return getModifiedItems(octxt, lastSync, MailItem.Type.UNKNOWN, null);
     }
 
     /** Returns the IDs of all items of the given type modified since a given
@@ -2532,11 +2597,13 @@ public class Mailbox {
      *         <li>a List of the IDs of all items of the given type modified
      *             since the checkpoint but not currently visible to the
      *             caller</ul> */
-    public synchronized Pair<List<Integer>,TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, byte type) throws ServiceException {
+    public synchronized Pair<List<Integer>,TypedIdList> getModifiedItems(OperationContext octxt, int lastSync,
+            MailItem.Type type) throws ServiceException {
         return getModifiedItems(octxt, lastSync, type, null);
     }
 
-    public synchronized Pair<List<Integer>,TypedIdList> getModifiedItems(OperationContext octxt, int lastSync, byte type, Set<Integer> folderIds) throws ServiceException {
+    public synchronized Pair<List<Integer>,TypedIdList> getModifiedItems(OperationContext octxt, int lastSync,
+            MailItem.Type type, Set<Integer> folderIds) throws ServiceException {
         if (lastSync >= getLastChangeID())
             return new Pair<List<Integer>,TypedIdList>(Collections.<Integer>emptyList(), new TypedIdList());
 
@@ -2631,16 +2698,16 @@ public class Mailbox {
     }
 
     public synchronized Tag getTagById(OperationContext octxt, int id) throws ServiceException {
-        return (Tag) getItemById(octxt, id, MailItem.TYPE_TAG);
+        return (Tag) getItemById(octxt, id, MailItem.Type.TAG);
     }
 
     Tag getTagById(int id) throws ServiceException {
-        return (Tag) getItemById(id, MailItem.TYPE_TAG);
+        return (Tag) getItemById(id, MailItem.Type.TAG);
     }
 
     public synchronized List<Tag> getTagList(OperationContext octxt) throws ServiceException {
         List<Tag> tags = new ArrayList<Tag>();
-        for (MailItem item : getItemList(octxt, MailItem.TYPE_TAG))
+        for (MailItem item : getItemList(octxt, MailItem.Type.TAG))
             tags.add((Tag) item);
         return tags;
     }
@@ -2679,13 +2746,13 @@ public class Mailbox {
     /** Returns the folder with the specified id.
      * @throws NoSuchItemException if the folder does not exist */
     public synchronized Folder getFolderById(OperationContext octxt, int id) throws ServiceException {
-        return (Folder) getItemById(octxt, id, MailItem.TYPE_FOLDER);
+        return (Folder) getItemById(octxt, id, MailItem.Type.FOLDER);
     }
 
     /** Returns the folder with the specified id.
      * @throws NoSuchItemException if the folder does not exist */
     public Folder getFolderById(int id) throws ServiceException {
-        return (Folder) getItemById(id, MailItem.TYPE_FOLDER);
+        return (Folder) getItemById(id, MailItem.Type.FOLDER);
     }
 
     /** Returns the folder with the specified parent and name.
@@ -2790,7 +2857,7 @@ public class Mailbox {
 
     public synchronized List<Folder> getFolderList(OperationContext octxt, SortBy sort) throws ServiceException {
         List<Folder> folders = new ArrayList<Folder>();
-        for (MailItem item : getItemList(octxt, MailItem.TYPE_FOLDER, -1, sort))
+        for (MailItem item : getItemList(octxt, MailItem.Type.FOLDER, -1, sort))
             folders.add((Folder) item);
         return folders;
     }
@@ -2849,41 +2916,43 @@ public class Mailbox {
 
     public synchronized List<Folder> getCalendarFolders(OperationContext octxt, SortBy sort) throws ServiceException {
         ArrayList<Folder> calFolders = new ArrayList<Folder>();
-        for (MailItem item : getItemList(octxt, MailItem.TYPE_FOLDER, -1, sort)) {
+        for (MailItem item : getItemList(octxt, MailItem.Type.FOLDER, -1, sort)) {
             Folder f = (Folder) item;
-            byte view = f.getDefaultView();
-            if (view == MailItem.TYPE_APPOINTMENT || view == MailItem.TYPE_TASK)
+            MailItem.Type view = f.getDefaultView();
+            if (view == MailItem.Type.APPOINTMENT || view == MailItem.Type.TASK) {
                 calFolders.add((Folder) item);
+            }
         }
-        for (MailItem item : getItemList(octxt, MailItem.TYPE_MOUNTPOINT, -1, sort)) {
+        for (MailItem item : getItemList(octxt, MailItem.Type.MOUNTPOINT, -1, sort)) {
             Folder f = (Folder) item;
-            byte view = f.getDefaultView();
-            if (view == MailItem.TYPE_APPOINTMENT || view == MailItem.TYPE_TASK)
+            MailItem.Type view = f.getDefaultView();
+            if (view == MailItem.Type.APPOINTMENT || view == MailItem.Type.TASK) {
                 calFolders.add((Folder) item);
+            }
         }
         return calFolders;
     }
 
     public synchronized SearchFolder getSearchFolderById(OperationContext octxt, int searchId) throws ServiceException {
-        return (SearchFolder) getItemById(octxt, searchId, MailItem.TYPE_SEARCHFOLDER);
+        return (SearchFolder) getItemById(octxt, searchId, MailItem.Type.SEARCHFOLDER);
     }
 
     SearchFolder getSearchFolderById(int searchId) throws ServiceException {
-        return (SearchFolder) getItemById(searchId, MailItem.TYPE_SEARCHFOLDER);
+        return (SearchFolder) getItemById(searchId, MailItem.Type.SEARCHFOLDER);
     }
 
 
     public synchronized Mountpoint getMountpointById(OperationContext octxt, int mptId) throws ServiceException {
-        return (Mountpoint) getItemById(octxt, mptId, MailItem.TYPE_MOUNTPOINT);
+        return (Mountpoint) getItemById(octxt, mptId, MailItem.Type.MOUNTPOINT);
     }
 
 
     public synchronized Note getNoteById(OperationContext octxt, int noteId) throws ServiceException {
-        return (Note) getItemById(octxt, noteId, MailItem.TYPE_NOTE);
+        return (Note) getItemById(octxt, noteId, MailItem.Type.NOTE);
     }
 
     Note getNoteById(int noteId) throws ServiceException {
-        return (Note) getItemById(noteId, MailItem.TYPE_NOTE);
+        return (Note) getItemById(noteId, MailItem.Type.NOTE);
     }
 
     public synchronized List<Note> getNoteList(OperationContext octxt, int folderId) throws ServiceException {
@@ -2892,17 +2961,17 @@ public class Mailbox {
 
     public synchronized List<Note> getNoteList(OperationContext octxt, int folderId, SortBy sort) throws ServiceException {
         List<Note> notes = new ArrayList<Note>();
-        for (MailItem item : getItemList(octxt, MailItem.TYPE_NOTE, folderId, sort))
+        for (MailItem item : getItemList(octxt, MailItem.Type.NOTE, folderId, sort))
             notes.add((Note) item);
         return notes;
     }
 
     public synchronized Chat getChatById(OperationContext octxt, int id) throws ServiceException {
-        return (Chat) getItemById(octxt, id, MailItem.TYPE_CHAT);
+        return (Chat) getItemById(octxt, id, MailItem.Type.CHAT);
     }
 
     Chat getChatById(int id) throws ServiceException {
-        return (Chat) getItemById(id, MailItem.TYPE_CHAT);
+        return (Chat) getItemById(id, MailItem.Type.CHAT);
     }
 
     public synchronized List<Chat> getChatList(OperationContext octxt, int folderId) throws ServiceException {
@@ -2911,17 +2980,17 @@ public class Mailbox {
 
     public synchronized List<Chat> getChatList(OperationContext octxt, int folderId, SortBy sort) throws ServiceException {
         List<Chat> chats = new ArrayList<Chat>();
-        for (MailItem item : getItemList(octxt, MailItem.TYPE_CHAT, folderId, sort))
+        for (MailItem item : getItemList(octxt, MailItem.Type.CHAT, folderId, sort))
             chats.add((Chat) item);
         return chats;
     }
 
     public synchronized Contact getContactById(OperationContext octxt, int id) throws ServiceException {
-        return (Contact) getItemById(octxt, id, MailItem.TYPE_CONTACT);
+        return (Contact) getItemById(octxt, id, MailItem.Type.CONTACT);
     }
 
     Contact getContactById(int id) throws ServiceException {
-        return (Contact) getItemById(id, MailItem.TYPE_CONTACT);
+        return (Contact) getItemById(id, MailItem.Type.CONTACT);
     }
 
     public synchronized List<Contact> getContactList(OperationContext octxt, int folderId) throws ServiceException {
@@ -2930,7 +2999,7 @@ public class Mailbox {
 
     public synchronized List<Contact> getContactList(OperationContext octxt, int folderId, SortBy sort) throws ServiceException {
         List<Contact> contacts = new ArrayList<Contact>();
-        for (MailItem item : getItemList(octxt, MailItem.TYPE_CONTACT, folderId, sort))
+        for (MailItem item : getItemList(octxt, MailItem.Type.CONTACT, folderId, sort))
             contacts.add((Contact) item);
         return contacts;
     }
@@ -2940,11 +3009,11 @@ public class Mailbox {
      * @throws NoSuchItemException if the item does not exist
      */
     public synchronized Message getMessageById(OperationContext octxt, int id) throws ServiceException {
-        return (Message) getItemById(octxt, id, MailItem.TYPE_MESSAGE);
+        return (Message) getItemById(octxt, id, MailItem.Type.MESSAGE);
     }
 
     Message getMessageById(int id) throws ServiceException {
-        return (Message) getItemById(id, MailItem.TYPE_MESSAGE);
+        return (Message) getItemById(id, MailItem.Type.MESSAGE);
     }
 
     Message getMessage(MailItem.UnderlyingData data) throws ServiceException {
@@ -2952,7 +3021,7 @@ public class Mailbox {
     }
 
     Message getCachedMessage(Integer id) throws ServiceException {
-        return (Message) getCachedItem(id, MailItem.TYPE_MESSAGE);
+        return (Message) getCachedItem(id, MailItem.Type.MESSAGE);
     }
 
     public synchronized List<Message> getMessagesByConversation(OperationContext octxt, int convId) throws ServiceException {
@@ -2981,11 +3050,11 @@ public class Mailbox {
 
 
     public synchronized Conversation getConversationById(OperationContext octxt, int id) throws ServiceException {
-        return (Conversation) getItemById(octxt, id, MailItem.TYPE_CONVERSATION);
+        return (Conversation) getItemById(octxt, id, MailItem.Type.CONVERSATION);
     }
 
     Conversation getConversationById(int id) throws ServiceException {
-        return (Conversation) getItemById(id, MailItem.TYPE_CONVERSATION);
+        return (Conversation) getItemById(id, MailItem.Type.CONVERSATION);
     }
 
     Conversation getConversation(MailItem.UnderlyingData data) throws ServiceException {
@@ -2993,7 +3062,7 @@ public class Mailbox {
     }
 
     Conversation getCachedConversation(Integer id) throws ServiceException {
-        return (Conversation) getCachedItem(id, MailItem.TYPE_CONVERSATION);
+        return (Conversation) getCachedItem(id, MailItem.Type.CONVERSATION);
     }
 
     public synchronized Conversation getConversationByHash(OperationContext octxt, String hash) throws ServiceException {
@@ -3019,8 +3088,9 @@ public class Mailbox {
 
         // XXX: why not just do a "getConversationById()" if convId != null?
         MailItem.UnderlyingData data = DbMailItem.getByHash(this, hash);
-        if (data == null || data.type == MailItem.TYPE_CONVERSATION)
+        if (data == null || data.type == MailItem.Type.CONVERSATION.toByte()) {
             return getConversation(data);
+        }
         return (Conversation) getMessage(data).getParent();
     }
 
@@ -3039,16 +3109,16 @@ public class Mailbox {
 
 
     public WikiItem getWikiById(OperationContext octxt, int id) throws ServiceException {
-        return (WikiItem) getItemById(octxt, id, MailItem.TYPE_WIKI);
+        return (WikiItem) getItemById(octxt, id, MailItem.Type.WIKI);
     }
 
 
     public Document getDocumentById(OperationContext octxt, int id) throws ServiceException {
-        return (Document) getItemById(octxt, id, MailItem.TYPE_DOCUMENT);
+        return (Document) getItemById(octxt, id, MailItem.Type.DOCUMENT);
     }
 
     Document getDocumentById(int id) throws ServiceException {
-        return (Document) getItemById(id, MailItem.TYPE_DOCUMENT);
+        return (Document) getItemById(id, MailItem.Type.DOCUMENT);
     }
 
     public synchronized List<Document> getDocumentList(OperationContext octxt, int folderId) throws ServiceException {
@@ -3057,7 +3127,7 @@ public class Mailbox {
 
     public synchronized List<Document> getDocumentList(OperationContext octxt, int folderId, SortBy sort) throws ServiceException {
         List<Document> docs = new ArrayList<Document>();
-        for (MailItem item : getItemList(octxt, MailItem.TYPE_DOCUMENT, folderId, sort))
+        for (MailItem item : getItemList(octxt, MailItem.Type.DOCUMENT, folderId, sort))
             docs.add((Document) item);
         return docs;
     }
@@ -3077,19 +3147,20 @@ public class Mailbox {
     }
 
     private void checkCalendarType(MailItem item) throws ServiceException {
-        byte type = item.getType();
-        if (type != MailItem.TYPE_APPOINTMENT && type != MailItem.TYPE_TASK)
+        MailItem.Type type = item.getType();
+        if (type != MailItem.Type.APPOINTMENT && type != MailItem.Type.TASK) {
             throw MailServiceException.NO_SUCH_CALITEM(item.getId());
+        }
     }
 
     public synchronized CalendarItem getCalendarItemById(OperationContext octxt, int id) throws ServiceException {
-        MailItem item = getItemById(octxt, id, MailItem.TYPE_UNKNOWN);
+        MailItem item = getItemById(octxt, id, MailItem.Type.UNKNOWN);
         checkCalendarType(item);
         return (CalendarItem) item;
     }
 
     CalendarItem getCalendarItemById(int id) throws ServiceException {
-        MailItem item = getItemById(id, MailItem.TYPE_UNKNOWN);
+        MailItem item = getItemById(id, MailItem.Type.UNKNOWN);
         checkCalendarType(item);
         return (CalendarItem) item;
     }
@@ -3099,38 +3170,38 @@ public class Mailbox {
     }
 
     public synchronized List getCalendarItemList(OperationContext octxt, int folderId) throws ServiceException {
-        return getItemList(octxt, MailItem.TYPE_UNKNOWN, folderId);
+        return getItemList(octxt, MailItem.Type.UNKNOWN, folderId);
     }
 
 
     public synchronized Appointment getAppointmentById(OperationContext octxt, int id) throws ServiceException {
-        return (Appointment) getItemById(octxt, id, MailItem.TYPE_APPOINTMENT);
+        return (Appointment) getItemById(octxt, id, MailItem.Type.APPOINTMENT);
     }
 
     Appointment getAppointmentById(int id) throws ServiceException {
-        return (Appointment) getItemById(id, MailItem.TYPE_APPOINTMENT);
+        return (Appointment) getItemById(id, MailItem.Type.APPOINTMENT);
     }
 
     public synchronized List<MailItem> getAppointmentList(OperationContext octxt, int folderId) throws ServiceException {
-        return getItemList(octxt, MailItem.TYPE_APPOINTMENT, folderId);
+        return getItemList(octxt, MailItem.Type.APPOINTMENT, folderId);
     }
 
 
     public synchronized Task getTaskById(OperationContext octxt, int id) throws ServiceException {
-        return (Task) getItemById(octxt, id, MailItem.TYPE_TASK);
+        return (Task) getItemById(octxt, id, MailItem.Type.TASK);
     }
 
     Task getTaskById(int id) throws ServiceException {
-        return (Task) getItemById(id, MailItem.TYPE_TASK);
+        return (Task) getItemById(id, MailItem.Type.TASK);
     }
 
     public synchronized List<MailItem> getTaskList(OperationContext octxt, int folderId) throws ServiceException {
-        return getItemList(octxt, MailItem.TYPE_TASK, folderId);
+        return getItemList(octxt, MailItem.Type.TASK, folderId);
     }
 
 
-    public synchronized TypedIdList listCalendarItemsForRange(OperationContext octxt, byte type, long start, long end, int folderId)
-    throws ServiceException {
+    public synchronized TypedIdList listCalendarItemsForRange(OperationContext octxt, MailItem.Type type,
+            long start, long end, int folderId) throws ServiceException {
         if (folderId == ID_AUTO_INCREMENT)
             return new TypedIdList();
 
@@ -3150,14 +3221,14 @@ public class Mailbox {
         }
     }
 
-    public synchronized List<CalendarItem> getCalendarItems(OperationContext octxt, byte type, int folderId)
+    public synchronized List<CalendarItem> getCalendarItems(OperationContext octxt, MailItem.Type type, int folderId)
     throws ServiceException {
         return getCalendarItemsForRange(octxt, type, -1, -1, folderId, null);
     }
 
-    public synchronized List<CalendarItem> getCalendarItemsForRange(OperationContext octxt, long start, long end, int folderId, int[] excludeFolders)
-    throws ServiceException {
-        return getCalendarItemsForRange(octxt, MailItem.TYPE_UNKNOWN, start, end, folderId, excludeFolders);
+    public synchronized List<CalendarItem> getCalendarItemsForRange(OperationContext octxt, long start, long end,
+            int folderId, int[] excludeFolders) throws ServiceException {
+        return getCalendarItemsForRange(octxt, MailItem.Type.UNKNOWN, start, end, folderId, excludeFolders);
     }
 
     /** Returns a <tt>Collection</tt> of all {@link CalendarItem}s which
@@ -3186,9 +3257,8 @@ public class Mailbox {
      *
      * @perms {@link ACL#RIGHT_READ} on all returned calendar items.
      * @throws ServiceException */
-    public synchronized List<CalendarItem> getCalendarItemsForRange(OperationContext octxt, byte type,
-            long start, long end, int folderId, int[] excludeFolders)
-    throws ServiceException {
+    public synchronized List<CalendarItem> getCalendarItemsForRange(OperationContext octxt, MailItem.Type type,
+            long start, long end, int folderId, int[] excludeFolders) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getCalendarItemsForRange", octxt);
@@ -3218,7 +3288,8 @@ public class Mailbox {
         }
     }
 
-    public synchronized List<Integer> getItemListByDates(OperationContext octxt, byte type, long start, long end, int folderId, boolean descending) throws ServiceException {
+    public synchronized List<Integer> getItemListByDates(OperationContext octxt, MailItem.Type type,
+            long start, long end, int folderId, boolean descending) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getItemListByDates", octxt);
@@ -3364,17 +3435,18 @@ public class Mailbox {
     }
 
 
-    public synchronized CalendarDataResult getCalendarSummaryForRange(OperationContext octxt, int folderId, byte itemType, long start, long end)
-    throws ServiceException {
+    public synchronized CalendarDataResult getCalendarSummaryForRange(OperationContext octxt, int folderId,
+            MailItem.Type type, long start, long end) throws ServiceException {
         Folder folder = getFolderById(folderId);
-        if (!folder.canAccess(ACL.RIGHT_READ))
+        if (!folder.canAccess(ACL.RIGHT_READ)) {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on folder " + folder.getName());
-        return CalendarCacheManager.getInstance().getSummaryCache().
-            getCalendarSummary(octxt, getAccountId(), folderId, itemType, start, end, true);
+        }
+        return CalendarCacheManager.getInstance().getSummaryCache().getCalendarSummary(octxt, getAccountId(), folderId,
+                type, start, end, true);
     }
 
-    public synchronized List<CalendarDataResult> getAllCalendarsSummaryForRange(OperationContext octxt, byte itemType, long start, long end)
-    throws ServiceException {
+    public synchronized List<CalendarDataResult> getAllCalendarsSummaryForRange(OperationContext octxt,
+            MailItem.Type type, long start, long end) throws ServiceException {
         boolean success = false;
         try {
             // folder cache is populated in beginTransaction...
@@ -3387,14 +3459,17 @@ public class Mailbox {
                 // Only look at folders of right view type.  We might have to relax this to allow appointments/tasks
                 // in any folder, but that requires scanning too many folders each time, most of which don't contain
                 // any calendar items.
-                if (folder.getDefaultView() != itemType)
+                if (folder.getDefaultView() != type) {
                     continue;
-                if (!folder.canAccess(ACL.RIGHT_READ))
+                }
+                if (!folder.canAccess(ACL.RIGHT_READ)) {
                     continue;
+                }
                 CalendarDataResult result = CalendarCacheManager.getInstance().getSummaryCache().
-                    getCalendarSummary(octxt, getAccountId(), folder.getId(), itemType, start, end, true);
-                if (result != null)
+                    getCalendarSummary(octxt, getAccountId(), folder.getId(), type, start, end, true);
+                if (result != null) {
                     list.add(result);
+                }
             }
             return list;
         } finally {
@@ -3779,8 +3854,8 @@ public class Mailbox {
         int numFixedTZs = 0;
         ZimbraLog.calendar.info("Started: timezone fixup in calendar of mailbox " + getId());
         List<List<MailItem>> lists = new ArrayList<List<MailItem>>(2);
-        lists.add(getItemList(octxt, MailItem.TYPE_APPOINTMENT));
-        lists.add(getItemList(octxt, MailItem.TYPE_TASK));
+        lists.add(getItemList(octxt, MailItem.Type.APPOINTMENT));
+        lists.add(getItemList(octxt, MailItem.Type.TASK));
         for (List<MailItem> items : lists) {
             for (Iterator<MailItem> iter = items.iterator(); iter.hasNext(); ) {
                 Object obj = iter.next();
@@ -3858,8 +3933,8 @@ public class Mailbox {
         ZimbraLog.calendar.info("Started: end time fixup in calendar of mailbox " + getId());
         @SuppressWarnings("unchecked")
         List<MailItem>[] lists = new List[2];
-        lists[0] = getItemList(octxt, MailItem.TYPE_APPOINTMENT);
-        lists[1] = getItemList(octxt, MailItem.TYPE_TASK);
+        lists[0] = getItemList(octxt, MailItem.Type.APPOINTMENT);
+        lists[1] = getItemList(octxt, MailItem.Type.TASK);
         for (List<MailItem> items : lists) {
             for (Iterator<MailItem> iter = items.iterator(); iter.hasNext(); ) {
                 Object obj = iter.next();
@@ -3906,8 +3981,8 @@ public class Mailbox {
         ZimbraLog.calendar.info("Started: priority fixup in calendar of mailbox " + getId());
         @SuppressWarnings("unchecked")
         List<MailItem>[] lists = new List[2];
-        lists[0] = getItemList(octxt, MailItem.TYPE_APPOINTMENT);
-        lists[1] = getItemList(octxt, MailItem.TYPE_TASK);
+        lists[0] = getItemList(octxt, MailItem.Type.APPOINTMENT);
+        lists[1] = getItemList(octxt, MailItem.Type.TASK);
         for (List<MailItem> items : lists) {
             for (Iterator<MailItem> iter = items.iterator(); iter.hasNext(); ) {
                 Object obj = iter.next();
@@ -4895,7 +4970,7 @@ public class Mailbox {
             SetImapUid redoPlayer = (SetImapUid) mCurrentChange.getRedoPlayer();
 
             for (int id : itemIds) {
-                MailItem item = getItemById(id, MailItem.TYPE_UNKNOWN);
+                MailItem item = getItemById(id, MailItem.Type.UNKNOWN);
                 int imapId = redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapUid(id);
                 item.setImapUid(getNextItemId(imapId));
                 redoRecorder.setImapUid(item.getId(), item.getImapUid());
@@ -4908,14 +4983,17 @@ public class Mailbox {
         }
     }
 
-    public synchronized void setColor(OperationContext octxt, int itemId, byte type, byte color) throws ServiceException {
+    public synchronized void setColor(OperationContext octxt, int itemId, MailItem.Type type, byte color)
+            throws ServiceException {
         setColor(octxt, new int[] { itemId }, type, color);
     }
-    public synchronized void setColor(OperationContext octxt, int[] itemIds, byte type, byte color) throws ServiceException {
+    public synchronized void setColor(OperationContext octxt, int[] itemIds, MailItem.Type type, byte color)
+            throws ServiceException {
         setColor(octxt, itemIds, type, new MailItem.Color(color));
     }
 
-    public synchronized void setColor(OperationContext octxt, int[] itemIds, byte type, MailItem.Color color) throws ServiceException {
+    public synchronized void setColor(OperationContext octxt, int[] itemIds, MailItem.Type type, MailItem.Color color)
+            throws ServiceException {
         ColorItem redoRecorder = new ColorItem(mId, itemIds, type, color);
 
         boolean success = false;
@@ -4935,7 +5013,8 @@ public class Mailbox {
         }
     }
 
-    public synchronized void setCustomData(OperationContext octxt, int itemId, byte type, CustomMetadata custom) throws ServiceException {
+    public synchronized void setCustomData(OperationContext octxt, int itemId, MailItem.Type type,
+            CustomMetadata custom) throws ServiceException {
         String key = custom.getSectionKey();
         if (MetadataCallback.isSectionRegistered(key))
             throw ServiceException.PERM_DENIED("custom metadata section '" + key + "' may only be calculated, not set");
@@ -4957,7 +5036,8 @@ public class Mailbox {
         }
     }
 
-    public synchronized void setDate(OperationContext octxt, int itemId, byte type, long date) throws ServiceException {
+    public synchronized void setDate(OperationContext octxt, int itemId, MailItem.Type type, long date)
+            throws ServiceException {
         DateItem redoRecorder = new DateItem(mId, itemId, type, date);
 
         boolean success = false;
@@ -4975,15 +5055,16 @@ public class Mailbox {
         }
     }
 
-    public synchronized void alterTag(OperationContext octxt, int itemId, byte type, int tagId, boolean addTag) throws ServiceException {
+    public synchronized void alterTag(OperationContext octxt, int itemId, MailItem.Type type, int tagId,
+            boolean addTag) throws ServiceException {
         alterTag(octxt, new int[] { itemId }, type, tagId, addTag, null);
     }
-    public synchronized void alterTag(OperationContext octxt, int itemId, byte type, int tagId, boolean addTag, TargetConstraint tcon)
-    throws ServiceException {
+    public synchronized void alterTag(OperationContext octxt, int itemId, MailItem.Type type, int tagId,
+            boolean addTag, TargetConstraint tcon) throws ServiceException {
         alterTag(octxt, new int[] { itemId }, type, tagId, addTag, tcon);
     }
-    public synchronized void alterTag(OperationContext octxt, int[] itemIds, byte type, int tagId, boolean addTag, TargetConstraint tcon)
-    throws ServiceException {
+    public synchronized void alterTag(OperationContext octxt, int[] itemIds, MailItem.Type type, int tagId,
+            boolean addTag, TargetConstraint tcon) throws ServiceException {
         AlterItemTag redoRecorder = new AlterItemTag(mId, itemIds, type, tagId, addTag, tcon);
 
         boolean success = false;
@@ -5016,29 +5097,35 @@ public class Mailbox {
         }
     }
 
-    public synchronized void setTags(OperationContext octxt, int itemId, byte type, int flags, long tags) throws ServiceException {
+    public synchronized void setTags(OperationContext octxt, int itemId, MailItem.Type type, int flags, long tags)
+            throws ServiceException {
         setTags(octxt, itemId, type, flags, tags, null);
     }
-    public synchronized void setTags(OperationContext octxt, int itemId, byte type, String flagStr, String tagIDs, TargetConstraint tcon)
-    throws ServiceException {
+
+    public synchronized void setTags(OperationContext octxt, int itemId, MailItem.Type type, String flagStr,
+            String tagIDs, TargetConstraint tcon) throws ServiceException {
         int flags = (flagStr == null ? MailItem.FLAG_UNCHANGED : Flag.flagsToBitmask(flagStr));
         long tags = (tagIDs == null ? MailItem.TAG_UNCHANGED : Tag.tagsToBitmask(tagIDs));
         setTags(octxt, itemId, type, flags, tags, tcon);
     }
-    public synchronized void setTags(OperationContext octxt, int[] itemIds, byte type, String flagStr, String tagIDs, TargetConstraint tcon)
-    throws ServiceException {
+
+    public synchronized void setTags(OperationContext octxt, int[] itemIds, MailItem.Type type, String flagStr,
+            String tagIDs, TargetConstraint tcon) throws ServiceException {
         int flags = (flagStr == null ? MailItem.FLAG_UNCHANGED : Flag.flagsToBitmask(flagStr));
         long tags = (tagIDs == null ? MailItem.TAG_UNCHANGED : Tag.tagsToBitmask(tagIDs));
         setTags(octxt, itemIds, type, flags, tags, tcon);
     }
-    public synchronized void setTags(OperationContext octxt, int itemId, byte type, int flags, long tags, TargetConstraint tcon)
-    throws ServiceException {
+
+    public synchronized void setTags(OperationContext octxt, int itemId, MailItem.Type type, int flags, long tags,
+            TargetConstraint tcon) throws ServiceException {
         setTags(octxt, new int[] { itemId }, type, flags, tags, tcon);
     }
-    public synchronized void setTags(OperationContext octxt, int[] itemIds, byte type, int flags, long tags, TargetConstraint tcon)
-    throws ServiceException {
-        if (flags == MailItem.FLAG_UNCHANGED && tags == MailItem.TAG_UNCHANGED)
+
+    public synchronized void setTags(OperationContext octxt, int[] itemIds, MailItem.Type type, int flags, long tags,
+            TargetConstraint tcon) throws ServiceException {
+        if (flags == MailItem.FLAG_UNCHANGED && tags == MailItem.TAG_UNCHANGED) {
             return;
+        }
 
         SetItemTags redoRecorder = new SetItemTags(mId, itemIds, type, flags, tags, tcon);
 
@@ -5077,14 +5164,18 @@ public class Mailbox {
         }
     }
 
-    public synchronized MailItem copy(OperationContext octxt, int itemId, byte type, int folderId) throws ServiceException {
+    public synchronized MailItem copy(OperationContext octxt, int itemId, MailItem.Type type, int folderId)
+            throws ServiceException {
         return copy(octxt, new int[] { itemId }, type, folderId).get(0);
     }
-    public synchronized List<MailItem> copy(OperationContext octxt, int[] itemIds, byte type, int folderId) throws ServiceException {
+
+    public synchronized List<MailItem> copy(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
+            throws ServiceException {
         return copy(octxt, itemIds, type, folderId, false);
     }
-    public synchronized List<MailItem> copy(OperationContext octxt, int[] itemIds, byte type, int folderId, boolean fromDumpster)
-    throws ServiceException {
+
+    public synchronized List<MailItem> copy(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId,
+            boolean fromDumpster) throws ServiceException {
         CopyItem redoRecorder = new CopyItem(mId, type, folderId, fromDumpster);
         boolean success = false;
         try {
@@ -5136,7 +5227,7 @@ public class Mailbox {
                         MailItem parent = null;
                         if (parentId > 0) {
                             try {
-                                parent = getItemById(parentId, MailItem.TYPE_UNKNOWN);
+                                parent = getItemById(parentId, MailItem.Type.UNKNOWN);
                             } catch (MailServiceException.NoSuchItemException e) {
                                 // ignore
                             }
@@ -5160,7 +5251,8 @@ public class Mailbox {
         }
     }
 
-    public synchronized List<MailItem> imapCopy(OperationContext octxt, int[] itemIds, byte type, int folderId) throws IOException, ServiceException {
+    public synchronized List<MailItem> imapCopy(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
+            throws IOException, ServiceException {
         // this is an IMAP command, so we'd better be tracking IMAP changes by now...
         beginTrackingImap();
 
@@ -5257,9 +5349,10 @@ public class Mailbox {
      *        {@link ACL#RIGHT_DELETE} on the source folder
      * @param octxt     The context for this request (e.g. auth user id).
      * @param itemId    The ID of the item to move.
-     * @param type      The type of the item or {@link MailItem#TYPE_UNKNOWN}.
+     * @param type      The type of the item or {@link MailItem.Type#UNKNOWN}.
      * @param targetId  The ID of the target folder for the move. */
-    public synchronized void move(OperationContext octxt, int itemId, byte type, int targetId) throws ServiceException {
+    public synchronized void move(OperationContext octxt, int itemId, MailItem.Type type, int targetId)
+            throws ServiceException {
         move(octxt, new int[] { itemId }, type, targetId, null);
     }
 
@@ -5272,10 +5365,11 @@ public class Mailbox {
      *        {@link ACL#RIGHT_DELETE} on the source folder
      * @param octxt     The context for this request (e.g. auth user id).
      * @param itemId    The ID of the item to move.
-     * @param type      The type of the item or {@link MailItem#TYPE_UNKNOWN}.
+     * @param type      The type of the item or {@link MailItem.Type#UNKNOWN}.
      * @param targetId  The ID of the target folder for the move.
      * @param tcon      An optional constraint on the item being moved. */
-    public synchronized void move(OperationContext octxt, int itemId, byte type, int targetId, TargetConstraint tcon) throws ServiceException {
+    public synchronized void move(OperationContext octxt, int itemId, MailItem.Type type, int targetId,
+            TargetConstraint tcon) throws ServiceException {
         move(octxt, new int[] { itemId }, type, targetId, tcon);
     }
 
@@ -5288,10 +5382,11 @@ public class Mailbox {
      *        {@link ACL#RIGHT_DELETE} on all the the source folders
      * @param octxt     The context for this request (e.g. auth user id).
      * @param itemId    A list of the IDs of the items to move.
-     * @param type      The type of the items or {@link MailItem#TYPE_UNKNOWN}.
+     * @param type      The type of the items or {@link MailItem.Type#UNKNOWN}.
      * @param targetId  The ID of the target folder for the move.
      * @param tcon      An optional constraint on the items being moved. */
-    public synchronized void move(OperationContext octxt, int[] itemIds, byte type, int targetId, TargetConstraint tcon) throws ServiceException {
+    public synchronized void move(OperationContext octxt, int[] itemIds, MailItem.Type type, int targetId,
+            TargetConstraint tcon) throws ServiceException {
         try {
             moveInternal(octxt, itemIds, type, targetId, tcon);
             return;
@@ -5320,16 +5415,19 @@ public class Mailbox {
         }
     }
 
-    private String generateAlternativeItemName(OperationContext octxt, int id, byte type) throws ServiceException {
+    private String generateAlternativeItemName(OperationContext octxt, int id, MailItem.Type type)
+            throws ServiceException {
         String name = getItemById(octxt, id, type).getName();
         String uuid = '{' + UUID.randomUUID().toString() + '}';
-        if (name.length() + uuid.length() > MailItem.MAX_NAME_LENGTH)
+        if (name.length() + uuid.length() > MailItem.MAX_NAME_LENGTH) {
             return name.substring(0, MailItem.MAX_NAME_LENGTH - uuid.length()) + uuid;
-        else
+        } else {
             return name + uuid;
+        }
     }
 
-    private synchronized void moveInternal(OperationContext octxt, int[] itemIds, byte type, int targetId, TargetConstraint tcon) throws ServiceException {
+    private synchronized void moveInternal(OperationContext octxt, int[] itemIds, MailItem.Type type, int targetId,
+            TargetConstraint tcon) throws ServiceException {
         MoveItem redoRecorder = new MoveItem(mId, itemIds, type, targetId, tcon);
         Map<Integer, String> oldFolderPaths = new HashMap<Integer, String>();
 
@@ -5379,15 +5477,17 @@ public class Mailbox {
         }
     }
 
-    public synchronized void rename(OperationContext octxt, int id, byte type, String name, int folderId) throws ServiceException {
+    public synchronized void rename(OperationContext octxt, int id, MailItem.Type type, String name, int folderId)
+            throws ServiceException {
         if (name != null && name.startsWith("/")) {
             rename(octxt, id, type, name);
             return;
         }
 
         name = StringUtil.stripControlCharacters(name);
-        if (name == null || name.equals(""))
+        if (Strings.isNullOrEmpty(name)) {
             throw ServiceException.INVALID_REQUEST("cannot set name to empty string", null);
+        }
 
         RenameItem redoRecorder = new RenameItem(mId, id, type, name, folderId);
 
@@ -5424,7 +5524,8 @@ public class Mailbox {
         }
     }
 
-    public synchronized void rename(OperationContext octxt, int id, byte type, String path) throws ServiceException {
+    public synchronized void rename(OperationContext octxt, int id, MailItem.Type type, String path)
+            throws ServiceException {
         if (path == null || !path.startsWith("/")) {
             rename(octxt, id, type, path, ID_AUTO_INCREMENT);
             return;
@@ -5514,7 +5615,7 @@ public class Mailbox {
      * Deletes the <tt>MailItem</tt> with the given id.  Does nothing
      * if the <tt>MailItem</tt> doesn't exist.
      */
-    public synchronized void delete(OperationContext octxt, int itemId, byte type) throws ServiceException {
+    public synchronized void delete(OperationContext octxt, int itemId, MailItem.Type type) throws ServiceException {
         delete(octxt, new int[] { itemId }, type, null);
     }
 
@@ -5534,9 +5635,10 @@ public class Mailbox {
      *
      *  @param octxt operation context or <tt>null</tt>
      *  @param itemId item id
-     *  @param type item type or {@link MailItem#TYPE_UNKNOWN}
+     *  @param type item type or {@link MailItem.Type#UNKNOWN}
      *  @param tcon target constraint or <tt>null</tt> */
-    public synchronized void delete(OperationContext octxt, int itemId, byte type, TargetConstraint tcon) throws ServiceException {
+    public synchronized void delete(OperationContext octxt, int itemId, MailItem.Type type, TargetConstraint tcon)
+            throws ServiceException {
         delete(octxt, new int[] { itemId }, type, tcon);
     }
 
@@ -5547,9 +5649,10 @@ public class Mailbox {
      *
     *  @param octxt operation context or <tt>null</tt>
     *  @param itemIds item ids
-    *  @param type item type or {@link MailItem#TYPE_UNKNOWN}
+    *  @param type item type or {@link MailItem.Type#UNKNOWN}
     *  @param tcon target constraint or <tt>null</tt> */
-    public synchronized void delete(OperationContext octxt, int[] itemIds, byte type, TargetConstraint tcon) throws ServiceException {
+    public synchronized void delete(OperationContext octxt, int[] itemIds, MailItem.Type type, TargetConstraint tcon)
+            throws ServiceException {
         DeleteItem redoRecorder = new DeleteItem(mId, itemIds, type, tcon);
         Map<Integer, String> deletedFolderPaths = new HashMap<Integer, String>();
         Map<Integer, String> deletedTags = new HashMap<Integer, String>();
@@ -5565,16 +5668,16 @@ public class Mailbox {
 
                 MailItem item;
                 try {
-                    item = getItemById(id, MailItem.TYPE_UNKNOWN);
+                    item = getItemById(id, MailItem.Type.UNKNOWN);
                 } catch (NoSuchItemException nsie) {
                     // trying to delete nonexistent things is A-OK!
                     continue;
                 }
 
-                if (item.getType() == MailItem.TYPE_FOLDER) {
+                if (item.getType() == MailItem.Type.FOLDER) {
                     deletedFolderPaths.put(item.getId(), ((Folder) item).getPath());
                 }
-                if (item.getType() == MailItem.TYPE_TAG) {
+                if (item.getType() == MailItem.Type.TAG) {
                     deletedTags.put(item.getId(), item.getName());
                 }
 
@@ -5620,7 +5723,7 @@ public class Mailbox {
         for (int id : itemIds) {
             MailItem item = null;
             try {
-                item = getItemById(id, MailItem.TYPE_UNKNOWN, true);
+                item = getItemById(id, MailItem.Type.UNKNOWN, true);
             } catch (MailServiceException.NoSuchItemException e) {
                 ZimbraLog.mailbox.info("ignoring NO_SUCH_ITEM exception during dumpster delete; item id=" + id, e);
                 continue;
@@ -5942,21 +6045,18 @@ public class Mailbox {
         }
     }
 
-    /**
-     * @see #createFolder(OperationContext, String, int, byte, byteint, byte, String)
-     */
-    public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte defaultView, int flags, byte color, String url)
-    throws ServiceException {
+    public synchronized Folder createFolder(OperationContext octxt, String name, int parentId,
+            MailItem.Type defaultView, int flags, byte color, String url) throws ServiceException {
         return createFolder(octxt, name, parentId, (byte)0, defaultView, flags, color, url);
     }
 
-    public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte attrs, byte defaultView, int flags, byte color, String url)
-    throws ServiceException {
+    public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte attrs,
+            MailItem.Type defaultView, int flags, byte color, String url) throws ServiceException {
         return createFolder(octxt, name, parentId, attrs, defaultView, flags, new MailItem.Color(color), url);
     }
 
-    public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte attrs, byte defaultView, int flags, MailItem.Color color, String url)
-    throws ServiceException {
+    public synchronized Folder createFolder(OperationContext octxt, String name, int parentId, byte attrs,
+            MailItem.Type defaultView, int flags, MailItem.Color color, String url) throws ServiceException {
         CreateFolder redoRecorder = new CreateFolder(mId, name, parentId, attrs, defaultView, flags, color, url);
 
         boolean success = false;
@@ -5975,10 +6075,8 @@ public class Mailbox {
         }
     }
 
-    /**
-     * @see #createFolder(OperationContext, String, int, byte, int, byte, String)
-     */
-    public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView) throws ServiceException {
+    public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, MailItem.Type defaultView)
+            throws ServiceException {
         return createFolder(octxt, path, attrs, defaultView, 0, MailItem.DEFAULT_COLOR, null);
     }
 
@@ -5999,13 +6097,13 @@ public class Mailbox {
      *
      * @throws ServiceException if the folder creation fails
      */
-    public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView, int flags, byte color, String url)
-    throws ServiceException {
+    public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, MailItem.Type defaultView,
+            int flags, byte color, String url) throws ServiceException {
         return createFolder(octxt, path, attrs, defaultView, flags, new MailItem.Color(color), url);
     }
 
-    public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, byte defaultView, int flags, MailItem.Color color, String url)
-    throws ServiceException {
+    public synchronized Folder createFolder(OperationContext octxt, String path, byte attrs, MailItem.Type defaultView,
+            int flags, MailItem.Color color, String url) throws ServiceException {
         if (path == null)
             throw ServiceException.FAILURE("null path passed to Mailbox.createFolderPath", null);
         if (!path.startsWith("/"))
@@ -6033,13 +6131,14 @@ public class Mailbox {
                 boolean last = i == parts.length - 1;
                 int folderId = playerFolderIds == null ? ID_AUTO_INCREMENT : playerFolderIds[i];
                 Folder subfolder = folder.findSubfolder(parts[i]);
-                if (subfolder == null)
+                if (subfolder == null) {
                     subfolder = Folder.create(getNextItemId(folderId), this, folder, parts[i], (byte) 0,
-                                              last ? defaultView : MailItem.TYPE_UNKNOWN, flags, color, last ? url : null, null);
-                else if (folderId != ID_AUTO_INCREMENT && folderId != subfolder.getId())
+                            last ? defaultView : MailItem.Type.UNKNOWN, flags, color, last ? url : null, null);
+                } else if (folderId != ID_AUTO_INCREMENT && folderId != subfolder.getId()) {
                     throw ServiceException.FAILURE("parent folder id changed since operation was recorded", null);
-                else if (last)
+                } else if (last) {
                     throw MailServiceException.ALREADY_EXISTS(path);
+                }
                 recorderFolderIds[i] = subfolder.getId();
                 folder = subfolder;
             }
@@ -6106,7 +6205,8 @@ public class Mailbox {
         }
     }
 
-    public synchronized void setFolderDefaultView(OperationContext octxt, int folderId, byte view) throws ServiceException {
+    public synchronized void setFolderDefaultView(OperationContext octxt, int folderId, MailItem.Type view)
+            throws ServiceException {
         SetFolderDefaultView redoRecorder = new SetFolderDefaultView(mId, folderId, view);
 
         boolean success = false;
@@ -6177,7 +6277,7 @@ public class Mailbox {
 
                 DataSource.Type type;
                 String name;
-                if (folder.getDefaultView() == MailItem.TYPE_APPOINTMENT) {
+                if (folder.getDefaultView() == MailItem.Type.APPOINTMENT) {
                     type = DataSource.Type.cal;
                     name = "CAL-" + folder.getId();
                 } else {
@@ -6217,12 +6317,13 @@ public class Mailbox {
         // If syncing a folder with calendar items, remember the current items.  After applying the new
         // appointments/tasks, we need to remove ones that were not updated because they are apparently
         // deleted from the source feed.
-        boolean isCalendar = folder.getDefaultView() == MailItem.TYPE_APPOINTMENT ||
-                             folder.getDefaultView() == MailItem.TYPE_TASK;
+        boolean isCalendar = folder.getDefaultView() == MailItem.Type.APPOINTMENT ||
+                             folder.getDefaultView() == MailItem.Type.TASK;
         Set<Integer> existingCalItems = new HashSet<Integer>();
         if (subscription && isCalendar) {
-            for (int i : listItemIds(octxt, MailItem.TYPE_UNKNOWN, folder.getId()))
+            for (int i : listItemIds(octxt, MailItem.Type.UNKNOWN, folder.getId())) {
                 existingCalItems.add(i);
+            }
         }
 
         // if there's nothing to add, we can short-circuit here
@@ -6293,7 +6394,7 @@ public class Mailbox {
 
         // Delete calendar items that have been deleted in the source feed.
         for (int toRemove : existingCalItems) {
-            delete(octxtNoConflicts, toRemove, MailItem.TYPE_UNKNOWN);
+            delete(octxtNoConflicts, toRemove, MailItem.Type.UNKNOWN);
         }
 
         // update the subscription to avoid downloading items twice
@@ -6390,7 +6491,7 @@ public class Mailbox {
         // Make sure that the user has the delete permission for all folders in
         // the hierarchy.
         for (int id : folderIds) {
-            if ((getEffectivePermissions(octxt, id, MailItem.TYPE_FOLDER) & ACL.RIGHT_DELETE) == 0) {
+            if ((getEffectivePermissions(octxt, id, MailItem.Type.FOLDER) & ACL.RIGHT_DELETE) == 0) {
                throw ServiceException.PERM_DENIED("not authorized to empty folder " +
                    getFolderById(octxt, id).getPath());
             }
@@ -6399,7 +6500,7 @@ public class Mailbox {
 
         QueryParams params = new QueryParams();
         params.setFolderIds(folderIds).setModifiedSequenceBefore(lastChangeID + 1).setRowLimit(batchSize);
-        params.setExcludedTypes(MailItem.TYPE_FOLDER, MailItem.TYPE_MOUNTPOINT, MailItem.TYPE_SEARCHFOLDER);
+        params.setExcludedTypes(EnumSet.of(MailItem.Type.FOLDER, MailItem.Type.MOUNTPOINT, MailItem.Type.SEARCHFOLDER));
 
         while (true) {
             Set<Integer> itemIds = null;
@@ -6418,7 +6519,7 @@ public class Mailbox {
                 if (itemIds.isEmpty()) {
                     break;
                 }
-                delete(octxt, ArrayUtil.toIntArray(itemIds), MailItem.TYPE_UNKNOWN, null);
+                delete(octxt, ArrayUtil.toIntArray(itemIds), MailItem.Type.UNKNOWN, null);
             }
         }
 
@@ -6470,14 +6571,12 @@ public class Mailbox {
     }
 
     public synchronized Mountpoint createMountpoint(OperationContext octxt, int folderId, String name,
-                                                    String ownerId, int remoteId, byte view, int flags, byte color)
-    throws ServiceException {
+            String ownerId, int remoteId, MailItem.Type view, int flags, byte color) throws ServiceException {
         return createMountpoint(octxt, folderId, name, ownerId, remoteId, view, flags, new MailItem.Color(color));
     }
 
     public synchronized Mountpoint createMountpoint(OperationContext octxt, int folderId, String name,
-                                                    String ownerId, int remoteId, byte view, int flags, MailItem.Color color)
-    throws ServiceException {
+            String ownerId, int remoteId, MailItem.Type view, int flags, MailItem.Color color) throws ServiceException {
         CreateMountpoint redoRecorder = new CreateMountpoint(mId, folderId, name, ownerId, remoteId, view, flags, color);
 
         boolean success = false;
@@ -6670,19 +6769,19 @@ public class Mailbox {
         }
     }
 
-    public WikiItem createWiki(OperationContext octxt, int folderId, String wikiword, String author, String description, InputStream data)
-    throws ServiceException {
-        return (WikiItem) createDocument(octxt, folderId, wikiword, WikiItem.WIKI_CONTENT_TYPE, author, description, data, MailItem.TYPE_WIKI);
+    public WikiItem createWiki(OperationContext octxt, int folderId, String wikiword, String author,
+            String description, InputStream data) throws ServiceException {
+        return (WikiItem) createDocument(octxt, folderId, wikiword, WikiItem.WIKI_CONTENT_TYPE, author, description,
+                data, MailItem.Type.WIKI);
     }
 
-    public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType, String author, String description, InputStream data)
-    throws ServiceException {
-        return createDocument(octxt, folderId, filename, mimeType, author, description, data, MailItem.TYPE_DOCUMENT);
+    public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType,
+            String author, String description, InputStream data) throws ServiceException {
+        return createDocument(octxt, folderId, filename, mimeType, author, description, data, MailItem.Type.DOCUMENT);
     }
 
-    public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType, String author, String description,
-                                   InputStream data, byte type)
-    throws ServiceException {
+    public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType,
+            String author, String description, InputStream data, MailItem.Type type) throws ServiceException {
         index.maybeIndexDeferredItems();
         try {
             ParsedDocument pd = new ParsedDocument(data, filename, mimeType, System.currentTimeMillis(), author, description);
@@ -6692,7 +6791,7 @@ public class Mailbox {
         }
     }
 
-    public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, byte type)
+    public Document createDocument(OperationContext octxt, int folderId, ParsedDocument pd, MailItem.Type type)
     throws IOException, ServiceException {
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = sm.stage(pd.getBlob(), this);
@@ -6708,12 +6807,16 @@ public class Mailbox {
                 int itemId = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
 
                 Document doc;
-                if (type == MailItem.TYPE_DOCUMENT)
+                switch (type) {
+                case DOCUMENT:
                     doc = Document.create(itemId, getFolderById(folderId), pd.getFilename(), pd.getContentType(), pd, null);
-                else if (type == MailItem.TYPE_WIKI)
+                    break;
+                case WIKI:
                     doc = WikiItem.create(itemId, getFolderById(folderId), pd.getFilename(), pd, null);
-                else
-                    throw MailServiceException.INVALID_TYPE(type);
+                    break;
+                default:
+                    throw MailServiceException.INVALID_TYPE(type.toString());
+                }
 
                 redoRecorder.setMessageId(itemId);
                 redoRecorder.setDocument(pd);
@@ -6799,7 +6902,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("purgeRevision", octxt, redoRecorder);
-            MailItem item = getItemById(itemId, MailItem.TYPE_DOCUMENT);
+            MailItem item = getItemById(itemId, MailItem.Type.DOCUMENT);
             item.purgeRevision(rev, includeOlderRevisions);
             success = true;
         } finally {
@@ -6908,7 +7011,7 @@ public class Mailbox {
 
                 redoRecorder.setMessageBodyInfo(new ParsedMessageDataSource(pm), size);
 
-                Chat chat = (Chat) getItemById(id, MailItem.TYPE_CHAT);
+                Chat chat = (Chat) getItemById(id, MailItem.Type.CHAT);
 
                 if (!chat.isMutable())
                     throw MailServiceException.IMMUTABLE_OBJECT(id);
@@ -7186,11 +7289,11 @@ public class Mailbox {
                 //    a redo error, and the second case would index the wrong
                 //    value.
                 if (redoRecorder != null) {
-                    if (mCurrentChange.mDirty != null && mCurrentChange.mDirty.changedTypes != 0) {
+                    if (mCurrentChange.mDirty != null && !mCurrentChange.mDirty.changedTypes.isEmpty()) {
                         // if an "all accounts" waitset is active, and this change has an appropriate type,
                         // then we'll need to set a commit-callback
-                        AllAccountsRedoCommitCallback cb =
-                            AllAccountsRedoCommitCallback.getRedoCallbackIfNecessary(getAccountId(), mCurrentChange.mDirty.changedTypes);
+                        AllAccountsRedoCommitCallback cb = AllAccountsRedoCommitCallback.getRedoCallbackIfNecessary(
+                                getAccountId(), mCurrentChange.mDirty.changedTypes);
                         if (cb != null) {
                             redoRecorder.setCommitCallback(cb);
                         }
@@ -7394,17 +7497,17 @@ public class Mailbox {
             for (Map<?, ?> map : new Map[] {change.mDirty.created, change.mDirty.deleted, change.mDirty.modified}) {
                 if (map != null) {
                     for (Object obj : map.values()) {
-                        if (obj instanceof Change)
+                        if (obj instanceof Change) {
                             obj = ((Change) obj).what;
-
-                        if (obj instanceof Tag)
-                            purge(MailItem.TYPE_TAG);
-                        else if (obj instanceof Folder)
-                            purge(MailItem.TYPE_FOLDER);
-                        else if (obj instanceof MailItem && cache != null)
+                        } else if (obj instanceof Tag) {
+                            purge(MailItem.Type.TAG);
+                        } else if (obj instanceof Folder) {
+                            purge(MailItem.Type.FOLDER);
+                        } else if (obj instanceof MailItem && cache != null) {
                             cache.remove(new Integer(((MailItem) obj).getId()));
-                        else if (obj instanceof Integer && cache != null)
+                        } else if (obj instanceof Integer && cache != null) {
                             cache.remove(obj);
+                        }
                     }
                 }
             }
@@ -7469,7 +7572,7 @@ public class Mailbox {
         return getAccount().isAttachmentsIndexingEnabled();
     }
 
-    private void logCacheActivity(Integer key, byte type, MailItem item) {
+    private void logCacheActivity(Integer key, MailItem.Type type, MailItem item) {
         // The global item cache counter always gets updated
         if (!isCachedType(type))
             ZimbraPerf.COUNTER_MBOX_ITEM_CACHE.increment(item == null ? 0 : 100);
@@ -7485,12 +7588,14 @@ public class Mailbox {
 
         // Don't log cache hits for folders, search folders and tags.  We always
         // keep these in memory, so cache hits are not interesting.
-        if (isCachedType(type))
+        if (isCachedType(type)) {
             return;
-        ZimbraLog.cache.debug("Cache hit for " + MailItem.getNameForType(type) + " " + key + " in mailbox " + getId());
+        }
+        ZimbraLog.cache.debug("Cache hit for %s %d in mailbox %d", type, key, getId());
     }
 
-    public synchronized MailItem lock(OperationContext octxt, int itemId, byte type, String accountId) throws ServiceException {
+    public synchronized MailItem lock(OperationContext octxt, int itemId, MailItem.Type type, String accountId)
+            throws ServiceException {
         LockItem redoRecorder = new LockItem(mId, itemId, type, accountId);
 
         boolean success = false;
@@ -7505,7 +7610,8 @@ public class Mailbox {
         }
     }
 
-    public synchronized void unlock(OperationContext octxt, int itemId, byte type, String accountId) throws ServiceException {
+    public synchronized void unlock(OperationContext octxt, int itemId, MailItem.Type type, String accountId)
+            throws ServiceException {
         UnlockItem redoRecorder = new UnlockItem(mId, itemId, type, accountId);
 
         boolean success = false;
@@ -7527,8 +7633,8 @@ public class Mailbox {
             OperationContext octxt = new OperationContext(this);
             beginTransaction("migrateWikiFolders", octxt, null);
             for (Folder f : mFolderCache.values()) {
-                if (f.getDefaultView() == MailItem.TYPE_WIKI) {
-                    f.migrateDefaultView(MailItem.TYPE_DOCUMENT);
+                if (f.getDefaultView() == MailItem.Type.WIKI) {
+                    f.migrateDefaultView(MailItem.Type.DOCUMENT);
                 }
             }
             success = true;

@@ -16,6 +16,7 @@ package com.zimbra.cs.index.query;
 
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -490,7 +491,7 @@ public class QueryParserTest {
     @Test
     public void contactContent() throws Exception {
         QueryParser parser = new QueryParser(null, ZimbraAnalyzer.getInstance());
-        parser.setTypes(Collections.singleton(MailItem.TYPE_CONTACT));
+        parser.setTypes(EnumSet.of(MailItem.Type.CONTACT));
 
         String src = "zimbra";
         Assert.assertEquals("(Q(l.contactData,zimbra *=zimbra [0 terms]) || Q(l.content,zimbra))",

@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Jun 11, 2005
  */
 package com.zimbra.cs.service.mail;
 
@@ -44,6 +40,7 @@ import java.util.Date;
 import java.util.Map;
 
 /**
+ * @since Jun 11, 2005
  * @author dkarp
  */
 public class SaveDraft extends MailDocumentHandler {
@@ -51,14 +48,21 @@ public class SaveDraft extends MailDocumentHandler {
     private static final String[] TARGET_DRAFT_PATH = new String[] { MailConstants.E_MSG, MailConstants.A_ID };
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_MSG, MailConstants.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
-    @Override protected String[] getProxiedIdPath(Element request) {
+
+    @Override
+    protected String[] getProxiedIdPath(Element request) {
         return getXPath(request, TARGET_DRAFT_PATH) != null ? TARGET_DRAFT_PATH : TARGET_FOLDER_PATH;
     }
-    @Override protected boolean checkMountpointProxy(Element request) {
+
+    @Override
+    protected boolean checkMountpointProxy(Element request) {
         return getXPath(request, TARGET_DRAFT_PATH) == null;
     }
-    @Override protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
+    @Override
+    protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
+
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
@@ -115,14 +119,14 @@ public class SaveDraft extends MailDocumentHandler {
         Account acct = mbox.getAccount();
         long quota = acct.getMailQuota();
         if (autoSendTime != 0 && acct.isMailAllowReceiveButNotSendWhenOverQuota() && quota != 0 && mbox.getSize() > quota) {
-            throw MailServiceException.QUOTA_EXCEEDED(quota);            
+            throw MailServiceException.QUOTA_EXCEEDED(quota);
         }
 
         Message msg;
         try {
             String origid = iidOrigid == null ? null : iidOrigid.toString(account == null ?
                 mbox.getAccountId() : account);
-            
+
             msg = mbox.saveDraft(octxt, pm, id, origid, replyType, identity, account, autoSendTime);
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOException while saving draft", e);
@@ -136,8 +140,8 @@ public class SaveDraft extends MailDocumentHandler {
         if (folderId != null || flags != null || tags != null || color != null) {
             try {
                 // best not to fail if there's an error here...
-                ItemActionHelper.UPDATE(octxt, mbox, zsc.getResponseProtocol(), Arrays.asList(msg.getId()), MailItem.TYPE_MESSAGE,
-                                           null, null, iidFolder, flags, tags, color);
+                ItemActionHelper.UPDATE(octxt, mbox, zsc.getResponseProtocol(), Arrays.asList(msg.getId()),
+                        MailItem.Type.MESSAGE, null, null, iidFolder, flags, tags, color);
                 // and make sure the Message object reflects post-update reality
                 msg = mbox.getMessageById(octxt, msg.getId());
             } catch (ServiceException e) {

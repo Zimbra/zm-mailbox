@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -64,8 +64,8 @@ public class FolderAction extends ItemAction {
         if (OP_GRANT.equalsIgnoreCase(operation) || OP_REVOKE.equalsIgnoreCase(operation) ||
             OP_REVOKEORPHANGRANTS.equalsIgnoreCase(operation))
             return true;
-		return super.checkMountpointProxy(request);
-	}
+        return super.checkMountpointProxy(request);
+    }
 
     public static final String OP_EMPTY    = "empty";
     public static final String OP_REFRESH  = "sync";
@@ -100,11 +100,11 @@ public class FolderAction extends ItemAction {
         if (operation.endsWith(OP_COPY) || operation.endsWith(OP_SPAM))
             throw ServiceException.INVALID_REQUEST("invalid operation on folder: " + operation, null);
         String successes;
-        if (FOLDER_OPS.contains(operation))
+        if (FOLDER_OPS.contains(operation)) {
             successes = handleFolder(context, request, operation, result);
-        else
-            successes = handleCommon(context, request, operation, MailItem.TYPE_FOLDER);
-
+        } else {
+            successes = handleCommon(context, request, operation, MailItem.Type.FOLDER);
+        }
         result.addAttribute(MailConstants.A_ID, successes);
         result.addAttribute(MailConstants.A_OPERATION, operation);
         return response;
@@ -133,10 +133,10 @@ public class FolderAction extends ItemAction {
             mbox.importFeed(octxt, iid.getId(), url, false);
         } else if (operation.equals(OP_FREEBUSY)) {
             boolean fb = action.getAttributeBool(MailConstants.A_EXCLUDE_FREEBUSY, false);
-            mbox.alterTag(octxt, iid.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, fb);
+            mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, fb);
             FreeBusyProvider.mailboxChanged(zsc.getRequestedAccountId());
         } else if (operation.equals(OP_CHECK) || operation.equals(OP_UNCHECK)) {
-            mbox.alterTag(octxt, iid.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_CHECKED, operation.equals(OP_CHECK));
+            mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_FLAG_CHECKED, operation.equals(OP_CHECK));
         } else if (operation.equals(OP_SET_URL)) {
             String url = action.getAttribute(MailConstants.A_URL, "");
             mbox.setFolderUrl(octxt, iid.getId(), url);
@@ -145,7 +145,7 @@ public class FolderAction extends ItemAction {
 
             if (action.getAttribute(MailConstants.A_EXCLUDE_FREEBUSY, null) != null) {
                 boolean fb = action.getAttributeBool(MailConstants.A_EXCLUDE_FREEBUSY, false);
-                mbox.alterTag(octxt, iid.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, fb);
+                mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, fb);
             }
         } else if (operation.equals(OP_REVOKE)) {
             String zid = action.getAttribute(MailConstants.A_ZIMBRA_ID);
@@ -223,18 +223,22 @@ public class FolderAction extends ItemAction {
             byte color = (byte) action.getAttributeLong(MailConstants.A_COLOR, -1);
             ACL acl = parseACL(action.getOptionalElement(MailConstants.E_ACL));
 
-            if (color >= 0)
-                mbox.setColor(octxt, iid.getId(), MailItem.TYPE_FOLDER, color);
-            if (acl != null)
+            if (color >= 0) {
+                mbox.setColor(octxt, iid.getId(), MailItem.Type.FOLDER, color);
+            }
+            if (acl != null) {
                 mbox.setPermissions(octxt, iid.getId(), acl);
-            if (flags != null)
-                mbox.setTags(octxt, iid.getId(), MailItem.TYPE_FOLDER, flags, null, null);
-            if (newName != null)
-                mbox.rename(octxt, iid.getId(), MailItem.TYPE_FOLDER, newName, iidFolder.getId());
-            else if (iidFolder.getId() > 0)
-                mbox.move(octxt, iid.getId(), MailItem.TYPE_FOLDER, iidFolder.getId(), null);
+            }
+            if (flags != null) {
+                mbox.setTags(octxt, iid.getId(), MailItem.Type.FOLDER, flags, null, null);
+            }
+            if (newName != null) {
+                mbox.rename(octxt, iid.getId(), MailItem.Type.FOLDER, newName, iidFolder.getId());
+            } else if (iidFolder.getId() > 0) {
+                mbox.move(octxt, iid.getId(), MailItem.Type.FOLDER, iidFolder.getId(), null);
+            }
         } else if (operation.equals(OP_SYNCON) || operation.equals(OP_SYNCOFF)) {
-            mbox.alterTag(octxt, iid.getId(), MailItem.TYPE_FOLDER, Flag.ID_FLAG_SYNC, operation.equals(OP_SYNCON));
+            mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_FLAG_SYNC, operation.equals(OP_SYNCON));
         } else {
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
         }
@@ -251,7 +255,7 @@ public class FolderAction extends ItemAction {
             String zid   = grant.getAttribute(MailConstants.A_ZIMBRA_ID);
             byte gtype   = ACL.stringToType(grant.getAttribute(MailConstants.A_GRANT_TYPE));
             short rights = ACL.stringToRights(grant.getAttribute(MailConstants.A_RIGHTS));
-            
+
             String secret = null;
             if (gtype == ACL.GRANTEE_KEY)
                 secret = grant.getAttribute(MailConstants.A_ACCESSKEY, null);
@@ -267,14 +271,14 @@ public class FolderAction extends ItemAction {
     }
 
     public static NamedEntry lookupEmailAddress(String name) throws ServiceException {
-    	NamedEntry nentry = null;
+        NamedEntry nentry = null;
         Provisioning prov = Provisioning.getInstance();
         nentry = prov.get(AccountBy.name, name);
         if (nentry == null)
-        	nentry = prov.get(DistributionListBy.name, name);
+            nentry = prov.get(DistributionListBy.name, name);
         return nentry;
     }
-    
+
     static NamedEntry lookupGranteeByName(String name, byte type, ZimbraSoapContext zsc) throws ServiceException {
         if (type == ACL.GRANTEE_AUTHUSER || type == ACL.GRANTEE_PUBLIC || type == ACL.GRANTEE_GUEST || type == ACL.GRANTEE_KEY)
             return null;
@@ -342,11 +346,11 @@ public class FolderAction extends ItemAction {
         else
             throw ServiceException.INVALID_REQUEST("invalid grantee type for revokeOrphanGrants", null);
 
-        String query = "(" + Provisioning.A_zimbraId + "=" + granteeId + ")";    
+        String query = "(" + Provisioning.A_zimbraId + "=" + granteeId + ")";
 
         Provisioning.SearchOptions opts = new SearchOptions();
         opts.setFlags(flags);
-        opts.setQuery(query);  
+        opts.setQuery(query);
         opts.setOnMaster(true);  // search the grantee on LDAP master
 
         Provisioning prov = Provisioning.getInstance();
@@ -365,7 +369,7 @@ public class FolderAction extends ItemAction {
     throws ServiceException {
         if (node.mFolder != null) {
             // skip this folder if the authed user does not have admin right
-            // we still want to proceed to subfolders because the authed user 
+            // we still want to proceed to subfolders because the authed user
             // may have admin right on subfolders
             //
             // e.g.   folder1 (a)
@@ -375,7 +379,7 @@ public class FolderAction extends ItemAction {
             //        if there are orphan grants on all folder1, folder2, folder3,
             //        we will revoke the orphan grants on folder1 and folder3 only, not folder2.
 
-            boolean canAdmin = (mbox.getEffectivePermissions(octxt, node.mFolder.getId(), MailItem.TYPE_FOLDER) & ACL.RIGHT_ADMIN) != 0;
+            boolean canAdmin = (mbox.getEffectivePermissions(octxt, node.mFolder.getId(), MailItem.Type.FOLDER) & ACL.RIGHT_ADMIN) != 0;
 
             if (canAdmin) {
                 ACL acl = node.mFolder.getACL(); // or getEffectiveACL?
@@ -384,7 +388,7 @@ public class FolderAction extends ItemAction {
                         if (granteeId.equals(grant.getGranteeId()) && gtype == grant.getGranteeType()) {
                             mbox.revokeAccess(octxt, node.mFolder.getId(), granteeId);
                             // break out of the loop since there can be only one grant for the same grantee on a folder
-                            break; 
+                            break;
                         }
                     }
                 }

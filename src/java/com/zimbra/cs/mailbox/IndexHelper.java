@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -73,7 +74,7 @@ public final class IndexHelper {
     private MailboxIndex mailboxIndex;
     // current re-indexing operation for this mailbox, or NULL if a re-index is not in progress.
     private volatile ReIndexTask reIndex;
-    private SetMultimap<Byte, Integer> deferredIds; // guarded by IndexHelper
+    private SetMultimap<MailItem.Type, Integer> deferredIds; // guarded by IndexHelper
 
     IndexHelper(Mailbox mbox) {
         mailbox = mbox;
@@ -107,7 +108,7 @@ public final class IndexHelper {
         assert(octx != null);
 
         ZimbraQuery query = MailboxIndex.compileQuery(proto, octx, mailbox, params);
-        Set<Byte> types = toIndexTypes(params.getTypes());
+        Set<MailItem.Type> types = toIndexTypes(params.getTypes());
         // no need to index if the search doesn't involve Lucene
         if (query.countTextOperations() > 0 && getDeferredCount(types) > 0) {
             try {
@@ -120,8 +121,8 @@ public final class IndexHelper {
         return MailboxIndex.search(query);
     }
 
-    public ZimbraQueryResults search(OperationContext octxt, String queryString, Set<Byte> types, SortBy sortBy,
-            int chunkSize, boolean inDumpster) throws ServiceException {
+    public ZimbraQueryResults search(OperationContext octxt, String queryString, Set<MailItem.Type> types,
+            SortBy sortBy, int chunkSize, boolean inDumpster) throws ServiceException {
         SearchParams params = new SearchParams();
         params.setQueryStr(queryString);
         params.setTimeZone(null);
@@ -135,8 +136,8 @@ public final class IndexHelper {
         return search(SoapProtocol.Soap12, octxt, params);
     }
 
-    public ZimbraQueryResults search(OperationContext octxt, String queryString, Set<Byte> types, SortBy sortBy,
-            int chunkSize) throws ServiceException {
+    public ZimbraQueryResults search(OperationContext octxt, String queryString, Set<MailItem.Type> types,
+            SortBy sortBy, int chunkSize) throws ServiceException {
         return search(octxt, queryString, types, sortBy, chunkSize, false);
     }
 
@@ -168,9 +169,9 @@ public final class IndexHelper {
     void maybeIndexDeferredItems() {
         // If there was a failure, we trigger indexing even if the deferred count is still low.
         if ((lastFailedTime >= 0 && System.currentTimeMillis() - lastFailedTime > FAILURE_DELAY) ||
-                getDeferredCount(Collections.<Byte>emptySet()) >= getBatchThreshold()) {
+                getDeferredCount(EnumSet.noneOf(MailItem.Type.class)) >= getBatchThreshold()) {
             try {
-                indexDeferredItems(Collections.<Byte>emptySet(), new BatchStatus(), false);
+                indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), new BatchStatus(), false);
             } catch (ServiceException e) {
                 ZimbraLog.indexing.error("Failed to index deferred items", e);
             }
@@ -184,7 +185,8 @@ public final class IndexHelper {
      * @param wait if an indexing is in progress by other threads, true to wait for them to complete, false to skip
      * indexing
      */
-    private void indexDeferredItems(Set<Byte> types, BatchStatus status, boolean wait) throws ServiceException {
+    private void indexDeferredItems(Set<MailItem.Type> types, BatchStatus status, boolean wait)
+            throws ServiceException {
         assert(!Thread.holdsLock(mailbox));
 
         if (wait) {
@@ -220,7 +222,7 @@ public final class IndexHelper {
         startReIndex(new ReIndexTask(octx, ids));
     }
 
-    public void startReIndexByType(OperationContext octx, Set<Byte> types) throws ServiceException {
+    public void startReIndexByType(OperationContext octx, Set<MailItem.Type> types) throws ServiceException {
         startReIndexById(octx, DbMailItem.getReIndexIds(mailbox, types));
     }
 
@@ -322,7 +324,7 @@ public final class IndexHelper {
                     }
                 }
                 clearDeferredIds();
-                indexDeferredItems(Collections.<Byte>emptySet(), status, true);
+                indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), status, true);
             } else { // partial re-index
                 synchronized (mailbox) {
                     boolean success = false;
@@ -393,7 +395,7 @@ public final class IndexHelper {
                             Flag indexingDeferredFlag = mailbox.getFlagById(Flag.ID_FLAG_INDEXING_DEFERRED);
 
                             for (SearchResult sr : items) {
-                                MailItem item = mailbox.getItemById(sr.id, sr.type);
+                                MailItem item = mailbox.getItemById(sr.id, MailItem.Type.of(sr.type));
                                 deferredTagsToClear.add(sr.id);
                                 item.tagChanged(indexingDeferredFlag, false);
                             }
@@ -464,7 +466,7 @@ public final class IndexHelper {
 
             MailItem item = null;
             try {
-                item = mailbox.getItemById(null, id, MailItem.TYPE_UNKNOWN);
+                item = mailbox.getItemById(null, id, MailItem.Type.UNKNOWN);
             } catch (Exception  e) {
                 ZimbraLog.indexing.warn("Failed to fetch deferred item id=%d", id, e);
                 status.addFailed(1);
@@ -519,7 +521,7 @@ public final class IndexHelper {
      */
     void upgradeMailboxTo1_2() {
         try {
-            List<Integer> ids = DbMailItem.getReIndexIds(mailbox, Collections.singleton(MailItem.TYPE_CONTACT));
+            List<Integer> ids = DbMailItem.getReIndexIds(mailbox, EnumSet.of(MailItem.Type.CONTACT));
             if (ids.isEmpty()) {
                 return;
             }
@@ -640,8 +642,8 @@ public final class IndexHelper {
      * @param types item types, empty set means all types
      * @return index deferred count
      */
-    private synchronized int getDeferredCount(Set<Byte> types) {
-        SetMultimap<Byte, Integer> ids;
+    private synchronized int getDeferredCount(Set<MailItem.Type> types) {
+        SetMultimap<MailItem.Type, Integer> ids;
         try {
             ids = getDeferredIds();
         } catch (ServiceException e) {
@@ -655,29 +657,29 @@ public final class IndexHelper {
             return ids.size();
         } else {
             int total = 0;
-            for (Byte type : types) {
+            for (MailItem.Type type : types) {
                 total += ids.get(type).size();
             }
             return total;
         }
     }
 
-    private synchronized SetMultimap<Byte, Integer> getDeferredIds() throws ServiceException {
+    private synchronized SetMultimap<MailItem.Type, Integer> getDeferredIds() throws ServiceException {
         if (deferredIds == null) {
             deferredIds = DbMailItem.getIndexDeferredIds(mailbox);
         }
         return deferredIds;
     }
 
-    private synchronized Collection<Integer> getDeferredIds(Set<Byte> types) throws ServiceException {
-        SetMultimap<Byte, Integer> ids = getDeferredIds();
+    private synchronized Collection<Integer> getDeferredIds(Set<MailItem.Type> types) throws ServiceException {
+        SetMultimap<MailItem.Type, Integer> ids = getDeferredIds();
         if (ids.isEmpty()) {
             return Collections.emptyList();
         } else if (types.isEmpty()) {
             return ImmutableSet.copyOf(ids.values());
         } else {
             ImmutableSet.Builder<Integer> builder = ImmutableSet.builder();
-            for (Byte type : types) {
+            for (MailItem.Type type : types) {
                 Set<Integer> set = ids.get(type);
                 if (set != null) {
                     builder.addAll(set);
@@ -687,7 +689,7 @@ public final class IndexHelper {
         }
     }
 
-    synchronized void addDeferredId(byte type, int id) {
+    synchronized void addDeferredId(MailItem.Type type, int id) {
         assert id > 0 : id;
         if (deferredIds == null) {
             return;
@@ -719,11 +721,11 @@ public final class IndexHelper {
      * Converts conversation type to message type if the type set contains it. We need to index message items when
      * a conversation search is requested.
      */
-    private Set<Byte> toIndexTypes(Set<Byte> types) {
-        if (types.contains(MailItem.TYPE_CONVERSATION)) {
-            types = new HashSet<Byte>(types); // copy
-            types.remove(MailItem.TYPE_CONVERSATION);
-            types.add(MailItem.TYPE_MESSAGE);
+    private Set<MailItem.Type> toIndexTypes(Set<MailItem.Type> types) {
+        if (types.contains(MailItem.Type.CONVERSATION)) {
+            types = EnumSet.copyOf(types); // copy
+            types.remove(MailItem.Type.CONVERSATION);
+            types.add(MailItem.Type.MESSAGE);
         }
         return types;
     }

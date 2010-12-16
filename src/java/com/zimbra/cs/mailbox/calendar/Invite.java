@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -65,10 +65,10 @@ import com.zimbra.common.mime.MimeConstants;
 
 /**
  * Invite
- * 
- * Invite isn't really the right name for this class, it should be called CalendarComponent 
+ *
+ * Invite isn't really the right name for this class, it should be called CalendarComponent
  * or something...
- * 
+ *
  * An Invite represents a single component entry of an CalendarItem -- ie a single VEvent or a VTodo or whatever
  * This is our smallest "chunk" of raw iCal data -- it has a single UUID, etc etc
  */
@@ -76,59 +76,25 @@ public class Invite {
 
     private static final boolean OUTLOOK_COMPAT_ALLDAY =
         LC.calendar_outlook_compatible_allday_events.booleanValue();
-    
+
     public static final String HEADER_SEPARATOR = "*~*~*~*~*~*~*~*~*~*";
 
     static Log sLog = LogFactory.getLog(Invite.class);
-    
+
     /**
      * Constructs an Invite object. This is called when an invite
      * is being retrieved from the database.
      * @param end
      * @param start
      */
-    Invite(
-            byte itemType,
-            String methodStr,
-            TimeZoneMap tzmap,
-            CalendarItem calItem,
-            String uid,
-            String status,
-            String priority,
-            String pctComplete,
-            long completed,
-            String freebusy,
-            String transp,
-            String classProp,
-            ParsedDateTime start,
-            ParsedDateTime end,
-            ParsedDuration duration,
-            Recurrence.IRecurrence recurrence,
-            boolean isOrganizer,
-            ZOrganizer org,
-            List<ZAttendee> attendees,
-            String name, 
-            String loc,
-            int flags,
-            String partStat,
-            boolean rsvp,
-            RecurId recurrenceId,
-            long dtstamp,
-            int seqno,
-            int mailboxId,
-            int mailItemId,
-            int componentNum,
-            boolean sentByMe,
-            String description,
-            String descHtml,
-            String fragment,
-            List<String> comments,
-            List<String> categories,
-            List<String> contacts,
-            Geo geo,
-            String url)
-            {
-        setItemType(itemType);
+    Invite(MailItem.Type type, String methodStr, TimeZoneMap tzmap, CalendarItem calItem, String uid, String status,
+            String priority, String pctComplete, long completed, String freebusy, String transp, String classProp,
+            ParsedDateTime start, ParsedDateTime end, ParsedDuration duration, Recurrence.IRecurrence recurrence,
+            boolean isOrganizer, ZOrganizer org, List<ZAttendee> attendees, String name, String loc, int flags,
+            String partStat, boolean rsvp, RecurId recurrenceId, long dtstamp, int seqno, int mailboxId, int mailItemId,
+            int componentNum, boolean sentByMe, String description, String descHtml, String fragment,
+            List<String> comments, List<String> categories, List<String> contacts, Geo geo, String url) {
+        setItemType(type);
         mMethod = lookupMethod(methodStr);
         mTzMap = tzmap;
         mCalItem = calItem;
@@ -198,10 +164,10 @@ public class Invite {
     private String mFragment;
     public String getFragment() { return mFragment; }
     public void setFragment(String fragment) { mFragment = fragment; }
-    
+
     /**
-     * Create an Invite object which will then be added to a mailbox Mailbox.addInvite()     
-     *  
+     * Create an Invite object which will then be added to a mailbox Mailbox.addInvite()
+     *
      * @param method usually "REQUEST" or else CANCEL/REPLY/PUBLISH
      * @param tzMap TimeZoneMap which contains every timezone referenced in DtStart, DtEnd, Duration or Recurrence
      * @param uid UID of this calendar item
@@ -210,11 +176,11 @@ public class Invite {
      * @param transparency IcalXmlStrMap.TRANSP_* RFC2445 Transparency
      * @param classProp IcalXmlStrMap.CLASS_*
      * @param allDayEvent TRUE if this is an all-day-event, FALSE otherwise.  This will override the Time part of DtStart and DtEnd, and will throw an ServiceException.FAILURE if the Duration is not Days or Weeks
-     * @param dtStart Start time 
+     * @param dtStart Start time
      * @param dtEndOrNull End time OR NULL (duration must be specified if this is null)
      * @param durationOrNull Duration (may not be specified if dtEnd is specified)
      * @param recurID If this invite is an EXCEPTION, the ID of the instance being excepted
-     * @param recurrenceOrNull IRecurrence rule tree 
+     * @param recurrenceOrNull IRecurrence rule tree
      * @param organizer RFC2445 Organizer: see Invite.createOrganizer
      * @param attendees list of RFC2445 Attendees: see Invite.createAttendee
      * @param name Name of this calendar item
@@ -224,87 +190,29 @@ public class Invite {
      * @param sequenceNoOrZero RFC2445 sequencying.  If 0, then will use current highest sequence no, or 1
      * @param partStat IcalXMLStrMap.PARTSTAT_* RFC2445 Participant Status of this mailbox
      * @param rsvp RFC2445 RSVP
-     * @param sentByMe TRUE if this mailbox sent this invite 
+     * @param sentByMe TRUE if this mailbox sent this invite
      */
-    public static Invite createInvite(
-            int mailboxId,
-            byte itemType,
-            String method,
-            TimeZoneMap tzMap, 
-            String uidOrNull,
-            String status,
-            String priority,
-            String pctComplete,
-            long completed,
-            String freeBusy,
-            String transparency,
-            String classProp,
-            boolean allDayEvent,
-            ParsedDateTime dtStart,
-            ParsedDateTime dtEndOrNull,
-            ParsedDuration durationOrNull,
-            RecurId recurId,
-            Recurrence.IRecurrence recurrenceOrNull,
-            boolean isOrganizer,
-            ZOrganizer organizer,
-            List<ZAttendee> attendees,
-            String name,
-            String location,
-            String description,
-            String descHtml,
-            List<String> comments,
-            List<String> categories,
-            List<String> contacts,
-            Geo geo,
-            String url,
-            long dtStampOrZero,
-            int sequenceNoOrZero,
-            String partStat,
-            boolean rsvp,
-            boolean sentByMe)
-    {
-        return new Invite(
-                itemType,
-                method,
-                tzMap,
-                null, // no calendar item yet
-                uidOrNull,
-                status,
-                priority,
-                pctComplete,
-                completed,
-                freeBusy,
-                transparency,
-                classProp,
-                dtStart,
-                dtEndOrNull,
-                durationOrNull,
-                recurrenceOrNull,
-                isOrganizer,
-                organizer,
-                attendees,
-                name,
-                location,
+    public static Invite createInvite(int mailboxId, MailItem.Type type, String method, TimeZoneMap tzMap,
+            String uidOrNull, String status, String priority, String pctComplete, long completed, String freeBusy,
+            String transparency, String classProp, boolean allDayEvent, ParsedDateTime dtStart,
+            ParsedDateTime dtEndOrNull, ParsedDuration durationOrNull, RecurId recurId,
+            Recurrence.IRecurrence recurrenceOrNull, boolean isOrganizer, ZOrganizer organizer,
+            List<ZAttendee> attendees, String name, String location, String description, String descHtml,
+            List<String> comments, List<String> categories, List<String> contacts, Geo geo, String url,
+            long dtStampOrZero, int sequenceNoOrZero, String partStat, boolean rsvp, boolean sentByMe) {
+        return new Invite(type, method, tzMap, null, // no calendar item yet
+                uidOrNull, status, priority, pctComplete, completed, freeBusy, transparency, classProp, dtStart,
+                dtEndOrNull, durationOrNull, recurrenceOrNull, isOrganizer, organizer, attendees, name, location,
                 Invite.APPT_FLAG_EVENT | (allDayEvent ? Invite.APPT_FLAG_ALLDAY : 0),
-                partStat,
-                rsvp,
-                recurId,
-                dtStampOrZero,
-                sequenceNoOrZero,
-                mailboxId,
-                0, // mailItemId MUST BE SET
+                partStat, rsvp, recurId, dtStampOrZero, sequenceNoOrZero, mailboxId, 0, // mailItemId MUST BE SET
                 0, // component num
-                sentByMe,
-                description, descHtml,
-                Fragment.getFragment(description, true),
-                comments, categories, contacts, geo, url
-        );
-        
+                sentByMe, description, descHtml, Fragment.getFragment(description, true), comments, categories,
+                contacts, geo, url);
     }
-    
+
     /**
      * Called by Mailbox.addInvite once it has an ID for this invite
-     * 
+     *
      * @param invId
      */
     public void setInviteId(int invId) {
@@ -370,8 +278,8 @@ public class Invite {
 
     /**
      * This is only really public to support serializing RedoOps -- you
-     * really don't want to call this API from anywhere else 
-     * 
+     * really don't want to call this API from anywhere else
+     *
      * @param inv
      * @return
      */
@@ -383,7 +291,7 @@ public class Invite {
         if (inv.isLocalOnly())
             meta.put(FN_LOCAL_ONLY, true);
 
-        meta.put(FN_ITEMTYPE, inv.getItemType());
+        meta.put(FN_ITEMTYPE, inv.getItemType().toByte());
         meta.put(FN_UID, inv.getUid());
         meta.put(FN_INVMSGID, inv.getMailItemId());
         meta.put(FN_COMPNUM, inv.getComponentNum());
@@ -415,22 +323,22 @@ public class Invite {
         if (inv.mRecurrence != null) {
             meta.put(FN_RECURRENCE, inv.mRecurrence.encodeMetadata());
         }
-        
+
         meta.put(FN_NAME, inv.getName());
-        
+
         meta.put(FN_LOCATION, inv.mLocation);
         meta.put(FN_APPT_FLAGS, inv.getFlags());
         meta.put(FN_PARTSTAT, inv.getPartStat());
         meta.put(FN_RSVP, inv.getRsvp());
-        
+
         meta.put(FN_TZMAP, inv.mTzMap.encodeAsMetadata());
-        
+
         if (inv.hasRecurId()) {
             meta.put(FN_RECUR_ID, inv.getRecurId().encodeMetadata());
         }
         meta.put(FN_DTSTAMP, inv.getDTStamp());
         meta.put(FN_SEQ_NO, inv.getSeqNo());
-        
+
         if (inv.hasOrganizer()) {
             meta.put(FN_ORGANIZER, inv.getOrganizer().encodeMetadata());
         }
@@ -506,7 +414,7 @@ public class Invite {
 
         if (inv.mXProps.size() > 0)
             Util.encodeXPropsAsMetadata(meta, inv.xpropsIterator());
-        
+
         if (inv.mDontIndexMimeMessage)
             meta.put(FN_DONT_INDEX_MM, true);
         return meta;
@@ -538,11 +446,11 @@ public class Invite {
             return ICalTok.PUBLISH;
         }
     }
-    
+
     /**
      * This API is public for RedoLogging to call into it -- you probably don't want to call it from
-     * anywhere else! 
-     * 
+     * anywhere else!
+     *
      * @param mailboxId
      * @param meta
      * @param calItem
@@ -550,9 +458,10 @@ public class Invite {
      * @return
      * @throws ServiceException
      */
-    public static Invite decodeMetadata(int mailboxId, Metadata meta, CalendarItem calItem, ICalTimeZone accountTZ) 
+    public static Invite decodeMetadata(int mailboxId, Metadata meta, CalendarItem calItem, ICalTimeZone accountTZ)
     throws ServiceException {
-        byte itemType = (byte) meta.getLong(FN_ITEMTYPE, MailItem.TYPE_APPOINTMENT);
+        byte btype = (byte) meta.getLong(FN_ITEMTYPE, -1);
+        MailItem.Type type = btype >= 0 ? MailItem.Type.of(btype) : MailItem.Type.APPOINTMENT;
         String uid = meta.get(FN_UID, null);
         int mailItemId = (int)meta.getLong(FN_INVMSGID);
         int componentNum = (int)meta.getLong(FN_COMPNUM);
@@ -573,13 +482,13 @@ public class Invite {
         ParsedDateTime dtStart = null;
         ParsedDateTime dtEnd = null;
         ParsedDuration duration = null;
-        
+
         RecurId recurrenceId = null;
-        
+
         TimeZoneMap tzMap = TimeZoneMap.decodeFromMetadata(meta.getMap(FN_TZMAP), accountTZ);
-        
+
         Metadata metaRecur = meta.getMap(FN_RECURRENCE, true);
-        Recurrence.IRecurrence recurrence = null; 
+        Recurrence.IRecurrence recurrence = null;
         if (metaRecur != null) {
             recurrence = Recurrence.decodeMetadata(metaRecur, tzMap);
         }
@@ -587,7 +496,7 @@ public class Invite {
         String methodStr = meta.get(FN_METHOD, ICalTok.PUBLISH.toString());
         if (ICalTok.CANCEL.toString().equals(methodStr))
             status = IcalXmlStrMap.STATUS_CANCELLED;
-        
+
         int flags = (int) meta.getLong(FN_APPT_FLAGS, 0);
         try {
             // DtStart
@@ -603,20 +512,20 @@ public class Invite {
             }
             // Duration
             duration = ParsedDuration.parse(meta.get(FN_DURATION, null));
-            
+
             if (meta.containsKey(FN_RECUR_ID)) {
                 Metadata rdata = meta.getMap(FN_RECUR_ID);
-                
+
                 recurrenceId = RecurId.decodeMetadata(rdata, tzMap);
             }
-            
+
         } catch (ParseException e) {
             throw ServiceException.FAILURE("Error parsing metadata for invite " + mailItemId+"-"+ componentNum + " in calItem " + calItem!=null ? Integer.toString(calItem.getId()) : "(null)", e);
         }
-        
+
         String name = meta.get(FN_NAME, "");
         String loc = meta.get(FN_LOCATION, null);
-        
+
         // For existing invites with no partstat, default to ACCEPTED status.
         String partStat = meta.get(FN_PARTSTAT, IcalXmlStrMap.PARTSTAT_ACCEPTED);
         // For existing invites with no RSVP, default to true.
@@ -629,7 +538,7 @@ public class Invite {
             Metadata metaOrg = meta.getMap(FN_ORGANIZER, true);
             org = metaOrg != null ? new ZOrganizer(metaOrg) : null;
         } catch (ServiceException e) {
-            sLog.warn("Problem decoding organizer for calItem " 
+            sLog.warn("Problem decoding organizer for calItem "
                     + calItem!=null ? Integer.toString(calItem.getId()) : "(null)"
                     + " invite "+mailItemId+"-" + componentNum);
         }
@@ -642,7 +551,7 @@ public class Invite {
                 if (metaAttendee != null)
                     attendees.add(new ZAttendee(metaAttendee));
             } catch (ServiceException e) {
-                ZimbraLog.calendar.warn("Problem decoding attendee " + i + " for calendar item " 
+                ZimbraLog.calendar.warn("Problem decoding attendee " + i + " for calendar item "
                         + calItem!=null ? Integer.toString(calItem.getId()) : "(null)"
                         + " invite "+mailItemId+"-" + componentNum);
             }
@@ -708,13 +617,10 @@ public class Invite {
 
         String url = meta.get(FN_URL, null);
 
-        Invite invite = new Invite(itemType, methodStr, tzMap, calItem, uid, status,
-                priority, pctComplete, completed, freebusy, transp, classProp,
-                dtStart, dtEnd, duration, recurrence, isOrganizer, org, attendees,
-                name, loc, flags, partStat, rsvp,
-                recurrenceId, dtstamp, seqno,
-                mailboxId, mailItemId, componentNum, sentByMe, desc, descHtml, fragment,
-                comments, categories, contacts, geo, url);
+        Invite invite = new Invite(type, methodStr, tzMap, calItem, uid, status, priority, pctComplete, completed,
+                freebusy, transp, classProp, dtStart, dtEnd, duration, recurrence, isOrganizer, org, attendees, name,
+                loc, flags, partStat, rsvp, recurrenceId, dtstamp, seqno, mailboxId, mailItemId, componentNum, sentByMe,
+                desc, descHtml, fragment, comments, categories, contacts, geo, url);
         invite.mDescInMeta = descInMeta;  // a little hacky, but necessary
 
         invite.setClassPropSetByMe(classPropSetByMe);
@@ -729,7 +635,7 @@ public class Invite {
                         invite.addAlarm(alarm);
                 }
             } catch (ServiceException e) {
-                ZimbraLog.calendar.warn("Problem decoding alarm " + i + " for calendar item " 
+                ZimbraLog.calendar.warn("Problem decoding alarm " + i + " for calendar item "
                         + calItem!=null ? Integer.toString(calItem.getId()) : "(null)"
                         + " invite "+mailItemId+"-" + componentNum, e);
             }
@@ -752,7 +658,7 @@ public class Invite {
                     invite.addXProp(xprop);
             }
         }
-        
+
         invite.setDontIndexMimeMessage(meta.getBool(FN_DONT_INDEX_MM, false));
 
         boolean localOnly = meta.getBool(FN_LOCAL_ONLY, false);
@@ -766,16 +672,16 @@ public class Invite {
     private String mDescription;
     private String mDescHtml;
     private boolean mDescInMeta = true;  // assume description is in metadata unless someone sets a large value
-    
+
     /**
-     * An optimization for indexing, if this is set then we don't need to try to fetch 
+     * An optimization for indexing, if this is set then we don't need to try to fetch
      * this Invite's MimeMessage in order to reindex it.
-     * 
+     *
      * This is TRUE if the Invite had no accompanying MimeMessage when it was stored,
-     * e.g. if it came from a REST-imported ICS file. 
+     * e.g. if it came from a REST-imported ICS file.
      */
     private boolean mDontIndexMimeMessage = false;
-    
+
     public synchronized void setDontIndexMimeMessage(boolean truthiness) { mDontIndexMimeMessage = truthiness; }
     public synchronized boolean getDontIndexMimeMessage() { return mDontIndexMimeMessage; }
 
@@ -936,11 +842,11 @@ public class Invite {
     }
 
     public void setPartStat(String partStat) { mPartStat = partStat; }
-    
+
     /**
      * The Invite datastructure caches "my" partstat so that I don't have to search through all
      * of the Attendee records every time I want to know my status....this function updates the
-     * catched PartStat data when I receive a new Invite 
+     * catched PartStat data when I receive a new Invite
      */
     public void updateMyPartStat(Account acct, String partStat)
     throws ServiceException {
@@ -950,16 +856,16 @@ public class Invite {
         } else {
             ZAttendee at = getMatchingAttendee(acct);
             if (at != null) {
-            	setRsvp(at.hasRsvp() ? at.getRsvp().booleanValue() : false);
-            	//
-            	// for BUG 4866 -- basically, if the incoming invite doesn't have a
-            	// PARTSTAT for us, assume it is "NEEDS-ACTION" iff this Invite supports
-            	// NEEDS_ACTION (ie is a Request or a Counter)
-            	//
-            	if (mMethod == ICalTok.REQUEST || mMethod == ICalTok.COUNTER) {
+                setRsvp(at.hasRsvp() ? at.getRsvp().booleanValue() : false);
+                //
+                // for BUG 4866 -- basically, if the incoming invite doesn't have a
+                // PARTSTAT for us, assume it is "NEEDS-ACTION" iff this Invite supports
+                // NEEDS_ACTION (ie is a Request or a Counter)
+                //
+                if (mMethod == ICalTok.REQUEST || mMethod == ICalTok.COUNTER) {
                     setPartStat(partStat);
                     at.setPartStat(partStat);
-            	}
+                }
             } else {
                 // if this is the first time we're parsing this, and we can't find ourself on the
                 // attendee list, then allow a reply...
@@ -967,19 +873,18 @@ public class Invite {
             }
         }
     }
-    
+
     /**
      * @return the CalendarItem object, or null if one could not be found
      */
-    public CalendarItem getCalendarItem() throws ServiceException
-    {
+    public CalendarItem getCalendarItem() {
         return mCalItem;
     }
-    
+
     public void setCalendarItem(CalendarItem calItem) {
         mCalItem = calItem;
     }
-    
+
     public void setIsAllDayEvent(boolean allDayEvent) {
         if (allDayEvent) {
             mFlags |= APPT_FLAG_ALLDAY;
@@ -1017,7 +922,7 @@ public class Invite {
     public long getCompleted() { return mCompleted; }
     public void setCompleted(long completed) { mCompleted = completed; }
     public int getSeqNo() { return mSeqNo; }
-    public void setSeqNo(int seqNo) { mSeqNo = seqNo; } 
+    public void setSeqNo(int seqNo) { mSeqNo = seqNo; }
     public ParsedDateTime getStartTime() { return mStart; }
     public void setDtStart(ParsedDateTime dtStart) { mStart = dtStart; }
     public ParsedDateTime getEndTime() { return mEnd; }
@@ -1056,12 +961,12 @@ public class Invite {
     public String getFreeBusyActual() {
         return partStatToFreeBusyActual(mPartStat);
     }
-    
+
     /**
-     * Returns actual free-busy status taking into account the free-busy 
-     * setting of the event, the user's participation status, and the 
+     * Returns actual free-busy status taking into account the free-busy
+     * setting of the event, the user's participation status, and the
      * scheduling status of the event.
-     * 
+     *
      * The getFreeBusy() method simply returns the event's free-busy
      * setting.
      * @return
@@ -1073,11 +978,11 @@ public class Invite {
         // invite was accepted or declined.  It shows up as free time.
         if (IcalXmlStrMap.FBTYPE_FREE.equals(fb))
             return IcalXmlStrMap.FBTYPE_FREE;
-        
+
         // If invite was accepted, use event's free-busy status.
         if (IcalXmlStrMap.PARTSTAT_ACCEPTED.equals(partStat))
             return fb;
-        
+
         // If invite was received but user hasn't acted on it yet
         // (NEEDS_ACTION), or if the user tentatively accepted it,
         // or if the event was only tentatively scheduled rather
@@ -1088,23 +993,23 @@ public class Invite {
                 IcalXmlStrMap.PARTSTAT_TENTATIVE.equals(partStat) ||
                 IcalXmlStrMap.STATUS_TENTATIVE.equals(mStatus))
             return IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE;
-        
+
         // If invite was declined or delegated to someone else, or if
         // this is a cancelled event, the user is free.
         if (IcalXmlStrMap.PARTSTAT_DECLINED.equals(partStat) ||
                 IcalXmlStrMap.PARTSTAT_DELEGATED.equals(partStat) ||
                 IcalXmlStrMap.STATUS_CANCELLED.equals(mStatus))
             return IcalXmlStrMap.FBTYPE_FREE;
-        
+
         return fb;
     }
-    
+
     /**
      * Calculate the "Effective End" of this event: that is, the value of DtEnd if set,
      * or the value of DtStart+Duration if that is set.  If neither is set, add 1 day to DtStart
      * if all-day event.  If not all-day, return DtStart. (0 duration)
-     * 
-     * @return 
+     *
+     * @return
      */
     public ParsedDateTime getEffectiveEndTime() {
         if (mEnd != null)
@@ -1120,13 +1025,13 @@ public class Invite {
         }
         return mStart.add(dur);
     }
-    
+
     /**
-     * 
+     *
      * Try to calculate the effective "default duration" of this event..this is either the DURATION
      * that was specified, or it is the DtEnd-DtStart of the first instance if they exist -- or, if they
      * don't exist, then this isn't an Event per se and you don't need the answer anyway: so we'll return NULL
-     * 
+     *
      * @return
      */
     public ParsedDuration getEffectiveDuration() {
@@ -1154,7 +1059,7 @@ public class Invite {
     public boolean isAllDayEvent() { return ((mFlags & APPT_FLAG_ALLDAY)!=0); }
     public boolean hasOrganizer() { return mOrganizer != null; }
     public boolean hasOtherAttendees() {
-    	return ((mAttendees != null) && (mAttendees.size() > 0));
+        return ((mAttendees != null) && (mAttendees.size() > 0));
     }
     void setIsRecurrence(boolean isRecurrence) {
         if (isRecurrence) {
@@ -1168,7 +1073,7 @@ public class Invite {
     public boolean hasAlarm() {
         return !mAlarms.isEmpty();
     }
-    
+
     public boolean hasAttachment() { return ((mFlags & APPT_FLAG_HAS_ATTACHMENT)!=0); }
     public void setHasAttachment(boolean hasAttachment) {
         if (hasAttachment) {
@@ -1196,8 +1101,9 @@ public class Invite {
         }
     }
 
+    @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("{ ");
         sb.append("mboxid: ").append(this.mMailboxId);
         sb.append(", mailitem: ").append(this.mMailItemId);
@@ -1240,28 +1146,28 @@ public class Invite {
         for (ZProperty xprop : mXProps) {
             sb.append(", ").append(xprop.toString());
         }
-        
+
         sb.append("}");
         return sb.toString();
     }
-    
+
     public static final int APPT_FLAG_TODO            = 0x01;
     public static final int APPT_FLAG_EVENT           = 0x02;
     public static final int APPT_FLAG_ALLDAY          = 0x04;
-    
+
     // TIM: removed this, wasn't being reliably set, and isn't necessary
     //  [instead we just check for mAttendees.size()>0 ]
     //public static final int APPT_FLAG_OTHER_ATTENDEES = 0x08;
-    
+
     public static final int APPT_FLAG_HASALARM        = 0x10;  // obsolete
     public static final int APPT_FLAG_ISRECUR         = 0x20;
     public static final int APPT_FLAG_NEEDS_REPLY     = 0x40;  // obsolete
     public static final int APPT_FLAG_HAS_ATTACHMENT  = 0x80;
     public static final int APPT_FLAG_DRAFT           = 0x100;
     public static final int APPT_FLAG_NEVER_SENT      = 0x200;  // true means attendees have never been notified
-    
+
     protected CalendarItem mCalItem = null;
-    
+
     // all of these are loaded from / stored in the meta
     protected String mUid;
     protected String mStatus = IcalXmlStrMap.STATUS_CONFIRMED;
@@ -1273,13 +1179,13 @@ public class Invite {
     protected ParsedDateTime mEnd = null;
     protected ParsedDuration mDuration = null;
     protected long mCompleted = 0;  // COMPLETED DATE-TIME of VTODO
-    
+
     protected String mName; /* name of the invite, aka "subject" */
     protected String mLocation;
     protected int mFlags = APPT_FLAG_EVENT;
     protected long mDTStamp = 0;
     protected int mSeqNo = 0;
-    
+
     // Participation status for this calendar user.  Values are the
     // 2-character strings in ICalXmlStrMap.sPartStatMap, not the longer
     // iCalendar PARTSTAT values.
@@ -1342,7 +1248,7 @@ public class Invite {
     private String mUrl;
 
     // MailItem type of calendar item containing this invite
-    private byte mItemType = MailItem.TYPE_APPOINTMENT;
+    private MailItem.Type type = MailItem.Type.APPOINTMENT;
 
     private ICalTok mMethod;
 
@@ -1351,7 +1257,7 @@ public class Invite {
     private List<ZProperty> mXProps = new ArrayList<ZProperty>();
 
     public Invite(String method, TimeZoneMap tzMap, boolean isOrganizer) {
-        setItemType(MailItem.TYPE_APPOINTMENT);
+        setItemType(MailItem.Type.APPOINTMENT);
         mMethod = lookupMethod(method);
         if (ICalTok.CANCEL.equals(mMethod))
             mStatus = IcalXmlStrMap.STATUS_CANCELLED;
@@ -1360,23 +1266,24 @@ public class Invite {
         mFragment = "";
     }
 
-    public Invite(byte itemType, String method, TimeZoneMap tzMap, boolean isOrganizer) {
-        setItemType(itemType);
+    public Invite(MailItem.Type type, String method, TimeZoneMap tzMap, boolean isOrganizer) {
+        setItemType(type);
         mMethod = lookupMethod(method);
-        if (ICalTok.CANCEL.equals(mMethod))
+        if (ICalTok.CANCEL.equals(mMethod)) {
             mStatus = IcalXmlStrMap.STATUS_CANCELLED;
+        }
         mTzMap = tzMap;
         mIsOrganizer = isOrganizer;
         mFragment = "";
     }
-    
-    
+
+
     public String getMethod() { return mMethod.toString(); }
     public void setMethod(String methodStr) { mMethod = lookupMethod(methodStr); }
-    
+
     public boolean sentByMe() { return mSentByMe; }
     void setSentByMe(boolean sentByMe) { mSentByMe = sentByMe; }
-    
+
     /**
      * @param acct
      * @return TRUE if this account is the "organizer" of the Event
@@ -1406,7 +1313,7 @@ public class Invite {
      * match this account (because an account can have multiple addresses), the address that matches
      * the given identity (persona) id is returned.  Account's default identity is used if identityId
      * is null or invalid.
-     * 
+     *
      * @param acct
      * @param identityId
      * @return The first matching attendee
@@ -1444,7 +1351,7 @@ public class Invite {
 
     /**
      * Find the (first) Attendee in our list that matches the passed-in account
-     * 
+     *
      * @param acct
      * @return The first matching attendee
      * @throws ServiceException
@@ -1452,10 +1359,10 @@ public class Invite {
     public ZAttendee getMatchingAttendee(Account acct) throws ServiceException {
         return getMatchingAttendee(acct, null);
     }
-    
+
     /**
      * Find the (first) Attendee in our list that matches the passed-in name
-     * 
+     *
      * @param acct
      * @return The first matching attendee
      * @throws ServiceException
@@ -1489,11 +1396,11 @@ public class Invite {
     }
 
     /**
-     * Updates the ATTENDEE entries in this invite which match entries in the other one -- presumably 
+     * Updates the ATTENDEE entries in this invite which match entries in the other one -- presumably
      * because the attendee has sent us a reply to change his status.  The Caller is responsible
-     * for ensuring the changed MetaData is written through to SQL and sending a notification of 
+     * for ensuring the changed MetaData is written through to SQL and sending a notification of
      * MailItem change.
-     * 
+     *
      * @param reply
      * @return
      * @throws ServiceException
@@ -1501,11 +1408,11 @@ public class Invite {
     public boolean updateMatchingAttendeesFromReply(Invite reply) throws ServiceException {
         // Find my ATTENDEE record in the Invite, it must be in our response
         List<ZAttendee> attendees = getAttendees();
-        
+
         ArrayList<ZAttendee> toAdd = new ArrayList<ZAttendee>();
-        
+
         boolean modified = false;
-        
+
         for (ZAttendee replyAt : reply.getAttendees()) {
             ZAttendee at = getMatchingAttendee(replyAt);
             if (at != null) {
@@ -1537,7 +1444,7 @@ public class Invite {
             if (!IcalXmlStrMap.PARTSTAT_DECLINED.equalsIgnoreCase(replyAt.getPartStat()))
                 toAdd.add(replyAt);
         }
-        
+
         if (toAdd.size() > 0) {
             for (ZAttendee add : toAdd) {
                 modified = true;
@@ -1550,20 +1457,20 @@ public class Invite {
     public List<ZAttendee> getAttendees() {
         return mAttendees;
     }
-    
+
     public void clearAttendees() {
-    	mAttendees.clear();
+        mAttendees.clear();
     }
-    
+
     public void addAttendee(ZAttendee at) {
         mAttendees.add(at);
     }
 
-    public void setOrganizer(ZOrganizer org) throws ServiceException {
+    public void setOrganizer(ZOrganizer org) {
         mOrganizer = org;
     }
-    
-    
+
+
     public ZOrganizer getOrganizer() {
         // Be careful!  Don't assume this is non-null.
         return mOrganizer;
@@ -1620,19 +1527,29 @@ public class Invite {
         mLocalOnly = localOnly;
     }
 
-    public boolean isEvent()  { return mItemType == MailItem.TYPE_APPOINTMENT; }
-    public boolean isTodo()   { return mItemType == MailItem.TYPE_TASK; }
-    public byte getItemType() { return mItemType; }
-    public void setItemType(byte t) {
-        mItemType = t;
+    public boolean isEvent() {
+        return type == MailItem.Type.APPOINTMENT;
+    }
+
+    public boolean isTodo() {
+        return type == MailItem.Type.TASK;
+    }
+
+    public MailItem.Type getItemType() {
+        return type;
+    }
+
+    public void setItemType(MailItem.Type type) {
+        this.type = type;
         // If mStatus is set to default appointment status but we have a task
         // invite, change to default task status.
-        if (mItemType == MailItem.TYPE_TASK && IcalXmlStrMap.STATUS_CONFIRMED.equals(mStatus))
+        if (type == MailItem.Type.TASK && IcalXmlStrMap.STATUS_CONFIRMED.equals(mStatus)) {
             mStatus = IcalXmlStrMap.STATUS_NEEDS_ACTION;
+        }
     }
 
     private TimeZoneMap mTzMap;
-    
+
     public TimeZoneMap getTimeZoneMap() { return mTzMap; }
 
     public ZVCalendar newToICalendar(boolean includePrivateData) throws ServiceException {
@@ -1647,7 +1564,7 @@ public class Invite {
 
         // timezones
         for (Iterator<ICalTimeZone> iter = mTzMap.tzIterator(); iter.hasNext();) {
-            ICalTimeZone cur = (ICalTimeZone) iter.next();
+            ICalTimeZone cur = iter.next();
             vcal.addComponent(cur.newToVTimeZone());
         }
 
@@ -1705,7 +1622,7 @@ public class Invite {
             boolean continueOnError, InviteVisitor visitor)
     throws ServiceException {
         String method = cal.getPropVal(ICalTok.METHOD, ICalTok.PUBLISH.toString());
-        
+
         // process the TIMEZONE's first: everything depends on them being there...
         TimeZoneMap tzmap = new TimeZoneMap(ICalTimeZone.getAccountTimeZone(account));
         for (ZComponent comp : cal.mComponents) {
@@ -1719,25 +1636,22 @@ public class Invite {
                            sentByMe, mbx, mailItemId, continueOnError, visitor);
     }
 
-    private static void createFromCalendar(
-            List<Invite> toAdd, Account account, String fragment,
-            String method, TimeZoneMap tzmap, Iterator<ZComponent> compIter,
-            boolean sentByMe, Mailbox mbx, int mailItemId,
-            boolean continueOnError, InviteVisitor visitor)
-    throws ServiceException {
+    private static void createFromCalendar(List<Invite> toAdd, Account account, String fragment, String method,
+            TimeZoneMap tzmap, Iterator<ZComponent> compIter, boolean sentByMe, Mailbox mbx, int mailItemId,
+            boolean continueOnError, InviteVisitor visitor) throws ServiceException {
         int compNum = 0;
-        for (; compIter.hasNext(); ) {
+        while (compIter.hasNext()) {
             ZComponent comp = compIter.next();
             Invite newInv = null;
             try {
-                byte type;
+                MailItem.Type type;
                 ICalTok compTypeTok = comp.getTok();
                 if (compTypeTok == null) continue;
-                if (ICalTok.VTODO.equals(compTypeTok))
-                    type = MailItem.TYPE_TASK;
-                else
-                    type = MailItem.TYPE_APPOINTMENT;
-    
+                if (ICalTok.VTODO.equals(compTypeTok)) {
+                    type = MailItem.Type.TASK;
+                } else {
+                    type = MailItem.Type.APPOINTMENT;
+                }
                 switch (compTypeTok) {
                 case VEVENT:
                 case VTODO:
@@ -1751,14 +1665,14 @@ public class Invite {
 
                         List<Object> addRecurs = new ArrayList<Object>();
                         List<Object> subRecurs = new ArrayList<Object>();
-    
+
                         newInv.setComponentNum(compNum);
                         if (mbx != null)
                             newInv.setMailboxId(mbx.getId());
                         newInv.setMailItemId(mailItemId);
                         newInv.setSentByMe(sentByMe);
                         compNum++;
-    
+
                         for (ZComponent subcomp : comp.mComponents) {
                             ICalTok subCompTypeTok = subcomp.getTok();
                             switch (subCompTypeTok) {
@@ -1792,7 +1706,7 @@ public class Invite {
                                         newInv.addCategory(cat);
                                     }
                                 }
-                            } else {    
+                            } else {
                                 // Skip properties with missing value.  There may be parameters specified, but
                                 // it's still wrong to send a property without value.  They can only lead to
                                 // parse errors later, so ignore them.
@@ -1819,8 +1733,8 @@ public class Invite {
                                 case DTSTART:
                                     ParsedDateTime dtstart = ParsedDateTime.parse(prop, tzmap);
                                     newInv.setDtStart(dtstart);
-                                    if (!dtstart.hasTime()) 
-                                    	newInv.setIsAllDayEvent(true);
+                                    if (!dtstart.hasTime())
+                                        newInv.setIsAllDayEvent(true);
                                     break;
                                 case DTEND:
                                     if (isEvent) {
@@ -1884,7 +1798,7 @@ public class Invite {
                                 case EXRULE:
                                     ZRecur exrecur = new ZRecur(propVal, tzmap);
                                     subRecurs.add(exrecur);
-                                    newInv.setIsRecurrence(true);                            
+                                    newInv.setIsRecurrence(true);
                                     break;
                                 case EXDATE:
                                     RdateExdate exdate = RdateExdate.parse(prop, tzmap);
@@ -1927,7 +1841,7 @@ public class Invite {
                                     break;
                                 case X_MICROSOFT_CDO_ALLDAYEVENT:
                                     if (isEvent) {
-                                        if (prop.getBoolValue()) 
+                                        if (prop.getBoolValue())
                                             newInv.setIsAllDayEvent(true);
                                     }
                                     break;
@@ -1986,20 +1900,20 @@ public class Invite {
                                 }
                             }
                         }
-    
+
                         newInv.setIsOrganizer(account);
-    
+
                         newInv.validateDuration();
-    
+
                         ParsedDuration duration = newInv.getDuration();
-                        
+
                         if (duration == null) {
                             ParsedDateTime end = newInv.getEndTime();
                             if (end != null && newInv.getStartTime() != null) {
                                 duration = end.difference(newInv.getStartTime());
                             }
                         }
-    
+
                         if (!addRecurs.isEmpty() || !subRecurs.isEmpty()) {
                             // We have a recurrence.  Make sure DTSTART is not null.
                             ParsedDateTime st = newInv.getStartTime();
@@ -2045,7 +1959,7 @@ public class Invite {
                                 }
                             }
                         }
-                        
+
                         if (newInv.hasRecurId()) {
                             if (addRules.size() > 0) {
                                 newInv.setRecurrence(new Recurrence.ExceptionRule(newInv.getRecurId(),
@@ -2056,20 +1970,20 @@ public class Invite {
                                 newInv.setRecurrence(new Recurrence.RecurrenceRule(newInv.getStartTime(), duration, new InviteInfo(newInv), addRules, subRules));
                             }
                         }
-                        
+
                         String location = newInv.getLocation();
                         if (location == null)
-                        	newInv.setLocation("");
-    
+                            newInv.setLocation("");
+
                         // Process callback.
                         if (visitor != null)
                             visitor.visit(newInv);
                     } catch (ParseException e) {
                         throw ServiceException.PARSE_ERROR(
                             "Unable to parse iCalendar data: " + e.getMessage(), e);
-                      
+
                     }
-                    
+
                     break;
                 }
             } catch (ServiceException e) {
@@ -2102,13 +2016,13 @@ public class Invite {
                 (summary != null ? ", SUMMARY:" + summary : ""),
                 e);
     }
-    
+
     public ZComponent newToVComponent(boolean useOutlookCompatAllDayEvents, boolean includePrivateData)
     throws ServiceException {
         boolean isRequestPublishCancel =
             ICalTok.REQUEST.equals(mMethod) || ICalTok.PUBLISH.equals(mMethod) || ICalTok.CANCEL.equals(mMethod);
         ICalTok compTok;
-        if (mItemType == MailItem.TYPE_TASK) {
+        if (type == MailItem.Type.TASK) {
             compTok = ICalTok.VTODO;
             useOutlookCompatAllDayEvents = false;
         } else {
@@ -2123,7 +2037,7 @@ public class Invite {
             for (Iterator iter = recur.addRulesIterator(); iter!=null && iter.hasNext();) {
                 IRecurrence cur = (IRecurrence)iter.next();
 
-                switch (cur.getType()) { 
+                switch (cur.getType()) {
                 case Recurrence.TYPE_SINGLE_DATES:
                     Recurrence.SingleDates sd = (Recurrence.SingleDates) cur;
                     RdateExdate rdate = sd.getRdateExdate();
@@ -2134,12 +2048,12 @@ public class Invite {
                     component.addProperty(new ZProperty(ICalTok.RRULE, srr.getRule().toString()));
                     break;
                 }
-                
+
             }
             for (Iterator iter = recur.subRulesIterator(); iter!=null && iter.hasNext();) {
                 IRecurrence cur = (IRecurrence)iter.next();
 
-                switch (cur.getType()) { 
+                switch (cur.getType()) {
                 case Recurrence.TYPE_SINGLE_DATES:
                     Recurrence.SingleDates sd = (Recurrence.SingleDates) cur;
                     RdateExdate exdate = sd.getRdateExdate();
@@ -2158,7 +2072,7 @@ public class Invite {
             String name = getName();
             if (name != null && name.length()>0)
                 component.addProperty(new ZProperty(ICalTok.SUMMARY, name));
-            
+
             // DESCRIPTION and X-ALT-DESC;FMTTYPE=text/html
             String desc = getDescription();
             if (desc != null) {
@@ -2177,7 +2091,7 @@ public class Invite {
                 altDesc.addParameter(new ZParameter(ICalTok.FMTTYPE, MimeConstants.CT_TEXT_HTML));
                 component.addProperty(altDesc);
             }
-            
+
             // COMMENT
             List<String> comments = getComments();
             if (comments != null && !comments.isEmpty()) {
@@ -2192,8 +2106,9 @@ public class Invite {
                 component.addProperty(new ZProperty(ICalTok.LOCATION, location.toString()));
 
             // ATTENDEES
-            for (ZAttendee at : (List<ZAttendee>)getAttendees()) 
+            for (ZAttendee at : getAttendees()) {
                 component.addProperty(at.toProperty());
+            }
 
             // PRIORITY
             if (mPriority != null)
@@ -2261,7 +2176,7 @@ public class Invite {
         ParsedDateTime dtstart = getStartTime();
         if (dtstart != null)
             component.addProperty(dtstart.toProperty(ICalTok.DTSTART, useOutlookCompatAllDayEvents));
-        
+
         // DTEND or DUE
         ParsedDateTime dtend = getEndTime();
         if (dtend != null) {
@@ -2270,12 +2185,12 @@ public class Invite {
                 prop = ICalTok.DUE;
             component.addProperty(dtend.toProperty(prop, useOutlookCompatAllDayEvents));
         }
-        
+
         // DURATION
         ParsedDuration dur = getDuration();
         if (dur != null)
             component.addProperty(new ZProperty(ICalTok.DURATION, dur.toString()));
-        
+
         // STATUS
         String status = getStatus();
         String statusIcal = IcalXmlStrMap.sStatusMap.toIcal(status);
@@ -2296,7 +2211,7 @@ public class Invite {
             // allDay
             if (isAllDayEvent())
                 component.addProperty(new ZProperty(ICalTok.X_MICROSOFT_CDO_ALLDAYEVENT, true));
-            
+
             // Microsoft Outlook compatibility for free-busy status
             if (isRequestPublishCancel) {
                 String outlookFreeBusy = IcalXmlStrMap.sOutlookFreeBusyMap.toIcal(getFreeBusy());
@@ -2310,13 +2225,13 @@ public class Invite {
 
         // RECURRENCE-ID
         RecurId recurId = getRecurId();
-        if (recurId != null) 
+        if (recurId != null)
             component.addProperty(recurId.toProperty(useOutlookCompatAllDayEvents));
-        
+
         // DTSTAMP
         ParsedDateTime dtStamp = ParsedDateTime.fromUTCTime(getDTStamp());
         component.addProperty(dtStamp.toProperty(ICalTok.DTSTAMP, useOutlookCompatAllDayEvents));
-        
+
         // SEQUENCE
         component.addProperty(new ZProperty(ICalTok.SEQUENCE, getSeqNo()));
 
@@ -2395,12 +2310,12 @@ public class Invite {
         mAlarms.add(alarm);
     }
     public List<Alarm> getAlarms() { return mAlarms; }
-    
+
     /**
      * Clear this Invite's alarms
      */
     public void clearAlarms() {
-    	mAlarms.clear();
+        mAlarms.clear();
     }
 
     public Iterator<ZProperty> xpropsIterator() { return mXProps.iterator(); }
@@ -2464,29 +2379,16 @@ public class Invite {
             attendees.add(new ZAttendee(at));  // add a copy of attendee
         }
         ZOrganizer org = mOrganizer != null ? new ZOrganizer(mOrganizer) : null;
-        Invite inv = new Invite(
-                mItemType, mMethod != null ? mMethod.toString() : null,
-                mTzMap,
-                mCalItem, mUid,
-                mStatus, mPriority,
-                mPercentComplete, mCompleted,
-                mFreeBusy, mTransparency, mClass,
-                mStart, mEnd, mDuration,
-                mRecurrence,
-                mIsOrganizer, org, attendees,
-                mName, mLocation,
+        Invite inv = new Invite(type, mMethod != null ? mMethod.toString() : null, mTzMap, mCalItem, mUid, mStatus,
+                mPriority, mPercentComplete, mCompleted, mFreeBusy, mTransparency, mClass, mStart, mEnd, mDuration,
+                mRecurrence, mIsOrganizer, org, attendees, mName, mLocation,
                 mFlags, mPartStat, mRsvp, mRecurrenceId, mDTStamp, mSeqNo,
                 0, // mMailboxId
                 0, // mMailItemId
                 0, // mComponentNum
-                mSentByMe,
-                mDescription, mDescHtml, mFragment,
-                new ArrayList<String>(mComments),
-                new ArrayList<String>(mCategories),
-                new ArrayList<String>(mContacts),
-                mGeo != null ? new Geo(mGeo.getLatitude(), mGeo.getLongitude()) : null,
-                mUrl
-                );
+                mSentByMe, mDescription, mDescHtml, mFragment, new ArrayList<String>(mComments),
+                new ArrayList<String>(mCategories), new ArrayList<String>(mContacts),
+                mGeo != null ? new Geo(mGeo.getLatitude(), mGeo.getLongitude()) : null, mUrl);
         inv.setClassPropSetByMe(classPropSetByMe());
         inv.setDontIndexMimeMessage(getDontIndexMimeMessage());
         inv.mLocalOnly = mLocalOnly;
@@ -2692,7 +2594,7 @@ public class Invite {
 
     /**
      * If this Invite is a series invite, create a new Invite object for the instance denoted by recurIdDt.
-     * Returns null if this Invite is not a series Invite. 
+     * Returns null if this Invite is not a series Invite.
      * @param recurIdDt
      * @return
      */

@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on 2004. 7. 21.
  */
 package com.zimbra.cs.redolog.op;
 
@@ -30,63 +26,77 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
+/**
+ * @since 2004. 7. 21.
+ */
 public class DeleteItem extends RedoableOp {
 
     private int[] mIds;
-    private byte mType;
+    private MailItem.Type type;
     private String mConstraint;
 
     public DeleteItem() {
-        mType = MailItem.TYPE_UNKNOWN;
+        type = MailItem.Type.UNKNOWN;
         mConstraint = null;
     }
 
-    public DeleteItem(int mailboxId, int[] ids, byte type, TargetConstraint tcon) {
+    public DeleteItem(int mailboxId, int[] ids, MailItem.Type type, TargetConstraint tcon) {
         setMailboxId(mailboxId);
         mIds = ids;
-        mType = type;
+        this.type = type;
         mConstraint = (tcon == null ? null : tcon.toString());
     }
 
-    @Override public int getOpCode() {
+    @Override
+    public int getOpCode() {
         return OP_DELETE_ITEM;
     }
 
-    @Override protected String getPrintableData() {
-        StringBuffer sb = new StringBuffer("ids=");
-        sb.append(Arrays.toString(mIds)).append(", type=").append(mType);
-        if (mConstraint != null)
+    @Override
+    protected String getPrintableData() {
+        StringBuilder sb = new StringBuilder("ids=");
+        sb.append(Arrays.toString(mIds)).append(", type=").append(type);
+        if (mConstraint != null) {
             sb.append(", constraint=").append(mConstraint);
+        }
         return sb.toString();
     }
 
-    @Override protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(-1);
-        out.writeByte(mType);
+        out.writeByte(type.toByte());
         boolean hasConstraint = mConstraint != null;
         out.writeBoolean(hasConstraint);
-        if (hasConstraint)
+        if (hasConstraint) {
             out.writeUTF(mConstraint);
+        }
         out.writeInt(mIds.length);
-        for (int id : mIds)
+        for (int id : mIds) {
             out.writeInt(id);
-    }
-
-    @Override protected void deserializeData(RedoLogInput in) throws IOException {
-        int id = in.readInt();
-        if (id > 0)
-            mIds = new int[] { id };
-        mType = in.readByte();
-        if (in.readBoolean())
-            mConstraint = in.readUTF();
-        if (id <= 0) {
-            mIds = new int[in.readInt()];
-            for (int i = 0; i < mIds.length; i++)
-                mIds[i] = in.readInt();
         }
     }
 
-    @Override public void redo() throws Exception {
+    @Override
+    protected void deserializeData(RedoLogInput in) throws IOException {
+        int id = in.readInt();
+        if (id > 0) {
+            mIds = new int[] { id };
+        }
+        type = MailItem.Type.of(in.readByte());
+        if (in.readBoolean()) {
+            mConstraint = in.readUTF();
+        }
+        if (id <= 0) {
+            mIds = new int[in.readInt()];
+            for (int i = 0; i < mIds.length; i++) {
+                mIds[i] = in.readInt();
+            }
+        }
+    }
+
+    @Override
+    public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 
@@ -99,14 +109,16 @@ public class DeleteItem extends RedoableOp {
             }
 
             try {
-                mbox.delete(getOperationContext(), mIds, mType, tcon);
+                mbox.delete(getOperationContext(), mIds, type, tcon);
             } catch (MailServiceException.NoSuchItemException e) {
-                if (mLog.isInfoEnabled())
+                if (mLog.isInfoEnabled()) {
                     mLog.info("Some of the items being deleted were already deleted from mailbox " + mboxId);
+                }
             }
     }
 
-    @Override public boolean isDeleteOp() {
+    @Override
+    public boolean isDeleteOp() {
         return true;
     }
 }

@@ -66,8 +66,9 @@ public class Note extends MailItem {
 
     public Note(Mailbox mbox, UnderlyingData data) throws ServiceException {
         super(mbox, data);
-        if (mData.type != TYPE_NOTE)
+        if (mData.type != Type.NOTE.toByte()) {
             throw new IllegalArgumentException();
+        }
     }
 
     @Override
@@ -137,20 +138,23 @@ public class Note extends MailItem {
      * @see Folder#canContain(byte) */
     static Note create(int id, Folder folder, String content, Rectangle location, Color color, CustomMetadata custom)
     throws ServiceException {
-        if (folder == null || !folder.canContain(TYPE_NOTE))
+        if (folder == null || !folder.canContain(Type.NOTE)) {
             throw MailServiceException.CANNOT_CONTAIN();
-        if (!folder.canAccess(ACL.RIGHT_INSERT))
+        }
+        if (!folder.canAccess(ACL.RIGHT_INSERT)) {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the folder");
+        }
         content = StringUtil.stripControlCharacters(content);
-        if (content == null || content.equals(""))
+        if (content == null || content.equals("")) {
             throw ServiceException.INVALID_REQUEST("notes may not be empty", null);
-        if (location == null)
+        }
+        if (location == null) {
             location = new Rectangle();
-
+        }
         Mailbox mbox = folder.getMailbox();
         UnderlyingData data = new UnderlyingData();
         data.id          = id;
-        data.type        = TYPE_NOTE;
+        data.type        = Type.NOTE.toByte();
         data.folderId    = folder.getId();
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
             data.indexId = 0;

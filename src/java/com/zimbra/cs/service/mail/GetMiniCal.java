@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -72,8 +72,8 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetMiniCal extends CalendarRequest {
 
     @Override
-	public Element handle(Element request, Map<String, Object> context)
-			throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context)
+            throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         Account authAcct = getAuthenticatedAccount(zsc);
@@ -132,7 +132,8 @@ public class GetMiniCal extends CalendarRequest {
                     for (Iterator<Integer> iterFolderId = folderIds.iterator(); iterFolderId.hasNext(); ) {
                         int folderId = iterFolderId.next();
                         try {
-                            CalendarDataResult result = calCache.getCalendarSummary(octxt, acctId, folderId, MailItem.TYPE_APPOINTMENT, rangeStart, rangeEnd, true);
+                            CalendarDataResult result = calCache.getCalendarSummary(octxt, acctId, folderId,
+                                    MailItem.Type.APPOINTMENT, rangeStart, rangeEnd, true);
                             if (result != null) {
                                 // Found data in cache.
                                 iterFolderId.remove();
@@ -209,15 +210,15 @@ public class GetMiniCal extends CalendarRequest {
         }
 
         for (String datestamp : busyDates) {
-        	Element dateElem = response.addElement(MailConstants.E_CAL_MINICAL_DATE);
-        	dateElem.setText(datestamp);
+            Element dateElem = response.addElement(MailConstants.E_CAL_MINICAL_DATE);
+            dateElem.setText(datestamp);
         }
 
         return response;
-	}
+    }
 
-	private static void addBusyDates(Calendar cal, CalendarData calData, long rangeStart, long rangeEnd, Set<String> busyDates)
-	throws ServiceException {
+    private static void addBusyDates(Calendar cal, CalendarData calData, long rangeStart, long rangeEnd, Set<String> busyDates)
+    throws ServiceException {
         for (Iterator<CalendarItemData> itemIter = calData.calendarItemIterator(); itemIter.hasNext(); ) {
             CalendarItemData item = itemIter.next();
             for (Iterator<InstanceData> instIter = item.instanceIterator(); instIter.hasNext(); ) {
@@ -235,17 +236,17 @@ public class GetMiniCal extends CalendarRequest {
                 }
             }
         }
-	}
+    }
 
-	private static void doLocalFolder(OperationContext octxt, ICalTimeZone tz, Mailbox mbox, int folderId,
-									  long rangeStart, long rangeEnd, Set<String> busyDates)
-	throws ServiceException {
-		Calendar cal = new GregorianCalendar(tz);
+    private static void doLocalFolder(OperationContext octxt, ICalTimeZone tz, Mailbox mbox, int folderId,
+            long rangeStart, long rangeEnd, Set<String> busyDates) throws ServiceException {
+        Calendar cal = new GregorianCalendar(tz);
         CalendarDataResult result = mbox.getCalendarSummaryForRange(
-                octxt, folderId, MailItem.TYPE_APPOINTMENT, rangeStart, rangeEnd);
-        if (result != null)
+                octxt, folderId, MailItem.Type.APPOINTMENT, rangeStart, rangeEnd);
+        if (result != null) {
             addBusyDates(cal, result.data, rangeStart, rangeEnd, busyDates);
-	}
+        }
+    }
 
     private static void doRemoteFolders(
             ZimbraSoapContext zsc, String remoteAccountId, List<String> remoteFolders, long rangeStart, long rangeEnd,
@@ -293,15 +294,15 @@ public class GetMiniCal extends CalendarRequest {
         }
     }
 
-	private static String getDatestamp(Calendar cal, long millis) {
-		cal.setTimeInMillis(millis);
-		int year = cal.get(Calendar.YEAR);
-		int month = cal.get(Calendar.MONTH) + 1;
-		int day = cal.get(Calendar.DAY_OF_MONTH);
-		return Integer.toString(year * 10000 + month * 100 + day);
-	}
+    private static String getDatestamp(Calendar cal, long millis) {
+        cal.setTimeInMillis(millis);
+        int year = cal.get(Calendar.YEAR);
+        int month = cal.get(Calendar.MONTH) + 1;
+        int day = cal.get(Calendar.DAY_OF_MONTH);
+        return Integer.toString(year * 10000 + month * 100 + day);
+    }
 
-	private static ICalTimeZone parseTimeZone(Element request) throws ServiceException {
+    private static ICalTimeZone parseTimeZone(Element request) throws ServiceException {
         Element tzElem = request.getOptionalElement(MailConstants.E_CAL_TZ);
         if (tzElem != null) {
             String tzid = tzElem.getAttribute(MailConstants.A_ID, null);
@@ -311,30 +312,30 @@ public class GetMiniCal extends CalendarRequest {
                     return knownTZ;
             }
 
-            // custom timezone            
+            // custom timezone
             String stdOffset = tzElem.getAttribute(MailConstants.A_CAL_TZ_STDOFFSET, null);
             if (stdOffset == null)
                 throw ServiceException.INVALID_REQUEST(
                         "Unknown TZ: \"" + tzid + "\" and no " + MailConstants.A_CAL_TZ_STDOFFSET + " specified", null);
-            
+
             return CalendarUtils.parseTzElement(tzElem);
         } else {
             return null;
         }
-	}
+    }
 
-	private static class Resolved {
-	    public ItemId iid;
-	    public ServiceException error;
-	    Resolved(ItemId iid, ServiceException e) {
-	        this.iid = iid;
-	        this.error = e;
-	    }
-	}
+    private static class Resolved {
+        public ItemId iid;
+        public ServiceException error;
+        Resolved(ItemId iid, ServiceException e) {
+            this.iid = iid;
+            this.error = e;
+        }
+    }
 
-	// Resolve mountpoints for each requested folder.  Resolution can result in error per folder.  Typical errors
-	// include PERM_DENIED (if sharer revoked permission), NO_SUCH_FOLDER (if sharer deleted shared folder), and
-	// NO_SUCH_ACCOUNT (if sharer account has been deleted).
+    // Resolve mountpoints for each requested folder.  Resolution can result in error per folder.  Typical errors
+    // include PERM_DENIED (if sharer revoked permission), NO_SUCH_FOLDER (if sharer deleted shared folder), and
+    // NO_SUCH_ACCOUNT (if sharer account has been deleted).
     private static Map<ItemId, Resolved> resolveMountpoints(OperationContext octxt, Mailbox mbox, List<ItemId> folderIids) {
         Map<ItemId, Resolved> result = new HashMap<ItemId, Resolved>();
         for (ItemId iidFolder : folderIids) {

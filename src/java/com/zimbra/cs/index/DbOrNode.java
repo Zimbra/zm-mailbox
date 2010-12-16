@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,126 +22,150 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbSearchConstraints;
 import com.zimbra.cs.db.DbSearchConstraintsNode;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 class DbOrNode implements IConstraints {
-   public NodeType getNodeType() { return NodeType.OR; }
 
-   /**
-    * @return The list of ANDed or ORed subnodes, or NULL if 
-    * this is a LEAF node.
-    */
-   public Iterable<? extends DbSearchConstraintsNode> getSubNodes() { return mSubNodes; }
+    @Override
+    public NodeType getNodeType() {
+        return NodeType.OR;
+    }
 
-   /**
-    * @return The SearchConstraints for this node, if it is a LEAF
-    * node, or NULL if it is not.
-    */
-   public DbSearchConstraints getSearchConstraints() { return null; }
+    /**
+     * @return The list of ANDed or ORed subnodes, or NULL if this is a LEAF node.
+     */
+    @Override
+    public Iterable<? extends DbSearchConstraintsNode> getSubNodes() {
+        return mSubNodes;
+    }
 
-   protected List<IConstraints> mSubNodes = new ArrayList<IConstraints>();
+    /**
+     * @return The SearchConstraints for this node, if it is a LEAF node, or NULL if it is not.
+     */
+    @Override
+    public DbSearchConstraints getSearchConstraints() {
+        return null;
+    }
 
-   public Object clone() throws CloneNotSupportedException {
-	   DbOrNode toRet = (DbOrNode)super.clone();
-	   
-	   toRet.mSubNodes = new ArrayList<IConstraints>();  
-	   for (IConstraints node : mSubNodes)
-		   toRet.mSubNodes.add((IConstraints)node.clone());
-	   
-	   return toRet;
-   }
+    protected List<IConstraints> mSubNodes = new ArrayList<IConstraints>();
 
-   public IConstraints andIConstraints(IConstraints other) {
-	   if (other.getNodeType() == NodeType.AND) {
-		   return other.andIConstraints(this);
-	   } else {
-		   IConstraints top = new DbAndNode();
-		   top = top.andIConstraints(this);
-		   top = top.andIConstraints(other);
-		   return top;
-	   }
-   }
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        DbOrNode toRet = (DbOrNode) super.clone();
+        toRet.mSubNodes = new ArrayList<IConstraints>();
+        for (IConstraints node : mSubNodes) {
+           toRet.mSubNodes.add((IConstraints) node.clone());
+        }
+        return toRet;
+    }
 
-   public IConstraints orIConstraints(IConstraints other) {
-	   if (other.getNodeType() == NodeType.OR) {
-	       // add all of the other node's subnodes to our list of subnodes
-	       for (IConstraints n : ((DbOrNode)other).mSubNodes) 
-	           mSubNodes.add(n);
-	   } else {
-	       mSubNodes.add(other);
-	   }
-	   return this;
-   }
+    @Override
+    public IConstraints andIConstraints(IConstraints other) {
+        if (other.getNodeType() == NodeType.AND) {
+            return other.andIConstraints(this);
+        } else {
+            IConstraints top = new DbAndNode();
+            top = top.andIConstraints(this);
+            top = top.andIConstraints(other);
+            return top;
+        }
+    }
 
-   public void ensureSpamTrashSetting(Mailbox mbox, List<Folder> excludeFolders) throws ServiceException {
-	   //
-	   // push down instead of ANDing this at the toplevel!
-	   //
-	   // This is important because we exclude (trash spam) and the query is:
-	   //
-	   //    (tag:foo is:anywhere) or (tag:bar)
-	   //
-	   // we want the resultant query to be:
-	   //
-	   //    (tag foo is:anywhere) or (tag:bar -in:trash -in:spam)
-	   //
-	   //
-	   for (IConstraints n : mSubNodes) 
-		   n.ensureSpamTrashSetting(mbox, excludeFolders);
-   }
+    @Override
+    public IConstraints orIConstraints(IConstraints other) {
+        if (other.getNodeType() == NodeType.OR) {
+            // add all of the other node's subnodes to our list of subnodes
+            for (IConstraints n : ((DbOrNode)other).mSubNodes) {
+                mSubNodes.add(n);
+            }
+        } else {
+            mSubNodes.add(other);
+        }
+        return this;
+    }
 
-   public boolean hasSpamTrashSetting() {
-	   for (IConstraints n : mSubNodes) 
-		   if (!n.hasSpamTrashSetting())
-			   return false;
-	   return true;
-   }
+    @Override
+    public void ensureSpamTrashSetting(Mailbox mbox, List<Folder> excludeFolders) throws ServiceException {
+        // push down instead of ANDing this at the toplevel!
+        //
+        // This is important because we exclude (trash spam) and the query is:
+        //
+        //    (tag:foo is:anywhere) or (tag:bar)
+        //
+        // we want the resultant query to be:
+        //
+        //    (tag foo is:anywhere) or (tag:bar -in:trash -in:spam)
+        for (IConstraints n : mSubNodes) {
+            n.ensureSpamTrashSetting(mbox, excludeFolders);
+        }
+    }
 
-   public void forceHasSpamTrashSetting() {
-	   for (IConstraints n : mSubNodes) 
-		   if (!n.hasSpamTrashSetting())
-			   n.forceHasSpamTrashSetting();
-   }
+    @Override
+    public boolean hasSpamTrashSetting() {
+        for (IConstraints n : mSubNodes) {
+            if (!n.hasSpamTrashSetting()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-   public boolean hasNoResults() {
-	   for (IConstraints n : mSubNodes) 
-		   if (!n.hasNoResults())
-			   return false;
-	   return true;
-   }
+    @Override
+    public void forceHasSpamTrashSetting() {
+        for (IConstraints n : mSubNodes) {
+            if (!n.hasSpamTrashSetting()) {
+                n.forceHasSpamTrashSetting();
+            }
+        }
+    }
 
-   public boolean tryDbFirst(Mailbox mbox) {
-	   return false;
-   }
+    @Override
+    public boolean hasNoResults() {
+        for (IConstraints n : mSubNodes) {
+            if (!n.hasNoResults()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-   public void setTypes(Set<Byte> types) {
-	   for (IConstraints n : mSubNodes) 
-		   n.setTypes(types);
-   }
+    @Override
+    public boolean tryDbFirst(Mailbox mbox) {
+        return false;
+    }
 
-   public String toQueryString() {
-	   StringBuilder ret = new StringBuilder("(");
-	   
-	   boolean atFirst = true;
-	   
-	   for (IConstraints n : mSubNodes) {
-		   if (!atFirst)
-			   ret.append(" OR ");
-		   
-		   ret.append(n.toQueryString());
-		   atFirst = false;
-	   }
-	   
-	   ret.append(')');
-	   return ret.toString();
-   }
+    @Override
+    public void setTypes(Set<MailItem.Type> types) {
+        for (IConstraints n : mSubNodes) {
+            n.setTypes(types);
+        }
+    }
 
-   public String toString()
-   {
-	   StringBuilder toRet = new StringBuilder("OR(");
-	   for (IConstraints n : mSubNodes)
-		   toRet.append(n.toString()).append(' ');
-	   return toRet.append(')').toString();
-   }
+    @Override
+    public String toQueryString() {
+        StringBuilder ret = new StringBuilder("(");
 
- }
+        boolean atFirst = true;
+
+        for (IConstraints n : mSubNodes) {
+            if (!atFirst) {
+               ret.append(" OR ");
+            }
+            ret.append(n.toQueryString());
+            atFirst = false;
+        }
+        ret.append(')');
+        return ret.toString();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder toRet = new StringBuilder("OR(");
+        for (IConstraints n : mSubNodes) {
+           toRet.append(n.toString()).append(' ');
+        }
+        return toRet.append(')').toString();
+    }
+
+}

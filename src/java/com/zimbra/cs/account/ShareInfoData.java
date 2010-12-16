@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -26,39 +26,39 @@ public class ShareInfoData {
     private String mOwnerAcctId;
     private String mOwnerAcctEmail;
     private String mOwnerAcctDisplayName;
-    
-    // folder 
+
+    // folder
     private int mFolderId;
     private String mFolderPath;
-    private byte mFolderDefaultView;
-    
+    private MailItem.Type folderDefaultView;
+
     // rights
     private short mRights;
-    
+
     // grantee
     private byte mGranteeType;
     private String mGranteeId;
     private String mGranteeName;
     private String mGranteeDisplayName;
-    
+
     // URL for accessing the share
-    // only used for guest share 
+    // only used for guest share
     private String mUrl;
-    
+
     // password (for guest grantee)
-    // only used for sending 
+    // only used for sending
     private String mGuestPassword;
-    
+
     // mountpointid
-    // Note: 
-    //    only used by zmprov/SoapProvisioning  to construct a 
+    // Note:
+    //    only used by zmprov/SoapProvisioning  to construct a
     //    ShareInfo from SOAP response to pass back just to be displayed
-    //  
-    //    NOT used by the any of the ShareInfo code on the server side  
+    //
+    //    NOT used by the any of the ShareInfo code on the server side
     //    On the server side, the mountpoint id is not part of the ShareInfo,
-    //    it is a property of the target account, and is encoded in the 
+    //    it is a property of the target account, and is encoded in the
     //    SOAP response by the visitor.
-    //    
+    //
     private String mMountpointId_zmprov_only;
     public void setMountpointId_zmprov_only(String mptId) {
         mMountpointId_zmprov_only = mptId;
@@ -70,17 +70,17 @@ public class ShareInfoData {
             return mMountpointId_zmprov_only;
     }
     ////////////////////////////////////
-    
 
-    
+
+
     public void setOwnerAcctId(String ownerAcctId) {
         mOwnerAcctId = ownerAcctId;
     }
-    
+
     public String getOwnerAcctId() {
         return mOwnerAcctId;
     }
-    
+
     public void setOwnerAcctEmail(String ownerAcctEmail) {
         mOwnerAcctEmail = ownerAcctEmail;
     }
@@ -88,7 +88,7 @@ public class ShareInfoData {
     public String getOwnerAcctEmail() {
         return mOwnerAcctEmail;
     }
-    
+
     public void setOwnerAcctDisplayName(String ownerAcctDisplayName) {
         mOwnerAcctDisplayName = ownerAcctDisplayName;
     }
@@ -96,13 +96,13 @@ public class ShareInfoData {
     public String getOwnerAcctDisplayName() {
         return mOwnerAcctDisplayName;
     }
-    
-    
-    
+
+
+
     public void setFolderId(int folderId) {
         mFolderId = folderId;
     }
-    
+
     public int getFolderId() {
         return mFolderId;
     }
@@ -110,97 +110,97 @@ public class ShareInfoData {
     public void setFolderPath(String folderPath) {
         mFolderPath = folderPath;
     }
-    
+
     public String getFolderPath() {
         return mFolderPath;
     }
-    
+
     // returns the leaf folder name
     public String getFolderName() {
         String[] fn = mFolderPath.split("/");
         return fn[fn.length - 1];
     }
-            
-    public void setFolderDefaultView(byte folderDefaultView) {
-        mFolderDefaultView = folderDefaultView;
+
+    public void setFolderDefaultView(MailItem.Type view) {
+        folderDefaultView = view;
     }
-    
+
     public String getFolderDefaultView() {
-        return MailItem.getNameForType(mFolderDefaultView);
+        return folderDefaultView.toString();
     }
-    
-    public byte getFolderDefaultViewCode() {
-        return mFolderDefaultView;
+
+    public MailItem.Type getFolderDefaultViewCode() {
+        return folderDefaultView;
     }
-    
+
     public void setRights(short rights) {
         mRights = rights;
     }
-    
+
     public String getRights() {
         return ACL.rightsToString(mRights);
     }
-    
+
     public short getRightsCode() {
         return mRights;
     }
-    
+
     public void setGranteeType(byte granteeType) {
         mGranteeType = granteeType;
     }
-    
+
     public byte getGranteeTypeCode() {
         return mGranteeType;
     }
-    
+
     public String getGranteeType() {
         return ACL.typeToString(mGranteeType);
     }
-    
+
     public void setGranteeId(String granteeId) {
         mGranteeId = granteeId;
     }
-    
+
     public String getGranteeId() {
         return mGranteeId;
     }
-    
+
     public void setGranteeName(String granteeName) {
         mGranteeName = granteeName;
     }
-    
+
     public String getGranteeName() {
         return mGranteeName;
     }
-    
+
     public void setGranteeDisplayName(String granteeDisplayName) {
         mGranteeDisplayName = granteeDisplayName;
     }
-    
+
     public String getGranteeDisplayName() {
         return mGranteeDisplayName;
     }
-    
-    
+
+
     public void setUrl(String url) {
         mUrl = url;
     }
-    
+
     public String getUrl() {
         return mUrl;
     }
-    
+
     public void setGuestPassword(String guestPassword) {
         mGuestPassword = guestPassword;
     }
-    
+
     public String getGuestPassword() {
         return mGuestPassword;
     }
-    
+
     /*
      * name shown in notification message, must have a value
-     * return display name if it is set, otherwise return 
+     * return display name if it is set, otherwise return
      * the owner's email
      */
     public String getOwnerNotifName() {
@@ -210,10 +210,10 @@ public class ShareInfoData {
         else
             return getOwnerAcctEmail();
     }
-    
+
     /*
      * name shown in notification message, must have a value
-     * return display name if it is set, otherwise return 
+     * return display name if it is set, otherwise return
      * the grantee name
      */
     public String getGranteeNotifName() {
@@ -223,29 +223,29 @@ public class ShareInfoData {
         else
             return getGranteeName();
     }
-    
+
 
     public static ShareInfoData fromXML(Element eShare) throws ServiceException {
         ShareInfoData sid = new ShareInfoData();
-        
+
         sid.setOwnerAcctId(eShare.getAttribute(AccountConstants.A_OWNER_ID, null));
         sid.setOwnerAcctEmail(eShare.getAttribute(AccountConstants.A_OWNER_EMAIL, null));
         sid.setOwnerAcctDisplayName(eShare.getAttribute(AccountConstants.A_OWNER_DISPLAY_NAME, null));
         sid.setFolderId(Integer.valueOf(eShare.getAttribute(AccountConstants.A_FOLDER_ID)));
         sid.setFolderPath(eShare.getAttribute(AccountConstants.A_FOLDER_PATH, null));
-        sid.setFolderDefaultView(MailItem.getTypeForName(eShare.getAttribute(MailConstants.A_DEFAULT_VIEW, null)));
+        sid.setFolderDefaultView(MailItem.Type.of(eShare.getAttribute(MailConstants.A_DEFAULT_VIEW, null)));
         sid.setRights(ACL.stringToRights(eShare.getAttribute(AccountConstants.A_RIGHTS)));
         sid.setGranteeType(ACL.stringToType(eShare.getAttribute(AccountConstants.A_GRANTEE_TYPE)));
         sid.setGranteeId(eShare.getAttribute(AccountConstants.A_GRANTEE_ID, null));
         sid.setGranteeName(eShare.getAttribute(AccountConstants.A_GRANTEE_NAME, null));
         sid.setGranteeDisplayName(eShare.getAttribute(AccountConstants.A_GRANTEE_DISPLAY_NAME, null));
-        
+
         // and this ugly thing
         sid.setMountpointId_zmprov_only(eShare.getAttribute(AccountConstants.A_MOUNTPOINT_ID, null));
-        
+
         return sid;
     }
-    
+
     public void toXML(Element eShare, Integer mptId) {
         eShare.addAttribute(AccountConstants.A_OWNER_ID,             getOwnerAcctId());
         eShare.addAttribute(AccountConstants.A_OWNER_EMAIL,          getOwnerAcctEmail());
@@ -258,14 +258,14 @@ public class ShareInfoData {
         eShare.addAttribute(AccountConstants.A_GRANTEE_ID,           getGranteeId());
         eShare.addAttribute(AccountConstants.A_GRANTEE_NAME,         getGranteeName());
         eShare.addAttribute(AccountConstants.A_GRANTEE_DISPLAY_NAME, getGranteeDisplayName());
-        
+
         if (mptId != null)
             eShare.addAttribute(AccountConstants.A_MOUNTPOINT_ID, mptId.toString());
     }
-    
+
     public void dump() {
         String format = "    %15s : %s\n";
-        
+
         System.out.println();
         System.out.printf(format, "owner id",        getOwnerAcctId());
         System.out.printf(format, "owner email",     getOwnerAcctEmail());
@@ -280,6 +280,6 @@ public class ShareInfoData {
         System.out.printf(format, "grantee email",   getGranteeName());
         System.out.printf(format, "grantee display", getGranteeDisplayName());
         System.out.println();
-        
+
     }
 }

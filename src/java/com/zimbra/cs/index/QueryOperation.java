@@ -93,10 +93,10 @@ public abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
         }
 
         Grouping retType = Grouping.ITEM; //MailboxIndex.SEARCH_RETURN_DOCUMENTS;
-        Set<Byte> types = params.getTypes();
-        if (types.contains(MailItem.TYPE_CONVERSATION)) {
+        Set<MailItem.Type> types = params.getTypes();
+        if (types.contains(MailItem.Type.CONVERSATION)) {
             retType = Grouping.CONVERSATION; //MailboxIndex.SEARCH_RETURN_CONVERSATIONS;
-        } else if (types.contains(MailItem.TYPE_MESSAGE)) {
+        } else if (types.contains(MailItem.Type.MESSAGE)) {
             retType = Grouping.MESSAGE; // MailboxIndex.SEARCH_RETURN_MESSAGES;
         }
 

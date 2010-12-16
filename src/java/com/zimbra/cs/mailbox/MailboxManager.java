@@ -625,7 +625,7 @@ public class MailboxManager {
 
                     // Backend data may have changed while mailbox was in
                     // maintenance mode.  Invalidate all caches.
-                    mbox.purge(MailItem.TYPE_UNKNOWN);
+                    mbox.purge(MailItem.Type.UNKNOWN);
 
                     if (removeFromCache) {
                         // We're going to let the Mailbox drop out of the

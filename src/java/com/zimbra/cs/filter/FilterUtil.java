@@ -278,7 +278,7 @@ public class FilterUtil {
                 // Only part of the folder path matched.  Auto-create the remaining path.
                 ZimbraLog.filter.info("Could not find folder %s.  Automatically creating it.",
                     folderPath);
-                folder = mbox.createFolder(octxt, folderPath, (byte) 0, MailItem.TYPE_MESSAGE);
+                folder = mbox.createFolder(octxt, folderPath, (byte) 0, MailItem.Type.MESSAGE);
             }
             try {
                 Message msg = mbox.addMessage(octxt, pm, folder.getId(), noICal, flags, tags, convId, recipient, null, context);

@@ -70,10 +70,6 @@ public final class ContactHit extends ZimbraHit {
         return mItemId;
     }
 
-    public byte getItemType() {
-        return MailItem.TYPE_CONTACT;
-    }
-
     @Override
     void setItem(MailItem item) {
         mContact = (Contact) item;

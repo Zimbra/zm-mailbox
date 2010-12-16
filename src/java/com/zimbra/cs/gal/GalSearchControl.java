@@ -162,16 +162,16 @@ public class GalSearchControl {
     }
 
     private static HashSet<String> SyncClients;
-    
+
     static {
         SyncClients = new HashSet<String>();
     }
-    
+
     public void sync() throws ServiceException {
         String id = Thread.currentThread().getName();
         int capacity = mParams.getDomain().getGalSyncMaxConcurrentClients();
         boolean doSync = false;
-        
+
         try {
             synchronized (SyncClients) {
                 // allow the sync only when the # of sync clients
@@ -194,7 +194,7 @@ public class GalSearchControl {
             }
         }
     }
-    
+
     private void doSync() throws ServiceException {
 
         checkFeatureEnabled(Provisioning.A_zimbraFeatureGalSyncEnabled);
@@ -424,11 +424,12 @@ public class GalSearchControl {
                     syncToken = LdapUtil.getEarlierTimestamp(syncToken, folderMapping.md.get(GalImport.SYNCTOKEN));
                     if (mParams.isIdOnly() && token.doMailboxSync()) {
                         int changeId = token.getChangeId(galAcct.getId());
-                        Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId, MailItem.TYPE_CONTACT, folderIds);
+                        Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId,
+                                MailItem.Type.CONTACT, folderIds);
 
                         int count = 0;
                         for (int itemId : changed.getFirst()) {
-                            MailItem item = mbox.getItemById(octxt, itemId, MailItem.TYPE_CONTACT);
+                            MailItem item = mbox.getItemById(octxt, itemId, MailItem.Type.CONTACT);
                             if (item instanceof Contact) {
                                 Contact c = (Contact)item;
                                 String accountType = c.get("zimbraAccountCalendarUserType");
@@ -464,11 +465,12 @@ public class GalSearchControl {
             if (mParams.isIdOnly() && token.doMailboxSync()) {
                 int changeId = token.getChangeId(galAcct.getId());
                 List<Integer> deleted = mbox.getTombstones(changeId).getAll();
-                Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId, MailItem.TYPE_CONTACT, folderIds);
+                Pair<List<Integer>,TypedIdList> changed = mbox.getModifiedItems(octxt, changeId,
+                        MailItem.Type.CONTACT, folderIds);
 
                 int count = 0;
                 for (int itemId : changed.getFirst()) {
-                    MailItem item = mbox.getItemById(octxt, itemId, MailItem.TYPE_CONTACT);
+                    MailItem item = mbox.getItemById(octxt, itemId, MailItem.Type.CONTACT);
                     if (item instanceof Contact)
                         callback.handleContact((Contact)item);
                     count++;
@@ -580,20 +582,20 @@ public class GalSearchControl {
             }
             mParams.setType(stype);
         }
-        
+
         Integer ldapLimit = mParams.getLdapLimit();
         int limit;
         if (ldapLimit == null)
             limit = mParams.getLimit();
         else
             limit = ldapLimit;
-        
+
         // restrict to domain config if we are not syncing, and there is no specific ldap limit set
         if (limit == 0 && GalOp.sync != mParams.getOp() && ldapLimit == null) {
             limit = domain.getGalMaxResults();
         }
         mParams.setLimit(limit);
-        
+
         if (galMode == GalMode.both) {
             // make two gal searches for 1/2 results each
             mParams.setLimit(limit / 2);

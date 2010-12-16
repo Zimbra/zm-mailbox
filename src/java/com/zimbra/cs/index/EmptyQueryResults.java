@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -27,8 +28,7 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 class EmptyQueryResults extends ZimbraQueryResultsImpl {
 
-
-    EmptyQueryResults(Set<Byte> types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
+    EmptyQueryResults(Set<MailItem.Type> types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
         super(types, searchOrder, mode);
     }
 

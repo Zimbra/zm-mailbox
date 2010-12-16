@@ -66,7 +66,7 @@ public abstract class MailDocumentHandler extends DocumentHandler {
         if (!checkMountpoint || !Provisioning.onLocalServer(acct))
             return null;
         Mailbox mbox = getRequestedMailbox(zsc);
-        MailItem item = mbox.getItemById(octxt, iid.getId(), MailItem.TYPE_UNKNOWN);
+        MailItem item = mbox.getItemById(octxt, iid.getId(), MailItem.Type.UNKNOWN);
         if (!(item instanceof Mountpoint))
             return null;
         return ((Mountpoint) item).getTarget();

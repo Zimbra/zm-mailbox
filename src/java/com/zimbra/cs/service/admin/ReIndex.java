@@ -32,8 +32,9 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.IndexHelper;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -120,7 +121,12 @@ public final class ReIndex extends AdminDocumentHandler {
                 }
 
                 if (typesStr != null) {
-                    Set<Byte> types = MailboxIndex.parseTypes(typesStr);
+                    Set<MailItem.Type> types;
+                    try {
+                        types = MailItem.Type.setOf(typesStr);
+                    } catch (IllegalArgumentException e) {
+                        throw MailServiceException.INVALID_TYPE(e.getMessage());
+                    }
                     mbox.index.startReIndexByType(getOperationContext(zsc, context), types);
                 } else if (idsStr != null) {
                     Set<Integer> ids = new HashSet<Integer>();

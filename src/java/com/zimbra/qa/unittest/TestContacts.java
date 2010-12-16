@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -59,14 +59,14 @@ extends TestCase {
     private static final String NAME_PREFIX = TestContacts.class.getSimpleName();
     private static final String USER_NAME = "user1";
     String mOriginalMaxContacts;
-    
+
     @BeforeMethod
     @Override public void setUp()
     throws Exception {
         cleanUp();
         mOriginalMaxContacts = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraContactMaxNumEntries);
     }
-    
+
     /**
      * Confirms that volumeId is not set for contacts.
      */
@@ -76,12 +76,12 @@ extends TestCase {
         Account account = Provisioning.getInstance().get(AccountBy.name, TestUtil.getAddress("user1"));
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         String sql = String.format("SELECT COUNT(*) FROM %s WHERE type = %d AND blob_digest IS NULL AND volume_id IS NOT NULL",
-            DbMailItem.getMailItemTableName(mbox), MailItem.TYPE_CONTACT);
+                DbMailItem.getMailItemTableName(mbox), MailItem.Type.CONTACT.toByte());
         DbResults results = DbUtil.executeQuery(sql);
         int count = results.getInt(1);
         assertEquals("Found non-null volumeId values for contacts", 0, count);
     }
-    
+
     /**
      * Tests {@link Attachment#getContent()} (bug 36974).
      */
@@ -92,11 +92,11 @@ extends TestCase {
         ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
         Map<String, String> attrs = new HashMap<String, String>();
         attrs.put("fullName", NAME_PREFIX + " testAttachments");
-        
+
         String attachment1Text = "attachment 1";
         int timeout = (int) Constants.MILLIS_PER_MINUTE;
         String folderId = Integer.toString(Mailbox.ID_FOLDER_CONTACTS);
-        
+
         String attachment1Id = zmbox.uploadAttachment("attachment.txt", attachment1Text.getBytes(), "text/plain", timeout);
         Map<String, ZAttachmentInfo> attachmentMap = new HashMap<String, ZAttachmentInfo>();
         ZAttachmentInfo info = new ZAttachmentInfo().setAttachmentId(attachment1Id);
@@ -113,7 +113,7 @@ extends TestCase {
             }
         }
     }
-    
+
     /**
      * Confirms that {@link Provisioning#A_zimbraContactMaxNumEntries} is enforced (bug 29627).
      */
@@ -137,7 +137,7 @@ extends TestCase {
         }
         assertEquals("Unexpected contact number", 3, i);
     }
-    
+
     /**
      * Tests the server-side {@link Attachment} class.
      */
@@ -150,16 +150,16 @@ extends TestCase {
         ds.setName("attachment.txt");
         DataHandler dh = new DataHandler(ds);
         Attachment attach = new Attachment(dh,  "attachment", data.length);
-        
+
         // Don't specify the attachment size.
         attach = new Attachment(dh,  "attachment");
         checkServerAttachment(data, attach);
-        
+
         // Create attachment from byte[].
         attach = new Attachment(data, "text/plain", "attachment", "attachment.txt");
         checkServerAttachment(data, attach);
     }
-    
+
     private void checkServerAttachment(byte[] expected, Attachment attach)
     throws Exception {
         TestUtil.assertEquals(expected, attach.getContent());
@@ -169,31 +169,31 @@ extends TestCase {
         assertEquals("attachment", attach.getName());
         assertEquals("attachment.txt", attach.getFilename());
     }
-    
+
     @Test
     public void testContactAttachments()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        
+
         // Create a contact with an attachment.
         Map<String, String> attrs = new HashMap<String, String>();
         attrs.put("fullName", NAME_PREFIX + " testAttachments");
-        
+
         String attachment1Text = "attachment 1";
         int timeout = (int) Constants.MILLIS_PER_MINUTE;
         String folderId = Integer.toString(Mailbox.ID_FOLDER_CONTACTS);
-        
+
         String attachment1Id = mbox.uploadAttachment("attachment.txt", attachment1Text.getBytes(), "text/plain", timeout);
         Map<String, ZAttachmentInfo> attachments = new HashMap<String, ZAttachmentInfo>();
         ZAttachmentInfo info = new ZAttachmentInfo().setAttachmentId(attachment1Id);
         attachments.put("attachment1", info);
         ZContact contact = mbox.createContact(folderId, null, attrs, attachments);
-        
+
         // Validate the attachment data.
         assertTrue(contact.getAttachmentNames().contains("attachment1"));
         byte[] data = getAttachmentData(contact, "attachment1");
         assertEquals(attachment1Text, new String(data));
-        
+
         // Add a second attachment.
         String attachment2Text = "attachment 2";
         String attachment2Id = mbox.uploadAttachment("attachment.txt", attachment2Text.getBytes(), "text/plain", timeout);
@@ -201,11 +201,11 @@ extends TestCase {
         info.setAttachmentId(attachment2Id);
         attachments.put("attachment2", info);
         contact = mbox.modifyContact(contact.getId(), false, null, attachments);
-        
+
         // Validate second attachment data.
         data = getAttachmentData(contact, "attachment2");
         assertEquals(attachment2Text, new String(data));
-        
+
         // Replace second attachment.
         String newAttachment2Text = "new attachment 2";
         String newAttachment2Id = mbox.uploadAttachment("attachment.txt", newAttachment2Text.getBytes(), "text/plain", timeout);
@@ -215,20 +215,20 @@ extends TestCase {
         // Confirm that the attachment data was updated.
         data = getAttachmentData(contact, "attachment2");
         assertEquals(newAttachment2Text, new String(data));
-        
+
         // Create third attachment with data from the second attachment.
         info.setAttachmentId(null);
         info.setPartName(contact.getAttachmentPartName("attachment2"));
         attachments.clear();
         attachments.put("attachment3", info);
         contact = mbox.modifyContact(contact.getId(), false, null, attachments);
-        
+
         // Verify the attachment data.
         data = getAttachmentData(contact, "attachment2");
         assertEquals(newAttachment2Text, new String(data));
         data = getAttachmentData(contact, "attachment3");
         assertEquals(newAttachment2Text, new String(data));
-        
+
         // Replace attachments.
         String attachment4Text = "attachment 4";
         String attachment4Id = mbox.uploadAttachment("attachment.txt", attachment4Text.getBytes(), "text/plain", timeout);
@@ -237,19 +237,19 @@ extends TestCase {
         attachments.clear();
         attachments.put("attachment4", info);
         contact = mbox.modifyContact(contact.getId(), true, attrs, attachments);
-        
+
         // Verify the attachment data.
         Set<String> names = contact.getAttachmentNames();
         assertEquals(1, names.size());
         assertTrue(names.contains("attachment4"));
         data = getAttachmentData(contact, "attachment4");
         assertEquals(attachment4Text, new String(data));
-        
+
         // Remove all attachments.
         info.setAttachmentId(null);
         contact = mbox.modifyContact(contact.getId(), false, attrs, attachments);
         assertEquals(0, contact.getAttachmentNames().size());
-        
+
         // Add an attachment to a contact that didn't previously have one.
         attachment4Id = mbox.uploadAttachment("attachment.txt", attachment4Text.getBytes(), "text/plain", timeout);
         info.setAttachmentId(attachment4Id);
@@ -257,7 +257,7 @@ extends TestCase {
         attachments.clear();
         attachments.put("attachment4", info);
         contact = mbox.modifyContact(contact.getId(), false, attrs, attachments);
-        
+
         // Verify the attachment data.
         names = contact.getAttachmentNames();
         assertEquals(1, names.size());
@@ -265,21 +265,21 @@ extends TestCase {
         data = getAttachmentData(contact, "attachment4");
         assertEquals(attachment4Text, new String(data));
     }
-    
+
     /*
     @Test(groups = {"hack"})
     public void testLargeFile()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        
+
         // Create a contact with an attachment.
         Map<String, String> attrs = new HashMap<String, String>();
         attrs.put("fullName", NAME_PREFIX + " testAttachments");
-        
+
         File file = new File("/tmp/u2.zip");
         FileInputStream in = new FileInputStream(file);
         String attachId = mbox.uploadContentAsStream("u2.zip", in, "application/zip", file.length(), (int) Constants.MILLIS_PER_DAY);
-        
+
         ZAttachmentInfo info = new ZAttachmentInfo().setAttachmentId(attachId);
         Map<String, ZAttachmentInfo> attachments = new HashMap<String, ZAttachmentInfo>();
         attachments.put("attachment", info);
@@ -287,13 +287,13 @@ extends TestCase {
         mbox.createContact(folderId, null, attrs, attachments);
     }
     */
-    
+
     private byte[] getAttachmentData(ZContact contact, String attachmentName)
     throws Exception {
         InputStream in = contact.getAttachmentData(attachmentName);
         return ByteUtil.getContent(in, 0);
     }
-    
+
     /**
      * test zclient contact import
      */
@@ -310,19 +310,19 @@ extends TestCase {
         ZImportContactsResult res = mbox.importContacts(folderId, ZMailbox.CONTACT_IMPORT_TYPE_CSV, attachmentId);
         Assert.assertEquals(res.getCount(), contactNum, "Number of contacts imported");
     }
-    
+
     @AfterMethod
     @Override public void tearDown()
     throws Exception {
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraContactMaxNumEntries, mOriginalMaxContacts);
         cleanUp();
     }
-    
+
     private void cleanUp()
     throws Exception {
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
     }
-    
+
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();

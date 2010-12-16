@@ -15,23 +15,22 @@
 
 package com.zimbra.cs.index;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
 import com.zimbra.cs.mailbox.calendar.WellKnownTimeZones;
@@ -164,15 +163,7 @@ public final class SearchParams implements Cloneable {
         return mQueryStr;
     }
 
-    public String getTypesStr() {
-        List<String> list = new ArrayList<String>(types.size());
-        for (byte type : types) {
-            list.add(MailItem.getNameForType(type));
-        }
-        return Joiner.on(',').skipNulls().join(list);
-    }
-
-    public Set<Byte> getTypes() {
+    public Set<MailItem.Type> getTypes() {
         return types;
     }
 
@@ -355,10 +346,14 @@ public final class SearchParams implements Cloneable {
     }
 
     public void setTypes(String value) throws ServiceException {
-        setTypes(MailboxIndex.parseTypes(value));
+        try {
+            setTypes(MailItem.Type.setOf(value));
+        } catch (IllegalArgumentException e) {
+            throw MailServiceException.INVALID_TYPE(e.getMessage());
+        }
     }
 
-    public void setTypes(Set<Byte> value) {
+    public void setTypes(Set<MailItem.Type> value) {
         types = value;
         checkForLocalizedContactSearch();
     }
@@ -379,7 +374,7 @@ public final class SearchParams implements Cloneable {
 
             // FIXME: for bug 41920, disable localized contact sorting
             // bug 22665 - if searching ONLY for contacts, and locale is not EN, used localized re-sort
-            if (types.size() == 1 && types.contains(MailItem.TYPE_CONTACT) && !isSystemDefaultLocale()) {
+            if (types.size() == 1 && types.contains(MailItem.Type.CONTACT) && !isSystemDefaultLocale()) {
                 if (mLocale != null) {
                     if (mSortBy != null) {
                         if (mSortBy.getType() == SortBy.Type.NAME_ASCENDING) {
@@ -539,7 +534,7 @@ public final class SearchParams implements Cloneable {
                 getCalItemExpandEnd());
         searchElt.addAttribute(MailConstants.E_QUERY, getQueryStr(),
                 Element.Disposition.CONTENT);
-        searchElt.addAttribute(MailConstants.A_SEARCH_TYPES, getTypesStr());
+        searchElt.addAttribute(MailConstants.A_SEARCH_TYPES, MailItem.Type.toString(types));
         searchElt.addAttribute(MailConstants.A_SORTBY, getSortByStr());
         if (getInlineRule() != null)
             searchElt.addAttribute(MailConstants.A_FETCH,
@@ -621,8 +616,13 @@ public final class SearchParams implements Cloneable {
         }
         params.setInDumpster(request.getAttributeBool(MailConstants.A_IN_DUMPSTER, false));
         params.setQueryStr(query);
-        params.setTypes(request.getAttribute(MailConstants.A_SEARCH_TYPES,
-                request.getAttribute(MailConstants.A_GROUPBY, Search.DEFAULT_SEARCH_TYPES)));
+        String types = request.getAttribute(MailConstants.A_SEARCH_TYPES,
+                request.getAttribute(MailConstants.A_GROUPBY, null));
+        if (Strings.isNullOrEmpty(types)) {
+            params.setTypes(Search.DEFAULT_SEARCH_TYPES);
+        } else {
+            params.setTypes(types);
+        }
         params.setSortByStr(request.getAttribute(MailConstants.A_SORTBY,
                 SortBy.DATE_DESCENDING.toString()));
 
@@ -720,10 +720,8 @@ public final class SearchParams implements Cloneable {
 
             // bug 35039 - using cursors with conversation-coalescing leads to convs
             //             appearing on multiple pages
-            for (byte b : params.getTypes()) {
-                if (b == MailItem.TYPE_CONVERSATION) {
-                    useCursorToNarrowDbQuery = false;
-                }
+            if (params.getTypes().contains(MailItem.Type.CONVERSATION)) {
+                useCursorToNarrowDbQuery = false;
             }
         }
 
@@ -1020,7 +1018,7 @@ public final class SearchParams implements Cloneable {
 
     // parsed:
     private SortBy mSortBy;
-    private Set<Byte> types = Collections.emptySet(); // types to seach for
+    private Set<MailItem.Type> types = EnumSet.noneOf(MailItem.Type.class); // types to seach for
 
     private boolean mPrefetch = true;
     private Mailbox.SearchResultMode mMode = Mailbox.SearchResultMode.NORMAL;

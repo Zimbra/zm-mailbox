@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -38,7 +38,7 @@ public class MigrateToDocuments {
 
     private Mailbox mbox;
     private OperationContext octxt;
-    
+
     public void handleAccount(Account account) throws ServiceException {
         handleMailbox(MailboxManager.getInstance().getMailboxByAccount(account, true));
     }
@@ -53,24 +53,24 @@ public class MigrateToDocuments {
         } catch (Exception e) {
         }
         if (destRoot == null)
-            destRoot = mbox.createFolder(octxt, path, (byte)0, MailItem.TYPE_DOCUMENT);
+            destRoot = mbox.createFolder(octxt, path, (byte)0, MailItem.Type.DOCUMENT);
         if (destRoot == null) {
             ZimbraLog.misc.warn("Can't create folder: %s", path);
             return;
         }
         moveToBackupFolder(root, destRoot);
         migrateFromBackupFolder(destRoot, root);
-        mbox.delete(octxt, destRoot.getId(), MailItem.TYPE_FOLDER);
+        mbox.delete(octxt, destRoot.getId(), MailItem.Type.FOLDER);
     }
-    
+
     private void moveToBackupFolder(Folder from, Folder to) throws ServiceException {
         for (Folder source : from.getSubfolders(octxt)) {
-            if (source.getDefaultView() != MailItem.TYPE_WIKI)
+            if (source.getDefaultView() != MailItem.Type.WIKI)
                 continue;
             String path = to.getPath() + "/" + source.getName();
             Folder dest = null;
             try {
-                dest = mbox.createFolder(octxt, path, (byte)0, MailItem.TYPE_DOCUMENT);
+                dest = mbox.createFolder(octxt, path, (byte)0, MailItem.Type.DOCUMENT);
             } catch (MailServiceException e) {
                 if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
                     dest = mbox.getFolderByPath(octxt, path);
@@ -82,9 +82,9 @@ public class MigrateToDocuments {
             }
             moveToBackupFolder(source, dest);
         }
-        for (MailItem item : mbox.getItemList(octxt, MailItem.TYPE_WIKI, from.getId())) {
+        for (MailItem item : mbox.getItemList(octxt, MailItem.Type.WIKI, from.getId())) {
             try {
-                mbox.move(octxt, item.getId(), MailItem.TYPE_WIKI, to.getId());
+                mbox.move(octxt, item.getId(), MailItem.Type.WIKI, to.getId());
             } catch (MailServiceException e) {
                 if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
                     ZimbraLog.misc.warn("Item already exists: %s", item.getName());
@@ -94,7 +94,7 @@ public class MigrateToDocuments {
             }
         }
     }
-    
+
     private void migrateFromBackupFolder(Folder from, Folder to) throws ServiceException {
         for (Folder source : from.getSubfolders(octxt)) {
             String path = to.getPath();
@@ -104,7 +104,7 @@ public class MigrateToDocuments {
             Folder sub = mbox.getFolderByPath(octxt, path);
             migrateFromBackupFolder(source, sub);
         }
-        for (MailItem item : mbox.getItemList(octxt, MailItem.TYPE_WIKI, from.getId())) {
+        for (MailItem item : mbox.getItemList(octxt, MailItem.Type.WIKI, from.getId())) {
             Document doc = (Document) item;
             Document main = null;
             try {
@@ -115,7 +115,7 @@ public class MigrateToDocuments {
             for (int rev = 1; rev < doc.getVersion(); rev++) {
                 Document revision = null;
                 try {
-                    revision = (Document)mbox.getItemRevision(octxt, item.getId(), MailItem.TYPE_DOCUMENT, rev);
+                    revision = (Document)mbox.getItemRevision(octxt, item.getId(), MailItem.Type.DOCUMENT, rev);
                 } catch (Exception e) {
                     ZimbraLog.misc.warn("Can't get revision " + rev + " for item " + doc.getName(), e);
                 }
@@ -130,17 +130,17 @@ public class MigrateToDocuments {
             addRevision(item.getName(), main, doc, to);
         }
     }
-    
+
     private Document addRevision(String name, Document main, Document revision, Folder to) {
         InputStream in = null;
         try {
             in = getContentStream(revision);
             String contentType = revision.getContentType();
-            if (revision.getType() == MailItem.TYPE_WIKI)
+            if (revision.getType() == MailItem.Type.WIKI)
                 contentType = "application/x-zimbra-doc; charset=utf-8";
             ParsedDocument pd = new ParsedDocument(in, name, contentType, revision.getDate(), revision.getCreator(), revision.getDescription());
             if (main == null) {
-                main = mbox.createDocument(octxt, to.getId(), pd, MailItem.TYPE_DOCUMENT);
+                main = mbox.createDocument(octxt, to.getId(), pd, MailItem.Type.DOCUMENT);
             } else {
                 mbox.addDocumentRevision(octxt, main.getId(), pd);
             }
@@ -154,9 +154,9 @@ public class MigrateToDocuments {
         }
         return main;
     }
-    
+
     private InputStream getContentStream(Document item) throws IOException, ServiceException {
-        if (item.getType() == MailItem.TYPE_DOCUMENT)
+        if (item.getType() == MailItem.Type.DOCUMENT)
             return item.getContentStream();
         String contents = new String(item.getContent(), "UTF-8");
         WikiTemplate wt = new WikiTemplate(contents, mbox.getAccountId(), Integer.toString(item.getFolderId()), item.getName());
@@ -168,7 +168,7 @@ public class MigrateToDocuments {
         System.out.println("zmwikimigrate [accountId]+");
         System.exit(0);
     }
-    
+
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();
         DbPool.startup();

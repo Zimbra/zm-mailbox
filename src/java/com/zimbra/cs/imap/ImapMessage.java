@@ -25,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Locale;
@@ -44,7 +45,6 @@ import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.BCodec;
 import org.apache.commons.codec.net.QCodec;
 
-import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeCompoundHeader;
@@ -74,8 +74,8 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         ImapMessageSet(Collection<ImapMessage> msgs)  { this();  addAll(msgs); }
     }
 
-    public static final Set<Byte> SUPPORTED_TYPES = ImmutableSet.of(
-            MailItem.TYPE_MESSAGE, MailItem.TYPE_CHAT, MailItem.TYPE_CONTACT);
+    public static final Set<MailItem.Type> SUPPORTED_TYPES = EnumSet.of(
+            MailItem.Type.MESSAGE, MailItem.Type.CHAT, MailItem.Type.CONTACT);
 
     static final short FLAG_RECENT       = 0x0001;
     static final short FLAG_SPAM         = 0x0002;
@@ -99,12 +99,12 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
     long  tags;
     short sflags;
 
-    public ImapMessage(int id, byte type, int imapId, int flag, long tag) {
+    public ImapMessage(int id, MailItem.Type type, int imapId, int flag, long tag) {
         msgId   = id;
         imapUid = imapId;
         flags   = flag;
         tags    = tag;
-        sflags  = (type == MailItem.TYPE_CONTACT ? FLAG_IS_CONTACT : 0);
+        sflags  = (type == MailItem.Type.CONTACT ? FLAG_IS_CONTACT : 0);
     }
 
     public ImapMessage(MailItem item) {
@@ -124,8 +124,8 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         return this;
     }
 
-    byte getType() {
-        return (sflags & FLAG_IS_CONTACT) == 0 ? MailItem.TYPE_MESSAGE : MailItem.TYPE_CONTACT;
+    MailItem.Type getType() {
+        return (sflags & FLAG_IS_CONTACT) == 0 ? MailItem.Type.MESSAGE : MailItem.Type.CONTACT;
     }
 
     boolean isExpunged()  { return (sflags & FLAG_EXPUNGED) != 0; }
@@ -197,7 +197,7 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         try {
             return new Mime.FixedMimeMessage(JMSession.getSession(), is);
         } catch (MessagingException e) {
-            throw ServiceException.FAILURE("error creating MimeMessage for " + MailItem.getNameForType(item.getType()) + ' ' + item.getId(), e);
+            throw ServiceException.FAILURE("error creating MimeMessage for " +item.getType() + ' ' + item.getId(), e);
         } finally {
             ByteUtil.closeStream(is);
         }

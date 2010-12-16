@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,24 +21,24 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.ParsedDocument;
 
 public class WikiItem extends Document {
-	
-	WikiItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
-		super(mbox, data);
-	}
-	
-	public String getWikiWord() {
-		return getName();
-	}
+
+    WikiItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
+        super(mbox, data);
+    }
+
+    public String getWikiWord() {
+        return getName();
+    }
 
     public static final String WIKI_CONTENT_TYPE = "text/html; charset=utf-8";
-	
+
     static WikiItem create(int id, Folder folder, String wikiword, ParsedDocument pd, CustomMetadata custom)
     throws ServiceException {
         Metadata meta = new Metadata();
-        UnderlyingData data = prepareCreate(TYPE_WIKI, id, folder, wikiword, WIKI_CONTENT_TYPE, pd, meta, custom);
+        UnderlyingData data = prepareCreate(Type.WIKI, id, folder, wikiword, WIKI_CONTENT_TYPE, pd, meta, custom);
 
-		Mailbox mbox = folder.getMailbox();
-		data.contentChanged(mbox);
+        Mailbox mbox = folder.getMailbox();
+        data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding WikiItem %s: id=%d, folderId=%d, folderName=%s.",
             wikiword, data.id, folder.getId(), folder.getName());
         DbMailItem.create(mbox, data, null);

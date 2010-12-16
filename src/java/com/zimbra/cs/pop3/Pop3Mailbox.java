@@ -16,8 +16,8 @@
 package com.zimbra.cs.pop3;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -47,7 +47,7 @@ class Pop3Mailbox {
     private List<Pop3Message> mMessages; // array of pop messages
     private OperationContext mOpContext;
 
-    private static final Set<Byte> POP3_TYPES = Collections.singleton(MailItem.TYPE_MESSAGE);
+    private static final Set<MailItem.Type> POP3_TYPES = EnumSet.of(MailItem.Type.MESSAGE);
 
     /**
      * initialize the Pop3Mailbox, without keeping a reference to either the Mailbox object or
@@ -223,9 +223,9 @@ class Pop3Mailbox {
             if (p3m.isDeleted()) {
                 try {
                     if (hard) {
-                        mbox.delete(mOpContext, p3m.getId(), MailItem.TYPE_MESSAGE);
+                        mbox.delete(mOpContext, p3m.getId(), MailItem.Type.MESSAGE);
                     } else {
-                        mbox.move(mOpContext, p3m.getId(), MailItem.TYPE_MESSAGE, Mailbox.ID_FOLDER_TRASH);
+                        mbox.move(mOpContext, p3m.getId(), MailItem.Type.MESSAGE, Mailbox.ID_FOLDER_TRASH);
                     }
                     count++;
                 } catch (ServiceException e) {

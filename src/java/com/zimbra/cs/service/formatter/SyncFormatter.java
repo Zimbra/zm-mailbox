@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,7 +19,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.mail.Part;
@@ -27,7 +29,6 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -46,25 +47,27 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.mime.MimeConstants;
 
 public class SyncFormatter extends Formatter {
-    
+
     public static final String QP_NOHDR = "nohdr";
 
+    @Override
     public String getType() {
         return "sync";
     }
 
-    public String getDefaultSearchTypes() {
+    @Override
+    public Set<MailItem.Type> getDefaultSearchTypes() {
         // TODO: all?
-        return MailboxIndex.SEARCH_FOR_MESSAGES;
+        return EnumSet.of(MailItem.Type.MESSAGE);
     }
 
     /**
-     * add to content as well as http headers for now (unless told not to)... 
+     * add to content as well as http headers for now (unless told not to)...
      */
     private static List<Pair<String, String>> getXZimbraHeaders(MailItem item) {
-    	List<Pair<String, String>> hdrs = new ArrayList<Pair<String, String>>();
-    	hdrs.add(new Pair<String, String>("X-Zimbra-ItemId", item.getId() + ""));
-    	hdrs.add(new Pair<String, String>("X-Zimbra-FolderId", item.getFolderId() + ""));
+        List<Pair<String, String>> hdrs = new ArrayList<Pair<String, String>>();
+        hdrs.add(new Pair<String, String>("X-Zimbra-ItemId", item.getId() + ""));
+        hdrs.add(new Pair<String, String>("X-Zimbra-FolderId", item.getFolderId() + ""));
         hdrs.add(new Pair<String, String>("X-Zimbra-Tags", item.getTagString()));
         hdrs.add(new Pair<String, String>("X-Zimbra-Flags", item.getFlagString()));
         hdrs.add(new Pair<String, String>("X-Zimbra-Received", item.getDate() + ""));
@@ -72,38 +75,39 @@ public class SyncFormatter extends Formatter {
         hdrs.add(new Pair<String, String>("X-Zimbra-Change", item.getModifiedSequence() + ""));
         hdrs.add(new Pair<String, String>("X-Zimbra-Revision", item.getSavedSequence() + ""));
         if (item instanceof Message)
-        	hdrs.add(new Pair<String, String>("X-Zimbra-Conv", ((Message) item).getConversationId() + ""));
+            hdrs.add(new Pair<String, String>("X-Zimbra-Conv", ((Message) item).getConversationId() + ""));
         return hdrs;
     }
-    
+
     private static byte[] getXZimbraHeadersBytes(List<Pair<String, String>> hdrs) {
-    	StringBuilder sb = new StringBuilder();
-    	for (Pair<String, String> pair : hdrs)
-    		sb.append(pair.getFirst()).append(": ").append(pair.getSecond()).append("\r\n");
-    	return sb.toString().getBytes();
+        StringBuilder sb = new StringBuilder();
+        for (Pair<String, String> pair : hdrs)
+            sb.append(pair.getFirst()).append(": ").append(pair.getSecond()).append("\r\n");
+        return sb.toString().getBytes();
     }
-    
+
     public static byte[] getXZimbraHeadersBytes(MailItem item) {
-    	return getXZimbraHeadersBytes(getXZimbraHeaders(item));
+        return getXZimbraHeadersBytes(getXZimbraHeaders(item));
     }
-    
+
     private static void addXZimbraHeaders(Context context, MailItem item, long size) throws IOException {
-    	List<Pair<String, String>> hdrs = getXZimbraHeaders(item);
-    	for (Pair<String, String> pair : hdrs)
-    		context.resp.addHeader(pair.getFirst(), pair.getSecond());
+        List<Pair<String, String>> hdrs = getXZimbraHeaders(item);
+        for (Pair<String, String> pair : hdrs)
+            context.resp.addHeader(pair.getFirst(), pair.getSecond());
 
-    	// inline X-Zimbra headers with response body if nohdr parameter is not present
-    	// also explicitly set the Content-Length header, as it's only done implicitly for short payloads
-    	if (context.params.get(QP_NOHDR) == null) {
-    		byte[] inline = getXZimbraHeadersBytes(hdrs);
-    		if (size > 0)
-    			context.resp.setContentLength(inline.length + (int) size);
-    		context.resp.getOutputStream().write(inline);
-    	} else if (size > 0) {
-    		context.resp.setContentLength((int) size);
-    	}
+        // inline X-Zimbra headers with response body if nohdr parameter is not present
+        // also explicitly set the Content-Length header, as it's only done implicitly for short payloads
+        if (context.params.get(QP_NOHDR) == null) {
+            byte[] inline = getXZimbraHeadersBytes(hdrs);
+            if (size > 0)
+                context.resp.setContentLength(inline.length + (int) size);
+            context.resp.getOutputStream().write(inline);
+        } else if (size > 0) {
+            context.resp.setContentLength((int) size);
+        }
     }
 
+    @Override
     public void formatCallback(Context context) throws IOException, ServiceException, UserServletException {
         try {
             if (context.hasPart()) {
@@ -156,7 +160,7 @@ public class SyncFormatter extends Formatter {
             InputStream is = calItem.getRawMessage();
             if (is != null)
                 ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
-        }        
+        }
     }
 
     private void handleMessage(Context context, Message msg) throws IOException, ServiceException {
@@ -177,7 +181,7 @@ public class SyncFormatter extends Formatter {
         if (!(item instanceof Message))
             throw UserServletException.notImplemented("can only handle messages");
         Message message = (Message) item;
-        
+
         MimePart mp = getMimePart(message, context.getPart());
         if (mp != null) {
             String contentType = mp.getContentType();
@@ -217,16 +221,20 @@ public class SyncFormatter extends Formatter {
     /**
      * This formatter downloads attachments as part of the mime blob so it can't be blocked. See bug 5310 for more details.
      */
+    @Override
     public boolean canBeBlocked() {
         return false;
     }
 
+    @Override
     public boolean supportsSave() {
         return true;
     }
 
     // FIXME: need to support tags, flags, date, etc...
-    public void saveCallback(Context context, String contentType, Folder folder, String filename) throws IOException, ServiceException, UserServletException {
+    @Override
+    public void saveCallback(Context context, String contentType, Folder folder, String filename)
+            throws IOException, ServiceException, UserServletException {
         byte[] body = context.getPostBody();
         try {
             Mailbox mbox = folder.getMailbox();

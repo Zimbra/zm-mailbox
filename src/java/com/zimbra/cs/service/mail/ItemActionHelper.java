@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -59,34 +59,32 @@ import com.zimbra.cs.zclient.ZMountpoint;
 public class ItemActionHelper {
 
     public static ItemActionHelper TAG(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-                List<Integer> ids, byte type, boolean flagValue, TargetConstraint tcon, int tagId)
-    throws ServiceException {
-        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, 
+            List<Integer> ids, MailItem.Type type, boolean flagValue, TargetConstraint tcon, int tagId)
+            throws ServiceException {
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto,
                     ids, Op.TAG, type, flagValue, tcon);
         ia.setTagId(tagId);
         ia.schedule();
         return ia;
     }
-    
+
     public static ItemActionHelper FLAG(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-                List<Integer> ids, byte type, boolean flagValue, TargetConstraint tcon)
-    throws ServiceException {
+            List<Integer> ids, MailItem.Type type, boolean flagValue, TargetConstraint tcon) throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.FLAG, type, flagValue, tcon);
         ia.schedule();
         return ia;
     }
-    
+
     public static ItemActionHelper READ(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-                List<Integer> ids, byte type, boolean flagValue, TargetConstraint tcon)
-    throws ServiceException {
+            List<Integer> ids, MailItem.Type type, boolean flagValue, TargetConstraint tcon) throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.READ, type, flagValue, tcon);
         ia.schedule();
         return ia;
     }
-    
+
     public static ItemActionHelper COLOR(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-                List<Integer> ids, byte type, TargetConstraint tcon, MailItem.Color color)
-    throws ServiceException {
+            List<Integer> ids, MailItem.Type type, TargetConstraint tcon, MailItem.Color color)
+            throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.COLOR, type, true, tcon);
         ia.setColor(color);
         ia.schedule();
@@ -94,16 +92,14 @@ public class ItemActionHelper {
     }
 
     public static ItemActionHelper HARD_DELETE(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-                List<Integer> ids, byte type, TargetConstraint tcon)
-    throws ServiceException {
+            List<Integer> ids, MailItem.Type type, TargetConstraint tcon) throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.HARD_DELETE, type, true, tcon);
         ia.schedule();
         return ia;
     }
 
     public static ItemActionHelper RECOVER(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-                List<Integer> ids, byte type, TargetConstraint tcon, ItemId iidFolder)
-    throws ServiceException {
+            List<Integer> ids, MailItem.Type type, TargetConstraint tcon, ItemId iidFolder) throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.RECOVER, type, true, tcon);
         ia.setIidFolder(iidFolder);
         ia.schedule();
@@ -111,16 +107,14 @@ public class ItemActionHelper {
     }
 
     public static ItemActionHelper DUMPSTER_DELETE(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-                List<Integer> ids, byte type, TargetConstraint tcon)
-    throws ServiceException {
+            List<Integer> ids, MailItem.Type type, TargetConstraint tcon) throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.DUMPSTER_DELETE, type, true, tcon);
         ia.schedule();
         return ia;
     }
 
     public static ItemActionHelper MOVE(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-                List<Integer> ids, byte type, TargetConstraint tcon, ItemId iidFolder)
-    throws ServiceException {
+            List<Integer> ids, MailItem.Type type, TargetConstraint tcon, ItemId iidFolder) throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.MOVE, type, true, tcon);
         ia.setIidFolder(iidFolder);
         ia.schedule();
@@ -128,7 +122,7 @@ public class ItemActionHelper {
     }
 
     public static ItemActionHelper COPY(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-                List<Integer> ids, byte type, TargetConstraint tcon, ItemId iidFolder)
+                List<Integer> ids, MailItem.Type type, TargetConstraint tcon, ItemId iidFolder)
     throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.COPY, type, true, tcon);
         ia.setIidFolder(iidFolder);
@@ -137,9 +131,8 @@ public class ItemActionHelper {
     }
 
     public static ItemActionHelper SPAM(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-                List<Integer> ids, byte type, boolean flagValue, 
-                TargetConstraint tcon, ItemId iidFolder)
-    throws ServiceException {
+            List<Integer> ids, MailItem.Type type, boolean flagValue, TargetConstraint tcon, ItemId iidFolder)
+            throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.SPAM, type, flagValue, tcon);
         ia.setIidFolder(iidFolder);
         ia.schedule();
@@ -147,8 +140,8 @@ public class ItemActionHelper {
     }
 
     public static ItemActionHelper RENAME(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-                List<Integer> ids, byte type, TargetConstraint tcon, String name, ItemId iidFolder)
-    throws ServiceException {
+            List<Integer> ids, MailItem.Type type, TargetConstraint tcon, String name, ItemId iidFolder)
+            throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.RENAME, type, true, tcon);
         ia.setName(name);
         ia.setIidFolder(iidFolder);
@@ -157,9 +150,8 @@ public class ItemActionHelper {
     }
 
     public static ItemActionHelper UPDATE(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-                List<Integer> ids, byte type, TargetConstraint tcon, String name, ItemId iidFolder, String flags,
-                String tags, MailItem.Color color)
-    throws ServiceException {
+            List<Integer> ids, MailItem.Type type, TargetConstraint tcon, String name, ItemId iidFolder, String flags,
+            String tags, MailItem.Color color) throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.UPDATE, type, true, tcon);
         ia.setName(name);
         ia.setIidFolder(iidFolder);
@@ -169,18 +161,16 @@ public class ItemActionHelper {
         ia.schedule();
         return ia;
     }
-                
+
     public static ItemActionHelper LOCK(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-            List<Integer> ids, byte type, TargetConstraint tcon)
-    throws ServiceException {
+            List<Integer> ids, MailItem.Type type, TargetConstraint tcon) throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.LOCK, type, true, tcon);
         ia.schedule();
         return ia;
     }
 
     public static ItemActionHelper UNLOCK(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-            List<Integer> ids, byte type, TargetConstraint tcon)
-    throws ServiceException {
+            List<Integer> ids, MailItem.Type type, TargetConstraint tcon) throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.UNLOCK, type, true, tcon);
         ia.schedule();
         return ia;
@@ -201,21 +191,21 @@ public class ItemActionHelper {
         UPDATE("update"),
         LOCK("lock"),
         UNLOCK("unlock");
-        
+
         private String mStr;
 
         private Op(String str)  { mStr = str; }
 
         @Override public String toString()  { return mStr; }
     }
-    
+
     protected String mResult;
     protected List<String> mCreatedIds;
 
     protected SoapProtocol mResponseProtocol;
     protected Op mOperation;
     protected int[] mIds;
-    protected byte mItemType;
+    protected MailItem.Type type;
     protected boolean mFlagValue;
     protected TargetConstraint mTargetConstraint;
     protected int mHopCount;
@@ -227,10 +217,10 @@ public class ItemActionHelper {
     protected MailItem.Color mColor;
 
     // only when OP=RENAME or OP=UPDATE
-    protected String mName; 
+    protected String mName;
 
     // only when OP=MOVE or OP=COPY or OP=RENAME or OP=UPDATE or OP=SPAM
-    protected ItemId mIidFolder, mIidRequestedFolder; 
+    protected ItemId mIidFolder, mIidRequestedFolder;
 
     // only when OP=UPDATE
     protected String mFlags;
@@ -240,62 +230,62 @@ public class ItemActionHelper {
     protected Account mAuthenticatedAccount;
 
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         StringBuilder toRet = new StringBuilder(super.toString());
-        
+
         toRet.append(" Op=").append(mOperation.toString());
-        toRet.append(" Type=").append(mItemType);
+        toRet.append(" Type=").append(type);
         toRet.append(" FlagValue=").append(mFlagValue);
-        if (mTargetConstraint != null) 
+        if (mTargetConstraint != null)
             toRet.append(" TargetConst=").append(mTargetConstraint.toString());
 
-        if (mOperation == Op.TAG) 
+        if (mOperation == Op.TAG)
             toRet.append(" TagId=").append(mTagId);
 
         if (mOperation == Op.COLOR || mOperation == Op.UPDATE)
             toRet.append(" Color=").append(mColor);
 
-        if (mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE) 
+        if (mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE)
             toRet.append(" iidFolder=").append(mIidFolder);
 
         if (mOperation == Op.UPDATE) {
-            if (mFlags != null) 
+            if (mFlags != null)
                 toRet.append(" flags=").append(mFlags);
-            if (mTags != null) 
+            if (mTags != null)
                 toRet.append(" tags=").append(mTags);
         }
         return toRet.toString();
     }
-    
+
     public void setTagId(int tagId) {
         assert(mOperation == Op.TAG);
         mTagId = tagId;
     }
-    public void setColor(MailItem.Color color) { 
+    public void setColor(MailItem.Color color) {
         assert(mOperation == Op.COLOR || mOperation == Op.UPDATE);
-        mColor = color; 
+        mColor = color;
     }
-    public void setName(String name) { 
+    public void setName(String name) {
         assert(mOperation == Op.RENAME || mOperation == Op.UPDATE);
-        mName = name; 
+        mName = name;
     }
-    public void setIidFolder(ItemId iidFolder)  { 
+    public void setIidFolder(ItemId iidFolder)  {
         assert(mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE || mOperation == Op.RECOVER);
-        mIidRequestedFolder = mIidFolder = iidFolder; 
+        mIidRequestedFolder = mIidFolder = iidFolder;
     }
     public void setFlags(String flags) {
         assert(mOperation == Op.UPDATE);
-        mFlags = flags; 
+        mFlags = flags;
     }
-    public void setTags(String tags) {                        
+    public void setTags(String tags) {
         assert(mOperation == Op.UPDATE);
-        mTags = tags; 
+        mTags = tags;
     }
 
-    ItemActionHelper(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-                List<Integer> ids, Op op, byte type, boolean flagValue, TargetConstraint tcon)
-    throws ServiceException {
-        
+    ItemActionHelper(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,  List<Integer> ids, Op op,
+            MailItem.Type type, boolean flagValue, TargetConstraint tcon) throws ServiceException {
+
         mOpCtxt = octxt;
         mMailbox = mbox;
 
@@ -313,11 +303,11 @@ public class ItemActionHelper {
         mOperation = op;
         if (mOperation == null)
             throw ServiceException.INVALID_REQUEST("unknown operation: null", null);
-        mItemType = type;
+        this.type = type;
         mFlagValue = flagValue;
         mTargetConstraint = tcon;
     }
-    
+
     private OperationContext mOpCtxt;
     private Mailbox mMailbox;
     protected Mailbox getMailbox() { return mMailbox; }
@@ -367,22 +357,22 @@ public class ItemActionHelper {
         // iterate over the local items and perform the requested operation
         switch (mOperation) {
             case FLAG:
-                getMailbox().alterTag(getOpCtxt(), mIds, mItemType, Flag.ID_FLAG_FLAGGED, mFlagValue, mTargetConstraint);
+                getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.ID_FLAG_FLAGGED, mFlagValue, mTargetConstraint);
                 break;
             case READ:
-                getMailbox().alterTag(getOpCtxt(), mIds, mItemType, Flag.ID_FLAG_UNREAD, !mFlagValue, mTargetConstraint);
+                getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.ID_FLAG_UNREAD, !mFlagValue, mTargetConstraint);
                 break;
             case TAG:
-                getMailbox().alterTag(getOpCtxt(), mIds, mItemType, mTagId, mFlagValue, mTargetConstraint);
+                getMailbox().alterTag(getOpCtxt(), mIds, type, mTagId, mFlagValue, mTargetConstraint);
                 break;
             case COLOR:
-                getMailbox().setColor(getOpCtxt(), mIds, mItemType, mColor);
+                getMailbox().setColor(getOpCtxt(), mIds, type, mColor);
                 break;
             case HARD_DELETE:
-                getMailbox().delete(getOpCtxt(), mIds, mItemType, mTargetConstraint);
+                getMailbox().delete(getOpCtxt(), mIds, type, mTargetConstraint);
                 break;
             case RECOVER:
-                getMailbox().copy(getOpCtxt(), mIds, mItemType, mIidFolder.getId(), true);
+                getMailbox().copy(getOpCtxt(), mIds, type, mIidFolder.getId(), true);
                 getMailbox().deleteFromDumpster(getOpCtxt(), mIds);
                 break;
             case DUMPSTER_DELETE:
@@ -390,37 +380,44 @@ public class ItemActionHelper {
                 break;
             case SPAM:
             case MOVE:
-                getMailbox().move(getOpCtxt(), mIds, mItemType, mIidFolder.getId(), mTargetConstraint);
+                getMailbox().move(getOpCtxt(), mIds, type, mIidFolder.getId(), mTargetConstraint);
                 break;
             case COPY:
-                List<MailItem> copies = getMailbox().copy(getOpCtxt(), mIds, mItemType, mIidFolder.getId());
+                List<MailItem> copies = getMailbox().copy(getOpCtxt(), mIds, type, mIidFolder.getId());
                 mCreatedIds = new ArrayList<String>(mIds.length);
-                for (MailItem item : copies)
+                for (MailItem item : copies) {
                     mCreatedIds.add(mIdFormatter.formatItemId(item));
+                }
                 break;
             case RENAME:
-                for (int id : mIds)
-                    getMailbox().rename(getOpCtxt(), id, mItemType, mName, mIidFolder.getId());
+                for (int id : mIds) {
+                    getMailbox().rename(getOpCtxt(), id, type, mName, mIidFolder.getId());
+                }
                 break;
             case UPDATE:
                 if (mName != null) {
-                    for (int id : mIds)
-                        getMailbox().rename(getOpCtxt(), id, mItemType, mName, mIidFolder.getId());
+                    for (int id : mIds) {
+                        getMailbox().rename(getOpCtxt(), id, type, mName, mIidFolder.getId());
+                    }
                 } else if (mIidFolder.getId() > 0) {
-                    getMailbox().move(getOpCtxt(), mIds, mItemType, mIidFolder.getId(), mTargetConstraint);
+                    getMailbox().move(getOpCtxt(), mIds, type, mIidFolder.getId(), mTargetConstraint);
                 }
-                if (mTags != null || mFlags != null)
-                    getMailbox().setTags(getOpCtxt(), mIds, mItemType, mFlags, mTags, mTargetConstraint);
-                if (mColor != null)
-                    getMailbox().setColor(getOpCtxt(), mIds, mItemType, mColor);
+                if (mTags != null || mFlags != null) {
+                    getMailbox().setTags(getOpCtxt(), mIds, type, mFlags, mTags, mTargetConstraint);
+                }
+                if (mColor != null) {
+                    getMailbox().setColor(getOpCtxt(), mIds, type, mColor);
+                }
                 break;
             case LOCK:
-                for (int id : mIds)
-                    getMailbox().lock(getOpCtxt(), id, mItemType, mAuthenticatedAccount.getId());
+                for (int id : mIds) {
+                    getMailbox().lock(getOpCtxt(), id, type, mAuthenticatedAccount.getId());
+                }
                 break;
             case UNLOCK:
-                for (int id : mIds)
-                    getMailbox().unlock(getOpCtxt(), id, mItemType, mAuthenticatedAccount.getId());
+                for (int id : mIds) {
+                    getMailbox().unlock(getOpCtxt(), id, type, mAuthenticatedAccount.getId());
+                }
                 break;
             default:
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + mOperation, null);
@@ -429,23 +426,23 @@ public class ItemActionHelper {
 
     private AuthToken getAuthToken() throws ServiceException {
         AuthToken authToken = null;
-        
+
         if (mOpCtxt != null)
             authToken = mOpCtxt.getAuthToken();
-        
+
         if (authToken == null)
             authToken = AuthProvider.getAuthToken(mAuthenticatedAccount);
 
         return authToken;
     }
-    
+
     private void executeRemote() throws ServiceException, IOException {
         Account target = Provisioning.getInstance().get(Provisioning.AccountBy.id, mIidFolder.getAccountId());
-        
+
         AuthToken at = getAuthToken();
         String pxyAuthToken = Provisioning.onLocalServer(target) ? null : at.getProxyAuthToken();
         ZAuthToken zat = pxyAuthToken == null ? at.toZAuthToken() : new ZAuthToken(pxyAuthToken);
-        
+
         ZMailbox.Options zoptions = new ZMailbox.Options(zat, AccountUtil.getSoapUri(target));
         zoptions.setNoSession(true);
         zoptions.setTargetAccount(target.getId());
@@ -472,14 +469,14 @@ public class ItemActionHelper {
         boolean toSpam = mIidFolder.getId() == Mailbox.ID_FOLDER_SPAM;
         boolean toMailbox = !toSpam && mIidFolder.getId() != Mailbox.ID_FOLDER_TRASH;
 
-        for (MailItem item : mMailbox.getItemById(mOpCtxt, mIds, mItemType)) {
-            if (item == null)
+        for (MailItem item : mMailbox.getItemById(mOpCtxt, mIds, type)) {
+            if (item == null) {
                 continue;
-
+            }
             List<Message> msgs = null;
-            if (item instanceof Conversation)
+            if (item instanceof Conversation) {
                 msgs = mMailbox.getMessagesByConversation(mOpCtxt, item.getId(), SortBy.DATE_ASCENDING);
-
+            }
             if (deleteOriginal) {
                 if (msgs != null) {
                     // determine which of the conversation's component messages are actually able to be moved
@@ -494,14 +491,18 @@ public class ItemActionHelper {
                     }
                     // stop here if no messages would be moved...
                     if (msgs.isEmpty()) {
-                        if (permDenied)
-                            throw ServiceException.PERM_DENIED("cannot delete any messages in " + MailItem.getNameForType(item) + " " + item.getId());
+                        if (permDenied) {
+                            throw ServiceException.PERM_DENIED("cannot delete any messages in " +
+                                    item.getType() + " " + item.getId());
+                        }
                         // all messages were excluded by the TargetConstraint, so there's no failure...
                         continue;
                     }
                 } else {
-                    if (!canDelete(item))
-                        throw ServiceException.PERM_DENIED("cannot delete existing copy of " + MailItem.getNameForType(item) + " " + item.getId());
+                    if (!canDelete(item)) {
+                        throw ServiceException.PERM_DENIED("cannot delete existing copy of " +
+                                item.getType() + " " + item.getId());
+                    }
                 }
             }
 
@@ -528,111 +529,105 @@ public class ItemActionHelper {
             InputStream in = null;
 
             switch (item.getType()) {
-                case MailItem.TYPE_CONTACT:
-                    ZContact contact = zmbx.createContact(folderStr, null, ((Contact) item).getFields());
-                    createdId = contact.getId();
-                    mCreatedIds.add(createdId);
-                    break;
-
-                case MailItem.TYPE_MESSAGE:
+            case CONTACT:
+                ZContact contact = zmbx.createContact(folderStr, null, ((Contact) item).getFields());
+                createdId = contact.getId();
+                mCreatedIds.add(createdId);
+                break;
+            case MESSAGE:
+                try {
+                    in = StoreManager.getInstance().getContent(item.getBlob());
+                    createdId = zmbx.addMessage(folderStr, flags, null, item.getDate(), in, item.getSize(), true);
+                } finally {
+                    ByteUtil.closeStream(in);
+                }
+                mCreatedIds.add(createdId);
+                break;
+            case VIRTUAL_CONVERSATION:
+            case CONVERSATION:
+                for (Message msg : msgs) {
+                    flags = (mOperation == Op.UPDATE && mFlags != null ? mFlags : msg.getFlagString());
                     try {
-                        in = StoreManager.getInstance().getContent(item.getBlob());
-                        createdId = zmbx.addMessage(folderStr, flags, null, item.getDate(), in, item.getSize(), true);
+                        in = StoreManager.getInstance().getContent(msg.getBlob());
+                        createdId = zmbx.addMessage(folderStr, flags, null, msg.getDate(), in, msg.getSize(), true);
                     } finally {
                         ByteUtil.closeStream(in);
                     }
                     mCreatedIds.add(createdId);
-                    break;
+                }
+                break;
+            case DOCUMENT:
+                Document doc = (Document) item;
+                try {
+                    in = StoreManager.getInstance().getContent(doc.getBlob());
+                    String uploadId = zmbx.uploadContentAsStream(name, in, doc.getContentType(), doc.getSize(), 4000);
+                    createdId = zmbx.createDocument(folderStr, name, uploadId);
+                } finally {
+                    ByteUtil.closeStream(in);
+                }
+                mCreatedIds.add(createdId);
+                break;
+            case WIKI:
+                createdId = zmbx.createWiki(folderStr, name, new String(((WikiItem) item).getContent(), "utf-8"));
+                mCreatedIds.add(createdId);
+                break;
+            case APPOINTMENT:
+            case TASK:
+                CalendarItem cal = (CalendarItem) item;
+                // private calendar item may not be moved by non-owner unless permission was granted
+                if (!cal.isPublic()) {
+                    boolean asAdmin = mOpCtxt != null ? mOpCtxt.isUsingAdminPrivileges() : false;
+                    if (!cal.allowPrivateAccess(mAuthenticatedAccount, asAdmin))
+                        throw ServiceException.PERM_DENIED(
+                                "you do not have permission to move/copy a private calendar item from the current folder/mailbox");
+                }
 
-                case MailItem.TYPE_VIRTUAL_CONVERSATION:
-                case MailItem.TYPE_CONVERSATION:
-                    for (Message msg : msgs) {
-                        flags = (mOperation == Op.UPDATE && mFlags != null ? mFlags : msg.getFlagString());
-                        try {
-                            in = StoreManager.getInstance().getContent(msg.getBlob());
-                            createdId = zmbx.addMessage(folderStr, flags, null, msg.getDate(), in, msg.getSize(), true);
-                        } finally {
-                            ByteUtil.closeStream(in);
-                        }
-                        mCreatedIds.add(createdId);
+                // Move the item to remote mailbox using SetAppointmentRequest/SetTaskRequest.
+                QName qname = (item.getType() == MailItem.Type.TASK ? MailConstants.SET_TASK_REQUEST : MailConstants.SET_APPOINTMENT_REQUEST);
+                Element request = new Element.XMLElement(qname).addAttribute(MailConstants.A_FOLDER, folderStr).addAttribute(MailConstants.A_FLAGS, flags);
+                ToXML.encodeAlarmTimes(request, cal);
+
+                Invite invDefault = cal.getDefaultInviteOrNull();
+
+                // Takeover as organizer if we're doing a MOVE and source mailbox is the organizer.
+                // Don't takeover in a COPY operation.
+                boolean takeoverAsOrganizer = false;
+                if (Op.MOVE.equals(mOperation)) {
+                    Invite inv = invDefault;
+                    if (inv == null) {
+                        // no default invite; let's use the first invite
+                        Invite[] invs = cal.getInvites();
+                        if (invs != null && invs.length > 0)
+                            inv = invs[0];
                     }
-                    break;
+                    takeoverAsOrganizer = inv != null && inv.isOrganizer();
+                }
 
-                case MailItem.TYPE_DOCUMENT:
-                    Document doc = (Document) item;
-                    try {
-                        in = StoreManager.getInstance().getContent(doc.getBlob());
-                        String uploadId = zmbx.uploadContentAsStream(name, in, doc.getContentType(), doc.getSize(), 4000);
-                        createdId = zmbx.createDocument(folderStr, name, uploadId);
-                    } finally {
-                        ByteUtil.closeStream(in);
-                    }
-                    mCreatedIds.add(createdId);
-                    break;
+                if (invDefault != null) {
+                    addCalendarPart(request.addUniqueElement(MailConstants.A_DEFAULT), cal, invDefault, zmbx, target, takeoverAsOrganizer);
+                }
 
-                case MailItem.TYPE_WIKI:
-                    createdId = zmbx.createWiki(folderStr, name, new String(((WikiItem) item).getContent(), "utf-8"));
-                    mCreatedIds.add(createdId);
-                    break;
+                for (Invite inv : cal.getInvites()) {
+                    if (inv == null || inv == invDefault)
+                        continue;
+                    String elem = inv.isCancel() ? MailConstants.E_CAL_CANCEL : MailConstants.E_CAL_EXCEPT;
+                    addCalendarPart(request.addElement(elem), cal, inv, zmbx, target, takeoverAsOrganizer);
+                }
 
-                case MailItem.TYPE_APPOINTMENT:
-                case MailItem.TYPE_TASK:
-                    CalendarItem cal = (CalendarItem) item;
-                    // private calendar item may not be moved by non-owner unless permission was granted
-                    if (!cal.isPublic()) {
-                        boolean asAdmin = mOpCtxt != null ? mOpCtxt.isUsingAdminPrivileges() : false;
-                        if (!cal.allowPrivateAccess(mAuthenticatedAccount, asAdmin))
-                            throw ServiceException.PERM_DENIED(
-                                    "you do not have permission to move/copy a private calendar item from the current folder/mailbox");
-                    }
+                ToXML.encodeCalendarReplies(request, cal);
 
-                    // Move the item to remote mailbox using SetAppointmentRequest/SetTaskRequest.
-                    QName qname = (item.getType() == MailItem.TYPE_TASK ? MailConstants.SET_TASK_REQUEST : MailConstants.SET_APPOINTMENT_REQUEST);
-                    Element request = new Element.XMLElement(qname).addAttribute(MailConstants.A_FOLDER, folderStr).addAttribute(MailConstants.A_FLAGS, flags);
-                    ToXML.encodeAlarmTimes(request, cal);
+                createdId = zmbx.invoke(request).getAttribute(MailConstants.A_CAL_ID);
+                mCreatedIds.add(createdId);
 
-                    Invite invDefault = cal.getDefaultInviteOrNull();
-
-                    // Takeover as organizer if we're doing a MOVE and source mailbox is the organizer.
-                    // Don't takeover in a COPY operation.
-                    boolean takeoverAsOrganizer = false;
-                    if (Op.MOVE.equals(mOperation)) {
-                        Invite inv = invDefault;
-                        if (inv == null) {
-                            // no default invite; let's use the first invite
-                            Invite[] invs = cal.getInvites();
-                            if (invs != null && invs.length > 0)
-                                inv = invs[0];
-                        }
-                        takeoverAsOrganizer = inv != null && inv.isOrganizer();
-                    }
-
-                    if (invDefault != null) {
-                        addCalendarPart(request.addUniqueElement(MailConstants.A_DEFAULT), cal, invDefault, zmbx, target, takeoverAsOrganizer);
-                    }
-
-                    for (Invite inv : cal.getInvites()) {
-                        if (inv == null || inv == invDefault)
-                            continue;
-                        String elem = inv.isCancel() ? MailConstants.E_CAL_CANCEL : MailConstants.E_CAL_EXCEPT;
-                        addCalendarPart(request.addElement(elem), cal, inv, zmbx, target, takeoverAsOrganizer);
-                    }
-
-                    ToXML.encodeCalendarReplies(request, cal);
-
-                    createdId = zmbx.invoke(request).getAttribute(MailConstants.A_CAL_ID);
-                    mCreatedIds.add(createdId);
-
-                    if (takeoverAsOrganizer) {
-                        // Announce organizer change to attendees.
-                        request = new Element.XMLElement(MailConstants.ANNOUNCE_ORGANIZER_CHANGE_REQUEST);
-                        request.addAttribute(MailConstants.A_ID, createdId);
-                        zmbx.invoke(request);
-                    }
-                    break;
-
-                default:
-                    throw MailServiceException.CANNOT_COPY(item.getId());
+                if (takeoverAsOrganizer) {
+                    // Announce organizer change to attendees.
+                    request = new Element.XMLElement(MailConstants.ANNOUNCE_ORGANIZER_CHANGE_REQUEST);
+                    request.addAttribute(MailConstants.A_ID, createdId);
+                    zmbx.invoke(request);
+                }
+                break;
+            default:
+                throw MailServiceException.CANNOT_COPY(item.getId());
             }
 
             try {

@@ -39,7 +39,7 @@ public class AutoSendDraftTask extends ScheduledTask<Object> {
         Integer draftId = new Integer(getProperty(DRAFT_ID_PROP_NAME));
         Message msg;
         try {
-            msg = (Message) mbox.getItemById(null, draftId, MailItem.TYPE_MESSAGE);
+            msg = (Message) mbox.getItemById(null, draftId, MailItem.Type.MESSAGE);
         } catch (MailServiceException.NoSuchItemException e) {
             // Draft might have been deleted
             ZimbraLog.scheduler.debug("Draft message with id %s no longer exists in mailbox", draftId);
@@ -60,7 +60,7 @@ public class AutoSendDraftTask extends ScheduledTask<Object> {
         mailSender.setIdentity(StringUtil.isNullOrEmpty(msg.getDraftIdentityId()) ? null : mbox.getAccount().getIdentityById(msg.getDraftIdentityId()));
         mailSender.sendMimeMessage(null, mbox, msg.getMimeMessage());
         // now delete the draft
-        mbox.delete(null, draftId, MailItem.TYPE_MESSAGE);
+        mbox.delete(null, draftId, MailItem.Type.MESSAGE);
         return null;
     }
 

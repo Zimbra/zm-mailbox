@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -27,12 +28,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.service.UserServlet;
@@ -76,8 +77,8 @@ public abstract class Formatter {
         return TIME_UNSPECIFIED;
     }
 
-    public String getDefaultSearchTypes() {
-        return MailboxIndex.SEARCH_FOR_MESSAGES;
+    public Set<MailItem.Type> getDefaultSearchTypes() {
+        return EnumSet.of(MailItem.Type.MESSAGE);
     }
 
     public final void format(UserServlet.Context context)
@@ -129,14 +130,20 @@ public abstract class Formatter {
         if (query != null) {
             if (context.target instanceof Folder) {
                 Folder f = (Folder) context.target;
-                if (f.getId() != Mailbox.ID_FOLDER_USER_ROOT)
+                if (f.getId() != Mailbox.ID_FOLDER_USER_ROOT) {
                     query = "in:" + f.getPath() + " " + query;
+                }
             }
-            String searchTypes = context.getTypesString();
-            if (searchTypes == null) {
-                searchTypes = getDefaultSearchTypes();
+            Set<MailItem.Type> types;
+            if (context.getTypesString() == null) {
+                types = getDefaultSearchTypes();
+            } else {
+                try {
+                    types = MailItem.Type.setOf(context.getTypesString());
+                } catch (IllegalArgumentException e) {
+                    throw MailServiceException.INVALID_TYPE(e.getMessage());
+                }
             }
-            Set<Byte> types = MailboxIndex.parseTypes(searchTypes);
             ZimbraQueryResults results = context.targetMailbox.index.search(context.opContext, query, types,
                     SortBy.DATE_DESCENDING, context.getOffset() + context.getLimit());
             return new QueryResultIterator(results);
@@ -150,28 +157,22 @@ public abstract class Formatter {
         }
     }
 
-    protected Collection<? extends MailItem> getMailItemsFromFolder(Context context, Folder folder, long startTime, long endTime, long chunkSize) throws ServiceException {
+    protected Collection<? extends MailItem> getMailItemsFromFolder(Context context, Folder folder,
+            long startTime, long endTime, long chunkSize) throws ServiceException {
         switch (folder.getDefaultView()) {
-            case MailItem.TYPE_APPOINTMENT:
-            case MailItem.TYPE_TASK:
-                return context.targetMailbox.getCalendarItemsForRange(context.opContext, startTime, endTime, folder.getId(), null);
-            case MailItem.TYPE_CONTACT:
-                return context.targetMailbox.getContactList(context.opContext, folder.getId(), SortBy.NAME_ASCENDING);
-            case MailItem.TYPE_DOCUMENT:
-            case MailItem.TYPE_WIKI:
-                return context.targetMailbox.getDocumentList(context.opContext, folder.getId(), SortBy.NAME_ASCENDING);
-            default:
-                return context.targetMailbox.getItemList(context.opContext, MailItem.TYPE_MESSAGE, folder.getId());
+        case APPOINTMENT:
+        case TASK:
+            return context.targetMailbox.getCalendarItemsForRange(context.opContext, startTime, endTime, folder.getId(), null);
+        case CONTACT:
+            return context.targetMailbox.getContactList(context.opContext, folder.getId(), SortBy.NAME_ASCENDING);
+        case DOCUMENT:
+        case WIKI:
+            return context.targetMailbox.getDocumentList(context.opContext, folder.getId(), SortBy.NAME_ASCENDING);
+        default:
+            return context.targetMailbox.getItemList(context.opContext, MailItem.Type.MESSAGE, folder.getId());
         }
     }
 
-    /**
-     *
-     * @param attr
-     * @param accountId
-     * @return
-     * @throws ServletException
-     */
     public static boolean checkGlobalOverride(String attr, Account account) throws ServletException {
         Provisioning prov = Provisioning.getInstance();
         try {

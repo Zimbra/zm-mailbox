@@ -50,21 +50,21 @@ class MessageChanges {
         // Find tombstones and modified items since specified change id
         List<Integer> tombstones;
         List<Integer> modifiedItems;
-        
+
         synchronized (mbox) {
             lastChangeId = mbox.getLastChangeID();
             if (lastChangeId <= changeId) {
                 return this; // No changes
             }
-            tombstones = mbox.getTombstones(changeId).getIds(MailItem.TYPE_MESSAGE);
-            modifiedItems = mbox.getModifiedItems(null, changeId, MailItem.TYPE_MESSAGE).getFirst();
+            tombstones = mbox.getTombstones(changeId).getIds(MailItem.Type.MESSAGE);
+            modifiedItems = mbox.getModifiedItems(null, changeId, MailItem.Type.MESSAGE).getFirst();
         }
         if ((tombstones == null || tombstones.isEmpty()) && modifiedItems.isEmpty()) {
             return this; // No changes
         }
 
         changes = new ArrayList<MessageChange>();
-        
+
         // Find messages deleted from this folder
         if (tombstones != null) {
             for (int id : tombstones) {
@@ -82,7 +82,7 @@ class MessageChanges {
                 changes.add(change);
             }
         }
-        
+
         return this;
     }
 
@@ -115,7 +115,7 @@ class MessageChanges {
     public boolean hasChanges() {
         return changes != null && !changes.isEmpty();
     }
-    
+
     public Collection<MessageChange> getChanges() {
         if (changes == null) {
             changes = new ArrayList<MessageChange>();
@@ -147,7 +147,7 @@ class MessageChanges {
             return null;
         }
     }
-    
+
     private ImapMessage getTracker(int msgId) throws ServiceException {
         try {
             return new ImapMessage(ds, msgId);
