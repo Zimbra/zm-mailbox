@@ -15,6 +15,7 @@
 
 package com.zimbra.common.smtpserver;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -257,8 +258,10 @@ public class SmtpToLmtp {
                     }
                     send(lmtpOut, "QUIT");
                     readLine(lmtpIn);
+                } catch (EOFException e) {
+                    ZimbraLog.smtp.info("Client disconnected");
                 } catch (IOException e) {
-                    ZimbraLog.smtp.warn("Error occurred while sending DATA", e);
+                    ZimbraLog.smtp.warn("Error occurred", e);
                 } finally {
                     ByteUtil.closeStream(dataIn);
                     tempFile.delete();
@@ -269,7 +272,7 @@ public class SmtpToLmtp {
         }
         
         private void send(PrintWriter out, String response) {
-            ZimbraLog.smtp.debug("S: %s", response);
+            ZimbraLog.smtp.trace("S: %s", response);
             out.print(response + "\r\n");
             out.flush();
         }
@@ -288,9 +291,9 @@ public class SmtpToLmtp {
                 buf.append((char) c);
             }
             if (c < 0) {
-                throw new IOException("Client disconnected");
+                throw new EOFException("Client disconnected");
             }
-            ZimbraLog.smtp.debug("C: %s", buf);
+            ZimbraLog.smtp.trace("C: %s", buf);
             return buf.toString();
         }
     }
