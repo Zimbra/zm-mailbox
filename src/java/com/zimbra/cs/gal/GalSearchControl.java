@@ -554,11 +554,11 @@ public class GalSearchControl {
                 // return true so we do *not* fallback to do the ldap search.
                 return true;
             } else {
-                ZimbraLog.gal.warn("remote search on GalSync account failed for"+galSyncAcct.getName(), e);
+                ZimbraLog.gal.warn("remote search on GalSync account failed for " + galSyncAcct.getName(), e);
                 return false;
             }
         } catch (Exception e) {
-            ZimbraLog.gal.warn("remote search on GalSync account failed for"+galSyncAcct.getName(), e);
+            ZimbraLog.gal.warn("remote search on GalSync account failed for " + galSyncAcct.getName(), e);
             return false;
         }
 
