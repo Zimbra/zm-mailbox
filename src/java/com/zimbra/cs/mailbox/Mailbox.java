@@ -7671,4 +7671,12 @@ public class Mailbox {
     }
 
     public boolean useDumpsterForSpam() { return false; }
+
+    /**
+     * Return true if the folder is a internally managed system folder which should not normally be modified
+     * Used during ZD account import to ignore entries in LocalMailbox 'Notification Mountpoints'  
+     */
+    public boolean isImmutableSystemFolder(int folderId) {
+        return false;
+    }
 }
