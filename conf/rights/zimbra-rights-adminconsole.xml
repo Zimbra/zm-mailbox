@@ -1484,6 +1484,7 @@
     <desc> Admin Console view attr rights for Domain Info Tab </desc>
     <attrs>
       <a n="zimbraDomainName"/>
+      <a n="zimbraDomainType"/>  
       <a n="description"/>
       <a n="zimbraDomainStatus"/>
       <a n="zimbraPrefTimeZoneId"/>
