@@ -113,6 +113,13 @@
     <part name="parameters" element="tns:ReloadLocalConfigResponse"/>
   </message>
 
+  <message name="getServerStatsRequest">
+    <part name="parameters" element="tns:GetServerStatsRequest"/>
+  </message>
+  <message name="getServerStatsResponse">
+    <part name="parameters" element="tns:GetServerStatsResponse"/>
+  </message>
+
   <message name="soapHdrContext">
     <part name="context" element="zimbra:context"/>
   </message>
@@ -177,6 +184,10 @@
     <operation name="reloadLocalConfigRequest">
       <input message="tns:reloadLocalConfigRequest"/>
       <output message="tns:reloadLocalConfigResponse"/>
+    </operation>
+    <operation name="getServerStatsRequest">
+      <input message="tns:getServerStatsRequest"/>
+      <output message="tns:getServerStatsResponse"/>
     </operation>
   </portType>
 
@@ -339,6 +350,17 @@
 
     <operation name="reloadLocalConfigRequest">
       <soap:operation soapAction="urn:zimbraAdmin/ReloadLocalConfig" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getServerStatsRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetServerStats" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>

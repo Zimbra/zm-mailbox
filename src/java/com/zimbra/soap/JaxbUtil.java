@@ -36,6 +36,8 @@ import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
+import com.zimbra.soap.admin.message.GetServerStatsRequest;
+import com.zimbra.soap.admin.message.GetServerStatsResponse;
 import com.zimbra.soap.admin.message.ReloadLocalConfigRequest;
 import com.zimbra.soap.admin.message.ReloadLocalConfigResponse;
 import com.zimbra.soap.mail.message.ExportContactsRequest;
@@ -78,7 +80,9 @@ public final class JaxbUtil {
 
             // zimbraAdmin
             ReloadLocalConfigRequest.class,
-            ReloadLocalConfigResponse.class
+            ReloadLocalConfigResponse.class,
+            GetServerStatsRequest.class,
+            GetServerStatsResponse.class
         };
 
         try {
