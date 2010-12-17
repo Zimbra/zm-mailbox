@@ -666,6 +666,9 @@ public abstract class ArchiveFormatter extends Formatter {
             flist = fldr.getSubfolderHierarchy();
             if (r == Resolve.Reset) {
                 for (Folder f : flist) {
+                    if (context.targetMailbox.isImmutableSystemFolder(f.getId())) {
+                        continue;
+                    }
                     try {
                         List<Integer> delIds;
 
@@ -928,6 +931,9 @@ public abstract class ArchiveFormatter extends Formatter {
                 path = fldr.getPath() + id.path;
             if (path.endsWith("/") && !path.equals("/"))
                 path = path.substring(0, path.length() - 1);
+            if (mbox.isImmutableSystemFolder(id.ud.folderId)) {
+                return;
+            }
             switch (mi.getType()) {
             case MailItem.TYPE_APPOINTMENT:
             case MailItem.TYPE_TASK:
