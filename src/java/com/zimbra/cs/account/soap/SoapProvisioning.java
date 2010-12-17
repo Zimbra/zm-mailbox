@@ -56,6 +56,7 @@ import com.zimbra.cs.account.accesscontrol.ViaGrantImpl;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.soap.JaxbUtil;
 
 public class SoapProvisioning extends Provisioning {
 
@@ -359,6 +360,13 @@ public class SoapProvisioning extends Provisioning {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public <T> T invokeJaxb(Object jaxbObject) throws ServiceException {
+        Element req = JaxbUtil.jaxbToElement(jaxbObject);
+        Element res = invoke(req);
+        return (T) JaxbUtil.elementToJaxb(res);
+    }
+    
     static Map<String, Object> getAttrs(Element e) throws ServiceException {
         return getAttrs(e, AdminConstants.A_N);
     }
