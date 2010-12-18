@@ -3,8 +3,6 @@ package com.zimbra.cs.mailbox.alerts;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.CalendarItem;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.ScheduledTask;
@@ -39,6 +37,10 @@ public abstract class CalItemReminderTaskBase extends ScheduledTask {
             calItem = mbox.getCalendarItemById(null, calItemId);
         } catch (ServiceException e) {
             ZimbraLog.scheduler.warn("Calendar item with id %s does not exist", calItemId);
+            return null;
+        }
+        if (calItem.inTrash()) {
+            ZimbraLog.scheduler.debug("Calendar item with id %s is in Trash", calItemId);
             return null;
         }
         Integer invId = new Integer(getProperty(INV_ID_PROP_NAME));
