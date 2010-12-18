@@ -63,11 +63,9 @@ public class CalItemReminderService extends MailboxListener {
                     } catch (ServiceException e) {
                         ZimbraLog.scheduler.error("Error in fetching calendar item's folder", e);
                     }
-                    if (!calItemCanceled) {
-                        if (cancelExistingReminders(calItem)) {
-                            scheduleNextReminders(calItem);
-                        }
-                    }
+                    // cancel any existing reminders and schedule new ones if cal item not canceled
+                    if (cancelExistingReminders(calItem) && !calItemCanceled)
+                        scheduleNextReminders(calItem);
                 }
             }
         }
