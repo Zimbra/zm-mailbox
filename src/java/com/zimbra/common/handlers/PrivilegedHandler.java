@@ -114,7 +114,11 @@ public class PrivilegedHandler {
             if (getBooleanAttr(attributes, A_zimbraLmtpServerEnabled, false)) {
             	port = getIntAttr(attributes, A_zimbraLmtpBindPort, D_LMTP_BIND_PORT);
             	address = getAttr(attributes, A_zimbraLmtpBindAddress, null);
-            	NetUtil.bindTcpServerSocket(address, port);
+            	if (LC.nio_lmtp_enabled.booleanValue()) {
+            		NetUtil.bindNioServerSocket(address, port);
+            	} else {
+            		NetUtil.bindTcpServerSocket(address, port);
+            	}
             }
         } catch (Throwable t) {        	
             try {

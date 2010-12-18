@@ -31,7 +31,7 @@ import org.apache.log4j.PropertyConfigurator;
  *
  * @author schemers
  */
-public final class ZimbraLog {
+public class ZimbraLog {
 
     /**
      * "ip" key for context. IP of request
@@ -83,12 +83,6 @@ public final class ZimbraLog {
     private static final String C_USER_AGENT = "ua";
 
     /**
-     * List of IP addresses and user-agents of the proxy chain.
-     * was sent.
-     */
-    private static final String C_VIA = "via";
-
-    /**
      * "msgid" key for context.  The Message-ID header of the message being
      * operated on.
      */
@@ -137,7 +131,8 @@ public final class ZimbraLog {
     /**
      * the "zimbra.index.add" logger. For the add-to-the-index part of indexing
      */
-    public static final Log indexing = LogFactory.getLog("zimbra.index.indexing");
+    public static final Log index_add = LogFactory.getLog("zimbra.index.indexadd");
+
 
     /**
      * Fhe "zimbra.searchstat" logger.  For logging statistics about what kinds of searches are run
@@ -165,29 +160,14 @@ public final class ZimbraLog {
     public static final Log nio = LogFactory.getLog("zimbra.nio");
 
     /**
-     * the "zimbra.imap.client" logger. For IMAP client related events.
-     */
-    public static final Log imap_client = LogFactory.getLog("zimbra.imap-client");
-
-    /**
-     * the "zimbra.imap" logger. For IMAP server related events.
+     * the "zimbra.imap" logger. For IMAP-related events.
      */
     public static final Log imap = LogFactory.getLog("zimbra.imap");
 
     /**
-     * the "zimbra.pop.client" logger. For POP3 client related events.
-     */
-    public static final Log pop_client = LogFactory.getLog("zimbra.pop-client");
-
-    /**
-     * the "zimbra.pop" logger. For POP3 server related events.
+     * the "zimbra.pop" logger. For POP-related events.
      */
     public static final Log pop = LogFactory.getLog("zimbra.pop");
-
-    /**
-     * the "zimbra.milter" logger. For MILTER-related events
-     */
-    public static final Log milter = LogFactory.getLog("zimbra.milter");
 
     /**
      * the "zimbra.mailbox" logger. For mailbox-related events.
@@ -389,19 +369,11 @@ public final class ZimbraLog {
      */
     public static final Log mbxmgr = LogFactory.getLog("zimbra.mbxmgr");
 
-    /**
-     * "zimbra.tnef" logger.  Logs TNEF conversion operations.
-     */
-    public static final Log tnef = LogFactory.getLog("zimbra.tnef");
-
 
     /**
      * Maps the log category name to its description.
      */
     public static final Map<String, String> CATEGORY_DESCRIPTIONS;
-
-    private ZimbraLog() {
-    }
 
     /**
      * Returns a new <tt>Set</tt> that contains the values of
@@ -446,13 +418,10 @@ public final class ZimbraLog {
         descriptions.put(misc.getCategory(), "Miscellaneous");
         descriptions.put(index.getCategory(), "Index operations");
         descriptions.put(redolog.getCategory(), "Redo log operations");
-        descriptions.put(lmtp.getCategory(), "LMTP server (incoming mail)");
-        descriptions.put(smtp.getCategory(), "SMTP client (outgoing mail)");
-        descriptions.put(imap_client.getCategory(), "IMAP client");
-        descriptions.put(imap.getCategory(), "IMAP server");
-        descriptions.put(milter.getCategory(), "MILTER protocol operations");
-        descriptions.put(pop_client.getCategory(), "POP client");
-        descriptions.put(pop.getCategory(), "POP server");
+        descriptions.put(lmtp.getCategory(), "LMTP operations (incoming mail)");
+        descriptions.put(smtp.getCategory(), "SMTP operations (outgoing mail)");
+        descriptions.put(imap.getCategory(), "IMAP protocol operations");
+        descriptions.put(pop.getCategory(), "POP protocol operations");
         descriptions.put(mailbox.getCategory(), "General mailbox operations");
         descriptions.put(calendar.getCategory(), "Calendar operations");
         descriptions.put(im.getCategory(), "Instant messaging operations");
@@ -489,8 +458,8 @@ public final class ZimbraLog {
     //this is called from offline and only at LC init so we are taking chances with race
     private static final Set<String> CONTEXT_FILTER = new HashSet<String>();
     public static void addContextFilters(String filters) {
-        for (String item : filters.split(","))
-            CONTEXT_FILTER.add(item);
+    	for (String item : filters.split(","))
+    		CONTEXT_FILTER.add(item);
     }
 
     /**
@@ -567,7 +536,7 @@ public final class ZimbraLog {
      * logging context.
      */
     public static void addItemToContext(int itemId) {
-        addToContext(C_ITEM, Integer.toString(itemId));
+    	addToContext(C_ITEM, Integer.toString(itemId));
     }
 
     /**
@@ -584,7 +553,7 @@ public final class ZimbraLog {
      * logging context.
      */
     public static void removeItemFromContext(int itemId) {
-        removeFromContext(C_ITEM);
+    	removeFromContext(C_ITEM);
     }
 
     /**
@@ -631,8 +600,8 @@ public final class ZimbraLog {
     /**
      * Adds mailbox id to the current thread's logging context.
      */
-    public static void addMboxToContext(int mboxId) {
-        addToContext(C_MID, Integer.toString(mboxId));
+    public static void addMboxToContext(long mboxId) {
+        addToContext(C_MID, Long.toString(mboxId));
     }
 
     /**
@@ -678,15 +647,6 @@ public final class ZimbraLog {
     }
 
     /**
-     * Adds {@code via} to the current thread's logging context.
-     *
-     * @param value
-     */
-    public static void addViaToContext(String value) {
-        ZimbraLog.addToContext(C_VIA, value);
-    }
-
-    /**
      * Clears the current thread's logging context.
      *
      */
@@ -720,9 +680,9 @@ public final class ZimbraLog {
         }
         p.put("log4j.appender.A1.layout", "org.apache.log4j.PatternLayout");
         if (showThreads) {
-            p.put("log4j.appender.A1.layout.ConversionPattern", "[%t] [%x] %p: %m%n");
+        	p.put("log4j.appender.A1.layout.ConversionPattern", "[%t] [%x] %p: %m%n");
         } else {
-            p.put("log4j.appender.A1.layout.ConversionPattern", "[%x] %p: %m%n");
+        	p.put("log4j.appender.A1.layout.ConversionPattern", "[%x] %p: %m%n");
         }
         PropertyConfigurator.configure(p);
     }
@@ -757,7 +717,7 @@ public final class ZimbraLog {
      */
     public static void toolSetupLog4j(String defaultLevel, String propsFile) {
         if (propsFile != null && new File(propsFile).exists()) {
-            PropertyConfigurator.configure(propsFile);
+        	PropertyConfigurator.configure(propsFile);
         } else {
             toolSetupLog4j(defaultLevel, null, false);
         }
@@ -765,10 +725,10 @@ public final class ZimbraLog {
 
     private static void encodeArg(StringBuilder sb, String name, String value) {
         if (value == null) {
-            value = "";
+        	value = "";
         }
         if (value.indexOf(';') != -1) {
-            value = value.replaceAll(";", ";;");
+        	value = value.replaceAll(";", ";;");
         }
         // replace returns ref to original string if char to replace doesn't exist
         value = value.replace('\r', ' ');
@@ -790,7 +750,7 @@ public final class ZimbraLog {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < args.length; i += 2) {
             if (i > 0) {
-                sb.append(' ');
+            	sb.append(' ');
             }
             encodeArg(sb, args[i], args[i + 1]);
         }
@@ -810,18 +770,18 @@ public final class ZimbraLog {
         boolean needSpace = false;
         for (int i = 0; i < args.length; i += 2) {
             if (needSpace) {
-                sb.append(' ');
+            	sb.append(' ');
             } else {
-                needSpace = true;
+            	needSpace = true;
             }
             encodeArg(sb, args[i], args[i + 1]);
         }
         if (extraArgs != null) {
-            for (Map.Entry<String, ?> entry : extraArgs.entrySet()) {
+        	for (Map.Entry<String, ?> entry : extraArgs.entrySet()) {
                 if (needSpace) {
-                    sb.append(' ');
+                	sb.append(' ');
                 } else {
-                    needSpace = true;
+                	needSpace = true;
                 }
                 String name = entry.getKey();
                 Object value = entry.getValue();

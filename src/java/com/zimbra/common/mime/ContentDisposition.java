@@ -16,69 +16,26 @@ package com.zimbra.common.mime;
 
 public class ContentDisposition extends MimeCompoundHeader {
     private static final String ATTACHMENT = "attachment";
-    private static final String INLINE     = "inline";
+    private static final String INLINE = "inline";
 
-    private String mDisposition;
+    public ContentDisposition(String header)                   { super(header);  normalizeValue(); }
+    public ContentDisposition(String header, boolean use2231)  { super(header, use2231);  normalizeValue(); }
+    public ContentDisposition(ContentDisposition cdisp)        { super(cdisp);  normalizeValue(); }
 
-    public ContentDisposition(String value) {
-        super("Content-Disposition", value);
-        normalizeDisposition();
-    }
+    public ContentDisposition setValue(String value)                   { super.setValue(value);  normalizeValue();  return this; }
+    public ContentDisposition setParameter(String name, String value)  { super.setParameter(name, value);  return this; }
 
-    public ContentDisposition(String value, boolean use2231) {
-        super("Content-Disposition", value, use2231);
-        normalizeDisposition();
-    }
-
-    ContentDisposition(String name, byte[] content, int start, String defaultType) {
-        super(name, content, start);
-        normalizeDisposition();
-    }
-
-    public ContentDisposition(MimeHeader header) {
-        super(header);
-        normalizeDisposition();
-    }
-
-    @Override protected ContentDisposition clone() {
-        return new ContentDisposition(this);
-    }
-
-
-    public ContentDisposition setDisposition(String disposition) {
-        return setPrimaryValue(disposition);
-    }
-
-    @Override public ContentDisposition setPrimaryValue(String value) {
-        super.setPrimaryValue(value);
-        normalizeDisposition();
-        return this;
-    }
-
-    @Override public ContentDisposition setParameter(String name, String value) {
-        super.setParameter(name, value);
-        return this;
-    }
-
-    public String getDisposition() {
-        return mDisposition;
-    }
-
-    private void normalizeDisposition() {
-        String value = getPrimaryValue() == null ? "" : getPrimaryValue().trim().toLowerCase();
-        mDisposition = value.equals(ATTACHMENT) || value.equals(INLINE) ? value : ATTACHMENT;
-    }
-
-    @Override protected void reserialize() {
-        if (mContent == null) {
-            super.setPrimaryValue(getDisposition());
-            super.reserialize();
+    private void normalizeValue() {
+        String value = getValue();
+        if (value == null || value.trim().equals("")) {
+            setValue(ATTACHMENT);
+        } else {
+            if (!value.equals(value.trim().toLowerCase()))
+                setValue(value.trim().toLowerCase());
+            else if (!value.equals(ATTACHMENT) && !value.equals(INLINE))
+                setValue(ATTACHMENT);
         }
     }
 
-    @Override public ContentDisposition cleanup() {
-        super.setPrimaryValue(getDisposition());
-        super.cleanup();
-        return this;
-    }
+    public String toString()  { return toString(21); }
 }

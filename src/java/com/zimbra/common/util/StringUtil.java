@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- *
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -18,9 +18,6 @@
  */
 package com.zimbra.common.util;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
 
 import java.io.BufferedReader;
@@ -44,212 +41,107 @@ import java.util.regex.Pattern;
  */
 public class StringUtil {
 
-    /** A user-friendly version of {@link String#equals(Object)} that handles
-     *  one or both nulls easily. */
+    /** A user-friendly version of <tt>String.equals()</tt> that handles one or both nulls easily. */
     public static boolean equal(String s1, String s2) {
-        if (s1 == null || s2 == null) {
+        if (s1 == null || s2 == null)
             return s1 == s2;
-        }
         return s1.equals(s2);
     }
-
-    /** A user-friendly version of {@link String#equalsIgnoreCase(String)}
-     *  that handles one or both nulls easily. */
+    
+    /** A user-friendly version of <tt>String.equalsIgnoreCase()</tt> that handles one or both nulls easily. */
     public static boolean equalIgnoreCase(String s1, String s2) {
-        if (s1 == null || s2 == null) {
+        if (s1 == null || s2 == null)
             return s1 == s2;
-        }
         return s1.equalsIgnoreCase(s2);
     }
 
-    /** A user-friendly compareTo that handles one or both nulls easily.
+    /**
+     * A user-friendly compareTo that handles one or both nulls easily.
+     * @param s1
+     * @param s2
      * @return 0 if s1 and s2 are equal, value less than 0 if s1 is before s2,
      *         or value greater than 0 if s1 is after s2; null is considered
-     *         to come before any non-null value */
+     *         to come before any non-null value
+     */
     public static int compareTo(String s1, String s2) {
         if (s1 != null) {
-            if (s2 != null) {
+            if (s2 != null)
                 return s1.compareTo(s2);
-            } else {
+            else
                 return 1;
-            }
         } else {  // s1 == null
-            if (s2 != null) {
+            if (s2 != null)
                 return -1;
-            } else {
+            else
                 return 0;
-            }
         }
     }
 
     public static int countOccurrences(String str, char c) {
-        if (str == null) {
+        if (str == null)
             return 0;
-        }
-
         int count = 0;
-        for (int i = 0, len = str.length(); i < len; i++) {
-            if (str.charAt(i) == c) {
+        for (int i = 0, len = str.length(); i < len; i++)
+            if (str.charAt(i) == c)
                 count++;
-            }
-        }
         return count;
     }
 
-    /**
-     * Replaces control characters in the filename with space. Windows has
-     * a problem with downloading such filenames.
-     *
-     * @param filename filename to sanitize
-     * @return sanitized filename
-     */
-    public static String sanitizeFilename(String filename) {
-        if (Strings.isNullOrEmpty(filename)) {
-            return filename;
-        }
-        return filename.replaceAll("\\p{Cntrl}", " ");
-    }
-
-    /** Returns the passed-in {@code string} with all XML-unsafe characters
-     *  removed.  If nothing needs to be removed, the original {@code String}
-     *  is returned.  Those characters considered "unsafe" are:<ul>
-     *    <li>control characters below 0x20 other than TAB, CR, and LF
-     *    <li>byte-order markers (0xFFFE and 0xFFFF)
-     *    <li>unmatched UTF-16 surrogates</ul>
-     *  XML 1.1 permits all control characters other than NUL (0x00), but
-     *  this method sanitizes for XML 1.0 with its more restrictive rules. */
-    public static String stripControlCharacters(String string) {
-        if (isNullOrEmpty(string)) {
-            return string;
-        }
-
-        StringBuilder sb = null;
-        int start = 0;
-        for (int i = 0, len = string.length(); i < len; i++) {
-            for ( ; i < len; i++) {
-                char c = string.charAt(i);
-                // invalid control characters (note: XML 1.1 disallows only 0x00)
-                if (c < 0x20 && c != 0x09 && c != 0x0A && c != 0x0D) {
-                    break;
-                }
-                // byte-order markers and unmatched low surrogates
-                if (c == 0xFFFE || c == 0xFFFF || Character.isLowSurrogate(c)) {
-                    break;
-                }
-                // high surrogates without a subsequent low surrogate
-                if (Character.isHighSurrogate(c)) {
-                    if (i == string.length() - 1 || !Character.isLowSurrogate(string.charAt(i + 1))) {
-                        break;
-                    }
-                    i++;
-                }
-            }
-            if (i >= len) {
+    public static String stripControlCharacters(String raw) {
+        if (raw == null)
+            return null;
+        int i;
+        for (i = 0; i < raw.length(); i++) {
+            char c = raw.charAt(i);
+            // invalid control characters
+            if (c < 0x20 && c != 0x09 && c != 0x0A && c != 0x0D)
                 break;
-            }
-
-            if (sb == null) {
-                sb = new StringBuilder(len - 1);
-            }
-            if (start < i) {
-                sb.append(string.substring(start, i));
-            }
-            start = i + 1;
+            // byte-order markers and high/low surrogates
+            if (c == 0xFFFE || c == 0xFFFF || (c > 0xD7FF && c < 0xE000))
+                break;
         }
-
-        if (sb == null) {
-            return string;
-        } else {
-            start = Math.min(start, string.length());
-            return sb.append(string.substring(start)).toString();
+        if (i >= raw.length())
+            return raw;
+        StringBuilder sb = new StringBuilder(raw.substring(0, i));
+        for ( ; i < raw.length(); i++) {
+            char c = raw.charAt(i);
+            if (c >= 0x20 || c == 0x09 || c == 0x0A || c == 0x0D)
+                if (c != 0xFFFE && c != 0xFFFF && (c <= 0xD7FF || c >= 0xE000))
+                    sb.append(c);
         }
+        return sb.toString();
     }
 
-    /** Replaces all high and low surrogate character pairs (0xD800-0xDFFF)
-     *  with the '?' character.  This is sometimes needed when handing data to
-     *  third-party applications which cannot handle characters outside the
-     *  Basic Multilingual Plane (U+10000 and higher). */
-    public static String removeSurrogates(String string) {
-        if (isNullOrEmpty(string)) {
-            return string;
-        }
-
-        StringBuilder sb = null;
-        int start = 0;
-        for (int i = 0, len = string.length(); i < len; i++) {
-            char c = string.charAt(i);
-            if (c >= 0xD800 && c <= 0xDFFF) {
-                if (sb == null) {
-                    sb = new StringBuilder(len - 1);
-                }
-                if (start < i) {
-                    sb.append(string.substring(start, i));
-                }
-                sb.append('?');
-                start = ++i + 1;
-            }
-        }
-        if (sb == null) {
-            return string;
-        } else {
-            start = Math.min(start, string.length());
-            return sb.append(string.substring(start)).toString();
-        }
-    }
-
-    /** Returns whether the passed-in {@code string} contains any surrogates
-     *  (0xD800-0xDFFF).  Two surrogate chars are used to encode a character
-     *  outside the Basic Multilingual Plane (U+10000 and higher). */
-    public static boolean containsSurrogates(String string) {
-        if (!isNullOrEmpty(string)) {
-            for (int i = 0, len = string.length(); i < len; i++) {
-                char c = string.charAt(i);
-                if (c >= 0xD800 && c <= 0xDFFF) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /** Returns whether the passed-in {@code String} is comprised only of
+    /** Returns whether the passed-in <code>String</code> is comprised only of
      *  printable ASCII characters.  The "printable ASCII characters" are CR,
-     *  LF, TAB, and all characters from 0x20 to 0x7E.  If the argument is
-     *  {@code null}, returns {@code false}. */
-    public static boolean isAsciiString(String string) {
-        if (string == null) {
+     *  LF, TAB, and all characters from 0x20 to 0x7E. */
+    public static boolean isAsciiString(String str) {
+        if (str == null)
             return false;
-        }
-
-        for (int i = 0, len = string.length(); i < len; i++) {
-            char c = string.charAt(i);
-            if ((c < 0x20 || c >= 0x7F) && c != '\r' && c != '\n' && c != '\t') {
+        for (int i = 0, len = str.length(); i < len; i++) {
+            char c = str.charAt(i);
+            if ((c < 0x20 || c >= 0x7F) && c != '\r' && c != '\n' && c != '\t')
                 return false;
-            }
         }
         return true;
     }
 
     /** Removes all spaces (and any character below 0x20) from the end of the
-     *  passed-in {@code String}.  If nothing was trimmed, the original
-     *  {@code String} is returned. */
+     *  passed-in <code>String</code>.  If nothing was trimmed, the original
+     *  <code>String</code> is returned. */
     public static String trimTrailingSpaces(String raw) {
-        if (raw == null) {
+        if (raw == null)
             return null;
-        }
-
         int length = raw.length();
-        while (length > 0 && raw.charAt(length - 1) <= ' ') {
+        while (length > 0 && raw.charAt(length - 1) <= ' ')
             length--;
-        }
         return length == raw.length() ? raw : raw.substring(0, length);
     }
 
-    /** Add the name/value mapping to the map. If an entry doesn't exist,
-     *  value remains a {@code String}.  If an entry already exists as a
-     *  {@code String}, convert to {@code String[]} and add new value.
-     *  If entry already exists as a {@code String[]}, grow array and add
-     *  new value.
+    /**
+     * add the name/value mapping to the map. If an entry doesn't exist, value remains
+     * a String. If an entry already exists as a String, convert to String[] and add new
+     * value. If entry already exists as a String[], grow array and add new value.
      * @param result result map
      * @param name
      * @param value
@@ -268,65 +160,33 @@ public class StringUtil {
             result.put(name, nv);
         }
     }
-
+    
     /**
      * Convert an array of the form:
-     *
+     * 
      *    a1 v1 a2 v2 a2 v3
-     *
+     *    
      * to a map of the form:
-     *
+     * 
      *    a1 -> v1
      *    a2 -> [v2, v3]
      */
     public static Map<String, Object> keyValueArrayToMultiMap(String[] args, int offset) {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        for (int i = offset; i < args.length; i += 2) {
+        for (int i = offset; i < args.length; i+=2) {
             String n = args[i];
-            if (i + 1 >= args.length) {
+            if (i+1 >= args.length)
                 throw new IllegalArgumentException("not enough arguments");
-            }
-            String v = args[i + 1];
+            String v = args[i+1];
             addToMultiMap(attrs, n, v);
         }
         return attrs;
     }
 
-    /**
-     * Converts an old-style multimap to Guava's version.
-     */
-    public static Multimap<String, String> toNewMultimap(Map<String, Object> oldMultimap) {
-        Multimap<String, String> newMap = ArrayListMultimap.create();
-        for (String key : oldMultimap.keySet()) {
-            Object value = oldMultimap.get(key);
-            if (value instanceof String[]) {
-                for (String sVal : (String[]) value) {
-                    newMap.put(key, sVal);
-                }
-            } else if (value == null) {
-                newMap.put(key, null);
-            } else {
-                newMap.put(key, value.toString());
-            }
-        }
-        return newMap;
-    }
-
-    /**
-     * Converts a Guava multimap to an old-style version.
-     */
-    public static Map<String, Object> toOldMultimap(Multimap<String, String> newMultimap) {
-        Map<String, Object> oldMap = new HashMap<String, Object>();
-        for (Map.Entry<String, String> entry : newMultimap.entries()) {
-            addToMultiMap(oldMap, entry.getKey(), entry.getValue());
-        }
-        return oldMap;
-    }
-
     private static final int TERM_WHITESPACE = 1;
     private static final int TERM_SINGLEQUOTE = 2;
-    private static final int TERM_DBLQUOTE = 3;
-
+    private static final int TERM_DBLQUOTE = 3;    
+    
     /**
      * open the specified file and return the first line in the file, without the end of line character(s).
      * @param file
@@ -337,13 +197,13 @@ public class StringUtil {
         InputStream is = null;
         try {
             is = new FileInputStream(file);
-            BufferedReader in = new BufferedReader(new InputStreamReader(is));
+            BufferedReader in = new BufferedReader(new InputStreamReader(is));            
             return in.readLine();
         } finally {
             ByteUtil.closeStream(is);
         }
     }
-
+    
     /**
      * read a line from "in", using readLine(). A trailing '\\' on the line will
      * be treated as continuation and the next line will be read and appended to the line,
@@ -355,20 +215,18 @@ public class StringUtil {
     public static String readLine(BufferedReader in) throws IOException {
         String line;
         StringBuilder sb = null;
-
+        
         while ((line = in.readLine()) != null) {
             if (line.length() == 0) {
                 break;
             } else if (line.charAt(line.length()-1) == '\\') {
-                if (sb == null) {
-                    sb = new StringBuilder();
-                }
+                if (sb == null) sb = new StringBuilder();
                 sb.append(line.substring(0, line.length()-1));
             } else {
                 break;
             }
         }
-
+        
         if (line == null) {
             if (sb == null) {
                 return null;
@@ -384,16 +242,14 @@ public class StringUtil {
             }
         }
     }
-
+    
     public static List<String> parseSieveStringList(String value) throws ServiceException {
         List<String> result = new ArrayList<String>();
-        if (value == null) {
+        if (value == null)
             return result;
-        }
         value = value.trim();
-        if (value.isEmpty()) {
+        if (value.length() == 0)
             return result;
-        }
 
         int i = 0;
         boolean inStr = false;
@@ -432,15 +288,15 @@ public class StringUtil {
 
     /**
      * split a line into array of Strings, using a shell-style syntax for tokenizing words.
-     *
+     * 
      * @param line
      * @return
      */
     public static String[] parseLine(String line) {
         ArrayList<String> result = new ArrayList<String>();
-
-        int i = 0;
-
+        
+        int i=0;
+        
         StringBuilder sb = new StringBuilder(32);
         int term = TERM_WHITESPACE;
         boolean inStr = false;
@@ -448,7 +304,7 @@ public class StringUtil {
         scan: while (i < line.length()) {
             char ch = line.charAt(i++);
             boolean escapedTerm = false;
-
+            
             if (ch == '\\' && i < line.length()) {
                 ch = line.charAt(i++);
                 switch (ch) {
@@ -461,15 +317,15 @@ public class StringUtil {
                     case 't':
                         ch = '\t';
                         escapedTerm = true;
-                        break;
+                        break;  
                     case 'r':
                         ch = '\r';
                         escapedTerm = true;
-                        break;
+                        break;                        
                     case '\'':
                         ch = '\'';
                         escapedTerm = true;
-                        break;
+                        break;                        
                     case '"':
                         ch = '"';
                         escapedTerm = true;
@@ -479,7 +335,7 @@ public class StringUtil {
                         break;
                 }
             }
-
+                
             if (inStr) {
                 if (!escapedTerm && (
                             (term == TERM_WHITESPACE && Character.isWhitespace(ch)) ||
@@ -491,25 +347,24 @@ public class StringUtil {
                     term = TERM_WHITESPACE;
                     continue scan;
                 }
-                sb.append(ch);
+                sb.append(ch);                
             } else {
                 if (!escapedTerm) {
                     switch (ch) {
-                        case '\'':
-                            term = TERM_SINGLEQUOTE;
-                            inStr = true;
+                    case '\'':
+                        term = TERM_SINGLEQUOTE;
+                        inStr = true;
+                        continue scan;
+                    case '"':
+                        term = TERM_DBLQUOTE;
+                        inStr = true;
+                        continue scan;
+                    default:
+                        if (Character.isWhitespace(ch))
                             continue scan;
-                        case '"':
-                            term = TERM_DBLQUOTE;
-                            inStr = true;
-                            continue scan;
-                        default:
-                            if (Character.isWhitespace(ch)) {
-                                continue scan;
-                            }
-                            inStr = true;
-                            sb.append(ch);
-                            break;
+                        inStr = true;
+                        sb.append(ch);
+                        break;
                     }
                 } else {
                     // we had an escaped terminator, start a new string
@@ -519,22 +374,20 @@ public class StringUtil {
             }
         }
 
-        if (sb.length() > 0) {
+        if (sb.length() > 0)
             result.add(sb.toString());
-        }
-
+        
         return result.toArray(new String[result.size()]);
     }
 
     private static void dump(String line) {
         String[] result = parseLine(line);
         System.out.println("line: "+line);
-        for (int i=0; i < result.length; i++) {
-            System.out.println(i + ": (" + result[i] + ")");
-        }
+        for (int i=0; i < result.length; i++)
+            System.out.println(i+": ("+result[i]+")");
         System.out.println();
     }
-
+    
     public static void main(String args[]) {
         dump("this is a test");
         dump("this is 'a nother' test");
@@ -555,10 +408,10 @@ public class StringUtil {
     // in it.
     public static Pattern atPattern =
         Pattern.compile("(.*)\\@([^\\@]+)\\@(.*)", Pattern.DOTALL);
-
+    
     public static Pattern varPattern =
         Pattern.compile("(.*)\\$\\{([^\\}]+)\\}(.*)", Pattern.DOTALL);
-
+    
     /**
      * Substitutes all occurrences of the specified values into a template. Keys
      * for the values are specified in the template as <code>${KEY_NAME}</code>.
@@ -569,7 +422,7 @@ public class StringUtil {
     public static String fillTemplate(String template, Map<String, ? extends Object> vars) {
         return fillTemplate(template, vars, varPattern);
     }
-
+    
     /**
      * Substitutes all occurrences of the specified values into a template. Keys
      * for the values are specified in the template as a regex <code>Pattern</code>.
@@ -582,10 +435,10 @@ public class StringUtil {
         if (template == null) {
             return null;
         }
-
+        
         String line = template;
         Matcher matcher = pattern.matcher(line);
-
+        
         // Substitute multiple variables per line
         while (matcher.matches()) {
             String key = matcher.group(2);
@@ -599,7 +452,7 @@ public class StringUtil {
         }
         return line;
     }
-
+    
     /**
      * Joins an array of <code>short</code>s, separated by a delimiter.
      */
@@ -607,9 +460,9 @@ public class StringUtil {
         if (array == null) {
             return null;
         }
-
+        
         StringBuilder buf = new StringBuilder();
-
+        
         for (int i = 0; i < array.length; i++) {
             buf.append(array[i]);
             if (i + 1 < array.length) {
@@ -627,24 +480,21 @@ public class StringUtil {
     }
 
     public static String join(String delimiter, Object[] array, final int start, final int count) {
-        if (array == null) {
+        if (array == null)
             return null;
-        }
 
         StringBuilder buf = new StringBuilder();
         for (int i = start, end = start + count; i < end; i++) {
             buf.append(array[i]);
-            if (i + 1 < end) {
+            if (i + 1 < end)
                 buf.append(delimiter);
-            }
         }
         return buf.toString();
     }
 
     public static String join(String delimiter, Iterable<? extends Object> array) {
-        if (array == null) {
+        if (array == null)
             return null;
-        }
 
         boolean firstTime = true;
         StringBuilder buf = new StringBuilder();
@@ -658,16 +508,16 @@ public class StringUtil {
         }
         return buf.toString();
     }
-
+    
     /**
      * Returns the simple class name (the name after the last dot)
      * from a fully-qualified class name.  Behavior is the same as
-     * {@link FileUtil#getExtension}.
+     * {@link FileUtil#getExtension}. 
      */
     public static String getSimpleClassName(String className) {
         return FileUtil.getExtension(className);
     }
-
+    
     /**
      * Returns the simple class name (the name after the last dot)
      * for the specified object.
@@ -678,13 +528,16 @@ public class StringUtil {
         }
         return FileUtil.getExtension(o.getClass().getName());
     }
-
+    
     /**
      * Returns <code>true</code> if the secified string is <code>null</code> or its
      * length is <code>0</code>.
      */
     public static boolean isNullOrEmpty(String s) {
-        return s == null || s.isEmpty();
+        if (s == null || s.length() == 0) {
+            return true;
+        }
+        return false;
     }
 
     private static final String[] JS_CHAR_ENCODINGS = {
@@ -695,10 +548,8 @@ public class StringUtil {
     };
 
     public static String jsEncode(Object obj) {
-        if (obj == null) {
+        if (obj == null)
             return "";
-        }
-
         String replacement, str = obj.toString();
         StringBuilder sb = null;
         int i, last, length = str.length();
@@ -714,11 +565,10 @@ public class StringUtil {
                 default:        if (c >= ' ')                        continue;
                                 replacement = JS_CHAR_ENCODINGS[c];  break;
             }
-            if (sb == null) {
+            if (sb == null)
                 sb = new StringBuilder(str.substring(0, i));
-            } else {
+            else
                 sb.append(str.substring(last, i));
-            }
             sb.append(replacement);
             last = i + 1;
         }
@@ -737,10 +587,7 @@ public class StringUtil {
      * Escapes special characters with their HTML equivalents.
      */
     public static String escapeHtml(String text) {
-        if (text == null || text.length() == 0) {
-            return "";
-        }
-
+        if (text == null || text.length() == 0) return "";
         StringBuilder result = new StringBuilder(text.length());
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
@@ -758,28 +605,25 @@ public class StringUtil {
         return result.toString();
     }
 
-    /** Determines whether {@code data} can be encoded using
-     *  {@code requestedCharset}.
-     * @param data              the data to be encoded
-     * @param requestedCharset  the character set
-     * @return {@code requestedCharset} if encoding is supported,
-     *         "<tt>utf-8</tt>" if not, or
-     *         "<tt>us-ascii</tt>" if data is {@code null}.
+    /**
+     * Determines whether data can be encoded using <tt>requestedCharset</tt>.
+     *  
+     * @param data the data to be encoded
+     * @param requestedCharset the character set
+     * @return <tt>requestedCharset</tt> if encoding is supported, <tt>&quot;utf-8&quot;</tt>
+     * if not, or <tt>&quot;us-ascii&quot;</tt> if data is <tt>null</tt>.
      */
     public static String checkCharset(String data, String requestedCharset) {
-        if (data == null) {
+        if (data == null)
             return "us-ascii";
-        }
 
-        if (requestedCharset != null && !requestedCharset.isEmpty() && !requestedCharset.equalsIgnoreCase("utf-8")) {
+        if (requestedCharset != null && !requestedCharset.equalsIgnoreCase("utf-8")) {
             try {
                 Charset cset = Charset.forName(requestedCharset);
-                if (cset.canEncode() && cset.newEncoder().canEncode(data)) {
+                if (cset.canEncode() && cset.newEncoder().canEncode(data))
                     return requestedCharset;
-                }
             } catch (Exception e) {}
         }
-
         return "utf-8";
     }
 
@@ -851,29 +695,21 @@ public class StringUtil {
      * @return escaped (if needed) identifier
      */
     public static String escapeJavaIdentifier(String s) {
-        if (isNullOrEmpty(s)) {
+        if (isNullOrEmpty(s))
             return s;
-        } else if (isJavaReservedWord(s)) {
+        else if (isJavaReservedWord(s))
             return s + "_";
-        }
 
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < s.length(); i++) {
             char ch = s.charAt(i);
-            if (i == 0) {
-                result.append(Character.isJavaIdentifierStart(ch) ? ch : "_");
-            } else {
-                result.append(Character.isJavaIdentifierPart(ch) ? ch : "_");
-            }
+            if (i == 0) result.append(Character.isJavaIdentifierStart(ch) ? ch : "_");
+            else result.append(Character.isJavaIdentifierPart(ch) ? ch : "_");
          }
          return result.toString();
     }
 
     public static String capitalize(String s) {
         return s.substring(0,1).toUpperCase() + s.substring(1);
-    }
-
-    public static String enclose(String strToEnclose, char encloseWith) {
-        return new StringBuilder().append(encloseWith).append(strToEnclose).append(encloseWith).toString();
     }
 }
