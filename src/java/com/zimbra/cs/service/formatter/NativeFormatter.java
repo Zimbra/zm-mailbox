@@ -276,6 +276,9 @@ public class NativeFormatter extends Formatter {
                 resp.setContentLength(content.length());
             resp.getWriter().write(content);
         } else {
+            // flash attachment may contain a malicious script hence..
+            if (contentType.startsWith(MimeConstants.CT_APPLICATION_SHOCKWAVE_FLASH))
+                disp = Part.ATTACHMENT;
             resp.setContentType(contentType);
             sendbackBinaryData(req, resp, is, disp, filename, size);
         }
