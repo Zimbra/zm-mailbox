@@ -82,15 +82,21 @@ public abstract class ServerConfig {
         return getDescription() + " closing connection";
     }
 
+    /** The message sent back to a client whose new connection is being
+     *  rejected because the thread pool is currently exhausted. */
+    public String getConnectionRejected() {
+        return null;
+    }
+
     public String getDescription() {
         StringBuilder sb = new StringBuilder();
         String name = getServerName();
-        if (name != null && name.length() > 0) {
+        if (name != null && !name.isEmpty()) {
             sb.append(name).append(' ');
         }
         sb.append("Zimbra ");
         String version = getServerVersion();
-        if (version != null && version.length() > 0) {
+        if (version != null && !version.isEmpty()) {
             sb.append(version).append(' ');
         }
         return sb.append(getProtocol()).append(" server").toString();

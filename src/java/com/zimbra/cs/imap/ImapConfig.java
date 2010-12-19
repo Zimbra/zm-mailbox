@@ -92,6 +92,11 @@ public class ImapConfig extends ServerConfig {
     }
 
     @Override
+    public String getConnectionRejected() {
+        return "* BYE " + getDescription() + " closing connection; no threads available";
+    }
+
+    @Override
     public int getShutdownGraceSeconds() {
        return getIntAttr(A_zimbraImapShutdownGraceSeconds, super.getShutdownGraceSeconds());
     }
