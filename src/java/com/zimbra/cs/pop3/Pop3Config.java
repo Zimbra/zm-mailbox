@@ -76,6 +76,11 @@ public class Pop3Config extends ServerConfig {
         return ZimbraLog.pop;
     }
 
+    @Override
+    public String getConnectionRejected() {
+        return "-ERR " + getDescription() + " closing connection; no threads available";
+    }
+
     public boolean isCleartextLoginsEnabled() {
         return getBooleanAttr(A_zimbraPop3CleartextLoginEnabled, false);
     }

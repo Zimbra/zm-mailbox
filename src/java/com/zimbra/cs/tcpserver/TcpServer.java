@@ -16,12 +16,13 @@
 package com.zimbra.cs.tcpserver;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -67,7 +68,7 @@ public abstract class TcpServer implements Runnable, Server {
         //   but then retire them if they're not reused within 2 minutes
         int corePoolSize = Math.min(numThreads, 10);
         mPooledExecutor = new ThreadPoolExecutor(corePoolSize, numThreads, 2, TimeUnit.MINUTES,
-                new LinkedBlockingQueue<Runnable>(), new TcpThreadFactory(mName, false, threadPriority));
+                new SynchronousQueue<Runnable>(), new TcpThreadFactory(mName, false, threadPriority));
 
         // TODO a linked list is probably the wrong datastructure here
         // TODO write tests with multiple concurrent client
@@ -191,6 +192,7 @@ public abstract class TcpServer implements Runnable, Server {
 
         mLog.info("Starting accept loop: %d core threads, %d max threads.",
             mPooledExecutor.getCorePoolSize(), mPooledExecutor.getMaximumPoolSize());
+
         try {
             while (!mShutdownRequested) {
                 Socket connection = mServerSocket.accept();
@@ -200,7 +202,24 @@ public abstract class TcpServer implements Runnable, Server {
                 try {
                     mPooledExecutor.execute(handler);
                 } catch (RejectedExecutionException e) {
-                    mLog.warn("handler thread pool execution request rejected", e);
+                    mLog.error("cannot handle connection; thread pool exhausted", e);
+                    try {
+                        String message = mConfig.getConnectionRejected();
+                        if (message != null) {
+                            OutputStream os = connection.getOutputStream();
+                            if (os != null) {
+                                os.write((message + "\r\n").getBytes());
+                                os.flush();
+                            }
+                        }
+                    } catch (Throwable t) {
+                        // ignore any errors while dropping unhandled connection
+                    }
+                    try {
+                        connection.close();
+                    } catch (Throwable t) {
+                        // ignore any errors while dropping unhandled connection
+                    }
                 }
             }
         } catch (IOException ioe) {
@@ -208,6 +227,7 @@ public abstract class TcpServer implements Runnable, Server {
                 Zimbra.halt("accept loop failed", ioe);
             }
         }
+
         mLog.info("finished accept loop");
     }
     
@@ -215,7 +235,7 @@ public abstract class TcpServer implements Runnable, Server {
         if (mLog.isWarnEnabled()) {
             int warnPercent = LC.thread_pool_warn_percent.intValue();
             // Add 1 because the thread for this connection is not active yet.
-            int active =  mPooledExecutor.getActiveCount() + 1;
+            int active = mPooledExecutor.getActiveCount() + 1;
             int max = mPooledExecutor.getMaximumPoolSize();
             int utilization = active * 100 / max; 
             if (utilization >= warnPercent) {
