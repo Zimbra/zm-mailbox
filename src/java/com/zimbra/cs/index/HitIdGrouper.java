@@ -64,11 +64,8 @@ public class HitIdGrouper extends BufferingResultsGrouper {
         mBufferedHit.add(curGroupHit);
 
         // buffer all the hits with the same sort field
-        while (mHits.hasNext() &&
-                curGroupHit.compareBySortField(mSortOrder, mHits.peekNext()) == 0) {
-            if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("HitIdGrouper buffering " + mHits.peekNext());
-            }
+        while (mHits.hasNext() && curGroupHit.compareBySortField(mSortOrder, mHits.peekNext()) == 0) {
+            ZimbraLog.search.debug("HitIdGrouper buffering %s", mHits.peekNext());
             mBufferedHit.add(mHits.getNext());
         }
 

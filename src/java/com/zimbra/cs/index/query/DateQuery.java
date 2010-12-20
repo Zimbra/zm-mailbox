@@ -387,10 +387,7 @@ public final class DateQuery extends Query {
             } // else (relative/absolute check)
         } // else (numeric check)
 
-        if (ZimbraLog.index_search.isDebugEnabled()) {
-            ZimbraLog.index_search.debug("Parsed date range to: (" +
-                    mDate.toString() + "-" + mEndDate.toString() + ")");
-        }
+        ZimbraLog.search.debug("Parsed date range to: (%s - %s)", mDate, mEndDate);
 
         // convert BEFORE, AFTER and DATE to the right explicit params...
         if (!hasExplicitComparasins) {

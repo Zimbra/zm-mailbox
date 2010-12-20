@@ -84,8 +84,8 @@ final class RemoteQueryOperation extends FilterQueryOperation {
 
         Server remoteServer = prov.getServer(acct);
 
-        if (ZimbraLog.index_search.isDebugEnabled()) {
-            ZimbraLog.index_search.debug("RemoteQuery=\"%s\" target=%s server=%s",
+        if (ZimbraLog.search.isDebugEnabled()) {
+            ZimbraLog.search.debug("RemoteQuery=\"%s\" target=%s server=%s",
                     mOp.toQueryString(), mTarget, remoteServer.getName());
         }
 

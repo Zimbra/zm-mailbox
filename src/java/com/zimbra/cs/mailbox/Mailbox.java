@@ -5924,7 +5924,7 @@ public class Mailbox {
             try {
                 indexData = pc.getLuceneDocuments(this);
             } catch (ServiceException e) {
-                ZimbraLog.indexing.info("Failed to analyze new contact in folder %d; contact will not be indexed",
+                ZimbraLog.index.warn("Failed to analyze new contact in folder %d; contact will not be indexed",
                         folderId, e);
                 indexData = Collections.emptyList();
             }
@@ -5990,7 +5990,7 @@ public class Mailbox {
             try {
                 indexData = pc.getLuceneDocuments(this);
             } catch (Exception e) {
-                ZimbraLog.indexing.info("caught exception analyzing contact %d; contact will not be indexed",
+                ZimbraLog.index.info("caught exception analyzing contact %d; contact will not be indexed",
                         contactId, e);
                 indexData = new ArrayList<IndexDocument>();
             }

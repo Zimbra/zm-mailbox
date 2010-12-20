@@ -409,14 +409,14 @@ public final class ZimbraQuery {
             throw ServiceException.PARSE_ERROR("PARSER_ERROR", e);
         }
 
-        if (ZimbraLog.index_search.isDebugEnabled()) {
+        if (ZimbraLog.search.isDebugEnabled()) {
             StringBuilder buf = new StringBuilder(toString());
             buf.append(" search([");
             buf.append(params.getTypes());
             buf.append("],");
             buf.append(params.getSortBy());
             buf.append(')');
-            ZimbraLog.index_search.debug(buf.toString());
+            ZimbraLog.search.debug(buf.toString());
         }
 
         // Step 2: build a parse tree and push all the "NOT's" down to the
@@ -433,18 +433,18 @@ public final class ZimbraQuery {
             // this generates all of the query operations
             operation = parseTree.getQueryOperation();
 
-            ZimbraLog.index_search.debug("OP=%s", operation);
+            ZimbraLog.search.debug("OP=%s", operation);
 
             // expand the is:local and is:remote parts into in:(LIST)'s
             operation = operation.expandLocalRemotePart(mbox);
-            ZimbraLog.index_search.debug("AFTEREXP=%s", operation);
+            ZimbraLog.search.debug("AFTEREXP=%s", operation);
 
             // optimize the query down
             operation = operation.optimize(mailbox);
             if (operation == null) {
                 operation = new NoResultsQueryOperation();
             }
-            ZimbraLog.index_search.debug("OPTIMIZED=%s", operation);
+            ZimbraLog.search.debug("OPTIMIZED=%s", operation);
         }
 
         // STEP 4: use the OperationContext to update the set of visible referenced folders, local AND remote
@@ -535,15 +535,14 @@ public final class ZimbraQuery {
                     try {
                         ((RemoteQueryOperation) remoteOp).setup(proto, octxt.getAuthToken(), params);
                     } catch (Exception e) {
-                        ZimbraLog.index_search.info("Ignoring " + e +
-                                " during RemoteQuery generation for " + remoteOps);
+                        ZimbraLog.search.info("Ignoring " + e + " during RemoteQuery generation for " + remoteOps);
                     }
                 }
             }
 
             // For the LOCAL parts of the query, do permission checks, do trash/spam exclusion
             if (!localOps.mQueryOperations.isEmpty()) {
-                ZimbraLog.index_search.debug("LOCAL_IN=%s", localOps);
+                ZimbraLog.search.debug("LOCAL_IN=%s", localOps);
 
                 Account authAcct = null;
                 if (octxt != null) {
@@ -574,17 +573,13 @@ public final class ZimbraQuery {
                     localOps.mQueryOperations.addAll(toAdd);
                 }
 
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    ZimbraLog.index_search.debug(
-                            "LOCAL_AFTERTS=" + localOps.toString());
-                }
+                ZimbraLog.search.debug("LOCAL_AFTERTS=%s", localOps);
 
-                //
                 // Check to see if we need to filter out private appointment data
                 boolean allowPrivateAccess = true;
                 if (octxt != null) {
                     allowPrivateAccess = AccessManager.getInstance().allowPrivateAccess(octxt.getAuthenticatedUser(),
-                                                                    mbox.getAccount(), octxt.isUsingAdminPrivileges());
+                            mbox.getAccount(), octxt.isUsingAdminPrivileges());
                 }
 
                 //
@@ -628,10 +623,10 @@ public final class ZimbraQuery {
                 localOps = handleLocalPermissionChecks(localOps, visibleFolders,
                         allowPrivateAccess);
 
-                ZimbraLog.index_search.debug("LOCAL_AFTER_PERM_CHECKS=%s", localOps);
+                ZimbraLog.search.debug("LOCAL_AFTER_PERM_CHECKS=%s", localOps);
 
                 if (!hasFolderRightPrivateSet.isEmpty()) {
-                    ZimbraLog.index_search.debug("CLONED_LOCAL_BEFORE_PERM=%s", clonedLocal);
+                    ZimbraLog.search.debug("CLONED_LOCAL_BEFORE_PERM=%s", clonedLocal);
 
                     // now we're going to setup the clonedLocal tree
                     // to run with private access ALLOWED, over the set of folders
@@ -640,20 +635,20 @@ public final class ZimbraQuery {
                     clonedLocal = handleLocalPermissionChecks(
                             clonedLocal, hasFolderRightPrivateSet, true);
 
-                    ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_PERM=%s", clonedLocal);
+                    ZimbraLog.search.debug("CLONED_LOCAL_AFTER_PERM=%s", clonedLocal);
 
                     // clonedLocal should only have the single INTERSECT in it
                     assert(clonedLocal.mQueryOperations.size() == 1);
 
                     QueryOperation optimizedClonedLocal = clonedLocal.optimize(mbox);
-                    ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_OPTIMIZE=%s", optimizedClonedLocal);
+                    ZimbraLog.search.debug("CLONED_LOCAL_AFTER_OPTIMIZE=%s", optimizedClonedLocal);
 
                     UnionQueryOperation withPrivateExcluded = localOps;
                     localOps = new UnionQueryOperation();
                     localOps.add(withPrivateExcluded);
                     localOps.add(optimizedClonedLocal);
 
-                    ZimbraLog.index_search.debug("LOCAL_WITH_CLONED=%s", localOps);
+                    ZimbraLog.search.debug("LOCAL_WITH_CLONED=%s", localOps);
 
                     //
                     // we should end up with:
@@ -673,13 +668,11 @@ public final class ZimbraQuery {
             UnionQueryOperation union = new UnionQueryOperation();
             union.add(localOps);
             union.add(remoteOps);
-            if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("BEFORE_FINAL_OPT=%s", union);
-            }
+            ZimbraLog.search.debug("BEFORE_FINAL_OPT=%s", union);
             operation = union.optimize(mbox);
             assert(union.mQueryOperations.size() > 0);
         }
-        ZimbraLog.index_search.debug("END_ZIMBRAQUERY_CONSTRUCTOR=%s", operation);
+        ZimbraLog.search.debug("END_ZIMBRAQUERY_CONSTRUCTOR=%s", operation);
     }
 
     SearchParams getParams() {
@@ -713,7 +706,7 @@ public final class ZimbraQuery {
             assert(targets.size() >1 || !targets.hasExternalTargets() || operation instanceof RemoteQueryOperation);
             assert(results == null);
 
-            ZimbraLog.index_search.debug("OPERATION: %s", operation);
+            ZimbraLog.search.debug("OPERATION: %s", operation);
 
             results = operation.run(mailbox, params, chunkSize);
             results = HitIdGrouper.Create(results, params.getSortBy());
@@ -734,7 +727,7 @@ public final class ZimbraQuery {
 
             return results;
         } else {
-            ZimbraLog.index_search.debug("Operation optimized to nothing.  Returning no results");
+            ZimbraLog.search.debug("Operation optimized to nothing.  Returning no results");
             return new EmptyQueryResults(params.getTypes(), params.getSortBy(), params.getMode());
         }
     }
@@ -785,7 +778,7 @@ public final class ZimbraQuery {
                 if (visibleFolders != null) {
                     if (visibleFolders.size() == 0) {
                         union.mQueryOperations.remove(i);
-                        ZimbraLog.index_search.debug("Query changed to NULL_QUERY_OPERATION, no visible folders");
+                        ZimbraLog.search.debug("Query changed to NULL_QUERY_OPERATION, no visible folders");
                         union.mQueryOperations.add(i, new NoResultsQueryOperation());
                     } else {
                         union.mQueryOperations.remove(i);

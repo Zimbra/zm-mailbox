@@ -228,12 +228,8 @@ public final class LuceneQueryOperation extends QueryOperation {
                 try {
                     int freq = mSearcher.getSearcher().docFreq(term);
                     int docsCutoff = (int) (mSearcher.getSearcher().maxDoc() * sDbFirstTermFreqPerc);
-                    if (ZimbraLog.index_search.isDebugEnabled()) {
-                        ZimbraLog.index_search.debug("Term matches " + freq +
-                                " docs.  DB-First cutoff (" +
-                                (100 * sDbFirstTermFreqPerc) + "%) is " +
-                                docsCutoff + " docs");
-                    }
+                    ZimbraLog.search.debug("Term matches %d docs. DB-First cutoff (%d %) is %d docs",
+                            freq, 100 * sDbFirstTermFreqPerc, docsCutoff);
                     if (freq > docsCutoff) {
                         return true;
                     }
@@ -245,14 +241,10 @@ public final class LuceneQueryOperation extends QueryOperation {
 
         try {
             fetchFirstResults(1000); // some arbitrarily large initial size to fetch
-            if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("Lucene part has " + countHits() + " hits");
-            }
-            if (this.countHits() > 1000) { // also arbitrary, just to make very small searches run w/o extra DB check
+            ZimbraLog.search.debug("Lucene part has %d hits", countHits());
+            if (countHits() > 1000) { // also arbitrary, just to make very small searches run w/o extra DB check
                 int dbHitCount = this.mDBOp.getDbHitCount();
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    ZimbraLog.index_search.debug("Lucene part has " + countHits() + " hits, db part has " + dbHitCount);
-                }
+                ZimbraLog.search.debug("Lucene part has %d hits, db part has %d", countHits(), dbHitCount);
 
                 if (dbHitCount < this.countHits()) {
                     return true; // run DB-FIRST
@@ -276,17 +268,11 @@ public final class LuceneQueryOperation extends QueryOperation {
         if (!mHaveRunSearch) {
             assert(mCurHitNo == 0);
             mTopDocsLen = 3*initialChunkSize;
-            long start = 0;
-            if (ZimbraLog.index_search.isDebugEnabled()) {
-                start = System.currentTimeMillis();
-            }
+            long start= System.currentTimeMillis();
             runSearch();
-            if (ZimbraLog.index_search.isDebugEnabled()) {
-                long time = System.currentTimeMillis() - start;
-                int totalResults = mTopDocs != null ? mTopDocs.totalHits : 0;
-                ZimbraLog.index_search.debug("Fetched Initial " + mTopDocsLen +
-                        " (out of " + totalResults +
-                        " total) search results from Lucene in " + time + "ms");
+            if (ZimbraLog.search.isDebugEnabled()) {
+                ZimbraLog.search.debug("Fetched Initial %d (out of %d total) search results from Lucene in %d ms",
+                        mTopDocsLen, mTopDocs != null ? mTopDocs.totalHits : 0, System.currentTimeMillis() - start);
             }
         }
     }
@@ -323,37 +309,24 @@ public final class LuceneQueryOperation extends QueryOperation {
                     if (mTopDocsLen > luceneLen) {
                         mTopDocsLen = luceneLen;
                     }
-                    if (ZimbraLog.index_search.isDebugEnabled()) {
-                        start = System.currentTimeMillis();
-                    }
-                    runSearch();
-                    if (ZimbraLog.index_search.isDebugEnabled()) {
-                        long time = System.currentTimeMillis() - start;
-                        ZimbraLog.index_search.debug("Fetched " + mTopDocsLen +
-                                " search results from Lucene in " + time + "ms");
-                    }
-                }
-
-                if (ZimbraLog.index_search.isDebugEnabled()) {
                     start = System.currentTimeMillis();
+                    runSearch();
+                    ZimbraLog.search.debug("Fetched %d search results from Lucene in %d ms",
+                            mTopDocsLen, System.currentTimeMillis() - start);
                 }
 
-
+                start = System.currentTimeMillis();
                 int docId = mTopDocs.scoreDocs[mCurHitNo].doc;
                 Document d = mSearcher.getSearcher().doc(docId);
 
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    long now = System.currentTimeMillis();
-                    fetchFromLucene1 += (now - start);
-                    start = now;
-                }
+                long now = System.currentTimeMillis();
+                fetchFromLucene1 += (now - start);
+                start = now;
 
                 float score;
                 score = mTopDocs.scoreDocs[mCurHitNo].score;
 
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    fetchFromLucene2 += (System.currentTimeMillis() - start);
-                }
+                fetchFromLucene2 += (System.currentTimeMillis() - start);
 
                 mCurHitNo++;
 
@@ -370,10 +343,7 @@ public final class LuceneQueryOperation extends QueryOperation {
                 }
             }
 
-            if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("FetchFromLucene1 " + fetchFromLucene1 +
-                        "ms FetchFromLucene2 " + fetchFromLucene2 + "ms ");
-            }
+            ZimbraLog.search.debug("FetchFromLucene1=%d FetchFromLucene2=%d", fetchFromLucene1, fetchFromLucene2);
 
             return toRet;
 
@@ -395,9 +365,7 @@ public final class LuceneQueryOperation extends QueryOperation {
                     outerQuery.add(new BooleanClause(new TermQuery(
                             new Term(LuceneFields.L_ALL, LuceneFields.L_ALL_VALUE)), Occur.MUST));
                     outerQuery.add(new BooleanClause(mQuery, Occur.MUST));
-                    if (ZimbraLog.index_search.isDebugEnabled()) {
-                        ZimbraLog.index_search.debug("Executing Lucene Query: " + outerQuery.toString());
-                    }
+                    ZimbraLog.search.debug("Executing Lucene Query: %s", outerQuery);
 
                     TermsFilter filter = null;
                     if (mFilterTerms != null) {

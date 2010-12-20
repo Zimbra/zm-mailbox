@@ -118,24 +118,13 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         this.types = types;
     }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.index.IConstraints#toQueryString()
-     */
+    @Override
     public String toQueryString() {
         if (noResults)
             return "-is:anywhere";
 
         return toString();
     }
-
-    /* (non-Javadoc)
-     * @see com.zimbra.cs.db.DbSearchConstraints#toString()
-     */
-    public String toString()
-    {
-        return super.toString();
-    }
-
 
     /**
      * @param itemId
@@ -330,9 +319,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
             if (convId == 0) {
                 convId = cid;
             } else {
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    ZimbraLog.index_search.debug("Query requested two conflicting convIDs, this is now a no-results-query");
-                }
+                ZimbraLog.search.debug("Query requested two conflicting convIDs, this is now a no-results-query");
                 convId = Integer.MAX_VALUE;
                 noResults = true;
             }
@@ -358,9 +345,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
             if (remoteConvId == null) {
                 remoteConvId = cid;
             } else {
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    ZimbraLog.index_search.debug("Query requested two conflicting Remote convIDs, this is now a no-results-query");
-                }
+                ZimbraLog.search.debug("Query requested two conflicting Remote convIDs, this is now a no-results-query");
                 remoteConvId = new ItemId(cid.getAccountId(), Integer.MAX_VALUE);
                 noResults = true;
             }
@@ -379,11 +364,8 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
     void addInRemoteFolderClause(ItemId id, String subfolderPath, boolean includeSubfolders, boolean truth)
     {
         if (truth) {
-            if ((remoteFolders.size() > 0 && !remoteFolders.contains(id))
-                        || excludeRemoteFolders.contains(id)) {
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    ZimbraLog.index_search.debug("AND of conflicting remote folders, no-results-query");
-                }
+            if ((remoteFolders.size() > 0 && !remoteFolders.contains(id)) || excludeRemoteFolders.contains(id)) {
+                ZimbraLog.search.debug("AND of conflicting remote folders, no-results-query");
                 noResults = true;
             }
             remoteFolders.clear();
@@ -393,9 +375,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
             if (remoteFolders.contains(id)) {
                 remoteFolders.remove(id);
                 if (remoteFolders.size() == 0) {
-                    if (ZimbraLog.index_search.isDebugEnabled()) {
-                        ZimbraLog.index_search.debug("AND of conflicting remote folders, no-results-query");
-                    }
+                    ZimbraLog.search.debug("AND of conflicting remote folders, no-results-query");
                     noResults = true;
                 }
             }
@@ -410,11 +390,8 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
     void addInClause(Folder folder, boolean truth)
     {
         if (truth) {
-            if ((folders.size() > 0 && !folders.contains(folder))
-                        || excludeFolders.contains(folder)) {
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    ZimbraLog.index_search.debug("AND of conflicting folders, no-results-query");
-                }
+            if ((folders.size() > 0 && !folders.contains(folder)) || excludeFolders.contains(folder)) {
+                ZimbraLog.search.debug("AND of conflicting folders, no-results-query");
                 noResults = true;
             }
             folders.clear();
@@ -424,9 +401,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
             if (folders.contains(folder)) {
                 folders.remove(folder);
                 if (folders.size() == 0) {
-                    if (ZimbraLog.index_search.isDebugEnabled()) {
-                        ZimbraLog.index_search.debug("AND of conflicting folders, no-results-query");
-                    }
+                    ZimbraLog.search.debug("AND of conflicting folders, no-results-query");
                     noResults = true;
                 }
             }
@@ -447,27 +422,16 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
         if (!truth) {
             // if they are weird enough to say "NOT is:anywhere" then we
             // just make it a no-results-query.
-
-            if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("addAnyFolderClause(FALSE) called -- changing to no-results-query.");
-            }
+            ZimbraLog.search.debug("addAnyFolderClause(FALSE) called -- changing to no-results-query.");
             noResults = true;
         }
     }
 
-    /**
-     * @param tag
-     * @param truth
-     */
     void addTagClause(Tag tag, boolean truth) {
-        if (ZimbraLog.index_search.isDebugEnabled()) {
-            ZimbraLog.index_search.debug("AddTagClause("+tag+","+truth+")");
-        }
+        ZimbraLog.search.debug("AddTagClause(%s,%b)", tag, truth);
         if (truth) {
-            if (excludeTags!=null && excludeTags.contains(tag)) {
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    ZimbraLog.index_search.debug("TAG and NOT TAG = no results");
-                }
+            if (excludeTags != null && excludeTags.contains(tag)) {
+                ZimbraLog.search.debug("TAG and NOT TAG = no results");
                 noResults = true;
             }
             if (tags == null)
@@ -475,9 +439,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
             tags.add(tag);
         } else {
             if (tags != null && tags.contains(tag)) {
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    ZimbraLog.index_search.debug("TAG and NOT TAG = no results");
-                }
+                ZimbraLog.search.debug("TAG and NOT TAG = no results");
                 noResults = true;
             }
             if (excludeTags == null)

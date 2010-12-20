@@ -205,7 +205,7 @@ public final class LuceneIndex {
         for (Integer id : ids) {
             Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, id.toString());
             writerRef.get().deleteDocuments(term);
-            ZimbraLog.indexing.debug("Deleted documents id=%d", id);
+            ZimbraLog.index.debug("Deleted documents id=%d", id);
         }
     }
 
@@ -214,7 +214,7 @@ public final class LuceneIndex {
      */
     synchronized void deleteIndex() throws IOException {
         assert(writerRef == null);
-        ZimbraLog.indexing.debug("Deleting index %s", luceneDirectory);
+        ZimbraLog.index.debug("Deleting index %s", luceneDirectory);
         readersCache.remove(this);
 
         String[] files;
@@ -223,7 +223,7 @@ public final class LuceneIndex {
         } catch (NoSuchDirectoryException ignore) {
             return;
         } catch (IOException e) {
-            ZimbraLog.indexing.warn("Failed to delete index: %s", luceneDirectory, e);
+            ZimbraLog.index.warn("Failed to delete index: %s", luceneDirectory, e);
             return;
         }
 
@@ -404,10 +404,10 @@ public final class LuceneIndex {
                  */
                 @Override
                 public void message(String message) {
-                    ZimbraLog.index_lucene.debug("IW: %s", message);
+                    ZimbraLog.index.debug("IW: %s", message);
                 }
             };
-            if (ZimbraLog.index_lucene.isDebugEnabled()) {
+            if (ZimbraLog.index.isDebugEnabled()) {
                 // Set a dummy PrintStream, otherwise Lucene suppresses logging.
                 writer.setInfoStream(new PrintStream(new NullOutputStream()));
             }
@@ -430,17 +430,17 @@ public final class LuceneIndex {
     }
 
     private synchronized <T extends Throwable> void repair(T ex) throws T {
-        ZimbraLog.index_lucene.error("Index corrupted", ex);
+        ZimbraLog.index.error("Index corrupted", ex);
         LuceneIndexRepair repair = new LuceneIndexRepair(luceneDirectory);
         try {
             if (repair.repair() > 0) {
-                ZimbraLog.index_lucene.info("Index repaired, re-indexing is recommended.");
+                ZimbraLog.index.info("Index repaired, re-indexing is recommended.");
             } else {
-                ZimbraLog.index_lucene.warn("Unable to repair, re-indexing is required.");
+                ZimbraLog.index.warn("Unable to repair, re-indexing is required.");
                 throw ex;
             }
         } catch (IOException e) {
-            ZimbraLog.index_lucene.warn("Failed to repair, re-indexing is required.", e);
+            ZimbraLog.index.warn("Failed to repair, re-indexing is required.", e);
             throw ex;
         }
     }
@@ -449,7 +449,7 @@ public final class LuceneIndex {
         try {
             IndexWriter.unlock(luceneDirectory);
         } catch (IOException e) {
-            ZimbraLog.index_lucene.warn("Failed to unlock IndexWriter %s", this, e);
+            ZimbraLog.index.warn("Failed to unlock IndexWriter %s", this, e);
         }
     }
 
@@ -469,7 +469,7 @@ public final class LuceneIndex {
                 try {
                     newReader = oldReader.reopen();
                     if (oldReader != newReader) { // reader changed, must close old one
-                        ZimbraLog.index_lucene.debug("Reopened IndexReader");
+                        ZimbraLog.search.debug("Reopened IndexReader");
                         readersCache.remove(this); // ref--
                         ref.dec();
                         READER_THROTTLE.acquireUninterruptibly();
@@ -477,7 +477,7 @@ public final class LuceneIndex {
                         readersCache.put(this, ref); // ref++
                     }
                 } catch (IOException e) {
-                    ZimbraLog.index_lucene.debug("Failed to reopen IndexReader", e);
+                    ZimbraLog.search.debug("Failed to reopen IndexReader", e);
                     readersCache.remove(this);
                     ref.dec();
                     ref = null;
@@ -621,7 +621,7 @@ public final class LuceneIndex {
         assert(Thread.holdsLock(this));
         assert(writerRef != null);
 
-        ZimbraLog.index_lucene.debug("Commit IndexWriter");
+        ZimbraLog.index.debug("Commit IndexWriter");
 
         MergeTask task = new MergeTask(writerRef);
         if (IndexHelper.isIndexThread()) { // batch index running in background
@@ -633,7 +633,7 @@ public final class LuceneIndex {
                 mailboxIndex.mailbox.index.submit(task); // merge must run in background
                 success = true;
             } catch (RejectedExecutionException e) {
-                ZimbraLog.indexing.warn("Skipping merge because all index threads are busy");
+                ZimbraLog.index.warn("Skipping merge because all index threads are busy");
             } finally {
                 if (!success) {
                     writerRef.dec();
@@ -648,12 +648,12 @@ public final class LuceneIndex {
     synchronized void closeWriter() {
         assert(writerRef != null);
 
-        ZimbraLog.index_lucene.debug("Close IndexWriter");
+        ZimbraLog.index.debug("Close IndexWriter");
 
         try {
             writerRef.get().close(false); // ignore phantom pending merges
         } catch (IOException e) {
-            ZimbraLog.index_lucene.error("Failed to close IndexWriter", e);
+            ZimbraLog.index.error("Failed to close IndexWriter", e);
         } finally {
             unlockIndexWriter();
             WRITER_THROTTLE.release();
@@ -666,12 +666,12 @@ public final class LuceneIndex {
      * thread.
      */
     void closeReader(IndexReader reader) {
-        ZimbraLog.index_lucene.debug("Close IndexReader");
+        ZimbraLog.search.debug("Close IndexReader");
 
         try {
             reader.close();
         } catch (IOException e) {
-            ZimbraLog.index_lucene.warn("Failed to close IndexReader", e);
+            ZimbraLog.search.warn("Failed to close IndexReader", e);
         } finally {
             READER_THROTTLE.release();
         }
@@ -773,10 +773,10 @@ public final class LuceneIndex {
                 if (((MergeScheduler) ref.get().getMergeScheduler()).tryLock()) {
                     ref.get().maybeMerge();
                 } else {
-                    ZimbraLog.indexing.debug("Merge is in progress by other thread");
+                    ZimbraLog.index.debug("Merge is in progress by other thread");
                 }
             } catch (IOException e) {
-                ZimbraLog.index_lucene.error("Failed to merge IndexWriter", e);
+                ZimbraLog.index.error("Failed to merge IndexWriter", e);
             } finally {
                 ((MergeScheduler) ref.get().getMergeScheduler()).release();
                 ref.dec();

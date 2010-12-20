@@ -135,7 +135,7 @@ public final class IndexHelper {
                 // don't wait if an indexing is in progress by other thread
                 indexDeferredItems(types, new BatchStatus(), false);
             } catch (ServiceException e) {
-                ZimbraLog.indexing.error("Failed to index deferred items", e);
+                ZimbraLog.index.error("Failed to index deferred items", e);
             }
         }
         return MailboxIndex.search(query);
@@ -203,7 +203,7 @@ public final class IndexHelper {
             try {
                 INDEX_EXECUTOR.submit(new BatchIndexTask());
             } catch (RejectedExecutionException e) {
-                ZimbraLog.indexing.warn("Skipping batch index because all index threads are busy");
+                ZimbraLog.index.warn("Skipping batch index because all index threads are busy");
             }
         }
     }
@@ -222,7 +222,7 @@ public final class IndexHelper {
         if (wait) {
             indexLock.acquireUninterruptibly();
         } else if (!indexLock.tryAcquire()) {
-            ZimbraLog.indexing.debug("index is in progress by other thread, skipping");
+            ZimbraLog.index.debug("index is in progress by other thread, skipping");
             return;
         }
         lastFailedTime = -1; // reset
@@ -232,7 +232,7 @@ public final class IndexHelper {
             indexItemList(ids, status);
 
             long elapsed = System.currentTimeMillis() - start;
-            ZimbraLog.indexing.info("Batch complete processed=%d,failed=%d,elapsed=%d (%.2f items/sec)",
+            ZimbraLog.index.info("Batch complete processed=%d,failed=%d,elapsed=%d (%.2f items/sec)",
                     status.getProcessed(), status.getFailed(), elapsed,
                     1000.0 * (status.getProcessed() - status.getFailed()) / elapsed);
         } finally {
@@ -291,7 +291,7 @@ public final class IndexHelper {
         @Override
         public void exec() {
             try {
-                ZimbraLog.indexing.info("Re-index start");
+                ZimbraLog.index.info("Re-index start");
 
                 long start = System.currentTimeMillis();
                 reIndex();
@@ -303,19 +303,19 @@ public final class IndexHelper {
                     avg = elapsed / status.getProcessed();
                     mps = avg > 0 ? 1000 / avg : 0;
                 }
-                ZimbraLog.indexing.info("Re-index completed items=%d,failed=%s,elapsed=%d (avg %d ms/item, %d items/sec)",
+                ZimbraLog.index.info("Re-index completed items=%d,failed=%s,elapsed=%d (avg %d ms/item, %d items/sec)",
                         status.getTotal(), status.getFailed(), elapsed, avg, mps);
                 onCompletion();
             } catch (ServiceException e) {
                 if (e.getCode() == ServiceException.INTERRUPTED) {
-                    ZimbraLog.indexing.info("Re-index cancelled %s", status);
+                    ZimbraLog.index.info("Re-index cancelled %s", status);
                 } else {
-                    ZimbraLog.indexing.error("Re-index failed. This mailbox must be manually re-indexed.", e);
+                    ZimbraLog.index.error("Re-index failed. This mailbox must be manually re-indexed.", e);
                 }
             } catch (OutOfMemoryError e) {
                 Zimbra.halt("out of memory", e);
             } catch (Throwable t) {
-                ZimbraLog.indexing.error("Re-index failed. This mailbox must be manually re-indexed.", t);
+                ZimbraLog.index.error("Re-index failed. This mailbox must be manually re-indexed.", t);
             } finally {
                 synchronized (IndexHelper.this) {
                     reIndex = null;
@@ -494,14 +494,14 @@ public final class IndexHelper {
             try {
                 item = mailbox.getItemById(null, id, MailItem.Type.UNKNOWN);
             } catch (Exception  e) {
-                ZimbraLog.indexing.warn("Failed to fetch deferred item id=%d", id, e);
+                ZimbraLog.index.warn("Failed to fetch deferred item id=%d", id, e);
                 status.addFailed(1);
                 continue;
             }
             try {
                 chunk.add(new Mailbox.IndexItemEntry(false, item, item.generateIndexData(true)));
             } catch (MailItem.TemporaryIndexingException e) {
-                ZimbraLog.indexing.warn("Temporary index failure id=%d", id, e);
+                ZimbraLog.index.warn("Temporary index failure id=%d", id, e);
                 lastFailedTime = System.currentTimeMillis();
                 status.addFailed(1);
                 continue;
@@ -511,7 +511,7 @@ public final class IndexHelper {
             if (i == ids.size() || chunkByteSize > MAX_TX_BYTES || chunk.size() >= MAX_TX_ITEMS) {
                 // we have a chunk of items and their corresponding index data -- add them to the index
                 try {
-                    ZimbraLog.indexing.debug("Batch progress %d/%d", i, ids.size());
+                    ZimbraLog.index.debug("Batch progress %d/%d", i, ids.size());
 
                     if (status.isCancelled()) {
                         throw ServiceException.INTERRUPTED("cancelled");
@@ -530,7 +530,7 @@ public final class IndexHelper {
                                 mailbox.endTransaction(success);
                             }
                         } catch (ServiceException e) {
-                            ZimbraLog.indexing.warn("Failed to index chunk=%s", chunk, e);
+                            ZimbraLog.index.warn("Failed to index chunk=%s", chunk, e);
                             status.addFailed(chunk.size());
                         }
                     }
@@ -586,7 +586,7 @@ public final class IndexHelper {
                     mailboxIndex.endWrite();
                 }
             } catch (Exception e) {
-                ZimbraLog.indexing.warn("Skipping indexing; Unable to parse message %d", itemId, e);
+                ZimbraLog.index.warn("Skipping indexing; Unable to parse message %d", itemId, e);
             }
         }
     }
@@ -605,7 +605,7 @@ public final class IndexHelper {
         try {
             mailboxIndex.beginWrite();
         } catch (IOException e) {
-            ZimbraLog.indexing.warn("Failed to open IndexWriter", e);
+            ZimbraLog.index.warn("Failed to open IndexWriter", e);
             lastFailedTime = System.currentTimeMillis();
             return;
         }
@@ -617,13 +617,13 @@ public final class IndexHelper {
                 try {
                     mailboxIndex.deleteDocuments(del);
                 } catch (IOException e) {
-                    ZimbraLog.indexing.warn("Failed to delete index documents", e);
+                    ZimbraLog.index.warn("Failed to delete index documents", e);
                 }
             }
 
             for (IndexItemEntry entry : add) {
                 if (entry.documents == null) {
-                    ZimbraLog.indexing.warn("NULL index data item=%s", entry);
+                    ZimbraLog.index.warn("NULL index data item=%s", entry);
                     continue;
                 }
 
@@ -632,7 +632,7 @@ public final class IndexHelper {
                 try {
                     mailboxIndex.indexMailItem(mailbox, entry.deleteFirst, entry.documents, entry.item);
                 } catch (ServiceException e) {
-                    ZimbraLog.indexing.warn("Failed to index item=%d", entry, e);
+                    ZimbraLog.index.warn("Failed to index item=%d", entry, e);
                     lastFailedTime = System.currentTimeMillis();
                     continue;
                 }
@@ -642,7 +642,7 @@ public final class IndexHelper {
             try {
                 mailboxIndex.endWrite();
             } catch (IOException e) {
-                ZimbraLog.indexing.error("Failed to commit IndexWriter", e);
+                ZimbraLog.index.error("Failed to commit IndexWriter", e);
                 return;
             }
         }
@@ -673,7 +673,7 @@ public final class IndexHelper {
         try {
             ids = getDeferredIds();
         } catch (ServiceException e) {
-            ZimbraLog.indexing.error("Failed to query deferred IDs", e);
+            ZimbraLog.index.error("Failed to query deferred IDs", e);
             return 0;
         }
 
@@ -721,7 +721,7 @@ public final class IndexHelper {
             return;
         }
         deferredIds.put(type, id);
-        ZimbraLog.indexing.debug("deferredIds=%s", deferredIds);
+        ZimbraLog.index.debug("deferredIds=%s", deferredIds);
     }
 
     synchronized void removeDeferredId(int id) {
@@ -823,7 +823,7 @@ public final class IndexHelper {
         void addProcessed(int delta) {
             processed += delta;
             if (processed % 2000 == 0) {
-                ZimbraLog.indexing.info("Re-index progress %d/%d", processed, total);
+                ZimbraLog.index.info("Re-index progress %d/%d", processed, total);
             }
         }
 
@@ -891,7 +891,7 @@ public final class IndexHelper {
             } catch (OutOfMemoryError e) {
                 Zimbra.halt("out of memory", e);
             } catch (Throwable t) {
-                ZimbraLog.indexing.error(t.getMessage(), t);
+                ZimbraLog.index.error(t.getMessage(), t);
             } finally {
                 ZimbraLog.clearContext();
             }

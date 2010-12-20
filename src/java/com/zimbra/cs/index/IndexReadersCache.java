@@ -123,7 +123,7 @@ final class IndexReadersCache {
             ref = readers.get(index);
         }
         if (ref != null) {
-            ZimbraLog.index_lucene.debug("Stale IndexReader: %s", index);
+            ZimbraLog.index.debug("Stale IndexReader: %s", index);
             ref.stale();
         }
     }

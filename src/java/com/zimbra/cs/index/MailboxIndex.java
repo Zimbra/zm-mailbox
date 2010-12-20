@@ -90,7 +90,7 @@ public final class MailboxIndex {
     public static ZimbraQueryResults search(ZimbraQuery zq) throws ServiceException {
         SearchParams params = zq.getParams();
         String qs = params.getQueryStr();
-        ZimbraLog.index_search.debug("query: %s",  qs);
+        ZimbraLog.search.debug("query: %s",  qs);
 
         // handle special-case Task-only sorts: convert them to a "normal sort"
         //     and then re-sort them at the end
