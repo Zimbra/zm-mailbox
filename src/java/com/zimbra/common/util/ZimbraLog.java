@@ -120,24 +120,14 @@ public final class ZimbraLog {
     public static final Log net = LogFactory.getLog("zimbra.net");
 
     /**
-     * the "zimbra.index" logger. For general indexing-related events.
+     * the "zimbra.index" logger. For indexing.
      */
     public static final Log index = LogFactory.getLog("zimbra.index");
 
     /**
-     * the "zimbra.index.lucene" logger. For logging of low-level lucene operations (debug-level only)
+     * the "zimbra.search" logger. For search.
      */
-    public static final Log index_lucene = LogFactory.getLog("zimbra.index.lucene");
-
-    /**
-     * the "zimbra.index.search" logger. For logging of the search side of indexing
-     */
-    public static final Log index_search = LogFactory.getLog("zimbra.index.search");
-
-    /**
-     * the "zimbra.index.add" logger. For the add-to-the-index part of indexing
-     */
-    public static final Log indexing = LogFactory.getLog("zimbra.index.indexing");
+    public static final Log search = LogFactory.getLog("zimbra.search");
 
     /**
      * Fhe "zimbra.searchstat" logger.  For logging statistics about what kinds of searches are run
@@ -444,7 +434,8 @@ public final class ZimbraLog {
         // won't be listed in zmprov online help.
         Map<String, String> descriptions = new TreeMap<String, String>();
         descriptions.put(misc.getCategory(), "Miscellaneous");
-        descriptions.put(index.getCategory(), "Index operations");
+        descriptions.put(index.getCategory(), "Indexing operations");
+        descriptions.put(search.getCategory(), "Search operations");
         descriptions.put(redolog.getCategory(), "Redo log operations");
         descriptions.put(lmtp.getCategory(), "LMTP server (incoming mail)");
         descriptions.put(smtp.getCategory(), "SMTP client (outgoing mail)");
