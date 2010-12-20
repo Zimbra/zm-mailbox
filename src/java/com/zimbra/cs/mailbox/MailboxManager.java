@@ -219,7 +219,10 @@ public class MailboxManager {
         sInstance = mmgr;
     }
 
-    public void startup() {}
+    public void startup() {
+        IndexHelper.startup();
+    }
+
     public void shutdown() {}
 
     /** Returns the mailbox for the given account.  Creates a new mailbox

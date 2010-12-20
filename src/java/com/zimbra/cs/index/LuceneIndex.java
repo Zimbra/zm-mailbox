@@ -19,11 +19,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
@@ -43,11 +40,11 @@ import org.apache.lucene.util.Version;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.io.NullOutputStream;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.localconfig.DebugConfig;
+import com.zimbra.cs.mailbox.IndexHelper;
 import com.zimbra.cs.mailbox.MailItem;
 
 /**
@@ -67,10 +64,6 @@ public final class LuceneIndex {
     private static final Semaphore READER_THROTTLE = new Semaphore(LC.zimbra_index_max_readers.intValue());
     private static final Semaphore WRITER_THROTTLE = new Semaphore(LC.zimbra_index_max_writers.intValue());
 
-    private static final ExecutorService MERGE_EXECUTOR = Executors.newFixedThreadPool(
-            LC.zimbra_index_merge_threads.intValue(),
-            new ThreadFactoryBuilder().setNameFormat("IndexMerge-%d").setDaemon(true).build());
-
     private static IndexReadersCache readersCache;
 
     private final LuceneDirectory luceneDirectory;
@@ -82,7 +75,6 @@ public final class LuceneIndex {
             ZimbraLog.index.info("Indexing is disabled by the localconfig 'debug_disable_indexing' flag");
             return;
         }
-        ((ThreadPoolExecutor) MERGE_EXECUTOR).prestartAllCoreThreads();
         BooleanQuery.setMaxClauseCount(LC.zimbra_index_lucene_max_terms_per_query.intValue());
         readersCache = new IndexReadersCache(
                 LC.zimbra_index_reader_cache_size.intValue(),
@@ -477,7 +469,7 @@ public final class LuceneIndex {
                 try {
                     newReader = oldReader.reopen();
                     if (oldReader != newReader) { // reader changed, must close old one
-                        ZimbraLog.index_lucene.debug("Reopened IndexReader %s", this);
+                        ZimbraLog.index_lucene.debug("Reopened IndexReader");
                         readersCache.remove(this); // ref--
                         ref.dec();
                         READER_THROTTLE.acquireUninterruptibly();
@@ -485,7 +477,7 @@ public final class LuceneIndex {
                         readersCache.put(this, ref); // ref++
                     }
                 } catch (IOException e) {
-                    ZimbraLog.index_lucene.debug("Failed to reopen IndexReader %s", this, e);
+                    ZimbraLog.index_lucene.debug("Failed to reopen IndexReader", e);
                     readersCache.remove(this);
                     ref.dec();
                     ref = null;
@@ -629,16 +621,23 @@ public final class LuceneIndex {
         assert(Thread.holdsLock(this));
         assert(writerRef != null);
 
-        ZimbraLog.index_lucene.debug("Commit IndexWriter %s", this);
+        ZimbraLog.index_lucene.debug("Commit IndexWriter");
 
-        boolean success = false;
-        try {
-            writerRef.get().commit();
-            MERGE_EXECUTOR.submit(new MergeTask(writerRef));
-            success = true;
-        } finally {
-            if (!success) {
-                writerRef.dec();
+        MergeTask task = new MergeTask(writerRef);
+        if (IndexHelper.isIndexThread()) { // batch index running in background
+            task.exec();
+        } else { // catch-up index running in foreground
+            boolean success = false;
+            try {
+                writerRef.get().commit();
+                mailboxIndex.mailbox.index.submit(task); // merge must run in background
+                success = true;
+            } catch (RejectedExecutionException e) {
+                ZimbraLog.indexing.warn("Skipping merge because all index threads are busy");
+            } finally {
+                if (!success) {
+                    writerRef.dec();
+                }
             }
         }
     }
@@ -649,12 +648,12 @@ public final class LuceneIndex {
     synchronized void closeWriter() {
         assert(writerRef != null);
 
-        ZimbraLog.index_lucene.debug("Close IndexWriter %s", this);
+        ZimbraLog.index_lucene.debug("Close IndexWriter");
 
         try {
-            writerRef.get().close();
+            writerRef.get().close(false); // ignore phantom pending merges
         } catch (IOException e) {
-            ZimbraLog.index_lucene.error("Failed to close IndexWriter %s", this, e);
+            ZimbraLog.index_lucene.error("Failed to close IndexWriter", e);
         } finally {
             unlockIndexWriter();
             WRITER_THROTTLE.release();
@@ -667,12 +666,12 @@ public final class LuceneIndex {
      * thread.
      */
     void closeReader(IndexReader reader) {
-        ZimbraLog.index_lucene.debug("Close IndexReader %s", this);
+        ZimbraLog.index_lucene.debug("Close IndexReader");
 
         try {
             reader.close();
         } catch (IOException e) {
-            ZimbraLog.index_lucene.warn("Failed to close IndexReader %s", this, e);
+            ZimbraLog.index_lucene.warn("Failed to close IndexReader", e);
         } finally {
             READER_THROTTLE.release();
         }
@@ -760,32 +759,28 @@ public final class LuceneIndex {
      * readers without long delay that merges likely cause. Merge threads don't block other writer threads running in
      * foreground. Another indexing using the same writer may start even while the merge is in progress.
      */
-    private static final class MergeTask implements Callable<Void> {
+    private static final class MergeTask extends IndexHelper.IndexTask {
         private final IndexWriterRef ref;
 
         MergeTask(IndexWriterRef ref) {
+            super(ref.getIndex().mailboxIndex.mailbox);
             this.ref = ref;
         }
 
         @Override
-        public Void call() {
-            try {
-                ZimbraLog.addMboxToContext(ref.getIndex().mailboxIndex.mailbox.getId());
-                ZimbraLog.addAccountNameToContext(ref.getIndex().mailboxIndex.mailbox.getAccount().getName());
-            } catch (ServiceException ignore) {
-            }
+        public void exec() {
             try {
                 if (((MergeScheduler) ref.get().getMergeScheduler()).tryLock()) {
                     ref.get().maybeMerge();
+                } else {
+                    ZimbraLog.indexing.debug("Merge is in progress by other thread");
                 }
             } catch (IOException e) {
-                ZimbraLog.index_lucene.error("Failed to merge IndexWriter %s", ref.getIndex(), e);
+                ZimbraLog.index_lucene.error("Failed to merge IndexWriter", e);
             } finally {
                 ((MergeScheduler) ref.get().getMergeScheduler()).release();
                 ref.dec();
-                ZimbraLog.clearContext();
             }
-            return null;
         }
     }
 

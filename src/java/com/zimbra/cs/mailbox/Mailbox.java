@@ -1052,7 +1052,7 @@ public class Mailbox {
         }
 
         if (data != null && indexImmediately()) {
-            mCurrentChange.addIndexItem(new IndexItemEntry(deleteFirst, item, data));
+            mCurrentChange.indexItems.add(new IndexItemEntry(deleteFirst, item, data));
         } else { // defer
             index.addDeferredId(item.getType(), item.getId());
         }
@@ -4041,23 +4041,19 @@ public class Mailbox {
     }
 
     public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId)
-    throws ServiceException {
-        index.maybeIndexDeferredItems();
+            throws ServiceException {
         boolean addRevision = true;  // Always rev the calendar item.
         return addInvite(octxt, inv, folderId, null, false, false, addRevision);
     }
 
     public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId, ParsedMessage pm)
-    throws ServiceException {
-        index.maybeIndexDeferredItems();
+            throws ServiceException {
         boolean addRevision = true;  // Always rev the calendar item.
         return addInvite(octxt, inv, folderId, pm, false, false, addRevision);
     }
 
     public AddInviteData addInvite(OperationContext octxt, Invite inv, int folderId, boolean preserveExistingAlarms,
-                           boolean addRevision)
-    throws ServiceException {
-        index.maybeIndexDeferredItems();
+            boolean addRevision) throws ServiceException {
         return addInvite(octxt, inv, folderId, null, preserveExistingAlarms, false, addRevision);
     }
 
@@ -4414,8 +4410,7 @@ public class Mailbox {
     private Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
                               int flags, String tagStr, int conversationId, String rcptEmail,
                               Message.DraftInfo dinfo, CustomMetadata customData, DeliveryContext dctxt)
-    throws IOException, ServiceException {
-        index.maybeIndexDeferredItems();
+            throws IOException, ServiceException {
         // make sure the message has been analyzed before taking the Mailbox lock
         if (indexImmediately())
             pm.analyzeFully();
@@ -4853,8 +4848,6 @@ public class Mailbox {
             return addMessage(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME,
                               null, ID_AUTO_INCREMENT, ":API:", dinfo, null, null);
         }
-
-        index.maybeIndexDeferredItems();
 
         // make sure the message has been analyzed before taking the Mailbox lock
         if (indexImmediately())
@@ -6782,7 +6775,6 @@ public class Mailbox {
 
     public Document createDocument(OperationContext octxt, int folderId, String filename, String mimeType,
             String author, String description, InputStream data, MailItem.Type type) throws ServiceException {
-        index.maybeIndexDeferredItems();
         try {
             ParsedDocument pd = new ParsedDocument(data, filename, mimeType, System.currentTimeMillis(), author, description);
             return createDocument(octxt, folderId, pd, type);
@@ -6843,9 +6835,8 @@ public class Mailbox {
         }
     }
 
-    public Document addDocumentRevision(OperationContext octxt, int docId, String author, String name, String description, InputStream data)
-    throws ServiceException {
-        index.maybeIndexDeferredItems();
+    public Document addDocumentRevision(OperationContext octxt, int docId, String author, String name,
+            String description, InputStream data) throws ServiceException {
         Document doc = getDocumentById(octxt, docId);
         try {
             ParsedDocument pd = new ParsedDocument(data, name, doc.getContentType(), System.currentTimeMillis(), author, description);
@@ -6926,7 +6917,6 @@ public class Mailbox {
         if (pm == null)
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding chat to mailbox " + mId, null);
 
-        index.maybeIndexDeferredItems();
         boolean deferIndexing = !indexImmediately();
         List<IndexDocument> docList = null;
         if (!deferIndexing) {
@@ -7236,13 +7226,13 @@ public class Mailbox {
         if (mCurrentChange.octxt != null)
             needRedo = mCurrentChange.octxt.needRedo();
         RedoableOp redoRecorder = mCurrentChange.recorder;
-        // 1. Log the change redo record for main transaction.
+        // Log the change redo record for main transaction.
         if (redoRecorder != null && needRedo)
             redoRecorder.log(true);
 
         boolean allGood = false;
         try {
-            // 3. Commit the main transaction in database.
+            // Commit the main transaction in database.
             if (conn != null) {
                 try {
                     conn.commit();
@@ -7276,18 +7266,12 @@ public class Mailbox {
 
         if (allGood) {
             if (needRedo) {
-                // 5. Write commit record for main transaction.
-                //    By writing the commit record for main transaction before
-                //    calling MailItem.reindex(), we are guaranteed to see the
-                //    commit-main record in the redo stream before
-                //    commit-index record.  This order ensures that during
-                //    crash recovery the main transaction is redone before
-                //    indexing.  If the order were reversed, crash recovery
-                //    would attempt to index an item which hasn't been created
-                //    yet or would attempt to index the item with
-                //    pre-modification value.  The first case would result in
-                //    a redo error, and the second case would index the wrong
-                //    value.
+                // Write commit record for main transaction. By writing the commit record for main transaction before
+                // calling MailItem.reindex(), we are guaranteed to see the commit-main record in the redo stream before
+                // commit-index record. This order ensures that during crash recovery the main transaction is redone
+                // before indexing. If the order were reversed, crash recovery would attempt to index an item which
+                // hasn't been created yet or would attempt to index the item with pre-modification value. The first
+                // case would result in a redo error, and the second case would index the wrong value.
                 if (redoRecorder != null) {
                     if (mCurrentChange.mDirty != null && !mCurrentChange.mDirty.changedTypes.isEmpty()) {
                         // if an "all accounts" waitset is active, and this change has an appropriate type,
@@ -7302,8 +7286,11 @@ public class Mailbox {
                 }
             }
 
-            // 6. We are finally done with database and redo commits.
-            //    Cache update comes last.
+            if (mCurrentChange.changeId != MailboxChange.NO_CHANGE) {
+                index.maybeIndexDeferredItems();
+            }
+
+            // We are finally done with database and redo commits. Cache update comes last.
             commitCache(mCurrentChange);
         }
     }
@@ -7674,7 +7661,7 @@ public class Mailbox {
 
     /**
      * Return true if the folder is a internally managed system folder which should not normally be modified
-     * Used during ZD account import to ignore entries in LocalMailbox 'Notification Mountpoints'  
+     * Used during ZD account import to ignore entries in LocalMailbox 'Notification Mountpoints'
      */
     public boolean isImmutableSystemFolder(int folderId) {
         return false;

@@ -26,13 +26,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -63,10 +64,14 @@ public final class IndexHelper {
     private static final long MAX_TX_BYTES = LC.zimbra_index_max_transaction_bytes.longValue();
     private static final int MAX_TX_ITEMS = LC.zimbra_index_max_transaction_items.intValue();
     private static final long FAILURE_DELAY = LC.zimbra_index_deferred_items_failure_delay.intValue() * 1000;
+
+    private static final ThreadPoolExecutor INDEX_EXECUTOR = new ThreadPoolExecutor(
+            LC.zimbra_index_threads.intValue(), LC.zimbra_index_threads.intValue(),
+            Long.MAX_VALUE, TimeUnit.NANOSECONDS, new SynchronousQueue<Runnable>(), new IndexThreadFactory("Index"));
     // Re-index threads are created on demand basis. The number of threads are capped.
-    private static final ExecutorService REINDEX_EXECUTOR = new ThreadPoolExecutor(0,
-            LC.zimbra_index_reindex_pool_size.intValue(), 0L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
-            new ThreadFactoryBuilder().setNameFormat("ReIndex-%d").setDaemon(true).build());
+    private static final ExecutorService REINDEX_EXECUTOR = new ThreadPoolExecutor(
+            0, LC.zimbra_reindex_threads.intValue(), 0L, TimeUnit.SECONDS,
+            new SynchronousQueue<Runnable>(), new IndexThreadFactory("ReIndex"));
     private volatile long lastFailedTime = -1;
     // Only one thread may run index at a time.
     private Semaphore indexLock = new Semaphore(1);
@@ -76,8 +81,23 @@ public final class IndexHelper {
     private volatile ReIndexTask reIndex;
     private SetMultimap<MailItem.Type, Integer> deferredIds; // guarded by IndexHelper
 
+
     IndexHelper(Mailbox mbox) {
         mailbox = mbox;
+    }
+
+    /**
+     * Starts all index threads.
+     */
+    static void startup() {
+        INDEX_EXECUTOR.prestartAllCoreThreads();
+    }
+
+    /**
+     * Returns true if the current thread was spawned by {@link #INDEX_EXECUTOR}.
+     */
+    public static boolean isIndexThread() {
+        return Thread.currentThread().getThreadGroup() == IndexThreadFactory.GROUP;
     }
 
     void instantiateMailboxIndex() throws ServiceException {
@@ -164,6 +184,16 @@ public final class IndexHelper {
     }
 
     /**
+     * Submits a task to {@link #INDEX_EXECUTOR}.
+     *
+     * @param task index task
+     * @throws RejectedExecutionException if all index threads are busy
+     */
+    public void submit(IndexTask task) {
+        INDEX_EXECUTOR.submit(task);
+    }
+
+    /**
      * Attempts to index deferred items.
      */
     void maybeIndexDeferredItems() {
@@ -171,9 +201,9 @@ public final class IndexHelper {
         if ((lastFailedTime >= 0 && System.currentTimeMillis() - lastFailedTime > FAILURE_DELAY) ||
                 getDeferredCount(EnumSet.noneOf(MailItem.Type.class)) >= getBatchThreshold()) {
             try {
-                indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), new BatchStatus(), false);
-            } catch (ServiceException e) {
-                ZimbraLog.indexing.error("Failed to index deferred items", e);
+                INDEX_EXECUTOR.submit(new BatchIndexTask());
+            } catch (RejectedExecutionException e) {
+                ZimbraLog.indexing.warn("Skipping batch index because all index threads are busy");
             }
         }
     }
@@ -215,11 +245,11 @@ public final class IndexHelper {
      * a WARN message is logged, but it won't be retried.
      */
     public void startReIndex(OperationContext octx) throws ServiceException {
-        startReIndex(new ReIndexTask(octx, null));
+        startReIndex(new ReIndexTask(octx, mailbox, null));
     }
 
     public void startReIndexById(OperationContext octx, Collection<Integer> ids) throws ServiceException {
-        startReIndex(new ReIndexTask(octx, ids));
+        startReIndex(new ReIndexTask(octx, mailbox, ids));
     }
 
     public void startReIndexByType(OperationContext octx, Set<MailItem.Type> types) throws ServiceException {
@@ -246,23 +276,21 @@ public final class IndexHelper {
         return reIndex.status;
     }
 
-    private class ReIndexTask implements Runnable {
+    private class ReIndexTask extends IndexTask {
         private final OperationContext octx;
         private final Collection<Integer> ids;
         private final ReIndexStatus status = new ReIndexStatus();
 
-        ReIndexTask(OperationContext octx, Collection<Integer> ids) {
+        ReIndexTask(OperationContext octx, Mailbox mbox, Collection<Integer> ids) {
+            super(mbox);
             assert(ids == null || !ids.isEmpty());
             this.octx = octx;
             this.ids = ids;
         }
 
         @Override
-        public void run() {
+        public void exec() {
             try {
-                ZimbraLog.addMboxToContext(mailbox.getId());
-                ZimbraLog.addAccountNameToContext(mailbox.getAccount().getName());
-
                 ZimbraLog.indexing.info("Re-index start");
 
                 long start = System.currentTimeMillis();
@@ -292,8 +320,6 @@ public final class IndexHelper {
                 synchronized (IndexHelper.this) {
                     reIndex = null;
                 }
-                ZimbraLog.removeMboxFromContext();
-                ZimbraLog.removeAccountFromContext();
             }
         }
 
@@ -375,7 +401,7 @@ public final class IndexHelper {
             }
         }
 
-        ReIndexTask task = new ReIndexTask(null, ids) {
+        ReIndexTask task = new ReIndexTask(null, mailbox, ids) {
             @Override
             protected void onCompletion() {
                 try {
@@ -525,7 +551,7 @@ public final class IndexHelper {
             if (ids.isEmpty()) {
                 return;
             }
-            ReIndexTask task = new ReIndexTask(null, ids) {
+            ReIndexTask task = new ReIndexTask(null, mailbox, ids) {
                 @Override
                 protected void onCompletion() {
                     synchronized (mailbox) {
@@ -647,7 +673,7 @@ public final class IndexHelper {
         try {
             ids = getDeferredIds();
         } catch (ServiceException e) {
-            ZimbraLog.indexing.error("Failed to query deferrred IDs", e);
+            ZimbraLog.indexing.error("Failed to query deferred IDs", e);
             return 0;
         }
 
@@ -829,6 +855,62 @@ public final class IndexHelper {
         boolean isCancelled() {
             return cancel;
         }
+    }
+
+    private static final class IndexThreadFactory implements ThreadFactory {
+        private static final ThreadGroup GROUP = new ThreadGroup("Index");
+        static {
+            GROUP.setDaemon(true);
+        }
+        private final String name;
+        private final AtomicInteger count = new AtomicInteger(1);
+
+        IndexThreadFactory(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public Thread newThread(Runnable runnable) {
+            return new Thread(GROUP, runnable, name + '-' + count.getAndIncrement());
+        }
+    }
+
+    public static abstract class IndexTask implements Runnable {
+        private final Mailbox mailbox;
+
+        public IndexTask(Mailbox mbox) {
+            mailbox = mbox;
+        }
+
+        @Override
+        public final void run() {
+            try {
+                ZimbraLog.addMboxToContext(mailbox.getId());
+                ZimbraLog.addAccountNameToContext(mailbox.getAccount().getName());
+                exec();
+            } catch (OutOfMemoryError e) {
+                Zimbra.halt("out of memory", e);
+            } catch (Throwable t) {
+                ZimbraLog.indexing.error(t.getMessage(), t);
+            } finally {
+                ZimbraLog.clearContext();
+            }
+        }
+
+        protected abstract void exec() throws Exception;
+    }
+
+    private final class BatchIndexTask extends IndexTask {
+
+        BatchIndexTask() {
+            super(mailbox);
+        }
+
+        @Override
+        protected void exec() throws Exception {
+            indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), new BatchStatus(), false);
+        }
+
     }
 
 }
