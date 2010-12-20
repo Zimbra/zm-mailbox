@@ -93,7 +93,7 @@ public class ImapConfig extends ServerConfig {
 
     @Override
     public String getConnectionRejected() {
-        return "* BYE " + getDescription() + " closing connection; no threads available";
+        return "* BYE " + getDescription() + " closing connection; service busy";
     }
 
     @Override
@@ -142,5 +142,4 @@ public class ImapConfig extends ServerConfig {
         return Provisioning.getInstance().getConfig()
                 .getLongAttr(A_zimbraMtaMaxMessageSize, DEFAULT_MAX_MESSAGE_SIZE);
     }
-
 }

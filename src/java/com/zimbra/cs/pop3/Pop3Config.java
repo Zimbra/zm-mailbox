@@ -78,7 +78,7 @@ public class Pop3Config extends ServerConfig {
 
     @Override
     public String getConnectionRejected() {
-        return "-ERR " + getDescription() + " closing connection; no threads available";
+        return "-ERR " + getDescription() + " closing connection; service busy";
     }
 
     public boolean isCleartextLoginsEnabled() {
@@ -88,6 +88,4 @@ public class Pop3Config extends ServerConfig {
     public boolean isSaslGssapiEnabled() {
         return getBooleanAttr(A_zimbraPop3SaslGssapiEnabled, false);
     }
-
-
 }

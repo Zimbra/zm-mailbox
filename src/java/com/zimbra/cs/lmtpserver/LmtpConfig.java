@@ -85,7 +85,7 @@ public class LmtpConfig extends ServerConfig {
 
     @Override
     public String getConnectionRejected() {
-        return "421 " + getDescription() + " closing connection; no threads available";
+        return "421 " + getDescription() + " closing connection; service busy";
     }
 
     public String getMtaRecipientDelimiter() {
