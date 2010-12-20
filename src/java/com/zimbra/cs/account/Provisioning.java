@@ -1856,6 +1856,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         domain,
         galgroup,
         group,
+        mime,
         server,
         zimlet;
 
