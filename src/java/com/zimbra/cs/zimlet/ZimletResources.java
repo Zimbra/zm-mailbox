@@ -87,6 +87,7 @@ public class ZimletResources extends DiskCacheServlet {
         
         @SuppressWarnings("unchecked")
         Set<String> zimletNames = (Set<String>) req.getAttribute(ZimletFilter.ALLOWED_ZIMLETS);
+        Set<String> allZimletNames = (Set<String>) req.getAttribute(ZimletFilter.ALL_ZIMLETS);
 
         if (!pathInfo.startsWith(RESOURCE_PATH)) {
             // handle requests for individual files included in zimlet in case dev=1 is set.
@@ -104,7 +105,7 @@ public class ZimletResources extends DiskCacheServlet {
             LC.zimbra_web_generate_gzip.booleanValue() && uri.endsWith(COMPRESSED_EXT)
         ;
 
-        String cacheId = getCacheId(req, type, zimletNames);
+        String cacheId = getCacheId(req, type, zimletNames, allZimletNames);
 
         if (ZimbraLog.zimlet.isDebugEnabled()) {
             ZimbraLog.zimlet.debug("DEBUG: uri=" + uri);
@@ -134,7 +135,10 @@ public class ZimletResources extends DiskCacheServlet {
                 ServletContext clientContext = baseContext.getContext(mailUrl);
                 RequestDispatcher dispatcher = clientContext.getRequestDispatcher(RESOURCE_PATH);
 
-                for (String zimletName : zimletNames) {
+                // NOTE: We have to return the messages for *all* of the zimlets,
+                // NOTE: not just the enabled ones, because their names and
+                // NOTE: descriptions can be translated.
+                for (String zimletName : allZimletNames) {
                     RequestWrapper wrappedReq = new RequestWrapper(req, RESOURCE_PATH + zimletName);
                     ResponseWrapper wrappedResp = new ResponseWrapper(resp, printer);
                     wrappedReq.setParameter("debug", "1"); // bug 45922: avoid cached messages
@@ -406,18 +410,14 @@ public class ZimletResources extends DiskCacheServlet {
     }
 
     private String getCacheId(HttpServletRequest req, String type,
-        Set<String> zimletNames) {
+        Set<String> zimletNames, Set<String> allZimletNames) {
         StringBuilder str = new StringBuilder();
 
         str.append(getLocale(req).toString());
         str.append(":");
-        Iterator<String> iter = zimletNames.iterator();
-        for (int i = 0; iter.hasNext(); i++) {
-            if (i > 0) {
-                str.append(",");
-            }
-            str.append(iter.next());
-        }
+        append(str, zimletNames);
+        str.append(":");
+        append(str, allZimletNames);
         str.append(":");
         str.append(type);
         // NOTE: Keep compressed extension at end of cacheId.
@@ -425,6 +425,16 @@ public class ZimletResources extends DiskCacheServlet {
             str.append(COMPRESSED_EXT);
         }
         return str.toString();
+    }
+
+    private static void append(StringBuilder dest, Set<String> set) {
+        Iterator<String> iter = set.iterator();
+        for (int i = 0; iter.hasNext(); i++) {
+            if (i > 0) {
+                dest.append(",");
+            }
+            dest.append(iter.next());
+        }
     }
 
     private static Locale getLocale(HttpServletRequest req) {

@@ -45,6 +45,7 @@ import com.zimbra.common.util.TemplateCompiler;
 @SuppressWarnings("serial")
 public class ZimletFilter extends ZimbraServlet implements Filter {
 
+    public static final String ALL_ZIMLETS = "com.zimbra.cs.zimlet.All";
     public static final String ALLOWED_ZIMLETS = "com.zimbra.cs.zimlet.Allowed";
 
 	private static final String ZIMLET_URL = "^/service/zimlet/(?:_dev/)?([^/\\?]+)([/\\?]?)(.*)$";
@@ -98,6 +99,7 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
         // get list of allowed zimlets
         Provisioning prov = Provisioning.getInstance();
 		List<Zimlet> allowedZimlets = new LinkedList<Zimlet>();
+        List<Zimlet> allZimlets = new LinkedList<Zimlet>();
 		try {
 		    isAdminAuth = AdminAccessControl.getAdminAccessControl(authToken).isSufficientAdminForZimletFilterServlet();
 		    
@@ -107,17 +109,25 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 				Account account = prov.get(AccountBy.id, authToken.getAccountId(), authToken);
 				for (String zimletName : ZimletUtil.getAvailableZimlets(account).getZimletNamesAsArray()) {
 					Zimlet zimlet = prov.getZimlet(zimletName);
-					if (zimlet != null && zimlet.isEnabled()) {
+					if (zimlet == null) continue;
+                    if (zimlet.isEnabled()) {
 						allowedZimlets.add(zimlet);
 					}
+                    allZimlets.add(zimlet);
 				}
 			}
 
 			// add the admin zimlets
 			else {
-				List<Zimlet> allZimlets = prov.listAllZimlets();
-				for (Zimlet zimlet : allZimlets) {
-					if (zimlet.isExtension() && zimlet.isEnabled()) {
+				allZimlets = prov.listAllZimlets();
+                Iterator<Zimlet> iter = allZimlets.iterator();
+				while (iter.hasNext()) {
+                    Zimlet zimlet = iter.next();
+					if (zimlet.isExtension()) {
+                        iter.remove();
+                        continue;
+                    }
+                    if (zimlet.isEnabled()) {
 						allowedZimlets.add(zimlet);
 					}
 				}
@@ -131,10 +141,8 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 
 		// order by priority
 		List<Zimlet> zimletList = ZimletUtil.orderZimletsByPriority(allowedZimlets);
-		Set<String> allowedZimletNames = new LinkedHashSet<String>();
-		for (Zimlet zimlet : zimletList) {
-			allowedZimletNames.add(zimlet.getName());
-		}
+		Set<String> allowedZimletNames = getZimletNames(zimletList);
+        Set<String> allZimletNames = getZimletNames(allZimlets);
 
         // get list of zimlets for request
         Set<String> zimletNames = new LinkedHashSet<String>();
@@ -169,18 +177,21 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
                 if (zimlet == null) {
                     ZimbraLog.zimlet.info("no such zimlet: "+zimletName);
                     iter.remove();
+                    allZimlets.remove(zimlet);
                     continue;
                 }
 
                 if (!allowedZimletNames.contains(zimletName)) {
                     ZimbraLog.zimlet.info("unauthorized request to zimlet "+zimletName+" from user "+authToken.getAccountId());
                     iter.remove();
+                    allZimlets.remove(zimlet);
                     continue;
                 }
 
 				if (zimlet.isExtension() && !isAdminAuth) {
 //					ZimbraLog.zimlet.info("!!!!! removing extension zimlet: "+zimletName);
 					iter.remove();
+                    allZimlets.remove(zimlet);
 				}
 			}
             catch (ServiceException se) {
@@ -227,10 +238,24 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 
         // process request
         req.setAttribute(ZimletFilter.ALLOWED_ZIMLETS, zimletNames);
+        req.setAttribute(ZimletFilter.ALL_ZIMLETS, allZimletNames);
         chain.doFilter(req, resp);
 	}
 
 	public void destroy() {
 
 	}
+
+    //
+    // Private methods
+    //
+
+    private static Set<String> getZimletNames(List<Zimlet> zimlets) {
+        Set<String> names = new LinkedHashSet<String>();
+        for (Zimlet zimlet : zimlets) {
+            names.add(zimlet.getName());
+        }
+        return names;
+    }
+    
 }
