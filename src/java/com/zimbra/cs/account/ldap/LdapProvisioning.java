@@ -179,6 +179,8 @@ public class LdapProvisioning extends Provisioning {
                 LC.ldap_cache_external_domain_maxsize.intValue(),
                 LC.ldap_cache_external_domain_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
 
+    private static LdapMimeTypeCache sMimeTypeCache = new LdapMimeTypeCache();
+    	
     private static NamedEntryCache<Server> sServerCache =
         new NamedEntryCache<Server>(
                 LC.ldap_cache_server_maxsize.intValue(),
@@ -518,6 +520,10 @@ public class LdapProvisioning extends Provisioning {
 
     @Override
     public List<MimeTypeInfo> getMimeTypes(String mimeType) throws ServiceException {
+    	return sMimeTypeCache.getMimeTypes(this, mimeType);
+    }
+    
+    List<MimeTypeInfo> getMimeTypesByQuery(String mimeType) throws ServiceException {
         ZimbraLdapContext zlc = null;
         try {
             zlc = new ZimbraLdapContext();
@@ -541,9 +547,13 @@ public class LdapProvisioning extends Provisioning {
             ZimbraLdapContext.closeContext(zlc);
         }
     }
-
+    
     @Override
     public List<MimeTypeInfo> getAllMimeTypes() throws ServiceException {
+    	return sMimeTypeCache.getAllMimeTypes(this);
+    }
+
+    List<MimeTypeInfo> getAllMimeTypesByQuery() throws ServiceException {
         ZimbraLdapContext zlc = null;
         try {
             zlc = new ZimbraLdapContext();
@@ -6285,6 +6295,9 @@ public class LdapProvisioning extends Provisioning {
             } else
                 sDomainCache.clear();
             return;
+        case mime:
+        	sMimeTypeCache.flushCache(this);
+        	return;
         case server:
             if (entries != null) {
                 for (CacheEntry entry : entries) {
