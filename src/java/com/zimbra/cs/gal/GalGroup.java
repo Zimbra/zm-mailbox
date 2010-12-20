@@ -17,6 +17,7 @@ import com.zimbra.common.util.ThreadPool;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
@@ -24,7 +25,10 @@ import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Provisioning.CacheEntryBy;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
+import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.AuthProvider;
@@ -39,15 +43,29 @@ public abstract class GalGroup {
     };
     
     private static final Provisioning prov = Provisioning.getInstance();
-    private static Map<String, DomainGalGroupBin> groups = new HashMap<String, DomainGalGroupBin>();
+    private static Map<String, DomainGalGroupCache> groups = new HashMap<String, DomainGalGroupCache>();
     private static ThreadPool syncGalGroupThreadPool = new ThreadPool("SyncGalGroup", 10);
     
-    private interface GalGroupBin {
+    private interface GalGroupCache {
         boolean isInternalGroup(String addr);
         boolean isExternalGroup(String addr);
     }
 
     private static class GalGroupCacheFullException extends Exception {
+    }
+    
+    public static void flushCache(CacheEntry[] domains) throws ServiceException {
+        if (domains != null) {
+            for (CacheEntry entry : domains) {
+                DomainBy domainBy = (entry.mEntryBy==CacheEntryBy.id)? DomainBy.id : DomainBy.name;
+                Domain domain = prov.get(Provisioning.DomainBy.name, entry.mEntryIdentity);
+                if (domain == null)
+                    throw AccountServiceException.NO_SUCH_DOMAIN(entry.mEntryIdentity);
+                GalGroup.flushCache(domain);
+            }
+        } else {
+            GalGroup.flushCache((Domain)null);
+        }
     }
     
     public static GroupInfo getGroupInfo(String addr, Account requestedAcct, Account authedAcct) {
@@ -64,7 +82,7 @@ public abstract class GalGroup {
         if (!domain.isGalGroupIndicatorEnabled())
             return null;
         
-        GalGroupBin galGroup = null;
+        GalGroupCache galGroup = null;
         
         try {
             galGroup = GalGroup.getGalGroupForDomain(requestedAcct, domain);
@@ -75,7 +93,7 @@ public abstract class GalGroup {
         if (galGroup == null) {
             // GalGroup for the domain is still syncing, do a GAL search
             // this should not happen once the syncing is finished 
-            galGroup = new EmailAddrGalGroupBin(addr, requestedAcct);
+            galGroup = new EmailAddrGalGroupCache(addr, requestedAcct);
         }
         
         // we have a fully synced GalGroup object for the domain
@@ -91,10 +109,33 @@ public abstract class GalGroup {
         return null;
     }
     
-    private static synchronized GalGroupBin getGalGroupForDomain(Account requestedAcct, Domain domain) 
+    private static synchronized void flushCache(Domain domain) {
+        if (domain == null) {
+            for (Map.Entry<String, DomainGalGroupCache> entry : groups.entrySet())
+                GalGroup.flushCache(entry.getKey(), entry.getValue());
+        } else {
+            String domainName = domain.getName();
+            DomainGalGroupCache galGroup = groups.get(domainName);
+            GalGroup.flushCache(domain.getName(), galGroup);
+        }
+    }
+    
+    private static void flushCache(String domainName, DomainGalGroupCache galGroup) {
+        
+        if (galGroup == null) {
+            ZimbraLog.gal.info("GalGroup - flushCache: no cache entry for domain " + domainName);
+        } else if (galGroup.isSyncing()) {
+            ZimbraLog.gal.info("GalGroup - flushCache: Still syncing GalGroup for domain " + domainName);
+        } else { 
+            ZimbraLog.gal.info("GalGroup - flushCache: Flushing GalGroup for domain " + domainName);
+            GalGroup.removeFromCache(domainName, "flush cache");
+        }
+    }
+    
+    private static synchronized GalGroupCache getGalGroupForDomain(Account requestedAcct, Domain domain) 
     throws GalGroupCacheFullException{
         String domainName = domain.getName();
-        DomainGalGroupBin galGroup = groups.get(domainName);
+        DomainGalGroupCache galGroup = groups.get(domainName);
         
         if (galGroup == null) {
             // see if there is room for a new domain
@@ -118,9 +159,9 @@ public abstract class GalGroup {
             // 
             clearHadWarnedDomainForCacheFull(domain);
             
-            galGroup = new DomainGalGroupBin(domainName);
+            galGroup = new DomainGalGroupCache(domainName);
             GalGroup.putInCache(domainName, galGroup);
-            DomainGalGroupBin.SyncThread syncThread = new DomainGalGroupBin.SyncThread(domain, galGroup);
+            DomainGalGroupCache.SyncThread syncThread = new DomainGalGroupCache.SyncThread(domain, galGroup);
             syncGalGroupThreadPool.execute(syncThread);
         }
         
@@ -151,7 +192,7 @@ public abstract class GalGroup {
         domain.setCachedData(EntryCacheDataKey.DOMAIN_GROUP_CACHE_FULL_HAD_BEEN_WARNED.getKeyName(), null);
     }
     
-    private static synchronized void putInCache(String domainName, DomainGalGroupBin galGroup) {
+    private static synchronized void putInCache(String domainName, DomainGalGroupCache galGroup) {
         ZimbraLog.gal.debug("GalGroup - adding GalGroup cache for domain " + domainName);
         groups.put(domainName, galGroup);
     }
@@ -187,7 +228,7 @@ public abstract class GalGroup {
     /**
      * GAL group search result for a domain (all GAL groups in the domain's GAL)
      */
-    private static class DomainGalGroupBin implements GalGroupBin {
+    private static class DomainGalGroupCache implements GalGroupCache {
         private String domainName; // for debugging purpose only
         private long lifeTime;
         private int max;
@@ -196,7 +237,7 @@ public abstract class GalGroup {
         private Set<String> externalGroups;
         
         
-        private DomainGalGroupBin(String domainName) {
+        private DomainGalGroupCache(String domainName) {
             lifeTime = 0;  // life starts when the sync is completed 
             max = LC.gal_group_cache_maxsize_per_domain.intValue(); // 0 is unlimited    
             
@@ -269,9 +310,9 @@ public abstract class GalGroup {
         private static class SyncThread implements Runnable {
             AuthToken adminAuthToken; // admin auth token for the search
             Domain domain;
-            DomainGalGroupBin galGroup;
+            DomainGalGroupCache galGroup;
         
-            private SyncThread(Domain domain, DomainGalGroupBin galGroup) {
+            private SyncThread(Domain domain, DomainGalGroupCache galGroup) {
                 this.domain = domain;
                 this.galGroup = galGroup;
             }
@@ -344,11 +385,11 @@ public abstract class GalGroup {
             }
             
             private static class SyncGalGroupCallback extends GalSearchResultCallback {
-                private DomainGalGroupBin galGroup;
+                private DomainGalGroupCache galGroup;
                 private boolean hasMore;
                 private boolean pagingSupported; // default to false
                 
-                private SyncGalGroupCallback(GalSearchParams params, DomainGalGroupBin galGroup) {
+                private SyncGalGroupCallback(GalSearchParams params, DomainGalGroupCache galGroup) {
                     super(params);
                     this.galGroup = galGroup;
                 }
@@ -448,10 +489,10 @@ public abstract class GalGroup {
     /**
      * GAL group search result for an email address 
      */
-    private static class EmailAddrGalGroupBin implements GalGroupBin {
+    private static class EmailAddrGalGroupCache implements GalGroupCache {
         SearchGroupCallback resultCallback;
         
-        EmailAddrGalGroupBin(String addr, Account requestedAcct) {
+        EmailAddrGalGroupCache(String addr, Account requestedAcct) {
             GalSearchParams params = new GalSearchParams(requestedAcct);
             params.setQuery(addr);
             params.setType(Provisioning.GalSearchType.group);

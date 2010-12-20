@@ -37,6 +37,7 @@ import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -76,12 +77,17 @@ public class FlushCache extends AdminDocumentHandler {
                 cacheType = CacheEntryType.fromString(type);
                 doFlush(context, cacheType, eCache);
             } catch (ServiceException e) {
-                // see if it a registered extension
-                CacheExtension ce = CacheExtension.getHandler(type);
-                if (ce != null)
-                    ce.flushCache();
-                else
-                    throw ServiceException.INVALID_REQUEST("invalid cache type "+type, null);
+                
+                if (cacheType == null) {
+                    // see if it is a registered extension
+                    CacheExtension ce = CacheExtension.getHandler(type);
+                    if (ce != null)
+                        ce.flushCache();
+                    else
+                        throw e;
+                } else {
+                    throw e;
+                }
             }
         }
 
@@ -97,7 +103,10 @@ public class FlushCache extends AdminDocumentHandler {
         switch (cacheType) {
         case acl:
             PermissionCache.invalidateCache();
-            break;        
+            break;
+        case galgroup:
+            GalGroup.flushCache(getCacheEntries(eCache));
+            break;
         case uistrings:
             FlushCache.sendFlushRequest(context, "/zimbra", "/res/AjxMsg.js");
             FlushCache.sendFlushRequest(context, "/zimbraAdmin", "/res/AjxMsg.js");
@@ -121,7 +130,7 @@ public class FlushCache extends AdminDocumentHandler {
         }
     }
 
-    private void flushLdapCache(CacheEntryType cacheType, Element eCache) throws ServiceException {
+    private CacheEntry[] getCacheEntries(Element eCache) throws ServiceException {
         List<Element> eEntries = eCache.listElements(AdminConstants.E_ENTRY);
         CacheEntry[] entries = null;
         if (eEntries.size() > 0) {
@@ -129,9 +138,15 @@ public class FlushCache extends AdminDocumentHandler {
             int i = 0;
             for (Element eEntry : eEntries) {
                 entries[i++] = new CacheEntry(CacheEntryBy.valueOf(eEntry.getAttribute(AdminConstants.A_BY)),
-                                              eEntry.getText());
+                        eEntry.getText());
             }
         }
+        
+        return entries;
+    }
+    
+    private void flushLdapCache(CacheEntryType cacheType, Element eCache) throws ServiceException {
+        CacheEntry[] entries = getCacheEntries(eCache);
         Provisioning.getInstance().flushCache(cacheType, entries);
     }
 

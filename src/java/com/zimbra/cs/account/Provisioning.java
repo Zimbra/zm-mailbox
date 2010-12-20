@@ -1851,10 +1851,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
         // ldap entries
         account,
-        group,
         config,
         cos,
         domain,
+        galgroup,
+        group,
         server,
         zimlet;
 
