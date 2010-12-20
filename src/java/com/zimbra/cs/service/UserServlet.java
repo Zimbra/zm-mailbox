@@ -1276,6 +1276,8 @@ public class UserServlet extends ZimbraServlet {
     private static HashSet<String> ZIMBRA_DOC_CONTENT_TYPE = new HashSet<String>();
     static {
         ZIMBRA_DOC_CONTENT_TYPE.add("application/x-zimbra-doc");
+        ZIMBRA_DOC_CONTENT_TYPE.add("application/x-zimbra-slides");
+        ZIMBRA_DOC_CONTENT_TYPE.add("application/x-zimbra-xls");
     }
 
     private String defaultFormat(Context context) {
