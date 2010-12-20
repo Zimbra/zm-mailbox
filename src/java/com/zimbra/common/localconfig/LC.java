@@ -181,10 +181,11 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_mailbox_change_checkpoint_frequency = KnownKey.newKey(100);
 
-    public static final KnownKey zimbra_index_reindex_pool_size = KnownKey.newKey(10);
+    @Supported
+    public static final KnownKey zimbra_index_threads = KnownKey.newKey(10);
 
     @Supported
-    public static final KnownKey zimbra_index_merge_threads = KnownKey.newKey(10);
+    public static final KnownKey zimbra_reindex_threads = KnownKey.newKey(10);
 
     @Supported
     public static final KnownKey zimbra_index_max_readers = KnownKey.newKey(30);
@@ -1022,7 +1023,7 @@ public final class LC {
     public static final KnownKey antispam_mysql_user = KnownKey.newKey("zimbra");
     public static final KnownKey antispam_mysql_root_password = KnownKey.newKey("");
     public static final KnownKey antispam_mysql_password = KnownKey.newKey("");
-    
+
     // LDAP Custom DIT base DN for LDAP app admin entries
     public static final KnownKey ldap_dit_base_dn_appadmin      = KnownKey.newKey("");
     // LDAP Custom DIT base DN for config branch
