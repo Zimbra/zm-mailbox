@@ -347,24 +347,44 @@ What happens behind the scene in ZCS server:
 4. Trouble Shooting
 =====================
 (1) Make sure the following are true:
-    * Intranet Zone
-    * Accessing the server using a Hostname rather then IP
-    * Integrated Windows Authentication in IE is enabled, the host is trusted in Firefox
-    * The Server is not local to the browser
-    * The client's Kerberos system is authenticated to a domain controller
+    - Intranet Zone
+    - Accessing the server using a Hostname rather then IP
+    - Integrated Windows Authentication in IE is enabled, the host is trusted in Firefox
+    - The Server is not local to the browser
+    - The client's Kerberos system is authenticated to a domain controller
 
+
+(2) If the browser display the "401 Unauthorized", it's most likely that the browser either 
+    did not send another request with Authorization in response to the 401, or had sent an 
+    Authorization which is not using the GSS-API/SPNEGO scheme.  
+    
+    Check your browser settings, and make sure it is one of the supported browsers/platforms.  
+
+
+(3) If you are redirected to the error URL specified in zimbraSpnegoAuthErrorURL, that means
+    The SPNEGO authentication sequence does not work.  
+     
+    - ADD "-DDEBUG=true -Dsun.security.spnego.debug=all" (note, not replace) to 
+      localconfig key spnego_java_options
    
-(2) If you are redirected to the URL specified in zimbraSpnegoAuthErrorURL, that means
-    The SPNEGO sequence itself does not work.  
+    - add log4j.logger.org.mortbay.log=DEBUG in log4j
+    
+    then restart mailbox server.
      
-    ***ADD*** (note, not replace):
-       -DDEBUG=true 
-       -Dsun.security.spnego.debug=all 
-    to localconfig key spnego_java_options, then restart mailbox server.
-     
-    browse to the debug snoop page:  http://{server}:{port}/spnego/snoop.jsp     
+    Browse to the debug snoop page:  http://{server}:{port}/spnego/snoop.jsp     
     see if you can access the snoop.jsp
+    
+    Check zmmailboxd.out and mailox.log for debug output.
      
+
+(4) If you can access /spnego/snoop.jsp, but get a Zimbra preauth error, that means preauth 
+    on domain is not configured correctly.
+    
+    Check if III, 2.3, (A) and (B) are done correctly;
+    - Do "zmprov gd {domain} zimbraPreAuthKey" to get the preauth key for the doamin.
+    - Make sure /opt/zimbra/jetty/webapps/spnego/spnego_preauth.jsp is updated with the preauth key.
+
+
 
 =======================
 Appendix A: HTTP Flow
