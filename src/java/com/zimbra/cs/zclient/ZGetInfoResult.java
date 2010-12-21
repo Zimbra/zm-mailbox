@@ -83,6 +83,7 @@ public class ZGetInfoResult implements ToZJSONObject {
     }
 
     public ZSignature getSignature(String id) {
+        if (id == null) return null;
         for (Signature sig : data.getSignatures()) {
             if (id.equals(sig.getId())) {
                 return SoapConverter.FROM_SOAP_SIGNATURE.apply(sig);
