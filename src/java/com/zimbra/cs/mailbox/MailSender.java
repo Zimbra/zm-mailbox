@@ -325,6 +325,23 @@ public class MailSender {
     }
 
     /**
+     * Get recipient addresses from either the member variable or the message.
+     * @throws MessagingException 
+     */
+    protected Address[] getRecipients(final MimeMessage mm) throws MessagingException {
+        Address[] rcptAddresses = null;
+        if (mRecipients.isEmpty()) {
+            rcptAddresses = mm.getAllRecipients();
+        } else {
+            rcptAddresses = new Address[mRecipients.size()];
+            for (int i = 0; i < rcptAddresses.length; i++) {
+                rcptAddresses[i] = new JavaMailInternetAddress(mRecipients.get(i));
+            }
+        }
+        return rcptAddresses;
+    }
+    
+    /**
      * Getter for Collection of uploads - exposed for OfflineMailSender
      */
     protected Collection<Upload> getUploads() {
@@ -794,17 +811,8 @@ public class MailSender {
         String hostname = getNextHost();
 
         try {
-            // Initialize recipient addresses from either the member variable
-            // or the message.
-            Address[] rcptAddresses = null;
-            if (mRecipients.isEmpty()) {
-                rcptAddresses = mm.getAllRecipients();
-            } else {
-                rcptAddresses = new Address[mRecipients.size()];
-                for (int i = 0; i < rcptAddresses.length; i++) {
-                    rcptAddresses[i] = new JavaMailInternetAddress(mRecipients.get(i));
-                }
-            }
+            // Initialize recipient addresses
+            Address[] rcptAddresses = getRecipients(mm);
 
             while (rcptAddresses != null && rcptAddresses.length > 0) {
                 try {
