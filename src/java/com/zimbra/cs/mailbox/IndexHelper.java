@@ -15,6 +15,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -274,6 +275,17 @@ public final class IndexHelper {
         }
         reIndex.status.cancel();
         return reIndex.status;
+    }
+
+    public boolean verify(PrintStream out) throws ServiceException {
+        indexLock.acquireUninterruptibly(); // make sure no writers are opened
+        try {
+            return mailboxIndex.verify(out);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("Failed to verify index", e);
+        } finally {
+            indexLock.release();
+        }
     }
 
     private class ReIndexTask extends IndexTask {

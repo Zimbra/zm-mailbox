@@ -123,6 +123,7 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.GET_LICENSE_INFO_REQUEST, new GetLicenseInfo());
 
         dispatcher.registerHandler(AdminConstants.REINDEX_REQUEST, new ReIndex());
+        dispatcher.registerHandler(AdminConstants.VERIFY_INDEX_REQUEST, new VerifyIndex());
         dispatcher.registerHandler(AdminConstants.RECALCULATE_MAILBOX_COUNTS_REQUEST, new RecalculateMailboxCounts());
 
         // zimlet
@@ -248,7 +249,7 @@ public class AdminService implements DocumentService {
 
         // wiki migration
         dispatcher.registerHandler(AdminConstants.MIGRATE_ACCOUNT_REQUEST, new MigrateAccount());
-        
+
         // noop
         dispatcher.registerHandler(AdminConstants.NO_OP_REQUEST, new NoOp());
     }

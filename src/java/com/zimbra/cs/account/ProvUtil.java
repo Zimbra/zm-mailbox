@@ -174,7 +174,7 @@ public class ProvUtil implements HttpDebugListener {
         System.out.println("This command has been deprecated.");
         System.exit(1);
     }
-    
+
     private void usage() {
         usage(null);
     }
@@ -527,6 +527,7 @@ public class ProvUtil implements HttpDebugListener {
         RENAME_DISTRIBUTION_LIST("renameDistributionList", "rdl", "{list@domain|id} {newName@domain}", Category.LIST, 2, 2),
         RENAME_DOMAIN("renameDomain", "rd", "{domain|id} {newDomain}", Category.DOMAIN, 2, 2, Via.ldap),
         REINDEX_MAILBOX("reIndexMailbox", "rim", "{name@domain|id} {start|status|cancel} [{types|ids} {type or id} [,type or id...]]", Category.MAILBOX, 2, Integer.MAX_VALUE, null, new ReindexCommandHelp()),
+        VERIFY_INDEX("verifyIndex", "vi", "{name@domain|id}", Category.MAILBOX, 1, 1),
         REVOKE_RIGHT("revokeRight", "rvr", "{target-type} [{target-id|target-name}] {grantee-type} [{grantee-id|grantee-name}] {[-]right}", Category.RIGHT, 3, 5, null, new RightCommandHelp()),
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
         SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH),
@@ -1130,6 +1131,9 @@ public class ProvUtil implements HttpDebugListener {
         case REINDEX_MAILBOX:
             doReIndexMailbox(args);
             break;
+        case VERIFY_INDEX:
+            doVerifyIndex(args);
+            break;
         case RECALCULATE_MAILBOX_COUNTS:
             doRecalculateMailboxCounts(args);
             break;
@@ -1255,8 +1259,9 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doReIndexMailbox(String[] args) throws ServiceException {
-        if (!(mProv instanceof SoapProvisioning))
+        if (!(mProv instanceof SoapProvisioning)) {
             throwSoapOnly();
+        }
         SoapProvisioning sp = (SoapProvisioning) mProv;
         Account acct = lookupAccount(args[1]);
         ReIndexBy by = null;
@@ -1270,15 +1275,31 @@ public class ProvUtil implements HttpDebugListener {
             if (args.length > 4) {
                 values = new String[args.length - 4];
                 System.arraycopy(args, 4, values, 0, args.length - 4);
-            } else
+            } else {
                 throw ServiceException.INVALID_REQUEST("missing reindex-by values", null);
+            }
         }
         ReIndexInfo info = sp.reIndex(acct, args[2], by, values);
         ReIndexInfo.Progress progress = info.getProgress();
         System.out.printf("status: %s\n", info.getStatus());
-        if (progress != null)
+        if (progress != null) {
             System.out.printf("progress: numSucceeded=%d, numFailed=%d, numRemaining=%d\n",
-                              progress.getNumSucceeded(), progress.getNumFailed(), progress.getNumRemaining());
+                    progress.getNumSucceeded(), progress.getNumFailed(), progress.getNumRemaining());
+        }
+    }
+
+    private void doVerifyIndex(String[] args) throws ServiceException {
+        if (!(mProv instanceof SoapProvisioning)) {
+            throwSoapOnly();
+        }
+        System.out.println("Verifying, on a large index it can take quite a long time...");
+        SoapProvisioning soap = (SoapProvisioning) mProv;
+        SoapProvisioning.VerifyIndexResult result = soap.verifyIndex(lookupAccount(args[1]));
+        System.out.println();
+        System.out.print(result.message);
+        if (!result.status) {
+            throw ServiceException.FAILURE("The index may be corrupted. Run reIndexMailbox(rim) to repair.", null);
+        }
     }
 
     private void doRecalculateMailboxCounts(String[] args) throws ServiceException {
@@ -2831,7 +2852,7 @@ public class ProvUtil implements HttpDebugListener {
 
                 if (mVerbose) e.printStackTrace(System.err);
             } catch (ArgException e) {
-                    usage();
+                usage();
             }
         }
     }
@@ -2981,7 +3002,7 @@ public class ProvUtil implements HttpDebugListener {
                             }
                         }
                     }
-                    
+
                     // This has to happen last because JLine modifies System.in.
                     is = System.in;
                 }
@@ -4221,7 +4242,7 @@ public class ProvUtil implements HttpDebugListener {
         for (FbCli.FbProvider fbprov : fbcli.getAllFreeBusyProviders())
             System.out.println(fbprov.toString());
     }
-    
+
     private void doGetFreeBusyQueueInfo(String[] args) throws ServiceException, IOException {
         FbCli fbcli = new FbCli();
         String name = null;
@@ -4230,7 +4251,7 @@ public class ProvUtil implements HttpDebugListener {
         for (FbCli.FbQueue fbqueue : fbcli.getFreeBusyQueueInfo(name))
             System.out.println(fbqueue.toString());
     }
-    
+
     private void doPushFreeBusy(String[] args) throws ServiceException, IOException {
         FbCli fbcli = new FbCli();
         HashMap<String,HashSet<String>> accountMap = new HashMap<String,HashSet<String>>();
@@ -4253,7 +4274,7 @@ public class ProvUtil implements HttpDebugListener {
             fbcli.pushFreeBusyForAccounts(accountMap.get(host));
         }
     }
-    
+
     private void doPushFreeBusyForDomain(String[] args) throws ServiceException, IOException {
         lookupDomain(args[1]);
         FbCli fbcli = new FbCli();

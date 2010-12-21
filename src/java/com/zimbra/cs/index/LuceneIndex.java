@@ -24,6 +24,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
+import org.apache.lucene.index.CheckIndex;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -675,6 +676,22 @@ public final class LuceneIndex {
         } finally {
             READER_THROTTLE.release();
         }
+    }
+
+    /**
+     * Run a sanity check for the index. Callers are responsible to make sure the index is not opened by any writer.
+     *
+     * @param out info stream where messages should go. If null, no messages are printed.
+     * @return true if no problems were found, otherwise false
+     * @throws IOException failed to verify, but it doesn't necessarily mean the index is corrupted.
+     */
+    public boolean verify(PrintStream out) throws IOException {
+        CheckIndex check = new CheckIndex(luceneDirectory);
+        if (out != null) {
+            check.setInfoStream(out);
+        }
+        CheckIndex.Status status = check.checkIndex();
+        return status.clean;
     }
 
     interface TermEnumInterface {

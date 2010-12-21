@@ -15,6 +15,7 @@
 package com.zimbra.cs.index;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -371,6 +372,10 @@ public final class MailboxIndex {
 
     int getMailboxId() {
         return mMailboxId;
+    }
+
+    public boolean verify(PrintStream out) throws IOException {
+        return luceneIndex.verify(out);
     }
 
 }
