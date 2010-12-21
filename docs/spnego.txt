@@ -370,6 +370,13 @@ What happens behind the scene in ZCS server:
 (3) If you are redirected to the error URL specified in zimbraSpnegoAuthErrorURL, that means
     The SPNEGO authentication sequence does not work.  
      
+    Take a network trace, make sure the browser send Authorization header(Appendix A: HTTP Flow, 5) 
+    in response to the 401.  Make sure (use a network packet decodeder like Wireshark) the 
+    Negotiate is using GSS-API/SPNEGO, not NTLM.
+     
+    After verifying that the browser is sending the correct Negotiate, if it still does not work, 
+    turn on the following debug and check Zimrba logs:
+     
     - ADD "-DDEBUG=true -Dsun.security.spnego.debug=all" (note, not replace) to 
       localconfig key spnego_java_options
    
@@ -382,6 +389,9 @@ What happens behind the scene in ZCS server:
     
     Check zmmailboxd.out and mailox.log for debug output.
      
+    * One of the error at this stage could be because of clock skew on the jetty server.  
+      If this is the case, it should be shown in zmmailboxd.out.  Fix the clock skew and try again.
+    
 
 (4) If you can access /spnego/snoop.jsp, but get a Zimbra preauth error, that means preauth 
     on domain is not configured correctly.
