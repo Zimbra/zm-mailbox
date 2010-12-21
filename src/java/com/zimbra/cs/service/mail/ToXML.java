@@ -1882,6 +1882,7 @@ public class ToXML {
             ZimbraLog.soap.warn("Unable to determine max content size", e);
         }
 
+        boolean wasTruncated = false;
         if (ctype.equals(MimeConstants.CT_TEXT_HTML)) {
             String charset = mpi.getContentTypeParameter(MimeConstants.P_CHARSET);
             InputStream stream = null;
@@ -1917,6 +1918,9 @@ public class ToXML {
                     }
                 }
             } finally {
+                if (tw != null) {
+                    wasTruncated = tw.wasTruncated();
+                }
                 ByteUtil.closeStream(stream);
                 ByteUtil.closeReader(reader);
             }
@@ -1931,20 +1935,25 @@ public class ToXML {
                 // The normal check for truncated data won't work because
                 // the length of the converted text is different than the length
                 // of the source, so set the attr here.
-                elt.addAttribute(MailConstants.A_TRUNCATED_CONTENT, true);
+                wasTruncated = true;
             }
             data = TextEnrichedHandler.convertToHTML(enriched);
         } else {
             Reader reader = Mime.getContentAsReader(mp, defaultCharset);
             int maxChars = (maxSize > 0 ? maxSize + 1 : -1);
             data = ByteUtil.getContent(reader, maxChars, true);
+            if (data.length() == maxChars) {
+                wasTruncated = true;
+            }
         }
 
         if (data != null) {
             data = StringUtil.stripControlCharacters(data);
-            if (maxSize > 0 && data.length() > maxSize) {
-                data = data.substring(0, maxSize);
+            if (wasTruncated) {
                 elt.addAttribute(MailConstants.A_TRUNCATED_CONTENT, true);
+                if (data.length() > maxSize) {
+                    data = data.substring(0, maxSize);
+                }
             }
             elt.addAttribute(MailConstants.E_CONTENT, data, Element.Disposition.CONTENT);
         }
