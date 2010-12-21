@@ -35,18 +35,19 @@ import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.Zimbra;
 
 public abstract class TcpServer implements Runnable, Server {
-    private final Log mLog;
-    private final ThreadPoolExecutor mPooledExecutor;
-    private final String mName;
-    private final ServerSocket mServerSocket;
-    private final List<ProtocolHandler> mActiveHandlers;
-    private boolean mSSLEnabled;
-    private ServerConfig mConfig;
-    private volatile boolean mShutdownRequested;
+    private final Log log;
+    private final ThreadPoolExecutor pooledExecutor;
+    private final String name;
+    private final ServerSocket serverSocket;
+    private final List<ProtocolHandler> activeHandlers;
+    private boolean sslEnabled;
+    private ServerConfig config;
+    private volatile boolean shutdownRequested;
 
     public TcpServer(String name, ServerConfig config) throws ServiceException {
         this(name, config.getNumThreads(), config.getServerSocket());
-        mConfig = config;
+        this.config = config;
+        this.sslEnabled = config.isSslEnabled();
     }
 
     public TcpServer(String name, int numThreads, ServerSocket serverSocket) {
@@ -54,34 +55,34 @@ public abstract class TcpServer implements Runnable, Server {
     }
 
     public TcpServer(String name, int numThreads, int threadPriority, ServerSocket serverSocket) {
-        mName = name;
-        mServerSocket = serverSocket;
-        mLog = LogFactory.getLog(TcpServer.class.getName() + "/" + serverSocket.getLocalPort());
+        this.name = name;
+        this.serverSocket = serverSocket;
+        this.log = LogFactory.getLog(TcpServer.class.getName() + "/" + serverSocket.getLocalPort());
 
         if (numThreads <= 0) {
-            mLog.warn("number of handler threads " + numThreads + " invalid; will use 10 threads instead");
+            log.warn("number of handler threads " + numThreads + " invalid; will use 10 threads instead");
             numThreads = 10;
         }
 
         // Core pool size is 1, to limit the number of idle threads in thread dumps.
         // Idle threads are aged out of the pool after 2 minutes.
-        mPooledExecutor = new ThreadPoolExecutor(1, numThreads, 2, TimeUnit.MINUTES,
-                new SynchronousQueue<Runnable>(), new TcpThreadFactory(mName, false, threadPriority));
+        this.pooledExecutor = new ThreadPoolExecutor(1, numThreads, 2, TimeUnit.MINUTES,
+                new SynchronousQueue<Runnable>(), new TcpThreadFactory(this.name, false, threadPriority));
 
         // TODO a linked list is probably the wrong datastructure here
         // TODO write tests with multiple concurrent client
         // TODO write some tests for shutdown/startup
-        mActiveHandlers = new LinkedList<ProtocolHandler>();
+        this.activeHandlers = new LinkedList<ProtocolHandler>();
     }
 
     @Override
     public ServerConfig getConfig() {
-        return mConfig;
+        return config;
     }
 
     public int getConfigMaxIdleMilliSeconds() {
-        if (mConfig != null) {
-            int secs = mConfig.getMaxIdleSeconds();
+        if (config != null) {
+            int secs = config.getMaxIdleSeconds();
             if (secs >= 0) {
                 return secs * 1000;
             }
@@ -89,39 +90,39 @@ public abstract class TcpServer implements Runnable, Server {
         return -1;
     }
 
-    public void setSSLEnabled(boolean ssl) {
-        mSSLEnabled = ssl;
+    protected void setSslEnabled(boolean ssl) {
+        sslEnabled = ssl;
     }
 
-    public boolean isSSLEnabled() {
-        return mSSLEnabled;
+    public boolean isSslEnabled() {
+        return sslEnabled;
     }
 
     public void addActiveHandler(ProtocolHandler handler) {
-        synchronized (mActiveHandlers) {
-            mActiveHandlers.add(handler);
+        synchronized (activeHandlers) {
+            activeHandlers.add(handler);
         }
     }
 
     public void removeActiveHandler(ProtocolHandler handler) {
-        synchronized (mActiveHandlers) {
-            mActiveHandlers.remove(handler);
+        synchronized (activeHandlers) {
+            activeHandlers.remove(handler);
         }
     }
 
     protected int numActiveHandlers() {
-        synchronized (mActiveHandlers) {
-            return mActiveHandlers.size();
+        synchronized (activeHandlers) {
+            return activeHandlers.size();
         }
     }
     
     public int numThreads() {
-        return mPooledExecutor.getPoolSize();
+        return pooledExecutor.getPoolSize();
     }
 
     private void shutdownActiveHandlers(boolean graceful) {
-        synchronized (mActiveHandlers) {
-            for (ProtocolHandler handler : mActiveHandlers) {
+        synchronized (activeHandlers) {
+            for (ProtocolHandler handler : activeHandlers) {
                 if (graceful) {
                     handler.gracefulShutdown("graceful shutdown requested");
                 } else {
@@ -134,84 +135,88 @@ public abstract class TcpServer implements Runnable, Server {
     @Override
     public void start() {
         Thread t = new Thread(this);
-        if (mName != null) {
-            t.setName(mName);
+        if (name != null) {
+            t.setName(name);
         }
         t.start();
     }
 
     @Override
     public void stop() {
-        stop(mConfig.getShutdownGraceSeconds());
+        stop(config.getShutdownGraceSeconds());
     }
 
     @Override
     public void stop(int forceShutdownAfterSeconds) {
-        mLog.info(mName + " initiating shutdown");
-        mShutdownRequested = true;
+        log.info(name + " initiating shutdown");
+        shutdownRequested = true;
 
         try {
-            mServerSocket.close();
+            serverSocket.close();
             Thread.yield();
         } catch (IOException ioe) {
-            mLog.warn(mName + " error closing server socket", ioe);
+            log.warn(name + " error closing server socket", ioe);
         }
 
-        mPooledExecutor.shutdown();
+        pooledExecutor.shutdown();
 
         shutdownActiveHandlers(true);
 
         if (numActiveHandlers() == 0) {
-            mLog.info(mName + " shutting down idle thread pool");
-            mPooledExecutor.shutdownNow();
+            log.info(name + " shutting down idle thread pool");
+            pooledExecutor.shutdownNow();
             return;
         }
 
-        mLog.info(mName + " waiting " + forceShutdownAfterSeconds + " seconds for thread pool shutdown");
+        log.info(name + " waiting " + forceShutdownAfterSeconds + " seconds for thread pool shutdown");
         try {
-            mPooledExecutor.awaitTermination(forceShutdownAfterSeconds, TimeUnit.SECONDS);
+            pooledExecutor.awaitTermination(forceShutdownAfterSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException ie) {
-            mLog.warn(mName + " interrupted while waiting for graceful shutdown", ie);
+            log.warn(name + " interrupted while waiting for graceful shutdown", ie);
         }
 
         if (numActiveHandlers() == 0) {
-            mLog.info(mName + " thread pool terminated");
+            log.info(name + " thread pool terminated");
             return;
         }
 
         shutdownActiveHandlers(false);
 
-        mLog.info(mName + " shutdown complete");
+        log.info(name + " shutdown complete");
     }
 
     @Override
     public void run() {
-        Thread.currentThread().setName(mName);
+        Thread.currentThread().setName(name);
 
-        mLog.info("Starting accept loop: %d core threads, %d max threads.",
-            mPooledExecutor.getCorePoolSize(), mPooledExecutor.getMaximumPoolSize());
+        log.info("Starting accept loop: %d core threads, %d max threads.",
+            pooledExecutor.getCorePoolSize(), pooledExecutor.getMaximumPoolSize());
 
         try {
-            while (!mShutdownRequested) {
-                Socket connection = mServerSocket.accept();
+            while (!shutdownRequested) {
+                Socket connection = serverSocket.accept();
                 warnIfNecessary();
                 ProtocolHandler handler = newProtocolHandler();
                 handler.setConnection(connection);
                 try {
-                    mPooledExecutor.execute(handler);
+                    pooledExecutor.execute(handler);
                 } catch (RejectedExecutionException e) {
-                    mLog.error("cannot handle connection; thread pool exhausted", e);
-                    try {
-                        String message = mConfig.getConnectionRejected();
+                    log.error("cannot handle connection; thread pool exhausted", e);
+                    // send a "server busy" message to the client before dropping connection
+                    //   (but skip if client expects an SSL handshake, which we can't do here) 
+                    if (config != null && !isSslEnabled()) {
+                        String message = config.getConnectionRejected();
                         if (message != null) {
-                            OutputStream os = connection.getOutputStream();
-                            if (os != null) {
-                                os.write((message + "\r\n").getBytes());
-                                os.flush();
+                            try {
+                                OutputStream os = connection.getOutputStream();
+                                if (os != null) {
+                                    os.write((message + "\r\n").getBytes());
+                                    os.flush();
+                                }
+                            } catch (Throwable t) {
+                                // ignore any errors while notifying unhandled connection
                             }
                         }
-                    } catch (Throwable t) {
-                        // ignore any errors while dropping unhandled connection
                     }
                     try {
                         connection.close();
@@ -221,23 +226,23 @@ public abstract class TcpServer implements Runnable, Server {
                 }
             }
         } catch (IOException ioe) {
-            if (!mShutdownRequested) {
+            if (!shutdownRequested) {
                 Zimbra.halt("accept loop failed", ioe);
             }
         }
 
-        mLog.info("finished accept loop");
+        log.info("finished accept loop");
     }
     
     private void warnIfNecessary() {
-        if (mLog.isWarnEnabled()) {
+        if (log.isWarnEnabled()) {
             int warnPercent = LC.thread_pool_warn_percent.intValue();
             // Add 1 because the thread for this connection is not active yet.
-            int active = mPooledExecutor.getActiveCount() + 1;
-            int max = mPooledExecutor.getMaximumPoolSize();
+            int active = pooledExecutor.getActiveCount() + 1;
+            int max = pooledExecutor.getMaximumPoolSize();
             int utilization = active * 100 / max; 
             if (utilization >= warnPercent) {
-                mLog.warn("Thread pool is %d%% utilized.  %d out of %d threads in use.",
+                log.warn("Thread pool is %d%% utilized.  %d out of %d threads in use.",
                     utilization, active, max);
             }
         }
