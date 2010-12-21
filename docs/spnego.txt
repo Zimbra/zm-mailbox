@@ -286,10 +286,16 @@ zimbraSpnegoAuthPrincipal   : {zimbraSpnegoAuthTargetName}@{zimbraSpnegoAuthReal
 ===========================
 Windows
     Firefox:
-        1. browse to about:config and agree to the warnings
-        2. search through to find the 'network' settings
+        1. Browse to about:config and agree to the warnings
+        2. Search through to find the "network" settings (in the Filter, type "network.n")
+        3. Enter a comma-delimited list of trusted domains or URLs 
+           for network.negotiate-auth.delegation-uris and network.negotiate-auth.trusted-uris.
+           e.g.
              * set network.negotiate-auth.delegation-uris to http://,https://
              * set network.negotiate-auth.trusted-uris to http://,https://
+             or
+             * set network.negotiate-auth.delegation-uris to http://dogfood.zimbra.com,https://dogfood.zimbra.com,http://catfood.zimbra.com,https://catfood.zimbra.com
+             * set network.negotiate-auth.trusted-uris to http://dogfood.zimbra.com,https://dogfood.zimbra.com,http://catfood.zimbra.com,https://catfood.zimbra.com
     
     IE/Chrome/Safari:
         1. Tools -> Options -> Security -> Local Intranet -> Sites
