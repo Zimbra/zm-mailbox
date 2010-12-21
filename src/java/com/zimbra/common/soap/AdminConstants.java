@@ -200,6 +200,8 @@ public final class AdminConstants {
 
     public static final String E_REINDEX_REQUEST = "ReIndexRequest";
     public static final String E_REINDEX_RESPONSE = "ReIndexResponse";
+    public static final String E_VERIFY_INDEX_REQUEST = "VerifyIndexRequest";
+    public static final String E_VERIFY_INDEX_RESPONSE = "VerifyIndexResponse";
     public static final String E_RECALCULATE_MAILBOX_COUNTS_REQUEST = "RecalculateMailboxCountsRequest";
     public static final String E_RECALCULATE_MAILBOX_COUNTS_RESPONSE = "RecalculateMailboxCountsResponse";
 
@@ -595,6 +597,8 @@ public final class AdminConstants {
 
     public static final QName REINDEX_REQUEST = QName.get(E_REINDEX_REQUEST, NAMESPACE);
     public static final QName REINDEX_RESPONSE = QName.get(E_REINDEX_RESPONSE, NAMESPACE);
+    public static final QName VERIFY_INDEX_REQUEST = QName.get(E_VERIFY_INDEX_REQUEST, NAMESPACE);
+    public static final QName VERIFY_INDEX_RESPONSE = QName.get(E_VERIFY_INDEX_RESPONSE, NAMESPACE);
     public static final QName RECALCULATE_MAILBOX_COUNTS_REQUEST = QName.get(E_RECALCULATE_MAILBOX_COUNTS_REQUEST, NAMESPACE);
     public static final QName RECALCULATE_MAILBOX_COUNTS_RESPONSE = QName.get(E_RECALCULATE_MAILBOX_COUNTS_RESPONSE, NAMESPACE);
 
