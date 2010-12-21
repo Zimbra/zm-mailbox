@@ -63,11 +63,9 @@ public abstract class TcpServer implements Runnable, Server {
             numThreads = 10;
         }
 
-        // we'll build up to a pool of 10 worker threads as work arrives;
-        //   if more threads are needed at once, we'll allocate them up to numThreads
-        //   but then retire them if they're not reused within 2 minutes
-        int corePoolSize = Math.min(numThreads, 10);
-        mPooledExecutor = new ThreadPoolExecutor(corePoolSize, numThreads, 2, TimeUnit.MINUTES,
+        // Core pool size is 1, to limit the number of idle threads in thread dumps.
+        // Idle threads are aged out of the pool after 2 minutes.
+        mPooledExecutor = new ThreadPoolExecutor(1, numThreads, 2, TimeUnit.MINUTES,
                 new SynchronousQueue<Runnable>(), new TcpThreadFactory(mName, false, threadPriority));
 
         // TODO a linked list is probably the wrong datastructure here
