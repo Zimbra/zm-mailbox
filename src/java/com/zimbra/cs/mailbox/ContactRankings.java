@@ -15,6 +15,8 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.TreeMap;
@@ -79,6 +81,13 @@ public class ContactRankings {
 		
 		rankings.writeToDatabase();
 	}
+	
+	public static void increment(String accountId, Address[] addrs) throws ServiceException {
+	    HashSet<Address> addrSet = new HashSet<Address>();
+	    Collections.addAll(addrSet, addrs);
+	    increment(accountId, addrSet);
+	}
+	
 	public synchronized void increment(String email, String displayName) {
 		long now = System.currentTimeMillis();
 		email = email.toLowerCase();
