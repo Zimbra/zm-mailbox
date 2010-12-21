@@ -1141,8 +1141,8 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
             String title = ctxt.item.getName();
             title = title.replaceAll("<", "&lt;");
             title = title.replaceAll(">", "&gt;");
-            WikiUrl wurl = new WikiUrl(ctxt.item);
             try {
+                WikiUrl wurl = new WikiUrl(ctxt.item);
                 Map<String,String> params = ctxt.token.parseParam();
                 String type = params.get(sTYPE);
 
@@ -1238,21 +1238,17 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
         }
     }
     static class WikiUrl {
-        public WikiUrl(MailItem item) {
-            this(item.getName(), item.getFolderId());
+        public WikiUrl(MailItem item) throws ServiceException {
             if (item instanceof Folder)
                 mIsFolder = true;
-        }
-        public WikiUrl(String url) {
-            // url must be in absolute form
-            this(url, -1);
-        }
-        public WikiUrl(String url, int currentPos) {
-            // url can be in absolute or relative form.
-            mUrl = url;
-            mId = currentPos;
+            mUrl = item.getName();
+            mId = item.getFolderId();
+            mPath = item.getPath();
+            mAccount = item.getAccount();
             parse();
         }
+        private Account mAccount;
+        private String mPath;
         private int mId;
         private String mUrl;
         private String mFilename;
@@ -1307,11 +1303,8 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
             } else if (isAbsolute()) {
                 // take the path as is.
                 p.append(mUrl);
-            } else if (Provisioning.onLocalServer(acct)) {
-                // calculate absolute path based on current location
-                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-                Folder f = mbox.getFolderById(ctxt.octxt, mId);
-                p.append(f.getPath());
+            } else if (acct.equals(mAccount)) {
+                p.append(mPath);
                 if (p.charAt(p.length() - 1) != '/')
                     p.append("/");
                 p.append(mUrl);
