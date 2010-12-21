@@ -1305,9 +1305,6 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
                 p.append(mUrl);
             } else if (acct.equals(mAccount)) {
                 p.append(mPath);
-                if (p.charAt(p.length() - 1) != '/')
-                    p.append("/");
-                p.append(mUrl);
             } else {
                 // we know the account, and remote folder id, and relative path
                 // from the remote folder.  we can do something like getFolder
