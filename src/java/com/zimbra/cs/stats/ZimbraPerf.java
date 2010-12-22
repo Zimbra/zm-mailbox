@@ -100,6 +100,12 @@ public class ZimbraPerf {
     @Description("Number of IMAP SSL handler threads")
     public static final String RTS_IMAP_SSL_THREADS = "imap_ssl_threads";
 
+    @Description("Number of HTTP handler threads")
+    public static final String RTS_HTTP_THREADS = "http_threads";
+    
+    @Description("Number of idle HTTP handler threads")
+    public static final String RTS_HTTP_IDLE_THREADS = "http_idle_threads";
+    
     @Description("Number of SOAP sessions")
     public static final String RTS_SOAP_SESSIONS = "soap_sessions";
 
@@ -208,7 +214,7 @@ public class ZimbraPerf {
             RTS_LMTP_CONN, RTS_LMTP_THREADS,
             RTS_POP_CONN, RTS_POP_THREADS, RTS_POP_SSL_CONN, RTS_POP_SSL_THREADS, 
             RTS_IMAP_CONN, RTS_IMAP_THREADS, RTS_IMAP_SSL_CONN, RTS_IMAP_SSL_THREADS,
-            RTS_SOAP_SESSIONS,
+            RTS_HTTP_IDLE_THREADS, RTS_HTTP_THREADS, RTS_SOAP_SESSIONS,
             RTS_MBOX_CACHE_SIZE, RTS_MSG_CACHE_SIZE,
             RTS_FD_CACHE_SIZE, RTS_FD_CACHE_HIT_RATE,
             RTS_ACL_CACHE_HIT_RATE,
@@ -445,6 +451,7 @@ public class ZimbraPerf {
         initDescriptions();
         
         addStatsCallback(new ServerStatsCallback());
+        addStatsCallback(new JettyStats());
         
         StatsDumper.schedule(new MailboxdStats(), CSV_DUMP_FREQUENCY);
 
