@@ -25,6 +25,10 @@
       </New>
     </Set>
 
+    <Call class="com.zimbra.common.jetty.JettyMonitor" name="setThreadPool">
+      <Arg><Ref id="pool"/></Arg>
+    </Call>
+
     <!-- =========================================================== -->
     <!-- Set connectors                                              -->
     <!-- =========================================================== -->
