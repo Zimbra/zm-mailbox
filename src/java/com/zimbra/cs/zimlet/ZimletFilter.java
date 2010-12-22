@@ -124,12 +124,12 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 				while (iter.hasNext()) {
                     Zimlet zimlet = iter.next();
 					if (zimlet.isExtension()) {
+	                    if (zimlet.isEnabled()) {
+	                        allowedZimlets.add(zimlet);
+	                    }
                         iter.remove();
                         continue;
                     }
-                    if (zimlet.isEnabled()) {
-						allowedZimlets.add(zimlet);
-					}
 				}
 			}
 		}
