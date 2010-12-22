@@ -127,8 +127,6 @@ public class ZimletFilter extends ZimbraServlet implements Filter {
 	                    if (zimlet.isEnabled()) {
 	                        allowedZimlets.add(zimlet);
 	                    }
-                        iter.remove();
-                        continue;
                     }
 				}
 			}
