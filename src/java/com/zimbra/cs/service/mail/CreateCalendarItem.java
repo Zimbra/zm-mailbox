@@ -29,6 +29,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -71,6 +72,11 @@ public class CreateCalendarItem extends CalendarRequest {
         String defaultFolderStr = Integer.toString(defaultFolder);
         String folderIdStr = msgElem.getAttribute(MailConstants.A_FOLDER, defaultFolderStr);
         ItemId iidFolder = new ItemId(folderIdStr, zsc);
+
+        // Don't allow creating in Trash folder/subfolder.  We don't want to invite attendees to an appointment in trash.
+        Folder folder = mbox.getFolderById(iidFolder.getId());
+        if (folder.inTrash())
+            throw ServiceException.INVALID_REQUEST("cannot create a calendar item under trash", null);
 
         // trace logging
         if (!dat.mInvite.hasRecurId())
