@@ -36,6 +36,8 @@ import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
+import com.zimbra.soap.account.message.ModifyPropertiesRequest;
+import com.zimbra.soap.account.message.ModifyPropertiesResponse;
 import com.zimbra.soap.admin.message.ReloadLocalConfigRequest;
 import com.zimbra.soap.admin.message.ReloadLocalConfigResponse;
 import com.zimbra.soap.mail.message.GetDataSourcesRequest;
@@ -61,6 +63,8 @@ public final class JaxbUtil {
             GetInfoResponse.class,
             GetSignaturesRequest.class,
             GetSignaturesResponse.class,
+            ModifyPropertiesRequest.class,
+            ModifyPropertiesResponse.class,
 
             // zimbraMail
             GetDataSourcesRequest.class,

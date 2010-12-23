@@ -269,8 +269,8 @@ public class GetInfoResponse {
         return Attr.toMultimap(attrs);
     }
     
-    public List<Prop> getProps() {
-        return props; 
+    public Multimap<String, String> getPropsMultimap(String userPropKey) {
+        return Prop.toMultimap(props, userPropKey); 
     }
     
     // TODO: zimlets, etc.
