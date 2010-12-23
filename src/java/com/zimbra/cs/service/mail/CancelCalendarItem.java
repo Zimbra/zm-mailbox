@@ -68,6 +68,8 @@ public class CancelCalendarItem extends CalendarRequest {
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId()); 
             if (calItem == null)
                 throw MailServiceException.NO_SUCH_CALITEM(iid.getId(), " for CancelCalendarItemRequest(" + iid + "," + compNum + ")");
+            if (calItem.inTrash())
+                throw ServiceException.INVALID_REQUEST("cannot cancel a calendar item under trash", null);
 
             if (false) {  // We probably don't want to bother with conflict check for a cancel request...
                 // Conflict detection.  Do it only if requested by client.  (for backward compat)

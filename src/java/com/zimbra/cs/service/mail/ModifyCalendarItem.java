@@ -26,6 +26,7 @@ import javax.mail.internet.InternetAddress;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -105,6 +106,17 @@ public class ModifyCalendarItem extends CalendarRequest {
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
             if (calItem == null) {
                 throw MailServiceException.NO_SUCH_CALITEM(iid.toString(), "Could not find calendar item");
+            }
+
+            // Reject the request if calendar item is under trash or is being moved to trash.
+            if (calItem.inTrash())
+                throw ServiceException.INVALID_REQUEST("cannot modify a calendar item under trash", null);
+            if (!isInterMboxMove && iidFolder != null) {
+                if (iidFolder.getId() != calItem.getFolderId()) {
+                    Folder destFolder = mbox.getFolderById(iidFolder.getId());
+                    if (destFolder.inTrash())
+                        throw ServiceException.INVALID_REQUEST("cannot combine with a move to trash", null);
+                }
             }
 
             // Conflict detection.  Do it only if requested by client.  (for backward compat)
