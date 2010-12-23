@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20,7 +20,7 @@ import java.nio.charset.CharsetDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.core.buffer.IoBuffer;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -37,14 +37,14 @@ public abstract class MilterHandler extends ProtocolHandler {
     protected String sessPrefix;
     private Provisioning prov;
     private AccessManager accessMgr;
-    
+
     private static final MilterPacket RESPONSE_CONTINUE = new MilterPacket(1, (byte)'c', null);
     private static final MilterPacket RESPONSE_ACCEPT = new MilterPacket(1, (byte)'a', null);
     private static final MilterPacket RESPONSE_REJECT = new MilterPacket(1, (byte)'r', null);
     private static final MilterPacket RESPONSE_TEMPFAIL = new MilterPacket(1, (byte)'t', null);
-    
+
     private final CharsetDecoder asciiDecoder = Charset.forName("US-ASCII").newDecoder();
-    
+
     /* context attrs */
     private static final String CONNECTINFO_HOSTNAME = "cinfo_hostname";
     private static final String CONNECTINFO_PROTOFAMILY = "cinfo_protofamily";
@@ -52,11 +52,11 @@ public abstract class MilterHandler extends ProtocolHandler {
     private static final String CONNECTINFO_ADDRESS = "cinfo_address";
     private static final String MAILFROM_SENDER = "mailfrom_sender";
     private static final String CURRENT_RECIPIENT = "current_recipient";
-    
+
     /* macro keys */
     private static final String MACRO_MAIL_ADDR = "{mail_addr}";
     private static final String MACRO_RCPT_ADDR = "{rcpt_addr}";
-    
+
     /* option masks */
     private static final int SMFIP_NOCONNECT = 0x01;
     private static final int SMFIP_NOHELO = 0x02;
@@ -65,16 +65,16 @@ public abstract class MilterHandler extends ProtocolHandler {
     private static final int SMFIP_NOBODY = 0x10;
     private static final int SMFIP_NOHDRS = 0x20;
     private static final int SMFIP_NOEOH  = 0x40;
-    
+
     private static Long nextSessId = new Long(0);
-    
+
     public MilterHandler(MilterServer server) {
         super(null);
         config = server.getConfig();
         prov = Provisioning.getInstance();
         accessMgr = AccessManager.getInstance();
     }
-    
+
     protected void newSession() {
         synchronized (nextSessId) {
             sessId = nextSessId++;
@@ -82,7 +82,7 @@ public abstract class MilterHandler extends ProtocolHandler {
         sessPrefix = "[session-" + String.valueOf(sessId) + "] ";
         context.clear();
     }
-    
+
     protected MilterPacket processCommand(MilterPacket command) throws ServiceException {
         switch((char)command.getCommand()) {
             case 'O': return SMFIC_OptNeg(command);
@@ -98,10 +98,10 @@ public abstract class MilterHandler extends ProtocolHandler {
         }
     }
 
-    private ByteBuffer getDataBuffer(MilterPacket command) {
+    private IoBuffer getDataBuffer(MilterPacket command) {
         byte[] data = command.getData();
         if (data != null && data.length > 0) {
-            ByteBuffer buf = ByteBuffer.allocate(data.length, false);
+            IoBuffer buf = IoBuffer.allocate(data.length, false);
             buf.put(data);
             buf.flip();
             return buf;
@@ -109,7 +109,7 @@ public abstract class MilterHandler extends ProtocolHandler {
             return null;
         }
     }
-    
+
     private void concatStringAttr(String attr, StringBuilder sb) {
         String v = (String)context.get(attr);
         if (v != null) {
@@ -118,7 +118,7 @@ public abstract class MilterHandler extends ProtocolHandler {
             sb.append(v);
         }
     }
-    
+
     private String getConnInfoString() {
         StringBuilder sb = new StringBuilder();
         concatStringAttr(CONNECTINFO_HOSTNAME, sb);
@@ -127,22 +127,22 @@ public abstract class MilterHandler extends ProtocolHandler {
         concatStringAttr(CONNECTINFO_ADDRESS, sb);
         return sb.toString();
     }
-    
+
     private String normalizeAddr(String a) {
         String addr = a.toLowerCase();
         int lb = addr.indexOf("<");
         int rb = addr.indexOf(">");
         return lb >= 0 && rb > lb ? addr.substring(lb + 1, rb) : addr;
     }
-    
-    private void getAddrFromMacro(ByteBuffer macroData, String macro, String attr) {
+
+    private void getAddrFromMacro(IoBuffer macroData, String macro, String attr) {
         Map<String, String> macros = parseMacros(macroData);
         String addr = macros.get(macro);
         if (addr != null)
             context.put(attr, normalizeAddr(addr));
     }
-    
-    private Map<String, String> parseMacros(ByteBuffer buf) {
+
+    private Map<String, String> parseMacros(IoBuffer buf) {
         Map<String, String> macros = new HashMap<String, String>();
         while (buf.hasRemaining()) {
             try {
@@ -151,17 +151,17 @@ public abstract class MilterHandler extends ProtocolHandler {
                     String value = buf.getString(asciiDecoder);
                     if (key != null && value != null)
                         macros.put(key, value);
-                }   
+                }
             } catch (CharacterCodingException e) {}
         }
         return macros;
     }
-       
+
     protected MilterPacket SMFIR_ReplyCode(String code, String reason) {
         int len = 1 + 3 + 1 + reason.length() + 1; // cmd + 3-digit code + space + null-terminated text
         String dataStr = code + " " + reason;
         byte[] data = new byte[len - 1];
-        
+
         int dataStrLen = dataStr.length();
         for (int i = 0; i < dataStrLen; i++) {
             data[i] = (byte)(dataStr.charAt(i));
@@ -169,9 +169,9 @@ public abstract class MilterHandler extends ProtocolHandler {
         data[dataStrLen] = 0;
         return new MilterPacket(len, (byte)'y', data);
     }
-    
+
     protected MilterPacket SMFIC_Connect(MilterPacket command) {
-        ByteBuffer data = getDataBuffer(command);
+        IoBuffer data = getDataBuffer(command);
         if (data != null) {
             try {
                 context.put(CONNECTINFO_HOSTNAME, data.getString(asciiDecoder));
@@ -185,11 +185,11 @@ public abstract class MilterHandler extends ProtocolHandler {
         }
         return RESPONSE_CONTINUE;
     }
-    
+
     protected MilterPacket SMFIC_Mail(MilterPacket command) {
         return RESPONSE_CONTINUE;
     }
-    
+
     protected MilterPacket SMFIC_Rcpt(MilterPacket command) throws ServiceException {
         String sender = (String) context.get(MAILFROM_SENDER);
         if (sender == null)
@@ -199,23 +199,23 @@ public abstract class MilterHandler extends ProtocolHandler {
             ZimbraLog.milter.warn(sessPrefix + "Empty recipient");
         if (sender == null || rcpt == null)
             return RESPONSE_TEMPFAIL;
-        
+
         if (prov.isDistributionList(rcpt)) {
             DistributionList dl = prov.getAclGroup(Provisioning.DistributionListBy.name, rcpt);
             if (dl != null && !accessMgr.canDo(sender, dl, User.R_sendToDistList, false))
                 return SMFIR_ReplyCode("571", "571 Sender is not allowed to email this distribution list: " + rcpt);;
         }
-        return RESPONSE_CONTINUE;            
+        return RESPONSE_CONTINUE;
     }
-    
+
     protected MilterPacket SMFIC_Abort() {
         ZimbraLog.milter.info(sessPrefix + "Session reset");
         newSession();
         return null;
     }
-    
+
     protected MilterPacket SMFIC_Macro(MilterPacket command) {
-        ByteBuffer data = getDataBuffer(command);
+        IoBuffer data = getDataBuffer(command);
         if (data != null) {
             byte cmd = data.get();
             if ((char)cmd == 'M')
@@ -225,12 +225,12 @@ public abstract class MilterHandler extends ProtocolHandler {
         }
         return null;
     }
-    
+
     protected MilterPacket SMFIC_OptNeg(MilterPacket command) {
         int version = 2;
         int actions = 0;
         int protocol = SMFIP_NOHELO | SMFIP_NOBODY | SMFIP_NOEOH;
-        ByteBuffer data = ByteBuffer.allocate(12, false);
+        IoBuffer data = IoBuffer.allocate(12, false);
         data.putInt(version);
         data.putInt(actions);
         data.putInt(protocol);
@@ -238,11 +238,11 @@ public abstract class MilterHandler extends ProtocolHandler {
         System.arraycopy(data.array(), 0, dataArray, 0, 12);
         return new MilterPacket(13, (byte)'O', dataArray);
     }
-    
+
     protected MilterPacket SMFIC_Header(MilterPacket command) {
         return RESPONSE_ACCEPT; // stop processing when we hit headers
     }
-    
+
     protected MilterPacket SMFIC_Quit(MilterPacket command) {
         ZimbraLog.milter.debug(sessPrefix + "Received quit command from MTA");
         dropConnection();

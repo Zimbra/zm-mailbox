@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,13 +15,16 @@
 
 package com.zimbra.cs.security.sasl;
 
-import org.apache.mina.common.ByteBuffer;
-import org.apache.mina.common.IoFilterAdapter;
-import org.apache.mina.common.IoFilterChain;
-import org.apache.mina.common.IoSession;
-
 import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslServer;
+
+import org.apache.mina.core.buffer.IoBuffer;
+import org.apache.mina.core.filterchain.IoFilterAdapter;
+import org.apache.mina.core.filterchain.IoFilterChain;
+import org.apache.mina.core.session.IoSession;
+import org.apache.mina.core.write.DefaultWriteRequest;
+import org.apache.mina.core.write.WriteRequest;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +41,7 @@ public class SaslFilter extends IoFilterAdapter {
 
     /** When set, encryption is disabled for the first write */
     public static final String DISABLE_ENCRYPTION_ONCE =
-        SaslFilter.class.getName() + ".DisableEncryptionOnce"; 
+        SaslFilter.class.getName() + ".DisableEncryptionOnce";
 
     public SaslFilter(SaslServer server) {
         this(SaslSecurityLayer.getInstance(server));
@@ -47,7 +50,7 @@ public class SaslFilter extends IoFilterAdapter {
     public SaslFilter(SaslClient client) {
         this(SaslSecurityLayer.getInstance(client));
     }
-    
+
     public SaslFilter(SaslSecurityLayer securityLayer) {
         mSecurityLayer = securityLayer;
         mInputBuffer = new SaslInputBuffer(securityLayer.getMaxRecvSize());
@@ -55,9 +58,8 @@ public class SaslFilter extends IoFilterAdapter {
     }
 
     @Override
-    public void messageReceived(NextFilter nextFilter, IoSession session,
-                                Object message) throws IOException {
-        ByteBuffer buf = (ByteBuffer) message;
+    public void messageReceived(NextFilter nextFilter, IoSession session, Object message) throws IOException {
+        IoBuffer buf = (IoBuffer) message;
         debug("messageReceived: size = %d", buf.remaining());
         synchronized (mInputBuffer) {
             // Read and decrypt cipher blocks from input buffer
@@ -69,18 +71,17 @@ public class SaslFilter extends IoFilterAdapter {
                 if (mInputBuffer.isComplete()) {
                     debug("messageReceived: input complete");
                     byte[] b = mInputBuffer.unwrap(mSecurityLayer);
-                    nextFilter.messageReceived(session, ByteBuffer.wrap(b));
+                    nextFilter.messageReceived(session, IoBuffer.wrap(b));
                     mInputBuffer.clear();
                 }
             }
         }
-        buf.release();
+        buf.clear();
     }
 
     @Override
-    public void filterWrite(NextFilter nextFilter, IoSession session,
-                            WriteRequest writeRequest) throws IOException {
-        ByteBuffer buf = (ByteBuffer) writeRequest.getMessage();
+    public void filterWrite(NextFilter nextFilter, IoSession session, WriteRequest writeRequest) throws IOException {
+        IoBuffer buf = (IoBuffer) writeRequest.getMessage();
         // Allows us to disable encryption until authentication OK response
         // has been sent to client.
         if (session.containsAttribute(DISABLE_ENCRYPTION_ONCE)) {
@@ -98,9 +99,9 @@ public class SaslFilter extends IoFilterAdapter {
             nextFilter.filterWrite(session, writeRequest);
             return;
         }
-        
-        List<ByteBuffer> buffers = encrypt(buf);
-        buf.release();
+
+        List<IoBuffer> buffers = encrypt(buf);
+        buf.clear();
 
         // Create and send new WriteRequest for each output buffer. The last
         // request includes the WriteFuture from the original request, and this
@@ -108,10 +109,9 @@ public class SaslFilter extends IoFilterAdapter {
         // will have been written before the last.
         int size = buffers.size();
         for (int i = 0; i < size - 1; i++) {
-            nextFilter.filterWrite(session, new WriteRequest(buffers.get(i)));
+            nextFilter.filterWrite(session, new DefaultWriteRequest(buffers.get(i)));
         }
-        nextFilter.filterWrite(session, new WriteRequest(
-            buffers.get(size - 1), writeRequest.getFuture()));
+        nextFilter.filterWrite(session, new DefaultWriteRequest(buffers.get(size - 1), writeRequest.getFuture()));
     }
 
     /*
@@ -120,27 +120,26 @@ public class SaslFilter extends IoFilterAdapter {
      * the second the actual data. This is more efficient than having to copy
      * the bytes around in order to merge into one big buffer.
      */
-    private List<ByteBuffer> encrypt(ByteBuffer bb) throws IOException {
-        debug("encrypt enter: input buffer size = %d", bb.remaining());
-        List<ByteBuffer> buffers = new ArrayList<ByteBuffer>(2);
+    private List<IoBuffer> encrypt(IoBuffer buf) throws IOException {
+        debug("encrypt enter: input buffer size = %d", buf.remaining());
+        List<IoBuffer> buffers = new ArrayList<IoBuffer>(2);
         synchronized (mOutputBuffer) {
-            // May loop more than once if RAW_SEND_SIZE is exceeded 
+            // May loop more than once if RAW_SEND_SIZE is exceeded
             do {
-                mOutputBuffer.put(bb);
+                mOutputBuffer.put(buf);
                 byte[] b = mOutputBuffer.wrap(mSecurityLayer);
                 debug("encrypt wrap: encrypted buffer size = %d", b.length);
-                buffers.add(ByteBuffer.allocate(4).putInt(b.length).flip());
-                buffers.add(ByteBuffer.wrap(b));
+                buffers.add(IoBuffer.allocate(4).putInt(b.length).flip());
+                buffers.add(IoBuffer.wrap(b));
                 mOutputBuffer.clear();
-            } while (bb.hasRemaining());
+            } while (buf.hasRemaining());
         }
         debug("encrypt exit: buffer count = %d", buffers.size());
         return buffers;
     }
 
     @Override
-    public void onPostRemove(IoFilterChain parent, String name,
-                             NextFilter nextFilter) throws IOException {
+    public void onPostRemove(IoFilterChain parent, String name, NextFilter nextFilter) throws IOException {
         debug("onPostRemove: enter");
         mSecurityLayer.dispose();
     }

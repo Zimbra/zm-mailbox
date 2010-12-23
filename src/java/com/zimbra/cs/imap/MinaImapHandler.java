@@ -40,7 +40,8 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         mOutputStream = mSession.getOutputStream();
     }
 
-    @Override boolean doSTARTTLS(String tag) throws IOException {
+    @Override
+    boolean doSTARTTLS(String tag) throws IOException {
         if (!checkState(tag, State.NOT_AUTHENTICATED)) {
             return true;
         } else if (mStartedTLS) {
@@ -54,7 +55,8 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         return true;
     }
 
-    @Override public void connectionOpened() throws IOException {
+    @Override
+    public void connectionOpened() throws IOException {
         if (!Config.userServicesEnabled()) {
             ZimbraLog.imap.debug("Dropping connection (user services are disabled)");
             dropConnection();
@@ -67,11 +69,13 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         }
     }
 
-    @Override protected boolean processCommand() {
+    @Override
+    protected boolean processCommand() {
         throw new UnsupportedOperationException();
     }
 
-    @Override public void messageReceived(Object msg) throws IOException {
+    @Override
+    public void messageReceived(Object msg) throws IOException {
         if (mRequest == null)
             mRequest = new MinaImapRequest(this);
 
@@ -132,7 +136,8 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
      * execution since requests are processed in sequence for any given
      * connection.
      */
-    @Override protected void dropConnection(boolean sendBanner) {
+    @Override
+    protected void dropConnection(boolean sendBanner) {
         dropConnection(sendBanner, WRITE_TIMEOUT);
     }
 
@@ -156,11 +161,13 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         mSession.close();
     }
 
-    @Override public void dropConnection(long timeout) {
+    @Override
+    public void dropConnection(long timeout) {
         dropConnection(true, timeout);
     }
 
-    @Override public void connectionClosed() {
+    @Override
+    public void connectionClosed() {
         cleanup();
         mSession.close();
     }
@@ -175,39 +182,47 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         } catch (Exception e) {}
     }
 
-    @Override public void connectionIdle() {
+    @Override
+    public void connectionIdle() {
         notifyIdleConnection();
     }
 
-    @Override protected boolean setupConnection(Socket connection) {
+    @Override
+    protected boolean setupConnection(Socket connection) {
         throw new UnsupportedOperationException();
     }
 
-    @Override protected boolean authenticate() {
+    @Override
+    protected boolean authenticate() {
         throw new UnsupportedOperationException();
     }
 
-    @Override protected void notifyIdleConnection() {
+    @Override
+    protected void notifyIdleConnection() {
         ZimbraLog.imap.debug("dropping connection for inactivity");
         dropConnection();
     }
 
-    @Override protected void enableInactivityTimer() {
+    @Override
+    protected void enableInactivityTimer() {
         mSession.setMaxIdleSeconds(mConfig.getAuthenticatedMaxIdleSeconds());
     }
 
-    @Override protected void completeAuthentication() throws IOException {
+    @Override
+    protected void completeAuthentication() throws IOException {
         if (mAuthenticator.isEncryptionEnabled()) {
             mSession.startSasl(mAuthenticator.getSaslServer());
         }
         mAuthenticator.sendSuccess();
     }
 
-    @Override protected void flushOutput() throws IOException {
+    @Override
+    protected void flushOutput() throws IOException {
         mOutputStream.flush();
     }
 
-    @Override void sendLine(String line, boolean flush) throws IOException {
+    @Override
+    void sendLine(String line, boolean flush) throws IOException {
         MinaOutputStream out = (MinaOutputStream) mOutputStream;
         if (out != null) {
             out.write(line);

@@ -31,7 +31,6 @@ public class MinaPop3Handler extends Pop3Handler implements MinaHandler {
         super(server);
         this.mSession = session;
         mOutputStream = session.getOutputStream();
-        mSession.setMaxIdleSeconds(mConfig.getMaxIdleSeconds());
     }
 
     @Override

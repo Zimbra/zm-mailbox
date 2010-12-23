@@ -17,11 +17,15 @@ package com.zimbra.cs.mina;
 
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
-import org.apache.mina.common.IdleStatus;
-import org.apache.mina.common.IoFilterAdapter;
-import org.apache.mina.common.IoSession;
 
 import javax.net.ssl.SSLException;
+
+import org.apache.mina.core.buffer.IoBuffer;
+import org.apache.mina.core.filterchain.IoFilterAdapter;
+import org.apache.mina.core.session.IdleStatus;
+import org.apache.mina.core.session.IoSession;
+import org.apache.mina.core.write.WriteRequest;
+
 import java.nio.ByteBuffer;
 import java.net.SocketException;
 
@@ -56,8 +60,7 @@ class MinaLoggingFilter extends IoFilterAdapter {
     }
 
     @Override
-    public void sessionIdle(NextFilter nextFilter, IoSession session,
-                            IdleStatus status) {
+    public void sessionIdle(NextFilter nextFilter, IoSession session, IdleStatus status) {
         if (log.isDebugEnabled()) {
             debug(session, "Connection idle: " + status);
         }
@@ -94,7 +97,7 @@ class MinaLoggingFilter extends IoFilterAdapter {
     }
 
     @Override
-    public void messageSent(NextFilter nextFilter, IoSession session, Object message) {
+    public void messageSent(NextFilter nextFilter, IoSession session, WriteRequest message) {
         if (log.isTraceEnabled()) {
             trace(session, "S: %s", pp(message));
         }
@@ -122,8 +125,8 @@ class MinaLoggingFilter extends IoFilterAdapter {
         ByteBuffer bb;
         if (msg instanceof ByteBuffer) {
             bb = (ByteBuffer) msg;
-        } else if (msg instanceof org.apache.mina.common.ByteBuffer) {
-            bb = ((org.apache.mina.common.ByteBuffer) msg).buf();
+        } else if (msg instanceof IoBuffer) {
+            bb = ((IoBuffer) msg).buf();
         } else if (msg instanceof byte[]) {
             bb = ByteBuffer.wrap((byte[]) msg);
         } else {

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -16,6 +16,8 @@
 package com.zimbra.cs.mina;
 
 import java.nio.ByteBuffer;
+
+import org.apache.mina.core.buffer.IoBuffer;
 
 public final class MinaUtil {
     public static final byte CR = '\r';
@@ -28,7 +30,7 @@ public final class MinaUtil {
      * Ensure that specified buffer has at least enough capacity to accomodate
      * 'minSize' additional bytes, but not more than 'maxSize' additional bytes.
      * If 'maxSize' is 0, then there is no limit.
-     * 
+     *
      * @param bb the ByteBuffer to expand, or null to create a new one
      * @param minSize minimum additional capacity for resulting byte buffer
      * @param maxSize maximum additional capacity, or -1 for no maximum
@@ -57,7 +59,7 @@ public final class MinaUtil {
     public static ByteBuffer expand(ByteBuffer bb, int minSize) {
         return expand(bb, minSize, -1);
     }
-    
+
     public static String toAsciiString(ByteBuffer bb) {
         int len = bb.remaining();
         char[] cs = new char[len];
@@ -89,14 +91,14 @@ public final class MinaUtil {
         return b;
     }
 
-    public static org.apache.mina.common.ByteBuffer toMinaByteBuffer(ByteBuffer bb) {
-        return org.apache.mina.common.ByteBuffer.wrap(bb);
+    public static IoBuffer toMinaByteBuffer(ByteBuffer bb) {
+        return IoBuffer.wrap(bb);
     }
 
     public static String toHexString(ByteBuffer bb) {
         return appendHex(new StringBuilder(), bb).toString();
     }
-    
+
     public static StringBuilder appendHex(StringBuilder sb, ByteBuffer bb) {
         int limit = bb.limit();
         for (int i = bb.position(); i < limit; i++) {

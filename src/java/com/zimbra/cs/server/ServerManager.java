@@ -19,6 +19,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -32,7 +33,6 @@ import com.zimbra.cs.lmtpserver.TcpLmtpServer;
 import com.zimbra.cs.milter.MilterConfig;
 import com.zimbra.cs.milter.MilterServer;
 import com.zimbra.cs.milter.MinaMilterServer;
-import com.zimbra.cs.nio.NioThreadFactory;
 import com.zimbra.cs.pop3.MinaPop3Server;
 import com.zimbra.cs.pop3.Pop3Config;
 import com.zimbra.cs.pop3.Pop3Server;
@@ -49,7 +49,7 @@ public class ServerManager {
     private ExecutorService imapNioHandlerPool;
     private ExecutorService milterNioHandlerPool;
     private MilterServer milterServer;
-    
+
     private static final ServerManager INSTANCE = new ServerManager();
 
     // For debugging...
@@ -80,7 +80,7 @@ public class ServerManager {
                 imapSSLServer = startImapServer(true);
             }
         }
-        
+
         // run milter service in the same process as mailtoxd. should be used only in dev environment
         if (app.supports(MilterServer.class)) {
             if (LC.milter_in_process_mode.booleanValue()) {
@@ -99,7 +99,7 @@ public class ServerManager {
         server.start();
         return server;
     }
-    
+
     private Pop3Server startPop3Server(boolean ssl) throws ServiceException {
         Pop3Config config = new Pop3Config(ssl);
         if (pop3NioHandlerPool == null) {
@@ -131,7 +131,7 @@ public class ServerManager {
         server.start();
         return server;
     }
-    
+
     public void stopServers() throws ServiceException {
         if (lmtpServer != null) {
             lmtpServer.stop();
@@ -164,6 +164,6 @@ public class ServerManager {
             config.getNioMinThreads(),
             TimeUnit.SECONDS,
             new SynchronousQueue<Runnable>(),
-            new NioThreadFactory(config.getProtocol() + "Handler"));
+            new ThreadFactoryBuilder().setNameFormat(config.getProtocol() + "Server-%d").build());
     }
 }
