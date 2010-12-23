@@ -16,7 +16,6 @@ import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.JMSession;
 
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import java.text.DateFormat;
 import java.util.Date;
@@ -78,23 +77,14 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
 
         String organizer = null;
         ZOrganizer zOrganizer = invite.getOrganizer();
-        if (zOrganizer != null) {
-            if (zOrganizer.hasCn()) {
-                organizer = zOrganizer.getCn();
-            } else {
-                organizer = zOrganizer.getAddress();
-            }
-        }
+        if (zOrganizer != null)
+            organizer = zOrganizer.hasCn() ? zOrganizer.getCn() : zOrganizer.getAddress();
+        if (organizer == null) organizer = "";
 
         String folder = calItem.getMailbox().getFolderById(calItem.getFolderId()).getName();
 
-        return L10nUtil.getMessage(calItem.getType() == MailItem.TYPE_APPOINTMENT ? L10nUtil.MsgKey.apptReminderSmsText : L10nUtil.MsgKey.taskReminderSmsText,
-                                   locale,
-                                   calItem.getSubject(),
-                                   formattedStart,
-                                   formattedEnd,
-                                   location,
-                                   organizer,
-                                   folder);
+        return L10nUtil.getMessage(calItem.getType() == MailItem.TYPE_APPOINTMENT ?
+                                           L10nUtil.MsgKey.apptReminderSmsText : L10nUtil.MsgKey.taskReminderSmsText,
+                                   locale, calItem.getSubject(), formattedStart, formattedEnd, location, organizer, folder);
     }
 }
