@@ -34,15 +34,30 @@ public class InternetAddressTest {
         test("standard address",
                 "Bob the Builder <bob@example.com>",
                 "Bob the Builder", "bob@example.com");
-        test("no display name", "bob@example.com", null, "bob@example.com");
-        test("no addr-spec", "Bob the Builder", "Bob the Builder", null);
+        test("no display name",
+                "bob@example.com",
+                null, "bob@example.com");
+        test("no addr-spec",
+                "Bob the Builder",
+                "Bob the Builder", null);
         test("no display name, but addr-spec in brackets",
-                "<bob@example.com>",  null, "bob@example.com");
+                "<bob@example.com>",
+                null, "bob@example.com");
         test("bare non-ASCII character",
                 "_Bob_, the Build\u00ear == <bob@example.com>",
                 "_Bob_, the Build\u00ear ==", "bob@example.com");
         test("bare non-ASCII character in DOT ATOM",
-                "Ivar H\u00FCtt ivar@example.com", null, "\"IvarH\u00FCttivar\"@example.com");
+                "Ivar H\u00FCtt ivar@example.com",
+                null, "\"IvarH\u00FCttivar\"@example.com");
+        test("null return-path",
+                "Bob the Builder <>",
+                "Bob the Builder", "");
+        test("cruft '/' before terminating angle bracket",
+                "<bug-54513-14@http.bugzilla.zimbra.com/>",
+                null, "bug-54513-14@http.bugzilla.zimbra.com");
+        test("cruft '\\' before terminating angle bracket",
+                "<bug-54513-14@http.bugzilla.zimbra.com \\>",
+                null, "bug-54513-14@http.bugzilla.zimbra.com");
     }
 
     @Test
@@ -66,6 +81,16 @@ public class InternetAddressTest {
 
     @Test
     public void quote() {
+        test("joining quoted strings with normal text",
+                "\"Bob\" the \"Builder\" <bob@example.com>",
+                "Bob the Builder", "bob@example.com");
+        test("blank quoted strings",
+                " \"\"    \"Bob the Builder\" <bob@example.com>",
+                " Bob the Builder", "bob@example.com");
+        test("quotes around commas",
+                "\"Bob, the Builder\" <bob@example.com>",
+                "Bob, the Builder", "bob@example.com");
+
         test("stripping leading/trailing whitespace and useless quotes in address",
                 "  Bob the Builder   <\"bob\"@\"example.com\">",
                 "Bob the Builder", "bob@example.com");
@@ -75,12 +100,6 @@ public class InternetAddressTest {
         test("stripping whitespace and useless quotes in address",
                 "  Bob the Builder   <b ob@\"example.com\">",
                 "Bob the Builder", "bob@example.com");
-        test("joining quoted strings with normal text",
-                "\"Bob\" the \"Builder\" <bob@example.com>",
-                "Bob the Builder", "bob@example.com");
-        test("blank quoted strings",
-                " \"\"    \"Bob the Builder\" <bob@example.com>",
-                " Bob the Builder", "bob@example.com");
         test("stripping quotes from local-part of addr-spec",
                 "\"bob\"@example.com (Bob the Builder)  ",
                 "Bob the Builder", "bob@example.com");
@@ -119,9 +138,13 @@ public class InternetAddressTest {
         test("ignoring comments in address",
                 "Bob the Builder <bob(Big)@(Bob)example.com>",
                 "Bob the Builder", "bob@example.com");
-        test("quotes around commas",
-                "\"Bob, the Builder\" <bob@example.com>",
-                "Bob, the Builder", "bob@example.com");
+        test("joining quoted strings with normal text and dropping extra comments",
+                "\"Bob the\" Builder <bob(Bob)@example.com> (Bobbles)",
+                "Bob the Builder", "bob@example.com");
+        test("RFC 2822 A.5 oddball example",
+                "Pete(A wonderful \\) chap) <pete(his account)@silly.test(his host)>",
+                "Pete", "pete@silly.test");
+
         test("display part in comment",
                 "bob@example.com (Bob the Builder)  ",
                 "Bob the Builder", "bob@example.com");
@@ -143,12 +166,6 @@ public class InternetAddressTest {
         test("trailing spaces in comments and a missing end-bracket",
                 " ( Bob   the\tBuilder ) <bob@example.com",
                 "Bob the Builder", "bob@example.com");
-        test("joining quoted strings with normal text and dropping extra comments",
-                "\"Bob the\" Builder <bob(Bob)@example.com> (Bobbles)",
-                "Bob the Builder", "bob@example.com");
-        test("RFC 2822 A.5 oddball example",
-                "Pete(A wonderful \\) chap) <pete(his account)@silly.test(his host)>",
-                "Pete", "pete@silly.test");
     }
 
     @Test

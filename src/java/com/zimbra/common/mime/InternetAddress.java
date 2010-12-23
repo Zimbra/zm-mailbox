@@ -21,33 +21,33 @@ import java.util.List;
 import com.zimbra.common.mime.MimeAddressHeader;
 
 public class InternetAddress implements Cloneable {
-    private String mDisplay;
-    private String mEmail;
-    private String mCharset;
+    private String display;
+    private String email;
+    private String charset;
 
     public InternetAddress() {
-        mCharset = "utf-8";
+        this.charset = "utf-8";
     }
 
     public InternetAddress(String display, String email) {
-        mDisplay = display;
-        mEmail = email;
-        mCharset = "utf-8";
+        this.display = display;
+        this.email = email;
+        this.charset = "utf-8";
     }
 
     public InternetAddress(InternetAddress iaddr) {
-        mDisplay = iaddr.mDisplay;
-        mEmail = iaddr.mEmail;
-        mCharset = iaddr.mCharset;
+        this.display = iaddr.display;
+        this.email = iaddr.email;
+        this.charset = iaddr.charset;
     }
 
     public InternetAddress(String content) {
         byte[] bvalue;
         try {
-            mCharset = "utf-8";
-            bvalue = content.getBytes(mCharset);
+            this.charset = "utf-8";
+            bvalue = content.getBytes(this.charset);
         } catch (UnsupportedEncodingException e) {
-            mCharset = null;
+            this.charset = null;
             bvalue = content.getBytes();
         }
         parse(bvalue, 0, bvalue.length);
@@ -63,11 +63,11 @@ public class InternetAddress implements Cloneable {
 
     public InternetAddress(byte[] content, int start, int length, String charset) {
         if (charset != null && !charset.trim().isEmpty()) {
-            mCharset = charset.trim();
+            this.charset = charset.trim();
         }
         parse(content, start, length);
-        if (mCharset == null) {
-            mCharset = "utf-8";
+        if (this.charset == null) {
+            this.charset = "utf-8";
         }
     }
 
@@ -78,39 +78,39 @@ public class InternetAddress implements Cloneable {
 
 
     public String getAddress() {
-        return mEmail;
+        return email;
     }
 
     public String getPersonal() {
-        return mDisplay;
+        return display;
     }
 
     public String getCharset() {
-        return mCharset;
+        return charset;
     }
 
     public InternetAddress setAddress(String address) {
-        mEmail = address;
+        this.email = address;
         return this;
     }
 
     public InternetAddress setPersonal(String personal) {
-        mDisplay = personal;
+        this.display = personal;
         return this;
     }
 
     public InternetAddress setCharset(String charset) {
-        mCharset = charset == null || charset.trim().equals("") ? "utf-8" : charset.trim();
+        this.charset = charset == null || charset.trim().equals("") ? "utf-8" : charset.trim();
         return this;
     }
 
     /** Returns the address, properly MIME encoded for use in a message. */
     @Override
     public String toString() {
-        if (mDisplay != null) {
-            return MimeHeader.escape(mDisplay, mCharset, true) + (mEmail != null ? (" <" + mEmail + '>') : "");
-        } else if (mEmail != null) {
-            return mEmail;
+        if (display != null) {
+            return MimeHeader.escape(display, charset, true) + (email != null ? (" <" + email + '>') : "");
+        } else if (email != null) {
+            return email;
         } else {
             return "";
         }
@@ -119,10 +119,10 @@ public class InternetAddress implements Cloneable {
     /** Returns the address, formatted as a {@link String}.  No MIME encoding
      *  is done, so this form cannot be used in a message header. */
     public String toUnicodeString() {
-        if (mDisplay != null) {
-            return MimeHeader.quote(mDisplay) + (mEmail != null ? (" <" + mEmail + '>') : "");
-        } else if (mEmail != null) {
-            return mEmail;
+        if (display != null) {
+            return MimeHeader.quote(display) + (email != null ? (" <" + email + '>') : "");
+        } else if (email != null) {
+            return email;
         } else {
             return "";
         }
@@ -249,7 +249,7 @@ public class InternetAddress implements Cloneable {
 
         public Group(String name, List<InternetAddress> members) {
             super(name, null);
-            if (addresses != null) {
+            if (members != null) {
                 for (InternetAddress addr : members) {
                     addMember(addr);
                 }
@@ -324,7 +324,7 @@ public class InternetAddress implements Cloneable {
     }
 
     private void parse(byte[] content, int start, int length, boolean angle) {
-        HeaderUtils.ByteBuilder builder = new HeaderUtils.ByteBuilder(length, mCharset);
+        HeaderUtils.ByteBuilder builder = new HeaderUtils.ByteBuilder(length, charset);
         String base = null, address = null, comment = null;
         boolean quoted = false, dliteral = false, escaped = false, atsign = false, route = false;
         boolean slop = false, wsp = true, cwsp = true, encoded = false;
@@ -344,7 +344,7 @@ public class InternetAddress implements Cloneable {
                     if (angle) {
                         address = builder.appendTo(address);
                     } else if (builder.indexOf((byte) '=') != -1) {
-                        base = (base == null ? "" : base) +  MimeHeader.decode(builder.toByteArray(), mCharset);
+                        base = (base == null ? "" : base) +  MimeHeader.decode(builder.toByteArray(), charset);
                     } else {
                         base = builder.appendTo(base);
                     }
@@ -437,6 +437,10 @@ public class InternetAddress implements Cloneable {
                 }
                 angle = true;  wsp = true;  atsign = false;  route = false;  builder.reset();
             } else if (c == '>' && angle) {
+                // clean up cruft before saving...
+                while (!builder.isEmpty() && (builder.endsWith((byte) '/') || builder.endsWith((byte) '\\'))) {
+                    builder.pop();
+                }
                 address = builder.appendTo(address);
                 slop = true;  builder.reset();
             } else {
@@ -445,8 +449,9 @@ public class InternetAddress implements Cloneable {
                     if (angle && !startRoute) {
                         address = builder.appendTo(address);
                         // quote the mailbox part of the address if necessary
-                        if (!isValidDotAtom(address))
+                        if (!isValidDotAtom(address)) {
                             address = MimeHeader.quote(address);
+                        }
                         builder.reset();
                     }
                     if (!startRoute) {
@@ -475,7 +480,7 @@ public class InternetAddress implements Cloneable {
         if (!builder.isEmpty()) {
             if (clevel > 0)   comment = builder.appendTo(comment);
             else if (angle)   address = builder.appendTo(address);
-            else if (quoted)  base = (base == null ? "" : base) +  MimeHeader.decode(builder.toByteArray(), mCharset);
+            else if (quoted)  base = (base == null ? "" : base) +  MimeHeader.decode(builder.toByteArray(), charset);
             else              base = builder.appendTo(base);
         }
 
@@ -487,8 +492,8 @@ public class InternetAddress implements Cloneable {
             // there are some tricky little bits to parsing addresses that weren't followed, so re-parse as an address
             parse(content, start, length, true);
         } else {
-            mDisplay = base != null ? base : comment == null ? null : comment.toString();
-            mEmail = address == null ? null : address.toString().trim();
+            this.display = base != null ? base : comment == null ? null : comment.toString();
+            this.email = address == null ? null : address.toString().trim();
         }
     }
 

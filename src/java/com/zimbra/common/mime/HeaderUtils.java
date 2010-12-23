@@ -101,14 +101,16 @@ public class HeaderUtils {
             disableTrimming();
         }
 
-        @Override protected int nextByte() throws IOException {
+        @Override
+        protected int nextByte() throws IOException {
             int c = super.nextByte();
             return c == '_' ? ' ' : c;
         }
     }
 
+
     static class ByteBuilder extends ByteArrayOutputStream {
-        private String mCharset;
+        private String charset;
 
         ByteBuilder() {
             super();
@@ -120,12 +122,12 @@ public class HeaderUtils {
 
         ByteBuilder(String charset) {
             this();
-            mCharset = charset;
+            this.charset = charset;
         }
 
         ByteBuilder(int size, String charset) {
             this(size);
-            mCharset = charset;
+            this.charset = charset;
         }
 
         ByteBuilder(byte[] b) {
@@ -141,7 +143,7 @@ public class HeaderUtils {
         }
 
         ByteBuilder setCharset(String charset) {
-            mCharset = charset;
+            this.charset = charset;
             return this;
         }
 
@@ -182,20 +184,27 @@ public class HeaderUtils {
 
         int indexOf(byte b) {
             for (int i = 0; i < count; i++) {
-                if (buf[i] == b) {
+                if (buf[i] == b)
                     return i;
-                }
             }
             return -1;
         }
 
-        @Override public synchronized String toString() {
+        boolean startsWith(byte b) {
+            return count > 0 && buf[0] == b;
+        }
+
+        boolean endsWith(byte b) {
+            return count > 0 && buf[count - 1] == b;
+        }
+
+        @Override
+        public synchronized String toString() {
             try {
-                if (mCharset != null && !mCharset.isEmpty()) {
-                    return super.toString(mCharset);
+                if (charset != null && !charset.isEmpty()) {
+                    return super.toString(charset);
                 }
-            } catch (Exception e) {
-            }
+            } catch (Exception e) { }
             return super.toString();
         }
 
