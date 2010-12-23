@@ -7719,7 +7719,7 @@ public class Mailbox {
         }
     }
 
-    private void migrateWikiFolders() throws ServiceException {
+    protected void migrateWikiFolders() throws ServiceException {
         MigrateToDocuments migrate = new MigrateToDocuments();
         boolean success = false;
         try {
