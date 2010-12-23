@@ -105,24 +105,22 @@ public class CalItemEmailReminderTask extends CalItemReminderTaskBase {
 
         String organizer = null;
         ZOrganizer zOrganizer = invite.getOrganizer();
-        if (zOrganizer != null) {
-            if (zOrganizer.hasCn()) {
-                organizer = zOrganizer.getCn();
-            } else {
-                organizer = zOrganizer.getAddress();
-            }
-        }
+        if (zOrganizer != null)
+            organizer = zOrganizer.hasCn() ? zOrganizer.getCn() : zOrganizer.getAddress();
+        if (organizer == null) organizer = "";
+
 
         String folder = calItem.getMailbox().getFolderById(calItem.getFolderId()).getName();
 
         String description = html ? invite.getDescriptionHtml() : invite.getDescription();
         if (description == null) description = "";
 
-        return html ? L10nUtil.getMessage(calItem.getType() == MailItem.Type.APPOINTMENT ?
-                L10nUtil.MsgKey.apptReminderEmailBodyHtml : L10nUtil.MsgKey.taskReminderEmailBodyHtml,
-                locale, formattedStart, formattedEnd, location, organizer, folder, description) :
-                    L10nUtil.getMessage(calItem.getType() == MailItem.Type.APPOINTMENT ?
-                            L10nUtil.MsgKey.apptReminderEmailBody : L10nUtil.MsgKey.taskReminderEmailBody,
-                            locale, formattedStart, formattedEnd, location, organizer, folder, description);
+        return html ?
+                L10nUtil.getMessage(calItem.getType() == MailItem.Type.APPOINTMENT ?
+                                            L10nUtil.MsgKey.apptReminderEmailBodyHtml : L10nUtil.MsgKey.taskReminderEmailBodyHtml,
+                                    locale, formattedStart, formattedEnd, location, organizer, folder, description) :
+                L10nUtil.getMessage(calItem.getType() == MailItem.Type.APPOINTMENT ?
+                                            L10nUtil.MsgKey.apptReminderEmailBody : L10nUtil.MsgKey.taskReminderEmailBody,
+                                    locale, formattedStart, formattedEnd, location, organizer, folder, description);
     }
 }

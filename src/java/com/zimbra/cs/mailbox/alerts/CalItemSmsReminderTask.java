@@ -76,18 +76,14 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
 
         String organizer = null;
         ZOrganizer zOrganizer = invite.getOrganizer();
-        if (zOrganizer != null) {
-            if (zOrganizer.hasCn()) {
-                organizer = zOrganizer.getCn();
-            } else {
-                organizer = zOrganizer.getAddress();
-            }
-        }
+        if (zOrganizer != null)
+            organizer = zOrganizer.hasCn() ? zOrganizer.getCn() : zOrganizer.getAddress();
+        if (organizer == null) organizer = "";
 
         String folder = calItem.getMailbox().getFolderById(calItem.getFolderId()).getName();
 
         return L10nUtil.getMessage(calItem.getType() == MailItem.Type.APPOINTMENT ?
-                L10nUtil.MsgKey.apptReminderSmsText : L10nUtil.MsgKey.taskReminderSmsText,
-                locale, calItem.getSubject(), formattedStart, formattedEnd, location, organizer, folder);
+                                           L10nUtil.MsgKey.apptReminderSmsText : L10nUtil.MsgKey.taskReminderSmsText,
+                                   locale, calItem.getSubject(), formattedStart, formattedEnd, location, organizer, folder);
     }
 }
