@@ -16,7 +16,8 @@
 package com.zimbra.soap.mail.message;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import com.zimbra.common.soap.MailConstants;
 
-@XmlRootElement(name="GetDataSourcesRequest")
+@XmlRootElement(name=MailConstants.E_GET_DATA_SOURCES_REQUEST)
 public class GetDataSourcesRequest {
 }

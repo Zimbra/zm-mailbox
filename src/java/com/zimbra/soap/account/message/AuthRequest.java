@@ -29,6 +29,7 @@ import com.zimbra.soap.account.type.Account;
 import com.zimbra.soap.account.type.Attr;
 import com.zimbra.soap.account.type.PreAuth;
 import com.zimbra.soap.account.type.Pref;
+import com.zimbra.common.soap.AccountConstants;
 
 
 /*
@@ -43,25 +44,25 @@ import com.zimbra.soap.account.type.Pref;
    [<requestedSkin>{skin}</requestedSkin>]
  </AuthRequest>
  */
-@XmlRootElement(name="AuthRequest")
+@XmlRootElement(name=AccountConstants.E_AUTH_REQUEST)
 @XmlType(propOrder = {})
 public class AuthRequest {
 
-    @XmlElement private Account account;
-    @XmlElement private String password;
-    @XmlElement private PreAuth preauth;
-    @XmlElement private String authToken;
-    @XmlElement private String virtualHost;
+    @XmlElement(name=AccountConstants.E_ACCOUNT) private Account account;
+    @XmlElement(name=AccountConstants.E_PASSWORD) private String password;
+    @XmlElement(name=AccountConstants.E_PREAUTH) private PreAuth preauth;
+    @XmlElement(name=AccountConstants.E_AUTH_TOKEN) private String authToken;
+    @XmlElement(name=AccountConstants.E_VIRTUAL_HOST) private String virtualHost;
     
-    @XmlElementWrapper(name="prefs")
-    @XmlElement(name="pref")
+    @XmlElementWrapper(name=AccountConstants.E_PREFS)
+    @XmlElement(name=AccountConstants.E_PREF)
     private List<Pref> prefs = new ArrayList<Pref>();
     
-    @XmlElementWrapper(name="attrs")
-    @XmlElement(name="attr")
+    @XmlElementWrapper(name=AccountConstants.E_ATTRS)
+    @XmlElement(name=AccountConstants.E_ATTR)
     private List<Attr> attrs = new ArrayList<Attr>();
     
-    @XmlElement private String requestedSkin;
+    @XmlElement(name=AccountConstants.E_REQUESTED_SKIN) private String requestedSkin;
     
     public AuthRequest() {
     }

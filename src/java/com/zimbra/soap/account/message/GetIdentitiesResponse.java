@@ -27,7 +27,7 @@ import com.google.common.collect.Iterables;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.Identity;
 
-@XmlRootElement(name="GetIdentitiesResponse")
+@XmlRootElement(name=AccountConstants.E_GET_IDENTITIES_RESPONSE)
 @XmlType(propOrder = {})
 public class GetIdentitiesResponse {
 
