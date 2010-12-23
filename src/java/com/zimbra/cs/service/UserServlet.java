@@ -760,23 +760,8 @@ public class UserServlet extends ZimbraServlet {
             }
 
             if (context.target == null) {
-                // no joy.  if they asked for something like "calendar.csv" (where "calendar" was the folder name), try again minus the extension
-                int dot = context.itemPath.lastIndexOf('.'), slash = context.itemPath.lastIndexOf('/');
-                if (checkExtension && context.format == null && dot != -1 && dot > slash) {
-                    /* if path == /foo/bar/baz.html, then
-                     *      format -> html
-                     *      path   -> /foo/bar/baz  */
-                    String unsuffixedPath = context.itemPath.substring(0, dot);
-                    try {
-                        context.target = mbox.getItemByPath(context.opContext, unsuffixedPath);
-                        context.format = context.itemPath.substring(dot + 1);
-                        context.itemPath = unsuffixedPath;
-                    } catch (ServiceException e) { }
-                }
-            }
-
-            if (context.target == null) {
-                // still no joy.  the only viable possibility at this point is that there's a mountpoint somewhere higher up in the requested path
+                // if there is a mountpoint somewhere higher up in the requested path
+                // then we need to proxy the request to the sharer's mailbox.
                 try {
                     // to search for the mountpoint we use admin rights on the user's mailbox.
                     // this is done so that MailItems in the mountpoint can be resolved
@@ -792,6 +777,22 @@ public class UserServlet extends ZimbraServlet {
                         context.extraPath = match.getSecond();
                     }
                 } catch (ServiceException e) { }
+            }
+
+            if (context.target == null) {
+                // if they asked for something like "calendar.csv" (where "calendar" was the folder name), try again minus the extension
+                int dot = context.itemPath.lastIndexOf('.'), slash = context.itemPath.lastIndexOf('/');
+                if (checkExtension && context.format == null && dot != -1 && dot > slash) {
+                    /* if path == /foo/bar/baz.html, then
+                     *      format -> html
+                     *      path   -> /foo/bar/baz  */
+                    String unsuffixedPath = context.itemPath.substring(0, dot);
+                    try {
+                        context.target = mbox.getItemByPath(context.opContext, unsuffixedPath);
+                        context.format = context.itemPath.substring(dot + 1);
+                        context.itemPath = unsuffixedPath;
+                    } catch (ServiceException e) { }
+                }
             }
 
             // don't think this code can ever get called because <tt>context.target</tt> can't be null at this point
