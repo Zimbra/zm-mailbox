@@ -16,7 +16,6 @@
 package com.zimbra.cs.zclient;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.zimlet.ZimletUserProperties.ZimletProp;
 
 import org.json.JSONException;
 
@@ -28,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -116,20 +114,8 @@ public class ZGetInfoResult implements ToZJSONObject {
         return MapUtil.multimapToMapOfLists(data.getAttrsMultimap());
     }
 
-    public  Map<String, List<String>> getZimletProps() {
-        return MapUtil.multimapToMapOfLists(multimapFromProps(data.getProps()));
-    }
-    
-    //have to put this here rather than in Prop.java to avoid code duplication and/or circular dependency
-    //ZimbraSoap doesn't have access to ZimletProp class which currently encapsulates java->attributes nor to Provisioning which contains the attribute key 
-    private Multimap<String, String> multimapFromProps(List<Prop> props) {
-        String key = Provisioning.A_zimbraZimletUserProperties;
-        Multimap<String, String> map = ArrayListMultimap.create();
-        for (Prop p : props) {
-            ZimletProp zp = new ZimletProp(p.getZimlet(), p.getName(), p.getValue());
-            map.put(key, zp.prop);
-        }
-        return map;
+    public Map<String, List<String>> getZimletProps() {
+        return MapUtil.multimapToMapOfLists(data.getPropsMultimap(Provisioning.A_zimbraZimletUserProperties));
     }
 
     /***
@@ -234,7 +220,7 @@ public class ZGetInfoResult implements ToZJSONObject {
     }
     
     public String getVersion() {
-    	return data.getVersion();
+        return data.getVersion();
     }
 
     public Date getPrevSession() {
