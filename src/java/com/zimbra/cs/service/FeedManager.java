@@ -46,6 +46,7 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.apache.commons.httpclient.util.DateParseException;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.mime.ContentType;
@@ -56,7 +57,9 @@ import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -73,19 +76,47 @@ import com.zimbra.cs.util.Zimbra;
 public class FeedManager {
 
     public static final class SubscriptionData<T> {
-        public final List<T> items;
-        public String lastGuid;
-        public long   lastDate = -1;
-        public long   feedDate = System.currentTimeMillis();
+        private final List<T> items;
+        private String lastGuid;
+        private long   lastDate;
+        private boolean notModified;
 
-        SubscriptionData()              { items = new ArrayList<T>(); }
-        SubscriptionData(List<T> list)  { items = list; }
-        SubscriptionData(long fdate)    { items = new ArrayList<T>();  feedDate = fdate; }
+        private static SubscriptionData<Object> NOT_MODIFIED() {
+            return new SubscriptionData<Object>(new ArrayList<Object>(0), 0, true);
+        }
 
-        void recordItem(T item, String guid, long date) {
+        private SubscriptionData() {
+            this(new ArrayList<T>(), 0);
+        }
+        private SubscriptionData(List<T> items, long ldate)  {
+            this(items, ldate, false);
+        }
+        private SubscriptionData(List<T> items, long lastModifiedDate, boolean notModified)  {
+            this.items = items;
+            this.lastDate = lastModifiedDate;
+            this.notModified = notModified;
+        }
+
+        private void recordItem(T item, String guid, long date) {
             items.add(item);
             if (date > lastDate)  { lastGuid = guid;  lastDate = date; }
         }
+        private void recordFeedModifiedDate(long feedModified) {
+            if (feedModified > lastDate)
+                lastDate = feedModified;
+        }
+
+        public List<T> getItems() { return items; }
+        
+        // returns the guid of the most recently modified item
+        public String getMostRecentGuid() { return lastGuid; }
+
+        // returns the timestamp of the most recently modified item, or the last modified time of the feed itself,
+        // whichever is more recent
+        public long getLastModifiedDate() { return lastDate; }
+
+        // returns true if the feed has no change since the last sync (HTTP 304 Not Modified response)
+        public boolean isNotModified() { return notModified; }
     }
 
     public static final int MAX_REDIRECTS = 3;
@@ -95,6 +126,8 @@ public class FeedManager {
 
     public static SubscriptionData<?> retrieveRemoteDatasource(Account acct, String url, Folder.SyncData fsd)
     throws ServiceException {
+        assert(!StringUtil.isNullOrEmpty(url));
+
         HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
         HttpProxyUtil.configureProxy(client);
 
@@ -110,12 +143,11 @@ public class FeedManager {
 
         GetMethod get = null;
         BufferedInputStream content = null;
+        long lastModified = 0;
         try {
             String expectedCharset = MimeConstants.P_CHARSET_UTF8;
             int redirects = 0;
             do {
-                if (url == null || url.equals(""))
-                    return new SubscriptionData<Object>();
                 String lcurl = url.toLowerCase();
                 if (lcurl.startsWith("webcal:"))
                     url = "http:" + url.substring(7);
@@ -155,6 +187,11 @@ public class FeedManager {
                 get.setDoAuthentication(true);
                 get.addRequestHeader("User-Agent", HTTP_USER_AGENT);
                 get.addRequestHeader("Accept", HTTP_ACCEPT);
+                if (fsd != null && fsd.getLastSyncDate() > 0) {
+                    String lastSyncAt = org.apache.commons.httpclient.util.DateUtil.formatDate(
+                            new Date(fsd.getLastSyncDate()));
+                    get.addRequestHeader("If-Modified-Since", lastSyncAt);
+                }
                 HttpClientUtil.executeMethod(client, get);
 
                 Header locationHeader = get.getResponseHeader("location");
@@ -162,11 +199,32 @@ public class FeedManager {
                     // update our target URL and loop again to do another HTTP GET
                     url = locationHeader.getValue();
                     get.releaseConnection();
-                } else if (get.getStatusCode() != HttpServletResponse.SC_OK) {
-                    throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusLine().toString(), null);
                 } else {
-                    content = new BufferedInputStream(get.getResponseBodyAsStream());
-                    expectedCharset = get.getResponseCharSet();
+                    int statusCode = get.getStatusCode();
+                    if (statusCode == HttpServletResponse.SC_OK) {
+                        content = new BufferedInputStream(get.getResponseBodyAsStream());
+                        expectedCharset = get.getResponseCharSet();
+
+                        Header lastModHdr = get.getResponseHeader("Last-Modified");
+                        if (lastModHdr == null)
+                            lastModHdr = get.getResponseHeader("Date");
+                        if (lastModHdr != null) {
+                            try {
+                                Date d = org.apache.commons.httpclient.util.DateUtil.parseDate(lastModHdr.getValue());
+                                lastModified = d.getTime();
+                            } catch (DateParseException e) {
+                                ZimbraLog.misc.warn("unable to parse Last-Modified/Date header: " + lastModHdr.getValue(), e);
+                                lastModified = System.currentTimeMillis();
+                            }
+                        } else {
+                            lastModified = System.currentTimeMillis();
+                        }
+                    } else if (statusCode == HttpServletResponse.SC_NOT_MODIFIED) {
+                        ZimbraLog.misc.debug("Remote data at " + url + " not modified since last sync");
+                        return SubscriptionData.NOT_MODIFIED();
+                    } else {
+                        throw ServiceException.RESOURCE_UNREACHABLE(get.getStatusLine().toString(), null);
+                    }
                     break;
                 }
             } while (++redirects <= MAX_REDIRECTS);
@@ -179,7 +237,7 @@ public class FeedManager {
                 case -1:
                     throw ServiceException.PARSE_ERROR("empty body in response when fetching remote subscription", null);
                 case '<':
-                    return parseRssFeed(Element.parseXML(content), fsd);
+                    return parseRssFeed(Element.parseXML(content), fsd, lastModified);
                 case 'B':  case 'b':
                     List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(content, charset.toString());
                     List<Invite> invites = Invite.createFromCalendar(acct, null, icals, true, true, null);
@@ -188,7 +246,7 @@ public class FeedManager {
                     	if (inv.getUid() == null)
                     	    inv.setUid(LdapUtil.generateUUID());
                     }
-                    return new SubscriptionData<Invite>(invites);
+                    return new SubscriptionData<Invite>(invites, lastModified);
                 default:
                     throw ServiceException.PARSE_ERROR("unrecognized remote content", null);
             }
@@ -254,11 +312,12 @@ public class FeedManager {
         }
     }
 
-    private static SubscriptionData<ParsedMessage> parseRssFeed(Element root, Folder.SyncData fsd) throws ServiceException {
+    private static SubscriptionData<ParsedMessage> parseRssFeed(Element root, Folder.SyncData fsd, long lastModified)
+    throws ServiceException {
         try {
             String rname = root.getName();
             if (rname.equals("feed"))
-                return parseAtomFeed(root, fsd);
+                return parseAtomFeed(root, fsd, lastModified);
 
             Element channel = root.getElement("channel");
             String hrefChannel = channel.getAttribute("link");
@@ -267,7 +326,7 @@ public class FeedManager {
             Date dateChannel = DateUtil.parseRFC2822Date(channel.getAttribute("lastBuildDate", null), new Date());
 
             List<Enclosure> enclosures = new ArrayList<Enclosure>(3);
-            SubscriptionData<ParsedMessage> sdata = new SubscriptionData<ParsedMessage>(dateChannel.getTime());
+            SubscriptionData<ParsedMessage> sdata = new SubscriptionData<ParsedMessage>();
 
             if (rname.equals("rss"))
                 root = channel;
@@ -314,13 +373,15 @@ public class FeedManager {
                 ParsedMessage pm = generateMessage(title, text, href, html, addr, date, enclosures);
                 sdata.recordItem(pm, guid, date.getTime());
             }
+            sdata.recordFeedModifiedDate(lastModified);
             return sdata;
         } catch (UnsupportedEncodingException e) {
             throw ServiceException.FAILURE("error encoding rss channel name", e);
         }
     }
 
-    private static SubscriptionData<ParsedMessage> parseAtomFeed(Element feed, Folder.SyncData fsd) throws ServiceException {
+    private static SubscriptionData<ParsedMessage> parseAtomFeed(Element feed, Folder.SyncData fsd, long lastModified)
+    throws ServiceException {
         try {
             // get defaults from the <feed> element
             InternetAddress addrFeed = parseAtomAuthor(feed.getOptionalElement("author"), null);
@@ -328,7 +389,7 @@ public class FeedManager {
                 addrFeed = new JavaMailInternetAddress("", feed.getAttribute("title"), "utf-8");
             Date dateFeed = DateUtil.parseISO8601Date(feed.getAttribute("updated", null), new Date());
             List<Enclosure> enclosures = new ArrayList<Enclosure>();
-            SubscriptionData<ParsedMessage> sdata = new SubscriptionData<ParsedMessage>(dateFeed.getTime());
+            SubscriptionData<ParsedMessage> sdata = new SubscriptionData<ParsedMessage>();
 
             for (Element item : feed.listElements("entry")) {
                 // get the item's date
@@ -373,6 +434,7 @@ public class FeedManager {
                 ParsedMessage pm = generateMessage(title, content.getText(), href, html, addr, date, enclosures);
                 sdata.recordItem(pm, guid, date.getTime());
             }
+            sdata.recordFeedModifiedDate(lastModified);
             return sdata;
         } catch (UnsupportedEncodingException e) {
             throw ServiceException.FAILURE("error encoding atom feed name", e);
