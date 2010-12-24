@@ -64,6 +64,8 @@ public class Folder extends MailItem {
                 return false;
             return (stop = true);
         }
+
+        public long getLastSyncDate() { return lastDate; }
     }
 
     public static final byte FOLDER_IS_IMMUTABLE      = 0x01;
@@ -817,7 +819,8 @@ public class Folder extends MailItem {
      *  exception is thrown.
      *
      * @param guid  The last synchronized remote item's GUID.
-     * @param date  The last synchronized remote item's timestamp.
+     * @param date  The last synchronized remote item's timestamp, or the last-modified time of the remote feed,
+     *              whichever is more recent
      * @perms {@link ACL#RIGHT_WRITE} on the folder
      * @throws ServiceException   The following error codes are possible:<ul>
      *    <li><tt>mail.IMMUTABLE_OBJECT</tt> - if the folder can't be modified

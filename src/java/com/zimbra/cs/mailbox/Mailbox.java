@@ -6287,20 +6287,19 @@ public class Mailbox {
     }
 
     public void synchronizeFolder(OperationContext octxt, int folderId) throws ServiceException {
-        String url = getFolderById(octxt, folderId).getUrl();
-        if (!url.equals(""))
-            importFeed(octxt, folderId, url, true);
+        importFeed(octxt, folderId, getFolderById(octxt, folderId).getUrl(), true);
     }
 
     public void importFeed(OperationContext octxt, int folderId, String url, boolean subscription) throws ServiceException {
-        if (url == null || url.equals(""))
+        if (StringUtil.isNullOrEmpty(url))
             return;
 
         // get the remote data, skipping anything we've already seen (if applicable)
         Folder folder = getFolderById(octxt, folderId);
         Folder.SyncData fsd = subscription ? folder.getSyncData() : null;
         FeedManager.SubscriptionData<?> sdata = FeedManager.retrieveRemoteDatasource(getAccount(), url, fsd);
-        importFeedInternal(octxt, folder, url, subscription, fsd, sdata);
+        if (!sdata.isNotModified())
+            importFeedInternal(octxt, folder, url, subscription, fsd, sdata);
     }
 
     private synchronized void importFeedInternal(OperationContext octxt, Folder folder,
@@ -6312,17 +6311,18 @@ public class Mailbox {
         // deleted from the source feed.
         boolean isCalendar = folder.getDefaultView() == MailItem.Type.APPOINTMENT ||
                              folder.getDefaultView() == MailItem.Type.TASK;
-        Set<Integer> existingCalItems = new HashSet<Integer>();
+        Set<Integer> toRemove = new HashSet<Integer>();
         if (subscription && isCalendar) {
             for (int i : listItemIds(octxt, MailItem.Type.UNKNOWN, folder.getId())) {
-                existingCalItems.add(i);
+                toRemove.add(i);
             }
         }
 
         // if there's nothing to add, we can short-circuit here
-        if (sdata.items.isEmpty()) {
+        List<?> items = sdata.getItems();
+        if (items.isEmpty()) {
             if (subscription && isCalendar)
-                emptyFolder(octxt, folder.getId(), false);
+                emptyFolder(octxt, folder.getId(), false);  // quicker than deleting appointments one at a time
             updateRssDataSource(folder);
             return;
         }
@@ -6337,7 +6337,7 @@ public class Mailbox {
 
         // add the newly-fetched items to the folder
         Set<String> calUidsSeen = new HashSet<String>();
-        for (Object obj : sdata.items) {
+        for (Object obj : items) {
             try {
                 if (obj instanceof Invite) {
                     Invite inv = (Invite) obj;
@@ -6358,22 +6358,41 @@ public class Mailbox {
                         addRevision = false;
                     }
                     try {
-                        // Don't import if invite is for an existing appointment in a non-feed calendar.
-                        // Regular appointments are more important than those created from a feed.
-                        boolean skip = false;
+                        boolean importIt;
                         CalendarItem calItem = getCalendarItemByUid(uid);
-                        if (calItem != null) {
+                        if (calItem == null) {
+                            // New appointment.  Import it.
+                            importIt = true;
+                        } else {
+                            toRemove.remove(calItem.getId());
                             Folder curFolder = calItem.getFolder();
-                            if (curFolder.getId() != Mailbox.ID_FOLDER_TRASH && curFolder.getId() != Mailbox.ID_FOLDER_SPAM) {
-                                String feedUrl = curFolder.getUrl();
-                                skip = feedUrl == null || feedUrl.length() == 0;
+                            boolean sameFolder = curFolder.getId() == folder.getId();
+                            boolean inTrashOrSpam = !sameFolder && (curFolder.inTrash() || curFolder.inSpam());
+                            if (inTrashOrSpam) {
+                                // If appointment is under trash/spam, delete it now to allow the downloaded invite to
+                                // be imported cleanly.  Appointment in trash/spam is effectively non-existent, because
+                                // it will eventually get purged.
+                                delete(octxtNoConflicts, calItem.getId(), MailItem.Type.UNKNOWN);
+                                importIt = true;
+                            } else {
+                                // Don't import if item is in a different folder.  It might be a regular appointment, and
+                                // should not be overwritten by a feed version. (bug 14306)
+                                // Import only if downloaded version is newer.
+                                boolean changed;
+                                Invite curInv = calItem.getInvite(inv.getRecurId());
+                                if (curInv == null) {
+                                    // We have an appointment with the same UID, but don't have an invite
+                                    // with the same RECURRENCE-ID.  Treat it as a changed item.
+                                    changed = true;
+                                } else {
+                                    changed = inv.getSeqNo() > curInv.getSeqNo() ||
+                                              (inv.getSeqNo() == curInv.getSeqNo() && inv.getDTStamp() > curInv.getDTStamp());
+                                }
+                                importIt = sameFolder && changed;
                             }
                         }
-                        if (!skip) {
-                            AddInviteData aid = addInvite(octxtNoConflicts, inv, folder.getId(), true, addRevision);
-                            if (aid != null)
-                                existingCalItems.remove(aid.calItemId);
-                        }
+                        if (importIt)
+                            addInvite(octxtNoConflicts, inv, folder.getId(), true, addRevision);
                     } catch (ServiceException e) {
                         ZimbraLog.calendar.warn("Skipping bad iCalendar object during import: uid=" + inv.getUid(), e);
                     }
@@ -6386,14 +6405,15 @@ public class Mailbox {
         }
 
         // Delete calendar items that have been deleted in the source feed.
-        for (int toRemove : existingCalItems) {
-            delete(octxtNoConflicts, toRemove, MailItem.Type.UNKNOWN);
+        for (int i : toRemove) {
+            delete(octxtNoConflicts, i, MailItem.Type.UNKNOWN);
         }
 
         // update the subscription to avoid downloading items twice
-        if (subscription && sdata.lastDate > 0) {
+        long lastModDate = sdata.getLastModifiedDate();
+        if (subscription && lastModDate > 0) {
             try {
-                setSubscriptionData(octxt, folder.getId(), sdata.lastDate, sdata.lastGuid);
+                setSubscriptionData(octxt, folder.getId(), lastModDate, sdata.getMostRecentGuid());
             } catch (Exception e) {
                 ZimbraLog.mailbox.warn("could not update feed metadata", e);
             }
