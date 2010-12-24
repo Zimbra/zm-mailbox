@@ -155,7 +155,7 @@ public class HtmlFormatter extends Formatter {
         }
         if (targetItem != null) {
             context.req.setAttribute(ATTR_TARGET_ITEM_ID, targetItem.getId());
-            context.req.setAttribute(ATTR_TARGET_ITEM_TYPE, targetItem.getType().toByte());
+            context.req.setAttribute(ATTR_TARGET_ITEM_TYPE, targetItem.getType().toString());
             context.req.setAttribute(ATTR_TARGET_ITEM_PATH, targetItem.getPath());
             context.req.setAttribute(ATTR_TARGET_ITEM_NAME, targetItem.getName());
 
