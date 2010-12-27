@@ -58,6 +58,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     public static final String PERM_WRITE = "w";
 
     private ZFolder.Color mColor;
+    private String mRgb;
     private String mId;
     private String mName;
     private int mUnreadCount;
@@ -166,6 +167,13 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         }
     }
 
+    public static final String[] RGB_COLORS = {
+        // none,      blue,     cyan,      green,     purple
+        "#000000",  "#5b9bf2", "#43eded", "#6acb9e", "#ba86e5",
+        // red,     yellow,     pink,     gray      orange
+        "#f66666", "#f8fa33", "#fe98d3", "#bebebe", "#fdbc55"
+    };
+
     public enum View {
         appointment, chat, contact, conversation, document, message, remote,
         search, task, unknown, voice, wiki;
@@ -195,6 +203,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mParentId = e.getAttribute(MailConstants.A_FOLDER, null);
         mIsPlaceholder = mParentId == null;
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
+        mRgb = e.getAttribute(MailConstants.A_RGB, "null");
         try {
             mColor = ZFolder.Color.fromString(e.getAttribute(MailConstants.A_COLOR, "0"));
         } catch (ServiceException se) {
@@ -576,6 +585,9 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         return mColor;
     }
 
+    public String getRgb() {
+        return mRgb;
+    }
     /**
      * remote URL (RSS, iCal, etc) this folder syncs to
      *
@@ -684,7 +696,7 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
     public void sync() throws ServiceException { mMailbox.syncFolder(mId); }
 
     public void clearGrants() throws ServiceException {
-        mMailbox.updateFolder(mId, null, null, null, null, new ArrayList<ZGrant>());
+        mMailbox.updateFolder(mId, null, null, null, null, null, new ArrayList<ZGrant>());
     }
 
     public void empty(boolean recursive) throws ServiceException { mMailbox.emptyFolder(mId, recursive); }
@@ -701,13 +713,13 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
 
     public void modifyColor(ZFolder.Color color) throws ServiceException { mMailbox.modifyFolderColor(mId, color); }
 
-    public void modifyFlags(String flags) throws ServiceException { mMailbox.updateFolder(mId, null, null, null, flags, null); }
+    public void modifyFlags(String flags) throws ServiceException { mMailbox.updateFolder(mId, null, null, null, null, flags, null); }
 
     public void modifyURL(String url) throws ServiceException { mMailbox.modifyFolderURL(mId, url); }
 
     public void rename(String newPath) throws ServiceException { mMailbox.renameFolder(mId, newPath); }
 
-    public void updateFolder(String name, String parentId, Color newColor, String flags, List<ZGrant> acl) throws ServiceException {
-        mMailbox.updateFolder(mId, name, parentId, newColor, flags, acl);
+    public void updateFolder(String name, String parentId, Color newColor, String rgbColor, String flags, List<ZGrant> acl) throws ServiceException {
+        mMailbox.updateFolder(mId, name, parentId, newColor, rgbColor, flags, acl);
     }
 }

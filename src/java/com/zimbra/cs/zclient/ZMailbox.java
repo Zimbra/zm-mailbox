@@ -2891,7 +2891,7 @@ public class ZMailbox implements ToZJSONObject {
         return doAction(folderAction("url", id).addAttribute(MailConstants.A_URL, url));
     }
 
-    public ZActionResult updateFolder(String id, String name, String parentId, Color newColor, String flags, List<ZGrant> acl) throws ServiceException {
+    public ZActionResult updateFolder(String id, String name, String parentId, Color newColor, String rgbColor, String flags, List<ZGrant> acl) throws ServiceException {
         Element action = folderAction("update", id);
         if (name != null && name.length() > 0)
             action.addAttribute(MailConstants.A_NAME, name);
@@ -2899,6 +2899,8 @@ public class ZMailbox implements ToZJSONObject {
             action.addAttribute(MailConstants.A_FOLDER, parentId);
         if (newColor != null)
             action.addAttribute(MailConstants.A_COLOR, newColor.getValue());
+        if (rgbColor != null)
+            action.addAttribute(MailConstants.A_RGB, rgbColor);
         if (flags != null)
             action.addAttribute(MailConstants.A_FLAGS, flags);
         if (acl != null) {
