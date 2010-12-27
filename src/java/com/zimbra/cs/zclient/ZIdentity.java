@@ -128,7 +128,7 @@ public class ZIdentity  implements ToZJSONObject {
 
     public Element toElement(Element parent) {
         Element identity = parent.addElement(AccountConstants.E_IDENTITY);
-        identity.addAttribute(AccountConstants.A_NAME, getName()).addAttribute(AccountConstants.A_ID, getId());
+        identity.addAttribute(AccountConstants.A_NAME, getRawName()).addAttribute(AccountConstants.A_ID, getId());
         for (Map.Entry<String,String> entry : data.getAttrsMultimap().entries()) {
             identity.addKeyValuePair(entry.getKey(), entry.getValue(), AccountConstants.E_A,  AccountConstants.A_NAME);
         }
