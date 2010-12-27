@@ -225,6 +225,26 @@ public abstract class GalGroup {
         return true;
     }
     
+    private static class GalGroupCallback extends GalSearchResultCallback {
+        protected GalGroupCallback(GalSearchParams params) {
+            super(params);
+        }
+        
+        protected boolean isZimbraInternalGroup(String email, String zimbraId) {
+            return (zimbraId != null && prov.isDistributionList(email));
+        }
+        
+        protected String getSingleAttr(HashMap<String,Object> map, String attr) {
+            Object val = map.get(attr);
+            if (val instanceof String) 
+                return (String) val;
+            else if (val instanceof String[]) 
+                return ((String[])val)[0];
+            else 
+                return null;
+        }
+    }
+    
     /**
      * GAL group search result for a domain (all GAL groups in the domain's GAL)
      */
@@ -384,7 +404,7 @@ public abstract class GalGroup {
                 }
             }
             
-            private static class SyncGalGroupCallback extends GalSearchResultCallback {
+            private static class SyncGalGroupCallback extends GalGroupCallback {
                 private DomainGalGroupCache galGroup;
                 private boolean hasMore;
                 private boolean pagingSupported; // default to false
@@ -446,19 +466,9 @@ public abstract class GalGroup {
                         addResult(email, zimbraId);
                     }
                 }
-                
-                private String getSingleAttr(HashMap<String,Object> map, String attr) {
-                    Object val = map.get(attr);
-                    if (val instanceof String) 
-                        return (String) val;
-                    else if (val instanceof String[]) 
-                        return ((String[])val)[0];
-                    else 
-                        return null;
-                }
     
                 private void addResult(String email, String zimbraId) {
-                    if (zimbraId != null)
+                    if (isZimbraInternalGroup(email, zimbraId))
                         galGroup.addInternalGroup(email);
                     else
                         galGroup.addExternalGroup(email);
@@ -516,7 +526,7 @@ public abstract class GalGroup {
             return resultCallback.isExternalGroup();
         }
         
-        private static class SearchGroupCallback extends GalSearchResultCallback {
+        private static class SearchGroupCallback extends GalGroupCallback {
             private boolean isInternalGroup;
             private boolean isExternalGroup;
             
@@ -555,19 +565,9 @@ public abstract class GalGroup {
                 String zimbraId = getSingleAttr(contact, ContactConstants.A_zimbraId);
                 setResult(email, zimbraId);
             }
-            
-            private String getSingleAttr(HashMap<String,Object> map, String attr) {
-                Object val = map.get(attr);
-                if (val instanceof String) 
-                    return (String) val;
-                else if (val instanceof String[]) 
-                    return ((String[])val)[0];
-                else 
-                    return null;
-            }
 
             private void setResult(String email, String zimbraId) {
-                if (zimbraId != null)
+                if (isZimbraInternalGroup(email, zimbraId))
                     isInternalGroup = true;
                 else
                     isExternalGroup = true;
