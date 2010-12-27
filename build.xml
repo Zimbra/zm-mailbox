@@ -1540,8 +1540,7 @@
             zimbraServiceEnabled mailbox
             ModifyServer ${zimbra.server.hostname} zimbraMailPurgeSleepInterval 0
             cd ${defaultdomain.name} \
-          zimbraGalInternalSearchBase ROOT \
-          zimbraGalGroupIndicatorEnabled TRUE
+            zimbraGalInternalSearchBase ROOT
             mcf zimbraDefaultDomainName ${defaultdomain.name}
             mc default zimbraFeatureIMEnabled FALSE
             ca admin@${defaultdomain.name} test123 \
@@ -1619,8 +1618,8 @@
             zimbraCalResAutoAcceptDecline TRUE \
             zimbraCalResAutoDeclineIfBusy TRUE \
             zimbraCalResAutoDeclineRecurring FALSE \
-          zimbraCalResMaxNumConflictsAllowed 3 \
-          zimbraCalResMaxPercentConflictsAllowed 10 \
+            zimbraCalResMaxNumConflictsAllowed 3 \
+            zimbraCalResMaxPercentConflictsAllowed 10 \
             zimbraCalResLocationDisplayName 'Site: HQ, Building: A, Floor: 11, Room 1101' \
             zimbraCalResSite HQ \
             zimbraCalResBuilding A \
@@ -1711,12 +1710,12 @@
             zimbraCalResContactPhone '(650)555-1212' \
             zimbraPrefTimeZoneId '(GMT-08.00) Pacific Time (US &amp; Canada)' \
             zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-          cd example.com
-          cdl admin-team@example.com
-          cdl client-team@example.com
-          cdl qa-team@example.com
-          cdl server-team@example.com
-          grr domain example.com dom ${defaultdomain.name} viewDistList
+            cd example.com
+            cdl admin-team@example.com
+            cdl client-team@example.com
+            cdl qa-team@example.com
+            cdl server-team@example.com
+            grr domain example.com dom ${defaultdomain.name} viewDistList
          </echo>
     </target>
 
