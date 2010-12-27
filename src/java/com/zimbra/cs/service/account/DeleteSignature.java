@@ -20,6 +20,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.Signature;
@@ -42,14 +43,18 @@ public class DeleteSignature extends DocumentHandler {
 
         // signature can be specified by name or by ID
         Signature signature = null;
-        String id = eSignature.getAttribute(AccountConstants.A_ID, null);
-        if (id != null)
-            signature = prov.get(account, SignatureBy.id, id);
-        else
-            signature = prov.get(account, SignatureBy.name, eSignature.getAttribute(AccountConstants.A_NAME));
-
+        String sigStr = eSignature.getAttribute(AccountConstants.A_ID, null);
+        if (sigStr != null) {
+            signature = prov.get(account, SignatureBy.id, sigStr);
+        } else {
+            sigStr = eSignature.getAttribute(AccountConstants.A_NAME);
+            signature = prov.get(account, SignatureBy.name, sigStr);
+        }
+        
         if (signature != null)
             Provisioning.getInstance().deleteSignature(account, signature.getId());
+        else
+            throw AccountServiceException.NO_SUCH_SIGNATURE(sigStr);
 
         Element response = zsc.createElement(AccountConstants.DELETE_SIGNATURE_RESPONSE);
         return response;
