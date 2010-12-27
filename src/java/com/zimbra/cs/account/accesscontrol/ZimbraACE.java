@@ -405,12 +405,20 @@ public class ZimbraACE {
         
         return sb.toString();
     }
-    
-    // for logging, debugging
-    public String dump() {
-        return "[(" + getGranteeDisplayName() + ") " + serialize() + "]";
-    }
 
+    // for logging, debugging
+    public String dump(boolean verbose) {
+        if (verbose)
+            return "[" +
+                "grantee name=" + getGranteeDisplayName() +
+                ", grantee id=" + getGrantee() +
+                ", grantee type=" + getGranteeType().getCode() + 
+                ", right=" + getRight().getName() +
+          		"]";
+        else
+            return "[(" + getGranteeDisplayName() + ") " + serialize() + "]";
+    }
+    
     public static void validate(ZimbraACE ace) throws ServiceException {
         if (ace.mGranteeType == GranteeType.GT_GUEST || ace.mGranteeType == GranteeType.GT_KEY) {
             if (ace.getGrantee().contains(S_SECRET_DELIMITER))

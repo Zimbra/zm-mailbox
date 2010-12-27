@@ -1251,7 +1251,7 @@ public class RightCommand {
         
         List<ZimbraACE> revoked = ACLUtil.revokeRight(prov, targetEntry, aces);
         if (revoked.isEmpty())
-            throw AccountServiceException.NO_SUCH_GRANT(ace.dump());
+            throw AccountServiceException.NO_SUCH_GRANT(ace.dump(true));
     }
     
     /**
