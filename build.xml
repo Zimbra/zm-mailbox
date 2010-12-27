@@ -1468,9 +1468,8 @@
             zimbraServiceEnabled mailbox
             ModifyServer ${zimbra.server.hostname} zimbraMailPurgeSleepInterval 0
             cd ${defaultdomain.name} \
-        	zimbraGalInternalSearchBase ROOT \
-        	zimbraGalGroupIndicatorEnabled TRUE
-            mcf zimbraDefaultDomainName ${defaultdomain.name}
+        	zimbraGalInternalSearchBase ROOT
+        	mcf zimbraDefaultDomainName ${defaultdomain.name}
             mc default zimbraFeatureIMEnabled FALSE
             ca admin@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
