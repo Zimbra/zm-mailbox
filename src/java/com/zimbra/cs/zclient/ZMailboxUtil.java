@@ -1122,7 +1122,7 @@ public class ZMailboxUtil implements DebugListener {
             doModifyFolderGrant(args);
             break;
         case MODIFY_FOLDER_FLAGS:
-            mMbox.updateFolder(lookupFolderId(args[0]), null, null, null, args[1], null);
+            mMbox.updateFolder(lookupFolderId(args[0]), null, null, null, null, args[1], null);
             break;
         case MODIFY_FOLDER_URL:
             mMbox.modifyFolderURL(lookupFolderId(args[0]), args[1]);
