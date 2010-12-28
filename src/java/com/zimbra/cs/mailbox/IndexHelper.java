@@ -315,7 +315,7 @@ public final class IndexHelper {
                     avg = elapsed / status.getProcessed();
                     mps = avg > 0 ? 1000 / avg : 0;
                 }
-                ZimbraLog.index.info("Re-index completed items=%d,failed=%s,elapsed=%d (avg %d ms/item, %d items/sec)",
+                ZimbraLog.index.info("Re-index completed items=%d,failed=%d,elapsed=%d (avg %d ms/item, %d items/sec)",
                         status.getTotal(), status.getFailed(), elapsed, avg, mps);
                 onCompletion();
             } catch (ServiceException e) {
@@ -639,12 +639,12 @@ public final class IndexHelper {
                     continue;
                 }
 
-                ZimbraLog.mailbox.debug("index item=%d", entry);
+                ZimbraLog.mailbox.debug("index item=%s", entry);
 
                 try {
                     mailboxIndex.indexMailItem(mailbox, entry.deleteFirst, entry.documents, entry.item);
                 } catch (ServiceException e) {
-                    ZimbraLog.index.warn("Failed to index item=%d", entry, e);
+                    ZimbraLog.index.warn("Failed to index item=%s", entry, e);
                     lastFailedTime = System.currentTimeMillis();
                     continue;
                 }
