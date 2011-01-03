@@ -211,7 +211,7 @@ public class ContactRankings {
     }
 	private void dump(String action) {
 		if (ZimbraLog.gal.isDebugEnabled()) {
-			StringBuilder buf = new StringBuilder(action);
+			StringBuilder buf = new StringBuilder(action + " contact rankings");
 			buf.append("\n");
 			for (ContactEntry entry : getSortedSet()) {
 				entry.toString(buf);
