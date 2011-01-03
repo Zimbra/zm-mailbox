@@ -786,9 +786,15 @@ public final class LuceneIndex {
 
         @Override
         public void exec() {
+            IndexWriter writer = ref.get();
             try {
-                if (((MergeScheduler) ref.get().getMergeScheduler()).tryLock()) {
-                    ref.get().maybeMerge();
+                if (((MergeScheduler) writer.getMergeScheduler()).tryLock()) {
+                    int dels = writer.maxDoc() - writer.numDocs();
+                    if (dels >= LC.zimbra_index_max_pending_deletes.intValue()) {
+                        ZimbraLog.index.debug("Expunge deletes %d", dels);
+                        writer.expungeDeletes();
+                    }
+                    writer.maybeMerge();
                 } else {
                     ZimbraLog.index.debug("Merge is in progress by other thread");
                 }
