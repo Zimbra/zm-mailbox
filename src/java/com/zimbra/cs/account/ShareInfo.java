@@ -518,7 +518,7 @@ public class ShareInfo {
                         md.put(MD_FOLDER_PATH, folder.getPath());
 
                         // for the same reason, we encode the default view for the folder in our metadata
-                        md.put(MD_FOLDER_DEFAULT_VIEW, folder.getDefaultView());
+                        md.put(MD_FOLDER_DEFAULT_VIEW, folder.getDefaultView().toByte());
 
                         mGrants.add(md);
                     }
