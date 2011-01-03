@@ -205,7 +205,7 @@ public class DataSource extends AccountProperty {
         long interval;
         String val = getAttr(Provisioning.A_zimbraDataSourcePollingInterval);
         Provisioning prov = Provisioning.getInstance();
-        Account account = getOwnerAccount();
+        Account account = getAccount();
 
         // Get interval from data source or account.
         if (val != null) {
