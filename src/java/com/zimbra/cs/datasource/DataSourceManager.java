@@ -381,39 +381,57 @@ public class DataSourceManager {
         return (DataSourceTask) ScheduledTaskManager.getTask(DataSourceTask.class.getName(), dsId, mbox.getId());
     }
     
-    /*
+    /**
+     * Cancels scheduling for this <tt>DataSource</tt>
+     *
+     * @param account
+     * @param dsId
+     * @throws ServiceException
+     */
+    public static void cancelSchedule(Account account, String dsId)
+    throws ServiceException {
+    	updateSchedule(account, null, dsId, true);
+    }
+    
+    /**
+     * Cancels scheduling for this <tt>DataSource</tt>
+     * 
+     * @param account Account for the DataSource, cannot be null
+     * @param ds The DataSource, cannot be null
+     * @throws ServiceException
+     */
+    public static void updateSchedule(Account account, DataSource ds)
+    throws ServiceException {
+        updateSchedule(account, ds, ds.getId(), false);
+    }
+
+    /**
+     * 
      * Updates scheduling data for this <tt>DataSource</tt> both in memory and in the
      * <tt>data_source_task</tt> database table.
+     * 
+     * @param account Account for the DataSource, cannot be null.
+     * @param ds The DataSource.  Ignored if cancelSchedule is true.
+     * @param dsId zimbraId of the DataSource.
+     * @param cancelSchedule cancel scheduling for the DataSource.
+     * @throws ServiceException
      */
-    public static void updateSchedule(String accountId, String dsId)
+    private static void updateSchedule(Account account, DataSource ds, String dsId, boolean cancelSchedule)
     throws ServiceException {
         if (!LC.data_source_scheduling_enabled.booleanValue()) {
             return;
         }
+        String accountId = account.getId();
         ZimbraLog.datasource.debug("Updating schedule for account %s, data source %s", accountId, dsId);
         
-        // Look up account and data source
-        Provisioning prov = Provisioning.getInstance();
-        Account account = prov.get(AccountBy.id, accountId);
-        if (account == null) {
-            ZimbraLog.datasource.info(
-                "Account %s was deleted for data source %s.  Deleting scheduled task.",
-                accountId, dsId);
-            DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId);
-            deleteManaged(accountId, dsId);
-            // Don't have mailbox ID, so we'll have to wait for the task to run and clean itself up.
-            return;
-        }
-        // Get the mailbox without requesting auto-create.  It's important not to auto-create
-        // the mailbox when this code is called during restore.
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account, false);
-        if (mbox == null)
+        long mboxId = MailboxManager.getInstance().lookupMailboxId(account.getId());
+        if (mboxId == -1)
         	return;
-        DataSource ds = prov.get(account, DataSourceBy.id, dsId);
-        if (ds == null) {
+
+        if (cancelSchedule) {
             ZimbraLog.datasource.info(
                 "Data source %s was deleted.  Deleting scheduled task.", dsId);
-            ScheduledTaskManager.cancel(DataSourceTask.class.getName(), dsId, mbox.getId(), false);
+            ScheduledTaskManager.cancel(DataSourceTask.class.getName(), dsId, mboxId, false);
             DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId);
             deleteManaged(accountId, dsId);
             return;
@@ -421,7 +439,7 @@ public class DataSourceManager {
         if (!ds.isEnabled()) {
             ZimbraLog.datasource.info(
                 "Data source %s is disabled.  Deleting scheduled task.", dsId);
-            ScheduledTaskManager.cancel(DataSourceTask.class.getName(), dsId, mbox.getId(), false);
+            ScheduledTaskManager.cancel(DataSourceTask.class.getName(), dsId, mboxId, false);
             DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId);
             return;
         }
@@ -431,9 +449,9 @@ public class DataSourceManager {
             Connection conn = null;
             try {
                 conn = DbPool.getConnection();
-                ScheduledTaskManager.cancel(conn, DataSourceTask.class.getName(), ds.getId(), mbox.getId(), false);
+                ScheduledTaskManager.cancel(conn, DataSourceTask.class.getName(), ds.getId(), mboxId, false);
                 if (ds.isScheduled()) {
-                    DataSourceTask task = new DataSourceTask(mbox.getId(), accountId, dsId, ds.getPollingInterval());
+                    DataSourceTask task = new DataSourceTask(mboxId, accountId, dsId, ds.getPollingInterval());
                     ZimbraLog.datasource.debug("Scheduling %s", task);
                     ScheduledTaskManager.schedule(conn, task);
                 }
