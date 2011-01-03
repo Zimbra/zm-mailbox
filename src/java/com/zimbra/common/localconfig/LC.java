@@ -212,6 +212,10 @@ public final class LC {
     public static final KnownKey zimbra_index_max_transaction_items = KnownKey.newKey(100);
 
     @Supported
+    @Reloadable
+    public static final KnownKey zimbra_index_max_pending_deletes = KnownKey.newKey(20);
+
+    @Supported
     public static final KnownKey zimbra_index_lucene_batch_merge_policy = KnownKey.newKey(true);
 
     @Supported
@@ -421,8 +425,8 @@ public final class LC {
 
     @Supported
     public static final KnownKey ldap_cache_mime_maxage = KnownKey.newKey(15);
-    
-    
+
+
     public static final KnownKey ldap_cache_external_domain_maxsize = KnownKey.newKey(2000);
     public static final KnownKey ldap_cache_external_domain_maxage = KnownKey.newKey(15);
     public static final KnownKey ldap_cache_group_maxsize = KnownKey.newKey(2000);
