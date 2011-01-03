@@ -25,13 +25,19 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.service.admin.AdminDocumentHandler;
 import com.zimbra.cs.session.WaitSetAccount;
 import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
+import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -58,10 +64,10 @@ public class CreateWaitSet extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Element response = zsc.createElement(MailConstants.CREATE_WAIT_SET_RESPONSE);
-        return staticHandle(request, context, response);
+        return staticHandle(this, request, context, response);
     }
 
-    static public Element staticHandle(Element request, Map<String, Object> context, Element response) throws ServiceException {
+    static public Element staticHandle(DocumentHandler handler, Element request, Map<String, Object> context, Element response) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 
         String defInterestStr = request.getAttribute(MailConstants.A_DEFTYPES);
@@ -70,18 +76,12 @@ public class CreateWaitSet extends MailDocumentHandler {
         boolean adminAllowed = zsc.getAuthToken().isAdmin();
 
         boolean allAccts = request.getAttributeBool(MailConstants.A_ALL_ACCOUNTS, false);
-        if (allAccts && !adminAllowed) {
-            throw MailServiceException.PERM_DENIED("Non-Admin accounts may not wait on other accounts");
+        if (allAccts) {
+            WaitSetMgr.checkRightForAllAccounts(zsc);
         }
 
-        List<String> allowedAccountIds = null;
-        if (!adminAllowed) {
-            allowedAccountIds = new ArrayList<String>(1);
-            allowedAccountIds.add(zsc.getAuthtokenAccountId());
-        }
-
-        List<WaitSetAccount> add = WaitSetRequest.parseAddUpdateAccounts(
-            request.getOptionalElement(MailConstants.E_WAITSET_ADD), defaultInterests, allowedAccountIds);
+        List<WaitSetAccount> add = WaitSetRequest.parseAddUpdateAccounts(zsc, 
+            request.getOptionalElement(MailConstants.E_WAITSET_ADD), defaultInterests);
 
         // workaround for 27480: load the mailboxes NOW, before we grab the waitset lock
         List<Mailbox> referencedMailboxes = new ArrayList<Mailbox>();

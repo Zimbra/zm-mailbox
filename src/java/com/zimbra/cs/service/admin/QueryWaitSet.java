@@ -22,8 +22,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.session.IWaitSet;
@@ -41,9 +39,7 @@ public class QueryWaitSet extends AdminDocumentHandler {
     throws ServiceException {
         
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        
-        Server server = Provisioning.getInstance().getLocalServer();
-        checkRight(zsc, context, server, Admin.R_manageWaitSet);
+        WaitSetMgr.checkRightForAllAccounts(zsc); // must be a global admin
         
         Element response = zsc.createElement(AdminConstants.QUERY_WAIT_SET_RESPONSE);
         
@@ -71,6 +67,6 @@ public class QueryWaitSet extends AdminDocumentHandler {
     
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_manageWaitSet);
+        notes.add(AdminRightCheckPoint.Notes.SYSTEM_ADMINS_ONLY);
     }
 }
