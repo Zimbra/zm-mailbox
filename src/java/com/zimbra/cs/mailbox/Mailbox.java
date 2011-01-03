@@ -6068,7 +6068,7 @@ public class Mailbox {
                     // URL removed from folder.
                     String dsid = ds.getId();
                     prov.deleteDataSource(account, dsid);
-                    DataSourceManager.updateSchedule(account.getId(), dsid);
+                    DataSourceManager.cancelSchedule(account, dsid);
                 }
                 return;
             }
@@ -6090,7 +6090,7 @@ public class Mailbox {
                 }
                 
                 ds = prov.createDataSource(account, type, name, attrs);
-                DataSourceManager.updateSchedule(account.getId(), ds.getId());
+                DataSourceManager.updateSchedule(account, ds);
             }
         } catch (ServiceException e) {
             ZimbraLog.mailbox.warn("Unable to update data source for folder %s.", folder.getPath(), e);
