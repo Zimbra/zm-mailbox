@@ -2757,19 +2757,21 @@ public class LdapProvisioning extends Provisioning {
         return result;
     }
 
-    private void removeServerFromAllCOSes(String server, ZimbraLdapContext initZlc) {
+    private void removeServerFromAllCOSes(String serverId, String serverName, ZimbraLdapContext initZlc) {
         List<Cos> coses = null;
         try {
-            coses = searchCOS(LdapFilter.cosesByMailHostPool(server), initZlc);
+            coses = searchCOS(LdapFilter.cosesByMailHostPool(serverId), initZlc);
             for (Cos cos: coses) {
                 Map<String, String> attrs = new HashMap<String, String>();
-                attrs.put("-"+Provisioning.A_zimbraMailHostPool, server);
+                attrs.put("-"+Provisioning.A_zimbraMailHostPool, serverId);
+                ZimbraLog.account.info("Removing " + Provisioning.A_zimbraMailHostPool + " " +
+                        serverId + "(" + serverName + ") from cos " + cos.getName());
                 modifyAttrs(cos, attrs);
                 // invalidate cached cos
                 sCosCache.remove((LdapCos)cos);
             }
         } catch (ServiceException se) {
-            ZimbraLog.account.warn("unable to remove "+server+" from all COSes ", se);
+            ZimbraLog.account.warn("unable to remove "+serverId+" from all COSes ", se);
             return;
         }
 
@@ -2777,17 +2779,17 @@ public class LdapProvisioning extends Provisioning {
 
     @Override
     public void deleteServer(String zimbraId) throws ServiceException {
-        LdapServer s = (LdapServer) getServerByIdInternal(zimbraId);
-        if (s == null)
+        LdapServer server = (LdapServer) getServerByIdInternal(zimbraId);
+        if (server == null)
             throw AccountServiceException.NO_SUCH_SERVER(zimbraId);
 
         // TODO: what if accounts still have this server as a mailbox?
         ZimbraLdapContext zlc = null;
         try {
             zlc = new ZimbraLdapContext(true);
-            removeServerFromAllCOSes(zimbraId, zlc);
-            zlc.unbindEntry(s.getDN());
-            sServerCache.remove(s);
+            removeServerFromAllCOSes(zimbraId, server.getName(), zlc);
+            zlc.unbindEntry(server.getDN());
+            sServerCache.remove(server);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to purge server: "+zimbraId, e);
         } finally {
