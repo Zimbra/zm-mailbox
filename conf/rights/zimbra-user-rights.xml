@@ -38,6 +38,7 @@
 
 <right name="viewDistList" userRight="1" targetType="dl" cache="1">
   <desc>view distribution list members</desc>
+  <default>allow</default>
 </right>
 
 </rights>
