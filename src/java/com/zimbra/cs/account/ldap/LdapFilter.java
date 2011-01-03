@@ -48,10 +48,6 @@ public class LdapFilter {
         return buf.toString();
     }
     
-    public static String allAccounts() {
-        return FILTER_ACCOUNT_OBJECTCLASS;
-    }
-    
     public static String accountByForeignPrincipal(String foreignPrincipal) {
         return "(&(zimbraForeignPrincipal=" + foreignPrincipal + ")" + FILTER_ACCOUNT_OBJECTCLASS + ")";
     }
