@@ -2361,7 +2361,7 @@ public class ToXML {
                 if (addr.equalsIgnoreCase(requestedAcct.getName()) || addr.equalsIgnoreCase(authedAcct.getName()))
                     continue;
 
-                GroupInfo groupInfo = GalGroup.getGroupInfo(addr, requestedAcct, authedAcct);
+                GroupInfo groupInfo = GalGroup.getGroupInfo(addr, true, requestedAcct, authedAcct);
                 if (GroupInfo.IS_GROUP == groupInfo) {
                     eEmail.addAttribute(MailConstants.A_IS_GROUP, true);
                     eEmail.addAttribute(MailConstants.A_EXP, false);
