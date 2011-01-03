@@ -19,22 +19,34 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 
 public abstract class AccountProperty extends NamedEntry {
-    private final String mAcctId;
+	/*
+	 *  We should clean this up in HELIX - only use mAcct, and deprecate mAcctId.  
+	 *  Reason for doing this in GNR is to avoid potential regressions
+	 *  (it should not cause any regression, in theory) because there are too many 
+	 *  callsites of  AccountProperty.getAccount(). 
+     */
+    private final String mAcctId; // HELIX TODO: remove in HELIX, use only mAcct
+    private final Account mAcct; 
     
     AccountProperty(Account acct, String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
         super(name, id, attrs, null, prov);
         mAcctId = acct.getId();
+        mAcct = acct;
     }
     
+    // HELIX TODO: return mAcct.getId() in HELIX
     public String getAccountId() {
         return mAcctId;
     }
     
-    public Account getAccount() throws ServiceException{
+    // HELIX TODO: return mAcct in HELIX
+    public Account getAccount() throws ServiceException {
         return Provisioning.getInstance().get(Provisioning.AccountBy.id, mAcctId);
     }
     
-    public Account getAccount(Provisioning prov) throws ServiceException{
-        return prov.get(Provisioning.AccountBy.id, mAcctId);
+    // HELIX TODO: delete in HELIX, use only getAccount()
+    public Account getOwnerAccount() {
+    	return mAcct;
     }
+    
 }

@@ -69,7 +69,7 @@ public class DeleteDataSource extends MailDocumentHandler {
             else if (dstype == DataSource.Type.imap)
                 DbImapFolder.deleteImapData(mbox, dataSourceId);
             DbDataSource.deleteAllMappings(dsrc);
-            DataSourceManager.updateSchedule(account.getId(), dataSourceId);
+            DataSourceManager.cancelSchedule(account, dataSourceId);
         }
         
         Element response = zsc.createElement(MailConstants.DELETE_DATA_SOURCE_RESPONSE);

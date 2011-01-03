@@ -16,6 +16,7 @@ package com.zimbra.cs.account.ldap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 
 public class LdapFilter {
 
@@ -24,8 +25,19 @@ public class LdapFilter {
     private static final String FILTER_DISTRIBUTION_LIST_OBJECTCLASS = "(objectclass=zimbraDistributionList)";
     
     /*
+     * operational
+     */
+    public static String hasSubordinates() {
+    	return "(hasSubordinates=TRUE)";
+    }
+    
+    /*
      * account
      */
+    public static String allAccounts() {
+        return FILTER_ACCOUNT_OBJECTCLASS;
+    }
+    
     public static String allNonSystemAccounts() {
         StringBuilder buf = new StringBuilder();
         buf.append("(&");
@@ -58,6 +70,15 @@ public class LdapFilter {
     
     public static String adminAccountByAdminFlag() {
         return "(|(zimbraIsAdminAccount=TRUE)(zimbraIsDelegatedAdminAccount=TRUE)(zimbraIsDomainAdminAccount=TRUE))";
+    }
+    
+    public static String homedOnServer(Server server) {
+    	String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname);
+    	return homedOnServer(serverName);
+    }
+    
+    public static String homedOnServer(String serverName) {
+    	return "(" + Provisioning.A_zimbraMailHost + "=" + serverName + ")";
     }
     
     /*

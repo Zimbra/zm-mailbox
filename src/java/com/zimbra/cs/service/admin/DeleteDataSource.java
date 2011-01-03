@@ -60,7 +60,7 @@ public class DeleteDataSource extends AdminDocumentHandler {
         String dsId = dsEl.getAttribute(AccountConstants.A_ID);
         Provisioning.getInstance().deleteDataSource(account, dsId);
 
-        DataSourceManager.updateSchedule(account.getId(), dsId);
+        DataSourceManager.cancelSchedule(account, dsId);
         
         Element response = zsc.createElement(AdminConstants.DELETE_DATA_SOURCE_RESPONSE);
         return response;
