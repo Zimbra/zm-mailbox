@@ -424,14 +424,14 @@ public class DataSourceManager {
         String accountId = account.getId();
         ZimbraLog.datasource.debug("Updating schedule for account %s, data source %s", accountId, dsId);
         
-        long mboxId = MailboxManager.getInstance().lookupMailboxId(account.getId());
+        int mboxId = MailboxManager.getInstance().lookupMailboxId(account.getId());
         if (mboxId == -1)
         	return;
 
         if (cancelSchedule) {
             ZimbraLog.datasource.info(
                 "Data source %s was deleted.  Deleting scheduled task.", dsId);
-            ScheduledTaskManager.cancel(DataSourceTask.class.getName(), dsId, mboxId, false);
+            ScheduledTaskManager.cancel(DataSourceTask.class.getName(), dsId, mboxId, false); 
             DbScheduledTask.deleteTask(DataSourceTask.class.getName(), dsId);
             deleteManaged(accountId, dsId);
             return;
