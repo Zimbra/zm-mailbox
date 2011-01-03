@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -415,15 +415,15 @@ public final class QueryParser {
 
     private String toString(Token token) {
         switch (token.kind) {
-            case TERM:
-                return token.image;
-            case QUOTED_TERM:
-            case BRACED_TERM:
-                // trim
-                return token.image.substring(1, token.image.length() - 1);
-            default:
-                assert(false);
-                return "";
+        case TERM:
+            return token.image;
+        case QUOTED_TERM:
+            return token.image.substring(1, token.image.length() - 1).replaceAll("\\\\\"", "\"");
+        case BRACED_TERM:
+            return token.image.substring(1, token.image.length() - 1);
+        default:
+            assert(false);
+            return "";
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -499,6 +499,15 @@ public class QueryParserTest {
 
         src = "in"; // stop word
         Assert.assertEquals("(Q(l.contactData,in *=in [0 terms]) || Q(l.content))", Query.toString(parser.parse(src)));
+    }
+
+    @Test
+    public void quoted() throws Exception {
+        QueryParser parser = new QueryParser(null, ZimbraAnalyzer.getInstance());
+        parser.setTypes(EnumSet.of(MailItem.Type.CONTACT));
+
+        Assert.assertEquals("(Q(l.contactData,zimbra,quoted,test *=test [0 terms]) || Q(l.content,zimbra,quoted,test))",
+                Query.toString(parser.parse("\"Zimbra \\\"quoted\\\" test\"")));
     }
 
 }
