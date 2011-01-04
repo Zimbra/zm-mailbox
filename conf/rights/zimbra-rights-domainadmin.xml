@@ -67,6 +67,7 @@
     <a n="zimbraCalendarCalDavSyncEnd"/>
     <a n="zimbraCalendarCalDavSyncStart"/>
     <a n="zimbraCalendarMaxRevisions"/>
+    <a n="zimbraCalendarReminderDeviceEmail"/>
     <a n="zimbraChildAccount"/>
     <a n="zimbraChildVisibleAccount"/>
     <a n="zimbraContactAutoCompleteEmailFields"/>
@@ -82,6 +83,7 @@
     <a n="zimbraDataSourcePop3PollingInterval"/>
     <a n="zimbraDataSourceRssPollingInterval"/>
     <a n="zimbraDataSourceYabPollingInterval"/>
+    <a n="zimbraDumpsterEnabled"/>
     <a n="zimbraExternalImapHostname"/>
     <a n="zimbraExternalImapPort"/>
     <a n="zimbraExternalImapSSLHostname"/>
@@ -93,6 +95,7 @@
     <a n="zimbraFeatureCalendarUpsellURL"/>
     <a n="zimbraFeatureContactsUpsellURL"/>
     <a n="zimbraFeatureDiscardInFiltersEnabled"/>
+    <a n="zimbraFeatureMAPIConnectorEnabled"/>
     <a n="zimbraFeatureMailForwardingEnabled"/>
     <a n="zimbraFeatureMailForwardingInFiltersEnabled"/>
     <a n="zimbraFeatureMailUpsellURL"/>
@@ -115,6 +118,7 @@
     <a n="zimbraJunkMessagesIndexingEnabled"/>
     <a n="zimbraLocale"/>
     <a n="zimbraMailCanonicalAddress"/>
+    <a n="zimbraMailDumpsterLifetime"/>
     <a n="zimbraMailForwardingAddress"/>
     <a n="zimbraMailIdleSessionTimeout"/>
     <a n="zimbraMailMessageLifetime"/>
@@ -123,6 +127,7 @@
     <a n="zimbraMailSpamLifetime"/>
     <a n="zimbraMailStatus"/>
     <a n="zimbraMailTrashLifetime"/>
+    <a n="zimbraMailTrustedSenderListMaxNumEntries"/>
     <a n="zimbraMaxContactsPerPage"/>
     <a n="zimbraMaxMailItemsPerPage"/>
     <a n="zimbraMaxVoiceItemsPerPage"/>
@@ -147,6 +152,9 @@
     <a n="zimbraPasswordMinPunctuationChars"/>
     <a n="zimbraPasswordMinUpperCaseChars"/>
     <a n="zimbraPasswordMustChange"/>
+    <a n="zimbraPhoneticCompany"/>
+    <a n="zimbraPhoneticFirstName"/>
+    <a n="zimbraPhoneticLastName"/>
     <a n="zimbraPop3Enabled"/>
     <a n="zimbraPortalName"/>
     <a n="zimbraPrefAccountTreeOpen"/>
@@ -156,7 +164,9 @@
     <a n="zimbraPrefAutoAddAddressEnabled"/>
     <a n="zimbraPrefAutoCompleteQuickCompletionOnComma"/>
     <a n="zimbraPrefAutoSaveDraftInterval"/>
+    <a n="zimbraPrefAutocompleteAddressBubblesEnabled"/>
     <a n="zimbraPrefBccAddress"/>
+    <a n="zimbraPrefBriefcaseReadingPaneLocation"/>
     <a n="zimbraPrefCalendarAllowCancelEmailToSelf"/>
     <a n="zimbraPrefCalendarAllowForwardedInvite"/>
     <a n="zimbraPrefCalendarAllowPublishMethodInvite"/>
@@ -184,11 +194,13 @@
     <a n="zimbraPrefCalendarShowPastDueReminders"/>
     <a n="zimbraPrefCalendarToasterEnabled"/>
     <a n="zimbraPrefCalendarUseQuickAdd"/>
+    <a n="zimbraPrefCalendarWorkingHours"/>
     <a n="zimbraPrefChildVisibleAccount"/>
     <a n="zimbraPrefClientType"/>
     <a n="zimbraPrefComposeFormat"/>
     <a n="zimbraPrefComposeInNewWindow"/>
     <a n="zimbraPrefContactsDisableAutocompleteOnContactGroupMembers"/>
+    <a n="zimbraPrefContactsExpandAppleContactGroups"/>
     <a n="zimbraPrefContactsInitialView"/>
     <a n="zimbraPrefContactsPerPage"/>
     <a n="zimbraPrefConvReadingPaneLocation"/>
@@ -205,6 +217,7 @@
     <a n="zimbraPrefForwardReplyFormat"/>
     <a n="zimbraPrefForwardReplyInOriginalFormat"/>
     <a n="zimbraPrefForwardReplyPrefixChar"/>
+    <a n="zimbraPrefForwardReplySignatureId"/>
     <a n="zimbraPrefFromAddress"/>
     <a n="zimbraPrefFromDisplay"/>
     <a n="zimbraPrefGalAutoCompleteEnabled"/>
@@ -255,11 +268,13 @@
     <a n="zimbraPrefMailSelectAfterDelete"/>
     <a n="zimbraPrefMailSendReadReceipts"/>
     <a n="zimbraPrefMailSignature"/>
+    <a n="zimbraPrefMailSignatureContactId"/>
     <a n="zimbraPrefMailSignatureEnabled"/>
     <a n="zimbraPrefMailSignatureHTML"/>
     <a n="zimbraPrefMailSignatureStyle"/>
     <a n="zimbraPrefMailSoundsEnabled"/>
     <a n="zimbraPrefMailToasterEnabled"/>
+    <a n="zimbraPrefMailTrustedSenderList"/>
     <a n="zimbraPrefMandatorySpellCheckEnabled"/>
     <a n="zimbraPrefMarkMsgRead"/>
     <a n="zimbraPrefMessageViewHtmlPreferred"/>
@@ -295,6 +310,7 @@
     <a n="zimbraPrefSpellIgnoreWord"/>
     <a n="zimbraPrefStandardClientAccessibilityMode"/>
     <a n="zimbraPrefTagTreeOpen"/>
+    <a n="zimbraPrefTasksReadingPaneLocation"/>
     <a n="zimbraPrefTimeZoneId"/>
     <a n="zimbraPrefTrashLifetime"/>
     <a n="zimbraPrefUseDefaultIdentitySettings"/>
@@ -383,6 +399,7 @@
     <a n="zimbraExternalPop3SSLHostname"/>
     <a n="zimbraExternalPop3SSLPort"/>
     <a n="zimbraGalAlwaysIncludeLocalCalendarResources"/>
+    <a n="zimbraGalSyncMaxConcurrentClients"/>
     <a n="zimbraHelpAdminURL"/>
     <a n="zimbraHelpAdvancedURL"/>
     <a n="zimbraHelpDelegatedURL"/>
@@ -392,10 +409,14 @@
     <a n="zimbraMailCanonicalAddress"/>
     <a n="zimbraMailForwardingAddress"/>
     <a n="zimbraMailStatus"/>
+    <a n="zimbraMailTrustedSenderListMaxNumEntries"/>
     <a n="zimbraNotes"/>
+    <a n="zimbraPrefMailTrustedSenderList"/>
     <a n="zimbraPrefSkin"/>
     <a n="zimbraPrefSpellIgnoreWord"/>
     <a n="zimbraPrefTimeZoneId"/>
+    <a n="zimbraReverseProxyUseExternalRoute"/>
+    <a n="zimbraReverseProxyUseExternalRouteIfAccountNotExist"/>
     <a n="zimbraSkinBackgroundColor"/>
     <a n="zimbraSkinFavicon"/>
     <a n="zimbraSkinForegroundColor"/>
@@ -406,7 +427,9 @@
     <a n="zimbraSkinSelectionColor"/>
     <a n="zimbraWebClientAdminReference"/>
     <a n="zimbraWebClientLoginURL"/>
+    <a n="zimbraWebClientLoginURLAllowedUA"/>
     <a n="zimbraWebClientLogoutURL"/>
+    <a n="zimbraWebClientLogoutURLAllowedUA"/>
 
   </attrs>
 </right>
