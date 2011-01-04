@@ -24,9 +24,15 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.service.admin.AdminDocumentHandler;
+import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -92,7 +98,7 @@ public class WaitSetMgr {
                                 oldestId = wsid;
                             }
                         }
-                        destroy(ownerAccountId, oldestId); 
+                        destroy(null, ownerAccountId, oldestId); 
                     }
                 }
             }
@@ -136,12 +142,14 @@ public class WaitSetMgr {
     }
 
     /**
-     * Destroy the referenced WaitSet.  
+     * Destroy the referenced WaitSet.
      * 
+     * @param zsc ZimbraSoapContext or permission checking.  If null, permission checking is skipped
+     * @param requestingAcctId
      * @param id
      * @throws ServiceException
      */
-    public static void destroy(String requestingAcctId, String id) throws ServiceException {
+    public static void destroy(ZimbraSoapContext zsc, String requestingAcctId, String id) throws ServiceException {
         synchronized(sWaitSets) {
             WaitSetBase ws = lookupInternal(id);
             if (ws == null) {
@@ -149,8 +157,13 @@ public class WaitSetMgr {
             }
             assert(!Thread.holdsLock(ws));
             
-            if (!ws.getOwnerAccountId().equals(requestingAcctId)) {
-                throw ServiceException.PERM_DENIED("Not the owner: Only the creator/owner may delete a waitset");
+            // skip permission checking if zsc is null
+            if (zsc != null) {
+                if (id.startsWith(WaitSetMgr.ALL_ACCOUNTS_ID_PREFIX)) {
+                    checkRightForAllAccounts(zsc);
+                } else {
+                    checkRightForOwnerAccount(ws, requestingAcctId);
+                }
             }
             
             //remove from the by-id map
@@ -318,6 +331,37 @@ public class WaitSetMgr {
         if (activeSets > 0) {
             ZimbraLog.session.info("WaitSet sweeper: %d active WaitSets (%d accounts) - %d sets with blocked callbacks",
                 activeSets, activeSessions, withCallback);
+        }
+    }
+    
+    /*
+     * ensure that the authenticated account is allowed to create/destroy/access a waitset on
+     * all accounts
+     */
+    public static void checkRightForAllAccounts(ZimbraSoapContext zsc) throws ServiceException {
+        AdminDocumentHandler.checkRight(zsc, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
+    }
+    
+    /*
+     * ensure that the authenticated account must be able to access the additionally specified 
+     * account in order to add/delete it to/from a waitset 
+     */
+    public static void checkRightForAdditionalAccount(String acctId, ZimbraSoapContext zsc) 
+    throws ServiceException {
+        Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.id, acctId);
+        if (acct == null)
+            throw ServiceException.DEFEND_ACCOUNT_HARVEST(acctId);
+            
+        if (!AccessManager.getInstance().canAccessAccount(zsc.getAuthToken(), acct, zsc.isUsingAdminPrivileges()))
+            throw ServiceException.PERM_DENIED("cannot access account " + acct.getName());
+    }
+    
+    /*
+     * ensure that the requesting account must be the owner(creator) of the waitset
+     */
+    public static void checkRightForOwnerAccount(IWaitSet ws, String requestingAcctId) throws ServiceException {
+        if (!ws.getOwnerAccountId().equals(requestingAcctId)) {
+            throw ServiceException.PERM_DENIED("Not owner(creator) of waitset");
         }
     }
 }

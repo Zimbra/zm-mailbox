@@ -165,8 +165,8 @@ public class WaitSetRequest extends MailDocumentHandler {
             
             String defInterestStr = null;
             if (waitSetId.startsWith(WaitSetMgr.ALL_ACCOUNTS_ID_PREFIX)) {
-                if (!adminAllowed) 
-                    throw MailServiceException.PERM_DENIED("Non-Admin accounts may not wait on other accounts");
+            	WaitSetMgr.checkRightForAllAccounts(zsc);
+            	
                 // default interest types required for "All" waitsets
                 defInterestStr = request.getAttribute(MailConstants.A_DEFTYPES);
                 int defaultInterests = WaitSetRequest.parseInterestStr(defInterestStr, 0);
@@ -178,21 +178,13 @@ public class WaitSetRequest extends MailDocumentHandler {
             if (cb.ws == null)
                 throw AdminServiceException.NO_SUCH_WAITSET(waitSetId);
             
-            if (!cb.ws.getOwnerAccountId().equals(zsc.getRequestedAccountId()))
-                throw ServiceException.PERM_DENIED("Not owner of waitset");
+            WaitSetMgr.checkRightForOwnerAccount(cb.ws, zsc.getRequestedAccountId());
             
-            List<String> allowedAccountIds = null;
-            if (!adminAllowed) {
-                allowedAccountIds = new ArrayList<String>(1);
-                allowedAccountIds.add(zsc.getRequestedAccountId());
-            }
-            
-            
-            List<WaitSetAccount> add = parseAddUpdateAccounts(
-                request.getOptionalElement(MailConstants.E_WAITSET_ADD), cb.ws.getDefaultInterest(), allowedAccountIds);
-            List<WaitSetAccount> update = parseAddUpdateAccounts(
-                request.getOptionalElement(MailConstants.E_WAITSET_UPDATE), cb.ws.getDefaultInterest(), allowedAccountIds);
-            List<String> remove = parseRemoveAccounts(request.getOptionalElement(MailConstants.E_WAITSET_REMOVE), allowedAccountIds);
+            List<WaitSetAccount> add = parseAddUpdateAccounts(zsc,
+                request.getOptionalElement(MailConstants.E_WAITSET_ADD), cb.ws.getDefaultInterest());
+            List<WaitSetAccount> update = parseAddUpdateAccounts(zsc,
+                request.getOptionalElement(MailConstants.E_WAITSET_UPDATE), cb.ws.getDefaultInterest());
+            List<String> remove = parseRemoveAccounts(zsc, request.getOptionalElement(MailConstants.E_WAITSET_REMOVE));
 
             ///////////////////
             // workaround for 27480: load the mailboxes NOW, before we grab the waitset lock
@@ -280,7 +272,8 @@ public class WaitSetRequest extends MailDocumentHandler {
      * @return
      * @throws ServiceException
      */
-    static List<WaitSetAccount> parseAddUpdateAccounts(Element elt, int defaultInterest, List<String> allowedAccountIds) throws ServiceException {
+    static List<WaitSetAccount> parseAddUpdateAccounts(ZimbraSoapContext zsc, Element elt, int defaultInterest) 
+    throws ServiceException {
         List<WaitSetAccount> toRet = new ArrayList<WaitSetAccount>();
         if (elt != null) {
             for (Iterator<Element> iter = elt.elementIterator(MailConstants.E_A); iter.hasNext();) {
@@ -298,9 +291,9 @@ public class WaitSetRequest extends MailDocumentHandler {
                 } else {
                     id = a.getAttribute(MailConstants.A_ID);
                 }
-                if (allowedAccountIds != null && !allowedAccountIds.contains(id)) {
-                    throw ServiceException.PERM_DENIED("Only admins may listen to other account IDs");
-                }
+                
+                WaitSetMgr.checkRightForAdditionalAccount(id, zsc);
+                
                 String tokenStr = a.getAttribute(MailConstants.A_TOKEN, null);
                 SyncToken token = tokenStr != null ? new SyncToken(tokenStr) : null;
                 int interests = parseInterestStr(a.getAttribute(MailConstants.A_TYPES, null), defaultInterest);
@@ -310,15 +303,14 @@ public class WaitSetRequest extends MailDocumentHandler {
         return toRet;
     }
     
-    static List<String> parseRemoveAccounts(Element elt, List<String> allowedAccountIds) throws ServiceException {
+    static List<String> parseRemoveAccounts(ZimbraSoapContext zsc, Element elt) throws ServiceException {
         List<String> remove = new ArrayList<String>();
         if (elt != null) {
             for (Iterator<Element> iter = elt.elementIterator(MailConstants.E_A); iter.hasNext();) {
                 Element a = iter.next();
                 String id = a.getAttribute(MailConstants.A_ID);
-                if (allowedAccountIds != null && !allowedAccountIds.contains(id)) {
-                    throw ServiceException.PERM_DENIED("Only adins may listen to other account IDs");
-                }
+                WaitSetMgr.checkRightForAdditionalAccount(id, zsc);
+
                 remove.add(id);
             }
         }

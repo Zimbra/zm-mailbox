@@ -52,7 +52,7 @@ public class DestroyWaitSet extends MailDocumentHandler {
     static public Element staticHandle(Element request, Map<String, Object> context, Element response) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         String waitSetId = request.getAttribute(MailConstants.A_WAITSET_ID);
-        WaitSetMgr.destroy(zsc.getRequestedAccountId(), waitSetId);
+        WaitSetMgr.destroy(zsc, zsc.getRequestedAccountId(), waitSetId);
         
         response.addAttribute(MailConstants.A_WAITSET_ID, waitSetId);
         return response;

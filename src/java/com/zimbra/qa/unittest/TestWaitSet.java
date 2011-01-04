@@ -125,7 +125,7 @@ public class TestWaitSet extends TestCase {
                 curSeqNo = cb.seqNo;
             }
         } finally {
-            WaitSetMgr.destroy(FAKE_ACCOUNT_ID, waitSetId);
+            WaitSetMgr.destroy(null, FAKE_ACCOUNT_ID, waitSetId);
         }
     }
     
@@ -192,7 +192,7 @@ public class TestWaitSet extends TestCase {
                 curSeqNo = cb.seqNo;
             }
         } finally {
-            WaitSetMgr.destroy(FAKE_ACCOUNT_ID, waitSetId);
+            WaitSetMgr.destroy(null, FAKE_ACCOUNT_ID, waitSetId);
         }
     }
     
