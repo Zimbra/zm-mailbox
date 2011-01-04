@@ -171,7 +171,7 @@ public class InternetAddress implements Cloneable {
             return ((MimeAddressHeader) header).getAddresses();
         } else {
             byte[] content = header.getRawHeader();
-            return parseHeader(content, header.mValueStart, content.length);
+            return parseHeader(content, header.valueStart, content.length);
         }
     }
 

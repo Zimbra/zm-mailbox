@@ -20,10 +20,13 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetHeaders;
+
+import com.google.common.collect.ImmutableSet;
 
 public class JavaMailInternetHeaders extends InternetHeaders implements JavaMailShim {
     private static final boolean ZPARSER = JavaMailMimeMessage.ZPARSER;
@@ -70,6 +73,7 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
         }
     }
 
+
     com.zimbra.common.mime.MimeHeaderBlock getZimbraMimeHeaderBlock() {
         return mHeaders;
     }
@@ -77,7 +81,7 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
     @Override public void load(InputStream is) throws MessagingException {
         if (ZPARSER) {
             try {
-                mHeaders.addAll(new com.zimbra.common.mime.MimeHeaderBlock(is));
+                mHeaders.appendAll(new com.zimbra.common.mime.MimeHeaderBlock(is));
             } catch (IOException ioe) {
                 throw new MessagingException("error reading header block", ioe);
             }
@@ -126,11 +130,20 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
         }
     }
 
+    private static final Set<String> RESENT_HEADERS = ImmutableSet.of(
+            "resent-date", "resent-from", "resent-sender", "resent-to", "resent-cc", "resent-bcc", "resent-message-id"
+    );
+
+    @SuppressWarnings("unchecked")
     @Override public void addHeader(String name, String value) {
         if (ZPARSER) {
             mHeaders.addHeader(name, value.getBytes());
         } else {
-            super.addHeader(name, value);
+            if (name != null && RESENT_HEADERS.contains(name.toLowerCase())) {
+                headers.add(0, new InternetHeader(name, value));
+            } else {
+                super.addHeader(name, value);
+            }
         }
     }
 
@@ -223,7 +236,7 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
                 }
                 byte[] bvalue = new byte[end - start + 1];
                 System.arraycopy(contents, start, bvalue, 0, end - start + 1);
-                mHeaders.addHeader(name, bvalue);
+                mHeaders.appendHeader(name, bvalue);
             }
         } else {
             super.addHeaderLine(line);

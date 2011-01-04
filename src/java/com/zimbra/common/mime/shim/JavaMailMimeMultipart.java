@@ -278,7 +278,7 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
                 mMultipart.removePart(0);
             }
             // need to parse the data source ourselves so that our offsets match up with the stream
-            com.zimbra.common.mime.MimeHeaderBlock headers = new com.zimbra.common.mime.MimeHeaderBlock(false).addHeader(ctype);
+            com.zimbra.common.mime.MimeHeaderBlock headers = new com.zimbra.common.mime.MimeHeaderBlock(ctype);
             InputStream is = null;
             try {
                 is = mpds.getInputStream();

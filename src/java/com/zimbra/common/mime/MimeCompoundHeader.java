@@ -29,10 +29,10 @@ import com.zimbra.common.mime.HeaderUtils.ByteBuilder;
 import com.zimbra.common.util.StringUtil;
 
 public class MimeCompoundHeader extends MimeHeader {
-    private boolean mUse2231Encoding;
-    private String mPrimaryValue;
-    private Map<String, String> mParams = new LinkedHashMap<String, String>();
-    private String mCharset;
+    private boolean use2231Encoding;
+    private String primaryValue;
+    private Map<String, String> params = new LinkedHashMap<String, String>();
+    private String charset;
 
     protected MimeCompoundHeader(String name, String value) {
         this(name, value, false);
@@ -40,7 +40,7 @@ public class MimeCompoundHeader extends MimeHeader {
 
     protected MimeCompoundHeader(String name, String value, boolean use2231) {
         super(name, value == null ? null : getBytes(value));
-        mUse2231Encoding = use2231;
+        this.use2231Encoding = use2231;
         parse();
     }
 
@@ -48,10 +48,10 @@ public class MimeCompoundHeader extends MimeHeader {
         super(header);
         if (header instanceof MimeCompoundHeader) {
             MimeCompoundHeader mch = (MimeCompoundHeader) header;
-            mUse2231Encoding = mch.mUse2231Encoding;
-            mPrimaryValue    = mch.mPrimaryValue;
-            mCharset         = mch.mCharset;
-            mParams.putAll(mch.mParams);
+            this.use2231Encoding = mch.use2231Encoding;
+            this.primaryValue    = mch.primaryValue;
+            this.charset         = mch.charset;
+            this.params.putAll(mch.params);
         } else {
             parse();
         }
@@ -72,15 +72,15 @@ public class MimeCompoundHeader extends MimeHeader {
 
 
     private void parse() {
-        if (mContent == null) {
+        if (content == null) {
             return;
         }
 
         RFC2231Data rfc2231 = new RFC2231Data();
         boolean escaped = false;
 
-        for (int i = mValueStart, count = mContent.length; i < count; i++) {
-            byte b = mContent[i];
+        for (int i = valueStart, count = content.length; i < count; i++) {
+            byte b = content[i];
 
             // ignore folding, even where it's not actually permitted
             if ((b == '\r' || b == '\n') && rfc2231.state != RFC2231State.VALUE && rfc2231.state != RFC2231State.SLOP) {
@@ -93,7 +93,7 @@ public class MimeCompoundHeader extends MimeHeader {
                     if (!escaped && b == '\\') {
                         escaped = true;
                     } else if (!escaped && b == '"') {
-                        rfc2231.saveParameter(mParams);
+                        rfc2231.saveParameter(params);
                         rfc2231.setState(RFC2231State.SLOP);
                     } else {
                         rfc2231.addValueByte(b);
@@ -111,7 +111,7 @@ public class MimeCompoundHeader extends MimeHeader {
                         rfc2231.comment++;
                         rfc2231.setState(RFC2231State.COMMENT);
                     } else if (b == ';') {
-                        rfc2231.saveParameter(mParams);
+                        rfc2231.saveParameter(params);
                         rfc2231.setState(RFC2231State.PARAM);
                     } else if (b > 0x20 && b < 0x7F && !TSPECIALS[b]) {
                         rfc2231.addKeyByte(b);
@@ -120,7 +120,7 @@ public class MimeCompoundHeader extends MimeHeader {
 
                 case VALUE:
                     if (b == ';' || b == ' ' || b == '\t' || b == '\r' || b == '\n') {
-                        rfc2231.saveParameter(mParams);
+                        rfc2231.saveParameter(params);
                         rfc2231.setState(b == ' ' || b == '\t' ? RFC2231State.SLOP : RFC2231State.PARAM);
                     } else if (b == '(') {
                         escaped = false;
@@ -133,7 +133,7 @@ public class MimeCompoundHeader extends MimeHeader {
 
                 case EQUALS:
                     if (b == ';') {
-                        rfc2231.saveParameter(mParams);
+                        rfc2231.saveParameter(params);
                         rfc2231.setState(RFC2231State.PARAM);
                     } else if (b == '"') {
                         escaped = false;
@@ -206,37 +206,37 @@ public class MimeCompoundHeader extends MimeHeader {
             }
         }
 
-        rfc2231.saveParameter(mParams);
-        rfc2231.assembleContinuations(mParams);
-        mPrimaryValue = mParams.remove(null);
+        rfc2231.saveParameter(params);
+        rfc2231.assembleContinuations(params);
+        this.primaryValue = params.remove(null);
     }
 
     public String getPrimaryValue() {
-        return mPrimaryValue;
+        return primaryValue;
     }
 
     public MimeCompoundHeader setPrimaryValue(String value) {
-        if (value != null && !value.equals(mPrimaryValue)) {
+        if (value != null && !value.equals(primaryValue)) {
             markDirty();
-            mPrimaryValue = value;
+            this.primaryValue = value;
         }
         return this;
     }
 
     public int getParameterCount() {
-        return mParams.size();
+        return params.size();
     }
 
-    public boolean containsParameter(String name) {
-        return getParameter(name) != null;
+    public boolean containsParameter(String pname) {
+        return getParameter(pname) != null;
     }
 
-    public String getParameter(String name) {
-        if (name != null) {
+    public String getParameter(String pname) {
+        if (pname != null) {
             // RFC 2045 2: "All media type values, subtype values, and parameter names
             //              as defined are case-insensitive."
-            for (Map.Entry<String, String> param : mParams.entrySet()) {
-                if (name.equalsIgnoreCase(param.getKey()))
+            for (Map.Entry<String, String> param : params.entrySet()) {
+                if (pname.equalsIgnoreCase(param.getKey()))
                     return param.getValue();
             }
         }
@@ -262,29 +262,29 @@ public class MimeCompoundHeader extends MimeHeader {
         if (key != null && !key.isEmpty()) {
             // RFC 2045 2: "All media type values, subtype values, and parameter names
             //              as defined are case-insensitive."
-            for (Iterator<String> it = mParams.keySet().iterator(); it.hasNext(); ) {
+            for (Iterator<String> it = params.keySet().iterator(); it.hasNext(); ) {
                 if (key.equalsIgnoreCase(it.next())) {
                     it.remove();
                 }
             }
             if (value != null) {
-                mParams.put(key, value);
+                params.put(key, value);
             }
         }
         return this;
     }
 
     public Iterator<Map.Entry<String, String>> parameterIterator() {
-        return mParams.entrySet().iterator();
+        return params.entrySet().iterator();
     }
 
     public MimeCompoundHeader setCharset(String charset) {
-        mCharset = charset == null || charset.trim().isEmpty() ? null : charset;
+        this.charset = charset == null || charset.trim().isEmpty() ? null : charset;
         return this;
     }
 
     public MimeCompoundHeader setUse2231Encoding(boolean use2231) {
-        mUse2231Encoding = use2231;
+        this.use2231Encoding = use2231;
         return this;
     }
 
@@ -308,20 +308,20 @@ public class MimeCompoundHeader extends MimeHeader {
     private static final int LINE_WRAP_LENGTH = 76;
 
     @Override protected void reserialize() {
-        if (mContent != null) {
+        if (content != null) {
             return;
         }
 
         ByteBuilder line = new ByteBuilder();
-        line.append(mName.getBytes()).append(':').append(' ');
-        mValueStart = line.length();
+        line.append(name.getBytes()).append(':').append(' ');
+        this.valueStart = line.length();
 
-        if (mPrimaryValue != null) {
-            line.append(mPrimaryValue);
+        if (primaryValue != null) {
+            line.append(primaryValue);
         }
 
         int position = line.length();
-        for (Map.Entry<String, String> param : mParams.entrySet()) {
+        for (Map.Entry<String, String> param : params.entrySet()) {
             String key = param.getKey(), value = param.getValue();
             if (value == null || key == null || key.isEmpty()) {
                 continue;
@@ -340,7 +340,7 @@ public class MimeCompoundHeader extends MimeHeader {
                 }
             }
 
-            String charset = nonascii ? StringUtil.checkCharset(value, mCharset) : "us-ascii";
+            String paramCharset = nonascii ? StringUtil.checkCharset(value, this.charset) : "us-ascii";
 
             ByteBuilder bb = new ByteBuilder();
             if (!nonascii) {
@@ -357,14 +357,14 @@ public class MimeCompoundHeader extends MimeHeader {
                 } else {
                     bb.append(param.getKey()).append('=').append(value);
                 }
-            } else if (mUse2231Encoding) {
+            } else if (use2231Encoding) {
                 try {
-                    String encoded = new URLEncoder().encode(value, charset);
-                    bb.append(param.getKey()).append('*').append('=').append(charset).append('\'').append('\'').append(encoded);
+                    String encoded = new URLEncoder().encode(value, paramCharset);
+                    bb.append(param.getKey()).append('*').append('=').append(paramCharset).append('\'').append('\'').append(encoded);
                 } catch (UnsupportedEncodingException e) {
                 }
             } else {
-                bb.append(param.getKey()).append('=').append('"').append(MimeHeader.EncodedWord.encode(value, charset)).append('"');
+                bb.append(param.getKey()).append('=').append('"').append(MimeHeader.EncodedWord.encode(value, paramCharset)).append('"');
             }
 
             if (position + bb.length() > LINE_WRAP_LENGTH) {
@@ -378,7 +378,7 @@ public class MimeCompoundHeader extends MimeHeader {
             position += bb.length();
         }
 
-        mContent = line.append('\r').append('\n').toByteArray();
+        this.content = line.append('\r').append('\n').toByteArray();
     }
 
     // special subclass of URLCodec that replaces ' ' with "%20" rather than with "+"

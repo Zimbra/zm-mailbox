@@ -45,8 +45,8 @@ public class MimeAddressHeader extends MimeHeader {
 
 
     private void parseAddresses() {
-        if (mValueStart > 0) {
-            mAddresses = InternetAddress.parseHeader(mContent, mValueStart, mContent.length - mValueStart);
+        if (valueStart > 0) {
+            mAddresses = InternetAddress.parseHeader(content, valueStart, content.length - valueStart);
         } else {
             mAddresses = new ArrayList<InternetAddress>(3);
         }

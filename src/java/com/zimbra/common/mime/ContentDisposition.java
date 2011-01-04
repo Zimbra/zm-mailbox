@@ -18,7 +18,7 @@ public class ContentDisposition extends MimeCompoundHeader {
     private static final String ATTACHMENT = "attachment";
     private static final String INLINE     = "inline";
 
-    private String mDisposition;
+    private String disposition;
 
     public ContentDisposition(String value) {
         super("Content-Disposition", value);
@@ -61,16 +61,16 @@ public class ContentDisposition extends MimeCompoundHeader {
     }
 
     public String getDisposition() {
-        return mDisposition;
+        return disposition;
     }
 
     private void normalizeDisposition() {
         String value = getPrimaryValue() == null ? "" : getPrimaryValue().trim().toLowerCase();
-        mDisposition = value.equals(ATTACHMENT) || value.equals(INLINE) ? value : ATTACHMENT;
+        this.disposition = value.equals(ATTACHMENT) || value.equals(INLINE) ? value : ATTACHMENT;
     }
 
     @Override protected void reserialize() {
-        if (mContent == null) {
+        if (content == null) {
             super.setPrimaryValue(getDisposition());
             super.reserialize();
         }

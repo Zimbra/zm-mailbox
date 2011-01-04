@@ -576,7 +576,7 @@ class MimeParser {
 
             PartInfo pcurrent = currentPart();
             MimeHeader header = new MimeHeader(key, content.toByteArray(), valueStart);
-            pcurrent.headers.addHeader(header);
+            pcurrent.headers.appendHeader(header);
             if (key.equalsIgnoreCase("Content-Type")) {
                 pcurrent.setContentType(new ContentType(header, defaultContentType()));
             }

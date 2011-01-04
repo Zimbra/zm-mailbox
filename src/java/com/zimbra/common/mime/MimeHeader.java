@@ -18,6 +18,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 //import java.nio.charset.Charset;
 
 import com.zimbra.common.mime.HeaderUtils.ByteBuilder;
@@ -26,9 +29,10 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 public class MimeHeader implements Cloneable {
-    protected final String mName;
-    protected byte[] mContent;
-    protected int mValueStart;
+    final HeaderInfo hinfo;
+    protected final String name;
+    protected byte[] content;
+    protected int valueStart;
 
     /** Constructor for pre-analyzed header line read from message source.
      * @param name    Header field name.
@@ -38,16 +42,18 @@ public class MimeHeader implements Cloneable {
      * @param start   The position within <code>content</code> where the header
      *                field value begins (after the ":"/": "). */
     MimeHeader(final String name, final byte[] content, final int start) {
-        mName = name;
-        mContent = content;
-        mValueStart = start;
+        this.hinfo = HeaderInfo.of(name);
+        this.name = name;
+        this.content = content;
+        this.valueStart = start;
     }
 
     /** Creates a {@code MimeHeader} from another {@code MimeHeader}. */
     MimeHeader(final MimeHeader header) {
-        mName = header.mName;
-        mContent = header.getRawHeader();
-        mValueStart = header.mValueStart;
+        this.hinfo = header.hinfo;
+        this.name = header.name;
+        this.content = header.getRawHeader();
+        this.valueStart = header.valueStart;
     }
 
     /** Creates a new {@code MimeHeader} with {@code value} as the field value.
@@ -67,7 +73,8 @@ public class MimeHeader implements Cloneable {
      *  will be used as the encoding charset if possible, defaulting back to
      *  <tt>utf-8</tt>.  <i>Note: No line folding is done at present.</i> */
     MimeHeader(final String name, final String value, final String encodingCharset) {
-        mName = name;
+        this.hinfo = HeaderInfo.of(name);
+        this.name = hinfo.name == null ? name : hinfo.name;
         String charset = encodingCharset != null && !encodingCharset.equals("") ? encodingCharset : null;
         updateContent(escape(value, charset, false).getBytes());
     }
@@ -76,12 +83,81 @@ public class MimeHeader implements Cloneable {
      *  {bvalue}CRLF</tt>".  {@code bvalue} is copied verbatim; no charset
      *  transforms, encoded-word handling, or folding is performed. */
     public MimeHeader(final String name, final byte[] bvalue) {
-        mName = name;
+        this.hinfo = HeaderInfo.of(name);
+        this.name = hinfo.name == null ? name : hinfo.name;
         updateContent(bvalue);
     }
 
-    @Override protected MimeHeader clone() {
+    @Override
+    protected MimeHeader clone() {
         return new MimeHeader(this);
+    }
+
+
+    enum HeaderInfo {
+        RETURN_PATH("Return-Path", 1, false, true),
+        RECEIVED("Received", 2, false, true),
+        RESENT_DATE("Resent-Date", 3, false, false, true),
+        RESENT_FROM("Resent-From", 3, false, false, true),
+        RESENT_SENDER("Resent-Sender", 3, false, false, true),
+        RESENT_TO("Resent-To", 3, false, false, true),
+        RESENT_CC("Resent-Cc", 3, false, false, true),
+        RESENT_BCC("Resent-Bcc", 3, false, false, true),
+        RESENT_MESSAGE_ID("Resent-Message-ID", 3, false, false, true),
+        DATE("Date", 4, true),
+        FROM("From", 5),
+        SENDER("Sender", 6, true),
+        REPLY_TO("Reply-To", 7, true),
+        TO("To", 8),
+        CC("Cc", 9),
+        BCC("Bcc", 10),
+        SUBJECT("Subject", 11, true),
+        MESSAGE_ID("Message-ID", 12, true),
+        IN_REPLY_TO("In-Reply-To", 13, true),
+        REFERENCES("References", 14, true),
+        CONTENT_TYPE("Content-Type", 15, true),
+        CONTENT_DISPOSITION("Content-Disposition", 16, true),
+        CONTENT_TRANSFER_ENCODING("Content-Transfer-Encoding", 17, true),
+        DEFAULT(null, 30),
+        CONTENT_LENGTH("Content-Length", 49, true),
+        STATUS("Status", 50, true);
+
+        final String name;
+        final int position;
+        final boolean unique, prepend, first;
+
+        HeaderInfo(String name, int position) {
+            this(name, position, false, false, false);
+        }
+
+        HeaderInfo(String name, int position, boolean unique) {
+            this(name, position, unique, false, false);
+        }
+
+        HeaderInfo(String name, int position, boolean unique, boolean prepend) {
+            this(name, position, unique, prepend, false);
+        }
+
+        HeaderInfo(String name, int position, boolean unique, boolean prepend, boolean first) {
+            this.name = name;  this.position = position;
+            this.unique = unique;  this.prepend = prepend;  this.first = first;
+        }
+
+        private static final Map<String, HeaderInfo> lookup = new HashMap<String, HeaderInfo>(40);
+        static {
+            for (HeaderInfo hinfo : EnumSet.allOf(HeaderInfo.class)) {
+                if (hinfo.name != null) {
+                    lookup.put(hinfo.name.toLowerCase(), hinfo);
+                }
+            }
+        }
+
+        static HeaderInfo of(String name) {
+            HeaderInfo hinfo = name == null ? null : lookup.get(name.toLowerCase());
+            return hinfo == null ? DEFAULT : hinfo;
+        }
+
+        @Override public String toString()  { return name; }
     }
 
 
@@ -90,50 +166,51 @@ public class MimeHeader implements Cloneable {
      *  copied verbatim; no charset transforms, encoded-word handling, or
      *  folding is performed.*/ 
     MimeHeader updateContent(final byte[] bvalue) {
-        byte[] bname = mName.getBytes();
+        byte[] bname = name.getBytes();
         int nlen = bname.length, vlen = bvalue == null ? 0 : bvalue.length;
         int csize = nlen + vlen + 4;
 
-        byte[] content = new byte[csize];
-        System.arraycopy(bname, 0, content, 0, nlen);
-        content[nlen] = ':';  content[nlen + 1] = ' ';
+        byte[] buf = new byte[csize];
+        System.arraycopy(bname, 0, buf, 0, nlen);
+        buf[nlen] = ':';  buf[nlen + 1] = ' ';
         if (bvalue != null) {
-            System.arraycopy(bvalue, 0, content, nlen + 2, vlen);
+            System.arraycopy(bvalue, 0, buf, nlen + 2, vlen);
         }
-        content[csize - 2] = '\r';  content[csize - 1] = '\n';
+        buf[csize - 2] = '\r';  buf[csize - 1] = '\n';
 
-        mContent = content;  mValueStart = nlen + 2;
+        this.content = buf;  this.valueStart = nlen + 2;
         return this;
     }
 
     /** Returns this header's field name (the bit before the '<tt>:</tt>' in
      *  the header line). */
     public String getName() {
-        return mName;
+        return name;
     }
 
     /** Returns the entire header line (including the field name and the
      *  '<tt>:</tt>') as a raw byte array. */
     public byte[] getRawHeader() {
         reserialize();
-        return mContent;
+        return content;
     }
 
     /** Returns the header's value (the bit after the '<tt>:</tt>') after all
      *  unfolding and decoding of RFC 2047 encoded-words has been performed. */
     public String getValue(final String charset) {
         reserialize();
-        int end = mContent.length, c;
-        while (end > mValueStart && ((c = mContent[end-1]) == '\n' || c == '\r')) {
+        int end = content.length, c;
+        while (end > valueStart && ((c = content[end-1]) == '\n' || c == '\r')) {
             end--;
         }
-        return decode(mContent, mValueStart, end - mValueStart, charset);
+        return decode(content, valueStart, end - valueStart, charset);
     }
 
     /** Returns the header's value (the bit after the '<tt>:</tt>') as a
      *  {@code String}.  No decoding is performed other than removing the
      *  trailing CRLF. */
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return getEncodedValue(null);
     }
 
@@ -150,11 +227,11 @@ public class MimeHeader implements Cloneable {
      *  performed other than removing the trailing CRLF. */
     public String getEncodedValue(String charset) {
         reserialize();
-        int end = mContent.length, c;
-        while (end > mValueStart && ((c = mContent[end-1]) == '\n' || c == '\r')) {
+        int end = content.length, c;
+        while (end > valueStart && ((c = content[end-1]) == '\n' || c == '\r')) {
             end--;
         }
-        return createString(mContent, mValueStart, end - mValueStart, charset);
+        return createString(content, valueStart, end - valueStart, charset);
     }
 
     private static String createString(byte[] bytes, int offset, int length, String charsetName) {
@@ -166,17 +243,17 @@ public class MimeHeader implements Cloneable {
     }
 
     /** Marks the header as "dirty" and requiring reserialization.  To enforce
-     *  this reserialization requirement, unsets {@link #mContent}. */
+     *  this reserialization requirement, unsets {@link #content}. */
     protected void markDirty() {
-        mContent = null;
-        mValueStart = -1;
+        this.content = null;
+        this.valueStart = -1;
         // XXX: if header is in a header block, should mark that block as dirty?
     }
 
     /** Returns whether the header has been marked as needing reserialization.
      * @see #markDirty() */
     protected boolean isDirty() {
-        return mContent == null;
+        return content == null;
     }
 
     /** Permits a subclass to regenerate the {@code byte[]} content of the

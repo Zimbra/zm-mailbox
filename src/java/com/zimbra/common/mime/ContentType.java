@@ -15,8 +15,8 @@
 package com.zimbra.common.mime;
 
 public class ContentType extends MimeCompoundHeader {
-    private String mPrimaryType, mSubType;
-    private final String mDefault;
+    private String primaryType, subType;
+    private final String defaultType;
 
     public static final String TEXT_PLAIN = "text/plain";
     public static final String APPLICATION_OCTET_STREAM = "application/octet-stream";
@@ -29,31 +29,31 @@ public class ContentType extends MimeCompoundHeader {
 
     public ContentType(String value, String defaultType) {
         super("Content-Type", value);
-        mDefault = defaultType == null || defaultType.isEmpty() ? DEFAULT : defaultType;
+        this.defaultType = defaultType == null || defaultType.isEmpty() ? DEFAULT : defaultType;
         normalizeType();
     }
 
     public ContentType(String value, boolean use2231) {
         super("Content-Type", value, use2231);
-        mDefault = DEFAULT;
+        this.defaultType = DEFAULT;
         normalizeType();
     }
 
     ContentType(String name, byte[] content, int start, String defaultType) {
         super(name, content, start);
-        mDefault = defaultType == null || defaultType.isEmpty() ? DEFAULT : defaultType;
+        this.defaultType = defaultType == null || defaultType.isEmpty() ? DEFAULT : defaultType;
         normalizeType();
     }
 
     public ContentType(ContentType ctype) {
         super(ctype);
-        mDefault = ctype == null ? DEFAULT : ctype.mDefault;
+        this.defaultType = ctype == null ? DEFAULT : ctype.defaultType;
         normalizeType();
     }
 
     ContentType(MimeHeader header, String defaultType) {
         super(header);
-        mDefault = defaultType == null || defaultType.isEmpty() ? DEFAULT : defaultType;
+        this.defaultType = defaultType == null || defaultType.isEmpty() ? DEFAULT : defaultType;
         normalizeType();
     }
 
@@ -73,8 +73,8 @@ public class ContentType extends MimeCompoundHeader {
     }
 
     public ContentType setSubType(String subtype) {
-        if (!mSubType.equals(subtype)) {
-            super.setPrimaryValue(mPrimaryType + '/' + subtype);
+        if (!subType.equals(subtype)) {
+            super.setPrimaryValue(primaryType + '/' + subtype);
             normalizeType();
         }
         return this;
@@ -86,42 +86,42 @@ public class ContentType extends MimeCompoundHeader {
     }
 
     public String getContentType() {
-        return mPrimaryType + '/' + mSubType;
+        return primaryType + '/' + subType;
     }
 
     public String getPrimaryType() {
-        return mPrimaryType;
+        return primaryType;
     }
 
     public String getSubType() {
-        return mSubType;
+        return subType;
     }
 
     private void normalizeType() {
         String primary = getPrimaryValue();
-        String value = primary == null || primary.isEmpty() ? mDefault : primary.trim().toLowerCase();
+        String value = primary == null || primary.isEmpty() ? defaultType : primary.trim().toLowerCase();
 
-        mPrimaryType = mSubType = "";
+        this.primaryType = subType = "";
         int slash = value.indexOf('/');
         if (slash != -1) {
-            mPrimaryType = value.substring(0, slash).trim();
-            mSubType = value.substring(slash + 1).trim();
+            this.primaryType = value.substring(0, slash).trim();
+            this.subType = value.substring(slash + 1).trim();
         }
 
-        if (mPrimaryType.isEmpty() || mSubType.isEmpty()) {
+        if (primaryType.isEmpty() || subType.isEmpty()) {
             // malformed content-type; default as best we can
-            if ("text".equals(slash == -1 ? value : mPrimaryType)) {
-                mPrimaryType = "text";
-                mSubType     = "plain";
+            if ("text".equals(slash == -1 ? value : primaryType)) {
+                this.primaryType = "text";
+                this.subType     = "plain";
             } else {
-                mPrimaryType = "application";
-                mSubType     = "octet-stream";
+                this.primaryType = "application";
+                this.subType     = "octet-stream";
             }
         }
     }
 
     @Override protected void reserialize() {
-        if (mContent == null) {
+        if (content == null) {
             super.setPrimaryValue(getContentType());
             super.reserialize();
         }
