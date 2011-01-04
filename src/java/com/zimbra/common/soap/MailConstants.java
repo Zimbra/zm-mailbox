@@ -64,6 +64,8 @@ public class MailConstants {
     public static final String E_SEND_REPORT_RESPONSE = "SendDeliveryReportResponse";
     public static final String E_SEND_SHARE_NOTIFICATION_REQUEST = "SendShareNotificationRequest";
     public static final String E_SEND_SHARE_NOTIFICATION_RESPONSE = "SendShareNotificationResponse";
+    public static final String E_BOUNCE_MSG_REQUEST = "BounceMsgRequest";
+    public static final String E_BOUNCE_MSG_RESPONSE = "BounceMsgResponse";
     public static final String E_ADD_MSG_REQUEST = "AddMsgRequest";
     public static final String E_ADD_MSG_RESPONSE = "AddMsgResponse";
     public static final String E_SAVE_DRAFT_REQUEST = "SaveDraftRequest";
@@ -286,6 +288,8 @@ public class MailConstants {
     public static final QName SEND_REPORT_RESPONSE = QName.get(E_SEND_REPORT_RESPONSE, NAMESPACE);
     public static final QName SEND_SHARE_NOTIFICATION_REQUEST = QName.get(E_SEND_SHARE_NOTIFICATION_REQUEST, NAMESPACE);
     public static final QName SEND_SHARE_NOTIFICATION_RESPONSE = QName.get(E_SEND_SHARE_NOTIFICATION_RESPONSE, NAMESPACE);
+    public static final QName BOUNCE_MSG_REQUEST = QName.get(E_BOUNCE_MSG_REQUEST, NAMESPACE);
+    public static final QName BOUNCE_MSG_RESPONSE = QName.get(E_BOUNCE_MSG_RESPONSE, NAMESPACE);
     public static final QName ADD_MSG_REQUEST = QName.get(E_ADD_MSG_REQUEST, NAMESPACE);
     public static final QName ADD_MSG_RESPONSE = QName.get(E_ADD_MSG_RESPONSE, NAMESPACE);
     public static final QName SAVE_DRAFT_REQUEST = QName.get(E_SAVE_DRAFT_REQUEST, NAMESPACE);
@@ -603,6 +607,7 @@ public class MailConstants {
     public static final String A_VALUE = "value";
     public static final String A_DATE = "d";
     public static final String A_SENT_DATE = "sd";
+    public static final String A_RESENT_DATE = "rd";
     public static final String A_SIZE = "s";
     public static final String A_FLAGS = "f";
     public static final String A_ID = "id";
