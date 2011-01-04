@@ -149,14 +149,16 @@ public class ExpandRecur extends MailDocumentHandler {
                 long invEnd = dtEnd != null ? dtEnd.getUtcTime() : 0;
                 if ((invStart < rangeEnd && invEnd > rangeStart) || (dtStart == null)) {
                     boolean allDay = false;
-                    int tzOffset = 0;
+                    int startTzo = 0, endTzo = 0;
                     if (dtStart != null) {
                         allDay = !dtStart.hasTime();
-                        tzOffset = dtStart.getOffset();
+                        startTzo = dtStart.getOffset();
                     }
+                    if (dtEnd != null)
+                        endTzo = dtEnd.getOffset();
                     Instance inst = new Instance(0, null,
-                                                 dtStart == null,
-                                                 invStart, invEnd, allDay, tzOffset,
+                                                 dtStart != null, dtEnd != null,
+                                                 invStart, invEnd, allDay, startTzo, endTzo,
                                                  true, false);
                     instances.add(inst);
                 }
@@ -167,13 +169,13 @@ public class ExpandRecur extends MailDocumentHandler {
 
     protected static Element addInstance(Element parent, Instance inst) throws ServiceException {
         Element instElem = parent.addElement(MailConstants.E_INSTANCE);
-        if (!inst.isTimeless()) {
+        if (inst.hasStart() && inst.hasEnd()) {
             long instStart = inst.getStart();
             instElem.addAttribute(MailConstants.A_CAL_START_TIME, instStart);
             instElem.addAttribute(MailConstants.A_CAL_NEW_DURATION, inst.getEnd() - inst.getStart());
             if (inst.isAllDay()) {
                 instElem.addAttribute(MailConstants.A_CAL_ALLDAY, true);
-                instElem.addAttribute(MailConstants.A_CAL_TZ_OFFSET, inst.getTzOffset());
+                instElem.addAttribute(MailConstants.A_CAL_TZ_OFFSET, inst.getStartTzOffset());
             }
             instElem.addAttribute(MailConstants.A_CAL_RECURRENCE_ID_Z, inst.getRecurIdZ());
         }

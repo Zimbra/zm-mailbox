@@ -162,14 +162,14 @@ public class CalSummaryCache {
                     // For an instance whose alarm time is within the time range, we must
                     // include it even if its start time is after the range.
                     long startOrAlarm = instStart == alarmInst ? alarmTime : instStart;
-
-                    if (!inst.isTimeless() &&
+                    boolean hasTimes = inst.hasStart() && inst.hasEnd();
+                    if (hasTimes &&
                         (startOrAlarm >= rangeEnd || inst.getEnd() <= rangeStart)) {
                         continue;
                     }
                     numInstances++;
 
-                    if (!inst.isTimeless()) {
+                    if (hasTimes) {
                         if (actualRangeStart == 0 || startOrAlarm < actualRangeStart)
                             actualRangeStart = startOrAlarm;
                         if (inst.getEnd() > actualRangeEnd)
@@ -187,7 +187,7 @@ public class CalSummaryCache {
                     InstanceData instData;
                     if (!inst.isException()) {
                         String ridZ = inst.getRecurIdZ();
-                        Long tzOffset = instStartLong != null && inst.isAllDay() ? new Long(inst.getTzOffset()) : null;
+                        Long tzOffset = instStartLong != null && inst.isAllDay() ? new Long(inst.getStartTzOffset()) : null;
                         instData = new InstanceData(
                                 ridZ, instStartLong, durationLong, alarmAt, tzOffset,
                                 effectivePartStat, fba, inv.getPercentComplete(),

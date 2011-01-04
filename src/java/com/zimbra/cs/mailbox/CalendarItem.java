@@ -841,9 +841,11 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                     long invEnd = dtEnd != null ? dtEnd.getUtcTime() : 0;
                     if ((invStart < endAdjusted && invEnd > start) || (dtStart == null)) {
                         Instance inst = new Instance(getId(), new InviteInfo(inv),
-                                                     dtStart == null,
+                                                     dtStart != null, dtEnd != null,
                                                      invStart, invEnd,
-                                                     inv.isAllDayEvent(), dtStart != null ? dtStart.getOffset() : 0,
+                                                     inv.isAllDayEvent(),
+                                                     dtStart != null ? dtStart.getOffset() : 0,
+                                                     dtEnd != null ? dtEnd.getOffset() : 0,
                                                      inv.hasRecurId(), false);
                         instances.add(inst);
                     }
@@ -854,7 +856,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         // Remove instances that aren't in the actual range.
         for (Iterator<Instance> iter = instances.iterator(); iter.hasNext(); ) {
             Instance inst = iter.next();
-            if (!inst.isTimeless()) {
+            if (inst.hasStart() && inst.hasEnd()) {
                 long instStart = inst.getStart();
                 long instEnd = inst.getEnd();
                 // Remove if instance is not the alarm instance and instance ends before range start
@@ -868,7 +870,8 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     }
 
     public static class Instance implements Comparable<Instance> {
-        private boolean mTimeless;  // if true, this instance has no start/end time (e.g. VTODO with no DTSTART)
+        private boolean mHasStart;
+        private boolean mHasEnd;
         private long mStart;        // calculated start time of this instance
         private long mEnd;          // calculated end time of this instance
 
@@ -881,7 +884,8 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
         private int mCalItemId;
         private boolean mAllDay;
-        private int mTzOffset;    // used when mAllDay == true; timezone offset in millis of mStart
+        private int mStartTzOffset;    // used when mAllDay == true; timezone offset in millis of mStart
+        private int mEndTzOffset;      // used when mAllDay == true; timezone offset in millis of mEnd
 
         /**
          * Create an Instance object using data in an Invite that points to
@@ -894,30 +898,41 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             long start = dtStart != null ? dtStart.getUtcTime() : 0;
             ParsedDateTime dtEnd = inv.getEffectiveEndTime();
             long end = dtEnd != null ? dtEnd.getUtcTime() : 0;
-            int tzOffset = 0;
+            int startTzo = 0, endTzo = 0;
             boolean allDay = inv.isAllDayEvent();
-            if (allDay)
-                tzOffset = dtStart.getOffset();
-            return new Instance(calItemId, new InviteInfo(inv), dtStart == null, start, end, allDay, tzOffset, inv.hasRecurId(), false);
+            if (allDay) {
+                if (dtStart != null)
+                    startTzo = dtStart.getOffset();
+                if (dtEnd != null)
+                    endTzo = dtEnd.getOffset();
+            }
+            return new Instance(calItemId, new InviteInfo(inv), dtStart != null, dtEnd != null, start, end,
+                                allDay, startTzo, endTzo, inv.hasRecurId(), false);
         }
 
         public Instance(int calItemId, InviteInfo invInfo,
-                boolean timeless,
-                long start, long end, boolean allDay, int tzOffset,
+                boolean hasStart, boolean hasEnd,
+                long start, long end, boolean allDay, int startTzOffset, int endTzOffset,
                 boolean _exception, boolean fromRdate)
         {
             mInvId = invInfo;
             mCalItemId = calItemId;
-            mTimeless = timeless;
-            if (mTimeless) {
-                mStart = mEnd = 0;
-                mAllDay = false;
-                mTzOffset = 0;
-            } else {
+            mHasStart = hasStart;
+            mHasEnd = hasEnd;
+            mAllDay = allDay;
+            if (mHasStart) {
                 mStart = start;
+                mStartTzOffset = mAllDay ? startTzOffset : 0;  // don't set TZ offset for non-allday instances
+            } else {
+                mStart = 0;
+                mStartTzOffset = 0;
+            }
+            if (mHasEnd) {
                 mEnd = end;
-                mAllDay = allDay;
-                mTzOffset = mAllDay ? tzOffset : 0;  // don't set mTzOffset for non-allday instances
+                mEndTzOffset = mAllDay ? endTzOffset : 0;  // don't set TZ offset for non-allday instances
+            } else {
+                mEnd = 0;
+                mEndTzOffset = 0;
             }
             mIsException = _exception;
             mFromRdate = fromRdate;
@@ -927,34 +942,17 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         public int compareTo(Instance other) {
             long toRet = mCalItemId - other.mCalItemId;
             if (toRet == 0) {
-                if (mTimeless == other.mTimeless) {
-                    toRet = mStart - other.mStart;
+                toRet = compareTimes(mHasStart, mStart, mAllDay, mStartTzOffset,
+                                     other.mHasStart, other.mStart, other.mAllDay, other.mStartTzOffset);
+                if (toRet == 0) {
+                    toRet = compareTimes(mHasEnd, mEnd, mAllDay, mEndTzOffset,
+                                         other.mHasEnd, other.mEnd, other.mAllDay, other.mEndTzOffset);
                     if (toRet == 0) {
-                        toRet = mEnd - other.mEnd;
-                        if (toRet == 0) {
-                            if (mAllDay == other.mAllDay) {
-                                toRet = mTzOffset - other.mTzOffset;
-                                if (toRet == 0) {
-                                    if (mInvId != null)
-                                        toRet = mInvId.compareTo(other.mInvId);
-                                    else if (other.mInvId != null)
-                                        toRet = other.mInvId.compareTo(mInvId) * -1;
-                                    else
-                                        toRet = 0;
-                                }
-                            } else {
-                                if (mAllDay)
-                                    toRet = -1;
-                                else
-                                    toRet = 1;
-                            }
-                        }
+                        if (mInvId != null)
+                            toRet = mInvId.compareTo(other.mInvId);
+                        else if (other.mInvId != null)
+                            toRet = other.mInvId.compareTo(mInvId) * -1;
                     }
-                } else {
-                    if (mTimeless)
-                        toRet = 1;
-                    else
-                        toRet = -1;
                 }
             }
             if (toRet > 0) {
@@ -977,20 +975,35 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                 sameInvId = mInvId.equals(other.mInvId);
             else
                 sameInvId = other.mInvId == null;
-            return sameInvId && (mTimeless == other.mTimeless)
-                   && (mStart == other.mStart) && (mEnd == other.mEnd)
-                   && (mAllDay == other.mAllDay) && (mTzOffset == other.mTzOffset);
+            return sameInvId && sameTime(other);
         }
 
         public boolean sameTime(Instance other) {
-            if (!mTimeless && !other.mTimeless) {
-                // Same if they have identical start and end times.
-                return mStart == other.mStart && mEnd == other.mEnd
-                       && mAllDay == other.mAllDay && mTzOffset == other.mTzOffset;
-            } else {
-                // Even if both are timeless they are considered different.
+            // Times are same only if they are both all-day or both non-allday.
+            if (mAllDay != other.mAllDay)
                 return false;
+
+            // If one has start time but the other doesn't, they have different times.
+            if (mHasStart != other.mHasStart)
+                return false;
+            if (mHasStart) {  // implies other.mHasStart is also true
+                // Both time and offset must be same to be considered the same time.
+                if (mStart != other.mStart || mStartTzOffset != other.mStartTzOffset)
+                    return false;
             }
+            // Neither has start time, or both have same start time.
+
+            // Likewise for end time.
+            if (mHasEnd != other.mHasEnd)
+                return false;
+            if (mHasEnd) {  // implies other.mHasEnd is also true
+                // Both time and offset must be same to be considered the same time.
+                if (mEnd != other.mEnd || mEndTzOffset != other.mEndTzOffset)
+                    return false;
+            }
+            // Neither has end time, or both have same start time.
+
+            return true;
         }
 
         @Override
@@ -998,10 +1011,10 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             StringBuilder toRet = new StringBuilder("INST(");
             Date dstart = new Date(mStart);
             Date dend = new Date(mEnd);
-            toRet.append(mTimeless).append(",");
+            toRet.append(mHasStart).append(",").append(mHasEnd).append(",");
             toRet.append(dstart).append(",").append(dend).append(",").append(mIsException);
             toRet.append(",allDay=").append(mAllDay);
-            toRet.append(",tzo=").append(mTzOffset);
+            toRet.append(",startTzo=").append(mStartTzOffset).append(",endTzo=").append(mEndTzOffset);
             if (mInvId != null)
                 toRet.append(",ID=").append(mInvId.getMsgId()).append("-").append(mInvId.getComponentId());
             toRet.append(")");
@@ -1015,8 +1028,10 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         public long getStart() { return mStart; }
         public long getEnd() { return mEnd; }
         public boolean isAllDay() { return mAllDay; }
-        public int getTzOffset() { return mTzOffset; }
-        public boolean isTimeless() { return mTimeless; }
+        public int getStartTzOffset() { return mStartTzOffset; }
+        public int getEndTzOffset() { return mEndTzOffset; }
+        public boolean hasStart() { return mHasStart; }
+        public boolean hasEnd() { return mHasEnd; }
         public boolean isException() { return mIsException; }
         public void setIsException(boolean isException) { mIsException = isException; }
         public boolean fromRdate() { return mFromRdate; }
@@ -1025,21 +1040,42 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         public static class StartTimeComparator implements Comparator<Instance> {
             @Override
             public int compare(Instance a, Instance b) {
-                long as = a.getStart();
-                long bs = b.getStart();
-                if (as < bs) {
-                    return -1;
-                } else if (as > bs) {
-                    return 1;
+                return compareTimes(a.mHasStart, a.mStart, a.mAllDay, a.mStartTzOffset,
+                                    b.mHasStart, b.mStart, b.mAllDay, b.mStartTzOffset);
+            }
+        }
+
+        // compares two times A and B
+        private static int compareTimes(boolean hasTimeA, long timeA, boolean allDayA, int tzoA,
+                                        boolean hasTimeB, long timeB, boolean allDayB, int tzoB) {
+            if (!hasTimeA) {
+                if (hasTimeB) {
+                    return -1;  // no time < has time
                 } else {
-                    if (a.mAllDay == b.mAllDay) {
-                        return a.mTzOffset - b.mTzOffset;
-                    } else {
-                        if (a.mAllDay)
-                            return -1;
-                        else
-                            return 1;
-                    }
+                    return 0;  // neither has time
+                }
+            } else if (!hasTimeB) {
+                return 1;  // has time > no time
+            }
+            // both have time
+
+            if (timeA < timeB) {
+                return -1;
+            } else if (timeA > timeB) {
+                return 1;
+            } else {
+                if (allDayA == allDayB) {
+                    if (tzoA > tzoB)
+                        return -1;
+                    else if (tzoA < tzoB)
+                        return 1;
+                    else
+                        return 0;
+                } else {
+                    if (allDayA)
+                        return -1;
+                    else
+                        return 1;
                 }
             }
         }
@@ -1049,11 +1085,11 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
          * @return
          */
         public String getRecurIdZ() {
-            if (mTimeless)
+            if (!mHasStart)
                 return null;
             ParsedDateTime dt;
             if (mAllDay) {
-                dt = ParsedDateTime.fromUTCTime(mStart + mTzOffset);
+                dt = ParsedDateTime.fromUTCTime(mStart + mStartTzOffset);
                 dt.setHasTime(false);
             } else {
                 dt = ParsedDateTime.fromUTCTime(mStart);
@@ -1070,7 +1106,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             // InviteInfo didn't have anything, meaning this instance wasn't an exception instance.
             // Generate a recurrence id using the data from the reference invite.
             if (refInv == null) {
-                if (!mTimeless) {
+                if (mHasStart) {
                     return new RecurId(ParsedDateTime.fromUTCTime(mStart), RecurId.RANGE_NONE);
                 } else {
                     // We can't handle all-day appointments if reference invite wasn't given.
@@ -3315,7 +3351,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             for (Instance inst : instances) {
                 long instStart = inst.getStart();
                 long instEnd = inst.getEnd();
-                if (!inst.isTimeless()) {
+                if (inst.hasStart() && inst.hasEnd()) {
                     // Ignore instances that ended already.
                     if (instEnd <= startTime)
                         continue;
@@ -3358,7 +3394,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         for (Instance inst : instances) {
             long instStart = inst.getStart();
             long instEnd = inst.getEnd();
-            if (!inst.isTimeless()) {
+            if (inst.hasStart() && inst.hasEnd()) {
                 // Ignore instances that ended already.
                 if (instEnd <= startTime)
                     continue;
@@ -3554,7 +3590,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                         if (inst.isException())  // only look at non-exception instances
                             continue;
                         long instStart = inst.getStart();
-                        if (instStart < lastAt && !inst.isTimeless())
+                        if (instStart < lastAt && inst.hasStart())
                             continue;
                         long triggerAt = alarm.getTriggerTime(instStart, inst.getEnd());
                         if (lastAt < triggerAt) {

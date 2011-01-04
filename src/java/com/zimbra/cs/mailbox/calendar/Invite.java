@@ -1018,6 +1018,8 @@ public class Invite {
             return null;
         ParsedDuration dur = mDuration;
         if (dur == null) {
+            if (isTodo())
+                return null;
             if (!mStart.hasTime())
                 dur = ParsedDuration.ONE_DAY;
             else
@@ -1042,6 +1044,8 @@ public class Invite {
         if (mEnd != null)
             return mEnd.difference(mStart);
         // DTSTART is there, but neither DTEND nor DURATION is set.
+        if (isTodo())
+            return null;
         if (!mStart.hasTime())
             return ParsedDuration.ONE_DAY;
         else
@@ -1740,6 +1744,8 @@ public class Invite {
                                     if (isEvent) {
                                         ParsedDateTime dtend = ParsedDateTime.parse(prop, tzmap);
                                         newInv.setDtEnd(dtend);
+                                        if (!dtend.hasTime())
+                                            newInv.setIsAllDayEvent(true);
                                     }
                                     break;
                                 case DUE:
@@ -1747,6 +1753,8 @@ public class Invite {
                                         ParsedDateTime due = ParsedDateTime.parse(prop, tzmap);
                                         // DUE is for VTODO what DTEND is for VEVENT.
                                         newInv.setDtEnd(due);
+                                        if (!due.hasTime())
+                                            newInv.setIsAllDayEvent(true);
                                     }
                                     break;
                                 case DURATION:
@@ -2450,14 +2458,19 @@ public class Invite {
                 ZimbraLog.calendar.warn("UID missing; subject=" + mName);
         }
 
-        // Keep all-day flag and DTSTART in sync.
-        if (mStart == null) {
+        // Don't let a task have DTSTART without DUE.
+        if (isTodo() && mStart != null && mEnd == null)
+            mStart = null;
+
+        // Keep all-day flag and DTSTART/DTEND/DUE in sync.
+        ParsedDateTime dt = mStart != null ? mStart : mEnd;  // Use DTSTART if given.  Fall back to DTEND/DUE.
+        if (dt == null) {
             // No DTSTART.  Force non-all-day.
             setIsAllDayEvent(false);
-        } else if (!mStart.hasTime()) {
+        } else if (!dt.hasTime()) {
             // DTSTART has no time part.  Force all-day.
             setIsAllDayEvent(true);
-        } else if (!mStart.hasZeroTime()) {
+        } else if (!dt.hasZeroTime()) {
             // Time part is not T000000.  Force non-all-day.
             setIsAllDayEvent(false);
         } else {

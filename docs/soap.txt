@@ -1482,8 +1482,7 @@ appointment result:
        isOrg="default_am_i_organizer_flag"
        [priority="num"]
        [percentComplete="num"] // only if a <task>
-       [dueDate="num"]         // only if a <task>
-       [dur="duration"]  // default duration
+       [dur="duration"]  // default duration; for appointments only
    >
      [<or d="friendly name" a="address">] // organizer, if available
      [<fr>DEFAULT FRAGMENT</fr>]
@@ -1492,7 +1491,7 @@ Expanded instance data -- only if calExpandInstStart and
     calExpandInstEnd are requested in the SearchRequest:
 
 [    <inst
-          [s="START_SECS_GMT"]
+          [s="ms"]  // start time in millis
           [tzo="ms"]  // offset from GMT in milliseconds for start time in the
                     // time zone of the instance; this is useful because the
                     // instance time zone may not be the same as the time zone
@@ -1501,6 +1500,9 @@ Expanded instance data -- only if calExpandInstStart and
                     // the difference between the instance time zone and its
                     // local time zone to determine the correct date to render
                     // the all-day block
+          [dueDate="ms"]  // due date in millis; for tasks only
+          [tzoDue="ms"]   // similar to tzo, but for dueDate; tzoDue can be different from tzo if start date
+                          // and due date lie on different sides of daylight savings transition
           [ex="1"]
           [ridZ="YYYYMMDD[ThhmmssZ]"]   // RECURRENCE-ID in "Z" (UTC) timezone, if this is an exception
           [ANY CHANGED PARAMETERS]

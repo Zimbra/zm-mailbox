@@ -37,6 +37,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
+import com.zimbra.cs.mailbox.Task;
 import com.zimbra.cs.mailbox.calendar.Geo;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
@@ -99,7 +100,16 @@ public class GetCalendarItemSummaries extends CalendarRequest {
         boolean hidePrivate = !calItem.allowPrivateAccess(authAccount, lc.isUsingAdminPrivileges());
 
         try {
-            boolean expandRanges = (rangeStart > 0 && rangeEnd > 0 && rangeStart < rangeEnd);
+            boolean expandRanges;
+            if (calItem instanceof Task) {
+                expandRanges = true;
+                if (rangeStart == -1 && rangeEnd == -1) {
+                    rangeStart = Long.MIN_VALUE;
+                    rangeEnd = Long.MAX_VALUE;
+                }
+            } else {
+                expandRanges = (rangeStart > 0 && rangeEnd > 0 && rangeStart < rangeEnd);
+            }
             
             boolean isAppointment = calItem instanceof Appointment;
             
@@ -115,14 +125,14 @@ public class GetCalendarItemSummaries extends CalendarRequest {
             ParsedDuration defDuration = defaultInvite.getEffectiveDuration();
             // Duration is null if no DTEND or DURATION was present.  Assume 1 day for all-day
             // events and 1 second for non all-day.  (bug 28615)
-            if (defDuration == null) {
+            if (defDuration == null && !defaultInvite.isTodo()) {
                 if (defaultInvite.isAllDayEvent())
                     defDuration = ParsedDuration.ONE_DAY;
                 else
                     defDuration = ParsedDuration.ONE_SECOND;
             }
             long defDurationMsecs = 0;
-            if (defaultInvite.getStartTime() != null) {
+            if (defaultInvite.getStartTime() != null && defDuration != null) {
                 ParsedDateTime s = defaultInvite.getStartTime();
                 long et = s.add(defDuration).getUtcTime();
                 defDurationMsecs = et - s.getUtcTime();
@@ -169,7 +179,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                             else
                                 invDuration = ParsedDuration.ONE_SECOND;
                         }
-                        if (inst.isTimeless() ||
+                        if (!inst.hasStart() ||
                             (startOrAlarm < rangeEnd && invDuration.addToTime(instStart) > rangeStart)) {
                             numInRange++;
                         } else {
@@ -212,10 +222,10 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                                 instElt.addAttribute(MailConstants.A_CAL_PARTSTAT, instPtSt);
                         }
 
-                        if (!inst.isTimeless()) {
+                        if (inst.hasStart()) {
                             instElt.addAttribute(MailConstants.A_CAL_START_TIME, instStart);
                             if (inv.isAllDayEvent())
-                                instElt.addAttribute(MailConstants.A_CAL_TZ_OFFSET, inst.getTzOffset());
+                                instElt.addAttribute(MailConstants.A_CAL_TZ_OFFSET, inst.getStartTzOffset());
                         }
 
 
@@ -279,8 +289,19 @@ public class GetCalendarItemSummaries extends CalendarRequest {
 
                             instElt.addAttribute(MailConstants.A_CAL_ISORG, inv.isOrganizer());
 
-                            if (!inst.isTimeless())
-                                instElt.addAttribute(newFormat ? MailConstants.A_CAL_NEW_DURATION : MailConstants.A_CAL_DURATION, inst.getEnd()-inst.getStart());
+                            if (inv.isTodo()) {
+                                if (inst.hasEnd()) {
+                                    instElt.addAttribute(MailConstants.A_TASK_DUE_DATE, inst.getEnd());
+                                    if (inv.isAllDayEvent())
+                                        instElt.addAttribute(MailConstants.A_CAL_TZ_OFFSET_DUE, inst.getEndTzOffset());
+                                }
+                            } else {
+                                if (inst.hasStart() && inst.hasEnd()) {
+                                    instElt.addAttribute(
+                                            newFormat ? MailConstants.A_CAL_NEW_DURATION : MailConstants.A_CAL_DURATION,
+                                            inst.getEnd() - inst.getStart());
+                                }
+                            }
 
                             if (inv.getStatus() != null)
                                 instElt.addAttribute(MailConstants.A_CAL_STATUS, inv.getStatus());
@@ -297,10 +318,18 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                             if (inv.isRecurrence())
                                 instElt.addAttribute(MailConstants.A_CAL_RECUR, true);
                         } else {
-                            // A non-exception instance can have duration that is different from
-                            // the default duration due to daylight savings time transitions.
-                            if (!inst.isTimeless() && defDurationMsecs != inst.getEnd()-inst.getStart()) {
-                                instElt.addAttribute(newFormat ? MailConstants.A_CAL_NEW_DURATION : MailConstants.A_CAL_DURATION, inst.getEnd()-inst.getStart());
+                            if (inv.isTodo()) {
+                                if (inst.hasEnd()) {
+                                    instElt.addAttribute(MailConstants.A_TASK_DUE_DATE, inst.getEnd());
+                                    if (inv.isAllDayEvent())
+                                        instElt.addAttribute(MailConstants.A_CAL_TZ_OFFSET_DUE, inst.getEndTzOffset());
+                                }
+                            } else {
+                                // A non-exception instance can have duration that is different from
+                                // the default duration due to daylight savings time transitions.
+                                if (inst.hasStart() && inst.hasEnd() && defDurationMsecs != inst.getEnd()-inst.getStart()) {
+                                    instElt.addAttribute(newFormat ? MailConstants.A_CAL_NEW_DURATION : MailConstants.A_CAL_DURATION, inst.getEnd()-inst.getStart());
+                                }
                             }
                         }
                     } catch (MailServiceException.NoSuchItemException e) {
@@ -388,9 +417,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                 calItemElem.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(calItem.getFolderId()));
                 calItemElem.addAttribute(MailConstants.A_CAL_STATUS, defaultInvite.getStatus());
                 calItemElem.addAttribute(MailConstants.A_CAL_CLASS, defaultInvite.getClassProp());
-                if (defaultInvite.isTodo())
-                    calItemElem.addAttribute(MailConstants.A_TASK_DUE_DATE, calItem.getEndTime());
-                if (defaultInvite.getStartTime() != null)
+                if (!defaultInvite.isTodo())
                     calItemElem.addAttribute(newFormat ? MailConstants.A_CAL_NEW_DURATION : MailConstants.A_CAL_DURATION, defDurationMsecs);
                 if (defaultInvite.isAllDayEvent())
                     calItemElem.addAttribute(MailConstants.A_CAL_ALLDAY, defaultInvite.isAllDayEvent());
