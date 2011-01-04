@@ -584,10 +584,6 @@
   <desc>create, volumes</desc>
 </right>  
 
-<right name="manageWaitSet" type="preset" targetType="server">
-  <desc>create, destroy, wait, query wait sets</desc>
-</right>  
-
 <right name="deployZimlet" type="preset" targetType="server">
   <desc>deploy and undeploy zimlets on a server</desc>
 </right>
