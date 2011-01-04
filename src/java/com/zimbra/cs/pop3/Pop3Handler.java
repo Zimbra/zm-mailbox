@@ -31,7 +31,7 @@ import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.stats.ZimbraPerf;
-import com.zimbra.cs.tcpserver.ProtocolHandler;
+import com.zimbra.cs.server.ProtocolHandler;
 import com.zimbra.cs.util.Config;
 import org.apache.commons.codec.binary.Base64;
 

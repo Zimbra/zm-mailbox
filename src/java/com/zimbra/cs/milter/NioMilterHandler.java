@@ -19,8 +19,8 @@ import java.net.Socket;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.tcpserver.NioHandler;
-import com.zimbra.cs.tcpserver.NioConnection;
+import com.zimbra.cs.server.NioHandler;
+import com.zimbra.cs.server.NioConnection;
 
 final class NioMilterHandler extends MilterHandler implements NioHandler {
     private final NioConnection connection;

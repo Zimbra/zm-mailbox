@@ -16,8 +16,8 @@ package com.zimbra.cs.pop3;
 
 import java.nio.ByteBuffer;
 
-import com.zimbra.cs.tcpserver.NioLineBuffer;
-import com.zimbra.cs.tcpserver.NioServerStats;
+import com.zimbra.cs.server.NioLineBuffer;
+import com.zimbra.cs.server.NioServerStats;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;

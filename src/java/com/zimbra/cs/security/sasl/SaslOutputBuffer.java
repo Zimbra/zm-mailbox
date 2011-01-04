@@ -15,7 +15,7 @@
 
 package com.zimbra.cs.security.sasl;
 
-import com.zimbra.cs.tcpserver.NioUtil;
+import com.zimbra.cs.server.NioUtil;
 
 import javax.security.sasl.SaslException;
 

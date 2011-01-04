@@ -16,8 +16,8 @@
 package com.zimbra.cs.pop3;
 
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.tcpserver.NioHandler;
-import com.zimbra.cs.tcpserver.NioConnection;
+import com.zimbra.cs.server.NioHandler;
+import com.zimbra.cs.server.NioConnection;
 
 import java.io.IOException;
 import java.net.Socket;

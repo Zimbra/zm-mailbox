@@ -15,7 +15,7 @@
 
 package com.zimbra.cs.imap;
 
-import com.zimbra.cs.tcpserver.NioHandler;
+import com.zimbra.cs.server.NioHandler;
 
 import java.io.IOException;
 

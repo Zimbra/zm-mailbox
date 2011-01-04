@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.tcpserver;
+package com.zimbra.cs.server;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,6 +34,9 @@ import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.Zimbra;
 
+/**
+ * Base class for TCP servers using thread per connection model.
+ */
 public abstract class TcpServer implements Runnable, Server {
     private final Log log;
     private final ThreadPoolExecutor pooledExecutor;

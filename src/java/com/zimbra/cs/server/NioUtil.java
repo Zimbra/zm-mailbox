@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.tcpserver;
+package com.zimbra.cs.server;
 
 import java.nio.ByteBuffer;
 

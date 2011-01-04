@@ -17,10 +17,10 @@ package com.zimbra.cs.imap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.tcpserver.NioHandler;
-import com.zimbra.cs.tcpserver.NioServer;
-import com.zimbra.cs.tcpserver.NioCodecFactory;
-import com.zimbra.cs.tcpserver.NioConnection;
+import com.zimbra.cs.server.NioHandler;
+import com.zimbra.cs.server.NioServer;
+import com.zimbra.cs.server.NioCodecFactory;
+import com.zimbra.cs.server.NioConnection;
 
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;

@@ -25,10 +25,10 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
-import com.zimbra.cs.tcpserver.NioCodecFactory;
-import com.zimbra.cs.tcpserver.NioHandler;
-import com.zimbra.cs.tcpserver.NioServer;
-import com.zimbra.cs.tcpserver.NioConnection;
+import com.zimbra.cs.server.NioCodecFactory;
+import com.zimbra.cs.server.NioHandler;
+import com.zimbra.cs.server.NioServer;
+import com.zimbra.cs.server.NioConnection;
 import com.zimbra.cs.server.ServerConfig;
 
 public class NioMilterServer extends NioServer implements MilterServer {

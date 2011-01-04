@@ -16,8 +16,8 @@
 package com.zimbra.qa.unittest;
 
 import com.zimbra.common.util.TaskUtil;
-import com.zimbra.cs.tcpserver.NioLineBuffer;
-import com.zimbra.cs.tcpserver.NioUtil;
+import com.zimbra.cs.server.NioLineBuffer;
+import com.zimbra.cs.server.NioUtil;
 import com.zimbra.cs.imap.LiteralInfo;
 import junit.framework.TestCase;
 

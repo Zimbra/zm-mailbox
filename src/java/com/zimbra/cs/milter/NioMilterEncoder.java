@@ -19,7 +19,7 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolEncoderAdapter;
 import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 
-import com.zimbra.cs.tcpserver.NioServerStats;
+import com.zimbra.cs.server.NioServerStats;
 
 public class NioMilterEncoder extends ProtocolEncoderAdapter {
     private final NioServerStats stats;

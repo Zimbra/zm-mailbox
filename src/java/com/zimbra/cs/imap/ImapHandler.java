@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -58,7 +58,7 @@ import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.service.mail.FolderAction;
 import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.tcpserver.ProtocolHandler;
+import com.zimbra.cs.server.ProtocolHandler;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;

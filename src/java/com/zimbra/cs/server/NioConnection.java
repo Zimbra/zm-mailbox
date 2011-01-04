@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.tcpserver;
+package com.zimbra.cs.server;
 
 import com.zimbra.cs.security.sasl.SaslFilter;
 

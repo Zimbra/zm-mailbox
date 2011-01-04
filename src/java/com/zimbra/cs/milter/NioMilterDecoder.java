@@ -19,7 +19,7 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.CumulativeProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 
-import com.zimbra.cs.tcpserver.NioServerStats;
+import com.zimbra.cs.server.NioServerStats;
 
 public class NioMilterDecoder extends CumulativeProtocolDecoder {
     private final NioServerStats stats;

@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.tcpserver;
+package com.zimbra.cs.server;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
@@ -161,7 +161,6 @@ public abstract class NioServer implements Server {
      * Creates a new server for the specified configuration.
      *
      * @param config the ServerConfig for the server
-     * @param pool the optional handler thread pool to use for this server
      * @throws ServiceException if a ServiceException occured
      */
     protected NioServer(ServerConfig config) throws ServiceException {

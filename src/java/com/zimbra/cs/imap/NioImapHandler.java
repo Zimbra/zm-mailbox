@@ -15,9 +15,9 @@
 package com.zimbra.cs.imap;
 
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.tcpserver.NioHandler;
-import com.zimbra.cs.tcpserver.NioOutputStream;
-import com.zimbra.cs.tcpserver.NioConnection;
+import com.zimbra.cs.server.NioHandler;
+import com.zimbra.cs.server.NioOutputStream;
+import com.zimbra.cs.server.NioConnection;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 import java.io.IOException;

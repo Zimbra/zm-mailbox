@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -20,8 +20,8 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.RealtimeStatsCallback;
 import com.zimbra.cs.stats.ZimbraPerf;
-import com.zimbra.cs.tcpserver.ProtocolHandler;
-import com.zimbra.cs.tcpserver.TcpServer;
+import com.zimbra.cs.server.ProtocolHandler;
+import com.zimbra.cs.server.TcpServer;
 
 public class TcpLmtpServer extends TcpServer implements LmtpServer, RealtimeStatsCallback {
     public TcpLmtpServer(LmtpConfig config) throws ServiceException {
