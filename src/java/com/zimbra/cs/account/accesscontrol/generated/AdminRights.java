@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 gsolovyev 20101108-1555 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110103-2343 */
 
 
     public static AdminRight R_accessGAL;
@@ -98,6 +98,7 @@ public class AdminRights {
     public static AdminRight R_adminConsoleGlobalRights;
     public static AdminRight R_adminConsoleGlobalThemesTabRights;
     public static AdminRight R_adminConsoleMailQueueRights;
+    public static AdminRight R_adminConsoleMigrationRights;
     public static AdminRight R_adminConsoleResourceRights;
     public static AdminRight R_adminConsoleResourcesContactTabRights;
     public static AdminRight R_adminConsoleResourcesPropertiesTabRights;
@@ -238,7 +239,6 @@ public class AdminRights {
     public static AdminRight R_manageCrossMailboxSearchTask;
     public static AdminRight R_manageMailQueue;
     public static AdminRight R_manageVolume;
-    public static AdminRight R_manageWaitSet;
     public static AdminRight R_manageZimlet;
     public static AdminRight R_modifyAccount;
     public static AdminRight R_modifyCalendarResource;
@@ -501,6 +501,7 @@ public class AdminRights {
         R_adminConsoleGlobalRights             = rm.getAdminRight(Right.RT_adminConsoleGlobalRights);
         R_adminConsoleGlobalThemesTabRights    = rm.getAdminRight(Right.RT_adminConsoleGlobalThemesTabRights);
         R_adminConsoleMailQueueRights          = rm.getAdminRight(Right.RT_adminConsoleMailQueueRights);
+        R_adminConsoleMigrationRights          = rm.getAdminRight(Right.RT_adminConsoleMigrationRights);
         R_adminConsoleResourceRights           = rm.getAdminRight(Right.RT_adminConsoleResourceRights);
         R_adminConsoleResourcesContactTabRights = rm.getAdminRight(Right.RT_adminConsoleResourcesContactTabRights);
         R_adminConsoleResourcesPropertiesTabRights = rm.getAdminRight(Right.RT_adminConsoleResourcesPropertiesTabRights);
@@ -641,7 +642,6 @@ public class AdminRights {
         R_manageCrossMailboxSearchTask         = rm.getAdminRight(Right.RT_manageCrossMailboxSearchTask);
         R_manageMailQueue                      = rm.getAdminRight(Right.RT_manageMailQueue);
         R_manageVolume                         = rm.getAdminRight(Right.RT_manageVolume);
-        R_manageWaitSet                        = rm.getAdminRight(Right.RT_manageWaitSet);
         R_manageZimlet                         = rm.getAdminRight(Right.RT_manageZimlet);
         R_modifyAccount                        = rm.getAdminRight(Right.RT_modifyAccount);
         R_modifyCalendarResource               = rm.getAdminRight(Right.RT_modifyCalendarResource);
