@@ -395,9 +395,9 @@ public class Recurrence
                 ParsedDateTime valStart = val.getStartTime();
                 ParsedDateTime valEnd = val.getEndTime();
                 boolean allDay = !valStart.hasTime() || (valStart.hasZeroTime() && mDefaultDuration != null && mDefaultDuration.isMultipleOfDays());
-                list.add(new Instance(calItemId, mInvId, false,
+                list.add(new Instance(calItemId, mInvId, true, true,
                                       valStart.getUtcTime(), valEnd.getUtcTime(),
-                                      allDay, valStart.getOffset(), 
+                                      allDay, valStart.getOffset(), valEnd.getOffset(),
                                       true, true));
             }
             Collections.sort(list);
@@ -692,9 +692,11 @@ public class Recurrence
                         instEnd = instStart;
                     }
                     if (instStart < end && instEnd > start) {
-                        int tzOffset = tz.getOffset(instStart);
+                        int startTzo = tz.getOffset(instStart);
+                        int endTzo = tz.getOffset(instEnd);
                         boolean allDay = !mDtStart.hasTime() || (mDtStart.hasZeroTime() && mDuration != null && mDuration.isMultipleOfDays());
-                        toRet.add(num++, new Instance(calItemId, mInvId, false, instStart, instEnd, allDay, tzOffset, false, false));
+                        toRet.add(num++, new Instance(calItemId, mInvId, true, true, instStart, instEnd,
+                                allDay, startTzo, endTzo, false, false));
                     }
                 }
             } catch (ServiceException se) {
@@ -883,7 +885,8 @@ public class Recurrence
 
             // DTSTART
             long firstStart = mDtStart.getUtcTime();
-            long firstEnd = mDuration != null ? mDtStart.add(mDuration).getUtcTime() : firstStart;
+            ParsedDateTime dtFirstEnd = mDuration != null ? mDtStart.add(mDuration) : null;
+            long firstEnd = dtFirstEnd != null ? dtFirstEnd.getUtcTime() : firstStart;
             if (firstStart < end && firstEnd > start) {
                 CalendarItem.Instance first = null;
                 if (toAdd.size() > 0) {
@@ -892,7 +895,9 @@ public class Recurrence
 
                 boolean allDay = !mDtStart.hasTime() || (mDtStart.hasZeroTime() && mDuration != null && mDuration.isMultipleOfDays());
                 CalendarItem.Instance dtstartInst = new CalendarItem.Instance(
-                        calItemId, mInvId, false, firstStart, firstEnd, allDay, mDtStart.getOffset(), false, true);
+                        calItemId, mInvId, true, true, firstStart, firstEnd,
+                        allDay, mDtStart.getOffset(), dtFirstEnd != null ? dtFirstEnd.getOffset() : 0,
+                        false, true);
                 if (first == null || first.compareTo(dtstartInst) != 0)
                     toAdd.add(0,dtstartInst);
             }
@@ -1382,7 +1387,7 @@ public class Recurrence
                                     RecurId eRid = except.getRecurId();
                                     if (eRid != null && eRid.getDt() != null) {
                                         long eOffset = eRid.getDt().getOffset();
-                                        long iOffset = inst.getTzOffset();
+                                        long iOffset = inst.getStartTzOffset();
                                         if (iOffset != eOffset)
                                             instStart += iOffset - eOffset;
                                     }

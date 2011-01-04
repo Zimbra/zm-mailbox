@@ -64,7 +64,7 @@ public class CheckRecurConflicts extends ExpandRecur {
         // Find the range covered by the instances.
         long rangeStartActual = rangeEnd, rangeEndActual = rangeStart;
         for (Instance inst : instances) {
-            if (!inst.isTimeless()) {
+            if (inst.hasStart() && inst.hasEnd()) {
                 rangeStartActual = Math.min(rangeStartActual, inst.getStart());
                 rangeEndActual = Math.max(rangeEndActual, inst.getEnd());
             }
@@ -149,7 +149,7 @@ public class CheckRecurConflicts extends ExpandRecur {
                 ival = ivalIter.hasNext() ? ivalIter.next() : null;
                 continue;
             }
-            if (inst.isTimeless()) {
+            if (!inst.hasStart() || !inst.hasEnd()) {
                 inst = instIter.hasNext() ? instIter.next() : null;
                 prevStatus = null;
                 continue;
