@@ -849,6 +849,7 @@ public class MailConstants {
     public static final String A_CAL_DATETIME = "d";
     public static final String A_CAL_DATETIME_UTC = "u";
     public static final String A_CAL_TZ_OFFSET = "tzo";
+    public static final String A_CAL_TZ_OFFSET_DUE = "tzoDue";
     public static final String A_CAL_SUB_ID = "subId";
     public static final String A_CAL_INV_ID = "invId";
     public static final String A_APPT_ID_DEPRECATE_ME = "apptId";
