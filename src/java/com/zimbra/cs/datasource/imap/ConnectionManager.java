@@ -103,6 +103,9 @@ final class ConnectionManager {
         LOG.debug("Releasing connection: " + ic);
         if (isReuseConnections(ds) && suspendConnection(ds, ic)) {
             if (connections.put(ds.getId(), ic) != null) {
+                //TODO: dubious assertion; if two threads open connections then this gets thrown when final one releases
+                //(e.g. when DataSourceManager.test() and a sync occur at the same time)
+                //maybe need a 'real' pool...
                 throw new AssertionError();
             }
         } else {
@@ -259,16 +262,18 @@ final class ConnectionManager {
             return false;
         }
         try {
-            ic.setReadTimeout(IDLE_READ_TIMEOUT);
             if (ic.hasIdle()) {
+                ic.setReadTimeout(IDLE_READ_TIMEOUT);
                 if (!ic.isSelected("INBOX")) {
                     ic.select("INBOX");
                 }
                 ic.idle(idleHandler(ds));
-            } else if (ic.hasUnselect()) {
-                ic.unselect();
-            } else {
-                ic.close_mailbox();
+            } else if (ic.isSelected()) {
+                if (ic.hasUnselect()) {
+                    ic.unselect();
+                } else {
+                    ic.close_mailbox();
+                }
             }
             LOG.debug("Suspended connection: " + ic);
         } catch (IOException e) {

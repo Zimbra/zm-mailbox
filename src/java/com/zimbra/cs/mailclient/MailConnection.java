@@ -342,6 +342,13 @@ public abstract class MailConnection {
     public synchronized boolean isLogout() {
         return state == State.LOGOUT;
     }
+    
+    /**
+     * @return <tt>true</tt> if in SELECTED state
+     */
+    public synchronized boolean isSelected() {
+        return state == State.SELECTED;
+    }
 
     /**
      * Sets the new connection state.
