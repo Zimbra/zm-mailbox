@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -228,8 +228,8 @@ public final class LuceneQueryOperation extends QueryOperation {
                 try {
                     int freq = mSearcher.getSearcher().docFreq(term);
                     int docsCutoff = (int) (mSearcher.getSearcher().maxDoc() * sDbFirstTermFreqPerc);
-                    ZimbraLog.search.debug("Term matches %d docs. DB-First cutoff (%d %) is %d docs",
-                            freq, 100 * sDbFirstTermFreqPerc, docsCutoff);
+                    ZimbraLog.search.debug("Term matches %d docs. DB-First cutoff (%d%%) is %d docs",
+                            freq, (int) (100 * sDbFirstTermFreqPerc), docsCutoff);
                     if (freq > docsCutoff) {
                         return true;
                     }
