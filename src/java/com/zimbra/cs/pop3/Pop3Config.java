@@ -26,7 +26,6 @@ import static com.zimbra.cs.account.Provisioning.*;
 
 public class Pop3Config extends ServerConfig {
     private static final String PROTOCOL = "POP3";
-    private static final int MAX_IDLE_SECONDS = 600;
 
     public Pop3Config(boolean ssl) {
         super(PROTOCOL, ssl);
@@ -57,18 +56,33 @@ public class Pop3Config extends ServerConfig {
     }
 
     @Override
-    public int getShutdownGraceSeconds() {
-       return getIntAttr(A_zimbraPop3ShutdownGraceSeconds, super.getShutdownGraceSeconds());
+    public int getShutdownTimeout() {
+       return getIntAttr(A_zimbraPop3ShutdownGraceSeconds, super.getShutdownTimeout());
     }
 
     @Override
-    public int getMaxIdleSeconds() {
-        return MAX_IDLE_SECONDS;
+    public int getMaxIdleTime() {
+        return LC.pop3_max_idle_time.intValue();
     }
 
     @Override
-    public int getNumThreads() {
-        return getIntAttr(A_zimbraPop3NumThreads, super.getNumThreads());
+    public int getMaxThreads() {
+        return getIntAttr(A_zimbraPop3NumThreads, super.getMaxThreads());
+    }
+
+    @Override
+    public int getThreadKeepAliveTime() {
+        return LC.pop3_thread_keep_alive_time.intValue();
+    }
+
+    @Override
+    public int getMaxConnections() {
+        return LC.pop3_max_connections.intValue();
+    }
+
+    @Override
+    public int getWriteTimeout() {
+        return LC.pop3_write_timeout.intValue();
     }
 
     @Override

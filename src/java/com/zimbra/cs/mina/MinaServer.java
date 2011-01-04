@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -46,8 +46,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.security.KeyStore;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -58,10 +56,10 @@ import java.util.concurrent.TimeUnit;
  * MINA request and connection handler instances.
  */
 public abstract class MinaServer implements Server {
-    protected final ExecutorService mHandlerThreadPool;
+    protected final ExecutorFilter executorFilter;
     protected final ZimbraSocketAcceptor acceptor;
-    protected final ServerConfig mServerConfig;
-    protected final MinaStats mStats;
+    protected final ServerConfig config;
+    protected final MinaStats stats;
 
     private static SSLContext sslContext;
     private static String[] mSslEnabledCipherSuites;
@@ -153,7 +151,7 @@ public abstract class MinaServer implements Server {
     public SslFilter newSSLFilter() {
         SSLContext sslCtxt = getSSLContext();
         SslFilter sslFilter = new SslFilter(sslCtxt);
-        String [] enabledCiphers = getSSLEnabledCiphers(sslCtxt, mServerConfig);
+        String[] enabledCiphers = getSSLEnabledCiphers(sslCtxt, config);
         if (enabledCiphers.length > 0)
             sslFilter.setEnabledCipherSuites(enabledCiphers);
         return sslFilter;
@@ -166,20 +164,17 @@ public abstract class MinaServer implements Server {
      * @param pool the optional handler thread pool to use for this server
      * @throws ServiceException if a ServiceException occured
      */
-    protected MinaServer(ServerConfig config, ExecutorService pool) throws ServiceException {
-        mServerConfig = config;
-        mHandlerThreadPool = pool;
-        acceptor = new ZimbraSocketAcceptor(config.getServerSocketChannel(), IO_PROCESSOR_POOL);
-        mStats = new MinaStats(this);
-    }
-
     protected MinaServer(ServerConfig config) throws ServiceException {
-        this(config, Executors.newFixedThreadPool(config.getNumThreads(),
-                new ThreadFactoryBuilder().setNameFormat(config.getProtocol() + "Server-%d").build()));
+        this.config = config;
+        acceptor = new ZimbraSocketAcceptor(config.getServerSocketChannel(), IO_PROCESSOR_POOL);
+        stats = new MinaStats(this);
+        executorFilter = new ExecutorFilter(1, config.getMaxThreads(),
+                config.getThreadKeepAliveTime(), TimeUnit.SECONDS,
+                new ThreadFactoryBuilder().setNameFormat(config.getProtocol() + "Server-%d").build());
     }
 
     public MinaStats getStats() {
-        return mStats;
+        return stats;
     }
 
     /**
@@ -189,7 +184,7 @@ public abstract class MinaServer implements Server {
      */
     @Override
     public ServerConfig getConfig() {
-        return mServerConfig;
+        return config;
     }
 
     /**
@@ -206,9 +201,10 @@ public abstract class MinaServer implements Server {
             fc.addFirst("ssl", newSSLFilter());
         }
         fc.addLast("codec", new ProtocolCodecFilter(getProtocolCodecFactory()));
-        fc.addLast("executer", new ExecutorFilter(mHandlerThreadPool));
+        fc.addLast("executer", executorFilter);
         fc.addLast("logger", new MinaLoggingFilter(this, false));
-        acceptor.getSessionConfig().setBothIdleTime(sc.getMaxIdleSeconds());
+        acceptor.getSessionConfig().setBothIdleTime(sc.getMaxIdleTime());
+        acceptor.getSessionConfig().setWriteTimeout(sc.getWriteTimeout());
         acceptor.setHandler(new MinaIoHandler(this));
         try {
             acceptor.bind();
@@ -220,61 +216,42 @@ public abstract class MinaServer implements Server {
     }
 
     /**
-     * Shuts down the server. Waits up to 'graceSecs' seconds for the server
-     * to stop, otherwise the server is forced to shut down.
+     * Shuts down the server. Waits up to 'graceSecs' seconds for the server to stop, otherwise the server is forced to
+     * shut down.
      *
-     * @param graceSecs number of seconds to wait before forced shutdown
+     * @param timeout number of seconds to wait before forced shutdown
      */
     @Override
-    public void stop(int graceSecs) {
+    public void stop(int timeout) {
         getLog().info("Initiating shutdown");
-        // Would prefer to unbind first then cleanly close active connections,
-        // but mina unbind seems to automatically close the active sessions
-        // so we must close connections then unbind, which does expose us to
-        // a potential race condition.
-        long start = System.currentTimeMillis();
-        long graceMSecs = graceSecs * 1000;
-        // Close active sessions and handlers
-        closeSessions(graceMSecs);
-        // Unbind listener socket
+        // Would prefer to unbind first then cleanly close active connections, but mina unbind seems to automatically
+        // close the active sessions so we must close connections then unbind, which does expose us to a potential race
+        // condition.
+        closeSessions();
         acceptor.unbind();
-        // Shutdown protocol handler threads
-        mHandlerThreadPool.shutdown();
-        // Wait remaining grace period for handlers to cleanly terminate
-        long elapsed = System.currentTimeMillis() - start;
-        if (elapsed > graceMSecs) {
-            try {
-                mHandlerThreadPool.awaitTermination(graceMSecs - elapsed, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                // Fall through
-            }
+        ExecutorService executor = (ExecutorService) executorFilter.getExecutor();
+        executor.shutdown();
+        try {
+            executor.awaitTermination(timeout, TimeUnit.SECONDS); // Wait for handlers to cleanly terminate
+        } catch (InterruptedException ignore) {
         }
-        // Force shutdown after grace period has expired
-        mHandlerThreadPool.shutdownNow();
+        executor.shutdownNow(); // Force shutdown after grace period has expired
     }
 
     @Override
     public void stop() {
-        stop(getConfig().getShutdownGraceSeconds());
+        stop(getConfig().getShutdownTimeout());
     }
 
-    private void closeSessions(long timeout) {
-        // Close currently open sessions and get active handlers
-        List<MinaHandler> handlers = new ArrayList<MinaHandler>();
+    private void closeSessions() {
         for (IoSession session : getSessions().values()) {
             getLog().info("Closing session = " + session);
             MinaHandler handler = MinaIoHandler.getMinaHandler(session);
-            if (handler != null) handlers.add(handler);
-        }
-        // Wait up to grace seconds to close active handlers
-        long start = System.currentTimeMillis();
-        for (MinaHandler handler : handlers) {
-            long elapsed = System.currentTimeMillis() - start;
-            try {
-                // Force close if timeout - elapsed < 0
-                handler.dropConnection(timeout - elapsed);
-            } catch (IOException e) {
-                getLog().warn("Error closing handler: %s", handler, e);
+            if (handler != null) {
+                try {
+                    handler.dropConnection();
+                } catch (IOException ignore) {
+                }
             }
         }
     }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -25,7 +25,6 @@ import java.util.TreeMap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ArrayUtil;
-import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapFolder.DirtyMessage;
 import com.zimbra.cs.imap.ImapHandler.ImapExtension;
@@ -44,8 +43,6 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
 
 public class ImapSession extends Session {
-    public static final int  IMAP_IDLE_TIMEOUT_SEC  = 30 * Constants.SECONDS_PER_MINUTE;
-    public static final long IMAP_IDLE_TIMEOUT_MSEC = IMAP_IDLE_TIMEOUT_SEC * Constants.MILLIS_PER_SECOND;
 
     interface ImapFolderData {
         int getId();
@@ -193,7 +190,7 @@ public class ImapSession extends Session {
     }
 
     @Override protected long getSessionIdleLifetime() {
-        return IMAP_IDLE_TIMEOUT_MSEC;
+        return mHandler.getConfig().getAuthenticatedMaxIdleTime() * 1000;
     }
 
     // XXX: need to handle the abrupt disconnect case, the LOGOUT case, the timeout case, and the too-many-sessions disconnect case

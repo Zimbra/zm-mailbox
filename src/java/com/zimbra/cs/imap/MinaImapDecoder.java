@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,7 +16,6 @@ package com.zimbra.cs.imap;
 
 import com.zimbra.cs.mina.LineBuffer;
 import com.zimbra.cs.mina.MinaStats;
-import com.zimbra.common.localconfig.LC;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
@@ -26,12 +25,12 @@ import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 public class MinaImapDecoder extends ProtocolDecoderAdapter {
     private final MinaStats stats;
     private final LineBuffer buf = new LineBuffer();
+    private final int chunkSize;
     private int count = -1;
 
-    private static final int MAX_BYTES = LC.nio_imap_write_chunk_size.intValue();
-
-    MinaImapDecoder(MinaStats stats) {
+    MinaImapDecoder(MinaStats stats, int chunkSize) {
         this.stats = stats;
+        this.chunkSize = chunkSize;
     }
 
     @Override
@@ -39,7 +38,7 @@ public class MinaImapDecoder extends ProtocolDecoderAdapter {
         java.nio.ByteBuffer bb = in.buf();
         while (bb.hasRemaining()) {
             if (count >= 0) {
-                int len = Math.min(Math.min(bb.remaining(), count), MAX_BYTES);
+                int len = Math.min(Math.min(bb.remaining(), count), chunkSize);
                 byte[] b = new byte[len];
                 bb.get(b);
                 out.write(b);

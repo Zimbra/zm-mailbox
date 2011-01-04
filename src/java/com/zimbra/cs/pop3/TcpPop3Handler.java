@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -26,8 +26,8 @@ import java.io.BufferedOutputStream;
 import java.net.Socket;
 
 public class TcpPop3Handler extends Pop3Handler {
-    private TcpServerInputStream mInputStream;
-    private String mRemoteAddress;
+    private TcpServerInputStream inputStream;
+    private String remoteAddress;
 
     TcpPop3Handler(Pop3Server server) {
         super(server);
@@ -35,9 +35,9 @@ public class TcpPop3Handler extends Pop3Handler {
 
     @Override
     protected boolean setupConnection(Socket connection) throws IOException {
-        mRemoteAddress = connection.getInetAddress().getHostAddress();
-        connection.setSoTimeout(mConfig.getMaxIdleSeconds() * 1000);
-        mInputStream = new TcpServerInputStream(connection.getInputStream());
+        remoteAddress = connection.getInetAddress().getHostAddress();
+        connection.setSoTimeout(mConfig.getMaxIdleTime() * 1000);
+        inputStream = new TcpServerInputStream(connection.getInputStream());
         mOutputStream = new BufferedOutputStream(connection.getOutputStream());
         return startConnection(connection.getInetAddress());
     }
@@ -45,7 +45,7 @@ public class TcpPop3Handler extends Pop3Handler {
     @Override
     protected boolean processCommand() throws IOException {
         try {
-            return processCommand(mInputStream.readLine());
+            return processCommand(inputStream.readLine());
         } finally {
             if (dropConnection) dropConnection();
         }
@@ -53,11 +53,11 @@ public class TcpPop3Handler extends Pop3Handler {
 
     @Override
     protected void dropConnection() {
-        ZimbraLog.addIpToContext(mRemoteAddress);
+        ZimbraLog.addIpToContext(remoteAddress);
         try {
-            if (mInputStream != null) {
-                mInputStream.close();
-                mInputStream = null;
+            if (inputStream != null) {
+                inputStream.close();
+                inputStream = null;
             }
             if (mOutputStream != null) {
                 mOutputStream.close();
@@ -84,7 +84,7 @@ public class TcpPop3Handler extends Pop3Handler {
         sock.setUseClientMode(false);
         startHandshake(sock);
         ZimbraLog.pop.debug("suite: %s", sock.getSession().getCipherSuite());
-        mInputStream = new TcpServerInputStream(sock.getInputStream());
+        inputStream = new TcpServerInputStream(sock.getInputStream());
         mOutputStream = new BufferedOutputStream(sock.getOutputStream());
     }
 
@@ -93,8 +93,7 @@ public class TcpPop3Handler extends Pop3Handler {
         mAuthenticator.sendSuccess();
         if (mAuthenticator.isEncryptionEnabled()) {
             // Switch to encrypted streams
-            mInputStream = new TcpServerInputStream(
-                mAuthenticator.unwrap(mConnection.getInputStream()));
+            inputStream = new TcpServerInputStream(mAuthenticator.unwrap(mConnection.getInputStream()));
             mOutputStream = mAuthenticator.wrap(mConnection.getOutputStream());
         }
     }

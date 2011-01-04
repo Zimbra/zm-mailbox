@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -30,7 +30,6 @@ import java.util.Arrays;
 
 public class ImapConfig extends ServerConfig {
     private static final String PROTOCOL = "IMAP4rev1";
-    private static final int UNAUTHENTICATED_MAX_IDLE_SECONDS = 60;
     private static final int DEFAULT_MAX_MESSAGE_SIZE = 100 * 1024 * 1024;
 
     public ImapConfig(boolean ssl) {
@@ -44,14 +43,12 @@ public class ImapConfig extends ServerConfig {
 
     @Override
     public String getServerVersion() {
-        return getBooleanAttr(A_zimbraImapExposeVersionOnBanner, false) ?
-            BuildInfo.VERSION : null;
+        return getBooleanAttr(A_zimbraImapExposeVersionOnBanner, false) ? BuildInfo.VERSION : null;
     }
 
     @Override
     public String getBindAddress() {
-        return getAttr(isSslEnabled() ?
-            A_zimbraImapSSLBindAddress : A_zimbraImapBindAddress, null);
+        return getAttr(isSslEnabled() ? A_zimbraImapSSLBindAddress : A_zimbraImapBindAddress, null);
     }
 
     @Override
@@ -62,28 +59,42 @@ public class ImapConfig extends ServerConfig {
     }
 
     @Override
-    public int getNioMaxScheduledWriteBytes() {
-        return LC.nio_imap_max_scheduled_write_bytes.intValue();
+    public int getWriteTimeout() {
+        return LC.imap_write_timeout.intValue();
     }
 
     @Override
-    public int getNioWriteTimeout() {
-        return LC.nio_imap_write_timeout.intValue();
+    public int getWriteChunkSize() {
+        return LC.imap_write_chunk_size.intValue();
+    }
+
+    /**
+     * Returns the max idle timeout for unauthenticated connections.
+     *
+     * @return max idle timeout in seconds
+     */
+    @Override
+    public int getMaxIdleTime() {
+        return LC.imap_max_idle_time.intValue();
+    }
+
+    /**
+     * Returns the max idle timeout for authenticated connections.
+     *
+     * @return max idle timeout in seconds
+     */
+    public int getAuthenticatedMaxIdleTime() {
+        return LC.imap_authenticated_max_idle_time.intValue();
     }
 
     @Override
-    public int getNioWriteChunkSize() {
-        return LC.nio_imap_write_chunk_size.intValue();
+    public int getMaxThreads() {
+        return getIntAttr(A_zimbraImapNumThreads, super.getMaxThreads());
     }
 
     @Override
-    public int getMaxIdleSeconds() {
-        return UNAUTHENTICATED_MAX_IDLE_SECONDS;
-    }
-
-    @Override
-    public int getNumThreads() {
-        return getIntAttr(A_zimbraImapNumThreads, super.getNumThreads());
+    public int getMaxConnections() {
+        return LC.imap_max_connections.intValue();
     }
 
     @Override
@@ -97,22 +108,13 @@ public class ImapConfig extends ServerConfig {
     }
 
     @Override
-    public int getShutdownGraceSeconds() {
-       return getIntAttr(A_zimbraImapShutdownGraceSeconds, super.getShutdownGraceSeconds());
+    public int getShutdownTimeout() {
+       return getIntAttr(A_zimbraImapShutdownGraceSeconds, super.getShutdownTimeout());
     }
 
     @Override
-    public int getNioMinThreads() {
-        return LC.nio_imap_min_threads.intValue();
-    }
-
-    @Override
-    public int getNioThreadKeepAliveTime() {
-        return LC.nio_imap_thread_keep_alive_time.intValue();
-    }
-
-    public int getAuthenticatedMaxIdleSeconds() {
-        return ImapSession.IMAP_IDLE_TIMEOUT_SEC;
+    public int getThreadKeepAliveTime() {
+        return LC.imap_thread_keep_alive_time.intValue();
     }
 
     public boolean isCleartextLoginEnabled() {
@@ -124,8 +126,7 @@ public class ImapConfig extends ServerConfig {
     }
 
     public boolean isCapabilityDisabled(String name) {
-        String key = isSslEnabled() ?
-            A_zimbraImapSSLDisabledCapability : A_zimbraImapDisabledCapability;
+        String key = isSslEnabled() ? A_zimbraImapSSLDisabledCapability : A_zimbraImapDisabledCapability;
         try {
             return Arrays.asList(getLocalServer().getMultiAttr(key)).contains(name);
         } catch (ServiceException e) {
@@ -139,7 +140,6 @@ public class ImapConfig extends ServerConfig {
     }
 
     public long getMaxMessageSize() throws ServiceException {
-        return Provisioning.getInstance().getConfig()
-                .getLongAttr(A_zimbraMtaMaxMessageSize, DEFAULT_MAX_MESSAGE_SIZE);
+        return Provisioning.getInstance().getConfig().getLongAttr(A_zimbraMtaMaxMessageSize, DEFAULT_MAX_MESSAGE_SIZE);
     }
 }

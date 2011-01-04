@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,16 +28,14 @@ public abstract class ServerConfig {
     private String protocol;
     private boolean ssl;
 
-    private static final int SHUTDOWN_GRACE_SECONDS = 10;
-    private static final int NUM_THREADS = 20;
-    private static final int MAX_IDLE_SECONDS = 600;
-    private static final int NIO_MAX_SESSIONS = 200;
-    private static final int NIO_WRITE_CHUNK_SIZE = 8192;
-    private static final int NIO_WRITE_TIMEOUT = 60;
-    private static final int NIO_MAX_SCHEDULED_WRITE_BYTES = 1024 * 1024;
-    private static final int NIO_MIN_THREADS = 20;
-    private static final int NIO_THREAD_KEEP_ALIVE_TIME = 60;
-    
+    private static final int DEFAULT_SHUTDOWN_TIMEOUT = 10;
+    private static final int DEFAULT_MAX_THREADS = 1;
+    private static final int DEFAULT_MAX_IDLE_TIME = 600;
+    private static final int DEFAULT_MAX_CONNECTIONS = 200;
+    private static final int DEFAULT_WRITE_CHUNK_SIZE = 8192;
+    private static final int DEFAULT_WRITE_TIMEOUT = 10;
+    private static final int DEFAULT_THREAD_KEEP_ALIVE_TIME = 60 * 2;
+
     public ServerConfig(String protocol, boolean ssl) {
         this.protocol = protocol;
         this.ssl = ssl;
@@ -46,24 +44,30 @@ public abstract class ServerConfig {
     public String getServerName() {
         return LC.zimbra_server_hostname.value();
     }
-    
+
     public String getServerVersion() {
         return null;
     }
-    
+
     public String getBindAddress() {
         return null;
     }
-    
+
     public abstract int getBindPort();
     public abstract Log getLog();
-    
-    public int getMaxIdleSeconds() {
-        return MAX_IDLE_SECONDS;
+
+    /**
+     * Returns the max idle time. Connections with no data transmission for longer than this value is subject to
+     * terminate.
+     *
+     * @return max idle time in seconds
+     */
+    public int getMaxIdleTime() {
+        return DEFAULT_MAX_IDLE_TIME;
     }
 
-    public int getNumThreads() {
-        return NUM_THREADS;
+    public int getMaxThreads() {
+        return DEFAULT_MAX_THREADS;
     }
 
     public String getProtocol() {
@@ -112,34 +116,37 @@ public abstract class ServerConfig {
         }
     }
 
-    public int getShutdownGraceSeconds() {
-       return SHUTDOWN_GRACE_SECONDS;
+    /**
+     * Returns the server shutdown timeout. Upon a shutdown request, the server waits for handlers to cleanly terminate
+     * as long as this timeout, then halts remaining handlers.
+     *
+     * @return shutdown timeout in seconds
+     */
+    public int getShutdownTimeout() {
+       return DEFAULT_SHUTDOWN_TIMEOUT;
     }
 
-    public int getNioMaxSessions() {
-        return NIO_MAX_SESSIONS;
+    /**
+     * Returns the max number of concurrent connections allowed. New connections exceeding this limit are rejected.
+     *
+     * @return max number of connections
+     */
+    public int getMaxConnections() {
+        return DEFAULT_MAX_CONNECTIONS;
     }
 
-    public int getNioWriteChunkSize() {
-        return NIO_WRITE_CHUNK_SIZE;
+    public int getWriteChunkSize() {
+        return DEFAULT_WRITE_CHUNK_SIZE;
     }
 
-    public int getNioWriteTimeout() {
-        return NIO_WRITE_TIMEOUT;
+    public int getWriteTimeout() {
+        return DEFAULT_WRITE_TIMEOUT;
     }
 
-    public int getNioMaxScheduledWriteBytes() {
-        return NIO_MAX_SCHEDULED_WRITE_BYTES;
+    public int getThreadKeepAliveTime() {
+        return DEFAULT_THREAD_KEEP_ALIVE_TIME;
     }
 
-    public int getNioMinThreads() {
-        return NIO_MIN_THREADS;
-    }
-
-    public int getNioThreadKeepAliveTime() {
-        return NIO_THREAD_KEEP_ALIVE_TIME;
-    }
-    
     public ServerSocket getServerSocket() throws ServiceException {
         return isSslEnabled() ?
             NetUtil.getSslTcpServerSocket(getBindAddress(), getBindPort(), getSslExcludedCiphers()) :

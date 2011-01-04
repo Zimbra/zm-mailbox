@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -13,8 +13,6 @@
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.milter;
-
-import java.util.concurrent.ExecutorService;
 
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
@@ -32,12 +30,11 @@ import com.zimbra.cs.mina.MinaHandler;
 import com.zimbra.cs.mina.MinaServer;
 import com.zimbra.cs.mina.MinaSession;
 import com.zimbra.cs.server.ServerConfig;
-import com.zimbra.cs.server.ServerManager;
 
 public class MinaMilterServer extends MinaServer implements MilterServer {
 
-    public MinaMilterServer(ServerConfig config, ExecutorService pool) throws ServiceException {
-        super(config, pool);
+    public MinaMilterServer(ServerConfig config) throws ServiceException {
+        super(config);
         registerMinaStatsMBean("MinaMilterServer");
     }
 
@@ -61,17 +58,18 @@ public class MinaMilterServer extends MinaServer implements MilterServer {
         };
     }
 
-    @Override public MilterConfig getConfig() {
+    @Override
+    public MilterConfig getConfig() {
         return (MilterConfig) super.getConfig();
     }
 
-    @Override public Log getLog() {
+    @Override
+    public Log getLog() {
         return ZimbraLog.milter;
     }
 
     /* for running standalone milter server */
 
-    private static ExecutorService milterNioHandlerPool;
     private static MilterServer milterServer;
 
     private static class MilterShutdownHook extends Thread {
@@ -100,8 +98,7 @@ public class MinaMilterServer extends MinaServer implements MilterServer {
             }
 
             MilterConfig config = new MilterConfig();
-            milterNioHandlerPool = ServerManager.newNioHandlerPool(config);
-            milterServer = new MinaMilterServer(config, milterNioHandlerPool);
+            milterServer = new MinaMilterServer(config);
 
             MilterShutdownHook shutdownHook = new MilterShutdownHook(milterServer);
             Runtime.getRuntime().addShutdownHook(shutdownHook);

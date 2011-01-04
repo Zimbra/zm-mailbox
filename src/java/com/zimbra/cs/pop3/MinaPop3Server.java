@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -25,13 +25,11 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 
-import java.util.concurrent.ExecutorService;
-
 public class MinaPop3Server extends MinaServer implements Pop3Server {
-    public MinaPop3Server(Pop3Config config, ExecutorService pool) throws ServiceException {
-        super(config, pool);
-        registerMinaStatsMBean(
-            config.isSslEnabled() ? "MinaPop3SSLServer" : "MinaPop3Server");
+
+    public MinaPop3Server(Pop3Config config) throws ServiceException {
+        super(config);
+        registerMinaStatsMBean(config.isSslEnabled() ? "MinaPop3SSLServer" : "MinaPop3Server");
     }
 
     @Override

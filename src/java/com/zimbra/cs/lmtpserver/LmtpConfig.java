@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,14 +29,14 @@ public class LmtpConfig extends ServerConfig {
     private final LmtpBackend lmtpBackend;
 
     private static final String PROTOCOL = "LMTP";
-    private static final int MAX_IDLE_SECONDS = 300;
+    private static final int MAX_IDLE_TIME = 300; // seconds
 
     public static final LmtpConfig INSTANCE = new LmtpConfig();
 
     public static LmtpConfig getInstance() {
         return INSTANCE;
     }
-    
+
     private LmtpConfig() {
         super(PROTOCOL, false);
         lmtpBackend = new ZimbraLmtpBackend(this);
@@ -54,18 +54,18 @@ public class LmtpConfig extends ServerConfig {
     }
 
     @Override
-    public int getMaxIdleSeconds() {
-        return MAX_IDLE_SECONDS;
+    public int getMaxIdleTime() {
+        return MAX_IDLE_TIME;
     }
 
     @Override
-    public int getShutdownGraceSeconds() {
-       return getIntAttr(A_zimbraLmtpShutdownGraceSeconds, super.getShutdownGraceSeconds());
+    public int getShutdownTimeout() {
+       return getIntAttr(A_zimbraLmtpShutdownGraceSeconds, super.getShutdownTimeout());
     }
-    
+
     @Override
-    public int getNumThreads() {
-        return getIntAttr(A_zimbraLmtpNumThreads, super.getNumThreads());
+    public int getMaxThreads() {
+        return getIntAttr(A_zimbraLmtpNumThreads, super.getMaxThreads());
     }
 
     @Override

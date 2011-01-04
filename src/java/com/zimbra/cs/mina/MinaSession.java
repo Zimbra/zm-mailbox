@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -55,14 +55,14 @@ public class MinaSession {
     }
 
     public synchronized void startTls() throws IOException {
-        checkNotClosed();
+        ensureOpened();
         SslFilter filter = server.newSSLFilter();
         ioSession.getFilterChain().addFirst("ssl", filter);
         ioSession.setAttribute(SslFilter.DISABLE_ENCRYPTION_ONCE, true);
     }
 
     public synchronized void startSasl(SaslServer sasl) throws IOException {
-        checkNotClosed();
+        ensureOpened();
         SaslFilter filter = new SaslFilter(sasl);
         ioSession.getFilterChain().addFirst("sasl", filter);
         ioSession.setAttribute(SaslFilter.DISABLE_ENCRYPTION_ONCE, true);
@@ -73,32 +73,13 @@ public class MinaSession {
     }
 
     public synchronized void send(ByteBuffer bb) throws IOException {
-        checkNotClosed();
+        ensureOpened();
         ioSession.write(IoBuffer.wrap(bb));
     }
 
     public synchronized void send(Object obj) throws IOException {
-        checkNotClosed();
+        ensureOpened();
         ioSession.write(obj);
-    }
-
-    public boolean drainWriteQueue(long timeout) {
-        return drainWriteQueue(0, timeout);
-    }
-
-    public synchronized boolean drainWriteQueue(int threshold, long timeout) {
-        if (timeout <= 0) timeout = Long.MAX_VALUE;
-        long start = System.currentTimeMillis();
-        while (!isClosed() && threshold < getScheduledWriteBytes()) {
-            long elapsed = System.currentTimeMillis() - start;
-            if (elapsed > timeout) return false;
-            try {
-                wait(timeout - elapsed);
-            } catch (InterruptedException e) {
-                return true;
-            }
-        }
-        return true;
     }
 
     public synchronized long getScheduledWriteBytes() {
@@ -107,16 +88,15 @@ public class MinaSession {
 
     public synchronized void close() {
         if (!isClosed()) {
-            ioSession.close(true);
+            ioSession.close(false);
         }
-        notify();
     }
 
     public synchronized boolean isClosed() {
         return ioSession.isClosing();
     }
 
-    private void checkNotClosed() throws IOException {
+    private void ensureOpened() throws IOException {
         if (isClosed()) {
             throw new IOException("Session is closed");
         }

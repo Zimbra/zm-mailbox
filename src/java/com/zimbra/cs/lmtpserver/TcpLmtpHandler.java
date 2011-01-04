@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2007, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,7 +22,7 @@ import java.net.Socket;
 import java.io.IOException;
 
 public class TcpLmtpHandler extends LmtpHandler {
-    private TcpServerInputStream mInputStream;
+    private TcpServerInputStream inputStream;
 
     TcpLmtpHandler(LmtpServer server) {
         super(server);
@@ -31,8 +31,8 @@ public class TcpLmtpHandler extends LmtpHandler {
     @Override
     protected boolean setupConnection(Socket connection) throws IOException {
         reset();
-        connection.setSoTimeout(mConfig.getMaxIdleSeconds() * 1000);
-        mInputStream = new TcpServerInputStream(connection.getInputStream());
+        connection.setSoTimeout(mConfig.getMaxIdleTime() * 1000);
+        inputStream = new TcpServerInputStream(connection.getInputStream());
         mWriter = new LmtpWriter(connection.getOutputStream());
         return setupConnection(connection.getInetAddress());
     }
@@ -41,9 +41,9 @@ public class TcpLmtpHandler extends LmtpHandler {
     protected synchronized void dropConnection() {
         ZimbraLog.addIpToContext(mRemoteAddress);
         try {
-            if (mInputStream != null) {
-                mInputStream.close();
-                mInputStream = null;
+            if (inputStream != null) {
+                inputStream.close();
+                inputStream = null;
             }
             if (mWriter != null) {
                 mWriter.close();
@@ -63,14 +63,14 @@ public class TcpLmtpHandler extends LmtpHandler {
     @Override
     protected boolean processCommand() throws IOException {
         // make sure that the connection wasn't dropped during a preceding command processing
-        if (mInputStream != null)
-            return processCommand(mInputStream.readLine());
+        if (inputStream != null)
+            return processCommand(inputStream.readLine());
         return false;
     }
 
     @Override
     protected void continueDATA() throws IOException {
-        LmtpMessageInputStream min = new LmtpMessageInputStream(mInputStream, getAdditionalHeaders());
+        LmtpMessageInputStream min = new LmtpMessageInputStream(inputStream, getAdditionalHeaders());
         try {
             processMessageData(min);
         } catch (UnrecoverableLmtpException e) {

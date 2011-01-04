@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -14,12 +14,6 @@
  */
 package com.zimbra.cs.server;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
@@ -45,9 +39,6 @@ public class ServerManager {
     private Pop3Server pop3SSLServer;
     private ImapServer imapServer;
     private ImapServer imapSSLServer;
-    private ExecutorService pop3NioHandlerPool;
-    private ExecutorService imapNioHandlerPool;
-    private ExecutorService milterNioHandlerPool;
     private MilterServer milterServer;
 
     private static final ServerManager INSTANCE = new ServerManager();
@@ -102,32 +93,23 @@ public class ServerManager {
 
     private Pop3Server startPop3Server(boolean ssl) throws ServiceException {
         Pop3Config config = new Pop3Config(ssl);
-        if (pop3NioHandlerPool == null) {
-            pop3NioHandlerPool = newNioHandlerPool(config);
-        }
         Pop3Server server = NIO_ENABLED || LC.nio_pop3_enabled.booleanValue() ?
-            new MinaPop3Server(config, pop3NioHandlerPool) : new TcpPop3Server(config);
+            new MinaPop3Server(config) : new TcpPop3Server(config);
         server.start();
         return server;
     }
 
     private ImapServer startImapServer(boolean ssl) throws ServiceException {
         ImapConfig config = new ImapConfig(ssl);
-        if (imapNioHandlerPool == null) {
-            imapNioHandlerPool = newNioHandlerPool(config);
-        }
         ImapServer server = NIO_ENABLED || LC.nio_imap_enabled.booleanValue() ?
-            new MinaImapServer(config, imapNioHandlerPool) : new TcpImapServer(config);
+            new MinaImapServer(config) : new TcpImapServer(config);
         server.start();
         return server;
     }
 
     private MilterServer startMilterServer() throws ServiceException {
         MilterConfig config = new MilterConfig();
-        if (milterNioHandlerPool == null) {
-            milterNioHandlerPool = newNioHandlerPool(config);
-        }
-        MilterServer server = new MinaMilterServer(config, milterNioHandlerPool);
+        MilterServer server = new MinaMilterServer(config);
         server.start();
         return server;
     }
@@ -157,13 +139,4 @@ public class ServerManager {
         return lmtpServer;
     }
 
-    public static ExecutorService newNioHandlerPool(ServerConfig config) {
-        return new ThreadPoolExecutor(
-            Math.min(config.getNumThreads(), config.getNioMinThreads()),
-            config.getNumThreads(),
-            config.getNioMinThreads(),
-            TimeUnit.SECONDS,
-            new SynchronousQueue<Runnable>(),
-            new ThreadFactoryBuilder().setNameFormat(config.getProtocol() + "Server-%d").build());
-    }
 }
