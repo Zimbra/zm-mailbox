@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 gsolovyev 20101108-1555 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110103-2343 */
 
 
     /*
@@ -404,6 +404,11 @@ public class RightConsts {
     public static final String RT_adminConsoleMailQueueRights = "adminConsoleMailQueueRights";
 
     /**
+     * Rights for running migration tasks on a server through Admin Console
+     */
+    public static final String RT_adminConsoleMigrationRights = "adminConsoleMigrationRights";
+
+    /**
      * Admin Console Resource Rights
      */
     public static final String RT_adminConsoleResourceRights = "adminConsoleResourceRights";
@@ -484,8 +489,8 @@ public class RightConsts {
     public static final String RT_adminConsoleServerVolumesTabRights = "adminConsoleServerVolumesTabRights";
 
     /**
-     * Rights for configuring SSL certificate on a server through Admin
-     * Console
+     * Rights for configuring software updates component a server through
+     * Admin Console
      */
     public static final String RT_adminConsoleSoftwareUpdatesRights = "adminConsoleSoftwareUpdatesRights";
 
@@ -1114,11 +1119,6 @@ public class RightConsts {
      * create, volumes
      */
     public static final String RT_manageVolume = "manageVolume";
-
-    /**
-     * create, destroy, wait, query wait sets
-     */
-    public static final String RT_manageWaitSet = "manageWaitSet";
 
     /**
      * activate/deactivate zimlets on a cos

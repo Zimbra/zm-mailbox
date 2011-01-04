@@ -147,13 +147,6 @@ public class WaitSetMgr {
 
     /**
      * Destroy the referenced WaitSet.
-     *
-     * @param id
-     * @throws ServiceException
-     */
-    
-    /**
-     * Destroy the referenced WaitSet.
      * 
      * @param zsc ZimbraSoapContext or permission checking.  If null, permission checking is skipped
      * @param requestingAcctId
