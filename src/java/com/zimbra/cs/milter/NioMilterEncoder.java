@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -19,12 +19,12 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolEncoderAdapter;
 import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 
-import com.zimbra.cs.mina.MinaStats;
+import com.zimbra.cs.tcpserver.NioServerStats;
 
-public class MinaMilterEncoder extends ProtocolEncoderAdapter {
-    private final MinaStats stats;
+public class NioMilterEncoder extends ProtocolEncoderAdapter {
+    private final NioServerStats stats;
 
-    MinaMilterEncoder(MinaStats stats) {
+    NioMilterEncoder(NioServerStats stats) {
         this.stats = stats;
     }
 

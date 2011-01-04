@@ -19,21 +19,21 @@ import java.net.Socket;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mina.MinaHandler;
-import com.zimbra.cs.mina.MinaSession;
+import com.zimbra.cs.tcpserver.NioHandler;
+import com.zimbra.cs.tcpserver.NioConnection;
 
-final class MinaMilterHandler extends MilterHandler implements MinaHandler {
-    private final MinaSession session;
+final class NioMilterHandler extends MilterHandler implements NioHandler {
+    private final NioConnection connection;
 
-    MinaMilterHandler(MinaMilterServer server, MinaSession session) {
+    NioMilterHandler(NioMilterServer server, NioConnection conn) {
         super(server);
-        this.session = session;
+        connection = conn;
     }
 
     @Override
     public void connectionClosed() throws IOException {
         ZimbraLog.milter.info(sessPrefix + "Connection closed");
-        session.close();
+        connection.close();
     }
 
     @Override
@@ -54,7 +54,7 @@ final class MinaMilterHandler extends MilterHandler implements MinaHandler {
         try {
             MilterPacket response = processCommand(command);
             if (response != null) {
-                session.send(response);
+                connection.send(response);
             }
         } catch (ServiceException e) {
             ZimbraLog.milter.error(sessPrefix + "Server error: " + e.getMessage());
@@ -79,8 +79,8 @@ final class MinaMilterHandler extends MilterHandler implements MinaHandler {
 
     @Override
     public void dropConnection() {
-        if (!session.isClosed()) {
-            session.close();
+        if (connection.isOpen()) {
+            connection.close();
         }
     }
 

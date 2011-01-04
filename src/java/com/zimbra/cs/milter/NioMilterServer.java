@@ -25,35 +25,35 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
-import com.zimbra.cs.mina.MinaCodecFactory;
-import com.zimbra.cs.mina.MinaHandler;
-import com.zimbra.cs.mina.MinaServer;
-import com.zimbra.cs.mina.MinaSession;
+import com.zimbra.cs.tcpserver.NioCodecFactory;
+import com.zimbra.cs.tcpserver.NioHandler;
+import com.zimbra.cs.tcpserver.NioServer;
+import com.zimbra.cs.tcpserver.NioConnection;
 import com.zimbra.cs.server.ServerConfig;
 
-public class MinaMilterServer extends MinaServer implements MilterServer {
+public class NioMilterServer extends NioServer implements MilterServer {
 
-    public MinaMilterServer(ServerConfig config) throws ServiceException {
+    public NioMilterServer(ServerConfig config) throws ServiceException {
         super(config);
-        registerMinaStatsMBean("MinaMilterServer");
+        registerMBean("NioMilterServer");
     }
 
     @Override
-    public MinaHandler createHandler(MinaSession session) {
-        return new MinaMilterHandler(this, session);
+    public NioHandler createHandler(NioConnection conn) {
+        return new NioMilterHandler(this, conn);
     }
 
     @Override
     protected ProtocolCodecFactory getProtocolCodecFactory() {
-        return new MinaCodecFactory() {
+        return new NioCodecFactory() {
             @Override
             public ProtocolDecoder getDecoder(IoSession session) {
-                return new MinaMilterDecoder(getStats());
+                return new NioMilterDecoder(getStats());
             }
 
             @Override
             public ProtocolEncoder getEncoder(IoSession session) {
-                return new MinaMilterEncoder(getStats());
+                return new NioMilterEncoder(getStats());
             }
         };
     }
@@ -98,7 +98,7 @@ public class MinaMilterServer extends MinaServer implements MilterServer {
             }
 
             MilterConfig config = new MilterConfig();
-            milterServer = new MinaMilterServer(config);
+            milterServer = new NioMilterServer(config);
 
             MilterShutdownHook shutdownHook = new MilterShutdownHook(milterServer);
             Runtime.getRuntime().addShutdownHook(shutdownHook);
