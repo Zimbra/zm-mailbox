@@ -832,7 +832,7 @@ public class ParseMimeMessage {
     }
 
 
-    private static final class MessageAddresses {
+    static final class MessageAddresses {
         private final HashMap<String, Object> addrs = new HashMap<String, Object>();
         private final List<InternetAddress> newContacts;
 

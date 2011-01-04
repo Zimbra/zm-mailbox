@@ -33,6 +33,7 @@ import com.zimbra.common.soap.MailConstants;
  */
 public class MailService implements DocumentService {
 
+    @Override
     public void registerHandlers(DocumentDispatcher dispatcher) {
 
         // noop
@@ -69,6 +70,7 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.SEND_MSG_REQUEST, new SendMsg());
         dispatcher.registerHandler(MailConstants.SEND_REPORT_REQUEST, new SendDeliveryReport());
         dispatcher.registerHandler(MailConstants.SEND_SHARE_NOTIFICATION_REQUEST, new SendShareNotification());
+        dispatcher.registerHandler(MailConstants.BOUNCE_MSG_REQUEST, new BounceMsg());
         dispatcher.registerHandler(MailConstants.ADD_MSG_REQUEST, new AddMsg());
         dispatcher.registerHandler(MailConstants.SAVE_DRAFT_REQUEST, new SaveDraft());
         dispatcher.registerHandler(MailConstants.REMOVE_ATTACHMENTS_REQUEST, new RemoveAttachments());

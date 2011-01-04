@@ -20,6 +20,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -87,6 +88,7 @@ import javax.mail.internet.MimePart;
 import javax.mail.internet.MimeUtility;
 
 import java.io.*;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -789,7 +791,7 @@ public class ToXML {
     public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Message msg, String part,
                                             int maxSize, boolean wantHTML, boolean neuter, Set<String> headers, boolean serializeType)
     throws ServiceException {
-        boolean wholeMessage = (part == null || part.trim().equals(""));
+        boolean wholeMessage = (part == null || part.trim().isEmpty());
 
         Element m;
         if (wholeMessage) {
@@ -821,58 +823,78 @@ public class ToXML {
             addEmails(m, Mime.parseAddressHeader(mm, "To"), EmailType.TO);
             addEmails(m, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
             addEmails(m, Mime.parseAddressHeader(mm, "Bcc"), EmailType.BCC);
+            addEmails(m, Mime.parseAddressHeader(mm.getHeader("Resent-From", null), false), EmailType.RESENT_FROM);
             // read-receipts only get sent by the mailbox's owner
-            if (!(octxt.isDelegatedRequest(msg.getMailbox()) && octxt.isOnBehalfOfRequest(msg.getMailbox())))
+            if (!(octxt.isDelegatedRequest(msg.getMailbox()) && octxt.isOnBehalfOfRequest(msg.getMailbox()))) {
                 addEmails(m, Mime.parseAddressHeader(mm, "Disposition-Notification-To"), EmailType.READ_RECEIPT);
+            }
 
             String calIntendedFor = msg.getCalendarIntendedFor();
             m.addAttribute(MailConstants.A_CAL_INTENDED_FOR, calIntendedFor);
 
             String subject = Mime.getSubject(mm);
-            if (subject != null)
+            if (subject != null) {
                 m.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(subject), Element.Disposition.CONTENT);
-
-            String fragment = msg.getFragment();
-            if (fragment != null && !fragment.equals(""))
-                m.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
-
-            String messageID = mm.getMessageID();
-            if (messageID != null && !messageID.trim().equals(""))
-                m.addAttribute(MailConstants.E_MSG_ID_HDR, StringUtil.stripControlCharacters(messageID), Element.Disposition.CONTENT);
-
-            if (wholeMessage && msg.isDraft()) {
-                if (!msg.getDraftOrigId().equals(""))
-                    m.addAttribute(MailConstants.A_ORIG_ID, ifmt.formatItemId(new ItemId(msg.getDraftOrigId(), msg.getMailbox().getAccountId())));
-                if (!msg.getDraftReplyType().equals(""))
-                    m.addAttribute(MailConstants.A_REPLY_TYPE, msg.getDraftReplyType());
-                if (!msg.getDraftIdentityId().equals(""))
-                    m.addAttribute(MailConstants.A_IDENTITY_ID, msg.getDraftIdentityId());
-                if (!msg.getDraftAccountId().equals(""))
-                    m.addAttribute(MailConstants.A_FOR_ACCOUNT, msg.getDraftAccountId());
-                String inReplyTo = mm.getHeader("In-Reply-To", null);
-                if (inReplyTo != null && !inReplyTo.equals(""))
-                    m.addAttribute(MailConstants.E_IN_REPLY_TO, StringUtil.stripControlCharacters(inReplyTo), Element.Disposition.CONTENT);
-                if (msg.getDraftAutoSendTime() != 0)
-                    m.addAttribute(MailConstants.A_AUTO_SEND_TIME, msg.getDraftAutoSendTime());
             }
 
-            if (!wholeMessage)
+            String fragment = msg.getFragment();
+            if (fragment != null && !fragment.isEmpty()) {
+                m.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
+            }
+
+            String messageID = mm.getMessageID();
+            if (messageID != null && !messageID.trim().isEmpty()) {
+                m.addAttribute(MailConstants.E_MSG_ID_HDR, StringUtil.stripControlCharacters(messageID), Element.Disposition.CONTENT);
+            }
+
+            if (wholeMessage && msg.isDraft()) {
+                if (!msg.getDraftOrigId().isEmpty()) {
+                    m.addAttribute(MailConstants.A_ORIG_ID, ifmt.formatItemId(new ItemId(msg.getDraftOrigId(), msg.getMailbox().getAccountId())));
+                }
+                if (!msg.getDraftReplyType().isEmpty()) {
+                    m.addAttribute(MailConstants.A_REPLY_TYPE, msg.getDraftReplyType());
+                }
+                if (!msg.getDraftIdentityId().isEmpty()) {
+                    m.addAttribute(MailConstants.A_IDENTITY_ID, msg.getDraftIdentityId());
+                }
+                if (!msg.getDraftAccountId().isEmpty()) {
+                    m.addAttribute(MailConstants.A_FOR_ACCOUNT, msg.getDraftAccountId());
+                }
+                String inReplyTo = mm.getHeader("In-Reply-To", null);
+                if (inReplyTo != null && !inReplyTo.isEmpty()) {
+                    m.addAttribute(MailConstants.E_IN_REPLY_TO, StringUtil.stripControlCharacters(inReplyTo), Element.Disposition.CONTENT);
+                }
+                if (msg.getDraftAutoSendTime() != 0) {
+                    m.addAttribute(MailConstants.A_AUTO_SEND_TIME, msg.getDraftAutoSendTime());
+                }
+            }
+
+            if (!wholeMessage) {
                 m.addAttribute(MailConstants.A_SIZE, mm.getSize());
+            }
 
-            java.util.Date sent = mm.getSentDate();
-            if (sent != null)
+            Date sent = mm.getSentDate();
+            if (sent != null) {
                 m.addAttribute(MailConstants.A_SENT_DATE, sent.getTime());
+            }
 
-            if (msg.isInvite() && msg.hasCalendarItemInfos())
+            Calendar resent = DateUtil.parseRFC2822DateAsCalendar(mm.getHeader("Resent-Date", null));
+            if (resent != null) {
+                m.addAttribute(MailConstants.A_RESENT_DATE, resent.getTimeInMillis());
+            }
+
+            if (msg.isInvite() && msg.hasCalendarItemInfos()) {
                 encodeInvitesForMessage(m, ifmt, octxt, msg, NOTIFY_FIELDS, neuter);
+            }
 
             if (headers != null) {
                 for (String name : headers) {
                     String[] values = mm.getHeader(name);
-                    if (values == null)
-                        continue;
-                    for (int i = 0; i < values.length; i++)
-                        m.addKeyValuePair(name, values[i], MailConstants.A_HEADER, MailConstants.A_ATTRIBUTE_NAME);
+                    if (values != null) {
+                        for (int i = 0; i < values.length; i++) {
+                            m.addKeyValuePair(name, values[i], MailConstants.A_HEADER, MailConstants.A_ATTRIBUTE_NAME);
+                        }
+                    }
                 }
             }
 
@@ -1962,12 +1984,12 @@ public class ToXML {
 
 
     public enum EmailType {
-        NONE(null), FROM("f"), TO("t"), CC("c"), BCC("b"), REPLY_TO("r"), SENDER("s"), READ_RECEIPT("n");
+        NONE(null), FROM("f"), TO("t"), CC("c"), BCC("b"), REPLY_TO("r"), SENDER("s"), READ_RECEIPT("n"), RESENT_FROM("rf");
 
         private final String mRep;
         private EmailType(String c)  { mRep = c; }
 
-        @Override public String toString()     { return mRep; }
+        @Override public String toString()  { return mRep; }
     }
 
     /**

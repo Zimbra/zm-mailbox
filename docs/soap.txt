@@ -1089,12 +1089,14 @@ Email addresses:
 
  <e [t="{type}"] p="{personal-name}" a="{email-address}" d="{display-name}">{content}</e>
 
-   {type} = (f)rom, (t)o, (c)c, (b)cc, (r)eply-to, (s)ender, read-receipt (n)otification
+   {type} = (f)rom, (t)o, (c)c, (b)cc, (r)eply-to, (s)ender, read-receipt (n)otification, (rf) resent-from
 
          Type is only sent when an individual message is returned. In the
             list of conversations, all the email addresseses returned for a conversation are a subset
             of the participants. In the list of messages in a converstation, the email addressses are
             the senders.
+
+         Note that "rf" addresses can only be *returned* on a message; when sending a message, "rf" is ignored
 
    {personal-name} = the comment/name part of an address
    {email-address} = the user@domain part of an address
@@ -1769,7 +1771,7 @@ if <header>s are requested, any matching headers are inlined into the response
     (not available when raw="1")
 
 <GetMsgResponse>
-  <m id="{message-id}" [origid="..." rt="r|w"] [part="{part}"] f="{flags}" t="{tags}" s="{size}" [d="{received-date}"] sd="{date-header}" l="{folder}" (cid="{conv}")
+  <m id="{message-id}" [origid="..." rt="r|w"] [part="{part}"] f="{flags}" t="{tags}" s="{size}" [d="{received-date}"] sd="{date-header}" [rd="{resent-date}"] l="{folder}" (cid="{conv}")
      (cif="{X-Zimbra-Calendar-Intended-For header}")
   >
     <e ... [isGroup="1|0"] [exp="1|0"]/>*
@@ -1784,10 +1786,11 @@ if <header>s are requested, any matching headers are inlined into the response
   </m>
 </GetMsgResponse>
 
-origid/rt/irt are present only on drafts
-cif is set when the message is a calendar invite that was forwarded by another user, whose calendar is being
-managed by this user.  The attribute is set to the email of the forwarding user, for whom the invite was
-originally intended.
+- origid/rt/irt are present only on drafts
+- cif is set when the message is a calendar invite that was forwarded by another user, whose calendar is being
+  managed by this user.  The attribute is set to the email of the forwarding user, for whom the invite was
+  originally intended.
+- when a message has been re-sent, there will be "rf" <e> elements (Resent-From) and an "rd" attribute (Resent-Date)
 
 
 If needExp is "1" in the request, two additional flags will be included in <e> elements for the message:
@@ -2199,6 +2202,21 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
 <SendDeliveryReportRequest mid="{message-id}"/>
 
 <SendDeliveryReportResponse/>
+
+----------------------------
+
++ supports (f)rom, (t)o, (c)c, (b)cc, (s)ender "type" on <e> elements
++   (these get mapped to Resent-From, Resent-To, Resent-CC, Resent-Bcc, Resent-Sender
++    headers, which are prepended to copy of existing message)
++ aside from these prepended headers, message is reinjected verbatim
+
+<BounceMsgRequest>
+  <m id="{id-of-msg-to-resend}">
+    <e .../>*
+  </m>
+</BounceMsgRequest>
+
+<BounceMsgResponse/>
 
 ----------------------------
 

@@ -57,7 +57,7 @@ public final class SmtpConnection extends MailConnection {
     public static final String RSET = "RSET";
 
     // Same headers that SMTPTransport passes to MimeMessage.writeTo().
-    private static final String[] IGNORE_HEADERS = new String[] { "Bcc", "Content-Length" };
+    private static final String[] IGNORE_HEADERS = new String[] { "Bcc", "Resent-Bcc", "Content-Length" };
 
     private Set<String> invalidRecipients = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
     private Set<String> validRecipients = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
