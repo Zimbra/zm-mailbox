@@ -13,20 +13,21 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.mina;
+package com.zimbra.cs.tcpserver;
 
+import com.google.common.base.Charsets;
 import com.zimbra.cs.server.ServerConfig;
 
 import java.nio.ByteBuffer;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class MinaOutputStream extends OutputStream {
-    private MinaSession session;
+public class NioOutputStream extends OutputStream {
+    private NioConnection connection;
     private ByteBuffer buf;
 
-    public MinaOutputStream(MinaSession session) {
-        this.session = session;
+    public NioOutputStream(NioConnection conn) {
+        connection = conn;
     }
 
     @Override
@@ -50,7 +51,7 @@ public class MinaOutputStream extends OutputStream {
     }
 
      public void write(String s) throws IOException {
-         write(s.getBytes("UTF8"));
+         write(s.getBytes(Charsets.UTF_8));
      }
 
      @Override
@@ -68,16 +69,16 @@ public class MinaOutputStream extends OutputStream {
      }
 
      private void send(ByteBuffer bb) throws IOException {
-         session.send(bb);
+         connection.send(bb);
      }
 
      private ServerConfig getConfig() {
-         return session.getServer().getConfig();
+         return connection.getServer().getConfig();
      }
 
      @Override
      public void close() throws IOException {
          flush();
-         session.close();
+         connection.close();
      }
 }

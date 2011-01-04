@@ -1,33 +1,34 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2007, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.mina;
+package com.zimbra.cs.tcpserver;
 
 import java.nio.ByteBuffer;
-import java.io.UnsupportedEncodingException;
+
+import com.google.common.base.Charsets;
 
 /**
- * Utility class for incrementally parsing a line of text from a ByteBuffer.
- * Used when parsing IMAP, POP3, and LMTP command line requests. 
+ * Utility class for incrementally parsing a line of text from a {@link ByteBuffer}. Used when parsing IMAP, POP3, and
+ * LMTP command line requests.
  */
-public class LineBuffer {
+public class NioLineBuffer {
     private ByteBuffer buf;
     private boolean complete;
 
-    public LineBuffer() {}
+    public NioLineBuffer() {}
 
-    public LineBuffer(int size) {
+    public NioLineBuffer(int size) {
         buf = ByteBuffer.allocate(size);
     }
 
@@ -37,7 +38,7 @@ public class LineBuffer {
      * will be advanced to the character which immediately followed the LF.
      * Otherwise, if no LF was encountered than all remaining characters in
      * 'bb' are consumed.
-     * 
+     *
      * @param bb the ByteBuffer from which bytes are to be parsed
      * @return true if line is complete, false otherwise
      */
@@ -49,11 +50,11 @@ public class LineBuffer {
                 ByteBuffer tmp = bb.slice();
                 tmp.limit(len);
                 bb.position(pos + 1);
-                buf = MinaUtil.expand(buf, len, len).put(tmp);
+                buf = NioUtil.expand(buf, len, len).put(tmp);
                 buf.flip();
                 complete = true;
             } else {
-                buf = MinaUtil.expand(buf, bb.remaining()).put(bb);
+                buf = NioUtil.expand(buf, bb.remaining()).put(bb);
 
             }
         }
@@ -63,7 +64,7 @@ public class LineBuffer {
     public boolean matches(String s) {
         return s.length() == size() && startsWith(s);
     }
-    
+
     public boolean startsWith(String s) {
         if (s.length() <= size()) {
             for (int i = 0; i < s.length(); i++) {
@@ -75,7 +76,7 @@ public class LineBuffer {
         }
         return false;
     }
-    
+
     public ByteBuffer buf() {
         return buf;
     }
@@ -83,7 +84,8 @@ public class LineBuffer {
     public int size() {
         return complete ? buf.limit() : buf.position();
     }
-    
+
+    @Override
     public String toString() {
         return toString(size());
     }
@@ -100,13 +102,9 @@ public class LineBuffer {
     }
 
     public String toString(int len) {
-        try {
-            return new String(buf.array(), buf.arrayOffset(), len, "ASCII");
-        } catch (UnsupportedEncodingException e) {
-            throw new InternalError("ASCII charset missing");
-        }
+        return new String(buf.array(), buf.arrayOffset(), len, Charsets.US_ASCII);
     }
-    
+
     public boolean isComplete() {
         return complete;
     }

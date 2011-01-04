@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -13,13 +13,13 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.mina;
+package com.zimbra.cs.tcpserver;
 
 import java.nio.ByteBuffer;
 
 import org.apache.mina.core.buffer.IoBuffer;
 
-public final class MinaUtil {
+public final class NioUtil {
     public static final byte CR = '\r';
     public static final byte LF = '\n';
     public static final byte DOT = '.';
@@ -27,9 +27,8 @@ public final class MinaUtil {
     public static final int INITIAL_CAPACITY = 32;
 
     /**
-     * Ensure that specified buffer has at least enough capacity to accomodate
-     * 'minSize' additional bytes, but not more than 'maxSize' additional bytes.
-     * If 'maxSize' is 0, then there is no limit.
+     * Ensure that specified buffer has at least enough capacity to accommodate 'minSize' additional bytes, but not more
+     * than 'maxSize' additional bytes. If 'maxSize' is 0, then there is no limit.
      *
      * @param bb the ByteBuffer to expand, or null to create a new one
      * @param minSize minimum additional capacity for resulting byte buffer
@@ -64,7 +63,7 @@ public final class MinaUtil {
         int len = bb.remaining();
         char[] cs = new char[len];
         for (int i = 0; i < len; i++) {
-            cs[i] = (char) ((int) bb.get(i) & 0xff);
+            cs[i] = (char) (bb.get(i) & 0xff);
         }
         return new String(cs);
     }
@@ -91,7 +90,7 @@ public final class MinaUtil {
         return b;
     }
 
-    public static IoBuffer toMinaByteBuffer(ByteBuffer bb) {
+    public static IoBuffer toIoBuffer(ByteBuffer bb) {
         return IoBuffer.wrap(bb);
     }
 

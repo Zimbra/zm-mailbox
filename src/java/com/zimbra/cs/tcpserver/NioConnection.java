@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.mina;
+package com.zimbra.cs.tcpserver;
 
 import com.zimbra.cs.security.sasl.SaslFilter;
 
@@ -25,47 +25,50 @@ import org.apache.mina.filter.ssl.SslFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 
-public class MinaSession {
-    private final MinaServer server;
-    private final IoSession ioSession;
+public class NioConnection {
+    private final NioServer server;
+    private final IoSession session;
     private final OutputStream out;
+    private final InetSocketAddress remoteAddress;
 
-    MinaSession(MinaServer server, IoSession ioSession) {
+    NioConnection(NioServer server, IoSession session) {
         this.server = server;
-        this.ioSession = ioSession;
-        out = new MinaOutputStream(this);
+        this.session = session;
+        remoteAddress = (InetSocketAddress) session.getRemoteAddress();
+        out = new NioOutputStream(this);
     }
 
     public OutputStream getOutputStream() {
         return out;
     }
 
-    public MinaServer getServer() {
+    public NioServer getServer() {
         return server;
     }
 
     public InetSocketAddress getRemoteAddress() {
-        return (InetSocketAddress) ioSession.getRemoteAddress();
+        return remoteAddress;
     }
 
     public void setMaxIdleSeconds(int secs) {
-        ioSession.getConfig().setBothIdleTime(secs);
+        session.getConfig().setBothIdleTime(secs);
     }
 
     public synchronized void startTls() throws IOException {
         ensureOpened();
         SslFilter filter = server.newSSLFilter();
-        ioSession.getFilterChain().addFirst("ssl", filter);
-        ioSession.setAttribute(SslFilter.DISABLE_ENCRYPTION_ONCE, true);
+        session.getFilterChain().addFirst("ssl", filter);
+        session.setAttribute(SslFilter.DISABLE_ENCRYPTION_ONCE, true);
     }
 
     public synchronized void startSasl(SaslServer sasl) throws IOException {
         ensureOpened();
         SaslFilter filter = new SaslFilter(sasl);
-        ioSession.getFilterChain().addFirst("sasl", filter);
-        ioSession.setAttribute(SaslFilter.DISABLE_ENCRYPTION_ONCE, true);
+        session.getFilterChain().addFirst("sasl", filter);
+        session.setAttribute(SaslFilter.DISABLE_ENCRYPTION_ONCE, true);
     }
 
     public synchronized void messageSent() {
@@ -74,31 +77,31 @@ public class MinaSession {
 
     public synchronized void send(ByteBuffer bb) throws IOException {
         ensureOpened();
-        ioSession.write(IoBuffer.wrap(bb));
+        session.write(IoBuffer.wrap(bb));
     }
 
     public synchronized void send(Object obj) throws IOException {
         ensureOpened();
-        ioSession.write(obj);
+        session.write(obj);
     }
 
     public synchronized long getScheduledWriteBytes() {
-        return ioSession.getScheduledWriteBytes();
+        return session.getScheduledWriteBytes();
     }
 
     public synchronized void close() {
-        if (!isClosed()) {
-            ioSession.close(false);
+        if (isOpen()) {
+            session.close(false);
         }
     }
 
-    public synchronized boolean isClosed() {
-        return ioSession.isClosing();
+    public synchronized boolean isOpen() {
+        return session.isConnected();
     }
 
-    private void ensureOpened() throws IOException {
-        if (isClosed()) {
-            throw new IOException("Session is closed");
+    private void ensureOpened() throws SocketException {
+        if (!isOpen()) {
+            throw new SocketException("Session is closed");
         }
     }
 }

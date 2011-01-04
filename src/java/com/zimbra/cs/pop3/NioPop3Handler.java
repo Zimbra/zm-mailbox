@@ -16,29 +16,29 @@
 package com.zimbra.cs.pop3;
 
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mina.MinaHandler;
-import com.zimbra.cs.mina.MinaSession;
+import com.zimbra.cs.tcpserver.NioHandler;
+import com.zimbra.cs.tcpserver.NioConnection;
 
 import java.io.IOException;
 import java.net.Socket;
 
-final class MinaPop3Handler extends Pop3Handler implements MinaHandler {
-    private final MinaSession session;
+final class NioPop3Handler extends Pop3Handler implements NioHandler {
+    private final NioConnection connection;
 
-    MinaPop3Handler(MinaPop3Server server, MinaSession session) {
+    NioPop3Handler(NioPop3Server server, NioConnection conn) {
         super(server);
-        this.session = session;
-        mOutputStream = session.getOutputStream();
+        connection = conn;
+        mOutputStream = conn.getOutputStream();
     }
 
     @Override
     public void connectionOpened() throws IOException {
-        startConnection(session.getRemoteAddress().getAddress());
+        startConnection(connection.getRemoteAddress().getAddress());
     }
 
     @Override
     public void connectionClosed() throws IOException {
-        session.close();
+        connection.close();
     }
 
     @Override
@@ -58,20 +58,20 @@ final class MinaPop3Handler extends Pop3Handler implements MinaHandler {
 
     @Override
     protected void startTLS() throws IOException {
-        session.startTls();
+        connection.startTls();
         sendOK("Begin TLS negotiation");
     }
 
     @Override
     public void dropConnection() {
-        if (session.isClosed()) {
+        if (!connection.isOpen()) {
             return;
         }
         try {
             mOutputStream.close();
         } catch (IOException never) {
         }
-        session.close();
+        connection.close();
     }
 
     @Override
@@ -87,7 +87,7 @@ final class MinaPop3Handler extends Pop3Handler implements MinaHandler {
     @Override
     protected void completeAuthentication() throws IOException {
         if (mAuthenticator.isEncryptionEnabled()) {
-            session.startSasl(mAuthenticator.getSaslServer());
+            connection.startSasl(mAuthenticator.getSaslServer());
         }
         mAuthenticator.sendSuccess();
     }

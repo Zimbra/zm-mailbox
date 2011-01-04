@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.mina;
+package com.zimbra.cs.tcpserver;
 
 import java.io.IOException;
 
@@ -26,17 +26,14 @@ import com.google.common.base.Charsets;
 import com.zimbra.cs.util.Config;
 
 /**
- * Handler for MINA I/O events. Responsible for notifying the connection's {@link MinaHandler} when a connection has
+ * Handler for MINA I/O events. Responsible for notifying the connection's {@link NioHandler} when a connection has
  * been opened, closed, become idle, or a new request has been received.
  */
-class MinaIoHandler implements IoHandler {
-    private final MinaServer server;
-    private final MinaStats stats;
+class IoHandlerImpl implements IoHandler {
+    private final NioServer server;
+    private final NioServerStats stats;
 
-    private static final String MINA_SESSION = "MinaSession";
-    private static final String MINA_HANDLER = "MinaHandler";
-
-    MinaIoHandler(MinaServer server) {
+    IoHandlerImpl(NioServer server) {
         this.server = server;
         stats = server.getStats();
     }
@@ -48,10 +45,10 @@ class MinaIoHandler implements IoHandler {
      * initialization.
      */
     @Override
-    public void sessionCreated(IoSession ioSession) throws IOException {
-        MinaSession session = new MinaSession(server, ioSession);
-        ioSession.setAttribute(MINA_SESSION, session);
-        ioSession.setAttribute(MINA_HANDLER, server.createHandler(session));
+    public void sessionCreated(IoSession session) throws IOException {
+        NioConnection conn = new NioConnection(server, session);
+        session.setAttribute(NioConnection.class, conn);
+        session.setAttribute(NioHandler.class, server.createHandler(conn));
     }
 
     /**
@@ -61,7 +58,7 @@ class MinaIoHandler implements IoHandler {
      */
     @Override
     public void sessionOpened(IoSession session) throws IOException {
-        MinaHandler handler = getMinaHandler(session);
+        NioHandler handler = getHandler(session);
         long numSessions = stats.activeSessions.incrementAndGet();
         stats.totalSessions.incrementAndGet();
 
@@ -82,24 +79,24 @@ class MinaIoHandler implements IoHandler {
 
     @Override
     public void sessionClosed(IoSession session) throws IOException {
-        getMinaHandler(session).connectionClosed();
-        getMinaSession(session).close();
+        getHandler(session).connectionClosed();
+        getConnection(session).close();
         stats.activeSessions.decrementAndGet();
     }
 
     @Override
     public void sessionIdle(IoSession session, IdleStatus status) throws IOException{
-        getMinaHandler(session).connectionIdle();
+        getHandler(session).connectionIdle();
     }
 
     @Override
     public void messageReceived(IoSession session, Object msg) throws IOException {
-        getMinaHandler(session).messageReceived(msg);
+        getHandler(session).messageReceived(msg);
     }
 
     @Override
     public void exceptionCaught(IoSession session, Throwable e) throws IOException {
-        getMinaHandler(session).connectionClosed();
+        getHandler(session).connectionClosed();
     }
 
     @Override
@@ -107,15 +104,15 @@ class MinaIoHandler implements IoHandler {
         if (msg instanceof IoBuffer) {
             IoBuffer buf = (IoBuffer) msg;
             stats.sentBytes.addAndGet(buf.remaining());
-            getMinaSession(session).messageSent();
+            getConnection(session).messageSent();
         }
     }
 
-    public static MinaHandler getMinaHandler(IoSession session) {
-        return (MinaHandler) session.getAttribute(MINA_HANDLER);
+    public static NioHandler getHandler(IoSession session) {
+        return (NioHandler) session.getAttribute(NioHandler.class);
     }
 
-    private static MinaSession getMinaSession(IoSession session) {
-        return (MinaSession) session.getAttribute(MINA_SESSION);
+    public static NioConnection getConnection(IoSession session) {
+        return (NioConnection) session.getAttribute(NioConnection.class);
     }
 }

@@ -16,33 +16,33 @@
 package com.zimbra.cs.pop3;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.mina.MinaHandler;
-import com.zimbra.cs.mina.MinaServer;
-import com.zimbra.cs.mina.MinaCodecFactory;
-import com.zimbra.cs.mina.MinaSession;
+import com.zimbra.cs.tcpserver.NioHandler;
+import com.zimbra.cs.tcpserver.NioServer;
+import com.zimbra.cs.tcpserver.NioCodecFactory;
+import com.zimbra.cs.tcpserver.NioConnection;
 
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 
-public class MinaPop3Server extends MinaServer implements Pop3Server {
+public class NioPop3Server extends NioServer implements Pop3Server {
 
-    public MinaPop3Server(Pop3Config config) throws ServiceException {
+    public NioPop3Server(Pop3Config config) throws ServiceException {
         super(config);
-        registerMinaStatsMBean(config.isSslEnabled() ? "MinaPop3SSLServer" : "MinaPop3Server");
+        registerMBean(config.isSslEnabled() ? "NioPop3SSLServer" : "NioPop3Server");
     }
 
     @Override
-    public MinaHandler createHandler(MinaSession session) {
-        return new MinaPop3Handler(this, session);
+    public NioHandler createHandler(NioConnection conn) {
+        return new NioPop3Handler(this, conn);
     }
 
     @Override
     protected ProtocolCodecFactory getProtocolCodecFactory() {
-        return new MinaCodecFactory() {
+        return new NioCodecFactory() {
             @Override
             public ProtocolDecoder getDecoder(IoSession session) {
-                return new MinaPop3Decoder(getStats());
+                return new NioPop3Decoder(getStats());
             }
         };
     }

@@ -13,16 +13,15 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.mina;
+package com.zimbra.cs.tcpserver;
 
 import java.io.IOException;
 
 /**
- * Protocol handler for MINA-based server connections. The protocol handler
- * defines the action to take whenever a new connection is opened, is closed,
- * becomes idle, or a new request is received on the connection.
+ * Protocol handler for MINA-based server connections. The protocol handler defines the action to take whenever a new
+ * connection is opened, is closed, becomes idle, or a new request is received on the connection.
  */
-public interface MinaHandler {
+public interface NioHandler {
     /**
      * Called when a new connection has been opened.
      *

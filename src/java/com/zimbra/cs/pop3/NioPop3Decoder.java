@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,19 +16,19 @@ package com.zimbra.cs.pop3;
 
 import java.nio.ByteBuffer;
 
-import com.zimbra.cs.mina.LineBuffer;
-import com.zimbra.cs.mina.MinaStats;
+import com.zimbra.cs.tcpserver.NioLineBuffer;
+import com.zimbra.cs.tcpserver.NioServerStats;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolDecoderAdapter;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 
-public class MinaPop3Decoder extends ProtocolDecoderAdapter {
-    private final MinaStats stats;
-    private final LineBuffer lbuf = new LineBuffer();
+public class NioPop3Decoder extends ProtocolDecoderAdapter {
+    private final NioServerStats stats;
+    private final NioLineBuffer lbuf = new NioLineBuffer();
 
-    MinaPop3Decoder(MinaStats stats) {
+    NioPop3Decoder(NioServerStats stats) {
         this.stats = stats;
     }
 

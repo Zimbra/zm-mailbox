@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.mina;
+package com.zimbra.cs.tcpserver;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
@@ -52,14 +52,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Base class for MINA-based IMAP/POP3/LMTP servers. Handles creation of new
- * MINA request and connection handler instances.
+ * Base class for MINA-based IMAP/POP3/LMTP servers. Handles creation of new NIO request and connection handler
+ * instances.
  */
-public abstract class MinaServer implements Server {
+public abstract class NioServer implements Server {
     protected final ExecutorFilter executorFilter;
     protected final ZimbraSocketAcceptor acceptor;
     protected final ServerConfig config;
-    protected final MinaStats stats;
+    protected final NioServerStats stats;
 
     private static SSLContext sslContext;
     private static String[] mSslEnabledCipherSuites;
@@ -67,7 +67,7 @@ public abstract class MinaServer implements Server {
     // There is one IoProcessor pool shared by all protocol handlers
     private static final IoProcessor<NioSession> IO_PROCESSOR_POOL =
         new SimpleIoProcessorPool<NioSession>(NioProcessor.class, Executors.newCachedThreadPool(
-                new ThreadFactoryBuilder().setNameFormat("MinaIoProcessor-%d").build()));
+                new ThreadFactoryBuilder().setNameFormat("NioProcessor-%d").build()));
 
     private static synchronized SSLContext getSSLContext() {
         if (sslContext == null) {
@@ -100,7 +100,7 @@ public abstract class MinaServer implements Server {
      * Therefore we adapted the same scheme for zimbraSSLExcludeCipherSuites, which is written to jetty.xml
      * by config rewrite, and will be used for protocols (imaps/pop3s) handled by Zimbra code.
      *
-     * For nio based servers/handlers, MinaServer uses SSLFilter for SSL communication.  SSLFilter wraps
+     * For MINA based servers/handlers, NioTcpServer uses SSLFilter for SSL communication.  SSLFilter wraps
      * an SSLEngine that actually does all the work.  SSLFilter.setEnabledCipherSuites() sets the list of
      * cipher suites to be enabled when the underlying SSLEngine is initialized.  Since we only have an
      * excluded list, we need to exclude those from the ciphers suites which are currently enabled for use
@@ -116,7 +116,7 @@ public abstract class MinaServer implements Server {
      * SSLFilter.setEnabledCipherSuites() for SSL and StartTLS session.
      *
      * @param sslCtxt ssl context
-     * @param serverConfig mina server config
+     * @param serverConfig server config
      * @return array of enabled ciphers, or empty array (note, not null) if all default ciphers should be enabled.
      *         (i.e. we do not need to alter the default ciphers)
      */
@@ -164,16 +164,16 @@ public abstract class MinaServer implements Server {
      * @param pool the optional handler thread pool to use for this server
      * @throws ServiceException if a ServiceException occured
      */
-    protected MinaServer(ServerConfig config) throws ServiceException {
+    protected NioServer(ServerConfig config) throws ServiceException {
         this.config = config;
         acceptor = new ZimbraSocketAcceptor(config.getServerSocketChannel(), IO_PROCESSOR_POOL);
-        stats = new MinaStats(this);
+        stats = new NioServerStats(this);
         executorFilter = new ExecutorFilter(1, config.getMaxThreads(),
                 config.getThreadKeepAliveTime(), TimeUnit.SECONDS,
                 new ThreadFactoryBuilder().setNameFormat(config.getProtocol() + "Server-%d").build());
     }
 
-    public MinaStats getStats() {
+    public NioServerStats getStats() {
         return stats;
     }
 
@@ -202,16 +202,16 @@ public abstract class MinaServer implements Server {
         }
         fc.addLast("codec", new ProtocolCodecFilter(getProtocolCodecFactory()));
         fc.addLast("executer", executorFilter);
-        fc.addLast("logger", new MinaLoggingFilter(this, false));
+        fc.addLast("logger", new NioLoggingFilter(this, false));
         acceptor.getSessionConfig().setBothIdleTime(sc.getMaxIdleTime());
         acceptor.getSessionConfig().setWriteTimeout(sc.getWriteTimeout());
-        acceptor.setHandler(new MinaIoHandler(this));
+        acceptor.setHandler(new IoHandlerImpl(this));
         try {
             acceptor.bind();
         } catch(IOException e) {
             throw ServiceException.FAILURE("Failed to start", e);
         }
-        getLog().info("Starting %s server on %s%s", getConfig().getProtocol(), acceptor.getLocalAddress(),
+        getLog().info("Starting %s NioServer on %s%s", getConfig().getProtocol(), acceptor.getLocalAddress(),
                 sc.isSslEnabled() ? " (SSL)" : "");
     }
 
@@ -246,7 +246,7 @@ public abstract class MinaServer implements Server {
     private void closeSessions() {
         for (IoSession session : getSessions().values()) {
             getLog().info("Closing session = " + session);
-            MinaHandler handler = MinaIoHandler.getMinaHandler(session);
+            NioHandler handler = IoHandlerImpl.getHandler(session);
             if (handler != null) {
                 try {
                     handler.dropConnection();
@@ -261,22 +261,21 @@ public abstract class MinaServer implements Server {
     }
 
     /**
-     * Creates a new handler for handling requests received by the
-     * specified MINA session (connection).
+     * Creates a new handler for handling requests received by the specified NIO session (connection).
      *
      * @param session the I/O session (connection) being opened
-     * @return the MinaHandler for handling requests
+     * @return the {@link NioHandler} for handling requests
      */
-    protected abstract MinaHandler createHandler(MinaSession session);
+    protected abstract NioHandler createHandler(NioConnection conn);
 
     protected abstract ProtocolCodecFactory getProtocolCodecFactory();
 
-    protected void registerMinaStatsMBean(String type) {
+    protected void registerMBean(String type) {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         try {
             mbs.registerMBean(getStats(), new ObjectName("ZimbraCollaborationSuite:type=" + type));
         } catch (Exception e) {
-            getLog().warn("Unable to register MinaStats mbean", e);
+            getLog().warn("Unable to register NioServerStats mbean", e);
         }
     }
 

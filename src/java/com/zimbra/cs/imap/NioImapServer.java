@@ -17,33 +17,33 @@ package com.zimbra.cs.imap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mina.MinaHandler;
-import com.zimbra.cs.mina.MinaServer;
-import com.zimbra.cs.mina.MinaCodecFactory;
-import com.zimbra.cs.mina.MinaSession;
+import com.zimbra.cs.tcpserver.NioHandler;
+import com.zimbra.cs.tcpserver.NioServer;
+import com.zimbra.cs.tcpserver.NioCodecFactory;
+import com.zimbra.cs.tcpserver.NioConnection;
 
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 
-public class MinaImapServer extends MinaServer implements ImapServer {
+public class NioImapServer extends NioServer implements ImapServer {
 
-    public MinaImapServer(ImapConfig config) throws ServiceException {
+    public NioImapServer(ImapConfig config) throws ServiceException {
         super(config);
-        registerMinaStatsMBean(config.isSslEnabled() ? "MinaImapSSLServer" : "MinaImapServer");
+        registerMBean(config.isSslEnabled() ? "NioImapSSLServer" : "NioImapServer");
     }
 
     @Override
-    public MinaHandler createHandler(MinaSession session) {
-        return new MinaImapHandler(this, session);
+    public NioHandler createHandler(NioConnection conn) {
+        return new NioImapHandler(this, conn);
     }
 
     @Override
     protected ProtocolCodecFactory getProtocolCodecFactory() {
-        return new MinaCodecFactory() {
+        return new NioCodecFactory() {
             @Override
             public ProtocolDecoder getDecoder(IoSession session) {
-                return new MinaImapDecoder(getStats(), config.getWriteChunkSize());
+                return new NioImapDecoder(getStats(), config.getWriteChunkSize());
             }
         };
     }

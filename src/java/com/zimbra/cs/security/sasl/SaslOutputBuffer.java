@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,7 +15,7 @@
 
 package com.zimbra.cs.security.sasl;
 
-import com.zimbra.cs.mina.MinaUtil;
+import com.zimbra.cs.tcpserver.NioUtil;
 
 import javax.security.sasl.SaslException;
 
@@ -49,7 +49,7 @@ public class SaslOutputBuffer {
         if (isFull()) return;
         if (bb.remaining() > mBuffer.remaining()) {
             int minSize = Math.min(bb.remaining(), mMaxSize);
-            mBuffer = MinaUtil.expand(mBuffer, minSize, mMaxSize);
+            mBuffer = NioUtil.expand(mBuffer, minSize, mMaxSize);
         }
         int len = Math.min(mBuffer.remaining(), bb.remaining());
         int pos = mBuffer.position();
@@ -60,7 +60,7 @@ public class SaslOutputBuffer {
     public void put(byte b) {
         if (isFull()) return;
         if (!mBuffer.hasRemaining()) {
-            mBuffer = MinaUtil.expand(mBuffer, 1, mMaxSize);
+            mBuffer = NioUtil.expand(mBuffer, 1, mMaxSize);
         }
         mBuffer.put(b);
     }

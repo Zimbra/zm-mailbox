@@ -15,22 +15,22 @@
 package com.zimbra.cs.imap;
 
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mina.MinaHandler;
-import com.zimbra.cs.mina.MinaOutputStream;
-import com.zimbra.cs.mina.MinaSession;
+import com.zimbra.cs.tcpserver.NioHandler;
+import com.zimbra.cs.tcpserver.NioOutputStream;
+import com.zimbra.cs.tcpserver.NioConnection;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 import java.io.IOException;
 import java.net.Socket;
 
-final class MinaImapHandler extends ImapHandler implements MinaHandler {
-    private final MinaSession session;
-    private MinaImapRequest request;
+final class NioImapHandler extends ImapHandler implements NioHandler {
+    private final NioConnection connection;
+    private NioImapRequest request;
 
-    MinaImapHandler(MinaImapServer server, MinaSession session) {
+    NioImapHandler(NioImapServer server, NioConnection conn) {
         super(server);
-        this.session = session;
-        mOutputStream = session.getOutputStream();
+        connection = conn;
+        mOutputStream = conn.getOutputStream();
     }
 
     @Override
@@ -42,7 +42,7 @@ final class MinaImapHandler extends ImapHandler implements MinaHandler {
             return true;
         }
 
-        session.startTls();
+        connection.startTls();
         sendOK(tag, "begin TLS negotiation now");
         mStartedTLS = true;
         return true;
@@ -61,11 +61,11 @@ final class MinaImapHandler extends ImapHandler implements MinaHandler {
     @Override
     public void messageReceived(Object msg) throws IOException {
         if (request == null) {
-            request = new MinaImapRequest(this);
+            request = new NioImapRequest(this);
         }
         if (request.parse(msg)) {
             // Request is complete
-            setUpLogContext(session.getRemoteAddress().toString());
+            setUpLogContext(connection.getRemoteAddress().toString());
             try {
                 if (!processRequest(request)) {
                     dropConnection();
@@ -85,7 +85,7 @@ final class MinaImapHandler extends ImapHandler implements MinaHandler {
         }
     }
 
-    private boolean processRequest(MinaImapRequest req) throws IOException, ImapParseException {
+    private boolean processRequest(NioImapRequest req) throws IOException, ImapParseException {
         if (req.isMaxRequestSizeExceeded())
             throw new ImapParseException(req.getTag(), "maximum request size exceeded");
 
@@ -132,7 +132,7 @@ final class MinaImapHandler extends ImapHandler implements MinaHandler {
             ZimbraLog.imap.info("dropping connection for user " + mCredentials.getUsername() + " (server-initiated)");
         }
 
-        if (session.isClosed()) {
+        if (!connection.isOpen()) {
             return; // No longer connected
         }
         ZimbraLog.imap.debug("dropConnection: sendBanner = %s\n", sendBanner);
@@ -141,7 +141,7 @@ final class MinaImapHandler extends ImapHandler implements MinaHandler {
         if (sendBanner && !mGoodbyeSent) {
             sendBYE();
         }
-        session.close();
+        connection.close();
     }
 
     @Override
@@ -152,7 +152,7 @@ final class MinaImapHandler extends ImapHandler implements MinaHandler {
     @Override
     public void connectionClosed() {
         cleanup();
-        session.close();
+        connection.close();
     }
 
     private void cleanup() {
@@ -188,13 +188,13 @@ final class MinaImapHandler extends ImapHandler implements MinaHandler {
 
     @Override
     protected void enableInactivityTimer() {
-        session.setMaxIdleSeconds(mConfig.getAuthenticatedMaxIdleTime());
+        connection.setMaxIdleSeconds(mConfig.getAuthenticatedMaxIdleTime());
     }
 
     @Override
     protected void completeAuthentication() throws IOException {
         if (mAuthenticator.isEncryptionEnabled()) {
-            session.startSasl(mAuthenticator.getSaslServer());
+            connection.startSasl(mAuthenticator.getSaslServer());
         }
         mAuthenticator.sendSuccess();
     }
@@ -206,7 +206,7 @@ final class MinaImapHandler extends ImapHandler implements MinaHandler {
 
     @Override
     void sendLine(String line, boolean flush) throws IOException {
-        MinaOutputStream out = (MinaOutputStream) mOutputStream;
+        NioOutputStream out = (NioOutputStream) mOutputStream;
         if (out != null) {
             out.write(line);
             out.write("\r\n");

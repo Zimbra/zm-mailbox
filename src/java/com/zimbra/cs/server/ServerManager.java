@@ -19,15 +19,15 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.imap.ImapConfig;
 import com.zimbra.cs.imap.ImapServer;
-import com.zimbra.cs.imap.MinaImapServer;
+import com.zimbra.cs.imap.NioImapServer;
 import com.zimbra.cs.imap.TcpImapServer;
 import com.zimbra.cs.lmtpserver.LmtpConfig;
 import com.zimbra.cs.lmtpserver.LmtpServer;
 import com.zimbra.cs.lmtpserver.TcpLmtpServer;
 import com.zimbra.cs.milter.MilterConfig;
 import com.zimbra.cs.milter.MilterServer;
-import com.zimbra.cs.milter.MinaMilterServer;
-import com.zimbra.cs.pop3.MinaPop3Server;
+import com.zimbra.cs.milter.NioMilterServer;
+import com.zimbra.cs.pop3.NioPop3Server;
 import com.zimbra.cs.pop3.Pop3Config;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.pop3.TcpPop3Server;
@@ -94,7 +94,7 @@ public class ServerManager {
     private Pop3Server startPop3Server(boolean ssl) throws ServiceException {
         Pop3Config config = new Pop3Config(ssl);
         Pop3Server server = NIO_ENABLED || LC.nio_pop3_enabled.booleanValue() ?
-            new MinaPop3Server(config) : new TcpPop3Server(config);
+            new NioPop3Server(config) : new TcpPop3Server(config);
         server.start();
         return server;
     }
@@ -102,14 +102,14 @@ public class ServerManager {
     private ImapServer startImapServer(boolean ssl) throws ServiceException {
         ImapConfig config = new ImapConfig(ssl);
         ImapServer server = NIO_ENABLED || LC.nio_imap_enabled.booleanValue() ?
-            new MinaImapServer(config) : new TcpImapServer(config);
+            new NioImapServer(config) : new TcpImapServer(config);
         server.start();
         return server;
     }
 
     private MilterServer startMilterServer() throws ServiceException {
         MilterConfig config = new MilterConfig();
-        MilterServer server = new MinaMilterServer(config);
+        MilterServer server = new NioMilterServer(config);
         server.start();
         return server;
     }

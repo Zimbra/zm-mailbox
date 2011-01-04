@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -12,23 +12,23 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.mina;
+package com.zimbra.cs.tcpserver;
 
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.mina.core.session.IoSession;
 
-public class MinaStats implements MinaStatsMBean {
-    private final MinaServer server;
-
-    public MinaStats(MinaServer server) {
-        this.server = server;
-    }
+public class NioServerStats implements NioServerStatsMBean {
+    private final NioServer server;
 
     public final AtomicLong totalSessions = new AtomicLong();
     public final AtomicLong activeSessions = new AtomicLong();
     public final AtomicLong receivedBytes = new AtomicLong();
     public final AtomicLong sentBytes = new AtomicLong();
+
+    public NioServerStats(NioServer server) {
+        this.server = server;
+    }
 
     @Override
     public long getTotalSessions() {

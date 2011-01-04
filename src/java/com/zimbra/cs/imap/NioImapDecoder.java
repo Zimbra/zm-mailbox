@@ -14,21 +14,21 @@
  */
 package com.zimbra.cs.imap;
 
-import com.zimbra.cs.mina.LineBuffer;
-import com.zimbra.cs.mina.MinaStats;
+import com.zimbra.cs.tcpserver.NioLineBuffer;
+import com.zimbra.cs.tcpserver.NioServerStats;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolDecoderAdapter;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 
-public class MinaImapDecoder extends ProtocolDecoderAdapter {
-    private final MinaStats stats;
-    private final LineBuffer buf = new LineBuffer();
+public class NioImapDecoder extends ProtocolDecoderAdapter {
+    private final NioServerStats stats;
+    private final NioLineBuffer buf = new NioLineBuffer();
     private final int chunkSize;
     private int count = -1;
 
-    MinaImapDecoder(MinaStats stats, int chunkSize) {
+    NioImapDecoder(NioServerStats stats, int chunkSize) {
         this.stats = stats;
         this.chunkSize = chunkSize;
     }
