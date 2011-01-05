@@ -1,0 +1,3 @@
+<GetServerRequest xmlns="urn:zimbraAdmin">
+  <server by="name">fun.example.test</server>
+</GetServerRequest>

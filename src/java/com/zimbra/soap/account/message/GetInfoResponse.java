@@ -111,17 +111,17 @@ import com.zimbra.soap.account.type.Signature;
    [<license status="inGracePeriod|bad"/>]
 </GetInfoResponse>
  */
-@XmlRootElement(name="GetInfoResponse")
+@XmlRootElement(name=AccountConstants.E_GET_INFO_RESPONSE)
 @XmlType(propOrder = {})
 public class GetInfoResponse {
     @XmlAttribute(name=AccountConstants.A_ATTACHMENT_SIZE_LIMIT) private Long attachmentSizeLimit;
     @XmlAttribute(name=AccountConstants.A_DOCUMENT_SIZE_LIMIT) private Long documentSizeLimit;
     
-    @XmlElement(required=true) private String version;
-    @XmlElement(required=true, name="id") private String accountId;
-    @XmlElement(required=true, name="name") private String accountName;
-    @XmlElement private String crumb;
-    @XmlElement(required=true) private long lifetime;
+    @XmlElement(name=AccountConstants.E_VERSION, required=true) private String version;
+    @XmlElement(name=AccountConstants.E_ID, required=true) private String accountId;
+    @XmlElement(name=AccountConstants.E_NAME, required=true) private String accountName;
+    @XmlElement(name=AccountConstants.E_CRUMB) private String crumb;
+    @XmlElement(name=AccountConstants.E_LIFETIME, required=true) private long lifetime;
     @XmlElement(name=AccountConstants.E_REST) private String restUrl;
     @XmlElement(name=AccountConstants.E_QUOTA_USED) private Long quotaUsed;
     @XmlElement(name=AccountConstants.E_PREVIOUS_SESSION) private Long previousSessionTime;

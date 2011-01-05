@@ -32,7 +32,7 @@ import com.zimbra.soap.mail.type.MailPop3DataSource;
 import com.zimbra.soap.mail.type.MailRssDataSource;
 import com.zimbra.soap.type.DataSource;
 
-@XmlRootElement(name="GetDataSourcesResponse")
+@XmlRootElement(name=MailConstants.E_GET_DATA_SOURCES_RESPONSE)
 @XmlType(propOrder = {})
 public class GetDataSourcesResponse {
     

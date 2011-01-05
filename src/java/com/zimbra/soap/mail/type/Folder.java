@@ -39,7 +39,7 @@ import javax.xml.bind.annotation.XmlType;
 </folder>
 */
 @XmlRootElement(name="folder") // Root element is used for handling subclasses.
-@XmlType(propOrder = {})
+@XmlType(propOrder = {"grants", "subfolders"})
 public class Folder {
 
     @XmlEnum
