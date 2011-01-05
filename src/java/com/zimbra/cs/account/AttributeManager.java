@@ -1284,6 +1284,20 @@ public class AttributeManager {
             pw.println(o);
         }
     }
+    
+
+    // return rfc4512 dstring (4.1.  Schema Definitions)
+    String rfc4512Dstring(String unescaped) {
+        if (unescaped.contains("'"))
+            System.out.println(unescaped);
+        
+        String escaped = unescaped.replace("'", "\\27");
+        
+        if (unescaped.contains("'"))
+            System.out.println(escaped);
+        
+        return escaped;
+    }
 
     private void buildSchemaBanner(StringBuilder BANNER) {
 
@@ -1308,7 +1322,7 @@ public class AttributeManager {
 
         ATTRIBUTE_DEFINITIONS.append("( " + ai.getName() + "\n");
         ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "NAME ( '" + ai.getName() + "' )\n");
-        ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "DESC '" + ai.getDescription() + "'\n");
+        ATTRIBUTE_DEFINITIONS.append(ML_CONT_PREFIX + "DESC '" + rfc4512Dstring(ai.getDescription()) + "'\n");
         String syntax = null, substr = null, equality = null, ordering = null;
         switch (ai.getType()) {
         case TYPE_BOOLEAN:
@@ -1479,7 +1493,7 @@ public class AttributeManager {
 
             OC_DEFINITIONS.append(prefix + "( " + oci.getName() + "\n");
             OC_DEFINITIONS.append(ML_CONT_PREFIX + "NAME '" + oci.getName() + "'\n");
-            OC_DEFINITIONS.append(ML_CONT_PREFIX + "DESC '" + oci.getDescription() + "'\n");
+            OC_DEFINITIONS.append(ML_CONT_PREFIX + "DESC '" + rfc4512Dstring(oci.getDescription()) + "'\n");
             OC_DEFINITIONS.append(ML_CONT_PREFIX + "SUP ");
             for (String sup : oci.getSuperOCs())
                 OC_DEFINITIONS.append(sup);
@@ -1588,68 +1602,6 @@ public class AttributeManager {
                 return oc1.getName().compareTo(oc2.getName());
             }
         });
-    }
-
-    /**
-     * using the old schema template file (version 9), delete this methods after things are stablized.
-     *
-     * @param pw
-     * @param schemaTemplateFile
-     * @throws IOException
-     */
-    private void generateLdapSchema_old(PrintWriter pw, String schemaTemplateFile) throws IOException {
-        byte[] templateBytes = ByteUtil.getContent(new File(schemaTemplateFile));
-        String templateString = new String(templateBytes, "utf-8");
-
-        StringBuilder GROUP_OIDS = new StringBuilder();
-        StringBuilder ATTRIBUTE_OIDS = new StringBuilder();
-        StringBuilder ATTRIBUTE_DEFINITIONS = new StringBuilder();
-
-        for (Iterator<Integer> iter = mGroupMap.keySet().iterator(); iter.hasNext();) {
-            int i = iter.next();
-
-            //GROUP_OIDS
-            GROUP_OIDS.append("objectIdentifier " + mGroupMap.get(i) + " ZimbraLDAP:" + i + "\n");
-
-            // List all attrs which we define and which belong in this group
-            List<AttributeInfo> list = getAttrList(i);
-
-            // ATTRIBUTE_OIDS - sorted by OID
-            sortAttrsByOID(list);
-
-            for (AttributeInfo ai : list) {
-                String parentOid = ai.getParentOid();
-                if (parentOid == null)
-                    ATTRIBUTE_OIDS.append("objectIdentifier " + ai.getName() + " " + mGroupMap.get(i) + ':' + ai.getId() + "\n");
-                else
-                    ATTRIBUTE_OIDS.append("objectIdentifier " + ai.getName() + " " + parentOid + "." + ai.getId() + "\n");
-            }
-
-            // ATTRIBUTE_DEFINITIONS: DESC EQUALITY NAME ORDERING SINGLE-VALUE SUBSTR SYNTAX
-            // - sorted by name
-            sortAttrsByName(list);
-
-            for (AttributeInfo ai : list) {
-                ATTRIBUTE_DEFINITIONS.append("attributetype ");
-                buildAttrDef(ATTRIBUTE_DEFINITIONS, ai);
-                ATTRIBUTE_DEFINITIONS.append("\n\n");
-            }
-        }
-
-        Map<String,String> templateFillers = new HashMap<String,String>();
-        templateFillers.put("SCHEMA_VERSION_INFO", CLOptions.buildVersion());
-        templateFillers.put("GROUP_OIDS", GROUP_OIDS.toString());
-        templateFillers.put("ATTRIBUTE_OIDS", ATTRIBUTE_OIDS.toString());
-        templateFillers.put("ATTRIBUTE_DEFINITIONS", ATTRIBUTE_DEFINITIONS.toString());
-
-        for (AttributeClass cls : AttributeClass.values()) {
-            String key = "CLASS_MEMBERS_" + cls.toString().toUpperCase();
-            StringBuilder value = new StringBuilder();
-            buildObjectClassAttrs(cls, value);
-            templateFillers.put(key, value.toString());
-        }
-
-        pw.print(StringUtil.fillTemplate(templateString, templateFillers));
     }
 
     /**
