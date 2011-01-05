@@ -5157,6 +5157,20 @@ public class Mailbox {
         }
     }
 
+    /**
+     * Recovers items from dumpster.
+     * @param octxt
+     * @param itemIds
+     * @param type
+     * @param folderId folder to recover items to
+     * @return
+     * @throws ServiceException
+     */
+    public synchronized List<MailItem> recover(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
+    throws ServiceException {
+        return copyInternal(octxt, itemIds, type, folderId, true);
+    }
+
     public synchronized MailItem copy(OperationContext octxt, int itemId, MailItem.Type type, int folderId)
             throws ServiceException {
         return copy(octxt, new int[] { itemId }, type, folderId).get(0);
@@ -5164,12 +5178,12 @@ public class Mailbox {
 
     public synchronized List<MailItem> copy(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
             throws ServiceException {
-        return copy(octxt, itemIds, type, folderId, false);
+        return copyInternal(octxt, itemIds, type, folderId, false);
     }
 
-    public synchronized List<MailItem> copy(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId,
+    private synchronized List<MailItem> copyInternal(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId,
             boolean fromDumpster) throws ServiceException {
-        CopyItem redoRecorder = new CopyItem(mId, type, folderId, fromDumpster);
+        CopyItem redoRecorder = fromDumpster ? new RecoverItem(mId, type, folderId) : new CopyItem(mId, type, folderId);
         boolean success = false;
         try {
             beginTransaction("copy", octxt, redoRecorder);

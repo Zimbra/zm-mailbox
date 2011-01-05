@@ -33,18 +33,17 @@ public class CopyItem extends RedoableOp {
     private Map<Integer, Integer> mDestIds = new HashMap<Integer, Integer>();
     private MailItem.Type type;
     private int mDestFolderId;
-    private boolean mFromDumpster;
+    private boolean mFromDumpster;  // false in this class, true in subclass RecoverItem
 
     public CopyItem() {
         type = MailItem.Type.UNKNOWN;
         mDestFolderId = 0;
     }
 
-    public CopyItem(int mailboxId, MailItem.Type type, int folderId, boolean fromDumpster) {
+    public CopyItem(int mailboxId, MailItem.Type type, int folderId) {
         setMailboxId(mailboxId);
         this.type = type;
         mDestFolderId = folderId;
-        mFromDumpster = fromDumpster;
     }
 
     /**
@@ -63,6 +62,10 @@ public class CopyItem extends RedoableOp {
     @Override
     public int getOpCode() {
         return OP_COPY_ITEM;
+    }
+
+    protected void setFromDumpster(boolean fromDumpster) {
+        mFromDumpster = fromDumpster;
     }
 
     @Override
@@ -129,7 +132,10 @@ public class CopyItem extends RedoableOp {
             itemIds[i++] = id;
         }
         try {
-            mbox.copy(getOperationContext(), itemIds, type, mDestFolderId, mFromDumpster);
+            if (!mFromDumpster)
+                mbox.copy(getOperationContext(), itemIds, type, mDestFolderId);
+            else
+                mbox.recover(getOperationContext(), itemIds, type, mDestFolderId);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 mLog.info("Item is already in mailbox " + mboxId);

@@ -2071,15 +2071,19 @@ public abstract class MailItem implements Comparable<MailItem> {
             DbMailItem.copyCalendarItem((CalendarItem) this, copyId, inDumpster);
 
         // older revisions
-        for (MailItem revision : loadRevisions()) {
-            MailboxBlob srcRevBlob = revision.getBlob();
-            String revLocator = null;
-            if (srcRevBlob != null) {
-                MailboxBlob copyRevBlob = sm.link(srcRevBlob, mMailbox, copyId, revision.getSavedSequence());
-                mMailbox.markOtherItemDirty(copyRevBlob);
-                revLocator = copyRevBlob.getLocator();
+        // Copy revisions only when recovering from dumpster.  When copying from one non-dumpster folder to another,
+        // it is never desirable to copy old revisions. (bug 55070)
+        if (inDumpster) {
+            for (MailItem revision : loadRevisions()) {
+                MailboxBlob srcRevBlob = revision.getBlob();
+                String revLocator = null;
+                if (srcRevBlob != null) {
+                    MailboxBlob copyRevBlob = sm.link(srcRevBlob, mMailbox, copyId, revision.getSavedSequence());
+                    mMailbox.markOtherItemDirty(copyRevBlob);
+                    revLocator = copyRevBlob.getLocator();
+                }
+                DbMailItem.copyRevision(revision, copyId, revLocator, inDumpster);
             }
-            DbMailItem.copyRevision(revision, copyId, revLocator, inDumpster);
         }
 
         MailItem copy = constructItem(mMailbox, data);
