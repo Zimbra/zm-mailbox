@@ -102,6 +102,9 @@ public abstract class Right extends RightConsts {
         return mRightType;
     }
     
+    public RightClass getRightClass() {
+        return (isUserRight() ? RightClass.USER : RightClass.ADMIN);
+    }
     
     /**
      * - right name stored in zimbraACE.

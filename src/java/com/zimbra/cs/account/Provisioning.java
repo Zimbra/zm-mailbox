@@ -1786,7 +1786,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.FAILURE("unsupported", null);
     }
 
-    public List<Right> getAllRights(String targetType, boolean expandAllAttrs)  throws ServiceException {
+    public List<Right> getAllRights(String targetType, boolean expandAllAttrs, String rightClass)  throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
 

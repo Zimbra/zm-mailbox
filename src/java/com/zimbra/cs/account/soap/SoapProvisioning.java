@@ -2039,10 +2039,11 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public List<Right> getAllRights(String targetType, boolean expandAllAttrs)  throws ServiceException {
+    public List<Right> getAllRights(String targetType, boolean expandAllAttrs, String rightClass)  throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_ALL_RIGHTS_REQUEST);
         req.addAttribute(AdminConstants.A_TARGET_TYPE, targetType);
         req.addAttribute(AdminConstants.A_EXPAND_ALL_ATTRS, expandAllAttrs);
+        req.addAttribute(AdminConstants.A_RIGHT_CLASS, rightClass);
         Element resp = invoke(req);
 
         List<Right> rights = new ArrayList<Right>();

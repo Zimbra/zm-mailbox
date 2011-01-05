@@ -93,6 +93,7 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
 import com.zimbra.cs.account.accesscontrol.ComboRight;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightClass;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
@@ -468,7 +469,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_ALL_DOMAINS("getAllDomains", "gad", "[-v] [-e] [attr1 [attr2...]]", Category.DOMAIN, 0, Integer.MAX_VALUE),
         GET_ALL_EFFECTIVE_RIGHTS("getAllEffectiveRights", "gaer", "{grantee-type} {grantee-id|grantee-name} [expandSetAttrs] [expandGetAttrs]", Category.RIGHT, 2, 4),
         GET_ALL_FREEBUSY_PROVIDERS("getAllFbp", "gafbp", "[-v]", Category.FREEBUSY, 0, 1),
-        GET_ALL_RIGHTS("getAllRights", "gar", "[-v] [{target-type}]", Category.RIGHT, 0, 2),
+        GET_ALL_RIGHTS("getAllRights", "gar", "[-v] [-t {target-type}] [-c " + RightClass.values() + "]", Category.RIGHT, 0, 5),
         GET_ALL_SERVERS("getAllServers", "gas", "[-v] [-e] [service]", Category.SERVER, 0, 3),
         GET_ALL_XMPP_COMPONENTS("getAllXMPPComponents", "gaxcs", "", Category.CONFIG, 0, 0),
         GET_AUTH_TOKEN_INFO("getAuthTokenInfo", "gati", "{auth-token}", Category.MISC, 1, 1),
@@ -2090,28 +2091,33 @@ public class ProvUtil implements HttpDebugListener {
         dumpAttrs(attrs, null);
     }
 
-    private void doGetAllRights(String[] args) throws ServiceException {
+    private void doGetAllRights(String[] args) throws ServiceException, ArgException  {
         boolean verbose = false;
         String targetType = null;
-
+        String rightClass = null;    
+        
         int i = 1;
         while (i < args.length) {
             String arg = args[i];
             if (arg.equals("-v"))
                 verbose = true;
-            else {
-                if (targetType == null)
-                    targetType = arg;
-                else {
-                    System.out.println("invalid arg: " + arg + ", already specified target type: " + targetType);
-                    usage();
-                    return;
-                }
+            else if (arg.equals("-t")) {
+                i++;
+                if (i == args.length)
+                    throw new ArgException("not enough arguments");
+                else
+                    targetType = args[i];
+            } else if (arg.equals("-c")) {
+                i++;
+                if (i == args.length)
+                    throw new ArgException("not enough arguments");
+                else
+                    rightClass = args[i];
             }
             i++;
         }
 
-        List<Right> allRights = mProv.getAllRights(targetType, false);
+        List<Right> allRights = mProv.getAllRights(targetType, false, rightClass);
         for (Right right : allRights) {
             if (verbose)
                 dumpRight(right);
@@ -2134,6 +2140,8 @@ public class ProvUtil implements HttpDebugListener {
         String targetType = right.getTargetTypeStr();
         System.out.println(indent + "target type(s): " + (targetType==null?"":targetType));
 
+        System.out.println(indent + "    right class: " + right.getRightClass().name());
+        
         if (right.isAttrRight()) {
             AttrRight attrRight = (AttrRight)right;
             System.out.println();
