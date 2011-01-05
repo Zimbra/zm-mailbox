@@ -36,7 +36,7 @@ public class Grant {
         @XmlEnumValue("grp") GROUP ("grp"),
         @XmlEnumValue("all") AUTH_USER ("all"),
         @XmlEnumValue("dom") DOMAIN ("dom"),
-        @XmlEnumValue("gst") GUEST ("gst"),
+        @XmlEnumValue("guest") GUEST ("guest"),
         @XmlEnumValue("key") KEY ("key"),
         @XmlEnumValue("pub") PUBLIC ("pub");
 
