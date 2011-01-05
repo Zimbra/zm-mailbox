@@ -1105,6 +1105,7 @@ public final class AdminConstants {
     public static final String A_EXPAND_ALL_ATTRS = "expandAllAttrs";
     public static final String A_INHERITED   = "inherited";
     public static final String A_RIGHT       = "right";
+    public static final String A_RIGHT_CLASS = "rightClass";
     public static final String A_TARGET_TYPE = "targetType";
     public static final String A_SECRET      = "secret";
 
