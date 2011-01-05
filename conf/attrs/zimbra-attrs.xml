@@ -5233,5 +5233,20 @@ TODO: delete them permerntly from here
   <desc>Maximum number of concurrent GAL sync requests allowed on the system / domain.</desc>
 </attr>
 
+<attr id="1155" name="zimbraPop3MaxConnections" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.0.0">
+  <globalConfigValue>200</globalConfigValue>
+  <desc>Maximum number of concurrent POP3 connections allowed. New connections exceeding this limit are rejected.</desc>
+</attr>
+
+<attr id="1156" name="zimbraImapMaxConnections" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mailbox" since="8.0.0">
+  <globalConfigValue>200</globalConfigValue>
+  <desc>Maximum number of concurrent IMAP connections allowed. New connections exceeding this limit are rejected.</desc>
+</attr>
+
+<attr id="1157" name="zimbraMilterMaxConnections" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta" since="8.0.0">
+  <globalConfigValue>20000</globalConfigValue>
+  <desc>Maximum number of concurrent MILTER connections allowed. New connections exceeding this limit are rejected.</desc>
+</attr>
+
 </attrs>
 

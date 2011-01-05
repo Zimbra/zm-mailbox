@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101207-1337 */
+    /* build: 7.0.0_BETA1_1111 ysasaki 20110104-1117 */
 
     /**
      * RFC2256: descriptive information
@@ -10939,6 +10939,83 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
+     * Maximum number of concurrent IMAP connections allowed. New connections
+     * exceeding this limit are rejected.
+     *
+     * @return zimbraImapMaxConnections, or 200 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1156)
+    public int getImapMaxConnections() {
+        return getIntAttr(Provisioning.A_zimbraImapMaxConnections, 200);
+    }
+
+    /**
+     * Maximum number of concurrent IMAP connections allowed. New connections
+     * exceeding this limit are rejected.
+     *
+     * @param zimbraImapMaxConnections new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1156)
+    public void setImapMaxConnections(int zimbraImapMaxConnections) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapMaxConnections, Integer.toString(zimbraImapMaxConnections));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of concurrent IMAP connections allowed. New connections
+     * exceeding this limit are rejected.
+     *
+     * @param zimbraImapMaxConnections new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1156)
+    public Map<String,Object> setImapMaxConnections(int zimbraImapMaxConnections, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapMaxConnections, Integer.toString(zimbraImapMaxConnections));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of concurrent IMAP connections allowed. New connections
+     * exceeding this limit are rejected.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1156)
+    public void unsetImapMaxConnections() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapMaxConnections, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of concurrent IMAP connections allowed. New connections
+     * exceeding this limit are rejected.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1156)
+    public Map<String,Object> unsetImapMaxConnections(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraImapMaxConnections, "");
+        return attrs;
+    }
+
+    /**
      * maximum size of IMAP request in bytes excluding literal data
      *
      * @return zimbraImapMaxRequestSize, or 10240 if unset
@@ -16052,6 +16129,83 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
+     * Maximum number of concurrent MILTER connections allowed. New
+     * connections exceeding this limit are rejected.
+     *
+     * @return zimbraMilterMaxConnections, or 20000 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1157)
+    public int getMilterMaxConnections() {
+        return getIntAttr(Provisioning.A_zimbraMilterMaxConnections, 20000);
+    }
+
+    /**
+     * Maximum number of concurrent MILTER connections allowed. New
+     * connections exceeding this limit are rejected.
+     *
+     * @param zimbraMilterMaxConnections new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1157)
+    public void setMilterMaxConnections(int zimbraMilterMaxConnections) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterMaxConnections, Integer.toString(zimbraMilterMaxConnections));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of concurrent MILTER connections allowed. New
+     * connections exceeding this limit are rejected.
+     *
+     * @param zimbraMilterMaxConnections new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1157)
+    public Map<String,Object> setMilterMaxConnections(int zimbraMilterMaxConnections, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterMaxConnections, Integer.toString(zimbraMilterMaxConnections));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of concurrent MILTER connections allowed. New
+     * connections exceeding this limit are rejected.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1157)
+    public void unsetMilterMaxConnections() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterMaxConnections, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of concurrent MILTER connections allowed. New
+     * connections exceeding this limit are rejected.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1157)
+    public Map<String,Object> unsetMilterMaxConnections(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMilterMaxConnections, "");
+        return attrs;
+    }
+
+    /**
      * number of milter handler threads
      *
      * @return zimbraMilterNumThreads, or 100 if unset
@@ -19746,6 +19900,83 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetPop3ExposeVersionOnBanner(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPop3ExposeVersionOnBanner, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of concurrent POP3 connections allowed. New connections
+     * exceeding this limit are rejected.
+     *
+     * @return zimbraPop3MaxConnections, or 200 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1155)
+    public int getPop3MaxConnections() {
+        return getIntAttr(Provisioning.A_zimbraPop3MaxConnections, 200);
+    }
+
+    /**
+     * Maximum number of concurrent POP3 connections allowed. New connections
+     * exceeding this limit are rejected.
+     *
+     * @param zimbraPop3MaxConnections new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1155)
+    public void setPop3MaxConnections(int zimbraPop3MaxConnections) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3MaxConnections, Integer.toString(zimbraPop3MaxConnections));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of concurrent POP3 connections allowed. New connections
+     * exceeding this limit are rejected.
+     *
+     * @param zimbraPop3MaxConnections new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1155)
+    public Map<String,Object> setPop3MaxConnections(int zimbraPop3MaxConnections, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3MaxConnections, Integer.toString(zimbraPop3MaxConnections));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of concurrent POP3 connections allowed. New connections
+     * exceeding this limit are rejected.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1155)
+    public void unsetPop3MaxConnections() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3MaxConnections, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of concurrent POP3 connections allowed. New connections
+     * exceeding this limit are rejected.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1155)
+    public Map<String,Object> unsetPop3MaxConnections(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPop3MaxConnections, "");
         return attrs;
     }
 

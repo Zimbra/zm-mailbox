@@ -94,7 +94,7 @@ public class ImapConfig extends ServerConfig {
 
     @Override
     public int getMaxConnections() {
-        return LC.imap_max_connections.intValue();
+        return getIntAttr(A_zimbraImapMaxConnections, super.getMaxConnections());
     }
 
     @Override

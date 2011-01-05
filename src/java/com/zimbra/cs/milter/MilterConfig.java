@@ -14,13 +14,10 @@
  */
 package com.zimbra.cs.milter;
 
-import static com.zimbra.cs.account.ZAttrProvisioning.A_zimbraMilterNumThreads;
-import static com.zimbra.cs.account.ZAttrProvisioning.A_zimbraMilterBindAddress;
-import static com.zimbra.cs.account.ZAttrProvisioning.A_zimbraMilterBindPort;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.Config;
 
@@ -34,18 +31,18 @@ public class MilterConfig extends ServerConfig {
     @Override
     public int getBindPort() {
         int port = LC.milter_bind_port.intValue();
-        return port != 0 ? port : getIntAttr(A_zimbraMilterBindPort, Config.D_MILTER_BIND_PORT);
+        return port != 0 ? port : getIntAttr(Provisioning.A_zimbraMilterBindPort, Config.D_MILTER_BIND_PORT);
     }
 
     @Override
     public String getBindAddress() {
         String addr = LC.milter_bind_address.value();
-        return addr != null ? addr : getAttr(A_zimbraMilterBindAddress, "127.0.0.1");
+        return addr != null ? addr : getAttr(Provisioning.A_zimbraMilterBindAddress, "127.0.0.1");
     }
 
     @Override
     public int getMaxThreads() {
-        return getIntAttr(A_zimbraMilterNumThreads, super.getMaxThreads());
+        return getIntAttr(Provisioning.A_zimbraMilterNumThreads, super.getMaxThreads());
     }
 
     @Override
@@ -53,11 +50,9 @@ public class MilterConfig extends ServerConfig {
         return ZimbraLog.milter;
     }
 
-    // for now nio tweaks are in LC
-
     @Override
     public int getMaxConnections() {
-        return LC.milter_max_connections.intValue();
+        return getIntAttr(Provisioning.A_zimbraMilterMaxConnections, super.getMaxConnections());
     }
 
     @Override

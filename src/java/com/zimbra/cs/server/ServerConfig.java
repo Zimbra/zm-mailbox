@@ -31,7 +31,7 @@ public abstract class ServerConfig {
     private static final int DEFAULT_SHUTDOWN_TIMEOUT = 10;
     private static final int DEFAULT_MAX_THREADS = 1;
     private static final int DEFAULT_MAX_IDLE_TIME = 600;
-    private static final int DEFAULT_MAX_CONNECTIONS = 200;
+    private static final int DEFAULT_MAX_CONNECTIONS = 10;
     private static final int DEFAULT_WRITE_CHUNK_SIZE = 8192;
     private static final int DEFAULT_WRITE_TIMEOUT = 10;
     private static final int DEFAULT_THREAD_KEEP_ALIVE_TIME = 60 * 2;

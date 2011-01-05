@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -77,7 +77,7 @@ public class Pop3Config extends ServerConfig {
 
     @Override
     public int getMaxConnections() {
-        return LC.pop3_max_connections.intValue();
+        return getIntAttr(A_zimbraPop3MaxConnections, super.getMaxConnections());
     }
 
     @Override

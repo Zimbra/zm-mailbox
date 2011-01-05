@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20101207-1337 */
+    /* build: 7.0.0_BETA1_1111 ysasaki 20110104-1117 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3917,6 +3917,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraImapExposeVersionOnBanner = "zimbraImapExposeVersionOnBanner";
 
     /**
+     * Maximum number of concurrent IMAP connections allowed. New connections
+     * exceeding this limit are rejected.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1156)
+    public static final String A_zimbraImapMaxConnections = "zimbraImapMaxConnections";
+
+    /**
      * maximum size of IMAP request in bytes excluding literal data
      *
      * @since ZCS 6.0.7
@@ -4819,6 +4828,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMilterBindPort = "zimbraMilterBindPort";
 
     /**
+     * Maximum number of concurrent MILTER connections allowed. New
+     * connections exceeding this limit are rejected.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1157)
+    public static final String A_zimbraMilterMaxConnections = "zimbraMilterMaxConnections";
+
+    /**
      * number of milter handler threads
      *
      * @since ZCS 7.0.0
@@ -5531,6 +5549,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=692)
     public static final String A_zimbraPop3ExposeVersionOnBanner = "zimbraPop3ExposeVersionOnBanner";
+
+    /**
+     * Maximum number of concurrent POP3 connections allowed. New connections
+     * exceeding this limit are rejected.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1155)
+    public static final String A_zimbraPop3MaxConnections = "zimbraPop3MaxConnections";
 
     /**
      * number of handler threads
