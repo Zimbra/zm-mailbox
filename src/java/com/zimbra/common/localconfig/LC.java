@@ -708,15 +708,11 @@ public final class LC {
 
     public static final KnownKey text_attachments_base64 = KnownKey.newKey(true);
 
-    @Supported
     public static final KnownKey nio_imap_enabled = KnownKey.newKey(false);
-
-    @Supported
     public static final KnownKey nio_pop3_enabled = KnownKey.newKey(false);
 
     public static final KnownKey imap_max_request_size = KnownKey.newKey(10 * 1024);
 
-    public static final KnownKey imap_max_connections = KnownKey.newKey(200); //TODO move to LDAP
     public static final KnownKey imap_write_timeout = KnownKey.newKey(10);
     public static final KnownKey imap_write_chunk_size = KnownKey.newKey(8 * 1024);
     public static final KnownKey imap_thread_keep_alive_time = KnownKey.newKey(60);
@@ -724,7 +720,6 @@ public final class LC {
     public static final KnownKey imap_authenticated_max_idle_time = KnownKey.newKey(1800);
     public static final KnownKey data_source_imap_reuse_connections = KnownKey.newKey(false);
 
-    public static final KnownKey pop3_max_connections = KnownKey.newKey(200); //TODO move to LDAP
     public static final KnownKey pop3_write_timeout = KnownKey.newKey(10);
     public static final KnownKey pop3_thread_keep_alive_time = KnownKey.newKey(60);
     public static final KnownKey pop3_max_idle_time = KnownKey.newKey(600);
@@ -732,7 +727,6 @@ public final class LC {
     public static final KnownKey milter_bind_port = KnownKey.newKey(0);
     public static final KnownKey milter_bind_address = KnownKey.newKey(null);
     public static final KnownKey milter_max_idle_time = KnownKey.newKey(120);
-    public static final KnownKey milter_max_connections = KnownKey.newKey(20000); //TODO move to LDAP
     public static final KnownKey milter_in_process_mode = KnownKey.newKey(false);
     public static final KnownKey milter_write_timeout = KnownKey.newKey(10);
     public static final KnownKey milter_write_chunk_size = KnownKey.newKey(1024);
