@@ -6096,10 +6096,10 @@ public class LdapProvisioning extends Provisioning {
     /*
      * from zmprov -l, we don't expand all attrs, expandAllAttrs is ignored
      */
-    public List<Right> getAllRights(String targetType, boolean expandAllAttrs) throws ServiceException {
+    public List<Right> getAllRights(String targetType, boolean expandAllAttrs, String rightClass) throws ServiceException {
         if (expandAllAttrs)
             throw ServiceException.FAILURE("expandAllAttrs == TRUE is not supported", null);
-        return RightCommand.getAllRights(targetType);
+        return RightCommand.getAllRights(targetType, rightClass);
     }
 
     @Override

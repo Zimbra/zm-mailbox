@@ -22,6 +22,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightClass;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -34,7 +35,9 @@ public class GetAllRights extends RightDocumentHandler {
         
         String targetType = request.getAttribute(AdminConstants.A_TARGET_TYPE, null);
         boolean expandAllAtrts = request.getAttributeBool(AdminConstants.A_EXPAND_ALL_ATTRS, false);
-        List<Right> rights = RightCommand.getAllRights(targetType);
+        String rightClass = request.getAttribute(AdminConstants.A_RIGHT_CLASS, null);
+        
+        List<Right> rights = RightCommand.getAllRights(targetType, rightClass);
         
         Element response = lc.createElement(AdminConstants.GET_ALL_RIGHTS_RESPONSE);
         for (Right right : rights)

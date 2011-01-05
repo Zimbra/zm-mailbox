@@ -663,7 +663,7 @@ Get definition of a right.
                      1: include all attribute names in the <attrs> elements
 
 <GetRightResponse>
-  <right name="{right-name}" type="{right-type}" [targetType="{target-type}"]>
+  <right name="{right-name}" type="{right-type}" rightClass="{right-class} [targetType="{target-type}"]>
     <desc>{right-description}</desc>
     [<attrs [all="1"]>
        [<a n="{attr-name}"/>+]
@@ -683,27 +683,37 @@ Get definition of a right.
                - getAttrs/setAtrts: always present (comma-separated target types)
                - combo: always not present
 
+right-class: right class
+             ADMIN: admin right
+             USER: user right
 
 ----------------------------------------------------------
 Get all system defined rights.
 
       
-<GetAllRightsRequest [targetType="{target-type}"] [expandAllAttrs="{expand-all-attrs}"]/>
+<GetAllRightsRequest [targetType="{target-type}"] [expandAllAttrs="{expand-all-attrs}"] [rightClass={right-class}]/>
 
 {target-type} : target type on which a right is grantable
                 e.g. createAccount right is only grantable on domain entries and the globalgrant 
                      entry.
-                Don't confuse this with "whether a right is applicable on a target type".
-                e.g. the renameAccount right is "applicable" on account entries, but it is "grantable" 
+                Don't confuse this with "whether a right is executable on a target type".
+                e.g. the renameAccount right is "executable" on account entries, but it is "grantable" 
                      on account, distribuiton list, domain, and globalgrant entries.
      
 {expand-all-attrs} : whether to include all attribute names in the <attrs> elements in 
                      GetRightResponse if the right is meant for all attributes 
                      0: default, do not include all attribute names in the <attrs> elements
                      1: include all attribute names in the <attrs> elements
+                  
+{right-class} : right class
+                ADMIN: return admin rights only
+                USER: return user rights only
+                ALL: return oth admin rights and user rights
+
+
                      
 <GetAllRightsResponse>
-  <right name="{right-name}" type="{right-type}" [targetType="{target-type}"]>
+  <right name="{right-name}" type="{right-type}" rightClass="{right-class} [targetType="{target-type}"]">
     <desc>{right-description}</desc>
     [<attrs all="1">
        [<a n="{attr-name}"/>+]
@@ -714,6 +724,10 @@ Get all system defined rights.
   </right>+
 </GetAllRightsResponse>
 
+right-class: right class
+             ADMIN: admin right
+             USER: user right
+                 
 See <GetRightResponse> for description of each <right> in the response. 
 
 ----------------------------------------------------------

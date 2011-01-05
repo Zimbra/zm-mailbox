@@ -862,21 +862,40 @@ public class RightCommand {
      * @return
      * @throws ServiceException
      */
-    public static List<Right> getAllRights(String targetType) throws ServiceException {
+    public static List<Right> getAllRights(String targetType, String rightClass) throws ServiceException {
         verifyAccessManager();
         
-        Map<String, AdminRight> allRights = RightManager.getInstance().getAllAdminRights();
-        
-        List<Right> rights = new ArrayList<Right>();
+        Map<String, Right> allRights;
+        List<Right> result = new ArrayList<Right>();
         
         TargetType tt = (targetType==null)? null : TargetType.fromCode(targetType);
-        for (Map.Entry<String, AdminRight> right : allRights.entrySet()) {
+        RightClass rc = (rightClass==null)? RightClass.ADMIN : RightClass.fromString(rightClass);
+        
+        switch (rc) {
+        case USER:
+            getAllRights(tt, RightManager.getInstance().getAllUserRights(), result);
+            break;
+        case ALL:
+            getAllRights(tt, RightManager.getInstance().getAllAdminRights(), result);
+            getAllRights(tt, RightManager.getInstance().getAllUserRights(), result);
+            break;
+        case ADMIN:    
+        default:
+            // returning only admin rights 
+            getAllRights(tt, RightManager.getInstance().getAllAdminRights(), result);
+        }
+        
+        return result;
+    }
+    
+    private static void getAllRights(TargetType targetType, Map<String, ? extends Right> rights, List<Right> result) throws ServiceException {
+       
+        for (Map.Entry<String, ? extends Right> right : rights.entrySet()) {
             Right r = right.getValue();
-            if (tt == null || r.grantableOnTargetType(tt)) {
-                rights.add(r);
+            if (targetType == null || r.grantableOnTargetType(targetType)) {
+                result.add(r);
             }
         }
-        return rights;
     }
     
     public static boolean checkRight(Provisioning prov,
@@ -1298,6 +1317,7 @@ public class RightCommand {
         eRight.addAttribute(AdminConstants.E_NAME, right.getName());
         eRight.addAttribute(AdminConstants.A_TYPE, right.getRightType().name());
         eRight.addAttribute(AdminConstants.A_TARGET_TYPE, right.getTargetTypeStr());
+        eRight.addAttribute(AdminConstants.A_RIGHT_CLASS, right.getRightClass().name());
             
         eRight.addElement(AdminConstants.E_DESC).setText(right.getDesc());
             
