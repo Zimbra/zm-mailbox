@@ -30,6 +30,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.MimeDetect;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.MailboxIndex;
@@ -43,19 +48,14 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.common.mime.MimeDetect;
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.HttpUtil;
 
 public class NativeFormatter extends Formatter {
-    
+
     private static final String CONVERSION_PATH = "/extension/convertd";
     public static final String ATTR_INPUTSTREAM = "inputstream";
     public static final String ATTR_MSGDIGEST  = "msgdigest";
@@ -278,10 +278,6 @@ public class NativeFormatter extends Formatter {
             resp.setContentType(contentType);
             sendbackBinaryData(req, resp, is, disp, filename, size);
         }
-    }
-
-    public boolean canBeBlocked() {
-        return true;
     }
 
     public boolean supportsSave() {

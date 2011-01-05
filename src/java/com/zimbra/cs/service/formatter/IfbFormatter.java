@@ -94,10 +94,6 @@ public class IfbFormatter extends Formatter {
         return System.currentTimeMillis() + (2 * ONE_MONTH);
     }
 
-    public boolean canBeBlocked() {
-        return false;
-    }
-
     private String fixupAccountName(String emailAddress) throws ServiceException {
         int index = emailAddress.indexOf('@');
         String domain = null;

@@ -132,10 +132,6 @@ public class IcsFormatter extends Formatter {
         }
     }
 
-    public boolean canBeBlocked() {
-        return false;
-    }
-
     public boolean supportsSave() {
         return true;
     }

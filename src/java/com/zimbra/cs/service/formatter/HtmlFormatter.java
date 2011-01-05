@@ -66,11 +66,6 @@ public class HtmlFormatter extends Formatter {
     private static final String ATTR_TARGET_ACCOUNT_PREF_CALENDAR_DAY_HOUR_END  = "zimbra_target_account_prefCalendarDayHourEnd";
 
     @Override
-    public boolean canBeBlocked() {
-        return false;
-    }
-
-    @Override
     public void formatCallback(Context context) throws UserServletException,
             ServiceException, IOException, ServletException {
         dispatchJspRest(context.getServlet(), context);

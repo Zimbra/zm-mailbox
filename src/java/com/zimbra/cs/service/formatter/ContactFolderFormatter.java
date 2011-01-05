@@ -39,11 +39,7 @@ public class ContactFolderFormatter extends Formatter {
 	private static final String CONTENT_TYPE = "text/x-zimbra-delimitted-fields";
 
 	private enum Delimiter { Field, Contact };
-	
-	@Override
-	public boolean canBeBlocked() {
-		return false;
-	}
+
 
 	@Override
 	public void formatCallback(Context context) throws UserServletException,

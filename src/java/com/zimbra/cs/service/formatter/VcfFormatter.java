@@ -54,11 +54,6 @@ public class VcfFormatter extends Formatter {
     }
 
     @Override
-    public boolean canBeBlocked() {
-        return false;
-    }
-
-    @Override
     public void formatCallback(Context context) throws IOException, ServiceException {
         Charset charset = context.getCharset();
         Iterator<? extends MailItem> iterator = null;

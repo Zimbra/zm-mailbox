@@ -214,13 +214,6 @@ public class SyncFormatter extends Formatter {
         ByteUtil.copy(is, true, resp.getOutputStream(), false);
     }
 
-    /**
-     * This formatter downloads attachments as part of the mime blob so it can't be blocked. See bug 5310 for more details.
-     */
-    public boolean canBeBlocked() {
-        return false;
-    }
-
     public boolean supportsSave() {
         return true;
     }

@@ -534,13 +534,6 @@ public class UserServlet extends ZimbraServlet {
         if (mbox == null && context.formatter.requiresAuth())
             throw ServiceException.PERM_DENIED(L10nUtil.getMessage(MsgKey.errPermissionDenied, req));
 
-        if (context.formatter.canBeBlocked()) {
-            if (Formatter.checkGlobalOverride(Provisioning.A_zimbraAttachmentsBlocked, context.authAccount)) {
-                sendbackBlockMessage(context.req, context.resp);
-                return;
-            }
-        }
-
         context.formatter.format(context);
     }
 

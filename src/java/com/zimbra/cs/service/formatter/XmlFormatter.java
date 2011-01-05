@@ -36,11 +36,6 @@ public class XmlFormatter extends Formatter {
     }
 
     @Override
-    public boolean canBeBlocked() {
-        return false;
-    }
-
-    @Override
     public String getDefaultSearchTypes() {
         return MailboxIndex.SEARCH_FOR_EVERYTHING;
     }

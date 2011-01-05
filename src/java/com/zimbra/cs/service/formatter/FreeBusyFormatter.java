@@ -45,7 +45,4 @@ public class FreeBusyFormatter extends Formatter {
         HtmlFormatter.dispatchJspRest(context.getServlet(), context);
     }
 
-    public boolean canBeBlocked() {
-        return false;
-    }
 }
