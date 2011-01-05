@@ -34,18 +34,17 @@ public class CopyItem extends RedoableOp {
     private Map<Integer, Integer> mDestIds = new HashMap<Integer, Integer>();
     private byte mType;
     private int mDestFolderId;
-    private boolean mFromDumpster;
+    private boolean mFromDumpster;  // false in this class, true in subclass RecoverItem
 
     public CopyItem() {
         mType = MailItem.TYPE_UNKNOWN;
         mDestFolderId = 0;
     }
 
-    public CopyItem(int mailboxId, byte type, int folderId, boolean fromDumpster) {
+    public CopyItem(int mailboxId, byte type, int folderId) {
         setMailboxId(mailboxId);
         mType = type;
         mDestFolderId = folderId;
-        mFromDumpster = fromDumpster;
     }
 
     /**
@@ -65,7 +64,12 @@ public class CopyItem extends RedoableOp {
         return OP_COPY_ITEM;
     }
 
-    @Override protected String getPrintableData() {
+    protected void setFromDumpster(boolean fromDumpster) {
+        mFromDumpster = fromDumpster;
+    }
+
+    @Override
+    protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("type=").append(mType);
         sb.append(", destFolder=").append(mDestFolderId);
         sb.append(", [srcId, destId, srcImap]=");
@@ -123,7 +127,10 @@ public class CopyItem extends RedoableOp {
             itemIds[i++] = id;
 
         try {
-            mbox.copy(getOperationContext(), itemIds, mType, mDestFolderId, mFromDumpster);
+            if (!mFromDumpster)
+                mbox.copy(getOperationContext(), itemIds, mType, mDestFolderId);
+            else
+                mbox.recover(getOperationContext(), itemIds, mType, mDestFolderId);
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                 mLog.info("Item is already in mailbox " + mboxId);

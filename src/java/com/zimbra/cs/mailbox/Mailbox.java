@@ -5250,15 +5250,31 @@ public class Mailbox {
         }
     }
 
-    public synchronized MailItem copy(OperationContext octxt, int itemId, byte type, int folderId) throws ServiceException {
+    /**
+     * Recovers items from dumpster.
+     * @param octxt
+     * @param itemIds
+     * @param type
+     * @param folderId folder to recover items to
+     * @return
+     * @throws ServiceException
+     */
+    public synchronized List<MailItem> recover(OperationContext octxt, int[] itemIds, byte type, int folderId)
+    throws ServiceException {
+        return copyInternal(octxt, itemIds, type, folderId, true);
+    }
+
+    public synchronized MailItem copy(OperationContext octxt, int itemId, byte type, int folderId)
+            throws ServiceException {
         return copy(octxt, new int[] { itemId }, type, folderId).get(0);
     }
     public synchronized List<MailItem> copy(OperationContext octxt, int[] itemIds, byte type, int folderId) throws ServiceException {
-        return copy(octxt, itemIds, type, folderId, false);
+        return copyInternal(octxt, itemIds, type, folderId, false);
     }
-    public synchronized List<MailItem> copy(OperationContext octxt, int[] itemIds, byte type, int folderId, boolean fromDumpster)
-    throws ServiceException {
-        CopyItem redoRecorder = new CopyItem(mId, type, folderId, fromDumpster);
+
+    private synchronized List<MailItem> copyInternal(OperationContext octxt, int[] itemIds, byte type, int folderId,
+            boolean fromDumpster) throws ServiceException {
+        CopyItem redoRecorder = fromDumpster ? new RecoverItem(mId, type, folderId) : new CopyItem(mId, type, folderId);
         boolean success = false;
         try {
             beginTransaction("copy", octxt, redoRecorder);
