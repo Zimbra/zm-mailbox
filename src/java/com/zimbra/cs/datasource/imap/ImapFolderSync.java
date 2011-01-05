@@ -118,14 +118,6 @@ class ImapFolderSync {
         if (ds.isSyncInboxOnly() && !path.equalsIgnoreCase("Inbox"))
             return null;
         remoteFolder = new RemoteFolder(connection, path);
-        // return null tracker if STATUS command results in an error
-        try {
-            remoteFolder.status();
-        } catch (IOException e) {
-            remoteFolder.info("Error in STATUS command", e);
-            return null;
-        }
-        remoteFolder.info("syncing remote folder " + path);
         tracker = imapSync.getTrackedFolders().getByRemotePath(path);
         if (tracker != null) {
             checkTrackedFolder(ld);
@@ -133,6 +125,7 @@ class ImapFolderSync {
             createLocalFolder(ld);
         }
         if (tracker != null) {
+            remoteFolder.info("syncing remote folder " + path);
             // Check local folder flags for consistency with remote folder
             localFolder.updateFlags(ld);
         }
@@ -522,6 +515,7 @@ class ImapFolderSync {
             imapSync.deleteFolderTracker(tracker);
             // Create new local folder for remote path
             createLocalFolder(ld);
+            return (tracker != null);
         }
         return true;
     }
@@ -534,12 +528,17 @@ class ImapFolderSync {
             tracker = null;
             return;
         }
-        Flags flags = ld.getFlags();
-        long uidValidity = 0;
-        if (!flags.isNoselect()) {
+        //always check status; regardless of /noselect flag
+        //bug 41480; apparently some servers dont publish it
+        //make tracker null if STATUS command results in an error
+        try {
             mailboxInfo = remoteFolder.status();
-            uidValidity = mailboxInfo.getUidValidity();
+        } catch (IOException e) {
+            remoteFolder.info("Error in STATUS command", e);
+            tracker = null;
+            return;
         }
+        long uidValidity = mailboxInfo.getUidValidity();
         // Create local folder
         localFolder = new LocalFolder(mailbox, localPath);
         if (!localFolder.exists()) {

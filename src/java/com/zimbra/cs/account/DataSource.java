@@ -90,7 +90,7 @@ public class DataSource extends AccountProperty {
     public static final String CT_SSL = "ssl";
 
     private Type mType;
-    private DataSourceConfig.Service knownService;
+    protected DataSourceConfig.Service knownService;
 
     public DataSource(Account acct, Type type, String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(acct, name, id, attrs, null, prov);
