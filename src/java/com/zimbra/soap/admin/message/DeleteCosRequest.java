@@ -23,33 +23,20 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.ServerSelector;
-import com.zimbra.soap.admin.type.AttributeSelectorImpl;
 
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_GET_SERVER_REQUEST)
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name=AdminConstants.E_DELETE_COS_REQUEST)
 @XmlType(propOrder = {})
-public class GetServerRequest extends AttributeSelectorImpl {
+public class DeleteCosRequest {
 
-    @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
-    private boolean applyConfig = true;
-    @XmlElement(name=AdminConstants.E_SERVER)
-    private ServerSelector server;
+    @XmlAttribute(name=AdminConstants.A_ID, required=false)
+    private String id;
 
-    public GetServerRequest() {
+    public DeleteCosRequest() {
     }
 
-    public void setApplyConfig(boolean applyConfig) {
-        this.applyConfig = applyConfig;
+    public void setId(String id) {
+        this.id = id;
     }
-
-    public boolean isApplyConfig() {
-        return applyConfig;
-    }
-
-    public void setServer(ServerSelector server) {
-        this.server = server;
-    }
-
-    public ServerSelector getServer() { return server; }
+    public String getId() { return id; }
 }

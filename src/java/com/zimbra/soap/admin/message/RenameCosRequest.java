@@ -18,38 +18,27 @@ package com.zimbra.soap.admin.message;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.ServerSelector;
-import com.zimbra.soap.admin.type.AttributeSelectorImpl;
 
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_GET_SERVER_REQUEST)
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name=AdminConstants.E_RENAME_COS_REQUEST)
 @XmlType(propOrder = {})
-public class GetServerRequest extends AttributeSelectorImpl {
+public class RenameCosRequest {
 
-    @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
-    private boolean applyConfig = true;
-    @XmlElement(name=AdminConstants.E_SERVER)
-    private ServerSelector server;
+    @XmlAttribute(name=AdminConstants.E_ID, required=true)
+    private String id;
+    @XmlAttribute(name=AdminConstants.E_NEW_NAME, required=true)
+    private String newName;
 
-    public GetServerRequest() {
+    public RenameCosRequest() {
     }
 
-    public void setApplyConfig(boolean applyConfig) {
-        this.applyConfig = applyConfig;
-    }
+    public void setId(String id) { this.id = id; }
+    public void setNewName(String newName) { this.newName = newName; }
 
-    public boolean isApplyConfig() {
-        return applyConfig;
-    }
-
-    public void setServer(ServerSelector server) {
-        this.server = server;
-    }
-
-    public ServerSelector getServer() { return server; }
+    public String getId() { return id; }
+    public String getNewName() { return newName; }
 }

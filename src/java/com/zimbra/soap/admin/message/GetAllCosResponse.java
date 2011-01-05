@@ -15,6 +15,11 @@
 
 package com.zimbra.soap.admin.message;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -23,33 +28,33 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.ServerSelector;
-import com.zimbra.soap.admin.type.AttributeSelectorImpl;
+import com.zimbra.soap.admin.type.CosInfo;
 
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_GET_SERVER_REQUEST)
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name=AdminConstants.E_GET_ALL_COS_RESPONSE)
 @XmlType(propOrder = {})
-public class GetServerRequest extends AttributeSelectorImpl {
+public class GetAllCosResponse {
 
-    @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
-    private boolean applyConfig = true;
-    @XmlElement(name=AdminConstants.E_SERVER)
-    private ServerSelector server;
+    @XmlElement(name=AdminConstants.E_COS)
+    private List<CosInfo> cosList = new ArrayList <CosInfo> ();
 
-    public GetServerRequest() {
+    public GetAllCosResponse() {
     }
 
-    public void setApplyConfig(boolean applyConfig) {
-        this.applyConfig = applyConfig;
+    public List<CosInfo> getCosList() {
+        return Collections.unmodifiableList(cosList);
     }
 
-    public boolean isApplyConfig() {
-        return applyConfig;
+    public GetAllCosResponse setCosList(Collection<CosInfo> cosList) {
+        this.cosList.clear();
+        if (cosList != null) {
+            this.cosList.addAll(cosList);
+        }
+        return this;
     }
 
-    public void setServer(ServerSelector server) {
-        this.server = server;
+    public GetAllCosResponse addCos(CosInfo cos) {
+        cosList.add(cos);
+        return this;
     }
-
-    public ServerSelector getServer() { return server; }
 }

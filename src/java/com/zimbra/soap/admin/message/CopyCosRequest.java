@@ -23,33 +23,29 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.ServerSelector;
-import com.zimbra.soap.admin.type.AttributeSelectorImpl;
+import com.zimbra.soap.admin.type.CosSelector;
 
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_GET_SERVER_REQUEST)
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name=AdminConstants.E_COPY_COS_REQUEST)
 @XmlType(propOrder = {})
-public class GetServerRequest extends AttributeSelectorImpl {
+public class CopyCosRequest {
 
-    @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
-    private boolean applyConfig = true;
-    @XmlElement(name=AdminConstants.E_SERVER)
-    private ServerSelector server;
+    @XmlElement(name=AdminConstants.E_NAME)
+    private String name;
+    @XmlElement(name=AdminConstants.E_COS)
+    private CosSelector cos;
 
-    public GetServerRequest() {
+    public CopyCosRequest() {
     }
 
-    public void setApplyConfig(boolean applyConfig) {
-        this.applyConfig = applyConfig;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public boolean isApplyConfig() {
-        return applyConfig;
+    public void setCos(CosSelector cos) {
+        this.cos = cos;
     }
 
-    public void setServer(ServerSelector server) {
-        this.server = server;
-    }
-
-    public ServerSelector getServer() { return server; }
+    public String getName() { return name; }
+    public CosSelector getCos() { return cos; }
 }

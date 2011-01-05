@@ -15,38 +15,39 @@
 
 package com.zimbra.soap.admin.type;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.AdminConstants;
 
+@XmlAccessorType(XmlAccessType.FIELD)
 public class ServerSelector {
-    // TODO: Change users of com.zimbra.cs.account.Provisioning.ServerBy to use this instead
+    // TODO: Change com.zimbra.cs.account.Provisioning.ServerBy to use this
     @XmlEnum
     public enum ServerBy { id, name, serviceHostname }
 
-    @XmlValue private String key;
-    @XmlAttribute(name=AdminConstants.A_BY) private ServerBy serverBy;
+    @XmlValue private final String key;
+    @XmlAttribute(name=AdminConstants.A_BY) private final ServerBy serverBy;
 
-    public ServerSelector() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private ServerSelector() {
+        this.serverBy = null;
+        this.key = null;
     }
 
     public ServerSelector(ServerBy by, String key) {
-        setBy(by);
-        setKey(key);
-    }
-
-    public void setKey(String key) {
+        this.serverBy = by;
         this.key = key;
     }
 
     public String getKey() {
         return key;
-    }
-
-    public void setBy(ServerBy by) {
-        this.serverBy = by;
     }
 
     public ServerBy getBy() {

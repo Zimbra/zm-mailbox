@@ -15,31 +15,50 @@
 
 package com.zimbra.soap.admin.type;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_SERVER)
 @XmlType(propOrder = {})
-public class ServerInfo extends AdminObjectInfo {
+public class AdminObjectInfo {
+
+    @XmlAttribute(name=AdminConstants.A_NAME, required=true)
+    private final String name;
+    @XmlAttribute(name=AdminConstants.A_ID, required=true)
+    private final String id;
+    @XmlElement(name=AdminConstants.E_A)
+    private final List <Attr> attrList;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private ServerInfo() {
+    private AdminObjectInfo() {
         this(null, null, null);
     }
 
-    public ServerInfo(String id, String name) {
-        this(id, name, null);
+    public AdminObjectInfo(String id, String name, Collection <Attr> attrs) {
+        this.name = name;
+        this.id = id;
+        this.attrList = new ArrayList<Attr>();
+        if (attrs != null) {
+            this.attrList.addAll(attrs);
+        }
     }
 
-    public ServerInfo(String id, String name, Collection <Attr> attrs) {
-        super(id, name, attrs);
+    public String getName() { return name; }
+    public String getId() { return id; }
+    public List<Attr> getAttrList() {
+        return Collections.unmodifiableList(attrList);
     }
 }

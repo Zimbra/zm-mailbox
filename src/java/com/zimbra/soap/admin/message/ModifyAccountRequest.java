@@ -18,38 +18,31 @@ package com.zimbra.soap.admin.message;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.ServerSelector;
-import com.zimbra.soap.admin.type.AttributeSelectorImpl;
+import com.zimbra.soap.admin.type.AdminAttrsImpl;
 
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_GET_SERVER_REQUEST)
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name=AdminConstants.E_MODIFY_ACCOUNT_REQUEST)
 @XmlType(propOrder = {})
-public class GetServerRequest extends AttributeSelectorImpl {
+public class ModifyAccountRequest extends AdminAttrsImpl {
 
-    @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
-    private boolean applyConfig = true;
-    @XmlElement(name=AdminConstants.E_SERVER)
-    private ServerSelector server;
+    @XmlAttribute(name=AdminConstants.A_ID, required=true)
+    private final String id;
 
-    public GetServerRequest() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private ModifyAccountRequest() {
+        this(null);
     }
 
-    public void setApplyConfig(boolean applyConfig) {
-        this.applyConfig = applyConfig;
+    public ModifyAccountRequest(String id) {
+        this.id = id;
     }
 
-    public boolean isApplyConfig() {
-        return applyConfig;
-    }
-
-    public void setServer(ServerSelector server) {
-        this.server = server;
-    }
-
-    public ServerSelector getServer() { return server; }
+    public String getId() { return id; }
 }

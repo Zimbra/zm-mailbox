@@ -15,41 +15,45 @@
 
 package com.zimbra.soap.admin.message;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.ServerSelector;
-import com.zimbra.soap.admin.type.AttributeSelectorImpl;
+import com.zimbra.soap.admin.type.DLInfo;
 
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_GET_SERVER_REQUEST)
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name=AdminConstants.E_GET_ACCOUNT_MEMBERSHIP_RESPONSE)
 @XmlType(propOrder = {})
-public class GetServerRequest extends AttributeSelectorImpl {
+public class GetAccountMembershipResponse {
 
-    @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
-    private boolean applyConfig = true;
-    @XmlElement(name=AdminConstants.E_SERVER)
-    private ServerSelector server;
+    @XmlElement(name=AdminConstants.E_DL)
+    private List<DLInfo> dlList = new ArrayList<DLInfo>();
 
-    public GetServerRequest() {
+    public GetAccountMembershipResponse() {
     }
 
-    public void setApplyConfig(boolean applyConfig) {
-        this.applyConfig = applyConfig;
+    public GetAccountMembershipResponse setDlList(Collection<DLInfo> dls) {
+        this.dlList.clear();
+        if (dls != null) {
+            this.dlList.addAll(dls);
+        }
+        return this;
     }
 
-    public boolean isApplyConfig() {
-        return applyConfig;
+    public GetAccountMembershipResponse addDl(DLInfo dl) {
+        dlList.add(dl);
+        return this;
     }
 
-    public void setServer(ServerSelector server) {
-        this.server = server;
+    public List<DLInfo> getDlList() {
+        return Collections.unmodifiableList(dlList);
     }
-
-    public ServerSelector getServer() { return server; }
 }

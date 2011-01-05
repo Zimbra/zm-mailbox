@@ -15,38 +15,39 @@
 
 package com.zimbra.soap.admin.type;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.AdminConstants;
 
+@XmlAccessorType(XmlAccessType.FIELD)
 public class DomainSelector {
-    // From enum com.zimbra.cs.account.Provisioning.DomainBy;
+    // TODO: Change com.zimbra.cs.account.Provisioning.DomainBy to use this
     @XmlEnum
     public enum DomainBy { id, name, virtualHostname, krb5Realm, foreignName }
 
-    @XmlValue private String key;
-    @XmlAttribute(name=AdminConstants.A_BY) private DomainBy domainBy;
+    @XmlValue private final String key;
+    @XmlAttribute(name=AdminConstants.A_BY) private final DomainBy domainBy;
 
-    public DomainSelector() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private DomainSelector() {
+        this.domainBy = null;
+        this.key = null;
     }
 
     public DomainSelector(DomainBy by, String key) {
-        setBy(by);
-        setKey(key);
-    }
-
-    public void setKey(String key) {
+        this.domainBy = by;
         this.key = key;
     }
 
     public String getKey() {
         return key;
-    }
-
-    public void setBy(DomainBy by) {
-        this.domainBy = by;
     }
 
     public DomainBy getBy() {

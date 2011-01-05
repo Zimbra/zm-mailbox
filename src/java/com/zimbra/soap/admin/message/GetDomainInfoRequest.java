@@ -23,7 +23,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 
-import com.zimbra.soap.admin.type.AttributeSelectorImpl;
 import com.zimbra.soap.admin.type.DomainSelector;
 
 @XmlAccessorType(XmlAccessType.NONE)

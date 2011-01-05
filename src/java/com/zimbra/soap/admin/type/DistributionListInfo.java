@@ -16,30 +16,31 @@
 package com.zimbra.soap.admin.type;
 
 import java.util.Collection;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-import com.zimbra.common.soap.AccountConstants;
+
+import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AccountConstants.E_ACCOUNT)
+@XmlRootElement(name=AdminConstants.E_DL)
 @XmlType(propOrder = {})
-public class AccountInfo extends AdminObjectInfo {
+public class DistributionListInfo extends AdminObjectInfo {
 
     /**
      * no-argument constructor wanted by JAXB
      */
-    @SuppressWarnings("unused")
-    private AccountInfo() {
-        this(null, null, null);
+    private DistributionListInfo() {
+        super(null, null, null);
     }
 
-    public AccountInfo(String id, String name) {
-        this(id, name, null);
+    public DistributionListInfo(String id, String name) {
+        super(id, name, null);
     }
 
-    public AccountInfo(String id, String name, Collection <Attr> attrs) {
+    public DistributionListInfo(String id, String name, Collection <Attr> attrs) {
         super(id, name, attrs);
     }
 }

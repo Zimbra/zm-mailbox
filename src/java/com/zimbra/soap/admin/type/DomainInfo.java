@@ -15,37 +15,32 @@
 
 package com.zimbra.soap.admin.type;
 
+import java.util.Collection;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.NONE)
+@XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_DOMAIN)
 @XmlType(propOrder = {})
-public class DomainInfo extends AdminAttrsImpl {
+public class DomainInfo extends AdminObjectInfo {
 
-    @XmlAttribute(name=AdminConstants.A_NAME, required=true) private String name;
-    @XmlAttribute(name=AdminConstants.A_ID, required=true) private String id;
-
-    public DomainInfo() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    private DomainInfo() {
+        super(null, null, null);
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public DomainInfo(String id, String name) {
+        super(id, name, null);
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getId() {
-        return id;
+    public DomainInfo(String id, String name, Collection <Attr> attrs) {
+        super(id, name, attrs);
     }
 }

@@ -23,35 +23,45 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
+
 import com.zimbra.soap.admin.type.AccountSelector;
-import com.zimbra.soap.admin.type.AttributeSelectorImpl;
 
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name=AdminConstants.E_DELEGATE_AUTH_REQUEST)
+@XmlType(propOrder = {})
+public class DelegateAuthRequest {
 
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_GET_ACCOUNT_REQUEST)
-@XmlType(propOrder = {AdminConstants.E_ACCOUNT})
-public class GetAccountRequest extends AttributeSelectorImpl {
-
-    @XmlAttribute(name=AdminConstants.A_APPLY_COS, required=false)
-    private boolean applyCos = true;
-    @XmlElement(name=AdminConstants.E_ACCOUNT)
+    @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
     private AccountSelector account;
+    @XmlAttribute(name=AdminConstants.A_DURATION, required=false)
+    private long duration;
 
-    public GetAccountRequest() {
+    public DelegateAuthRequest() {
+    }
+
+    public DelegateAuthRequest(AccountSelector account) {
+        this(account, null);
+    }
+
+    public DelegateAuthRequest(AccountSelector account, Long duration) {
+        this.account = account;
+        if (duration != null)
+            this.duration = duration;
     }
 
     public void setAccount(AccountSelector account) {
         this.account = account;
     }
+
     public AccountSelector getAccount() {
         return account;
     }
 
-    public void setApplyCos(boolean applyCos) {
-        this.applyCos = applyCos;
+    public void setDuration(long duration) {
+        this.duration = duration;
     }
 
-    public boolean isApplyCos() {
-        return applyCos;
+    public long getDuration() {
+        return duration;
     }
 }

@@ -15,6 +15,10 @@
 
 package com.zimbra.soap.admin.message;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -23,33 +27,30 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.ServerSelector;
-import com.zimbra.soap.admin.type.AttributeSelectorImpl;
 
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_GET_SERVER_REQUEST)
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name=AdminConstants.E_GET_ALL_ACCOUNTS_REQUEST)
 @XmlType(propOrder = {})
-public class GetServerRequest extends AttributeSelectorImpl {
+public class GetAllAccountsRequest {
 
-    @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
-    private boolean applyConfig = true;
-    @XmlElement(name=AdminConstants.E_SERVER)
+    @XmlElement(name=AdminConstants.E_SERVER, required=false)
     private ServerSelector server;
+    @XmlElement(name=AdminConstants.E_DOMAIN, required=false)
+    private DomainSelector domain;
 
-    public GetServerRequest() {
-    }
-
-    public void setApplyConfig(boolean applyConfig) {
-        this.applyConfig = applyConfig;
-    }
-
-    public boolean isApplyConfig() {
-        return applyConfig;
+    public GetAllAccountsRequest() {
     }
 
     public void setServer(ServerSelector server) {
         this.server = server;
     }
 
+    public void setDomain(DomainSelector domain) {
+        this.domain = domain;
+    }
+
     public ServerSelector getServer() { return server; }
+    public DomainSelector getDomain() { return domain; }
 }

@@ -24,7 +24,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.Account;
+import com.zimbra.soap.admin.type.AccountSelector;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_AUTH_REQUEST)
@@ -35,7 +35,7 @@ public class AuthRequest {
     @XmlAttribute(name=AdminConstants.E_NAME, required=false) private String name;
     // password must be present if not using AuthToken
     @XmlAttribute(name=AdminConstants.E_PASSWORD, required=false) private String password;
-    @XmlElement(name=AccountConstants.E_ACCOUNT, required=false) private Account account;
+    @XmlElement(name=AccountConstants.E_ACCOUNT, required=false) private AccountSelector account;
     @XmlElement(name=AccountConstants.E_VIRTUAL_HOST, required=false) private String virtualHost;
     public AuthRequest() {
         this.authToken = null;
@@ -63,10 +63,10 @@ public class AuthRequest {
     public String getPassword() {
         return password;
     }
-    public void setAccount(Account account) {
+    public void setAccount(AccountSelector account) {
         this.account = account;
     }
-    public Account getAccount() {
+    public AccountSelector getAccount() {
         return account;
     }
     public void setVirtualHost(String virtualHost) {

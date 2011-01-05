@@ -15,17 +15,15 @@
 
 package com.zimbra.soap.admin.type;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Collection;
 import java.util.Collections;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+
+import com.google.common.collect.Lists;
 
 import com.zimbra.common.soap.AdminConstants;
 
@@ -34,7 +32,7 @@ import com.zimbra.common.soap.AdminConstants;
 abstract public class AdminAttrsImpl implements AdminAttrs {
 
     @XmlElement(name=AdminConstants.E_A)
-    private List<Attr> a = new ArrayList<Attr>();
+    private List<Attr> a = Lists.newArrayList();
 
     public AdminAttrsImpl setA(Collection<Attr> attrs) {
         this.a.clear();

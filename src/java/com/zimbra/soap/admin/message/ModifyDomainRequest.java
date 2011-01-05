@@ -29,12 +29,17 @@ import com.zimbra.soap.admin.type.AdminAttrsImpl;
 @XmlType(propOrder = {})
 public class ModifyDomainRequest extends AdminAttrsImpl {
     @XmlAttribute(name=AdminConstants.A_ID, required=true)
-    private String id;
+    private final String id;
 
-    public ModifyDomainRequest() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private ModifyDomainRequest() {
+        this(null);
     }
 
-    public void setId(String id) {
+    public ModifyDomainRequest(String id) {
         this.id = id;
     }
 

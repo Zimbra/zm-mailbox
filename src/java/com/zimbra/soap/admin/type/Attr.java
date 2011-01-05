@@ -15,6 +15,8 @@
 
 package com.zimbra.soap.admin.type;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
@@ -22,11 +24,15 @@ import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.AdminConstants;
 
+@XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_A)
 @XmlType(propOrder = {})
 public class Attr
 {
-    @XmlAttribute(name=AdminConstants.A_N) private String n;
+    @XmlAttribute(name=AdminConstants.A_N, required=true)
+    private String n;
+    @XmlAttribute(name=AdminConstants.A_C, required=false)
+    private Boolean isCosAttr;
     @XmlValue private String value;
 
     public Attr() {
@@ -45,15 +51,15 @@ public class Attr
         this.n = n;
     }
 
-    public String getN() {
-        return n;
-    }
-
     public void setValue(String value) {
         this.value = value;
     }
 
-    public String getValue() {
-        return value;
+    public void setIsCosAttr(Boolean isCosAttr) {
+        this.isCosAttr = isCosAttr;
     }
+
+    public String getN() { return n; }
+    public String getValue() { return value; }
+    public Boolean getIsCosAttr() { return isCosAttr; }
 }

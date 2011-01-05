@@ -15,7 +15,6 @@
 
 package com.zimbra.soap.admin.type;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -23,6 +22,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.collect.Lists;
 import com.google.common.base.Joiner;
 
 import com.zimbra.common.soap.AdminConstants;
@@ -32,7 +32,7 @@ import com.zimbra.common.soap.AdminConstants;
 abstract public class AttributeSelectorImpl implements AttributeSelector {
 
     private static Joiner COMMA_JOINER = Joiner.on(",");
-    private List<String> attrs = new ArrayList<String>();
+    private List<String> attrs = Lists.newArrayList();
     
     @XmlAttribute(name=AdminConstants.A_ATTRS) public String getAttrs() {
         return COMMA_JOINER.join(attrs);

@@ -15,6 +15,9 @@
 
 package com.zimbra.soap.admin.message;
 
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -22,34 +25,35 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.ServerSelector;
-import com.zimbra.soap.admin.type.AttributeSelectorImpl;
+import com.zimbra.soap.admin.type.AccountInfo;
 
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_GET_SERVER_REQUEST)
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name=AdminConstants.E_GET_ALL_ACCOUNTS_RESPONSE)
 @XmlType(propOrder = {})
-public class GetServerRequest extends AttributeSelectorImpl {
+public class GetAllAccountsResponse {
 
-    @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
-    private boolean applyConfig = true;
-    @XmlElement(name=AdminConstants.E_SERVER)
-    private ServerSelector server;
+    @XmlElement(name=AdminConstants.E_ACCOUNT)
+    private List <AccountInfo> accountList = Lists.newArrayList();
 
-    public GetServerRequest() {
+    public GetAllAccountsResponse() {
     }
 
-    public void setApplyConfig(boolean applyConfig) {
-        this.applyConfig = applyConfig;
+    public void setAccountList(Iterable <AccountInfo> accounts) {
+        this.accountList.clear();
+        if (accounts != null) {
+            Iterables.addAll(this.accountList, accounts);
+        }
     }
 
-    public boolean isApplyConfig() {
-        return applyConfig;
+    public void addAccount(AccountInfo account ) {
+        this.accountList.add(account);
     }
 
-    public void setServer(ServerSelector server) {
-        this.server = server;
+    public List <AccountInfo> getAccountList() {
+        return Collections.unmodifiableList(accountList);
     }
-
-    public ServerSelector getServer() { return server; }
 }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,30 +16,32 @@
 package com.zimbra.soap.admin.type;
 
 import java.util.Collection;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.AccountConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AccountConstants.E_ACCOUNT)
+@XmlRootElement(name=AccountConstants.E_CALENDAR_RESOURCE)
 @XmlType(propOrder = {})
-public class AccountInfo extends AdminObjectInfo {
+public class CalendarResourceInfo extends AdminObjectInfo {
 
     /**
      * no-argument constructor wanted by JAXB
      */
-    @SuppressWarnings("unused")
-    private AccountInfo() {
-        this(null, null, null);
+    private CalendarResourceInfo() {
+        super(null, null, null);
     }
 
-    public AccountInfo(String id, String name) {
-        this(id, name, null);
+    public CalendarResourceInfo(String id, String name) {
+        super(id, name, null);
     }
 
-    public AccountInfo(String id, String name, Collection <Attr> attrs) {
+    public CalendarResourceInfo(String id, String name, Collection <Attr> attrs) {
         super(id, name, attrs);
     }
 }

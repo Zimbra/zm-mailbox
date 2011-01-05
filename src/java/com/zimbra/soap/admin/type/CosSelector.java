@@ -15,31 +15,40 @@
 
 package com.zimbra.soap.admin.type;
 
-import java.util.Collection;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-import com.zimbra.common.soap.AccountConstants;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlValue;
+
+import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AccountConstants.E_ACCOUNT)
-@XmlType(propOrder = {})
-public class AccountInfo extends AdminObjectInfo {
+public class CosSelector {
+
+    // TODO: Change com.zimbra.cs.account.Provisioning.CosBy to use this
+    @XmlEnum
+    public static enum CosBy { id, name }
+
+    @XmlValue private final String key;
+    @XmlAttribute(name=AdminConstants.A_BY) private final CosBy cosBy;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AccountInfo() {
-        this(null, null, null);
+    private CosSelector() {
+        this.cosBy = null;
+        this.key = null;
     }
 
-    public AccountInfo(String id, String name) {
-        this(id, name, null);
+    public CosSelector(CosBy by, String key) {
+        this.cosBy = by;
+        this.key = key;
     }
 
-    public AccountInfo(String id, String name, Collection <Attr> attrs) {
-        super(id, name, attrs);
-    }
+    public String getKey() { return key; }
+
+    public CosBy getBy() { return cosBy; }
 }
