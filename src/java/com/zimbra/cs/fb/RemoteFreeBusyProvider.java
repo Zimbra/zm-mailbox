@@ -145,6 +145,9 @@ public class RemoteFreeBusyProvider extends FreeBusyProvider {
 	public boolean registerForMailboxChanges() {
 		return false;
 	}
+    public boolean registerForMailboxChanges(String accountId) {
+        return false;
+    }
 	public long cachedFreeBusyStartTime() {
 		return 0;
 	}
