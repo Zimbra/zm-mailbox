@@ -30,7 +30,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class SetMailboxMetadata extends MailDocumentHandler {
 
-    private static final int TOTAL_METADATA_LIMIT = 10000;
+    private static final int TOTAL_METADATA_LIMIT = 32768;
     
     private static enum SectionNames {
         zwc, bes
