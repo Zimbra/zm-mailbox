@@ -36,14 +36,11 @@ public class XmlFormatter extends Formatter {
         return "xml";
     }
 
-    @Override
-    public boolean canBeBlocked() {
-        return false;
-    }
+   
 
     @Override
     public Set<MailItem.Type> getDefaultSearchTypes() {
-        return MailboxIndex.SEARCH_FOR_EVERYTHING;
+         return MailboxIndex.SEARCH_FOR_EVERYTHING;
     }
 
     @Override

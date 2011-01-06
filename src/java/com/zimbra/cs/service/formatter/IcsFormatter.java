@@ -137,11 +137,7 @@ public class IcsFormatter extends Formatter {
         }
     }
 
-    @Override
-    public boolean canBeBlocked() {
-        return false;
-    }
-
+    
     @Override
     public boolean supportsSave() {
         return true;

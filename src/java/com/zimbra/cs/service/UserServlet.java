@@ -409,7 +409,7 @@ public class UserServlet extends ZimbraServlet {
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errMustAuthenticate, req));
                 return;
             }
-
+            
             checkTargetAccountStatus(context);
 
             if (proxyIfNecessary(req, resp, context))
@@ -461,19 +461,19 @@ public class UserServlet extends ZimbraServlet {
 
         return true;
     }
-
+    
     private void checkTargetAccountStatus(Context context) throws ServiceException {
         if (context.targetAccount != null) {
             String acctStatus = context.targetAccount.getAccountStatus(Provisioning.getInstance());
-
+            
             // no one can touch an account if it in maintenance mode
             if (Provisioning.ACCOUNT_STATUS_MAINTENANCE.equals(acctStatus))
                 throw AccountServiceException.MAINTENANCE_MODE();
-
+            
             // allow only admin access if the account is not active
-            if (!Provisioning.ACCOUNT_STATUS_ACTIVE.equals(acctStatus) &&
-                !(isAdminRequest(context.req) &&
-                  context.authToken != null &&
+            if (!Provisioning.ACCOUNT_STATUS_ACTIVE.equals(acctStatus) && 
+                !(isAdminRequest(context.req) && 
+                  context.authToken != null && 
                   (context.authToken.isDelegatedAuth() || AdminAccessControl.isAdequateAdminAccount(context.authAccount))))
                 throw AccountServiceException.ACCOUNT_INACTIVE(context.targetAccount.getName());
         }
@@ -534,13 +534,6 @@ public class UserServlet extends ZimbraServlet {
         if (mbox == null && context.formatter.requiresAuth())
             throw ServiceException.PERM_DENIED(L10nUtil.getMessage(MsgKey.errPermissionDenied, req));
 
-        if (context.formatter.canBeBlocked()) {
-            if (Formatter.checkGlobalOverride(Provisioning.A_zimbraAttachmentsBlocked, context.authAccount)) {
-                sendbackBlockMessage(context.req, context.resp);
-                return;
-            }
-        }
-
         context.formatter.format(context);
     }
 
@@ -567,7 +560,7 @@ public class UserServlet extends ZimbraServlet {
             }
 
             checkTargetAccountStatus(context);
-
+            
             if (proxyIfNecessary(req, resp, context))
                 return;
 
@@ -1280,17 +1273,17 @@ public class UserServlet extends ZimbraServlet {
         ZIMBRA_DOC_CONTENT_TYPE.add("application/x-zimbra-slides");
         ZIMBRA_DOC_CONTENT_TYPE.add("application/x-zimbra-xls");
     }
-
+    
     private String defaultFormat(Context context) {
         if (context.hasPart()) {
             return "native";
         }
         MailItem.Type type = MailItem.Type.UNKNOWN;
-        if (context.target instanceof Folder) {
+        if (context.target instanceof Folder) 
             type = ((Folder) context.target).getDefaultView();
-        } else if (context.target != null) {
+        else if (context.target != null)
             type = context.target.getType();
-        }
+
         switch (type) {
         case APPOINTMENT:
         case TASK:

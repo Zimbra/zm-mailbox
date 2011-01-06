@@ -55,10 +55,7 @@ public class VcfFormatter extends Formatter {
         return EnumSet.of(MailItem.Type.CONTACT);
     }
 
-    @Override
-    public boolean canBeBlocked() {
-        return false;
-    }
+    
 
     @Override
     public void formatCallback(Context context) throws IOException, ServiceException {

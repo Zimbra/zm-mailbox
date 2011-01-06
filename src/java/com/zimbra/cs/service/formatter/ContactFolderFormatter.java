@@ -40,10 +40,7 @@ public class ContactFolderFormatter extends Formatter {
 
     private enum Delimiter { Field, Contact };
 
-    @Override
-    public boolean canBeBlocked() {
-        return false;
-    }
+    
 
     @Override
     public void formatCallback(Context context) throws UserServletException,

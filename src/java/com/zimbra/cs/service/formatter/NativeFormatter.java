@@ -284,11 +284,7 @@ public class NativeFormatter extends Formatter {
         }
     }
 
-    @Override
-    public boolean canBeBlocked() {
-        return true;
-    }
-
+    
     @Override
     public boolean supportsSave() {
         return true;

@@ -50,9 +50,4 @@ public class FreeBusyFormatter extends Formatter {
         context.req.setAttribute(ATTR_FREEBUSY, "true");
         HtmlFormatter.dispatchJspRest(context.getServlet(), context);
     }
-
-    @Override
-    public boolean canBeBlocked() {
-        return false;
-    }
 }

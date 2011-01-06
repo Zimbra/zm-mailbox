@@ -62,11 +62,7 @@ public abstract class Formatter {
         return true;
     }
 
-    /**
-     *
-     * @return true if this formatter can be blocked by zimbraAttachmentsBlocked attr.
-     */
-    public abstract boolean canBeBlocked();
+   
 
     // eventually get this from query param ?start=long|YYYYMMMDDHHMMSS
     public long getDefaultStartTime() {

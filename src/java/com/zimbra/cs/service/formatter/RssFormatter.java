@@ -144,12 +144,8 @@ public class RssFormatter extends Formatter {
         item.addElement("pubDate").setText(mDateFormat.format(new Date(doc.getDate())));
         item.addElement("link").setText(context.req.getRequestURL().append("?id=" + doc.getId()).toString());
     }
-    
+
     public String getType() {
         return "rss";
-    }
-
-    public boolean canBeBlocked() {
-        return false;
     }
 }

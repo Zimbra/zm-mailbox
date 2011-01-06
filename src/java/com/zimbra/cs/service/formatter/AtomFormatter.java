@@ -124,7 +124,4 @@ public class AtomFormatter extends Formatter {
         return "atom";
     }
 
-    public boolean canBeBlocked() {
-        return false;
-    }
 }

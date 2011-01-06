@@ -90,11 +90,7 @@ public class CsvFormatter extends Formatter {
         context.resp.getWriter().print(sb.toString());
     }
 
-    @Override
-    public boolean canBeBlocked() {
-        return false;
-    }
-
+    
     @Override
     public boolean supportsSave() {
         return true;

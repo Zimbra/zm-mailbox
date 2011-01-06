@@ -24,7 +24,20 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.mail.Part;
@@ -39,12 +52,33 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
-import com.zimbra.common.util.HttpUtil.Browser;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.HttpUtil.Browser;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.mailbox.*;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Appointment;
+import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.Chat;
+import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Conversation;
+import com.zimbra.cs.mailbox.DeliveryOptions;
+import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Mountpoint;
+import com.zimbra.cs.mailbox.Note;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.Task;
+import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
@@ -63,8 +97,8 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.mail.ImportContacts;
-import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemData;
+import com.zimbra.cs.service.util.ItemId;
 
 public abstract class ArchiveFormatter extends Formatter {
     private Pattern ILLEGAL_FILE_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|\\\0]");
@@ -124,7 +158,6 @@ public abstract class ArchiveFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_EVERYTHING;
     }
 
-    @Override public boolean canBeBlocked() { return true; }
 
     @Override public boolean supportsSave() { return true; }
 
