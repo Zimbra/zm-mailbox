@@ -116,6 +116,8 @@ public final class LocalConfigCLI {
     private void exec(String[] args) {
         CommandLine cl = null;
         CommandLineParser parser = new GnuParser();
+
+        CliUtil.toolSetup("WARN");
         try {
             cl = parser.parse(mOptions, args);
         } catch (ParseException pe) {
@@ -218,7 +220,6 @@ public final class LocalConfigCLI {
         }
 
         if (cl.hasOption("l")) {
-            CliUtil.toolSetup("WARN");
             try {
                 reload();
             } catch (ServiceException e) {
