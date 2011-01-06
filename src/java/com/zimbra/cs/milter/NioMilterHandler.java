@@ -89,4 +89,8 @@ final class NioMilterHandler extends MilterHandler implements NioHandler {
         ZimbraLog.milter.debug(sessPrefix + "Dropping connection for inactivity");
         dropConnection();
     }
+
+    @Override
+    public void setLoggingContext() {
+    }
 }
