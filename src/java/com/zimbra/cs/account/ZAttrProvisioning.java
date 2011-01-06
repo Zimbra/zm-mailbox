@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20110104-1117 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110105-1440 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3297,6 +3297,25 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=227)
     public static final String A_zimbraFileUploadMaxSize = "zimbraFileUploadMaxSize";
+
+    /**
+     * Maximum number of messages that can be processed in a single
+     * ApplyFilterRules operation.
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1158)
+    public static final String A_zimbraFilterBatchSize = "zimbraFilterBatchSize";
+
+    /**
+     * The amount of time to sleep between every two messages during
+     * ApplyFilterRules. Increasing this value will even out server load at
+     * the expense of slowing down the operation.
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1159)
+    public static final String A_zimbraFilterSleepInterval = "zimbraFilterSleepInterval";
 
     /**
      * foreign name for mapping an external name to a zimbra domain on domain

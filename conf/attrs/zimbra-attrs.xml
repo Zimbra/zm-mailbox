@@ -5248,5 +5248,19 @@ TODO: delete them permerntly from here
   <desc>Maximum number of concurrent MILTER connections allowed. New connections exceeding this limit are rejected.</desc>
 </attr>
 
+<attr id="1158" name="zimbraFilterBatchSize" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable,accountInfo" since="7.0.0">
+  <defaultCOSValue>1000</defaultCOSValue>
+  <desc>Maximum number of messages that can be processed in a single ApplyFilterRules operation.</desc>
+</attr>
+
+<attr id="1159" name="zimbraFilterSleepInterval" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="7.0.0">
+  <defaultCOSValue>250</defaultCOSValue>
+  <desc>
+    The amount of time to sleep between every two messages during ApplyFilterRules.
+    Increasing this value will even out server load at the expense of slowing down
+    the operation.
+  </desc>
+</attr>
+
 </attrs>
 

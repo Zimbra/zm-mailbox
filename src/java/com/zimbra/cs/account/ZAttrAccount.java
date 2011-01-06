@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20110104-1117 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110105-1440 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -11941,6 +11941,183 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureZimbraAssistantEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureZimbraAssistantEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum number of messages that can be processed in a single
+     * ApplyFilterRules operation.
+     *
+     * @return zimbraFilterBatchSize, or 1000 if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1158)
+    public int getFilterBatchSize() {
+        return getIntAttr(Provisioning.A_zimbraFilterBatchSize, 1000);
+    }
+
+    /**
+     * Maximum number of messages that can be processed in a single
+     * ApplyFilterRules operation.
+     *
+     * @param zimbraFilterBatchSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1158)
+    public void setFilterBatchSize(int zimbraFilterBatchSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilterBatchSize, Integer.toString(zimbraFilterBatchSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of messages that can be processed in a single
+     * ApplyFilterRules operation.
+     *
+     * @param zimbraFilterBatchSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1158)
+    public Map<String,Object> setFilterBatchSize(int zimbraFilterBatchSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilterBatchSize, Integer.toString(zimbraFilterBatchSize));
+        return attrs;
+    }
+
+    /**
+     * Maximum number of messages that can be processed in a single
+     * ApplyFilterRules operation.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1158)
+    public void unsetFilterBatchSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilterBatchSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum number of messages that can be processed in a single
+     * ApplyFilterRules operation.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1158)
+    public Map<String,Object> unsetFilterBatchSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilterBatchSize, "");
+        return attrs;
+    }
+
+    /**
+     * The amount of time to sleep between every two messages during
+     * ApplyFilterRules. Increasing this value will even out server load at
+     * the expense of slowing down the operation.
+     *
+     * <p>Use getFilterSleepIntervalAsString to access value as a string.
+     *
+     * @see #getFilterSleepIntervalAsString()
+     *
+     * @return zimbraFilterSleepInterval in millseconds, or 250000 (250)  if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1159)
+    public long getFilterSleepInterval() {
+        return getTimeInterval(Provisioning.A_zimbraFilterSleepInterval, 250000L);
+    }
+
+    /**
+     * The amount of time to sleep between every two messages during
+     * ApplyFilterRules. Increasing this value will even out server load at
+     * the expense of slowing down the operation.
+     *
+     * @return zimbraFilterSleepInterval, or "250" if unset
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1159)
+    public String getFilterSleepIntervalAsString() {
+        return getAttr(Provisioning.A_zimbraFilterSleepInterval, "250");
+    }
+
+    /**
+     * The amount of time to sleep between every two messages during
+     * ApplyFilterRules. Increasing this value will even out server load at
+     * the expense of slowing down the operation.
+     *
+     * @param zimbraFilterSleepInterval new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1159)
+    public void setFilterSleepInterval(String zimbraFilterSleepInterval) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilterSleepInterval, zimbraFilterSleepInterval);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The amount of time to sleep between every two messages during
+     * ApplyFilterRules. Increasing this value will even out server load at
+     * the expense of slowing down the operation.
+     *
+     * @param zimbraFilterSleepInterval new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1159)
+    public Map<String,Object> setFilterSleepInterval(String zimbraFilterSleepInterval, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilterSleepInterval, zimbraFilterSleepInterval);
+        return attrs;
+    }
+
+    /**
+     * The amount of time to sleep between every two messages during
+     * ApplyFilterRules. Increasing this value will even out server load at
+     * the expense of slowing down the operation.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1159)
+    public void unsetFilterSleepInterval() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilterSleepInterval, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The amount of time to sleep between every two messages during
+     * ApplyFilterRules. Increasing this value will even out server load at
+     * the expense of slowing down the operation.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.0
+     */
+    @ZAttr(id=1159)
+    public Map<String,Object> unsetFilterSleepInterval(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilterSleepInterval, "");
         return attrs;
     }
 
