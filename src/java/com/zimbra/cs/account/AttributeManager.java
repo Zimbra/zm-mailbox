@@ -1284,18 +1284,10 @@ public class AttributeManager {
             pw.println(o);
         }
     }
-    
-
-    // return rfc4512 dstring (4.1.  Schema Definitions)
+   
+    // escape QQ and QS for rfc4512 dstring(http://www.ietf.org/rfc/rfc4512.txt 4.1.  Schema Definitions)
     String rfc4512Dstring(String unescaped) {
-        if (unescaped.contains("'"))
-            System.out.println(unescaped);
-        
-        String escaped = unescaped.replace("'", "\\27");
-        
-        if (unescaped.contains("'"))
-            System.out.println(escaped);
-        
+        String escaped = unescaped.replace("\\", "\\5C").replace("'", "\\27");
         return escaped;
     }
 

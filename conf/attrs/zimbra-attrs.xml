@@ -301,7 +301,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="4" name="zimbraMailHost" type="astring" max="256" callback="MailHost" cardinality="single" optionalIn="mailRecipient">
-  <desc>the server hosting the accounts mailbox</desc>
+  <desc>the server hosting the account's mailbox</desc>
 </attr>
 
 <!--
