@@ -204,7 +204,7 @@ public abstract class NioServer implements Server {
         fc.addLast("logger", new NioLoggingFilter(this, false));
         acceptor.getSessionConfig().setBothIdleTime(sc.getMaxIdleTime());
         acceptor.getSessionConfig().setWriteTimeout(sc.getWriteTimeout());
-        acceptor.setHandler(new IoHandlerImpl(this));
+        acceptor.setHandler(new NioHandlerDispatcher(this));
         try {
             acceptor.bind();
         } catch(IOException e) {
@@ -245,7 +245,7 @@ public abstract class NioServer implements Server {
     private void closeSessions() {
         for (IoSession session : getSessions().values()) {
             getLog().info("Closing session = " + session);
-            NioHandler handler = IoHandlerImpl.getHandler(session);
+            NioHandler handler = NioHandlerDispatcher.getHandler(session);
             if (handler != null) {
                 try {
                     handler.dropConnection();

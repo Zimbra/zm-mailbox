@@ -178,8 +178,9 @@ class ImapProxy {
                     } catch (IOException e) {
                         ZimbraLog.imap.warn("error encountered during IDLE; dropping connection", e);
                     }
-                    if (!success)
-                        handler.dropConnection();
+                    if (!success) {
+                        handler.dropConnection(true);
+                    }
                 }
             };
             mIdleThread.setName("Imap-Idle-Proxy-" + Thread.currentThread().getName());
@@ -229,11 +230,9 @@ class ImapProxy {
 
     boolean proxyCommand(final String tag, final byte[] payload, final boolean includeTaggedResponse, final boolean isIdle)
     throws IOException {
-//        System.out.write(payload);  System.out.flush();
         ImapConnection conn = writeRequest(payload);
-
         MailInputStream min = conn.getInputStream();
-        OutputStream out = mHandler.mOutputStream;
+        OutputStream out = mHandler.output;
         if (out == null) {
             dropConnection();
             throw new IOException("proxy connection already closed");

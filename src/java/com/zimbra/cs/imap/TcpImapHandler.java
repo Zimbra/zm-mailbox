@@ -18,6 +18,7 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.server.ProtocolHandler;
 import com.zimbra.cs.server.TcpServerInputStream;
 import com.zimbra.cs.util.Config;
 
@@ -26,26 +27,33 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 
-class TcpImapHandler extends ImapHandler {
-    private TcpServerInputStream inputStream;
+class TcpImapHandler extends ProtocolHandler {
+    private TcpServerInputStream input;
     private String remoteAddress;
     private TcpImapRequest request;
+    private final ImapConfig config;
+    private Socket socket;
+    private final HandlerDelegate delegate;
 
-    TcpImapHandler(ImapServer server) {
+    TcpImapHandler(TcpImapServer server) {
         super(server);
+        config = server.getConfig();
+        delegate = new HandlerDelegate(config);
     }
 
     @Override
     protected boolean setupConnection(Socket connection) throws IOException {
-        connection.setSoTimeout(mConfig.getMaxIdleTime() * 1000);
-        remoteAddress = connection.getInetAddress().getHostAddress();
+        socket = connection;
+        socket.setSoTimeout(config.getMaxIdleTime() * 1000);
+        remoteAddress = socket.getInetAddress().getHostAddress();
         INFO("connected");
 
-        inputStream = new TcpServerInputStream(connection.getInputStream());
-        mOutputStream = new BufferedOutputStream(connection.getOutputStream());
+        input = new TcpServerInputStream(connection.getInputStream());
+        delegate.output = new BufferedOutputStream(connection.getOutputStream());
 
         if (!Config.userServicesEnabled()) {
             ZimbraLog.imap.debug("dropping connection because user services are disabled");
@@ -53,7 +61,7 @@ class TcpImapHandler extends ImapHandler {
             return false;
         }
 
-        sendGreeting();
+        delegate.sendGreeting();
 
         return true;
     }
@@ -67,21 +75,21 @@ class TcpImapHandler extends ImapHandler {
     @Override
     protected void setIdle(boolean idle) {
         super.setIdle(idle);
-        ImapSession i4selected = mSelectedFolder;
-        if (i4selected != null)
+        ImapSession i4selected = delegate.selectedFolder;
+        if (i4selected != null) {
             i4selected.updateAccessTime();
+        }
     }
 
     @Override
     protected boolean processCommand() throws IOException {
         // FIXME: throw an exception instead?
-        if (inputStream == null)
-            return STOP_PROCESSING;
-
-        setUpLogContext(remoteAddress);
-
-        if (request == null)
-            request = new TcpImapRequest(inputStream, this);
+        if (input == null) {
+            return false;
+        }
+        if (request == null) {
+            request = new TcpImapRequest(input, delegate);
+        }
 
         try {
             request.continuation();
@@ -92,37 +100,36 @@ class TcpImapHandler extends ImapHandler {
 
             long start = ZimbraPerf.STOPWATCH_IMAP.start();
             // check account status before executing command
-            if (!checkAccountStatus()) {
-                return STOP_PROCESSING;
+            if (!delegate.checkAccountStatus()) {
+                return false;
             }
             boolean keepGoing;
-            if (mAuthenticator != null && !mAuthenticator.isComplete()) {
-                keepGoing = continueAuthentication(request);
+            if (delegate.authenticator != null && !delegate.authenticator.isComplete()) {
+                keepGoing = delegate.continueAuthentication(request);
             } else {
-                keepGoing = executeRequest(request);
+                keepGoing = delegate.executeRequest(request);
             }
             // FIXME Shouldn't we do these before executing the request??
             setIdle(false);
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
-            if (mLastCommand != null)
-                ZimbraPerf.IMAP_TRACKER.addStat(mLastCommand.toUpperCase(), start);
+            if (delegate.lastCommand != null) {
+                ZimbraPerf.IMAP_TRACKER.addStat(delegate.lastCommand.toUpperCase(), start);
+            }
             clearRequest();
-            mConsecutiveBAD = 0;
+            delegate.consecutiveBAD = 0;
             return keepGoing;
         } catch (TcpImapRequest.ImapContinuationException ice) {
             request.rewind();
             if (ice.sendContinuation) {
-                sendContinuation("send literal data");
+                delegate.sendContinuation("send literal data");
             }
-            return CONTINUE_PROCESSING;
+            return true;
         } catch (TcpImapRequest.ImapTerminatedException ite) {
-            return STOP_PROCESSING;
+            return false;
         } catch (ImapParseException ipe) {
             clearRequest();
-            handleParseException(ipe);
-            return mConsecutiveBAD >= MAXIMUM_CONSECUTIVE_BAD ? STOP_PROCESSING : CONTINUE_PROCESSING;
-        } finally {
-            ZimbraLog.clearContext();
+            delegate.handleParseException(ipe);
+            return delegate.consecutiveBAD < ImapHandler.MAXIMUM_CONSECUTIVE_BAD;
         }
     }
 
@@ -134,88 +141,6 @@ class TcpImapHandler extends ImapHandler {
     }
 
     @Override
-    boolean doSTARTTLS(String tag) throws IOException {
-        if (!checkState(tag, State.NOT_AUTHENTICATED)) {
-            return CONTINUE_PROCESSING;
-        } else if (mStartedTLS) {
-            sendNO(tag, "TLS already started");
-            return CONTINUE_PROCESSING;
-        }
-        sendOK(tag, "Begin TLS negotiation now");
-
-        SSLSocketFactory fac = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        SSLSocket tlsconn = (SSLSocket) fac.createSocket(mConnection, mConnection.getInetAddress().getHostName(), mConnection.getPort(), true);
-        NetUtil.setSSLEnabledCipherSuites(tlsconn, mConfig.getSslExcludedCiphers());
-        tlsconn.setUseClientMode(false);
-        startHandshake(tlsconn);
-        ZimbraLog.imap.debug("suite: " + tlsconn.getSession().getCipherSuite());
-        inputStream = new TcpServerInputStream(tlsconn.getInputStream());
-        mOutputStream = new BufferedOutputStream(tlsconn.getOutputStream());
-        mStartedTLS = true;
-
-        return CONTINUE_PROCESSING;
-    }
-
-    @Override
-    protected void dropConnection(boolean sendBanner) {
-        clearRequest();
-        try {
-            unsetSelectedFolder(false);
-        } catch (Exception e) { }
-
-        // wait at most 10 seconds for the untagged BYE to be sent, then force the stream closed
-        new Thread() {
-            @Override
-            public void run() {
-                if (mOutputStream == null)
-                    return;
-
-                try {
-                    sleep(10 * Constants.MILLIS_PER_SECOND);
-                } catch (InterruptedException ie) { }
-
-                OutputStream os = mOutputStream;
-                if (os != null) {
-                    try {
-                        os.close();
-                    } catch (IOException ioe) { }
-                }
-            }
-        }.start();
-
-        if (mCredentials != null && !mGoodbyeSent) {
-            ZimbraLog.imap.info("dropping connection for user " + mCredentials.getUsername() + " (server-initiated)");
-        }
-
-        ZimbraLog.addIpToContext(remoteAddress);
-        try {
-            OutputStream os = mOutputStream;
-            if (os != null) {
-                if (sendBanner && !mGoodbyeSent)
-                    sendBYE();
-                os.close();
-                mOutputStream = null;
-            }
-            if (inputStream != null) {
-                inputStream.close();
-                inputStream = null;
-            }
-            if (mAuthenticator != null) {
-                mAuthenticator.dispose();
-                mAuthenticator = null;
-            }
-        } catch (IOException e) {
-            if (ZimbraLog.imap.isDebugEnabled()) {
-                ZimbraLog.imap.debug("I/O error while closing connection", e);
-            } else {
-                ZimbraLog.imap.debug("I/O error while closing connection: " + e);
-            }
-        } finally {
-            ZimbraLog.clearContext();
-        }
-    }
-
-    @Override
     protected void notifyIdleConnection() {
         // we can, and do, drop idle connections after the timeout
 
@@ -223,37 +148,6 @@ class TcpImapHandler extends ImapHandler {
         // session timeout code that also drops connections?
         ZimbraLog.imap.debug("dropping connection for inactivity");
         dropConnection();
-    }
-
-    @Override
-    protected void completeAuthentication() throws IOException {
-        mAuthenticator.sendSuccess();
-        if (mAuthenticator.isEncryptionEnabled()) {
-            // switch to encrypted streams
-            inputStream = new TcpServerInputStream(mAuthenticator.unwrap(mConnection.getInputStream()));
-            mOutputStream = mAuthenticator.wrap(mConnection.getOutputStream());
-        }
-    }
-
-    @Override
-    protected void enableInactivityTimer() throws SocketException {
-        mConnection.setSoTimeout(mConfig.getAuthenticatedMaxIdleTime() * 1000);
-    }
-
-    @Override
-    protected void flushOutput() throws IOException {
-        mOutputStream.flush();
-    }
-
-    @Override
-    void sendLine(String line, boolean flush) throws IOException {
-        OutputStream os = mOutputStream;
-        if (os == null)
-            return;
-        os.write(line.getBytes());
-        os.write(LINE_SEPARATOR_BYTES);
-        if (flush)
-            os.flush();
     }
 
     void INFO(String message, Throwable e) {
@@ -271,5 +165,139 @@ class TcpImapHandler extends ImapHandler {
         if (message != null)
             length += message.length();
         return new StringBuilder(length).append("[").append(remoteAddress).append("] ").append(message);
+    }
+
+    @Override
+    protected void dropConnection() {
+        delegate.dropConnection(true);
+    }
+
+    ImapHandler setCredentials(ImapCredentials creds) {
+        delegate.setCredentials(creds);
+        return delegate;
+    }
+
+    private final class HandlerDelegate extends ImapHandler {
+
+        HandlerDelegate(ImapConfig config) {
+            super(config);
+        }
+
+        @Override
+        void sendLine(String line, boolean flush) throws IOException {
+            ZimbraLog.imap.trace("S: %s", line);
+            OutputStream os = output;
+            if (os == null) {
+                return;
+            }
+            os.write(line.getBytes());
+            os.write(LINE_SEPARATOR_BYTES);
+            if (flush) {
+                os.flush();
+            }
+        }
+
+        @Override
+        protected void dropConnection(boolean sendBanner) {
+            clearRequest();
+            try {
+                unsetSelectedFolder(false);
+            } catch (Exception e) { }
+
+            // wait at most 10 seconds for the untagged BYE to be sent, then force the stream closed
+            new Thread() {
+                @Override
+                public void run() {
+                    if (output == null) {
+                        return;
+                    }
+                    try {
+                        sleep(10 * Constants.MILLIS_PER_SECOND);
+                    } catch (InterruptedException ie) { }
+
+                    OutputStream os = output;
+                    if (os != null) {
+                        try {
+                            os.close();
+                        } catch (IOException ioe) { }
+                    }
+                }
+            }.start();
+
+            if (credentials != null && !goodbyeSent) {
+                ZimbraLog.imap.info("dropping connection for user %s (server-initiated)", credentials.getUsername());
+            }
+
+            ZimbraLog.addIpToContext(remoteAddress);
+            try {
+                OutputStream os = output;
+                if (os != null) {
+                    if (sendBanner && !goodbyeSent) {
+                        sendBYE();
+                    }
+                    os.close();
+                    output = null;
+                }
+                if (input != null) {
+                    input.close();
+                    input = null;
+                }
+                if (authenticator != null) {
+                    authenticator.dispose();
+                    authenticator = null;
+                }
+            } catch (IOException e) {
+                if (ZimbraLog.imap.isDebugEnabled()) {
+                    ZimbraLog.imap.debug("I/O error while closing connection", e);
+                } else {
+                    ZimbraLog.imap.debug("I/O error while closing connection: " + e);
+                }
+            } finally {
+                ZimbraLog.clearContext();
+            }
+        }
+
+        @Override
+        void enableInactivityTimer() throws SocketException {
+            mConnection.setSoTimeout(config.getAuthenticatedMaxIdleTime() * 1000);
+        }
+
+        @Override
+        void completeAuthentication() throws IOException {
+            delegate.setLoggingContext(remoteAddress);
+            authenticator.sendSuccess();
+            if (authenticator.isEncryptionEnabled()) {
+                // switch to encrypted streams
+                input = new TcpServerInputStream(authenticator.unwrap(mConnection.getInputStream()));
+                output = authenticator.wrap(mConnection.getOutputStream());
+            }
+        }
+
+        @Override
+        boolean doSTARTTLS(String tag) throws IOException {
+            if (!checkState(tag, State.NOT_AUTHENTICATED)) {
+                return true;
+            } else if (startedTLS) {
+                sendNO(tag, "TLS already started");
+                return true;
+            }
+            sendOK(tag, "Begin TLS negotiation now");
+
+            SSLSocketFactory fac = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            SSLSocket tlsconn = (SSLSocket) fac.createSocket(mConnection, mConnection.getInetAddress().getHostName(), mConnection.getPort(), true);
+            NetUtil.setSSLEnabledCipherSuites(tlsconn, config.getSslExcludedCiphers());
+            tlsconn.setUseClientMode(false);
+            startHandshake(tlsconn);
+            ZimbraLog.imap.debug("suite: " + tlsconn.getSession().getCipherSuite());
+            input = new TcpServerInputStream(tlsconn.getInputStream());
+            output = new BufferedOutputStream(tlsconn.getOutputStream());
+            startedTLS = true;
+            return true;
+        }
+
+        @Override
+        InetSocketAddress getLocalAddress() {
+            return (InetSocketAddress) socket.getLocalSocketAddress();
+        }
     }
 }

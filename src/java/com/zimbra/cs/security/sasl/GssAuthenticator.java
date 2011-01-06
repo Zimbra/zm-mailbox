@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -109,7 +109,7 @@ public class GssAuthenticator extends Authenticator {
 
         final String host;
         if (LC.krb5_service_principal_from_interface_address.booleanValue()) {
-            String localSocketHostname = mConnection.getLocalAddress().getCanonicalHostName().toLowerCase();
+            String localSocketHostname = localAddress.getCanonicalHostName().toLowerCase();
             if (localSocketHostname.length() == 0 || Character.isDigit(localSocketHostname.charAt(0)))
                 localSocketHostname = LC.zimbra_server_hostname.value();
             host = localSocketHostname;

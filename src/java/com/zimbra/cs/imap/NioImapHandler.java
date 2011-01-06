@@ -21,31 +21,18 @@ import com.zimbra.cs.server.NioConnection;
 import com.zimbra.cs.stats.ZimbraPerf;
 
 import java.io.IOException;
-import java.net.Socket;
+import java.net.InetSocketAddress;
 
 final class NioImapHandler extends ImapHandler implements NioHandler {
+    private final ImapConfig config;
     private final NioConnection connection;
     private NioImapRequest request;
 
     NioImapHandler(NioImapServer server, NioConnection conn) {
-        super(server);
+        super(server.getConfig());
         connection = conn;
-        mOutputStream = conn.getOutputStream();
-    }
-
-    @Override
-    boolean doSTARTTLS(String tag) throws IOException {
-        if (!checkState(tag, State.NOT_AUTHENTICATED)) {
-            return true;
-        } else if (mStartedTLS) {
-            sendNO(tag, "TLS already started");
-            return true;
-        }
-
-        connection.startTls();
-        sendOK(tag, "begin TLS negotiation now");
-        mStartedTLS = true;
-        return true;
+        config = server.getConfig();
+        output = conn.getOutputStream();
     }
 
     @Override
@@ -54,18 +41,13 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     @Override
-    protected boolean processCommand() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void messageReceived(Object msg) throws IOException {
         if (request == null) {
             request = new NioImapRequest(this);
         }
+
         if (request.parse(msg)) {
             // Request is complete
-            setUpLogContext(connection.getRemoteAddress().toString());
             try {
                 if (!processRequest(request)) {
                     dropConnection();
@@ -79,7 +61,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
                     request = null;
                 }
             }
-            if (mConsecutiveBAD >= MAXIMUM_CONSECUTIVE_BAD) {
+            if (consecutiveBAD >= ImapHandler.MAXIMUM_CONSECUTIVE_BAD) {
                 dropConnection();
             }
         }
@@ -89,59 +71,33 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
         if (req.isMaxRequestSizeExceeded())
             throw new ImapParseException(req.getTag(), "maximum request size exceeded");
 
-        ImapSession i4selected = mSelectedFolder;
+        ImapSession i4selected = selectedFolder;
         if (i4selected != null)
             i4selected.updateAccessTime();
 
         long start = ZimbraPerf.STOPWATCH_IMAP.start();
 
         try {
-            if (!checkAccountStatus())
-                return STOP_PROCESSING;
-
-            if (mAuthenticator != null && !mAuthenticator.isComplete())
+            if (!checkAccountStatus()) {
+                return false;
+            }
+            if (authenticator != null && !authenticator.isComplete()) {
                 return continueAuthentication(req);
-
+            }
             try {
                 boolean keepGoing = executeRequest(req);
-                mConsecutiveBAD = 0;
+                consecutiveBAD = 0;
                 return keepGoing;
             } catch (ImapParseException ipe) {
                 handleParseException(ipe);
-                return CONTINUE_PROCESSING;
+                return true;
             }
         } finally {
             ZimbraPerf.STOPWATCH_IMAP.stop(start);
-            if (mLastCommand != null)
-                ZimbraPerf.IMAP_TRACKER.addStat(mLastCommand.toUpperCase(), start);
+            if (lastCommand != null) {
+                ZimbraPerf.IMAP_TRACKER.addStat(lastCommand.toUpperCase(), start);
+            }
         }
-    }
-
-    /**
-     * Called when connection is closed. No need to worry about concurrent execution since requests are processed in
-     * sequence for any given connection.
-     */
-    @Override
-    protected void dropConnection(boolean sendBanner) {
-        try {
-            unsetSelectedFolder(false);
-        } catch (Exception e) {
-        }
-
-        if (mCredentials != null && !mGoodbyeSent) {
-            ZimbraLog.imap.info("dropping connection for user " + mCredentials.getUsername() + " (server-initiated)");
-        }
-
-        if (!connection.isOpen()) {
-            return; // No longer connected
-        }
-        ZimbraLog.imap.debug("dropConnection: sendBanner = %s\n", sendBanner);
-        cleanup();
-
-        if (sendBanner && !mGoodbyeSent) {
-            sendBYE();
-        }
-        connection.close();
     }
 
     @Override
@@ -167,51 +123,84 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
 
     @Override
     public void connectionIdle() {
-        notifyIdleConnection();
-    }
-
-    @Override
-    protected boolean setupConnection(Socket connection) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected boolean authenticate() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected void notifyIdleConnection() {
         ZimbraLog.imap.debug("dropping connection for inactivity");
         dropConnection();
     }
 
     @Override
-    protected void enableInactivityTimer() {
-        connection.setMaxIdleSeconds(mConfig.getAuthenticatedMaxIdleTime());
-    }
-
-    @Override
-    protected void completeAuthentication() throws IOException {
-        if (mAuthenticator.isEncryptionEnabled()) {
-            connection.startSasl(mAuthenticator.getSaslServer());
-        }
-        mAuthenticator.sendSuccess();
-    }
-
-    @Override
-    protected void flushOutput() throws IOException {
-        mOutputStream.flush();
+    public void setLoggingContext() {
+        setLoggingContext(connection.getRemoteAddress().toString());
     }
 
     @Override
     void sendLine(String line, boolean flush) throws IOException {
-        NioOutputStream out = (NioOutputStream) mOutputStream;
+        NioOutputStream out = (NioOutputStream) output;
         if (out != null) {
             out.write(line);
             out.write("\r\n");
-            if (flush)
+            if (flush) {
                 out.flush();
+            }
         }
+    }
+
+    /**
+     * Called when connection is closed. No need to worry about concurrent execution since requests are processed in
+     * sequence for any given connection.
+     */
+    @Override
+    void dropConnection(boolean sendBanner) {
+        try {
+            unsetSelectedFolder(false);
+        } catch (Exception e) {
+        }
+
+        if (credentials != null && !goodbyeSent) {
+            ZimbraLog.imap.info("dropping connection for user " + credentials.getUsername() + " (server-initiated)");
+        }
+
+        if (!connection.isOpen()) {
+            return; // No longer connected
+        }
+        ZimbraLog.imap.debug("dropConnection: sendBanner = %s\n", sendBanner);
+        cleanup();
+
+        if (sendBanner && !goodbyeSent) {
+            sendBYE();
+        }
+        connection.close();
+    }
+
+    @Override
+    void enableInactivityTimer() {
+        connection.setMaxIdleSeconds(config.getAuthenticatedMaxIdleTime());
+    }
+
+    @Override
+    void completeAuthentication() throws IOException {
+        if (authenticator.isEncryptionEnabled()) {
+            connection.startSasl(authenticator.getSaslServer());
+        }
+        authenticator.sendSuccess();
+    }
+
+    @Override
+    boolean doSTARTTLS(String tag) throws IOException {
+        if (!checkState(tag, State.NOT_AUTHENTICATED)) {
+            return true;
+        } else if (startedTLS) {
+            sendNO(tag, "TLS already started");
+            return true;
+        }
+
+        connection.startTls();
+        sendOK(tag, "begin TLS negotiation now");
+        startedTLS = true;
+        return true;
+    }
+
+    @Override
+    InetSocketAddress getLocalAddress() {
+        return connection.getLocalAddress();
     }
 }

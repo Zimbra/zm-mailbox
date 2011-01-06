@@ -49,6 +49,10 @@ public class NioConnection {
         return server;
     }
 
+    public InetSocketAddress getLocalAddress() {
+        return (InetSocketAddress) session.getServiceAddress();
+    }
+
     public InetSocketAddress getRemoteAddress() {
         return remoteAddress;
     }

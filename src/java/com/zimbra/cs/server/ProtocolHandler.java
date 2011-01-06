@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,7 +16,6 @@
 package com.zimbra.cs.server;
 
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.Zimbra;
 
@@ -72,50 +71,36 @@ public abstract class ProtocolHandler implements Runnable {
      */
     protected abstract void notifyIdleConnection();
 
-    private static Log mLog = LogFactory.getLog(ProtocolHandler.class);
+    private final Log log;
 
     protected Socket mConnection;
-    private boolean mIdle;
-    private final Object mIdleGuard = new Object();
-    private boolean mShuttingDown;
-    private final Object mShuttingDownGuard = new Object();
-    private TcpServer mServer;
+    private volatile boolean idle = true;
+    private volatile boolean shuttingDown = false;
+    private final TcpServer mServer;
     private Thread mHandlerThread;
 
     public ProtocolHandler(TcpServer server) {
         mServer = server;
-        mIdle = true;
-        mShuttingDown = false;
+        log = server.getConfig().getLog();
     }
 
-    protected boolean getIdle() {
-        synchronized (mIdleGuard) {
-            return mIdle;
-        }
-    }
-
-    protected void setIdle(boolean idle) {
-        synchronized (mIdleGuard) {
-            mIdle = idle;
-        }
+    protected void setIdle(boolean value) {
+        idle = value;
     }
 
     private boolean getShuttingDown() {
-        synchronized (mShuttingDownGuard) {
-            return mShuttingDown;
-        }
+        return shuttingDown;
     }
 
-    private void setShuttingDown(boolean b) {
-        synchronized (mShuttingDownGuard) {
-            mShuttingDown = b;
-        }
+    private void setShuttingDown(boolean value) {
+        shuttingDown = value;
     }
 
     void setConnection(Socket connection) {
         mConnection = connection;
     }
 
+    @Override
     public void run() {
         // This asserts any reuse of a ProtocolHandler object.  Once we close a connection
         // we also set it to null, and since there is no setConnection, you can't meaningfully
@@ -135,16 +120,17 @@ public abstract class ProtocolHandler implements Runnable {
             }
 
             if (setupConnection(mConnection)) {
-                if (authenticate())
+                if (authenticate()) {
                     processConnection();
-                else
-                    mLog.info("Authentication failed for client " + remoteAddress);
+                } else {
+                    log.info("Authentication failed for client " + remoteAddress);
+                }
             } else {
-                mLog.info("Connection refused for client " + remoteAddress);
+                log.info("Connection refused for client " + remoteAddress);
             }
         } catch (SocketTimeoutException e) {
             ZimbraLog.addIpToContext(remoteAddress);
-            mLog.debug("Idle timeout: " + e);
+            log.debug("Idle timeout: " + e);
             notifyIdleConnection();
         } catch (OutOfMemoryError e) {
             Zimbra.halt("out of memory", e);
@@ -152,17 +138,17 @@ public abstract class ProtocolHandler implements Runnable {
             Zimbra.halt("Fatal error occurred while handling connection", e);
         } catch (Throwable e) {
             ZimbraLog.addIpToContext(remoteAddress);
-            mLog.info("Exception occurred while handling connection", e);
+            log.info("Exception occurred while handling connection", e);
         } finally {
             dropConnection();
             ZimbraLog.addIpToContext(remoteAddress);
             try {
                 mConnection.close();
             } catch (IOException ioe) {
-                if (mLog.isDebugEnabled()) {
-                    mLog.info("I/O error while closing connection", ioe);
+                if (log.isDebugEnabled()) {
+                    log.info("I/O error while closing connection", ioe);
                 } else {
-                    mLog.info("I/O error while closing connection: " + ioe);
+                    log.info("I/O error while closing connection: " + ioe);
                 }
             } finally {
                 ZimbraLog.clearContext();
@@ -172,7 +158,7 @@ public abstract class ProtocolHandler implements Runnable {
         ZimbraLog.clearContext();
         mServer.removeActiveHandler(this);
         mHandlerThread = null;
-        mLog.info("Handler exiting normally");
+        log.info("Handler exiting normally");
     }
 
     /*
@@ -183,6 +169,7 @@ public abstract class ProtocolHandler implements Runnable {
     protected void startHandshake(final SSLSocket sock) throws IOException {
         sock.startHandshake();
         sock.addHandshakeCompletedListener(new HandshakeCompletedListener() {
+            @Override
             public void handshakeCompleted(HandshakeCompletedEvent event) {
                 hardShutdown("SSL renegotiation denied: " + sock);
             }
@@ -202,13 +189,13 @@ public abstract class ProtocolHandler implements Runnable {
                     if (getShuttingDown()) {
                         // Unless debug level enabled, don't log connection
                         // error if error occurs while socket is being closed
-                        mLog.debug("Shutdown in progress", e);
-                    } else if (mLog.isDebugEnabled()) {
+                        log.debug("Shutdown in progress", e);
+                    } else if (log.isDebugEnabled()) {
                         // For other connection errors, only include full stack
                         // trace if debug level enabled.
-                        mLog.info("I/O error while processing connection", e);
+                        log.info("I/O error while processing connection", e);
                     } else {
-                        mLog.info("I/O error while processing connection: " + e);
+                        log.info("I/O error while processing connection: " + e);
                     }
                 } else {
                     throw e;
@@ -224,30 +211,30 @@ public abstract class ProtocolHandler implements Runnable {
 
     void gracefulShutdown(String reason) {
         setShuttingDown(true);
-        if (reason != null)
-            mLog.info(reason);
-        synchronized (mIdleGuard) {
-            // If handler is idle, it must be blocked on socket read of
-            // next command and can be safely interrupted.
-            // If handler is not idle, it is in the middle of processing
-            // a command.  At the end of the command the handler thread
-            // will exit normally because of setShuttingDown(true) call
-            // above.
-            if (mIdle)
-                hardShutdown(null);
+        if (reason != null) {
+            log.info(reason);
+        }
+        // If handler is idle, it must be blocked on socket read of
+        // next command and can be safely interrupted.
+        // If handler is not idle, it is in the middle of processing
+        // a command.  At the end of the command the handler thread
+        // will exit normally because of setShuttingDown(true) call
+        // above.
+        if (idle) {
+            hardShutdown(null);
         }
     }
 
     void hardShutdown(String reason) {
         setShuttingDown(true);
         if (reason != null)
-            mLog.info(reason);
+            log.info(reason);
         if (!mConnection.isClosed()) {
             dropConnection();
             try {
                 mConnection.close();
             } catch (IOException ioe) {
-                mLog.info("Exception while closing connection", ioe);
+                log.info("Exception while closing connection", ioe);
             }
         }
         if (mHandlerThread != null) {

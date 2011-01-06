@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,7 +23,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthContext;
 
-import java.net.Socket;
+import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -45,13 +45,22 @@ public abstract class Authenticator {
 
     static {
         registerMechanism(PlainAuthenticator.MECHANISM, new AuthenticatorFactory() {
-            public Authenticator getAuthenticator(AuthenticatorUser authUser)  { return new PlainAuthenticator(authUser); }
+            @Override
+            public Authenticator getAuthenticator(AuthenticatorUser authUser) {
+                return new PlainAuthenticator(authUser);
+            }
         });
         registerMechanism(GssAuthenticator.MECHANISM, new AuthenticatorFactory() {
-            public Authenticator getAuthenticator(AuthenticatorUser authUser)  { return new GssAuthenticator(authUser); }
+            @Override
+            public Authenticator getAuthenticator(AuthenticatorUser authUser) {
+                return new GssAuthenticator(authUser);
+            }
         });
         registerMechanism(ZimbraAuthenticator.MECHANISM, new AuthenticatorFactory() {
-            public Authenticator getAuthenticator(AuthenticatorUser authUser)  { return new ZimbraAuthenticator(authUser); }
+            @Override
+            public Authenticator getAuthenticator(AuthenticatorUser authUser) {
+                return new ZimbraAuthenticator(authUser);
+            }
         });
     }
 
@@ -78,7 +87,7 @@ public abstract class Authenticator {
     protected final AuthenticatorUser mAuthUser;
     protected boolean mComplete;
     protected boolean mAuthenticated;
-    protected Socket mConnection;
+    protected InetAddress localAddress;
 
     protected Authenticator(String mechanism, AuthenticatorUser authUser) {
         mProtocol  = authUser.getProtocol();
@@ -107,10 +116,10 @@ public abstract class Authenticator {
 
     public abstract void dispose();
 
-    public void setConnection(Socket conn) {
-        mConnection = conn;
+    public void setLocalAddress(InetAddress addr) {
+        localAddress = addr;
     }
-    
+
     public boolean isComplete() {
         return mComplete;
     }
@@ -130,11 +139,11 @@ public abstract class Authenticator {
     public AuthenticatorUser getAuthenticatorUser() {
         return mAuthUser;
     }
-    
+
     public void sendSuccess() throws IOException {
         mAuthUser.sendSuccessful();
     }
-    
+
     public void sendFailed() throws IOException {
         mAuthUser.sendFailed();
         mComplete = true;
@@ -143,7 +152,7 @@ public abstract class Authenticator {
     public void sendFailed(String msg) throws IOException {
         mAuthUser.sendFailed(msg);
     }
-    
+
     public void sendBadRequest() throws IOException {
         mAuthUser.sendBadRequest("malformed authentication request");
         mComplete = true;

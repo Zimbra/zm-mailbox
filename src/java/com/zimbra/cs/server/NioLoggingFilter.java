@@ -16,13 +16,11 @@
 package com.zimbra.cs.server;
 
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.ZimbraLog;
 
 import javax.net.ssl.SSLException;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.filterchain.IoFilterAdapter;
-import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.core.write.WriteException;
 import org.apache.mina.core.write.WriteRequest;
@@ -35,48 +33,21 @@ import java.net.SocketException;
  */
 class NioLoggingFilter extends IoFilterAdapter {
     private final Log log;
-    private final boolean mHexDump;
+    private final boolean hexDump;
 
     NioLoggingFilter(NioServer server, boolean hexDump) {
         log = server.getLog();
-        mHexDump = hexDump;
-    }
-
-    @Override
-    public void sessionCreated(NextFilter nextFilter, IoSession session) {
-        debug(session, "Session created");
-        nextFilter.sessionCreated(session);
-    }
-
-    @Override
-    public void sessionOpened(NextFilter nextFilter, IoSession session) {
-        debug(session, "Connection opened");
-        nextFilter.sessionOpened(session);
-    }
-
-    @Override
-    public void sessionClosed(NextFilter nextFilter, IoSession session) {
-        debug(session, "Connection closed");
-        nextFilter.sessionClosed(session);
-    }
-
-    @Override
-    public void sessionIdle(NextFilter nextFilter, IoSession session, IdleStatus status) {
-        if (log.isDebugEnabled()) {
-            debug(session, "Connection idle: " + status);
-        }
-        nextFilter.sessionIdle(session, status);
+        this.hexDump = hexDump;
     }
 
     @Override
     public void exceptionCaught(NextFilter nextFilter, IoSession session, Throwable cause) {
-        // Use NioConnection.getRemoteAddress() because IoSession.getRemoteAddress() can be null.
-        ZimbraLog.addIpToContext(IoHandlerImpl.getConnection(session).getRemoteAddress().toString());
+        NioHandlerDispatcher.getHandler(session).setLoggingContext();
         String msg = "Exception caught: " + cause;
         if (isSocketError(cause)) {
             // If connection error, then only log full stack trace if debug enabled
             if (log.isDebugEnabled()) {
-                log.info(msg, cause);
+                log.debug(msg, cause);
             } else {
                 log.info(msg);
             }
@@ -92,29 +63,19 @@ class NioLoggingFilter extends IoFilterAdapter {
 
     @Override
     public void messageReceived(NextFilter nextFilter, IoSession session, Object message) {
+        NioHandlerDispatcher.getHandler(session).setLoggingContext();
         if (log.isTraceEnabled()) {
-            trace(session, "C: %s", pp(message));
+            log.trace("C: %s", pp(message));
         }
         nextFilter.messageReceived(session, message);
     }
 
     @Override
-    public void messageSent(NextFilter nextFilter, IoSession session, WriteRequest message) {
+    public void filterWrite(NextFilter nextFilter, IoSession session, WriteRequest message) {
         if (log.isTraceEnabled()) {
-            trace(session, "S: %s", pp(message));
+            log.trace("S: %s", pp(message));
         }
-        nextFilter.messageSent(session, message);
-    }
-
-    @Override
-    public void filterWrite(NextFilter nextFilter, IoSession session,  WriteRequest writeRequest) {
-        nextFilter.filterWrite(session, writeRequest);
-    }
-
-    @Override
-    public void filterClose(NextFilter nextFilter, IoSession session) throws Exception {
-        debug(session, "Connection closed by client");
-        nextFilter.filterClose(session);
+        nextFilter.filterWrite(session, message);
     }
 
     private Object pp(Object msg) {
@@ -156,7 +117,7 @@ class NioLoggingFilter extends IoFilterAdapter {
 
     private String pp(ByteBuffer bb) {
         StringBuilder sb = new StringBuilder(bb.remaining());
-        if (mHexDump) {
+        if (hexDump) {
             sb = NioUtil.appendHex(sb.append('('), bb).append(") ");
         }
         int limit = bb.limit();
@@ -164,18 +125,6 @@ class NioLoggingFilter extends IoFilterAdapter {
             sb.append((char) (bb.get(i) & 0xff));
         }
         return sb.toString();
-    }
-
-    private void debug(IoSession session, String msg) {
-        if (log.isDebugEnabled()) {
-            ZimbraLog.addIpToContext(session.getRemoteAddress().toString());
-            log.debug(msg);
-        }
-    }
-
-    private void trace(IoSession session, String format, Object arg) {
-        ZimbraLog.addIpToContext(session.getRemoteAddress().toString());
-        log.trace(format, arg);
     }
 
 }

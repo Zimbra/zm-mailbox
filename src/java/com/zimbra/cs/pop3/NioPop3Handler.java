@@ -18,22 +18,25 @@ package com.zimbra.cs.pop3;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.server.NioHandler;
 import com.zimbra.cs.server.NioConnection;
+import com.zimbra.cs.server.NioOutputStream;
 
 import java.io.IOException;
-import java.net.Socket;
+import java.net.InetSocketAddress;
 
 final class NioPop3Handler extends Pop3Handler implements NioHandler {
     private final NioConnection connection;
 
     NioPop3Handler(NioPop3Server server, NioConnection conn) {
-        super(server);
+        super(server.getConfig());
         connection = conn;
-        mOutputStream = conn.getOutputStream();
+        output = conn.getOutputStream();
     }
 
     @Override
     public void connectionOpened() throws IOException {
-        startConnection(connection.getRemoteAddress().getAddress());
+        if (!startConnection(connection.getRemoteAddress().getAddress())) {
+            connection.close();
+        }
     }
 
     @Override
@@ -49,11 +52,21 @@ final class NioPop3Handler extends Pop3Handler implements NioHandler {
 
     @Override
     public void messageReceived(Object msg) throws IOException {
-        try {
-            processCommand((String) msg);
-        } finally {
-            if (dropConnection) dropConnection();
+        if (!processCommand((String) msg)) {
+            dropConnection();
         }
+    }
+
+    @Override
+    public void dropConnection() {
+        if (!connection.isOpen()) {
+            return;
+        }
+        try {
+            output.close();
+        } catch (IOException never) {
+        }
+        connection.close();
     }
 
     @Override
@@ -63,32 +76,25 @@ final class NioPop3Handler extends Pop3Handler implements NioHandler {
     }
 
     @Override
-    public void dropConnection() {
-        if (!connection.isOpen()) {
-            return;
-        }
-        try {
-            mOutputStream.close();
-        } catch (IOException never) {
-        }
-        connection.close();
-    }
-
-    @Override
-    protected boolean setupConnection(Socket connection) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected boolean processCommand() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     protected void completeAuthentication() throws IOException {
-        if (mAuthenticator.isEncryptionEnabled()) {
-            connection.startSasl(mAuthenticator.getSaslServer());
+        if (authenticator.isEncryptionEnabled()) {
+            connection.startSasl(authenticator.getSaslServer());
         }
-        mAuthenticator.sendSuccess();
+        authenticator.sendSuccess();
+    }
+
+    @Override
+    InetSocketAddress getLocalAddress() {
+        return connection.getLocalAddress();
+    }
+
+    @Override
+    void sendLine(String line, boolean flush) throws IOException {
+        NioOutputStream nioutput = (NioOutputStream) output;
+        nioutput.write(line);
+        nioutput.write(LINE_SEPARATOR);
+        if (flush) {
+            nioutput.flush();
+        }
     }
 }

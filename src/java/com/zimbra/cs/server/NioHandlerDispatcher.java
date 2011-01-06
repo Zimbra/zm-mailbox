@@ -29,11 +29,11 @@ import com.zimbra.cs.util.Config;
  * Handler for MINA I/O events. Responsible for notifying the connection's {@link NioHandler} when a connection has
  * been opened, closed, become idle, or a new request has been received.
  */
-class IoHandlerImpl implements IoHandler {
+final class NioHandlerDispatcher implements IoHandler {
     private final NioServer server;
     private final NioServerStats stats;
 
-    IoHandlerImpl(NioServer server) {
+    NioHandlerDispatcher(NioServer server) {
         this.server = server;
         stats = server.getStats();
     }

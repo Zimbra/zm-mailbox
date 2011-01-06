@@ -15,8 +15,6 @@
 
 package com.zimbra.cs.imap;
 
-import com.zimbra.cs.server.NioHandler;
-
 import java.io.IOException;
 
 public class NioImapRequest extends ImapRequest {
@@ -24,8 +22,8 @@ public class NioImapRequest extends ImapRequest {
     private int literalCount;   // remaining byte count for current literal
     private boolean complete;   // if true then request is complete
 
-    public NioImapRequest(NioHandler handler) {
-        super((NioImapHandler) handler);
+    public NioImapRequest(ImapHandler handler) {
+        super(handler);
     }
 
     public boolean parse(Object obj) throws IOException {

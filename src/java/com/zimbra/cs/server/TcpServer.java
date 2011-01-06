@@ -19,6 +19,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.nio.channels.AsynchronousCloseException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
@@ -26,10 +29,16 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.HandshakeCompletedEvent;
+import javax.net.ssl.HandshakeCompletedListener;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLSocket;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.Zimbra;
@@ -253,4 +262,5 @@ public abstract class TcpServer implements Runnable, Server {
     }
 
     protected abstract ProtocolHandler newProtocolHandler();
+
 }
