@@ -42,6 +42,12 @@ public class AttributeInfo {
     private static Pattern GENTIME_PATTERN = Pattern.compile("^\\d{14}[zZ]$");
 
     private static Pattern DURATION_PATTERN = Pattern.compile("^\\d+([hmsd]|ms)?$");
+    
+    public static String DURATION_PATTERN_DOC =
+        "Must be in valid duration format: {digits}{time-unit}.  " + 
+        "digits: 0-9, time-unit: [hmsd]|ms.  " + 
+        "h - hours, m - minutes, s - seconds, d - days, ms - milliseconds.  " + 
+        "If time unit is not specified, the default is s(seconds).";
 
     /** attribute name */
     protected String mName;
@@ -295,7 +301,7 @@ public class AttributeInfo {
                 throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be TRUE or FALSE", null);
         case TYPE_DURATION:
             if (!DURATION_PATTERN.matcher(value).matches())
-                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be a valid duration: nnnn[hsmd]", null);
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName + " " + DURATION_PATTERN_DOC, null);
             long l = DateUtil.getTimeInterval(value, 0);
             if (l < mMin)
                 throw AccountServiceException.INVALID_ATTR_VALUE(mName+" is shorter than minimum allowed: "+mMinDuration, null);
@@ -447,7 +453,10 @@ public class AttributeInfo {
     }
 
     String getDescription() {
-        return mDescription;
+        if (AttributeType.TYPE_DURATION == getType())
+            return mDescription + "  " + DURATION_PATTERN_DOC;
+        else    
+            return mDescription;
     }
 
     long getMax() {
