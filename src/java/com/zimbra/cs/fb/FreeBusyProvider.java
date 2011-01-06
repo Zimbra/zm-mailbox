@@ -74,6 +74,7 @@ public abstract class FreeBusyProvider {
 
     // propagation of Zimbra users free/busy to 3rd party system
     public abstract boolean registerForMailboxChanges();
+    public abstract boolean registerForMailboxChanges(String accountId);
     public abstract Set<MailItem.Type> registerForItemTypes();
     public abstract boolean handleMailboxChange(String accountId);
     public abstract long cachedFreeBusyStartTime();
@@ -104,7 +105,7 @@ public abstract class FreeBusyProvider {
 
     public static void mailboxChanged(String accountId, Set<MailItem.Type> changedType) {
         for (FreeBusyProvider prov : sPROVIDERS)
-            if (prov.registerForMailboxChanges() && !Collections.disjoint(changedType, prov.registerForItemTypes())) {
+            if (prov.registerForMailboxChanges(accountId) && !Collections.disjoint(changedType, prov.registerForItemTypes())) {
                 FreeBusySyncQueue queue = sPUSHQUEUES.get(prov.getName());
                 if (queue == null)
                     queue = startConsumerThread(prov);
@@ -201,9 +202,6 @@ public abstract class FreeBusyProvider {
     }
 
     public String getQueueFilename() {
-        if (!registerForMailboxChanges()) {
-            return "(none)";
-        }
         return LC.freebusy_queue_directory.value() + "queue-" + getName();
     }
 
