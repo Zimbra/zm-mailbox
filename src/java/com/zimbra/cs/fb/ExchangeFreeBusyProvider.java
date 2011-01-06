@@ -54,7 +54,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.httpclient.HttpProxyUtil;
-import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 
@@ -217,20 +216,21 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
 	}
 	
 	public boolean registerForMailboxChanges() {
-		if (sRESOLVERS.size() > 1)
-			return true;
-		Config config = null;
-		try {
-			config = Provisioning.getInstance().getConfig();
-		} catch (ServiceException se) {
-			ZimbraLog.fb.warn("cannot fetch config", se);
-			return false;
-		}
-		String url = config.getAttr(Provisioning.A_zimbraFreebusyExchangeURL, null);
-		String user = config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthUsername, null);
-		String pass = config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthPassword, null);
-		String scheme = config.getAttr(Provisioning.A_zimbraFreebusyExchangeAuthScheme, null);
-		return (url != null && user != null && pass != null && scheme != null);
+	    return registerForMailboxChanges(null);
+	}
+	
+	public boolean registerForMailboxChanges(String accountId) {
+	    String email = null;
+	    try {
+	        Account account = null;
+	        if (accountId != null)
+	            account = Provisioning.getInstance().getAccountById(accountId);
+	        if (account != null)
+	            email = account.getName();
+        } catch (ServiceException se) {
+            ZimbraLog.fb.warn("cannot fetch account", se);
+	    }
+        return getServerInfo(email) != null;
 	}
 	
 	public long cachedFreeBusyStartTime() {
