@@ -35,6 +35,7 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import com.zimbra.common.util.FileUtil;
+import com.zimbra.common.util.L10nUtil;
 
 public class LocalConfig {
 
@@ -201,6 +202,8 @@ public class LocalConfig {
             keys = KnownKey.getAll();
             Arrays.sort(keys);
         }
+        // Get the default keyset for the default system locale
+        Set<String> keySet = L10nUtil.getBundleKeySet(null);
         for (int i = 0; i < keys.length; i++) {
             KnownKey key = KnownKey.get(keys[i]);
             if (key == null) {
@@ -208,9 +211,9 @@ public class LocalConfig {
                 continue;
             }
 
-            String doc = key.doc();
-            if (doc != null && (key.isSupported() || printUnsupported)) {
-                if (i > 0) {
+           if (keySet.contains(key.key()) && (key.isSupported() || printUnsupported)) {
+            	String doc = key.doc();
+            	if (i > 0) {
                     ps.println();
                 }
                 ps.println(keys[i] + ':');
