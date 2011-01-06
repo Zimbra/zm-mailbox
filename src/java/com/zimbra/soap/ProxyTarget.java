@@ -127,6 +127,7 @@ public final class ProxyTarget {
             if (mTimeout >= 0)
                 transport.setTimeout((int) Math.min(mTimeout, Integer.MAX_VALUE));
 
+            transport.setResponseProtocol(zsc.getResponseProtocol());
             Element response = transport.invokeRaw(envelope);
             Element body = transport.extractBodyElement(response);
             return new Pair<Element, Element>(transport.getZimbraContext(), body);
