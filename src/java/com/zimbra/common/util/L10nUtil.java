@@ -24,6 +24,7 @@ import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
@@ -32,7 +33,7 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-import javax.servlet.http.*;
+import javax.servlet.http.HttpServletRequest;
 
 import com.zimbra.common.localconfig.LC;
 
@@ -277,12 +278,44 @@ public class L10nUtil {
             else
                 return fmt;
         } catch (MissingResourceException e) {
-            ZimbraLog.misc.error("no resource bundle for base name " + basename + " can be found, " + 
+            ZimbraLog.misc.warn("no resource bundle for base name " + basename + " can be found, " + 
                     "(locale=" + key + ")", e);
             return null;
         }
     }
 
+    /**
+     * Shortned version of the getBundleKeySet method that uses the default message bundle as the base name
+     * @param lc The locale, if null it will use the default locale
+     * @return A set of keys if any found, will not return null
+     */
+    public static Set<String> getBundleKeySet(Locale lc) {
+        return getBundleKeySet(MSG_FILE_BASENAME, lc);
+    }
+
+    /**
+     * Gets the list of keys for a given bundle for a given locale
+     * @param basename The name of the bundle (ex ZMsgs)
+     * @param lc The locale, null will use the default system locale
+     * @return A set of keys if any found, will not return null
+     */
+    public static Set<String> getBundleKeySet(String basename, Locale lc) {
+        ResourceBundle rb;
+        try {
+            if (lc == null)
+                lc = Locale.getDefault();
+            rb = ResourceBundle.getBundle(basename, lc, sMsgClassLoader);
+            Set<String> result = new HashSet<String>();
+            Enumeration<String> keysEnum =  rb.getKeys();
+            while(keysEnum.hasMoreElements()) {
+                result.add(keysEnum.nextElement());
+            }
+            return result;
+        } catch (MissingResourceException e) {
+            // just return an empty set if we can't find the bundle
+            return Collections.emptySet();
+        }
+    }
     /** Returns the set of localized server messages for the given keys across
      *  all installed locales on the system. */
     public static Set<String> getMessagesAllLocales(MsgKey... msgkeys) {
