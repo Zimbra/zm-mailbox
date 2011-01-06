@@ -310,7 +310,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
  -->
 <attr id="8" name="zimbraHsmAge" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" deprecatedSince="6.0.0_BETA2">
   <globalConfigValue>30d</globalConfigValue>
-  <desc>Minimum age of mail items whose filesystem data will be moved to secondary storage (nnnnn[hmsd]).</desc>
+  <desc>Minimum age of mail items whose filesystem data will be moved to secondary storage.</desc>
   <deprecateDesc>deprecated in favor for zimbraHsmPolicy</deprecateDesc>
 </attr>
 
@@ -651,7 +651,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="106" name="zimbraMailMessageLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable,accountInfo">
   <defaultCOSValue>0</defaultCOSValue>
-  <desc>lifetime (nnnnn[hmsd]) of a mail message regardless of location</desc>
+  <desc>lifetime of a mail message regardless of location</desc>
 </attr>
 
 <attr id="107" name="zimbraContactMaxNumEntries" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
@@ -661,22 +661,22 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="108" name="zimbraAuthTokenLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>2d</defaultCOSValue>
-  <desc>lifetime (nnnnn[hmsd]) of newly created auth tokens</desc>
+  <desc>lifetime of newly created auth tokens</desc>
 </attr>
 
 <attr id="109" name="zimbraAdminAuthTokenLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>12h</defaultCOSValue>
-  <desc>lifetime (nnnnn[hmsd]) of newly created admin auth tokens</desc>
+  <desc>lifetime of newly created admin auth tokens</desc>
 </attr>
 
 <attr id="110" name="zimbraMailMinPollingInterval" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
   <defaultCOSValue>2m</defaultCOSValue>
-  <desc>minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])</desc>
+  <desc>minimum allowed value for zimbraPrefMailPollingInterval</desc>
 </attr>
 
 <attr id="111" name="zimbraPrefMailPollingInterval" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>5m</defaultCOSValue>
-  <desc>interval at which the web client polls the server for new messages (nnnnn[hmsd])</desc>
+  <desc>interval at which the web client polls the server for new messages</desc>
 </attr>
 
 <attr id="112" name="zimbraAccountClientAttr" type="string" max="1024" cardinality="multi" optionalIn="globalConfig" deprecatedSince="5.0">
@@ -690,7 +690,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="114" name="zimbraLastLogonTimestampFrequency" type="duration" cardinality="single" optionalIn="globalConfig">
   <globalConfigValue>7d</globalConfigValue>
-  <desc>how often (nnnnn[hmsd]) the zimbraLastLogonTimestamp is updated.  
+  <desc>how often the zimbraLastLogonTimestamp is updated.  
         if set to 0, updating zimbraLastLogonTimestamp is completely disabled
   </desc>
 </attr>
@@ -810,7 +810,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="147" name="zimbraMailIdleSessionTimeout" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
   <defaultCOSValue>0</defaultCOSValue>
-  <desc>idle timeout (nnnnn[hmsd])</desc>
+  <desc>idle timeout</desc>
 </attr>
 
 <attr id="148" name="zimbraPrefContactsPerPage" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable"> <!-- TODO: get min/max? -->
@@ -1051,7 +1051,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="191" name="zimbraVirusDefinitionsUpdateFrequency" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="mta">
   <globalConfigValue>2h</globalConfigValue>
-  <desc>how often (nnnnn[hmsd]) the virus definitions are updated</desc>
+  <desc>how often the virus definitions are updated</desc>
 </attr>
 
 <attr id="192" name="zimbraPrefShowFragments" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
@@ -1382,12 +1382,12 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="263" name="zimbraLogRawLifetime" type="duration" cardinality="single" optionalIn="globalConfig">
   <globalConfigValue>31d</globalConfigValue>
-  <desc>lifetime (nnnnn[hmsd]) of raw log rows in consolidated logger tables</desc>
+  <desc>lifetime of raw log rows in consolidated logger tables</desc>
 </attr>
 
 <attr id="264" name="zimbraLogSummaryLifetime" type="duration" cardinality="single" optionalIn="globalConfig">
   <globalConfigValue>730d</globalConfigValue>
-  <desc>lifetime (nnnnn[hmsd]) of summarized log rows in consolidated logger tables</desc>
+  <desc>lifetime of summarized log rows in consolidated logger tables</desc>
 </attr>
 
 <attr id="267" name="zimbraSpellCheckURL" type="astring" max="256" cardinality="multi" optionalIn="globalConfig,server" flags="serverInherited">
@@ -2840,7 +2840,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="561" name="zimbraPrefAutoSaveDraftInterval" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0">
   <defaultCOSValue>30s</defaultCOSValue>
-  <desc>time to wait before auto saving a draft(nnnnn[hmsd])</desc>
+  <desc>time to wait before auto saving a draft</desc>
 </attr>
 
 <attr id="562" name="zimbraVirtualIPAddress" type="string" max="256" cardinality="multi" optionalIn="domain" since="5.0.0">
