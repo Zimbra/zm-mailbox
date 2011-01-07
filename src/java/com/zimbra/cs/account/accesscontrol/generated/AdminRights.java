@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110103-2343 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110106-1444 */
 
 
     public static AdminRight R_accessGAL;
@@ -125,8 +125,6 @@ public class AdminRights {
     public static AdminRight R_checkDirectoryOnFileSystem;
     public static AdminRight R_checkDomainMXRecord;
     public static AdminRight R_checkExchangeAuthConfig;
-    public static AdminRight R_checkExternalAuthConfig;
-    public static AdminRight R_checkExternalGALConfig;
     public static AdminRight R_checkHealth;
     public static AdminRight R_checkRightGrp;
     public static AdminRight R_checkRightUsr;
@@ -528,8 +526,6 @@ public class AdminRights {
         R_checkDirectoryOnFileSystem           = rm.getAdminRight(Right.RT_checkDirectoryOnFileSystem);
         R_checkDomainMXRecord                  = rm.getAdminRight(Right.RT_checkDomainMXRecord);
         R_checkExchangeAuthConfig              = rm.getAdminRight(Right.RT_checkExchangeAuthConfig);
-        R_checkExternalAuthConfig              = rm.getAdminRight(Right.RT_checkExternalAuthConfig);
-        R_checkExternalGALConfig               = rm.getAdminRight(Right.RT_checkExternalGALConfig);
         R_checkHealth                          = rm.getAdminRight(Right.RT_checkHealth);
         R_checkRightGrp                        = rm.getAdminRight(Right.RT_checkRightGrp);
         R_checkRightUsr                        = rm.getAdminRight(Right.RT_checkRightUsr);
