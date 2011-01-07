@@ -24,7 +24,9 @@ import junit.framework.TestCase;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.zclient.ZFilterAction;
@@ -67,15 +69,22 @@ public class TestFilterExisting extends TestCase {
     private static final String DISCARD_RULE_NAME = NAME_PREFIX + " discard";
     private static final String REDIRECT_RULE_NAME = NAME_PREFIX + " redirect";
 
-    private ZFilterRules mOriginalRules;
-
+    private ZFilterRules originalRules;
+    private String originalBatchSize;
+    private String originalSleepInterval;
+    
     @Override
     public void setUp() throws Exception {
         cleanUp();
 
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        mOriginalRules = mbox.getIncomingFilterRules();
+        originalRules = mbox.getIncomingFilterRules();
+        originalBatchSize = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraFilterBatchSize);
+        originalSleepInterval = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraFilterSleepInterval);
         saveNewRules();
+        
+        // Speed up the test.
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraFilterSleepInterval, "0");
     }
 
     /**
@@ -354,6 +363,52 @@ public class TestFilterExisting extends TestCase {
         assertEquals("f", msg.getFlags());
     }
 
+    /**
+     * Confirms that we're enforcing {@code zimbraFilterBatchSize}.
+     */
+    public void testBatchSize() throws Exception {
+        TestUtil.getAccount(USER_NAME).setFilterBatchSize(1);
+        
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String subject = NAME_PREFIX + " testBatchSize flag";
+        String msg1Id = TestUtil.addMessage(mbox, subject + " 1");
+        String msg2Id = TestUtil.addMessage(mbox, subject + " 2");
+        try {
+            runRules(new String[] { FLAG_RULE_NAME }, null, "subject: \'" + subject + "\'");
+            fail("Batch size was not enforced");
+        } catch (SoapFaultException e) {
+            String msg = e.getMessage();
+            assertTrue(msg.contains("2 messages"));
+            assertTrue(msg.contains("limit of 1"));
+        }
+        
+        // Make sure the rule was not executed.
+        ZMessage msg = mbox.getMessageById(msg1Id);
+        if (msg.hasFlags()) {
+            assertFalse(msg.getFlags().contains("f"));
+        }
+        msg = mbox.getMessageById(msg2Id);
+        if (msg.hasFlags()) {
+            assertFalse(msg.getFlags().contains("f"));
+        }
+    }
+
+    /**
+     * Confirms that {@code zimbraFilterSleepInterval slows down
+     * {@code ApplyFilterRules}.
+     */
+    public void testSleepInterval() throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String subject = NAME_PREFIX + " testSleepInterval";
+        TestUtil.addMessage(mbox, subject + " 1");
+        TestUtil.addMessage(mbox, subject + " 2");
+
+        TestUtil.getAccount(USER_NAME).setFilterSleepInterval("500ms");
+        long startTime = System.currentTimeMillis();
+        runRules(new String[] { KEEP_RULE_NAME }, null, "subject: \'" + subject + "\'");
+        assertTrue(System.currentTimeMillis() - startTime > 500);
+    }
+    
     private void assertMoved(String sourceFolderName, String destFolderName, String subject)
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -485,7 +540,9 @@ public class TestFilterExisting extends TestCase {
     @Override
     protected void tearDown() throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        mbox.saveIncomingFilterRules(mOriginalRules);
+        mbox.saveIncomingFilterRules(originalRules);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraFilterBatchSize, originalBatchSize);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraFilterSleepInterval, originalSleepInterval);
         cleanUp();
     }
 

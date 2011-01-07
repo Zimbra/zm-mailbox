@@ -24,6 +24,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
@@ -40,59 +41,61 @@ import java.util.Collection;
 public class IncomingMessageHandler
 extends FilterHandler {
 
-    private DeliveryContext mContext;
-    private ParsedMessage mParsedMessage;
-    private Mailbox mMailbox;
-    private int mDefaultFolderId;
-    private String mRecipientAddress;
-    private int mSize;
+    private OperationContext octxt;
+    private DeliveryContext dctxt;
+    private ParsedMessage parsedMessage;
+    private Mailbox mailbox;
+    private int defaultFolderId;
+    private String recipientAddress;
+    private int size;
 
-    public IncomingMessageHandler(DeliveryContext context, Mailbox mbox,
+    public IncomingMessageHandler(OperationContext octxt, DeliveryContext dctxt, Mailbox mbox,
                                   String recipientAddress, ParsedMessage pm, int size,
                                   int defaultFolderId) {
-        mContext = context;
-        mMailbox = mbox;
-        mRecipientAddress = recipientAddress;
-        mParsedMessage = pm;
-        mSize = size;
-        mDefaultFolderId = defaultFolderId;
+        this.octxt = octxt;
+        this.dctxt = dctxt;
+        this.mailbox = mbox;
+        this.recipientAddress = recipientAddress;
+        this.parsedMessage = pm;
+        this.size = size;
+        this.defaultFolderId = defaultFolderId;
     }
 
     @Override
     public MimeMessage getMimeMessage() {
-        return mParsedMessage.getMimeMessage();
+        return parsedMessage.getMimeMessage();
     }
 
     @Override
     public ParsedMessage getParsedMessage() {
-        return mParsedMessage;
+        return parsedMessage;
     }
 
     @Override
     public String getDefaultFolderPath() throws ServiceException {
-        return mMailbox.getFolderById(null, mDefaultFolderId).getPath();
+        return mailbox.getFolderById(octxt, defaultFolderId).getPath();
     }
 
     @Override
     public Message explicitKeep(Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
-        return addMessage(mDefaultFolderId, flagActions, tags);
+        return addMessage(defaultFolderId, flagActions, tags);
     }
 
     @Override
     public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
-        ItemId id = FilterUtil.addMessage(mContext, mMailbox, mParsedMessage, mRecipientAddress, folderPath,
-                                          false, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mMailbox),
-                                          tags, Mailbox.ID_AUTO_INCREMENT, null);
+        ItemId id = FilterUtil.addMessage(dctxt, mailbox, parsedMessage, recipientAddress, folderPath,
+                                          false, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mailbox),
+                                          tags, Mailbox.ID_AUTO_INCREMENT, octxt);
 
         // Do spam training if the user explicitly filed the message into
         // the spam folder (bug 37164).
         try {
-            Folder folder = mMailbox.getFolderByPath(null, folderPath);
+            Folder folder = mailbox.getFolderByPath(octxt, folderPath);
             if (folder.getId() == Mailbox.ID_FOLDER_SPAM && id.isLocal()) {
                 SpamReport report = new SpamReport(true, "filter", folderPath);
-                SpamHandler.getInstance().handle(null, mMailbox, id.getId(), MailItem.Type.MESSAGE, report);
+                SpamHandler.getInstance().handle(octxt, mailbox, id.getId(), MailItem.Type.MESSAGE, report);
             }
         } catch (NoSuchItemException e) {
             ZimbraLog.filter.debug("Unable to do spam training for message %s because folder path %s does not exist.",
@@ -107,15 +110,15 @@ extends FilterHandler {
     @Override
     public Message implicitKeep(Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
-        int folderId = SpamHandler.isSpam(getMimeMessage()) ? Mailbox.ID_FOLDER_SPAM : mDefaultFolderId;
+        int folderId = SpamHandler.isSpam(getMimeMessage()) ? Mailbox.ID_FOLDER_SPAM : defaultFolderId;
         return addMessage(folderId, flagActions, tags);
     }
 
     private Message addMessage(int folderId, Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
         try {
-            return mMailbox.addMessage(null, mParsedMessage, folderId,
-                false, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mMailbox), tags, mRecipientAddress, mContext);
+            return mailbox.addMessage(octxt, parsedMessage, folderId,
+                false, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mailbox), tags, recipientAddress, dctxt);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add incoming message", e);
         }
@@ -124,11 +127,11 @@ extends FilterHandler {
     @Override
     public void redirect(String destinationAddress)
     throws ServiceException {
-        FilterUtil.redirect(mMailbox, mParsedMessage.getMimeMessage(), destinationAddress);
+        FilterUtil.redirect(mailbox, parsedMessage.getMimeMessage(), destinationAddress);
     }
 
     @Override
     public int getMessageSize() {
-        return mSize;
+        return size;
     }
 }

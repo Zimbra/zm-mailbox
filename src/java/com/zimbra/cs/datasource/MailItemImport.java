@@ -67,7 +67,7 @@ public abstract class MailItemImport implements DataSource.DataImport {
         switch (folderId) {
         case Mailbox.ID_FOLDER_INBOX:
             try {
-                List<ItemId> addedMessageIds = RuleManager.applyRulesToIncomingMessage(mbox, pm, size,
+                List<ItemId> addedMessageIds = RuleManager.applyRulesToIncomingMessage(octxt, mbox, pm, size,
                     dataSource.getEmailAddress(), dc, Mailbox.ID_FOLDER_INBOX);
                 Integer newMessageId = getFirstLocalId(addedMessageIds);
                 if (newMessageId == null) {

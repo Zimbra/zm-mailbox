@@ -238,7 +238,7 @@ public class Pop3Sync extends MailItemImport {
             } else {
                 Integer localId = getFirstLocalId(
                     RuleManager.applyRulesToIncomingMessage(
-                        mbox, pm, size, dataSource.getEmailAddress(), dc, dataSource.getFolderId(), allowFilterToMountpoint));
+                        null, mbox, pm, size, dataSource.getEmailAddress(), dc, dataSource.getFolderId(), allowFilterToMountpoint));
                 if (localId != null) {
                     msg = mbox.getMessageById(null, localId);
                 }

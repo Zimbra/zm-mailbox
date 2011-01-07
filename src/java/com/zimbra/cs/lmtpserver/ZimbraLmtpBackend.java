@@ -523,7 +523,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                     // Get msgid first, to avoid having to reopen and reparse the blob
                                     // file if Mailbox.addMessageInternal() closes it.
                                     pm.getMessageID();
-                                    addedMessageIds = RuleManager.applyRulesToIncomingMessage(mbox, pm, (int) blob.getRawSize(),
+                                    addedMessageIds = RuleManager.applyRulesToIncomingMessage(null, mbox, pm, (int) blob.getRawSize(),
                                                                                               rcptEmail, sharedDeliveryCtxt, Mailbox.ID_FOLDER_INBOX);
                                 } else {
                                     pm.getMessageID();
