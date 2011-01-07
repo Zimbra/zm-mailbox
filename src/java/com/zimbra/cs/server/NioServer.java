@@ -207,8 +207,8 @@ public abstract class NioServer implements Server {
         acceptor.setHandler(new NioHandlerDispatcher(this));
         try {
             acceptor.bind();
-        } catch(IOException e) {
-            throw ServiceException.FAILURE("Failed to start", e);
+        } catch (Throwable e) {
+            Zimbra.halt(config.getProtocol() + " NioServer failed to start", e);
         }
         getLog().info("Starting %s NioServer on %s%s", getConfig().getProtocol(), acceptor.getLocalAddress(),
                 sc.isSslEnabled() ? " (SSL)" : "");

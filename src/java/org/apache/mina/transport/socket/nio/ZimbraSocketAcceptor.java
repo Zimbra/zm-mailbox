@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -17,6 +17,7 @@ package org.apache.mina.transport.socket.nio;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -33,6 +34,8 @@ import org.apache.mina.transport.socket.SocketAcceptor;
 import org.apache.mina.transport.socket.SocketSessionConfig;
 import org.apache.mina.transport.socket.nio.NioProcessor;
 
+import com.zimbra.cs.util.Zimbra;
+
 /**
  * Zimbra patched version of {@code NioSocketAcceptor}.
  * <p>
@@ -40,6 +43,9 @@ import org.apache.mina.transport.socket.nio.NioProcessor;
  * is necessary in order for us to pre-bind server socket channel to privileged port as {@code root} using Jetty's
  * {@code setuid} extension before starting the server. To address this, this implementation accepts a pre-bound
  * {@link ServerSocketChannel}.
+ * <p>
+ * The original implementation pauses for a bit and keeps running when {@link ServerSocketChannel#accept()} failed. We
+ * modified this behavior by halting the entire process in order to prompt the admin to fix the problem.
  * <p>
  * Since this implementation needs to access package private classes of {@code org.apache.mina.transport.socket.nio},
  * this class is located in the same package. To avoid security check by JRE, this class needs to be loaded by the same
@@ -149,7 +155,14 @@ public final class ZimbraSocketAcceptor extends AbstractPollingIoAcceptor<NioSes
         }
 
         // accept the connection from the client
-        SocketChannel ch = handle.accept();
+        SocketChannel ch = null;
+        try {
+            ch = handle.accept();
+        } catch (ClosedChannelException e) {
+            throw e;
+        } catch (Throwable e) {
+            Zimbra.halt("accept failed", e);
+        }
 
         if (ch == null) {
             return null;
