@@ -138,7 +138,7 @@ public abstract class ProtocolHandler implements Runnable {
             Zimbra.halt("Fatal error occurred while handling connection", e);
         } catch (Throwable e) {
             ZimbraLog.addIpToContext(remoteAddress);
-            log.info("Exception occurred while handling connection", e);
+            log.error("Exception occurred while handling connection", e);
         } finally {
             dropConnection();
             ZimbraLog.addIpToContext(remoteAddress);
