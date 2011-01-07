@@ -108,11 +108,11 @@ public class SaveDocument extends WikiDocumentHandler {
             if (attElem != null) {
                 String aid = attElem.getAttribute(MailConstants.A_ID, null);
                 Upload up = FileUploadServlet.fetchUpload(zsc.getAuthtokenAccountId(), aid, zsc.getAuthToken());
-                doc = new Doc(up, explicitName, explicitCtype);
+                doc = new Doc(up, explicitName, explicitCtype, description);
             } else if (msgElem != null) {
                 String part = msgElem.getAttribute(MailConstants.A_PART);
                 ItemId iid = new ItemId(msgElem.getAttribute(MailConstants.A_ID), zsc);
-                doc = fetchMimePart(octxt, iid, part, explicitName, explicitCtype, zsc.getAuthToken());
+                doc = fetchMimePart(octxt, zsc.getAuthToken(), iid, part, explicitName, explicitCtype, description);
             } else if (docRevElem != null) {
                 ItemId iid = new ItemId(docRevElem.getAttribute(MailConstants.A_ID), zsc);
                 int revSource = (int) docRevElem.getAttributeLong(MailConstants.A_VERSION, 0);
@@ -124,7 +124,7 @@ public class SaveDocument extends WikiDocumentHandler {
                     } else {
                         docRev = (Document) mbox.getItemRevision(octxt, iid.getId(), MailItem.Type.DOCUMENT, revSource);
                     }
-                    doc = new Doc(docRev.getContentStream(), null, docRev.getName(), docRev.getContentType());
+                    doc = new Doc(docRev);
                 } else {
                     doc = new Doc(zsc.getAuthToken(), sourceAccount, iid.getId(), revSource);
                 }
@@ -135,7 +135,7 @@ public class SaveDocument extends WikiDocumentHandler {
                 }
             } else {
                 String inlineContent = docElem.getAttribute(MailConstants.E_CONTENT);
-                doc = new Doc(inlineContent, explicitName, explicitCtype);
+                doc = new Doc(inlineContent, explicitName, explicitCtype, description);
             }
 
             Document docItem = null;
@@ -153,8 +153,7 @@ public class SaveDocument extends WikiDocumentHandler {
                     throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_CONTENT_TYPE, null);
                 }
                 try {
-                    docItem = mbox.createDocument(octxt, fid.getId(), doc.name, doc.contentType, getAuthor(zsc),
-                            description, is, MailItem.Type.DOCUMENT);
+                    docItem = mbox.createDocument(octxt, fid.getId(), doc.name, doc.contentType, getAuthor(zsc), doc.description, is, MailItem.Type.DOCUMENT);
                 } catch (ServiceException e) {
                     if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
                         MailItem item = mbox.getItemByPath(octxt, doc.name, fid.getId());
@@ -177,7 +176,7 @@ public class SaveDocument extends WikiDocumentHandler {
                 if (doc.name != null) {
                     name = doc.name;
                 }
-                docItem = mbox.addDocumentRevision(octxt, itemId, getAuthor(zsc), name, description, is);
+                docItem = mbox.addDocumentRevision(octxt, itemId, getAuthor(zsc), name, doc.description, is);
             }
 
             response = zsc.createElement(MailConstants.SAVE_DOCUMENT_RESPONSE);
@@ -194,7 +193,7 @@ public class SaveDocument extends WikiDocumentHandler {
         return response;
     }
 
-    private Doc fetchMimePart(OperationContext octxt, ItemId itemId, String partId, String name, String ct, AuthToken authtoken) throws ServiceException {
+    private Doc fetchMimePart(OperationContext octxt, AuthToken authtoken, ItemId itemId, String partId, String name, String ct, String description) throws ServiceException {
         String accountId = itemId.getAccountId();
         Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
         if (Provisioning.onLocalServer(acct)) {
@@ -222,7 +221,7 @@ public class SaveDocument extends WikiDocumentHandler {
             Header ctHeader = get.getResponseHeader("Content-Type");
             ContentType contentType = new ContentType(ctHeader.getValue());
 
-            return new Doc(get.getResponseBodyAsStream(), contentType, name, ct);
+            return new Doc(get.getResponseBodyAsStream(), contentType, name, ct, description);
         } catch (HttpException e) {
             throw ServiceException.PROXY_ERROR(e, url);
         } catch (IOException e) {
@@ -233,6 +232,7 @@ public class SaveDocument extends WikiDocumentHandler {
     private static class Doc {
         String name;
         String contentType;
+        String description;
         private Upload up;
         private MimePart mp;
         private String sp;
@@ -245,26 +245,29 @@ public class SaveDocument extends WikiDocumentHandler {
             overrideProperties(filename, ctype);
         }
 
-        Doc(Upload upload, String filename, String ctype) {
+        Doc(Upload upload, String filename, String ctype, String d) {
             up = upload;
             name = upload.getName();
             contentType = upload.getContentType();
+            description = d;
             overrideProperties(filename, ctype);
             if (contentType == null) {
                 contentType = "application/octet-stream";
             }
         }
 
-        Doc(String content, String filename, String ctype) {
+        Doc(String content, String filename, String ctype, String d) {
             sp = content;
+            description = d;
             overrideProperties(filename, ctype);
             if (contentType != null) {
                 contentType = new ContentType(contentType).setParameter("charset", "utf-8").toString();
             }
         }
 
-        Doc(InputStream in, ContentType ct, String filename, String ctype) {
+        Doc(InputStream in, ContentType ct, String filename, String ctype, String d) {
             this.in = in;
+            description = d;
             name = ct == null ? null : ct.getParameter("name");
             if (name == null) {
                 name = "New Document";
@@ -276,6 +279,12 @@ public class SaveDocument extends WikiDocumentHandler {
             overrideProperties(filename, ctype);
         }
 
+        Doc (Document d) throws ServiceException {
+            in = d.getContentStream();
+            contentType = d.getContentType();
+            name = d.getName();
+            description = d.getDescription();
+        }
         Doc(AuthToken auth, Account acct, int id, int ver) throws ServiceException {
             String url = UserServlet.getRestUrl(acct) + "?fmt=native&disp=attachment&id=" + id;
             if (ver > 0) {
