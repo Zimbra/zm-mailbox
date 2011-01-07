@@ -39,6 +39,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.RandomPassword;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -117,7 +118,6 @@ public final class LocalConfigCLI {
         CommandLine cl = null;
         CommandLineParser parser = new GnuParser();
 
-        CliUtil.toolSetup("WARN");
         try {
             cl = parser.parse(mOptions, args);
         } catch (ParseException pe) {
@@ -220,6 +220,8 @@ public final class LocalConfigCLI {
         }
 
         if (cl.hasOption("l")) {
+            // reset logging and run native lib load
+            CliUtil.toolSetup("WARN");
             try {
                 reload();
             } catch (ServiceException e) {
@@ -300,6 +302,9 @@ public final class LocalConfigCLI {
         // Don't call CliUtil.toolSetup() until it's necessary as JNI libs
         // aren't in place in some cases during build.
         Logging.setUseZimbraLog(false);
+        // Some of the things we call have ZimbraLog lines in them, setup a basic logger to stderr
+        // to take care of those
+        ZimbraLog.toolSetupLog4jConsole("WARN", true, false);
         new LocalConfigCLI().exec(args);
     }
 
