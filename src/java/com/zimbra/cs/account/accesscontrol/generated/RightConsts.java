@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110103-2343 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110106-1444 */
 
 
     /*
@@ -547,16 +547,6 @@ public class RightConsts {
      * check exchange auth config
      */
     public static final String RT_checkExchangeAuthConfig = "checkExchangeAuthConfig";
-
-    /**
-     * check auth config for external auth
-     */
-    public static final String RT_checkExternalAuthConfig = "checkExternalAuthConfig";
-
-    /**
-     * check external GAL config
-     */
-    public static final String RT_checkExternalGALConfig = "checkExternalGALConfig";
 
     /**
      * check server health
