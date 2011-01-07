@@ -95,6 +95,7 @@ public class ApplyFilterRules extends MailDocumentHandler {
         Mailbox mbox = getRequestedMailbox(zsc);
         List<Integer> messageIds = new ArrayList<Integer>();
         List<Integer> affectedIds = new ArrayList<Integer>();
+        OperationContext octxt = getOperationContext(zsc, context);
         
         if (msgEl != null) {
             String[] ids = msgEl.getAttribute(MailConstants.A_IDS).split(",");
@@ -106,7 +107,7 @@ public class ApplyFilterRules extends MailDocumentHandler {
             ZimbraQueryResults results = null;
             
             try {
-                results = mbox.search(new OperationContext(mbox), query, types,
+                results = mbox.search(octxt, query, types,
                     SortBy.NONE, Integer.MAX_VALUE);
                 while (results.hasNext()) {
                     ZimbraHit hit = results.getNext();
@@ -126,26 +127,35 @@ public class ApplyFilterRules extends MailDocumentHandler {
             throw ServiceException.INVALID_REQUEST(msg, null);
         }
         
+        int max = account.getFilterBatchSize();
+        if (messageIds.size() > max) {
+            throw ServiceException.INVALID_REQUEST("Attempted to apply filter rules to " + messageIds.size() +
+                " messages, which exceeded the limit of " + max, null);
+        }
+        
         ZimbraLog.filter.info("Applying filter rules to %s existing messages.", messageIds.size());
+        long sleepInterval = account.getFilterSleepInterval();
         
         // Apply filter rules.
-        for (int id : messageIds) {
-            // Synchronize on the mailbox to make sure two threads don't operate
-            // on the same message simultaneously.
-            synchronized (mbox) {
-                Message msg = null;
+        for (int i = 0; i < messageIds.size(); i++) {
+            if (i > 0 && sleepInterval > 0) {
                 try {
-                    msg = mbox.getMessageById(null, id);
-                } catch (NoSuchItemException e) {
-                    // Message was deleted since the search was done (bug 41609).
-                    ZimbraLog.filter.info("Skipping message %d: %s.", id, e.toString());
+                    Thread.sleep(sleepInterval);
+                } catch (InterruptedException e) {
                 }
-                
-                if (msg != null) {
-                    if (RuleManager.applyRulesToExistingMessage(mbox, id, node)) {
-                        affectedIds.add(id);
-                    }
+            }
+            
+            int id = messageIds.get(i);
+            try {
+                mbox.getMessageById(octxt, id);
+                if (RuleManager.applyRulesToExistingMessage(octxt, mbox, id, node)) {
+                    affectedIds.add(id);
                 }
+            } catch (NoSuchItemException e) {
+                // Message was deleted since the search was done (bug 41609).
+                ZimbraLog.filter.info("Skipping message %d: %s.", id, e.toString());
+            } catch (ServiceException e) {
+                ZimbraLog.filter.warn("Unable to filter message %d.", id, e);
             }
         }
         

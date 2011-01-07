@@ -1,5 +1,10 @@
 package com.zimbra.cs.filter;
 
+import java.io.IOException;
+import java.util.Collection;
+
+import javax.mail.internet.MimeMessage;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.jsieve.ActionFlag;
@@ -9,44 +14,39 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.io.IOException;
-import java.util.Collection;
-
 /**
  * Mail filtering implementation for messages that are sent from a user's account.
  */
 public class OutgoingMessageHandler extends FilterHandler {
 
-    private ParsedMessage mParsedMessage;
-    private Mailbox mMailbox;
-    private int mDefaultFolderId;
-    private boolean mNoICal;
-    private int mDefaultFlags;
-    private String mDefaultTags;
-    private int mConvId;
-    private OperationContext mOctxt;
+    private ParsedMessage parsedMessage;
+    private Mailbox mailbox;
+    private int defaultFolderId;
+    private boolean noICal;
+    private int defaultFlags;
+    private String defaultTags;
+    private int convId;
+    private OperationContext octxt;
 
     public OutgoingMessageHandler(Mailbox mailbox, ParsedMessage pm, int sentFolderId, boolean noICal,
                                   int flags, String tags, int convId, OperationContext octxt) {
-        mMailbox = mailbox;
-        mParsedMessage = pm;
-        mDefaultFolderId = sentFolderId;
-        mNoICal = noICal;
-        mDefaultFlags = flags;
-        mDefaultTags = tags;
-        mConvId = convId;
-        mOctxt = octxt;
+        this.mailbox = mailbox;
+        this.parsedMessage = pm;
+        this.defaultFolderId = sentFolderId;
+        this.noICal = noICal;
+        this.defaultFlags = flags;
+        this.defaultTags = tags;
+        this.convId = convId;
+        this.octxt = octxt;
     }
 
     public MimeMessage getMimeMessage() {
-        return mParsedMessage.getMimeMessage();
+        return parsedMessage.getMimeMessage();
     }
 
     public int getMessageSize() {
         try {
-            return mParsedMessage.getMimeMessage().getSize();
+            return parsedMessage.getMimeMessage().getSize();
         } catch (Exception e) {
             ZimbraLog.filter.warn("Error in determining message size", e);
             return -1;
@@ -54,21 +54,21 @@ public class OutgoingMessageHandler extends FilterHandler {
     }
 
     public ParsedMessage getParsedMessage() {
-        return mParsedMessage;
+        return parsedMessage;
     }
 
     public String getDefaultFolderPath()
     throws ServiceException {
-        return mMailbox.getFolderById(null, mDefaultFolderId).getPath();
+        return mailbox.getFolderById(octxt, defaultFolderId).getPath();
     }
 
     @Override
     public Message explicitKeep(Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
         try {
-            return mMailbox.addMessage(mOctxt, mParsedMessage, mDefaultFolderId, mNoICal,
-                                       FilterUtil.getFlagBitmask(flagActions, mDefaultFlags, mMailbox),
-                                       FilterUtil.getTagsUnion(tags, mDefaultTags), mConvId);
+            return mailbox.addMessage(octxt, parsedMessage, defaultFolderId, noICal,
+                                       FilterUtil.getFlagBitmask(flagActions, defaultFlags, mailbox),
+                                       FilterUtil.getTagsUnion(tags, defaultTags), convId);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add sent message", e);
         }
@@ -77,7 +77,7 @@ public class OutgoingMessageHandler extends FilterHandler {
     @Override
     public void redirect(String destinationAddress)
     throws ServiceException {
-        FilterUtil.redirect(mMailbox, mParsedMessage.getMimeMessage(), destinationAddress);
+        FilterUtil.redirect(mailbox, parsedMessage.getMimeMessage(), destinationAddress);
     }
 
     @Override
@@ -87,8 +87,8 @@ public class OutgoingMessageHandler extends FilterHandler {
 
     @Override
     public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String tags) throws ServiceException {
-        return FilterUtil.addMessage(null, mMailbox, mParsedMessage, null, folderPath, mNoICal,
-                                     FilterUtil.getFlagBitmask(flagActions, mDefaultFlags, mMailbox),
-                                     FilterUtil.getTagsUnion(tags, mDefaultTags), mConvId, mOctxt);
+        return FilterUtil.addMessage(null, mailbox, parsedMessage, null, folderPath, noICal,
+                                     FilterUtil.getFlagBitmask(flagActions, defaultFlags, mailbox),
+                                     FilterUtil.getTagsUnion(tags, defaultTags), convId, octxt);
     }
 }

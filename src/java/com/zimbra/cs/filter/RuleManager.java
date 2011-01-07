@@ -357,10 +357,10 @@ public class RuleManager {
     }
 
     public static List<ItemId> applyRulesToIncomingMessage(
-        Mailbox mailbox, ParsedMessage pm, int size, String recipient,
+        OperationContext octxt, Mailbox mailbox, ParsedMessage pm, int size, String recipient,
         DeliveryContext sharedDeliveryCtxt, int incomingFolderId)
     throws ServiceException {
-        return applyRulesToIncomingMessage(mailbox, pm, size, recipient, sharedDeliveryCtxt, incomingFolderId, true);
+        return applyRulesToIncomingMessage(octxt, mailbox, pm, size, recipient, sharedDeliveryCtxt, incomingFolderId, true);
     }
     
     /**
@@ -371,13 +371,14 @@ public class RuleManager {
      * @return the list of message id's that were added, or an empty list.
      */
     public static List<ItemId> applyRulesToIncomingMessage(
+        OperationContext octxt,
         Mailbox mailbox, ParsedMessage pm, int size, String recipient,
         DeliveryContext sharedDeliveryCtxt, int incomingFolderId,
         boolean allowFilterToMountpoint)
     throws ServiceException {
         List<ItemId> addedMessageIds = null;
         IncomingMessageHandler handler = new IncomingMessageHandler(
-            sharedDeliveryCtxt, mailbox, recipient, pm, size, incomingFolderId);
+            octxt, sharedDeliveryCtxt, mailbox, recipient, pm, size, incomingFolderId);
         ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mailbox, handler);
         mailAdapter.setAllowFilterToMountpoint(allowFilterToMountpoint);
         
@@ -452,10 +453,10 @@ public class RuleManager {
         return addedMessageIds;
     }
 
-    public static boolean applyRulesToExistingMessage(Mailbox mbox, int messageId, Node node)
+    public static boolean applyRulesToExistingMessage(OperationContext octxt, Mailbox mbox, int messageId, Node node)
     throws ServiceException {
-        Message msg = mbox.getMessageById(null, messageId);
-        ExistingMessageHandler handler = new ExistingMessageHandler(mbox, messageId, (int) msg.getSize());
+        Message msg = mbox.getMessageById(octxt, messageId);
+        ExistingMessageHandler handler = new ExistingMessageHandler(octxt, mbox, messageId, (int) msg.getSize());
         ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mbox, handler);
         
         try {

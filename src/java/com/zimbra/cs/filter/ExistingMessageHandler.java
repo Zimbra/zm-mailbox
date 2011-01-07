@@ -30,6 +30,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -43,19 +44,21 @@ import com.zimbra.cs.service.util.ItemId;
 public class ExistingMessageHandler
 extends FilterHandler {
 
-    private Mailbox mMailbox;
-    private int mMessageId;
-    private MimeMessage mMimeMessage;
-    private ParsedMessage mParsedMessage;
-    private boolean mKept = false;
-    private boolean mFiled = false;
-    private boolean mFiltered = false;
-    private int mSize;
+    private OperationContext octxt;
+    private Mailbox mailbox;
+    private int messageId;
+    private MimeMessage mimeMessage;
+    private ParsedMessage parsedMessage;
+    private boolean kept = false;
+    private boolean filed = false;
+    private boolean filtered = false;
+    private int size;
     
-    public ExistingMessageHandler(Mailbox mbox, int messageId, int size) {
-        mMailbox = mbox;
-        mMessageId = messageId;
-        mSize = size;
+    public ExistingMessageHandler(OperationContext octxt, Mailbox mbox, int messageId, int size) {
+        this.octxt = octxt;
+        this.mailbox = mbox;
+        this.messageId = messageId;
+        this.size = size;
     }
     
     public String getDefaultFolderPath() throws ServiceException {
@@ -64,60 +67,60 @@ extends FilterHandler {
     
     private Folder getDefaultFolder()
     throws ServiceException {
-        return mMailbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
+        return mailbox.getFolderById(octxt, Mailbox.ID_FOLDER_INBOX);
     }
 
     public MimeMessage getMimeMessage()
     throws ServiceException {
-        if (mMimeMessage == null) {
-            Message msg = mMailbox.getMessageById(null, mMessageId);
-            mMimeMessage = msg.getMimeMessage();
+        if (mimeMessage == null) {
+            Message msg = mailbox.getMessageById(octxt, messageId);
+            mimeMessage = msg.getMimeMessage();
         }
-        return mMimeMessage;
+        return mimeMessage;
     }
 
     public ParsedMessage getParsedMessage()
     throws ServiceException {
-        if (mParsedMessage == null) {
-            Message msg = mMailbox.getMessageById(null, mMessageId);
+        if (parsedMessage == null) {
+            Message msg = mailbox.getMessageById(octxt, messageId);
             ParsedMessageOptions opt = new ParsedMessageOptions()
                 .setContent(msg.getMimeMessage())
-                .setAttachmentIndexing(mMailbox.attachmentsIndexingEnabled())
+                .setAttachmentIndexing(mailbox.attachmentsIndexingEnabled())
                 .setSize(msg.getSize())
                 .setDigest(msg.getDigest());
-            mParsedMessage = new ParsedMessage(opt);
+            parsedMessage = new ParsedMessage(opt);
         }
-        return mParsedMessage;
+        return parsedMessage;
     }
     
-    public boolean filtered() { return mFiltered; }
+    public boolean filtered() { return filtered; }
 
     @Override
     public void discard()
     throws ServiceException {
-        ZimbraLog.filter.info("Discarding existing message with id %d.", mMessageId);
-        mMailbox.delete(null, mMessageId, MailItem.TYPE_MESSAGE);
-        mFiltered = true;
+        ZimbraLog.filter.info("Discarding existing message with id %d.", messageId);
+        mailbox.delete(octxt, messageId, MailItem.TYPE_MESSAGE);
+        filtered = true;
     }
 
 
     @Override
     public Message implicitKeep(Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
-        ZimbraLog.filter.debug("Implicitly keeping existing message %d.", mMessageId);
-        Message msg = mMailbox.getMessageById(null, mMessageId);
+        ZimbraLog.filter.debug("Implicitly keeping existing message %d.", messageId);
+        Message msg = mailbox.getMessageById(octxt, messageId);
         updateTagsAndFlagsIfNecessary(msg, flagActions, tags);
-        mKept = true;
+        kept = true;
         return msg;
     }
 
     @Override
     public Message explicitKeep(Collection<ActionFlag> flagActions, String tags)
     throws ServiceException {
-        ZimbraLog.filter.debug("Explicitly keeping existing message %d.", mMessageId);
-        Message msg = mMailbox.getMessageById(null, mMessageId);
+        ZimbraLog.filter.debug("Explicitly keeping existing message %d.", messageId);
+        Message msg = mailbox.getMessageById(octxt, messageId);
         updateTagsAndFlagsIfNecessary(msg, flagActions, tags);
-        mKept = true;
+        kept = true;
         return msg;
     }
     
@@ -128,8 +131,8 @@ extends FilterHandler {
         if (msg.getTagBitmask() != tags || msg.getFlagBitmask() != flags) {
             ZimbraLog.filter.info("Updating flags to %d, tags to %d on message %d.",
                 flags, tags, msg.getId());
-            mMailbox.setTags(null, msg.getId(), MailItem.TYPE_MESSAGE, flags, tags);
-            mFiltered = true;
+            mailbox.setTags(octxt, msg.getId(), MailItem.TYPE_MESSAGE, flags, tags);
+            filtered = true;
         }
     }
     
@@ -141,7 +144,7 @@ extends FilterHandler {
     throws ServiceException {
         int flags = msg.getFlagBitmask();
         for (ActionFlag action : flagActions) {
-            Flag flag = mMailbox.getFlagById(action.getFlagId());
+            Flag flag = mailbox.getFlagById(action.getFlagId());
             if (action.isSetFlag()) {
                 flags |= flag.getBitmask();
             } else {
@@ -153,42 +156,42 @@ extends FilterHandler {
     
     @Override
     public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String tags) throws ServiceException {
-        Message source = mMailbox.getMessageById(null, mMessageId);
+        Message source = mailbox.getMessageById(octxt, messageId);
         
         // See if the message is already in the target folder.
         Folder targetFolder = null;
         try {
-            targetFolder = mMailbox.getFolderByPath(null, folderPath);
+            targetFolder = mailbox.getFolderByPath(octxt, folderPath);
         } catch (NoSuchItemException e) {
         }
         if (targetFolder != null && source.getFolderId() == targetFolder.getId()) {
             ZimbraLog.filter.debug("Ignoring fileinto action for message %d.  It is already in %s.",
-                mMessageId, folderPath);
+                messageId, folderPath);
             updateTagsAndFlagsIfNecessary(source, flagActions, tags);
             return null;
         }
         
-        ZimbraLog.filter.info("Copying existing message %d to folder %s.", mMessageId, folderPath);
+        ZimbraLog.filter.info("Copying existing message %d to folder %s.", messageId, folderPath);
         if (isLocalExistingFolder(folderPath)) {
             // Copy item into to a local folder.
-            Folder target = mMailbox.getFolderByPath(null, folderPath);
-            Message newMsg = (Message) mMailbox.copy(null, mMessageId, MailItem.TYPE_MESSAGE, target.getId());
-            mFiltered = true;
-            mFiled = true;
+            Folder target = mailbox.getFolderByPath(octxt, folderPath);
+            Message newMsg = (Message) mailbox.copy(octxt, messageId, MailItem.TYPE_MESSAGE, target.getId());
+            filtered = true;
+            filed = true;
 
             // Apply flags and tags
             int flagBits = source.getFlagBitmask();
             long tagBits = Tag.tagsToBitmask(tags);
-            mMailbox.setTags(null, newMsg.getId(), MailItem.TYPE_MESSAGE,
+            mailbox.setTags(octxt, newMsg.getId(), MailItem.TYPE_MESSAGE,
                 source.getFlagBitmask() | flagBits, source.getTagBitmask() | tagBits);
-            return new ItemId(mMailbox, mMessageId);
+            return new ItemId(mailbox, messageId);
         }
         
-        ItemId id = FilterUtil.addMessage(new DeliveryContext(), mMailbox, getParsedMessage(),
-            mMailbox.getAccount().getName(), folderPath, false, getFlagBitmask(source, flagActions), tags, Mailbox.ID_AUTO_INCREMENT, null);
+        ItemId id = FilterUtil.addMessage(new DeliveryContext(), mailbox, getParsedMessage(),
+            mailbox.getAccount().getName(), folderPath, false, getFlagBitmask(source, flagActions), tags, Mailbox.ID_AUTO_INCREMENT, octxt);
         if (id != null) {
-            mFiltered = true;
-            mFiled = true;
+            filtered = true;
+            filed = true;
         }
         return id;
     }
@@ -198,8 +201,8 @@ extends FilterHandler {
      */
     private boolean isLocalExistingFolder(String folderPath)
     throws ServiceException {
-        Pair<Folder, String> folderAndPath = mMailbox.getFolderByPathLongestMatch(
-            null, Mailbox.ID_FOLDER_USER_ROOT, folderPath);
+        Pair<Folder, String> folderAndPath = mailbox.getFolderByPathLongestMatch(
+            octxt, Mailbox.ID_FOLDER_USER_ROOT, folderPath);
         Folder folder = folderAndPath.getFirst();
         String remainingPath = folderAndPath.getSecond();
         if (folder instanceof Mountpoint || !StringUtil.isNullOrEmpty(remainingPath)) {
@@ -211,18 +214,18 @@ extends FilterHandler {
     @Override
     public void redirect(String destinationAddress) {
         ZimbraLog.filter.debug("Ignoring attempt to redirect existing message %d to %s.",
-            mMessageId, destinationAddress);
+            messageId, destinationAddress);
     }
 
     @Override
     public void afterFiltering() throws ServiceException {
-        if (mFiled && !mKept) {
-            ZimbraLog.filter.info("Deleting original message %d after filing to another folder.", mMessageId);
-            mMailbox.delete(null, mMessageId, MailItem.TYPE_MESSAGE);
+        if (filed && !kept) {
+            ZimbraLog.filter.info("Deleting original message %d after filing to another folder.", messageId);
+            mailbox.delete(octxt, messageId, MailItem.TYPE_MESSAGE);
         }
     }
 
     public int getMessageSize() {
-        return mSize;
+        return size;
     }
 }
