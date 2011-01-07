@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110105-2218 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110106-1444 */
 
     /**
      * RFC2256: descriptive information
@@ -4733,7 +4733,11 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getFreebusyExchangeCachedIntervalAsString to access value as a string.
      *
@@ -4749,7 +4753,11 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraFreebusyExchangeCachedInterval, or "60d" if unset
      *
@@ -4761,7 +4769,11 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraFreebusyExchangeCachedInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4776,7 +4788,11 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraFreebusyExchangeCachedInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -4792,7 +4808,11 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -4806,7 +4826,11 @@ public class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -4822,7 +4846,11 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getFreebusyExchangeCachedIntervalStartAsString to access value as a string.
      *
@@ -4839,7 +4867,11 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraFreebusyExchangeCachedIntervalStart, or "7d" if unset
      *
@@ -4852,7 +4884,11 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraFreebusyExchangeCachedIntervalStart new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4868,7 +4904,11 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraFreebusyExchangeCachedIntervalStart new value
      * @param attrs existing map to populate, or null to create a new map
@@ -4885,7 +4925,11 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -4900,7 +4944,11 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

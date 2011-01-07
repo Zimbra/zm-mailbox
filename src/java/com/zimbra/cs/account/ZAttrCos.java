@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110105-2218 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110106-1444 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -354,7 +354,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
+     * lifetime of newly created admin auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * <p>Use getAdminAuthTokenLifetimeAsString to access value as a string.
      *
@@ -368,7 +371,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
+     * lifetime of newly created admin auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @return zimbraAdminAuthTokenLifetime, or "12h" if unset
      */
@@ -378,7 +384,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
+     * lifetime of newly created admin auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraAdminAuthTokenLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -391,7 +400,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
+     * lifetime of newly created admin auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraAdminAuthTokenLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -405,7 +417,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
+     * lifetime of newly created admin auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -417,7 +432,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
+     * lifetime of newly created admin auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -948,7 +966,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created auth tokens
+     * lifetime of newly created auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * <p>Use getAuthTokenLifetimeAsString to access value as a string.
      *
@@ -962,7 +983,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created auth tokens
+     * lifetime of newly created auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @return zimbraAuthTokenLifetime, or "2d" if unset
      */
@@ -972,7 +996,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created auth tokens
+     * lifetime of newly created auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraAuthTokenLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -985,7 +1012,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created auth tokens
+     * lifetime of newly created auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraAuthTokenLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -999,7 +1029,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created auth tokens
+     * lifetime of newly created auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -1011,7 +1044,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created auth tokens
+     * lifetime of newly created auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -1346,7 +1382,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * CalDAV shared folder cache duration
+     * CalDAV shared folder cache duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getCalendarCalDavSharedFolderCacheDurationAsString to access value as a string.
      *
@@ -1362,7 +1401,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * CalDAV shared folder cache duration
+     * CalDAV shared folder cache duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraCalendarCalDavSharedFolderCacheDuration, or "1m" if unset
      *
@@ -1374,7 +1416,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * CalDAV shared folder cache duration
+     * CalDAV shared folder cache duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraCalendarCalDavSharedFolderCacheDuration new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1389,7 +1434,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * CalDAV shared folder cache duration
+     * CalDAV shared folder cache duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraCalendarCalDavSharedFolderCacheDuration new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1405,7 +1453,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * CalDAV shared folder cache duration
+     * CalDAV shared folder cache duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -1419,7 +1470,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * CalDAV shared folder cache duration
+     * CalDAV shared folder cache duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -1434,7 +1488,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart
+     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getCalendarCalDavSyncEndAsString to access value as a string.
      *
@@ -1450,7 +1508,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart
+     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraCalendarCalDavSyncEnd, or null if unset
      *
@@ -1462,7 +1524,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart
+     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraCalendarCalDavSyncEnd new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1477,7 +1543,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart
+     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraCalendarCalDavSyncEnd new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1493,7 +1563,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart
+     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -1507,7 +1581,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart
+     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -1528,7 +1606,10 @@ public class ZAttrCos extends NamedEntry {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV.
+     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
+     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
+     * days, ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getCalendarCalDavSyncStartAsString to access value as a string.
      *
@@ -1550,7 +1631,10 @@ public class ZAttrCos extends NamedEntry {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV.
+     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
+     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
+     * days, ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraCalendarCalDavSyncStart, or null if unset
      *
@@ -1568,7 +1652,10 @@ public class ZAttrCos extends NamedEntry {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV.
+     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
+     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
+     * days, ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraCalendarCalDavSyncStart new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1589,7 +1676,10 @@ public class ZAttrCos extends NamedEntry {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV.
+     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
+     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
+     * days, ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraCalendarCalDavSyncStart new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1611,7 +1701,10 @@ public class ZAttrCos extends NamedEntry {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV.
+     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
+     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
+     * days, ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -1631,7 +1724,10 @@ public class ZAttrCos extends NamedEntry {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV.
+     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
+     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
+     * days, ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2537,7 +2633,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getDataSourceCaldavPollingIntervalAsString to access value as a string.
      *
@@ -2555,7 +2654,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraDataSourceCaldavPollingInterval, or null if unset
      *
@@ -2569,7 +2671,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceCaldavPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2586,7 +2691,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceCaldavPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2604,7 +2712,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2620,7 +2731,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2637,7 +2751,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getDataSourceCalendarPollingIntervalAsString to access value as a string.
      *
@@ -2655,7 +2772,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraDataSourceCalendarPollingInterval, or "12h" if unset
      *
@@ -2669,7 +2789,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceCalendarPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2686,7 +2809,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceCalendarPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2704,7 +2830,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2720,7 +2849,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2737,7 +2869,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getDataSourceGalPollingIntervalAsString to access value as a string.
      *
@@ -2755,7 +2890,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraDataSourceGalPollingInterval, or null if unset
      *
@@ -2769,7 +2907,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceGalPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2786,7 +2927,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceGalPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2804,7 +2948,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2820,7 +2967,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2837,7 +2987,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getDataSourceImapPollingIntervalAsString to access value as a string.
      *
@@ -2855,7 +3008,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraDataSourceImapPollingInterval, or null if unset
      *
@@ -2869,7 +3025,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceImapPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2886,7 +3045,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceImapPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2904,7 +3066,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2920,7 +3085,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2937,7 +3105,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getDataSourceLivePollingIntervalAsString to access value as a string.
      *
@@ -2955,7 +3126,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraDataSourceLivePollingInterval, or null if unset
      *
@@ -2969,7 +3143,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceLivePollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2986,7 +3163,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceLivePollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3004,7 +3184,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -3020,7 +3203,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3097,7 +3283,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval.
+     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getDataSourceMinPollingIntervalAsString to access value as a string.
      *
@@ -3113,7 +3303,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval.
+     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraDataSourceMinPollingInterval, or "1m" if unset
      *
@@ -3125,7 +3319,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval.
+     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraDataSourceMinPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3140,7 +3338,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval.
+     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraDataSourceMinPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3156,7 +3358,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval.
+     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -3170,7 +3376,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval.
+     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3194,7 +3404,11 @@ public class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling.
+     * account/cos, use 0, which means no automated polling. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getDataSourcePollingIntervalAsString to access value as a string.
      *
@@ -3217,7 +3431,11 @@ public class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling.
+     * account/cos, use 0, which means no automated polling. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraDataSourcePollingInterval, or null if unset
      */
@@ -3236,7 +3454,11 @@ public class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling.
+     * account/cos, use 0, which means no automated polling. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraDataSourcePollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3258,7 +3480,11 @@ public class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling.
+     * account/cos, use 0, which means no automated polling. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraDataSourcePollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3281,7 +3507,11 @@ public class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling.
+     * account/cos, use 0, which means no automated polling. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -3302,7 +3532,11 @@ public class ZAttrCos extends NamedEntry {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling.
+     * account/cos, use 0, which means no automated polling. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3317,7 +3551,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getDataSourcePop3PollingIntervalAsString to access value as a string.
      *
@@ -3335,7 +3572,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraDataSourcePop3PollingInterval, or null if unset
      *
@@ -3349,7 +3589,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourcePop3PollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3366,7 +3609,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourcePop3PollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3384,7 +3630,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -3400,7 +3649,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3417,7 +3669,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getDataSourceRssPollingIntervalAsString to access value as a string.
      *
@@ -3435,7 +3690,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraDataSourceRssPollingInterval, or "12h" if unset
      *
@@ -3449,7 +3707,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceRssPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3466,7 +3727,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceRssPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3484,7 +3748,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -3500,7 +3767,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3517,7 +3787,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling.
+     * for automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getDataSourceYabPollingIntervalAsString to access value as a string.
      *
@@ -3535,7 +3808,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling.
+     * for automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraDataSourceYabPollingInterval, or null if unset
      *
@@ -3549,7 +3825,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling.
+     * for automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceYabPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3566,7 +3845,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling.
+     * for automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceYabPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3584,7 +3866,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling.
+     * for automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -3600,7 +3885,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling.
+     * for automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -8434,7 +8722,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation.
+     * the expense of slowing down the operation. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * <p>Use getFilterSleepIntervalAsString to access value as a string.
      *
@@ -8452,7 +8743,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation.
+     * the expense of slowing down the operation. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @return zimbraFilterSleepInterval, or "100ms" if unset
      *
@@ -8466,7 +8760,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation.
+     * the expense of slowing down the operation. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraFilterSleepInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8483,7 +8780,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation.
+     * the expense of slowing down the operation. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraFilterSleepInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8501,7 +8801,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation.
+     * the expense of slowing down the operation. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -8517,7 +8820,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation.
+     * the expense of slowing down the operation. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -8807,7 +9113,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getFreebusyExchangeCachedIntervalAsString to access value as a string.
      *
@@ -8823,7 +9133,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraFreebusyExchangeCachedInterval, or null if unset
      *
@@ -8835,7 +9149,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraFreebusyExchangeCachedInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8850,7 +9168,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraFreebusyExchangeCachedInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8866,7 +9188,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -8880,7 +9206,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -8896,7 +9226,11 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getFreebusyExchangeCachedIntervalStartAsString to access value as a string.
      *
@@ -8913,7 +9247,11 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraFreebusyExchangeCachedIntervalStart, or null if unset
      *
@@ -8926,7 +9264,11 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraFreebusyExchangeCachedIntervalStart new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8942,7 +9284,11 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraFreebusyExchangeCachedIntervalStart new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8959,7 +9305,11 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -8974,7 +9324,11 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -10467,7 +10821,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getMailDumpsterLifetimeAsString to access value as a string.
      *
@@ -10484,7 +10841,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraMailDumpsterLifetime, or "30d" if unset
      *
@@ -10497,7 +10857,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraMailDumpsterLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -10513,7 +10876,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraMailDumpsterLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -10530,7 +10896,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -10545,7 +10914,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -10820,7 +11192,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * idle timeout (nnnnn[hmsd])
+     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * <p>Use getMailIdleSessionTimeoutAsString to access value as a string.
      *
@@ -10834,7 +11209,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * idle timeout (nnnnn[hmsd])
+     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @return zimbraMailIdleSessionTimeout, or "0" if unset
      */
@@ -10844,7 +11222,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * idle timeout (nnnnn[hmsd])
+     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraMailIdleSessionTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -10857,7 +11238,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * idle timeout (nnnnn[hmsd])
+     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraMailIdleSessionTimeout new value
      * @param attrs existing map to populate, or null to create a new map
@@ -10871,7 +11255,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * idle timeout (nnnnn[hmsd])
+     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -10883,7 +11270,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * idle timeout (nnnnn[hmsd])
+     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -10896,7 +11286,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of a mail message regardless of location
+     * lifetime of a mail message regardless of location Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getMailMessageLifetimeAsString to access value as a string.
      *
@@ -10910,7 +11304,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of a mail message regardless of location
+     * lifetime of a mail message regardless of location Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraMailMessageLifetime, or "0" if unset
      */
@@ -10920,7 +11318,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of a mail message regardless of location
+     * lifetime of a mail message regardless of location Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraMailMessageLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -10933,7 +11335,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of a mail message regardless of location
+     * lifetime of a mail message regardless of location Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraMailMessageLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -10947,7 +11353,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of a mail message regardless of location
+     * lifetime of a mail message regardless of location Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -10959,7 +11369,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of a mail message regardless of location
+     * lifetime of a mail message regardless of location Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -10972,7 +11386,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])
+     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getMailMinPollingIntervalAsString to access value as a string.
      *
@@ -10986,7 +11404,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])
+     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraMailMinPollingInterval, or "2m" if unset
      */
@@ -10996,7 +11418,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])
+     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraMailMinPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11009,7 +11435,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])
+     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraMailMinPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11023,7 +11453,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])
+     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -11035,7 +11469,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])
+     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11344,7 +11782,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used.
+     * shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getMailSpamLifetimeAsString to access value as a string.
      *
@@ -11361,7 +11802,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used.
+     * shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraMailSpamLifetime, or "30d" if unset
      */
@@ -11374,7 +11818,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used.
+     * shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraMailSpamLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11390,7 +11837,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used.
+     * shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraMailSpamLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11407,7 +11857,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used.
+     * shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -11422,7 +11875,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used.
+     * shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11438,7 +11894,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getMailTrashLifetimeAsString to access value as a string.
      *
@@ -11455,7 +11914,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraMailTrashLifetime, or "30d" if unset
      */
@@ -11468,7 +11930,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraMailTrashLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11484,7 +11949,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraMailTrashLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11501,7 +11969,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -11516,7 +11987,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -13584,7 +14058,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it
+     * admin resets it Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * <p>Use getPasswordLockoutDurationAsString to access value as a string.
      *
@@ -13599,7 +14076,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it
+     * admin resets it Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @return zimbraPasswordLockoutDuration, or "1h" if unset
      */
@@ -13610,7 +14090,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it
+     * admin resets it Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraPasswordLockoutDuration new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -13624,7 +14107,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it
+     * admin resets it Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraPasswordLockoutDuration new value
      * @param attrs existing map to populate, or null to create a new map
@@ -13639,7 +14125,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it
+     * admin resets it Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -13652,7 +14141,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it
+     * admin resets it Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -13729,7 +14221,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred
+     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * <p>Use getPasswordLockoutFailureLifetimeAsString to access value as a string.
      *
@@ -13745,7 +14240,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred
+     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @return zimbraPasswordLockoutFailureLifetime, or "1h" if unset
      */
@@ -13757,7 +14255,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred
+     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraPasswordLockoutFailureLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -13772,7 +14273,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred
+     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraPasswordLockoutFailureLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -13788,7 +14292,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred
+     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -13802,7 +14309,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred
+     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -14944,7 +15454,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * time to wait before auto saving a draft(nnnnn[hmsd])
+     * time to wait before auto saving a draft Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * <p>Use getPrefAutoSaveDraftIntervalAsString to access value as a string.
      *
@@ -14960,7 +15473,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * time to wait before auto saving a draft(nnnnn[hmsd])
+     * time to wait before auto saving a draft Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @return zimbraPrefAutoSaveDraftInterval, or "30s" if unset
      *
@@ -14972,7 +15488,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * time to wait before auto saving a draft(nnnnn[hmsd])
+     * time to wait before auto saving a draft Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraPrefAutoSaveDraftInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14987,7 +15506,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * time to wait before auto saving a draft(nnnnn[hmsd])
+     * time to wait before auto saving a draft Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraPrefAutoSaveDraftInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -15003,7 +15525,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * time to wait before auto saving a draft(nnnnn[hmsd])
+     * time to wait before auto saving a draft Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -15017,7 +15542,10 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * time to wait before auto saving a draft(nnnnn[hmsd])
+     * time to wait before auto saving a draft Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -20820,7 +21348,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getPrefInboxReadLifetimeAsString to access value as a string.
      *
@@ -20837,7 +21368,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraPrefInboxReadLifetime, or "0" if unset
      *
@@ -20850,7 +21384,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefInboxReadLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -20866,7 +21403,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefInboxReadLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -20883,7 +21423,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -20898,7 +21441,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -20914,7 +21460,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getPrefInboxUnreadLifetimeAsString to access value as a string.
      *
@@ -20931,7 +21480,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraPrefInboxUnreadLifetime, or "0" if unset
      *
@@ -20944,7 +21496,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefInboxUnreadLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -20960,7 +21515,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefInboxUnreadLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -20977,7 +21535,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -20992,7 +21553,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -21206,7 +21770,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getPrefJunkLifetimeAsString to access value as a string.
      *
@@ -21225,7 +21792,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraPrefJunkLifetime, or "0" if unset
      *
@@ -21240,7 +21810,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefJunkLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21258,7 +21831,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefJunkLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -21277,7 +21853,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -21294,7 +21873,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -21881,7 +22463,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * interval at which the web client polls the server for new messages
-     * (nnnnn[hmsd])
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getPrefMailPollingIntervalAsString to access value as a string.
      *
@@ -21896,7 +22481,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * interval at which the web client polls the server for new messages
-     * (nnnnn[hmsd])
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraPrefMailPollingInterval, or "5m" if unset
      */
@@ -21907,7 +22495,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * interval at which the web client polls the server for new messages
-     * (nnnnn[hmsd])
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraPrefMailPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21921,7 +22512,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * interval at which the web client polls the server for new messages
-     * (nnnnn[hmsd])
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraPrefMailPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -21936,7 +22530,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * interval at which the web client polls the server for new messages
-     * (nnnnn[hmsd])
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -21949,7 +22546,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * interval at which the web client polls the server for new messages
-     * (nnnnn[hmsd])
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -22914,7 +23514,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval
+     * interval Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * <p>Use getPrefOutOfOfficeCacheDurationAsString to access value as a string.
      *
@@ -22930,7 +23533,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval
+     * interval Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @return zimbraPrefOutOfOfficeCacheDuration, or "7d" if unset
      */
@@ -22942,7 +23548,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval
+     * interval Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraPrefOutOfOfficeCacheDuration new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -22957,7 +23566,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval
+     * interval Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraPrefOutOfOfficeCacheDuration new value
      * @param attrs existing map to populate, or null to create a new map
@@ -22973,7 +23585,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval
+     * interval Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -22987,7 +23602,10 @@ public class ZAttrCos extends NamedEntry {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval
+     * interval Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -23588,7 +24206,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getPrefSentLifetimeAsString to access value as a string.
      *
@@ -23605,7 +24226,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraPrefSentLifetime, or "0" if unset
      *
@@ -23618,7 +24242,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefSentLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -23634,7 +24261,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefSentLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -23651,7 +24281,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -23666,7 +24299,10 @@ public class ZAttrCos extends NamedEntry {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -24816,7 +25452,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getPrefTrashLifetimeAsString to access value as a string.
      *
@@ -24835,7 +25474,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraPrefTrashLifetime, or "0" if unset
      *
@@ -24850,7 +25492,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefTrashLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -24868,7 +25513,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefTrashLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -24887,7 +25535,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -24904,7 +25555,10 @@ public class ZAttrCos extends NamedEntry {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -25687,7 +26341,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Minimum duration of time between quota warnings.
+     * Minimum duration of time between quota warnings. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getQuotaWarnIntervalAsString to access value as a string.
      *
@@ -25701,7 +26359,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Minimum duration of time between quota warnings.
+     * Minimum duration of time between quota warnings. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraQuotaWarnInterval, or "1d" if unset
      */
@@ -25711,7 +26373,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Minimum duration of time between quota warnings.
+     * Minimum duration of time between quota warnings. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraQuotaWarnInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -25724,7 +26390,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Minimum duration of time between quota warnings.
+     * Minimum duration of time between quota warnings. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraQuotaWarnInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -25738,7 +26408,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Minimum duration of time between quota warnings.
+     * Minimum duration of time between quota warnings. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -25750,7 +26424,11 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Minimum duration of time between quota warnings.
+     * Minimum duration of time between quota warnings. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

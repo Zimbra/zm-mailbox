@@ -113,7 +113,7 @@ public class AttributeManager {
     // contains attrs defined in one of the zimbra .xml files (currently zimbra attrs and some of the amavis attrs)
     // these attrs have AttributeInfo
     //
-    // Note: does *not* contains attrs defiend in the extensions(attrs in OCs specified in global config ***ExtraObjectClass)
+    // Note: does *not* contains attrs defined in the extensions(attrs in OCs specified in global config ***ExtraObjectClass)
     //
     // Extension attr names are in the class -> attrs maps:
     //     mClassToAttrsMap, mClassToLowerCaseAttrsMap, mClassToAllAttrsMap maps.

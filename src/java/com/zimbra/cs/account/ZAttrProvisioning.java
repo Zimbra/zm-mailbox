@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110105-2218 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110106-1444 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1116,10 +1116,22 @@ public class ZAttrProvisioning {
     public static final String A_description = "description";
 
     /**
+     * RFC2256: destination indicator
+     */
+    @ZAttr(id=-1)
+    public static final String A_destinationIndicator = "destinationIndicator";
+
+    /**
      * RFC2798: preferred name to be used when displaying entries
      */
     @ZAttr(id=-1)
     public static final String A_displayName = "displayName";
+
+    /**
+     * RFC2256: Facsimile (Fax) Telephone Number
+     */
+    @ZAttr(id=-1)
+    public static final String A_facsimileTelephoneNumber = "facsimileTelephoneNumber";
 
     /**
      * RFC2256: first name(s) for which the entity is known by
@@ -1144,6 +1156,12 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=-1)
     public static final String A_initials = "initials";
+
+    /**
+     * RFC2256: international ISDN number
+     */
+    @ZAttr(id=-1)
+    public static final String A_internationaliSDNNumber = "internationaliSDNNumber";
 
     /**
      * RFC2256: locality which this object resides in
@@ -1206,6 +1224,24 @@ public class ZAttrProvisioning {
     public static final String A_postalCode = "postalCode";
 
     /**
+     * RFC2256: Post Office Box
+     */
+    @ZAttr(id=-1)
+    public static final String A_postOfficeBox = "postOfficeBox";
+
+    /**
+     * RFC2256: preferred delivery method
+     */
+    @ZAttr(id=-1)
+    public static final String A_preferredDeliveryMethod = "preferredDeliveryMethod";
+
+    /**
+     * RFC2256: registered postal address
+     */
+    @ZAttr(id=-1)
+    public static final String A_registeredAddress = "registeredAddress";
+
+    /**
      * RFC2256: last (family) name(s) for which the entity is known by
      */
     @ZAttr(id=-1)
@@ -1236,6 +1272,18 @@ public class ZAttrProvisioning {
     public static final String A_telephoneNumber = "telephoneNumber";
 
     /**
+     * RFC2256: Teletex Terminal Identifier
+     */
+    @ZAttr(id=-1)
+    public static final String A_teletexTerminalIdentifier = "teletexTerminalIdentifier";
+
+    /**
+     * RFC2256: Telex Number
+     */
+    @ZAttr(id=-1)
+    public static final String A_telexNumber = "telexNumber";
+
+    /**
      * RFC2256: title associated with the entity
      */
     @ZAttr(id=-1)
@@ -1252,6 +1300,12 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=-1)
     public static final String A_userPassword = "userPassword";
+
+    /**
+     * RFC2256: X.121 Address
+     */
+    @ZAttr(id=-1)
+    public static final String A_x121Address = "x121Address";
 
     /**
      * calendar user type - USER (default) or RESOURCE
@@ -1297,7 +1351,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAdminAccessControlMech = "zimbraAdminAccessControlMech";
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
+     * lifetime of newly created admin auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      */
     @ZAttr(id=109)
     public static final String A_zimbraAdminAuthTokenLifetime = "zimbraAdminAuthTokenLifetime";
@@ -1596,7 +1653,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAuthTokenKey = "zimbraAuthTokenKey";
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created auth tokens
+     * lifetime of newly created auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      */
     @ZAttr(id=108)
     public static final String A_zimbraAuthTokenLifetime = "zimbraAuthTokenLifetime";
@@ -1787,7 +1847,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCalendarCalDavDisableScheduling = "zimbraCalendarCalDavDisableScheduling";
 
     /**
-     * CalDAV shared folder cache duration
+     * CalDAV shared folder cache duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 5.0.14
      */
@@ -1795,7 +1858,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCalendarCalDavSharedFolderCacheDuration = "zimbraCalendarCalDavSharedFolderCacheDuration";
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart
+     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @since ZCS 5.0.14
      */
@@ -1809,7 +1876,10 @@ public class ZAttrProvisioning {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV.
+     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
+     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
+     * days, ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @since ZCS 5.0.14
      */
@@ -2149,6 +2219,10 @@ public class ZAttrProvisioning {
      * Deprecated since: 6.0.6. Deprecated per bug 40081. Orig desc: How
      * often do we refresh contact ranking table from address book and GAL to
      * get friendly name for the email address. Use 0 to disable the refresh.
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @since ZCS 6.0.0_BETA2
      */
@@ -2213,7 +2287,11 @@ public class ZAttrProvisioning {
 
     /**
      * SQL statements that take longer than this duration to execute will be
-     * logged to the sqltrace category in mailbox.log.
+     * logged to the sqltrace category in mailbox.log. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @since ZCS 6.0.0_RC1
      */
@@ -2248,7 +2326,10 @@ public class ZAttrProvisioning {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -2258,7 +2339,10 @@ public class ZAttrProvisioning {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -2327,7 +2411,10 @@ public class ZAttrProvisioning {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -2349,7 +2436,10 @@ public class ZAttrProvisioning {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -2400,7 +2490,10 @@ public class ZAttrProvisioning {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -2423,7 +2516,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDataSourceMaxTraceSize = "zimbraDataSourceMaxTraceSize";
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval.
+     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @since ZCS 5.0.0
      */
@@ -2452,7 +2549,11 @@ public class ZAttrProvisioning {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling.
+     * account/cos, use 0, which means no automated polling. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      */
     @ZAttr(id=455)
     public static final String A_zimbraDataSourcePollingInterval = "zimbraDataSourcePollingInterval";
@@ -2460,7 +2561,10 @@ public class ZAttrProvisioning {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -2484,7 +2588,10 @@ public class ZAttrProvisioning {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -2517,7 +2624,10 @@ public class ZAttrProvisioning {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling.
+     * for automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -3310,7 +3420,10 @@ public class ZAttrProvisioning {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation.
+     * the expense of slowing down the operation. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @since ZCS 7.0.0
      */
@@ -3366,7 +3479,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFreebusyExchangeAuthUsername = "zimbraFreebusyExchangeAuthUsername";
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @since ZCS 5.0.3
      */
@@ -3375,7 +3492,11 @@ public class ZAttrProvisioning {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @since ZCS 5.0.3
      */
@@ -3410,7 +3531,10 @@ public class ZAttrProvisioning {
     /**
      * The interval to wait when the server encounters problems while
      * propagating Zimbra users free/busy information to external provider
-     * such as Exchange.
+     * such as Exchange. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 5.0.17
      */
@@ -3824,7 +3948,10 @@ public class ZAttrProvisioning {
     /**
      * Deprecated since: 6.0.0_BETA2. deprecated in favor for
      * zimbraHsmPolicy. Orig desc: Minimum age of mail items whose filesystem
-     * data will be moved to secondary storage (nnnnn[hmsd]).
+     * data will be moved to secondary storage. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      */
     @ZAttr(id=8)
     public static final String A_zimbraHsmAge = "zimbraHsmAge";
@@ -4167,8 +4294,12 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLastLogonTimestamp = "zimbraLastLogonTimestamp";
 
     /**
-     * how often (nnnnn[hmsd]) the zimbraLastLogonTimestamp is updated. if
-     * set to 0, updating zimbraLastLogonTimestamp is completely disabled
+     * how often the zimbraLastLogonTimestamp is updated. if set to 0,
+     * updating zimbraLastLogonTimestamp is completely disabled Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      */
     @ZAttr(id=114)
     public static final String A_zimbraLastLogonTimestampFrequency = "zimbraLastLogonTimestampFrequency";
@@ -4253,14 +4384,21 @@ public class ZAttrProvisioning {
     public static final String A_zimbraLogHostname = "zimbraLogHostname";
 
     /**
-     * lifetime (nnnnn[hmsd]) of raw log rows in consolidated logger tables
+     * lifetime of raw log rows in consolidated logger tables Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      */
     @ZAttr(id=263)
     public static final String A_zimbraLogRawLifetime = "zimbraLogRawLifetime";
 
     /**
-     * lifetime (nnnnn[hmsd]) of summarized log rows in consolidated logger
-     * tables
+     * lifetime of summarized log rows in consolidated logger tables Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      */
     @ZAttr(id=264)
     public static final String A_zimbraLogSummaryLifetime = "zimbraLogSummaryLifetime";
@@ -4396,7 +4534,10 @@ public class ZAttrProvisioning {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 7.0.0
      */
@@ -4456,7 +4597,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailForwardingAddressMaxNumAddrs = "zimbraMailForwardingAddressMaxNumAddrs";
 
     /**
-     * the server hosting the accounts mailbox
+     * the server hosting the account&#039;s mailbox
      */
     @ZAttr(id=4)
     public static final String A_zimbraMailHost = "zimbraMailHost";
@@ -4468,7 +4609,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailHostPool = "zimbraMailHostPool";
 
     /**
-     * idle timeout (nnnnn[hmsd])
+     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      */
     @ZAttr(id=147)
     public static final String A_zimbraMailIdleSessionTimeout = "zimbraMailIdleSessionTimeout";
@@ -4483,13 +4627,21 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailLastPurgedMailboxId = "zimbraMailLastPurgedMailboxId";
 
     /**
-     * lifetime (nnnnn[hmsd]) of a mail message regardless of location
+     * lifetime of a mail message regardless of location Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      */
     @ZAttr(id=106)
     public static final String A_zimbraMailMessageLifetime = "zimbraMailMessageLifetime";
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])
+     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      */
     @ZAttr(id=110)
     public static final String A_zimbraMailMinPollingInterval = "zimbraMailMinPollingInterval";
@@ -4536,7 +4688,10 @@ public class ZAttrProvisioning {
 
     /**
      * Sleep time between subsequent mailbox purges. 0 means that mailbox
-     * purging is disabled.
+     * purging is disabled. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 5.0.0
      */
@@ -4608,7 +4763,10 @@ public class ZAttrProvisioning {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used.
+     * shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      */
     @ZAttr(id=105)
     public static final String A_zimbraMailSpamLifetime = "zimbraMailSpamLifetime";
@@ -4643,7 +4801,10 @@ public class ZAttrProvisioning {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      */
     @ZAttr(id=104)
     public static final String A_zimbraMailTrashLifetime = "zimbraMailTrashLifetime";
@@ -5399,7 +5560,10 @@ public class ZAttrProvisioning {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it
+     * admin resets it Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      */
     @ZAttr(id=379)
     public static final String A_zimbraPasswordLockoutDuration = "zimbraPasswordLockoutDuration";
@@ -5413,7 +5577,10 @@ public class ZAttrProvisioning {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred
+     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      */
     @ZAttr(id=381)
     public static final String A_zimbraPasswordLockoutFailureLifetime = "zimbraPasswordLockoutFailureLifetime";
@@ -5716,7 +5883,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefAutoCompleteQuickCompletionOnComma = "zimbraPrefAutoCompleteQuickCompletionOnComma";
 
     /**
-     * time to wait before auto saving a draft(nnnnn[hmsd])
+     * time to wait before auto saving a draft Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @since ZCS 5.0.0
      */
@@ -6341,7 +6511,10 @@ public class ZAttrProvisioning {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 5.0.0
      */
@@ -6350,7 +6523,10 @@ public class ZAttrProvisioning {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 5.0.0
      */
@@ -6381,7 +6557,10 @@ public class ZAttrProvisioning {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 5.0.0
      */
@@ -6473,7 +6652,10 @@ public class ZAttrProvisioning {
 
     /**
      * interval at which the web client polls the server for new messages
-     * (nnnnn[hmsd])
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      */
     @ZAttr(id=111)
     public static final String A_zimbraPrefMailPollingInterval = "zimbraPrefMailPollingInterval";
@@ -6597,7 +6779,10 @@ public class ZAttrProvisioning {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval
+     * interval Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      */
     @ZAttr(id=386)
     public static final String A_zimbraPrefOutOfOfficeCacheDuration = "zimbraPrefOutOfOfficeCacheDuration";
@@ -6717,7 +6902,10 @@ public class ZAttrProvisioning {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 5.0.0
      */
@@ -6829,7 +7017,10 @@ public class ZAttrProvisioning {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 5.0.0
      */
@@ -6963,7 +7154,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraQuotaLastWarnTime = "zimbraQuotaLastWarnTime";
 
     /**
-     * Minimum duration of time between quota warnings.
+     * Minimum duration of time between quota warnings. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      */
     @ZAttr(id=485)
     public static final String A_zimbraQuotaWarnInterval = "zimbraQuotaWarnInterval";
@@ -7104,7 +7299,10 @@ public class ZAttrProvisioning {
 
     /**
      * wait duration before nginx sending back the NO response for failed
-     * imap/pop3 reverse proxy lookups
+     * imap/pop3 reverse proxy lookups Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 5.0.0
      */
@@ -7113,6 +7311,10 @@ public class ZAttrProvisioning {
 
     /**
      * time interval that an entry cached by NGINX will remain in the cache
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @since ZCS 5.0.10
      */
@@ -7121,7 +7323,10 @@ public class ZAttrProvisioning {
 
     /**
      * time interval that NGINX proxy will wait for a cache result, before
-     * considering the result as a cache miss
+     * considering the result as a cache miss Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @since ZCS 5.0.10
      */
@@ -7130,7 +7335,11 @@ public class ZAttrProvisioning {
 
     /**
      * time interval that NGINX proxy will wait before attempting to
-     * re-establish a connection to a memcache server that disconnected
+     * re-establish a connection to a memcache server that disconnected Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @since ZCS 5.0.10
      */
@@ -7139,7 +7348,10 @@ public class ZAttrProvisioning {
 
     /**
      * Time interval after which NGINX mail proxy will disconnect while
-     * establishing an upstream IMAP/POP connection
+     * establishing an upstream IMAP/POP connection Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -7251,7 +7463,10 @@ public class ZAttrProvisioning {
 
     /**
      * Time interval after which NGINX mail proxy will disconnect an inactive
-     * IMAP/POP connection
+     * IMAP/POP connection Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 5.0.10
      */
@@ -7430,7 +7645,10 @@ public class ZAttrProvisioning {
     /**
      * Time interval after which NGINX will fail over to the next route
      * lookup handler, if a handler does not respond to the route lookup
-     * request within this time
+     * request within this time Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 5.0.10
      */
@@ -7440,7 +7658,10 @@ public class ZAttrProvisioning {
     /**
      * Time interval (ms) given to mail route lookup handler to cache a
      * failed response to route a previous lookup request (after this time
-     * elapses, Proxy retries this host)
+     * elapses, Proxy retries this host) Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 5.0.12
      */
@@ -8092,7 +8313,10 @@ public class ZAttrProvisioning {
 
     /**
      * an email address to send mail to if Zimbra version check detects a new
-     * version
+     * version Must be in valid duration format: {digits}{time-unit}. digits:
+     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
+     * days, ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @since ZCS 6.0.2
      */
@@ -8215,7 +8439,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraVirusCheckEnabled = "zimbraVirusCheckEnabled";
 
     /**
-     * how often (nnnnn[hmsd]) the virus definitions are updated
+     * how often the virus definitions are updated Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      */
     @ZAttr(id=191)
     public static final String A_zimbraVirusDefinitionsUpdateFrequency = "zimbraVirusDefinitionsUpdateFrequency";

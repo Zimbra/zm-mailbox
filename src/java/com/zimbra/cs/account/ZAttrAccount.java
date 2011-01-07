@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110105-2218 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110106-1444 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -401,6 +401,68 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * RFC2256: destination indicator
+     *
+     * @return destinationIndicator, or null if unset
+     */
+    @ZAttr(id=-1)
+    public String getDestinationIndicator() {
+        return getAttr(Provisioning.A_destinationIndicator, null);
+    }
+
+    /**
+     * RFC2256: destination indicator
+     *
+     * @param destinationIndicator new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setDestinationIndicator(String destinationIndicator) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_destinationIndicator, destinationIndicator);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: destination indicator
+     *
+     * @param destinationIndicator new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setDestinationIndicator(String destinationIndicator, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_destinationIndicator, destinationIndicator);
+        return attrs;
+    }
+
+    /**
+     * RFC2256: destination indicator
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetDestinationIndicator() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_destinationIndicator, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: destination indicator
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetDestinationIndicator(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_destinationIndicator, "");
+        return attrs;
+    }
+
+    /**
      * RFC2798: preferred name to be used when displaying entries
      *
      * @return displayName, or null if unset
@@ -459,6 +521,68 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetDisplayName(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_displayName, "");
+        return attrs;
+    }
+
+    /**
+     * RFC2256: Facsimile (Fax) Telephone Number
+     *
+     * @return facsimileTelephoneNumber, or null if unset
+     */
+    @ZAttr(id=-1)
+    public String getFacsimileTelephoneNumber() {
+        return getAttr(Provisioning.A_facsimileTelephoneNumber, null);
+    }
+
+    /**
+     * RFC2256: Facsimile (Fax) Telephone Number
+     *
+     * @param facsimileTelephoneNumber new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setFacsimileTelephoneNumber(String facsimileTelephoneNumber) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_facsimileTelephoneNumber, facsimileTelephoneNumber);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: Facsimile (Fax) Telephone Number
+     *
+     * @param facsimileTelephoneNumber new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setFacsimileTelephoneNumber(String facsimileTelephoneNumber, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_facsimileTelephoneNumber, facsimileTelephoneNumber);
+        return attrs;
+    }
+
+    /**
+     * RFC2256: Facsimile (Fax) Telephone Number
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetFacsimileTelephoneNumber() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_facsimileTelephoneNumber, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: Facsimile (Fax) Telephone Number
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetFacsimileTelephoneNumber(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_facsimileTelephoneNumber, "");
         return attrs;
     }
 
@@ -707,6 +831,68 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetInitials(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_initials, "");
+        return attrs;
+    }
+
+    /**
+     * RFC2256: international ISDN number
+     *
+     * @return internationaliSDNNumber, or null if unset
+     */
+    @ZAttr(id=-1)
+    public String getInternationaliSDNNumber() {
+        return getAttr(Provisioning.A_internationaliSDNNumber, null);
+    }
+
+    /**
+     * RFC2256: international ISDN number
+     *
+     * @param internationaliSDNNumber new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setInternationaliSDNNumber(String internationaliSDNNumber) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_internationaliSDNNumber, internationaliSDNNumber);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: international ISDN number
+     *
+     * @param internationaliSDNNumber new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setInternationaliSDNNumber(String internationaliSDNNumber, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_internationaliSDNNumber, internationaliSDNNumber);
+        return attrs;
+    }
+
+    /**
+     * RFC2256: international ISDN number
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetInternationaliSDNNumber() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_internationaliSDNNumber, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: international ISDN number
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetInternationaliSDNNumber(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_internationaliSDNNumber, "");
         return attrs;
     }
 
@@ -1145,6 +1331,68 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * RFC2256: Post Office Box
+     *
+     * @return postOfficeBox, or null if unset
+     */
+    @ZAttr(id=-1)
+    public String getPostOfficeBox() {
+        return getAttr(Provisioning.A_postOfficeBox, null);
+    }
+
+    /**
+     * RFC2256: Post Office Box
+     *
+     * @param postOfficeBox new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setPostOfficeBox(String postOfficeBox) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_postOfficeBox, postOfficeBox);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: Post Office Box
+     *
+     * @param postOfficeBox new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setPostOfficeBox(String postOfficeBox, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_postOfficeBox, postOfficeBox);
+        return attrs;
+    }
+
+    /**
+     * RFC2256: Post Office Box
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetPostOfficeBox() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_postOfficeBox, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: Post Office Box
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetPostOfficeBox(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_postOfficeBox, "");
+        return attrs;
+    }
+
+    /**
      * RFC2256: postal address
      *
      * @return postalAddress, or null if unset
@@ -1265,6 +1513,130 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPostalCode(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_postalCode, "");
+        return attrs;
+    }
+
+    /**
+     * RFC2256: preferred delivery method
+     *
+     * @return preferredDeliveryMethod, or null if unset
+     */
+    @ZAttr(id=-1)
+    public String getPreferredDeliveryMethod() {
+        return getAttr(Provisioning.A_preferredDeliveryMethod, null);
+    }
+
+    /**
+     * RFC2256: preferred delivery method
+     *
+     * @param preferredDeliveryMethod new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setPreferredDeliveryMethod(String preferredDeliveryMethod) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_preferredDeliveryMethod, preferredDeliveryMethod);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: preferred delivery method
+     *
+     * @param preferredDeliveryMethod new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setPreferredDeliveryMethod(String preferredDeliveryMethod, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_preferredDeliveryMethod, preferredDeliveryMethod);
+        return attrs;
+    }
+
+    /**
+     * RFC2256: preferred delivery method
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetPreferredDeliveryMethod() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_preferredDeliveryMethod, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: preferred delivery method
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetPreferredDeliveryMethod(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_preferredDeliveryMethod, "");
+        return attrs;
+    }
+
+    /**
+     * RFC2256: registered postal address
+     *
+     * @return registeredAddress, or null if unset
+     */
+    @ZAttr(id=-1)
+    public String getRegisteredAddress() {
+        return getAttr(Provisioning.A_registeredAddress, null);
+    }
+
+    /**
+     * RFC2256: registered postal address
+     *
+     * @param registeredAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setRegisteredAddress(String registeredAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_registeredAddress, registeredAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: registered postal address
+     *
+     * @param registeredAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setRegisteredAddress(String registeredAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_registeredAddress, registeredAddress);
+        return attrs;
+    }
+
+    /**
+     * RFC2256: registered postal address
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetRegisteredAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_registeredAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: registered postal address
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetRegisteredAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_registeredAddress, "");
         return attrs;
     }
 
@@ -1579,6 +1951,130 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * RFC2256: Teletex Terminal Identifier
+     *
+     * @return teletexTerminalIdentifier, or null if unset
+     */
+    @ZAttr(id=-1)
+    public String getTeletexTerminalIdentifier() {
+        return getAttr(Provisioning.A_teletexTerminalIdentifier, null);
+    }
+
+    /**
+     * RFC2256: Teletex Terminal Identifier
+     *
+     * @param teletexTerminalIdentifier new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setTeletexTerminalIdentifier(String teletexTerminalIdentifier) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_teletexTerminalIdentifier, teletexTerminalIdentifier);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: Teletex Terminal Identifier
+     *
+     * @param teletexTerminalIdentifier new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setTeletexTerminalIdentifier(String teletexTerminalIdentifier, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_teletexTerminalIdentifier, teletexTerminalIdentifier);
+        return attrs;
+    }
+
+    /**
+     * RFC2256: Teletex Terminal Identifier
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetTeletexTerminalIdentifier() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_teletexTerminalIdentifier, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: Teletex Terminal Identifier
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetTeletexTerminalIdentifier(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_teletexTerminalIdentifier, "");
+        return attrs;
+    }
+
+    /**
+     * RFC2256: Telex Number
+     *
+     * @return telexNumber, or null if unset
+     */
+    @ZAttr(id=-1)
+    public String getTelexNumber() {
+        return getAttr(Provisioning.A_telexNumber, null);
+    }
+
+    /**
+     * RFC2256: Telex Number
+     *
+     * @param telexNumber new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setTelexNumber(String telexNumber) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_telexNumber, telexNumber);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: Telex Number
+     *
+     * @param telexNumber new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setTelexNumber(String telexNumber, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_telexNumber, telexNumber);
+        return attrs;
+    }
+
+    /**
+     * RFC2256: Telex Number
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetTelexNumber() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_telexNumber, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: Telex Number
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetTelexNumber(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_telexNumber, "");
+        return attrs;
+    }
+
+    /**
      * RFC2256: title associated with the entity
      *
      * @return title, or null if unset
@@ -1761,6 +2257,68 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetUserPassword(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_userPassword, "");
+        return attrs;
+    }
+
+    /**
+     * RFC2256: X.121 Address
+     *
+     * @return x121Address, or null if unset
+     */
+    @ZAttr(id=-1)
+    public String getX121Address() {
+        return getAttr(Provisioning.A_x121Address, null);
+    }
+
+    /**
+     * RFC2256: X.121 Address
+     *
+     * @param x121Address new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setX121Address(String x121Address) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_x121Address, x121Address);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: X.121 Address
+     *
+     * @param x121Address new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setX121Address(String x121Address, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_x121Address, x121Address);
+        return attrs;
+    }
+
+    /**
+     * RFC2256: X.121 Address
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetX121Address() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_x121Address, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * RFC2256: X.121 Address
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetX121Address(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_x121Address, "");
         return attrs;
     }
 
@@ -2129,7 +2687,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
+     * lifetime of newly created admin auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * <p>Use getAdminAuthTokenLifetimeAsString to access value as a string.
      *
@@ -2143,7 +2704,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
+     * lifetime of newly created admin auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @return zimbraAdminAuthTokenLifetime, or "12h" if unset
      */
@@ -2153,7 +2717,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
+     * lifetime of newly created admin auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraAdminAuthTokenLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2166,7 +2733,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
+     * lifetime of newly created admin auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraAdminAuthTokenLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2180,7 +2750,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
+     * lifetime of newly created admin auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -2192,7 +2765,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created admin auth tokens
+     * lifetime of newly created admin auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3187,7 +3763,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created auth tokens
+     * lifetime of newly created auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * <p>Use getAuthTokenLifetimeAsString to access value as a string.
      *
@@ -3201,7 +3780,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created auth tokens
+     * lifetime of newly created auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @return zimbraAuthTokenLifetime, or "2d" if unset
      */
@@ -3211,7 +3793,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created auth tokens
+     * lifetime of newly created auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraAuthTokenLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3224,7 +3809,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created auth tokens
+     * lifetime of newly created auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraAuthTokenLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3238,7 +3826,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created auth tokens
+     * lifetime of newly created auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -3250,7 +3841,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of newly created auth tokens
+     * lifetime of newly created auth tokens Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3729,7 +4323,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * CalDAV shared folder cache duration
+     * CalDAV shared folder cache duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getCalendarCalDavSharedFolderCacheDurationAsString to access value as a string.
      *
@@ -3745,7 +4342,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * CalDAV shared folder cache duration
+     * CalDAV shared folder cache duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraCalendarCalDavSharedFolderCacheDuration, or "1m" if unset
      *
@@ -3757,7 +4357,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * CalDAV shared folder cache duration
+     * CalDAV shared folder cache duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraCalendarCalDavSharedFolderCacheDuration new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3772,7 +4375,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * CalDAV shared folder cache duration
+     * CalDAV shared folder cache duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraCalendarCalDavSharedFolderCacheDuration new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3788,7 +4394,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * CalDAV shared folder cache duration
+     * CalDAV shared folder cache duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -3802,7 +4411,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * CalDAV shared folder cache duration
+     * CalDAV shared folder cache duration Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3817,7 +4429,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart
+     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getCalendarCalDavSyncEndAsString to access value as a string.
      *
@@ -3833,7 +4449,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart
+     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraCalendarCalDavSyncEnd, or null if unset
      *
@@ -3845,7 +4465,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart
+     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraCalendarCalDavSyncEnd new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3860,7 +4484,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart
+     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraCalendarCalDavSyncEnd new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3876,7 +4504,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart
+     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -3890,7 +4522,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * see description of zimbraCalendarCalDavSyncStart
+     * see description of zimbraCalendarCalDavSyncStart Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -3911,7 +4547,10 @@ public class ZAttrAccount  extends MailTarget {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV.
+     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
+     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
+     * days, ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getCalendarCalDavSyncStartAsString to access value as a string.
      *
@@ -3933,7 +4572,10 @@ public class ZAttrAccount  extends MailTarget {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV.
+     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
+     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
+     * days, ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraCalendarCalDavSyncStart, or null if unset
      *
@@ -3951,7 +4593,10 @@ public class ZAttrAccount  extends MailTarget {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV.
+     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
+     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
+     * days, ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraCalendarCalDavSyncStart new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3972,7 +4617,10 @@ public class ZAttrAccount  extends MailTarget {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV.
+     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
+     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
+     * days, ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraCalendarCalDavSyncStart new value
      * @param attrs existing map to populate, or null to create a new map
@@ -3994,7 +4642,10 @@ public class ZAttrAccount  extends MailTarget {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV.
+     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
+     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
+     * days, ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -4014,7 +4665,10 @@ public class ZAttrAccount  extends MailTarget {
      * zimbraCalendarCalDavSyncEnd is set to 1 years, then the appointments
      * between (now - 30 days) and (now + 1 year) will be available via
      * CalDAV. When they are unset all the appointments are available via
-     * CalDAV.
+     * CalDAV. Must be in valid duration format: {digits}{time-unit}. digits:
+     * 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d -
+     * days, ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -5185,7 +5839,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getDataSourceCaldavPollingIntervalAsString to access value as a string.
      *
@@ -5203,7 +5860,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraDataSourceCaldavPollingInterval, or null if unset
      *
@@ -5217,7 +5877,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceCaldavPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5234,7 +5897,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceCaldavPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5252,7 +5918,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -5268,7 +5937,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Caldav data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -5285,7 +5957,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getDataSourceCalendarPollingIntervalAsString to access value as a string.
      *
@@ -5303,7 +5978,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraDataSourceCalendarPollingInterval, or "12h" if unset
      *
@@ -5317,7 +5995,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceCalendarPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5334,7 +6015,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceCalendarPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5352,7 +6036,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -5368,7 +6055,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a remote calendar
      * data source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -5385,7 +6075,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getDataSourceGalPollingIntervalAsString to access value as a string.
      *
@@ -5403,7 +6096,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraDataSourceGalPollingInterval, or null if unset
      *
@@ -5417,7 +6113,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceGalPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5434,7 +6133,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceGalPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5452,7 +6154,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -5468,7 +6173,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a GAL data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -5485,7 +6193,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getDataSourceImapPollingIntervalAsString to access value as a string.
      *
@@ -5503,7 +6214,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraDataSourceImapPollingInterval, or null if unset
      *
@@ -5517,7 +6231,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceImapPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5534,7 +6251,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceImapPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5552,7 +6272,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -5568,7 +6291,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for an Imap data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -5585,7 +6311,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getDataSourceLivePollingIntervalAsString to access value as a string.
      *
@@ -5603,7 +6332,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraDataSourceLivePollingInterval, or null if unset
      *
@@ -5617,7 +6349,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceLivePollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5634,7 +6369,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceLivePollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5652,7 +6390,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -5668,7 +6409,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Live data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -5745,7 +6489,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval.
+     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getDataSourceMinPollingIntervalAsString to access value as a string.
      *
@@ -5761,7 +6509,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval.
+     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraDataSourceMinPollingInterval, or "1m" if unset
      *
@@ -5773,7 +6525,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval.
+     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraDataSourceMinPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5788,7 +6544,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval.
+     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraDataSourceMinPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5804,7 +6564,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval.
+     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -5818,7 +6582,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Shortest allowed duration for zimbraDataSourcePollingInterval.
+     * Shortest allowed duration for zimbraDataSourcePollingInterval. Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -5842,7 +6610,11 @@ public class ZAttrAccount  extends MailTarget {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling.
+     * account/cos, use 0, which means no automated polling. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getDataSourcePollingIntervalAsString to access value as a string.
      *
@@ -5865,7 +6637,11 @@ public class ZAttrAccount  extends MailTarget {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling.
+     * account/cos, use 0, which means no automated polling. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraDataSourcePollingInterval, or null if unset
      */
@@ -5884,7 +6660,11 @@ public class ZAttrAccount  extends MailTarget {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling.
+     * account/cos, use 0, which means no automated polling. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraDataSourcePollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5906,7 +6686,11 @@ public class ZAttrAccount  extends MailTarget {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling.
+     * account/cos, use 0, which means no automated polling. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraDataSourcePollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5929,7 +6713,11 @@ public class ZAttrAccount  extends MailTarget {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling.
+     * account/cos, use 0, which means no automated polling. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -5950,7 +6738,11 @@ public class ZAttrAccount  extends MailTarget {
      * zimbraDataSourcePollingInterval is set on data source, use it 2.
      * otherwise use the zimbraDataSource{Proto}PollingInterval on
      * account/cos 3. if zimbraDataSource{Proto}PollingInterval is not set on
-     * account/cos, use 0, which means no automated polling.
+     * account/cos, use 0, which means no automated polling. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -5965,7 +6757,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getDataSourcePop3PollingIntervalAsString to access value as a string.
      *
@@ -5983,7 +6778,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraDataSourcePop3PollingInterval, or null if unset
      *
@@ -5997,7 +6795,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourcePop3PollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6014,7 +6815,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourcePop3PollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -6032,7 +6836,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -6048,7 +6855,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Pop3 data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -6065,7 +6875,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getDataSourceRssPollingIntervalAsString to access value as a string.
      *
@@ -6083,7 +6896,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraDataSourceRssPollingInterval, or "12h" if unset
      *
@@ -6097,7 +6913,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceRssPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6114,7 +6933,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceRssPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -6132,7 +6954,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -6148,7 +6973,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Rss data
      * source. If unset or 0, the data source will not be scheduled for
-     * automated polling.
+     * automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -6165,7 +6993,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling.
+     * for automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getDataSourceYabPollingIntervalAsString to access value as a string.
      *
@@ -6183,7 +7014,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling.
+     * for automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraDataSourceYabPollingInterval, or null if unset
      *
@@ -6197,7 +7031,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling.
+     * for automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceYabPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6214,7 +7051,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling.
+     * for automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraDataSourceYabPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -6232,7 +7072,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling.
+     * for automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -6248,7 +7091,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The time interval between automated data imports for a Yahoo address
      * book data source. If unset or 0, the data source will not be scheduled
-     * for automated polling.
+     * for automated polling. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -12024,7 +12870,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation.
+     * the expense of slowing down the operation. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * <p>Use getFilterSleepIntervalAsString to access value as a string.
      *
@@ -12042,7 +12891,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation.
+     * the expense of slowing down the operation. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @return zimbraFilterSleepInterval, or "100ms" if unset
      *
@@ -12056,7 +12908,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation.
+     * the expense of slowing down the operation. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraFilterSleepInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -12073,7 +12928,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation.
+     * the expense of slowing down the operation. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraFilterSleepInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -12091,7 +12949,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation.
+     * the expense of slowing down the operation. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -12107,7 +12968,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * The amount of time to sleep between every two messages during
      * ApplyFilterRules. Increasing this value will even out server load at
-     * the expense of slowing down the operation.
+     * the expense of slowing down the operation. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -12513,7 +13377,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getFreebusyExchangeCachedIntervalAsString to access value as a string.
      *
@@ -12529,7 +13397,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraFreebusyExchangeCachedInterval, or null if unset
      *
@@ -12541,7 +13413,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraFreebusyExchangeCachedInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -12556,7 +13432,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraFreebusyExchangeCachedInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -12572,7 +13452,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -12586,7 +13470,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * The duration of f/b block pushed to Exchange server.
+     * The duration of f/b block pushed to Exchange server. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -12602,7 +13490,11 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getFreebusyExchangeCachedIntervalStartAsString to access value as a string.
      *
@@ -12619,7 +13511,11 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraFreebusyExchangeCachedIntervalStart, or null if unset
      *
@@ -12632,7 +13528,11 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraFreebusyExchangeCachedIntervalStart new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -12648,7 +13548,11 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraFreebusyExchangeCachedIntervalStart new value
      * @param attrs existing map to populate, or null to create a new map
@@ -12665,7 +13569,11 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -12680,7 +13588,11 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * The value of duration is used to indicate the start date (in the past
-     * relative to today) of the f/b interval pushed to Exchange server.
+     * relative to today) of the f/b interval pushed to Exchange server. Must
+     * be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -15331,7 +16243,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getMailDumpsterLifetimeAsString to access value as a string.
      *
@@ -15348,7 +16263,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraMailDumpsterLifetime, or "30d" if unset
      *
@@ -15361,7 +16279,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraMailDumpsterLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15377,7 +16298,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraMailDumpsterLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -15394,7 +16318,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -15409,7 +16336,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of messages in the dumpster. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -15684,7 +16614,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * the server hosting the accounts mailbox
+     * the server hosting the account&#039;s mailbox
      *
      * @return zimbraMailHost, or null if unset
      */
@@ -15694,7 +16624,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * the server hosting the accounts mailbox
+     * the server hosting the account&#039;s mailbox
      *
      * @param zimbraMailHost new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15707,7 +16637,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * the server hosting the accounts mailbox
+     * the server hosting the account&#039;s mailbox
      *
      * @param zimbraMailHost new value
      * @param attrs existing map to populate, or null to create a new map
@@ -15721,7 +16651,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * the server hosting the accounts mailbox
+     * the server hosting the account&#039;s mailbox
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -15733,7 +16663,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * the server hosting the accounts mailbox
+     * the server hosting the account&#039;s mailbox
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -15746,7 +16676,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * idle timeout (nnnnn[hmsd])
+     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * <p>Use getMailIdleSessionTimeoutAsString to access value as a string.
      *
@@ -15760,7 +16693,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * idle timeout (nnnnn[hmsd])
+     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @return zimbraMailIdleSessionTimeout, or "0" if unset
      */
@@ -15770,7 +16706,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * idle timeout (nnnnn[hmsd])
+     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraMailIdleSessionTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15783,7 +16722,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * idle timeout (nnnnn[hmsd])
+     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraMailIdleSessionTimeout new value
      * @param attrs existing map to populate, or null to create a new map
@@ -15797,7 +16739,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * idle timeout (nnnnn[hmsd])
+     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -15809,7 +16754,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * idle timeout (nnnnn[hmsd])
+     * idle timeout Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -15822,7 +16770,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of a mail message regardless of location
+     * lifetime of a mail message regardless of location Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getMailMessageLifetimeAsString to access value as a string.
      *
@@ -15836,7 +16788,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of a mail message regardless of location
+     * lifetime of a mail message regardless of location Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraMailMessageLifetime, or "0" if unset
      */
@@ -15846,7 +16802,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of a mail message regardless of location
+     * lifetime of a mail message regardless of location Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraMailMessageLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15859,7 +16819,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of a mail message regardless of location
+     * lifetime of a mail message regardless of location Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraMailMessageLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -15873,7 +16837,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of a mail message regardless of location
+     * lifetime of a mail message regardless of location Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -15885,7 +16853,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * lifetime (nnnnn[hmsd]) of a mail message regardless of location
+     * lifetime of a mail message regardless of location Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -15898,7 +16870,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])
+     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getMailMinPollingIntervalAsString to access value as a string.
      *
@@ -15912,7 +16888,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])
+     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraMailMinPollingInterval, or "2m" if unset
      */
@@ -15922,7 +16902,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])
+     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraMailMinPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15935,7 +16919,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])
+     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraMailMinPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -15949,7 +16937,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])
+     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -15961,7 +16953,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * minimum allowed value for zimbraPrefMailPollingInterval (nnnnn[hmsd])
+     * minimum allowed value for zimbraPrefMailPollingInterval Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -16404,7 +17400,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used.
+     * shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getMailSpamLifetimeAsString to access value as a string.
      *
@@ -16421,7 +17420,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used.
+     * shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraMailSpamLifetime, or "30d" if unset
      */
@@ -16434,7 +17436,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used.
+     * shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraMailSpamLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -16450,7 +17455,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used.
+     * shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraMailSpamLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -16467,7 +17475,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used.
+     * shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -16482,7 +17493,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefJunkLifetime, which is user-modifiable. The
-     * shorter duration is used.
+     * shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -16675,7 +17689,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getMailTrashLifetimeAsString to access value as a string.
      *
@@ -16692,7 +17709,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraMailTrashLifetime, or "30d" if unset
      */
@@ -16705,7 +17725,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraMailTrashLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -16721,7 +17744,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraMailTrashLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -16738,7 +17764,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -16753,7 +17782,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This admin-modifiable attribute works in
      * conjunction with zimbraPrefTrashLifetime, which is user-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -19124,7 +20156,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it
+     * admin resets it Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * <p>Use getPasswordLockoutDurationAsString to access value as a string.
      *
@@ -19139,7 +20174,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it
+     * admin resets it Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @return zimbraPasswordLockoutDuration, or "1h" if unset
      */
@@ -19150,7 +20188,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it
+     * admin resets it Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraPasswordLockoutDuration new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19164,7 +20205,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it
+     * admin resets it Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraPasswordLockoutDuration new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19179,7 +20223,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it
+     * admin resets it Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -19192,7 +20239,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * how long an account is locked out. Use 0 to lockout an account until
-     * admin resets it
+     * admin resets it Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -19269,7 +20319,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred
+     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * <p>Use getPasswordLockoutFailureLifetimeAsString to access value as a string.
      *
@@ -19285,7 +20338,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred
+     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @return zimbraPasswordLockoutFailureLifetime, or "1h" if unset
      */
@@ -19297,7 +20353,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred
+     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraPasswordLockoutFailureLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19312,7 +20371,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred
+     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraPasswordLockoutFailureLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19328,7 +20390,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred
+     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -19342,7 +20407,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * the duration after which old consecutive failed login attempts are
      * purged from the list, even though no successful authentication has
-     * occurred
+     * occurred Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -21079,7 +22147,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * time to wait before auto saving a draft(nnnnn[hmsd])
+     * time to wait before auto saving a draft Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * <p>Use getPrefAutoSaveDraftIntervalAsString to access value as a string.
      *
@@ -21095,7 +22166,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * time to wait before auto saving a draft(nnnnn[hmsd])
+     * time to wait before auto saving a draft Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @return zimbraPrefAutoSaveDraftInterval, or "30s" if unset
      *
@@ -21107,7 +22181,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * time to wait before auto saving a draft(nnnnn[hmsd])
+     * time to wait before auto saving a draft Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraPrefAutoSaveDraftInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21122,7 +22199,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * time to wait before auto saving a draft(nnnnn[hmsd])
+     * time to wait before auto saving a draft Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param zimbraPrefAutoSaveDraftInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -21138,7 +22218,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * time to wait before auto saving a draft(nnnnn[hmsd])
+     * time to wait before auto saving a draft Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -21152,7 +22235,10 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * time to wait before auto saving a draft(nnnnn[hmsd])
+     * time to wait before auto saving a draft Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -27955,7 +29041,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getPrefInboxReadLifetimeAsString to access value as a string.
      *
@@ -27972,7 +29061,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraPrefInboxReadLifetime, or "0" if unset
      *
@@ -27985,7 +29077,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefInboxReadLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28001,7 +29096,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefInboxReadLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -28018,7 +29116,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -28033,7 +29134,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of read messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -28049,7 +29153,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getPrefInboxUnreadLifetimeAsString to access value as a string.
      *
@@ -28066,7 +29173,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraPrefInboxUnreadLifetime, or "0" if unset
      *
@@ -28079,7 +29189,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefInboxUnreadLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28095,7 +29208,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefInboxUnreadLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -28112,7 +29228,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -28127,7 +29246,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of unread messages in the Inbox folder. 0 means that
-     * all messages will be retained.
+     * all messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -28341,7 +29463,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getPrefJunkLifetimeAsString to access value as a string.
      *
@@ -28360,7 +29485,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraPrefJunkLifetime, or "0" if unset
      *
@@ -28375,7 +29503,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefJunkLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28393,7 +29524,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefJunkLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -28412,7 +29546,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -28429,7 +29566,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Junk folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailSpamLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -29212,7 +30352,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * interval at which the web client polls the server for new messages
-     * (nnnnn[hmsd])
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getPrefMailPollingIntervalAsString to access value as a string.
      *
@@ -29227,7 +30370,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * interval at which the web client polls the server for new messages
-     * (nnnnn[hmsd])
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraPrefMailPollingInterval, or "5m" if unset
      */
@@ -29238,7 +30384,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * interval at which the web client polls the server for new messages
-     * (nnnnn[hmsd])
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraPrefMailPollingInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -29252,7 +30401,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * interval at which the web client polls the server for new messages
-     * (nnnnn[hmsd])
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraPrefMailPollingInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -29267,7 +30419,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * interval at which the web client polls the server for new messages
-     * (nnnnn[hmsd])
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -29280,7 +30435,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * interval at which the web client polls the server for new messages
-     * (nnnnn[hmsd])
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -30627,7 +31785,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval
+     * interval Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * <p>Use getPrefOutOfOfficeCacheDurationAsString to access value as a string.
      *
@@ -30643,7 +31804,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval
+     * interval Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @return zimbraPrefOutOfOfficeCacheDuration, or "7d" if unset
      */
@@ -30655,7 +31819,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval
+     * interval Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraPrefOutOfOfficeCacheDuration new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -30670,7 +31837,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval
+     * interval Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraPrefOutOfOfficeCacheDuration new value
      * @param attrs existing map to populate, or null to create a new map
@@ -30686,7 +31856,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval
+     * interval Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -30700,7 +31873,10 @@ public class ZAttrAccount  extends MailTarget {
     /**
      * server remembers addresses to which notifications have been sent for
      * this interval, and does not send duplicate notifications in this
-     * interval
+     * interval Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -32090,7 +33266,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getPrefSentLifetimeAsString to access value as a string.
      *
@@ -32107,7 +33286,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraPrefSentLifetime, or "0" if unset
      *
@@ -32120,7 +33302,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefSentLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -32136,7 +33321,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefSentLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -32153,7 +33341,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -32168,7 +33359,10 @@ public class ZAttrAccount  extends MailTarget {
 
     /**
      * Retention period of messages in the Sent folder. 0 means that all
-     * messages will be retained.
+     * messages will be retained. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -33318,7 +34512,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getPrefTrashLifetimeAsString to access value as a string.
      *
@@ -33337,7 +34534,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @return zimbraPrefTrashLifetime, or "0" if unset
      *
@@ -33352,7 +34552,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefTrashLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -33370,7 +34573,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraPrefTrashLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -33389,7 +34595,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -33406,7 +34615,10 @@ public class ZAttrAccount  extends MailTarget {
      * Retention period of messages in the Trash folder. 0 means that all
      * messages will be retained. This user-modifiable attribute works in
      * conjunction with zimbraMailTrashLifetime, which is admin-modifiable.
-     * The shorter duration is used.
+     * The shorter duration is used. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -34632,7 +35844,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Minimum duration of time between quota warnings.
+     * Minimum duration of time between quota warnings. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getQuotaWarnIntervalAsString to access value as a string.
      *
@@ -34646,7 +35862,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Minimum duration of time between quota warnings.
+     * Minimum duration of time between quota warnings. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @return zimbraQuotaWarnInterval, or "1d" if unset
      */
@@ -34656,7 +35876,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Minimum duration of time between quota warnings.
+     * Minimum duration of time between quota warnings. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraQuotaWarnInterval new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34669,7 +35893,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Minimum duration of time between quota warnings.
+     * Minimum duration of time between quota warnings. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraQuotaWarnInterval new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34683,7 +35911,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Minimum duration of time between quota warnings.
+     * Minimum duration of time between quota warnings. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -34695,7 +35927,11 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * Minimum duration of time between quota warnings.
+     * Minimum duration of time between quota warnings. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
