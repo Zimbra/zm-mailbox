@@ -102,6 +102,8 @@
     <a n="zimbraFeatureManageZimlets"/>
     <a n="zimbraFeatureMobileSyncEnabled"/>
     <a n="zimbraFeatureVoiceUpsellURL"/>
+    <a n="zimbraFilterBatchSize"/>
+    <a n="zimbraFilterSleepInterval"/>
     <a n="zimbraForeignPrincipal"/>
     <a n="zimbraFreebusyLocalMailboxNotActive"/>
     <a n="zimbraGalSyncAccountBasedAutoCompleteEnabled"/>

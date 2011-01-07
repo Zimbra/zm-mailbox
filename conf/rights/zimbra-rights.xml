@@ -475,10 +475,6 @@
   <desc>check exchange auth config</desc>
 </right>
 
-<right name="checkExternalGALConfig" type="preset" targetType="domain">
-  <desc>check external GAL config</desc>
-</right>
-
 <right name="configureWikiAccount" type="setAttrs" targetType="domain,config">
   <desc>configure attributes for wiki account</desc>
    <attrs>
@@ -504,11 +500,6 @@
     <a n="zimbraGalSyncLdapBindDn"/>
     <a n="zimbraGalSyncLdapBindPassword"/>                                   
   </attrs> 
-</right>
-
-
-<right name="checkExternalAuthConfig" type="preset" targetType="domain">
-  <desc>check auth config for external auth</desc>
 </right>
 
 <right name="configureExternalAuth" type="setAttrs" targetType="domain">

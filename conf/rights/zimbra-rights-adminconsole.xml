@@ -1524,7 +1524,6 @@
       <r n="setAdminConsoleDomainGALTab"/>
       <r n="viewAdminConsoleDomainGALTab"/>
       <r n="configureExternalGAL"/>
-      <r n="checkExternalGALConfig"/>
     </rights>
   </right>
 
@@ -1546,7 +1545,6 @@
     <rights>
       <r n="setAdminConsoleDomainAuthenticationTab"/>
       <r n="viewAdminConsoleDomainAuthenticationTab"/>
-      <r n="checkExternalAuthConfig"/>
       <r n="configureExternalAuth"/>
     </rights>
   </right>
