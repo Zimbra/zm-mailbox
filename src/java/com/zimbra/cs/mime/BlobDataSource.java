@@ -44,23 +44,25 @@ public class BlobDataSource implements DataSource {
         mContentType = ct;
     }
 
+    @Override
     public String getContentType() {
         if (mContentType != null)
             return mContentType;
         return "message/rfc822";
     }
 
+    @Override
     public InputStream getInputStream() throws IOException {
         return StoreManager.getInstance().getContent(mBlob);
     }
 
+    @Override
     public String getName() {
-        // TODO should we just return null?
-        return mBlob.toString();
+        return null;
     }
 
+    @Override
     public OutputStream getOutputStream() {
         throw new UnsupportedOperationException();
     }
-
 }
