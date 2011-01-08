@@ -630,7 +630,24 @@ public final class LuceneIndex {
         } else { // catch-up index running in foreground
             boolean success = false;
             try {
-                writerRef.get().commit();
+                try {
+                    writerRef.get().commit();
+                } catch (CorruptIndexException e) {
+                    try {
+                        writerRef.get().close(false);
+                    } catch (Throwable ignore) {
+                    }
+                    repair(e);
+                    throw e; // fail to commit regardless of the repair
+                } catch (AssertionError e) {
+                    try {
+                        writerRef.get().close(false);
+                    } catch (Throwable ignore) {
+                    }
+                    writerRef.get().close(false);
+                    repair(e);
+                    throw e; // fail to commit regardless of the repair
+                }
                 mailboxIndex.mailbox.index.submit(task); // merge must run in background
                 success = true;
             } catch (RejectedExecutionException e) {
@@ -653,6 +670,13 @@ public final class LuceneIndex {
 
         try {
             writerRef.get().close(false); // ignore phantom pending merges
+        } catch (CorruptIndexException e) {
+            try {
+                repair(e);
+            } catch (CorruptIndexException ignore) {
+            }
+        } catch (AssertionError e) {
+            repair(e);
         } catch (IOException e) {
             ZimbraLog.index.error("Failed to close IndexWriter", e);
         } finally {
@@ -776,7 +800,7 @@ public final class LuceneIndex {
      * readers without long delay that merges likely cause. Merge threads don't block other writer threads running in
      * foreground. Another indexing using the same writer may start even while the merge is in progress.
      */
-    private static final class MergeTask extends IndexHelper.IndexTask {
+    private final class MergeTask extends IndexHelper.IndexTask {
         private final IndexWriterRef ref;
 
         MergeTask(IndexWriterRef ref) {
@@ -785,7 +809,7 @@ public final class LuceneIndex {
         }
 
         @Override
-        public void exec() {
+        public void exec() throws IOException {
             IndexWriter writer = ref.get();
             try {
                 if (((MergeScheduler) writer.getMergeScheduler()).tryLock()) {
@@ -798,6 +822,18 @@ public final class LuceneIndex {
                 } else {
                     ZimbraLog.index.debug("Merge is in progress by other thread");
                 }
+            } catch (CorruptIndexException e) {
+                try {
+                    writer.close(false);
+                } catch (Throwable ignore) {
+                }
+                repair(e);
+            } catch (AssertionError e) {
+                try {
+                    writer.close(false);
+                } catch (Throwable ignore) {
+                }
+                repair(e);
             } catch (IOException e) {
                 ZimbraLog.index.error("Failed to merge IndexWriter", e);
             } finally {
