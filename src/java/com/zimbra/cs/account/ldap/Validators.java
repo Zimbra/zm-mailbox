@@ -233,10 +233,28 @@ final class Validators {
                 cosCountMap.put(e.getKey(), 0);
             for (Map.Entry<String,Integer> e : featureLimitMap.entrySet())
                 featureCountMap.put(e.getKey(), 0);
-
-            String desiredCosId = (String) attrs.get(Provisioning.A_zimbraCOSId);
-            if (desiredCosId == null)
-                desiredCosId = defaultCosId;
+            
+            boolean isModifyingCosId = (attrs.get(Provisioning.A_zimbraCOSId) != null);
+            boolean isCreatingEntry = CREATE_ACCOUNT_CHECK_DOMAIN_COS_AND_FEATURE.equals(action);
+            
+            String desiredCosId;
+            
+            if (isModifyingCosId || isCreatingEntry) {
+                desiredCosId = (String) attrs.get(Provisioning.A_zimbraCOSId);
+                if (desiredCosId == null) {
+                    desiredCosId = defaultCosId;
+                }
+            } else {
+                // we are not modifying cos for the account, and
+                // we are not creating, account must not be null
+                if (account != null) {
+                    desiredCosId = account.getCOS().getId();
+                } else {
+                    // really an internal error
+                    // at some point we should probably cleanup the validate interface/code 
+                    throw ServiceException.FAILURE("accunt object is null", null);
+                }
+            }
 
             Set<String> cosFeatures = getCosFeatures(prov, cosFeatureMap, desiredCosId, defaultCosId);
             Set<String> desiredFeatures = new HashSet<String>();
