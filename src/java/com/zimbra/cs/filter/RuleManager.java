@@ -358,9 +358,9 @@ public class RuleManager {
 
     public static List<ItemId> applyRulesToIncomingMessage(
         OperationContext octxt, Mailbox mailbox, ParsedMessage pm, int size, String recipient,
-        DeliveryContext sharedDeliveryCtxt, int incomingFolderId)
+        DeliveryContext sharedDeliveryCtxt, int incomingFolderId, boolean noICal)
     throws ServiceException {
-        return applyRulesToIncomingMessage(octxt, mailbox, pm, size, recipient, sharedDeliveryCtxt, incomingFolderId, true);
+        return applyRulesToIncomingMessage(octxt, mailbox, pm, size, recipient, sharedDeliveryCtxt, incomingFolderId, noICal, true);
     }
     
     /**
@@ -373,12 +373,12 @@ public class RuleManager {
     public static List<ItemId> applyRulesToIncomingMessage(
         OperationContext octxt,
         Mailbox mailbox, ParsedMessage pm, int size, String recipient,
-        DeliveryContext sharedDeliveryCtxt, int incomingFolderId,
+        DeliveryContext sharedDeliveryCtxt, int incomingFolderId, boolean noICal,
         boolean allowFilterToMountpoint)
     throws ServiceException {
         List<ItemId> addedMessageIds = null;
         IncomingMessageHandler handler = new IncomingMessageHandler(
-            octxt, sharedDeliveryCtxt, mailbox, recipient, pm, size, incomingFolderId);
+            octxt, sharedDeliveryCtxt, mailbox, recipient, pm, size, incomingFolderId, noICal);
         ZimbraMailAdapter mailAdapter = new ZimbraMailAdapter(mailbox, handler);
         mailAdapter.setAllowFilterToMountpoint(allowFilterToMountpoint);
         
