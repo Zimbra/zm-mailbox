@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -970,6 +970,13 @@ public final class LuceneIndex extends IndexWritersCache.CacheEntry {
             // Flush all changes to file system before committing redos.
             mIndexWriter.close();
             success = true;
+        } catch (CorruptIndexException e) {
+            try {
+                repair(e);
+            } catch (CorruptIndexException ignore) {
+            }
+        } catch (AssertionError e) {
+            repair(e);
         } catch (IOException e) {
             ZimbraLog.index_lucene.error("Failed to close IndexWriter %s", this, e);
             // fall through to finally here with success=false
