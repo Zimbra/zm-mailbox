@@ -75,10 +75,6 @@ public class NioConnection {
         session.setAttribute(SaslFilter.DISABLE_ENCRYPTION_ONCE, true);
     }
 
-    public synchronized void messageSent() {
-        notify();
-    }
-
     public synchronized void send(ByteBuffer bb) throws IOException {
         ensureOpened();
         session.write(IoBuffer.wrap(bb));

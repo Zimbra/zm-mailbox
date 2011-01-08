@@ -25,13 +25,14 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.ZimbraLdapContext;
-import com.zimbra.cs.server.NioCodecFactory;
 import com.zimbra.cs.server.NioHandler;
 import com.zimbra.cs.server.NioServer;
 import com.zimbra.cs.server.NioConnection;
 import com.zimbra.cs.server.ServerConfig;
 
 public class NioMilterServer extends NioServer implements MilterServer {
+    private final ProtocolDecoder decoder = new NioMilterDecoder();
+    private final ProtocolEncoder encoder = new NioMilterEncoder();
 
     public NioMilterServer(ServerConfig config) throws ServiceException {
         super(config);
@@ -45,15 +46,15 @@ public class NioMilterServer extends NioServer implements MilterServer {
 
     @Override
     protected ProtocolCodecFactory getProtocolCodecFactory() {
-        return new NioCodecFactory() {
+        return new ProtocolCodecFactory() {
             @Override
             public ProtocolDecoder getDecoder(IoSession session) {
-                return new NioMilterDecoder(getStats());
+                return decoder;
             }
 
             @Override
             public ProtocolEncoder getEncoder(IoSession session) {
-                return new NioMilterEncoder(getStats());
+                return encoder;
             }
         };
     }

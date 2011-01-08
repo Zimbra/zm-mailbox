@@ -24,12 +24,16 @@ import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
 import com.zimbra.cs.util.Zimbra;
 
+import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
 import org.apache.mina.core.service.IoProcessor;
 import org.apache.mina.core.service.SimpleIoProcessorPool;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.apache.mina.filter.codec.ProtocolEncoder;
+import org.apache.mina.filter.codec.ProtocolEncoderAdapter;
+import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 import org.apache.mina.filter.executor.ExecutorFilter;
 import org.apache.mina.filter.ssl.SslFilter;
 import org.apache.mina.transport.socket.nio.NioProcessor;
@@ -56,10 +60,10 @@ import java.util.concurrent.TimeUnit;
  * instances.
  */
 public abstract class NioServer implements Server {
+    protected static final ProtocolEncoder DEFAULT_ENCODER = new DefaultEncoder();
     protected final ExecutorFilter executorFilter;
     protected final ZimbraSocketAcceptor acceptor;
     protected final ServerConfig config;
-    protected final NioServerStats stats;
 
     private static SSLContext sslContext;
     private static String[] mSslEnabledCipherSuites;
@@ -166,14 +170,9 @@ public abstract class NioServer implements Server {
     protected NioServer(ServerConfig config) throws ServiceException {
         this.config = config;
         acceptor = new ZimbraSocketAcceptor(config.getServerSocketChannel(), IO_PROCESSOR_POOL);
-        stats = new NioServerStats(this);
         executorFilter = new ExecutorFilter(1, config.getMaxThreads(),
                 config.getThreadKeepAliveTime(), TimeUnit.SECONDS,
                 new ThreadFactoryBuilder().setNameFormat(config.getProtocol() + "Server-%d").build());
-    }
-
-    public NioServerStats getStats() {
-        return stats;
     }
 
     /**
@@ -272,7 +271,7 @@ public abstract class NioServer implements Server {
     protected void registerMBean(String type) {
         MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         try {
-            mbs.registerMBean(getStats(), new ObjectName("ZimbraCollaborationSuite:type=" + type));
+            mbs.registerMBean(new NioServerStats(this), new ObjectName("ZimbraCollaborationSuite:type=" + type));
         } catch (Exception e) {
             getLog().warn("Unable to register NioServerStats mbean", e);
         }
@@ -281,4 +280,15 @@ public abstract class NioServer implements Server {
     public Log getLog() {
         return getConfig().getLog();
     }
+
+    private static final class DefaultEncoder extends ProtocolEncoderAdapter {
+        @Override
+        public void encode(IoSession session, Object msg, ProtocolEncoderOutput out) {
+            if (msg instanceof IoBuffer) {
+                IoBuffer buf = (IoBuffer) msg;
+                out.write(buf);
+            }
+        }
+    };
+
 }

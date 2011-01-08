@@ -17,7 +17,10 @@ package com.zimbra.cs.server;
 public interface NioServerStatsMBean {
     long getTotalSessions();
     long getActiveSessions();
-    long getReceivedBytes();
-    long getSentBytes();
+    long getReadBytes();
+    long getReadMessages();
+    long getWrittenBytes();
+    long getWrittenMessages();
     long getScheduledWriteBytes();
+    long getScheduledWriteMessages();
 }

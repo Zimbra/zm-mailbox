@@ -19,17 +19,19 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.server.NioHandler;
 import com.zimbra.cs.server.NioServer;
-import com.zimbra.cs.server.NioCodecFactory;
 import com.zimbra.cs.server.NioConnection;
 
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
+import org.apache.mina.filter.codec.ProtocolEncoder;
 
 public class NioImapServer extends NioServer implements ImapServer {
+    private final ProtocolDecoder decoder;
 
     public NioImapServer(ImapConfig config) throws ServiceException {
         super(config);
+        decoder = new NioImapDecoder(config.getWriteChunkSize());
         registerMBean(config.isSslEnabled() ? "NioImapSSLServer" : "NioImapServer");
     }
 
@@ -40,10 +42,15 @@ public class NioImapServer extends NioServer implements ImapServer {
 
     @Override
     protected ProtocolCodecFactory getProtocolCodecFactory() {
-        return new NioCodecFactory() {
+        return new ProtocolCodecFactory() {
+            @Override
+            public ProtocolEncoder getEncoder(IoSession session) throws Exception {
+                return DEFAULT_ENCODER;
+            }
+
             @Override
             public ProtocolDecoder getDecoder(IoSession session) {
-                return new NioImapDecoder(getStats(), config.getWriteChunkSize());
+                return decoder;
             }
         };
     }

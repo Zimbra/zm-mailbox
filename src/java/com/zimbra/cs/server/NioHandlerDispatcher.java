@@ -18,7 +18,7 @@ package com.zimbra.cs.server;
 import java.io.IOException;
 
 import org.apache.mina.core.buffer.IoBuffer;
-import org.apache.mina.core.service.IoHandler;
+import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 
@@ -29,13 +29,11 @@ import com.zimbra.cs.util.Config;
  * Handler for MINA I/O events. Responsible for notifying the connection's {@link NioHandler} when a connection has
  * been opened, closed, become idle, or a new request has been received.
  */
-final class NioHandlerDispatcher implements IoHandler {
+final class NioHandlerDispatcher extends IoHandlerAdapter {
     private final NioServer server;
-    private final NioServerStats stats;
 
     NioHandlerDispatcher(NioServer server) {
         this.server = server;
-        stats = server.getStats();
     }
 
     /**
@@ -59,13 +57,11 @@ final class NioHandlerDispatcher implements IoHandler {
     @Override
     public void sessionOpened(IoSession session) throws IOException {
         NioHandler handler = getHandler(session);
-        long numSessions = stats.activeSessions.incrementAndGet();
-        stats.totalSessions.incrementAndGet();
 
         if (!Config.userServicesEnabled()) {
             server.getLog().warn("Dropping connection (user services are disabled)");
             session.close(true);
-        } else if (numSessions > server.getConfig().getMaxConnections()) {
+        } else if (server.acceptor.getManagedSessionCount() > server.getConfig().getMaxConnections()) {
             server.getLog().warn("Dropping connection (max connections exceeded)");
             String message = server.getConfig().getConnectionRejected();
             if (message != null) {
@@ -81,7 +77,6 @@ final class NioHandlerDispatcher implements IoHandler {
     public void sessionClosed(IoSession session) throws IOException {
         getHandler(session).connectionClosed();
         getConnection(session).close();
-        stats.activeSessions.decrementAndGet();
     }
 
     @Override
@@ -97,15 +92,6 @@ final class NioHandlerDispatcher implements IoHandler {
     @Override
     public void exceptionCaught(IoSession session, Throwable e) throws IOException {
         getHandler(session).connectionClosed();
-    }
-
-    @Override
-    public void messageSent(IoSession session, Object msg) {
-        if (msg instanceof IoBuffer) {
-            IoBuffer buf = (IoBuffer) msg;
-            stats.sentBytes.addAndGet(buf.remaining());
-            getConnection(session).messageSent();
-        }
     }
 
     public static NioHandler getHandler(IoSession session) {

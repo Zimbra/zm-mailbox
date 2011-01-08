@@ -14,48 +14,60 @@
  */
 package com.zimbra.cs.server;
 
-import java.util.concurrent.atomic.AtomicLong;
+import org.apache.mina.core.service.IoAcceptor;
+import org.apache.mina.core.service.IoServiceStatistics;
 
-import org.apache.mina.core.session.IoSession;
+/**
+ * A wrapper of {@link IoServiceStatistics} to expose it as a MBean.
+ *
+ * @author ysasaki
+ */
+final class NioServerStats implements NioServerStatsMBean {
+    private final IoAcceptor acceptor;
+    private final IoServiceStatistics stats;
 
-public class NioServerStats implements NioServerStatsMBean {
-    private final NioServer server;
-
-    public final AtomicLong totalSessions = new AtomicLong();
-    public final AtomicLong activeSessions = new AtomicLong();
-    public final AtomicLong receivedBytes = new AtomicLong();
-    public final AtomicLong sentBytes = new AtomicLong();
-
-    public NioServerStats(NioServer server) {
-        this.server = server;
+    NioServerStats(NioServer server) {
+        acceptor = server.acceptor;
+        stats = acceptor.getStatistics();
     }
 
     @Override
     public long getTotalSessions() {
-        return totalSessions.get();
+        return stats.getCumulativeManagedSessionCount();
     }
 
     @Override
     public long getActiveSessions() {
-        return activeSessions.get();
+        return acceptor.getManagedSessionCount();
     }
 
     @Override
-    public long getReceivedBytes() {
-        return receivedBytes.get();
+    public long getReadBytes() {
+        return stats.getReadBytes();
     }
 
     @Override
-    public long getSentBytes() {
-        return sentBytes.get();
+    public long getReadMessages() {
+        return stats.getReadMessages();
+    }
+
+    @Override
+    public long getWrittenBytes() {
+        return stats.getWrittenBytes();
+    }
+
+    @Override
+    public long getWrittenMessages() {
+        return stats.getWrittenMessages();
     }
 
     @Override
     public long getScheduledWriteBytes() {
-        long total = 0;
-        for (IoSession session : server.getSessions().values()) {
-            total += session.getScheduledWriteBytes();
-        }
-        return total;
+        return stats.getScheduledWriteBytes();
+    }
+
+    @Override
+    public long getScheduledWriteMessages() {
+        return stats.getScheduledWriteMessages();
     }
 }

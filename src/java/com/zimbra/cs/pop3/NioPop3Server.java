@@ -15,17 +15,21 @@
 
 package com.zimbra.cs.pop3;
 
+import com.google.common.base.Charsets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.server.NioHandler;
 import com.zimbra.cs.server.NioServer;
-import com.zimbra.cs.server.NioCodecFactory;
 import com.zimbra.cs.server.NioConnection;
 
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
+import org.apache.mina.filter.codec.ProtocolEncoder;
+import org.apache.mina.filter.codec.textline.LineDelimiter;
+import org.apache.mina.filter.codec.textline.TextLineDecoder;
 
-public class NioPop3Server extends NioServer implements Pop3Server {
+public final class NioPop3Server extends NioServer implements Pop3Server {
+    private static final ProtocolDecoder DECODER = new TextLineDecoder(Charsets.ISO_8859_1, LineDelimiter.AUTO);
 
     public NioPop3Server(Pop3Config config) throws ServiceException {
         super(config);
@@ -39,10 +43,15 @@ public class NioPop3Server extends NioServer implements Pop3Server {
 
     @Override
     protected ProtocolCodecFactory getProtocolCodecFactory() {
-        return new NioCodecFactory() {
+        return new ProtocolCodecFactory() {
+            @Override
+            public ProtocolEncoder getEncoder(IoSession session) throws Exception {
+                return DEFAULT_ENCODER;
+            }
+
             @Override
             public ProtocolDecoder getDecoder(IoSession session) {
-                return new NioPop3Decoder(getStats());
+                return DECODER;
             }
         };
     }

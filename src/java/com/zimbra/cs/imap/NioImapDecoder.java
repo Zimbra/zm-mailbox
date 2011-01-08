@@ -14,58 +14,85 @@
  */
 package com.zimbra.cs.imap;
 
-import com.zimbra.cs.server.NioLineBuffer;
-import com.zimbra.cs.server.NioServerStats;
+import java.io.IOException;
+import java.nio.charset.CharsetDecoder;
+
+import com.google.common.base.Charsets;
+import com.google.common.primitives.Ints;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
-import org.apache.mina.filter.codec.ProtocolDecoderAdapter;
+import org.apache.mina.filter.codec.CumulativeProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 
-public class NioImapDecoder extends ProtocolDecoderAdapter {
-    private final NioServerStats stats;
-    private final NioLineBuffer buf = new NioLineBuffer();
-    private final int chunkSize;
-    private int count = -1;
+/**
+ * Protocol Decoder for IMAP. This decodes a text line terminated by LF or CRLF into a string, and an IMAP literal into
+ * a byte array.
+ *
+ * @author ysasaki
+ */
+final class NioImapDecoder extends CumulativeProtocolDecoder {
+    private static final CharsetDecoder CHARSET = Charsets.ISO_8859_1.newDecoder();
 
-    NioImapDecoder(NioServerStats stats, int chunkSize) {
-        this.stats = stats;
+    private final int chunkSize;
+
+    NioImapDecoder(int chunkSize) {
         this.chunkSize = chunkSize;
     }
 
     @Override
-    public void decode(IoSession session, IoBuffer in, ProtocolDecoderOutput out) {
-        java.nio.ByteBuffer bb = in.buf();
-        while (bb.hasRemaining()) {
-            if (count >= 0) {
-                int len = Math.min(Math.min(bb.remaining(), count), chunkSize);
-                byte[] b = new byte[len];
-                bb.get(b);
-                out.write(b);
-                if (stats != null) {
-                    stats.receivedBytes.addAndGet(len);
-                }
-                count -= len;
-                if (count == 0) {
-                    count = -1;
-                }
-            } else if (buf.parse(bb)) {
-                String line = buf.getLine();
-                out.write(line);
-                if (stats != null) {
-                    stats.receivedBytes.addAndGet(buf.size());
-                }
-                buf.reset();
+    protected boolean doDecode(IoSession session, IoBuffer in, ProtocolDecoderOutput out) throws IOException {
+        int start = in.position(); // remember the initial position
+        int literal = (Integer) session.getAttribute(getClass(), -1);
+        byte prev = -1;
+
+        while (in.hasRemaining()) {
+            if (literal >= 0) {
+                int len = Ints.min(in.remaining(), literal, chunkSize);
+                byte[] chunk = new byte[len];
+                in.get(chunk);
                 try {
-                    LiteralInfo li = LiteralInfo.parse(line);
-                    if (li != null) {
-                        count = li.count;
+                    out.write(chunk);
+                } finally {
+                    literal -= len;
+                    if (literal == 0) {
+                        session.removeAttribute(getClass());
+                    } else {
+                        session.setAttribute(getClass(), literal);
                     }
-                } catch (IllegalArgumentException e) {
-                    // Let handler send error response
+                }
+                return true;
+            } else {
+                byte b = in.get();
+                if (b == '\n') {
+                    int pos = in.position();
+                    int limit = in.limit();
+                    try {
+                        in.position(start);
+                        in.limit(prev == '\r' ? pos - 2 : pos - 1); // Swallow the previous CR
+                        // The bytes between in.position() and in.limit() now contain a full CRLF terminated line.
+                        String line = in.getString(CHARSET);
+                        LiteralInfo li = LiteralInfo.parse(line);
+                        if (li != null) {
+                            session.setAttribute(getClass(), li.count);
+                        }
+                        out.write(line);
+                    } finally {
+                        // Set the position to point right after the detected line and set the limit to the old one.
+                        in.limit(limit);
+                        in.position(pos);
+                    }
+                    // Decoded one line. CumulativeProtocolDecoder will call me again until I return false.
+                    // So just return true until there are no more lines in the buffer.
+                    return true;
+                } else {
+                    prev = b;
                 }
             }
         }
+        // Could not find EOL in the buffer. Reset the initial position to the one we recorded above.
+        in.position(start);
+        return false;
     }
 
 }

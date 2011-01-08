@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,7 +16,6 @@
 package com.zimbra.qa.unittest;
 
 import com.zimbra.common.util.TaskUtil;
-import com.zimbra.cs.server.NioLineBuffer;
 import com.zimbra.cs.server.NioUtil;
 import com.zimbra.cs.imap.LiteralInfo;
 import junit.framework.TestCase;
@@ -27,9 +26,6 @@ import java.util.concurrent.TimeoutException;
 
 public class TestNioTcpServer extends TestCase {
     private static final String LINE = "This is a line";
-    private static final String CR = "\r";
-    private static final String LF = "\n";
-    private static final String CRLF = CR + LF;
 
     private static final int BIG_DATA_SIZE = 64 * 1024;
 
@@ -66,35 +62,6 @@ public class TestNioTcpServer extends TestCase {
         assertNotSame(b, NioUtil.getBytes(bb.put((byte) 1)));
         bb = ByteBuffer.wrap(b, 1, b.length - 1);
         assertNotSame(b, NioUtil.getBytes(bb));
-    }
-
-    public void testLineBuffer() {
-        NioLineBuffer lb = new NioLineBuffer();
-        assertFalse(lb.isComplete());
-        lb.parse(NioUtil.toAsciiBytes(LINE));
-        assertFalse(lb.isComplete());
-        ByteBuffer bb = NioUtil.toAsciiBytes(CRLF+LINE);
-        lb.parse(bb);
-        assertTrue(lb.isComplete());
-        assertEquals(LINE+CRLF, lb.toString());
-        assertEquals(LINE.length(), bb.remaining());
-        lb = new NioLineBuffer();
-        for (int i = 0; i < LINE.length(); i++) {
-            lb.parse(ByteBuffer.wrap(new byte[] { (byte) LINE.charAt(i) }));
-            assertFalse(lb.isComplete());
-        }
-        lb.parse(NioUtil.toAsciiBytes(CRLF));
-        assertTrue(lb.isComplete());
-        assertEquals(LINE+CRLF, lb.toString());
-    }
-
-    public void testLineBuffer2() {
-        NioLineBuffer lb = new NioLineBuffer();
-        lb.parse(NioUtil.toAsciiBytes(LINE));
-        lb.parse(NioUtil.toAsciiBytes(CR));
-        lb.parse(NioUtil.toAsciiBytes(LF));
-        assertTrue(lb.isComplete());
-        assertEquals(LINE+CRLF, lb.toString());
     }
 
     public void testLiteralInfo() throws Exception {

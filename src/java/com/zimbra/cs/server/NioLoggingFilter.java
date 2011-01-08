@@ -71,11 +71,11 @@ class NioLoggingFilter extends IoFilterAdapter {
     }
 
     @Override
-    public void filterWrite(NextFilter nextFilter, IoSession session, WriteRequest message) {
+    public void messageSent(NextFilter nextFilter, IoSession session, WriteRequest message) {
         if (log.isTraceEnabled()) {
             log.trace("S: %s", pp(message));
         }
-        nextFilter.filterWrite(session, message);
+        nextFilter.messageSent(session, message);
     }
 
     private Object pp(Object msg) {
