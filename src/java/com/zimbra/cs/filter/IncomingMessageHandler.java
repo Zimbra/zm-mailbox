@@ -48,10 +48,11 @@ extends FilterHandler {
     private int defaultFolderId;
     private String recipientAddress;
     private int size;
+    private boolean noICal;
 
     public IncomingMessageHandler(OperationContext octxt, DeliveryContext dctxt, Mailbox mbox,
                                   String recipientAddress, ParsedMessage pm, int size,
-                                  int defaultFolderId) {
+                                  int defaultFolderId, boolean noICal) {
         this.octxt = octxt;
         this.dctxt = dctxt;
         this.mailbox = mbox;
@@ -59,6 +60,7 @@ extends FilterHandler {
         this.parsedMessage = pm;
         this.size = size;
         this.defaultFolderId = defaultFolderId;
+        this.noICal = noICal;
     }
 
     @Override
@@ -118,7 +120,7 @@ extends FilterHandler {
     throws ServiceException {
         try {
             return mailbox.addMessage(octxt, parsedMessage, folderId,
-                false, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mailbox), tags, recipientAddress, dctxt);
+                noICal, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mailbox), tags, recipientAddress, dctxt);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add incoming message", e);
         }

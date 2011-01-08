@@ -68,7 +68,7 @@ public abstract class MailItemImport implements DataSource.DataImport {
         case Mailbox.ID_FOLDER_INBOX:
             try {
                 List<ItemId> addedMessageIds = RuleManager.applyRulesToIncomingMessage(octxt, mbox, pm, size,
-                    dataSource.getEmailAddress(), dc, Mailbox.ID_FOLDER_INBOX);
+                    dataSource.getEmailAddress(), dc, Mailbox.ID_FOLDER_INBOX, true);
                 Integer newMessageId = getFirstLocalId(addedMessageIds);
                 if (newMessageId == null) {
                     return null; // Message was discarded or filed remotely

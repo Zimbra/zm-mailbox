@@ -508,7 +508,7 @@ public class Message extends MailItem {
     /** This has to be done as a separate step, after the MailItem has been
      *  added, because of foreign key constraints on the CalendarItems table
      * @param invites */
-    private void processInvitesAfterCreate(String method, int folderId, boolean createCalItem,
+    private void processInvitesAfterCreate(String method, int folderId, boolean applyToCalendar,
                                            ParsedMessage pm, List<Invite> invites, ZVCalendar cal)
     throws ServiceException {
         if (pm == null)
@@ -587,6 +587,7 @@ public class Message extends MailItem {
                         RedoLogProvider redoProvider = RedoLogProvider.getInstance();
                         // Don't generate auto-reply email during redo playback or if delivering to a system account. (e.g. archiving, galsync, ham/spam)
                         boolean needAutoReply =
+                            applyToCalendar &&  // no auto-reply when processing as message-only
                             redoProvider.isMaster() &&
                             (redoPlayer == null || redoProvider.getRedoLogManager().getInCrashRecovery()) &&
                             !acct.isIsSystemResource();
@@ -748,7 +749,9 @@ public class Message extends MailItem {
                 if (intendedForMe) {
                     cur.sanitize(true);
                     calItem = mMailbox.getCalendarItemByUid(cur.getUid());
-                    if (createCalItem && !ICalTok.COUNTER.equals(methodTok) && !ICalTok.DECLINECOUNTER.equals(methodTok)) {
+                    if (applyToCalendar &&
+                        !ICalTok.REPLY.equals(methodTok) &&  // replies are handled elsewhere (in Mailbox.addMessage())
+                        !ICalTok.COUNTER.equals(methodTok) && !ICalTok.DECLINECOUNTER.equals(methodTok)) {
                         if (calItem == null) {
                             // ONLY create a calendar item if this is a REQUEST method...otherwise don't.
                             // Allow PUBLISH method as well depending on the preference.
@@ -865,10 +868,12 @@ public class Message extends MailItem {
 
         // Forward a copy of the message to calendar admin user if preference says so.
 
+        // Don't forward when processing as message-only.  (applyToCalendar == false)
         // Don't forward a forwarded invite.  Prevent infinite loop.
         // Don't forward the message being added to Sent folder.
         // Don't forward from a system account. (e.g. archiving, galsync, ham/spam)
-        if (!isForwardedInvite && intendedForMe && folderId != Mailbox.ID_FOLDER_SENT && !invites.isEmpty() && !acct.isIsSystemResource()) {
+        if (applyToCalendar && !isForwardedInvite && intendedForMe && folderId != Mailbox.ID_FOLDER_SENT &&
+            !invites.isEmpty() && !acct.isIsSystemResource()) {
             // Don't do the forwarding during redo playback.
             RedoableOp redoPlayer = octxt != null ? octxt.getPlayer() : null;
             RedoLogProvider redoProvider = RedoLogProvider.getInstance();
