@@ -19,14 +19,7 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolEncoderAdapter;
 import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 
-import com.zimbra.cs.server.NioServerStats;
-
-public class NioMilterEncoder extends ProtocolEncoderAdapter {
-    private final NioServerStats stats;
-
-    NioMilterEncoder(NioServerStats stats) {
-        this.stats = stats;
-    }
+final class NioMilterEncoder extends ProtocolEncoderAdapter {
 
     @Override
     public void encode(IoSession session, Object msg, ProtocolEncoderOutput out) {
@@ -37,13 +30,10 @@ public class NioMilterEncoder extends ProtocolEncoderAdapter {
         buffer.putInt(packet.getLength());
         buffer.put(packet.getCommand());
         byte[] data = packet.getData();
-        if (data != null && data.length > 0)
+        if (data != null && data.length > 0) {
             buffer.put(data);
+        }
         buffer.flip();
         out.write(buffer);
-
-        if (stats != null) {
-            stats.sentBytes.addAndGet(buffer.capacity());
-        }
     }
 }
