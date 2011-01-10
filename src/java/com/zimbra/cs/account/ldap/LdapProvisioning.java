@@ -73,6 +73,7 @@ import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.krb5.Krb5Principal;
+import com.zimbra.cs.account.ldap.LdapUtil.SearchLdapVisitor;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.httpclient.URLUtil;
@@ -2776,14 +2777,41 @@ public class LdapProvisioning extends Provisioning {
         }
 
      }
-
+    
+    private static class CountingVisitor implements SearchLdapVisitor {
+        long numAccts = 0;
+            
+        public void visit(String dn, Map<String, Object> attrs, Attributes ldapAttrs) {
+            numAccts++;
+        }
+            
+        long getNumAccts() {
+            return numAccts;
+        }
+    };
+        
+    private long getNumAccountsOnServer(Server server) throws ServiceException {        
+        String query = LdapFilter.accountsHomedOnServer(server);
+        String base = mDIT.mailBranchBaseDN();
+        String attrs[] = new String[] {Provisioning.A_zimbraId};
+        
+        CountingVisitor visitor = new CountingVisitor();
+        LdapUtil.searchLdapOnMaster(base, query, attrs, visitor);
+        
+        return visitor.getNumAccts();
+    }
+    
     @Override
     public void deleteServer(String zimbraId) throws ServiceException {
         LdapServer server = (LdapServer) getServerByIdInternal(zimbraId);
         if (server == null)
             throw AccountServiceException.NO_SUCH_SERVER(zimbraId);
 
-        // TODO: what if accounts still have this server as a mailbox?
+        // check that no account is still on this server
+        long numAcctsOnServer = getNumAccountsOnServer(server);
+        if (numAcctsOnServer != 0)
+            throw ServiceException.INVALID_REQUEST("There are " + numAcctsOnServer + " account(s) on this server.", null);
+        
         ZimbraLdapContext zlc = null;
         try {
             zlc = new ZimbraLdapContext(true);
@@ -4597,7 +4625,7 @@ public class LdapProvisioning extends Provisioning {
         LdapDomain ld = (LdapDomain) d;
         String filter = mDIT.filterAccountsByDomain(d, false);
         if (s != null) {
-            String serverFilter = "(" + Provisioning.A_zimbraMailHost + "=" + s.getAttr(Provisioning.A_zimbraServiceHostname) + ")";
+            String serverFilter = LdapFilter.homedOnServer(s);
             if (StringUtil.isNullOrEmpty(filter))
                 filter = serverFilter;
             else
