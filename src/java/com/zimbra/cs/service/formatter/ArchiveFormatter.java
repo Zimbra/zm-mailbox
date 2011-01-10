@@ -104,7 +104,8 @@ public abstract class ArchiveFormatter extends Formatter {
     private Pattern ILLEGAL_FILE_CHARS = Pattern.compile("[\\/\\:\\*\\?\\\"\\<\\>\\|\\\0]");
     private Pattern ILLEGAL_FOLDER_CHARS = Pattern.compile("[\\:\\*\\?\\\"\\<\\>\\|\\\0]");
     private static String UTF8 = "UTF-8";
-    private static enum Resolve { Modify, Replace, Reset, Skip }
+    public static enum Resolve { Modify, Replace, Reset, Skip }
+    public static final String PARAM_RESOLVE = "resolve";
 
     private static final class SortPath implements Comparator<MailItem> {
         SortPath() {
@@ -638,7 +639,7 @@ public abstract class ArchiveFormatter extends Formatter {
         Map<Integer, Integer> idMap = new HashMap<Integer, Integer>();
         long last = System.currentTimeMillis();
         String types = context.getTypesString();
-        String resolve = context.params.get("resolve");
+        String resolve = context.params.get(PARAM_RESOLVE);
         String subfolder = context.params.get("subfolder");
         String timestamp = context.params.get("timestamp");
         String timeout = context.params.get("timeout");

@@ -18,14 +18,21 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.SortBy;
@@ -39,10 +46,6 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.UserServlet.Context;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.mime.MimeConstants;
 
 public abstract class Formatter {
 
@@ -76,15 +79,58 @@ public abstract class Formatter {
     public Set<MailItem.Type> getDefaultSearchTypes() {
         return EnumSet.of(MailItem.Type.MESSAGE);
     }
+    
+    private static Map<Class<? extends Formatter>,FormatListener> listeners = new ConcurrentHashMap<Class<? extends Formatter>, FormatListener>();
+    
+    public static void registerListener(Class<? extends Formatter> clazz, FormatListener listener) {
+        listeners.put(clazz, listener);
+    }
+    
+    private Set<FormatListener> getClassListeners() {
+        Set<FormatListener> set = new HashSet<FormatListener>();
+        for (Class<? extends Formatter> clazz : listeners.keySet()) {
+            if (clazz.isAssignableFrom(this.getClass())) {
+                set.add(listeners.get(clazz));
+            }
+        }
+        return set;
+    }
 
+    private void formatStarted(UserServlet.Context context) throws ServiceException {
+        for (FormatListener listener : getClassListeners()) {
+            listener.formatCallbackStarted(context);
+        }
+    }
+    
+    private void formatEnded(UserServlet.Context context) throws ServiceException {
+        for (FormatListener listener : getClassListeners()) {
+            listener.formatCallbackEnded(context);
+        }
+    }
+    
+    private void saveStarted(UserServlet.Context context) throws ServiceException {
+        for (FormatListener listener : getClassListeners()) {
+            listener.saveCallbackStarted(context);
+        }
+    }
+    
+    private void saveEnded(UserServlet.Context context) throws ServiceException {
+        for (FormatListener listener : getClassListeners()) {
+            listener.saveCallbackEnded(context);
+        }
+    }
+    
     public final void format(UserServlet.Context context)
         throws UserServletException, IOException, ServletException, ServiceException {
 
         try {
+            formatStarted(context);
             formatCallback(context);
             updateClient(context, null);
         } catch (Exception e) {
             updateClient(context, e);
+        } finally {
+            formatEnded(context);
         }
     }
 
@@ -94,10 +140,12 @@ public abstract class Formatter {
         //TODO: set a large threshold for batch indexing
         //Mailbox mbox = context.targetMailbox;
         try {
+            saveStarted(context);
             saveCallback(context, contentType, folder, filename);
             updateClient(context, null);
         } catch (Exception e) {
             updateClient(context, e);
+            saveEnded(context);
         }
     }
 
