@@ -371,8 +371,10 @@ public class MimeDetect {
     public String detect(String file, InputStream is, int limit) throws IOException {
         String ct = detect(file);
         
-        if (ct != null)
-            return ct;        
+        if (ct != null) {
+            ByteUtil.closeStream(is);
+            return ct;
+        }
         return detect(ByteUtil.getPartialContent(is, limit, limit), limit);
     }
 

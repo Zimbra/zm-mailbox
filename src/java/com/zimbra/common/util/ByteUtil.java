@@ -869,11 +869,13 @@ public class ByteUtil {
             return delta;
         }
 
-        /**
-         * Returns the number of bytes read from the wrapped stream.
-         */
+        /** Returns the number of bytes read from the wrapped stream. */
         public long getPosition() {
             return position;
+        }
+
+        @Override public void close() {
+            ByteUtil.closeStream(in);
         }
     }
 
