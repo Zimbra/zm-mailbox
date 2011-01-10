@@ -68,6 +68,9 @@ public class LdapFilter {
         return "(|(zimbraIsAdminAccount=TRUE)(zimbraIsDelegatedAdminAccount=TRUE)(zimbraIsDomainAdminAccount=TRUE))";
     }
     
+    public static String accountsHomedOnServer(Server server) {
+        return "(&" + FILTER_ACCOUNT_OBJECTCLASS + homedOnServer(server) + ")";
+    }
     public static String homedOnServer(Server server) {
     	String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname);
     	return homedOnServer(serverName);
