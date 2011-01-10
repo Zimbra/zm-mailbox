@@ -472,8 +472,7 @@ public class UserServlet extends ZimbraServlet {
             
             // allow only admin access if the account is not active
             if (!Provisioning.ACCOUNT_STATUS_ACTIVE.equals(acctStatus) && 
-                !(isAdminRequest(context.req) && 
-                  context.authToken != null && 
+                !(context.authToken != null && 
                   (context.authToken.isDelegatedAuth() || AdminAccessControl.isAdequateAdminAccount(context.authAccount))))
                 throw AccountServiceException.ACCOUNT_INACTIVE(context.targetAccount.getName());
         }
