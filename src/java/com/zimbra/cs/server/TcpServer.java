@@ -19,9 +19,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.nio.channels.AsynchronousCloseException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
@@ -29,19 +26,12 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.HandshakeCompletedEvent;
-import javax.net.ssl.HandshakeCompletedListener;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLSocket;
-
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
-import com.zimbra.cs.util.Zimbra;
 
 /**
  * Base class for TCP servers using thread per connection model.
@@ -205,8 +195,8 @@ public abstract class TcpServer implements Runnable, Server {
         log.info("Starting accept loop: %d core threads, %d max threads.",
             pooledExecutor.getCorePoolSize(), pooledExecutor.getMaximumPoolSize());
 
-        try {
-            while (!shutdownRequested) {
+        while (!shutdownRequested) {
+            try {
                 Socket connection = serverSocket.accept();
                 warnIfNecessary();
                 ProtocolHandler handler = newProtocolHandler();
@@ -237,10 +227,12 @@ public abstract class TcpServer implements Runnable, Server {
                         // ignore any errors while dropping unhandled connection
                     }
                 }
-            }
-        } catch (IOException ioe) {
-            if (!shutdownRequested) {
-                Zimbra.halt("accept loop failed", ioe);
+            } catch (Throwable e) {
+                log.error("accept loop failed", e);
+                try {
+                    Thread.sleep(1000); // pause for 1 second
+                } catch (InterruptedException ignore) {
+                }
             }
         }
 
