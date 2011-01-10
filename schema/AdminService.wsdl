@@ -22,6 +22,13 @@
     <part name="parameters" element="tns:AuthResponse"/>
   </message>
 
+  <message name="checkHealthRequest">
+    <part name="parameters" element="tns:CheckHealthRequest"/>
+  </message>
+  <message name="checkHealthResponse">
+    <part name="parameters" element="tns:CheckHealthResponse"/>
+  </message>
+
   <message name="checkPasswordStrengthRequest">
     <part name="parameters" element="tns:CheckPasswordStrengthRequest"/>
   </message>
@@ -34,6 +41,13 @@
   </message>
   <message name="copyCosResponse">
     <part name="parameters" element="tns:CopyCosResponse"/>
+  </message>
+
+  <message name="countAccountRequest">
+    <part name="parameters" element="tns:CountAccountRequest"/>
+  </message>
+  <message name="countAccountResponse">
+    <part name="parameters" element="tns:CountAccountResponse"/>
   </message>
 
   <message name="createAccountRequest">
@@ -92,11 +106,25 @@
     <part name="parameters" element="tns:DeleteDomainResponse"/>
   </message>
 
+  <message name="deleteMailboxRequest">
+    <part name="parameters" element="tns:DeleteMailboxRequest"/>
+  </message>
+  <message name="deleteMailboxResponse">
+    <part name="parameters" element="tns:DeleteMailboxResponse"/>
+  </message>
+
   <message name="deleteServerRequest">
     <part name="parameters" element="tns:DeleteServerRequest"/>
   </message>
   <message name="deleteServerResponse">
     <part name="parameters" element="tns:DeleteServerResponse"/>
+  </message>
+
+  <message name="flushCacheRequest">
+    <part name="parameters" element="tns:FlushCacheRequest"/>
+  </message>
+  <message name="flushCacheResponse">
+    <part name="parameters" element="tns:FlushCacheResponse"/>
   </message>
 
   <message name="getAccountInfoRequest">
@@ -134,6 +162,13 @@
     <part name="parameters" element="tns:GetAllAdminAccountsResponse"/>
   </message>
 
+  <message name="getAllConfigRequest">
+    <part name="parameters" element="tns:GetAllConfigRequest"/>
+  </message>
+  <message name="getAllConfigResponse">
+    <part name="parameters" element="tns:GetAllConfigResponse"/>
+  </message>
+
   <message name="getAllCosRequest">
     <part name="parameters" element="tns:GetAllCosRequest"/>
   </message>
@@ -148,11 +183,32 @@
     <part name="parameters" element="tns:GetAllDomainsResponse"/>
   </message>
 
+  <message name="getAllLocalesRequest">
+    <part name="parameters" element="tns:GetAllLocalesRequest"/>
+  </message>
+  <message name="getAllLocalesResponse">
+    <part name="parameters" element="tns:GetAllLocalesResponse"/>
+  </message>
+
+  <message name="getAllMailboxesRequest">
+    <part name="parameters" element="tns:GetAllMailboxesRequest"/>
+  </message>
+  <message name="getAllMailboxesResponse">
+    <part name="parameters" element="tns:GetAllMailboxesResponse"/>
+  </message>
+
   <message name="getAllServersRequest">
     <part name="parameters" element="tns:GetAllServersRequest"/>
   </message>
   <message name="getAllServersResponse">
     <part name="parameters" element="tns:GetAllServersResponse"/>
+  </message>
+
+  <message name="getConfigRequest">
+    <part name="parameters" element="tns:GetConfigRequest"/>
+  </message>
+  <message name="getConfigResponse">
+    <part name="parameters" element="tns:GetConfigResponse"/>
   </message>
 
   <message name="getCosRequest">
@@ -176,6 +232,20 @@
     <part name="parameters" element="tns:GetDomainResponse"/>
   </message>
 
+  <message name="getMailboxRequest">
+    <part name="parameters" element="tns:GetMailboxRequest"/>
+  </message>
+  <message name="getMailboxResponse">
+    <part name="parameters" element="tns:GetMailboxResponse"/>
+  </message>
+
+  <message name="getMailboxStatsRequest">
+    <part name="parameters" element="tns:GetMailboxStatsRequest"/>
+  </message>
+  <message name="getMailboxStatsResponse">
+    <part name="parameters" element="tns:GetMailboxStatsResponse"/>
+  </message>
+
   <message name="getServerRequest">
     <part name="parameters" element="tns:GetServerRequest"/>
   </message>
@@ -190,11 +260,25 @@
     <part name="parameters" element="tns:GetServerStatsResponse"/>
   </message>
 
+  <message name="getServiceStatusRequest">
+    <part name="parameters" element="tns:GetServiceStatusRequest"/>
+  </message>
+  <message name="getServiceStatusResponse">
+    <part name="parameters" element="tns:GetServiceStatusResponse"/>
+  </message>
+
   <message name="modifyAccountRequest">
     <part name="parameters" element="tns:ModifyAccountRequest"/>
   </message>
   <message name="modifyAccountResponse">
     <part name="parameters" element="tns:ModifyAccountResponse"/>
+  </message>
+
+  <message name="modifyConfigRequest">
+    <part name="parameters" element="tns:ModifyConfigRequest"/>
+  </message>
+  <message name="modifyConfigResponse">
+    <part name="parameters" element="tns:ModifyConfigResponse"/>
   </message>
 
   <message name="modifyCosRequest">
@@ -216,6 +300,27 @@
   </message>
   <message name="modifyServerResponse">
     <part name="parameters" element="tns:ModifyServerResponse"/>
+  </message>
+
+  <message name="noOpRequest">
+    <part name="parameters" element="tns:NoOpRequest"/>
+  </message>
+  <message name="noOpResponse">
+    <part name="parameters" element="tns:NoOpResponse"/>
+  </message>
+
+  <message name="pingRequest">
+    <part name="parameters" element="tns:PingRequest"/>
+  </message>
+  <message name="pingResponse">
+    <part name="parameters" element="tns:PingResponse"/>
+  </message>
+
+  <message name="recalculateMailboxCountsRequest">
+    <part name="parameters" element="tns:RecalculateMailboxCountsRequest"/>
+  </message>
+  <message name="recalculateMailboxCountsResponse">
+    <part name="parameters" element="tns:RecalculateMailboxCountsResponse"/>
   </message>
 
   <message name="reloadLocalConfigRequest">
@@ -273,6 +378,10 @@
       <input message="tns:authRequest"/>
       <output message="tns:authResponse"/>
     </operation>
+    <operation name="checkHealthRequest">
+      <input message="tns:checkHealthRequest"/>
+      <output message="tns:checkHealthResponse"/>
+    </operation>
     <operation name="checkPasswordStrengthRequest">
       <input message="tns:checkPasswordStrengthRequest"/>
       <output message="tns:checkPasswordStrengthResponse"/>
@@ -280,6 +389,10 @@
     <operation name="copyCosRequest">
       <input message="tns:copyCosRequest"/>
       <output message="tns:copyCosResponse"/>
+    </operation>
+    <operation name="countAccountRequest">
+      <input message="tns:countAccountRequest"/>
+      <output message="tns:countAccountResponse"/>
     </operation>
     <operation name="createAccountRequest">
       <input message="tns:createAccountRequest"/>
@@ -313,9 +426,17 @@
       <input message="tns:deleteDomainRequest"/>
       <output message="tns:deleteDomainResponse"/>
     </operation>
+    <operation name="deleteMailboxRequest">
+      <input message="tns:deleteMailboxRequest"/>
+      <output message="tns:deleteMailboxResponse"/>
+    </operation>
     <operation name="deleteServerRequest">
       <input message="tns:deleteServerRequest"/>
       <output message="tns:deleteServerResponse"/>
+    </operation>
+    <operation name="flushCacheRequest">
+      <input message="tns:flushCacheRequest"/>
+      <output message="tns:flushCacheResponse"/>
     </operation>
     <operation name="getAccountInfoRequest">
       <input message="tns:getAccountInfoRequest"/>
@@ -337,6 +458,10 @@
       <input message="tns:getAllAdminAccountsRequest"/>
       <output message="tns:getAllAdminAccountsResponse"/>
     </operation>
+    <operation name="getAllConfigRequest">
+      <input message="tns:getAllConfigRequest"/>
+      <output message="tns:getAllConfigResponse"/>
+    </operation>
     <operation name="getAllCosRequest">
       <input message="tns:getAllCosRequest"/>
       <output message="tns:getAllCosResponse"/>
@@ -345,9 +470,21 @@
       <input message="tns:getAllDomainsRequest"/>
       <output message="tns:getAllDomainsResponse"/>
     </operation>
+    <operation name="getAllLocalesRequest">
+      <input message="tns:getAllLocalesRequest"/>
+      <output message="tns:getAllLocalesResponse"/>
+    </operation>
+    <operation name="getAllMailboxesRequest">
+      <input message="tns:getAllMailboxesRequest"/>
+      <output message="tns:getAllMailboxesResponse"/>
+    </operation>
     <operation name="getAllServersRequest">
       <input message="tns:getAllServersRequest"/>
       <output message="tns:getAllServersResponse"/>
+    </operation>
+    <operation name="getConfigRequest">
+      <input message="tns:getConfigRequest"/>
+      <output message="tns:getConfigResponse"/>
     </operation>
     <operation name="getCosRequest">
       <input message="tns:getCosRequest"/>
@@ -361,6 +498,14 @@
       <input message="tns:getDomainRequest"/>
       <output message="tns:getDomainResponse"/>
     </operation>
+    <operation name="getMailboxRequest">
+      <input message="tns:getMailboxRequest"/>
+      <output message="tns:getMailboxResponse"/>
+    </operation>
+    <operation name="getMailboxStatsRequest">
+      <input message="tns:getMailboxStatsRequest"/>
+      <output message="tns:getMailboxStatsResponse"/>
+    </operation>
     <operation name="getServerRequest">
       <input message="tns:getServerRequest"/>
       <output message="tns:getServerResponse"/>
@@ -369,9 +514,17 @@
       <input message="tns:getServerStatsRequest"/>
       <output message="tns:getServerStatsResponse"/>
     </operation>
+    <operation name="getServiceStatusRequest">
+      <input message="tns:getServiceStatusRequest"/>
+      <output message="tns:getServiceStatusResponse"/>
+    </operation>
     <operation name="modifyAccountRequest">
       <input message="tns:modifyAccountRequest"/>
       <output message="tns:modifyAccountResponse"/>
+    </operation>
+    <operation name="modifyConfigRequest">
+      <input message="tns:modifyConfigRequest"/>
+      <output message="tns:modifyConfigResponse"/>
     </operation>
     <operation name="modifyCosRequest">
       <input message="tns:modifyCosRequest"/>
@@ -384,6 +537,18 @@
     <operation name="modifyServerRequest">
       <input message="tns:modifyServerRequest"/>
       <output message="tns:modifyServerResponse"/>
+    </operation>
+    <operation name="noOpRequest">
+      <input message="tns:noOpRequest"/>
+      <output message="tns:noOpResponse"/>
+    </operation>
+    <operation name="pingRequest">
+      <input message="tns:pingRequest"/>
+      <output message="tns:pingResponse"/>
+    </operation>
+    <operation name="recalculateMailboxCountsRequest">
+      <input message="tns:recalculateMailboxCountsRequest"/>
+      <output message="tns:recalculateMailboxCountsResponse"/>
     </operation>
     <operation name="reloadLocalConfigRequest">
       <input message="tns:reloadLocalConfigRequest"/>
@@ -436,6 +601,17 @@
       </output>
     </operation>
 
+    <operation name="checkHealthRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/CheckHealth" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="checkPasswordStrengthRequest">
       <soap:operation soapAction="urn:zimbraAdmin/CheckPasswordStrength" style="document"/>
       <input>
@@ -449,6 +625,17 @@
 
     <operation name="copyCosRequest">
       <soap:operation soapAction="urn:zimbraAdmin/CopyCos" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="countAccountRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/CountAccount" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -546,8 +733,30 @@
       </output>
     </operation>
 
+    <operation name="deleteMailboxRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/DeleteMailbox" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="deleteServerRequest">
       <soap:operation soapAction="urn:zimbraAdmin/DeleteServer" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="flushCacheRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/FlushCache" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -612,6 +821,17 @@
       </output>
     </operation>
 
+    <operation name="getAllConfigRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetAllConfig" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="getAllCosRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetAllCos" style="document"/>
       <input>
@@ -634,8 +854,41 @@
       </output>
     </operation>
 
+    <operation name="getAllLocalesRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetAllLocales" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getAllMailboxesRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetAllMailboxes" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="getAllServersRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetAllServers" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getConfigRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetConfig" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -678,6 +931,28 @@
       </output>
     </operation>
 
+    <operation name="getMailboxRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetMailbox" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getMailboxStatsRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetMailboxStats" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="getServerRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetServer" style="document"/>
       <input>
@@ -700,8 +975,30 @@
       </output>
     </operation>
 
+    <operation name="getServiceStatusRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetServiceStatus" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="modifyAccountRequest">
       <soap:operation soapAction="urn:zimbraAdmin/ModifyAccount" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="modifyConfigRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/ModifyConfig" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -735,6 +1032,39 @@
 
     <operation name="modifyServerRequest">
       <soap:operation soapAction="urn:zimbraAdmin/ModifyServer" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="noOpRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/NoOp" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="pingRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/Ping" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="recalculateMailboxCountsRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/RecalculateMailboxCounts" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
