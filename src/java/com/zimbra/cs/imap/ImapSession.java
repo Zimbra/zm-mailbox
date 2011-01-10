@@ -239,13 +239,14 @@ public class ImapSession extends Session {
         return cachekey;
     }
 
-    synchronized PagedFolderData unload() throws IOException, ServiceException {
-        // if the data's already paged out, we can short-circuit
-        ImapFolder i4folder = mFolder instanceof ImapFolder ? (ImapFolder) mFolder : null;
-        if (i4folder != null) {
-            mFolder = new PagedFolderData(serialize(), i4folder);
+    synchronized void unload() throws IOException, ServiceException {
+        if (isRegistered()) {
+            // if the data's already paged out, we can short-circuit
+            ImapFolder i4folder = mFolder instanceof ImapFolder ? (ImapFolder) mFolder : null;
+            if (i4folder != null) {
+                mFolder = new PagedFolderData(serialize(), i4folder);
+            }
         }
-        return (PagedFolderData) mFolder;
     }
 
     synchronized ImapFolder reload() throws IOException {
@@ -350,6 +351,8 @@ public class ImapSession extends Session {
         } else if (Tag.validateId(id)) {
             mFolder.handleTagDelete(changeId, id);
         } else if (id == mFolderId) {
+            // Once the folder's gone, there's no point in keeping an IMAP Session listening on it around.
+            detach();
             // notify client that mailbox is deselected due to delete?
             // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
             //                mailbox, but disconnect all other clients who have the
