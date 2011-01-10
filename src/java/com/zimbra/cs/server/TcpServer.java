@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
@@ -228,6 +229,9 @@ public abstract class TcpServer implements Runnable, Server {
                     }
                 }
             } catch (Throwable e) {
+                if (e instanceof SocketException && shutdownRequested) {
+                    break; // ignore SocketException: Socket closed
+                }
                 log.error("accept loop failed", e);
                 try {
                     Thread.sleep(1000); // pause for 1 second
