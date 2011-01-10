@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -32,7 +32,6 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.cs.server.Server;
 import com.zimbra.cs.server.ServerConfig;
-import com.zimbra.cs.util.Zimbra;
 
 public abstract class TcpServer implements Runnable, Server {
     private final Log log;
@@ -115,7 +114,7 @@ public abstract class TcpServer implements Runnable, Server {
             return activeHandlers.size();
         }
     }
-    
+
     public int numThreads() {
         return pooledExecutor.getPoolSize();
     }
@@ -192,8 +191,8 @@ public abstract class TcpServer implements Runnable, Server {
         log.info("Starting accept loop: %d core threads, %d max threads.",
             pooledExecutor.getCorePoolSize(), pooledExecutor.getMaximumPoolSize());
 
-        try {
-            while (!shutdownRequested) {
+        while (!shutdownRequested) {
+            try {
                 Socket connection = serverSocket.accept();
                 warnIfNecessary();
                 ProtocolHandler handler = newProtocolHandler();
@@ -203,7 +202,7 @@ public abstract class TcpServer implements Runnable, Server {
                 } catch (RejectedExecutionException e) {
                     log.error("cannot handle connection; thread pool exhausted", e);
                     // send a "server busy" message to the client before dropping connection
-                    //   (but skip if client expects an SSL handshake, which we can't do here) 
+                    //   (but skip if client expects an SSL handshake, which we can't do here)
                     if (config != null && !isSslEnabled()) {
                         String message = config.getConnectionRejected();
                         if (message != null) {
@@ -224,23 +223,25 @@ public abstract class TcpServer implements Runnable, Server {
                         // ignore any errors while dropping unhandled connection
                     }
                 }
-            }
-        } catch (IOException ioe) {
-            if (!shutdownRequested) {
-                Zimbra.halt("accept loop failed", ioe);
+            } catch (Throwable e) {
+                log.error("accept loop failed", e);
+                try {
+                    Thread.sleep(1000); // pause for 1 second
+                } catch (InterruptedException ignore) {
+                }
             }
         }
 
         log.info("finished accept loop");
     }
-    
+
     private void warnIfNecessary() {
         if (log.isWarnEnabled()) {
             int warnPercent = LC.thread_pool_warn_percent.intValue();
             // Add 1 because the thread for this connection is not active yet.
             int active = pooledExecutor.getActiveCount() + 1;
             int max = pooledExecutor.getMaximumPoolSize();
-            int utilization = active * 100 / max; 
+            int utilization = active * 100 / max;
             if (utilization >= warnPercent) {
                 log.warn("Thread pool is %d%% utilized.  %d out of %d threads in use.",
                     utilization, active, max);
