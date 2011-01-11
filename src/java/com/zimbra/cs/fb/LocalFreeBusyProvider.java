@@ -105,6 +105,8 @@ public class LocalFreeBusyProvider {
                     long dur = defaultDuration;
                     if (instance.getDuration() != null)
                         dur = instance.getDuration().longValue();
+                    if (dur <= 0)  // Only consider instances with non-zero, positive duration.
+                        continue;
                     long instEnd = instStart + dur;
 
                     long recurIdDt = 0;
