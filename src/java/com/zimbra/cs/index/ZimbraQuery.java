@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -37,6 +37,7 @@ import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.common.service.ServiceException;
@@ -703,8 +704,7 @@ public final class ZimbraQuery {
 
                 Set<Folder> visibleFolders = mbox.getVisibleFolders(octxt);
 
-                localOps = handleLocalPermissionChecks(localOps, visibleFolders,
-                        allowPrivateAccess);
+                localOps = handleLocalPermissionChecks(localOps, visibleFolders, allowPrivateAccess);
 
                 if (ZimbraLog.index_search.isDebugEnabled()) {
                     ZimbraLog.index_search.debug("LOCAL_AFTER_PERM_CHECKS=%s", localOps);
@@ -720,9 +720,7 @@ public final class ZimbraQuery {
                     // to run with private access ALLOWED, over the set of folders
                     // that have RIGHT_PRIVATE (note that we build this list from the visible
                     // folder list, so we are
-                    //
-                    clonedLocal = handleLocalPermissionChecks(
-                            clonedLocal, hasFolderRightPrivateSet, true);
+                    clonedLocal = handleLocalPermissionChecks(clonedLocal, hasFolderRightPrivateSet, true);
 
                     if (ZimbraLog.index_search.isDebugEnabled()) {
                         ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_PERM=%s", clonedLocal);
@@ -846,9 +844,8 @@ public final class ZimbraQuery {
      *   - exclude all the not-visible folders from the query
      *   - look at all the text-operations and figure out if private appointments need to be excluded
      */
-    private static UnionQueryOperation handleLocalPermissionChecks(
-            UnionQueryOperation union, Set<Folder> visibleFolders,
-            boolean allowPrivateAccess) {
+    private static UnionQueryOperation handleLocalPermissionChecks(UnionQueryOperation union,
+            Set<Folder> visibleFolders, boolean allowPrivateAccess) {
 
         // Since optimize() has already been run, we know that each of our ops
         // only has one target (or none).  Find those operations which have
@@ -871,7 +868,7 @@ public final class ZimbraQuery {
                     op.depthFirstRecurse(new excludePrivateCalendarItems());
 
                 if (visibleFolders != null) {
-                    if (visibleFolders.size() == 0) {
+                    if (visibleFolders.isEmpty()) {
                         union.mQueryOperations.remove(i);
                         ZimbraLog.index_search.debug("Query changed to NULL_QUERY_OPERATION, no visible folders");
                         union.mQueryOperations.add(i, new NoResultsQueryOperation());
@@ -885,10 +882,13 @@ public final class ZimbraQuery {
                         UnionQueryOperation newUnion = new UnionQueryOperation();
                         intersect.addQueryOp(newUnion);
 
-                        for (Folder f : visibleFolders) {
-                            DBQueryOperation newOp = new DBQueryOperation();
-                            newUnion.add(newOp);
-                            newOp.addInClause(f, true);
+                        for (Folder folder : visibleFolders) {
+                            // exclude remote folders
+                            if (!(folder instanceof Mountpoint) || ((Mountpoint) folder).isLocal()) {
+                                DBQueryOperation newOp = new DBQueryOperation();
+                                newUnion.add(newOp);
+                                newOp.addInClause(folder, true);
+                            }
                         }
 
                         union.mQueryOperations.add(i, intersect);
