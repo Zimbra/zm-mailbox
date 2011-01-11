@@ -188,8 +188,10 @@ public class L10nUtil {
         errNotImplemented,
         errPartNotFound,
         errPermissionDenied,
-        errUnsupportedFormat
+        errUnsupportedFormat,
 
+        passwordViolation
+        
         // add other messages in the future...
     }
 
