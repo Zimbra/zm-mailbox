@@ -154,7 +154,7 @@ public final class UserServletContext {
         }
 
         if (this.format != null) {
-            this.formatter = srvlt.getFormatter(this.format);
+            this.formatter = UserServlet.getFormatter(this.format);
             if (this.formatter == null)
                 throw new UserServletException(HttpServletResponse.SC_NOT_IMPLEMENTED, L10nUtil.getMessage(MsgKey.errNotImplemented, request));
         }

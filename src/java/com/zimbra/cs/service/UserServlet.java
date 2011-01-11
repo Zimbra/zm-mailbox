@@ -233,7 +233,7 @@ public class UserServlet extends ZimbraServlet {
         return getRestUrl(acct) + HttpUtil.urlEscape(item.getPath());
     }
 
-    public Formatter getFormatter(FormatType type) {
+    public static Formatter getFormatter(FormatType type) {
         return FormatterFactory.mFormatters.get(type);
     }
 
@@ -571,6 +571,7 @@ public class UserServlet extends ZimbraServlet {
 
             context.target = folder;
             resolveFormatter(context);
+            
             if (!context.formatter.supportsSave())
                 sendError(context, req, resp, L10nUtil.getMessage(MsgKey.errUnsupportedFormat, req));
 

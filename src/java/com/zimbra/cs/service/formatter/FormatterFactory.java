@@ -63,11 +63,11 @@ public class FormatterFactory {
              */
             public static FormatType fromString(String str)
             {
-                // Attempt to get the type from the map
+                             // Attempt to get the type from the map
                 FormatType result = strToType.get(str);
                 
                 // if we missed this is likely the first call
-                if(result == null && !strToType.isEmpty()) {
+                if(result == null && strToType.isEmpty()) {
                     Map<String, FormatType> tempMap = new HashMap<String, FormatType>();
                     for (FormatType type :FormatType.values()) {
                         tempMap.put(type.toString(),type);
@@ -78,6 +78,7 @@ public class FormatterFactory {
                    }
                    strToType = Collections.unmodifiableMap(tempMap);
                 }
+                
                 return result;
             }
             
