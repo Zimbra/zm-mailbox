@@ -93,8 +93,8 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
-import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.mail.ImportContacts;
 import com.zimbra.cs.service.util.ItemData;
 import com.zimbra.cs.service.util.ItemId;
@@ -162,13 +162,13 @@ public abstract class ArchiveFormatter extends Formatter {
 
     protected boolean getDefaultMeta() { return true; }
 
-    protected abstract ArchiveInputStream getInputStream(Context context,
+    protected abstract ArchiveInputStream getInputStream(UserServletContext context,
         String charset) throws IOException, ServiceException, UserServletException;
 
-    protected abstract ArchiveOutputStream getOutputStream(Context context,
+    protected abstract ArchiveOutputStream getOutputStream(UserServletContext context,
         String charset) throws IOException;
 
-    @Override public void formatCallback(Context context) throws IOException,
+    @Override public void formatCallback(UserServletContext context) throws IOException,
         ServiceException, UserServletException {
         HashMap<Integer, Integer> cnts = new HashMap<Integer, Integer>();
         boolean conversations = false;
@@ -338,7 +338,7 @@ public abstract class ArchiveFormatter extends Formatter {
         }
     }
 
-    private ArchiveOutputStream saveItem(Context context, MailItem mi,
+    private ArchiveOutputStream saveItem(UserServletContext context, MailItem mi,
         Map<Integer, String> fldrs, Map<Integer, Integer> cnts,
         Set<String> names, boolean version, ArchiveOutputStream aos,
         CharsetEncoder charsetEncoder) throws ServiceException {
@@ -638,7 +638,7 @@ public abstract class ArchiveFormatter extends Formatter {
     }
 
     @Override
-    public void saveCallback(Context context, String contentType, Folder fldr,
+    public void saveCallback(UserServletContext context, String contentType, Folder fldr,
             String file) throws IOException, ServiceException {
         Exception ex = null;
         ItemData id = null;
@@ -841,7 +841,7 @@ public abstract class ArchiveFormatter extends Formatter {
         ZimbraLog.misc.warn(s);
     }
 
-    private Folder createParent(Context context, Map<Object, Folder> fmap,
+    private Folder createParent(UserServletContext context, Map<Object, Folder> fmap,
         String path, byte view) throws ServiceException {
         String parent = path.substring(0, path.lastIndexOf('/'));
 
@@ -850,7 +850,7 @@ public abstract class ArchiveFormatter extends Formatter {
         return createPath(context, fmap, parent, view);
     }
 
-    private Folder createPath(Context context, Map<Object, Folder> fmap,
+    private Folder createPath(UserServletContext context, Map<Object, Folder> fmap,
         String path, byte view) throws ServiceException {
         Folder fldr;
 
@@ -934,7 +934,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 e.getCause().toString());
     }
 
-    private void addItem(Context context, Folder fldr,
+    private void addItem(UserServletContext context, Folder fldr,
         Map<Object, Folder> fmap, Map<String, Integer> digestMap,
         Map<Integer, Integer> idMap, int[] ids, byte[] searchTypes, Resolve r,
         ItemData id, ArchiveInputStream ais, ArchiveInputEntry aie,
@@ -1388,7 +1388,7 @@ public abstract class ArchiveFormatter extends Formatter {
         }
     }
 
-    private void addData(Context context, Folder fldr, Map<Object, Folder> fmap,
+    private void addData(UserServletContext context, Folder fldr, Map<Object, Folder> fmap,
         byte[] searchTypes, Resolve r, boolean timestamp,
         ArchiveInputStream ais, ArchiveInputEntry aie,
         List<ServiceException> errs) throws ServiceException {

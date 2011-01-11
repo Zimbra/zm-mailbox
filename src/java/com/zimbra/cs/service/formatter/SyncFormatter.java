@@ -37,8 +37,9 @@ import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
-import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
@@ -49,8 +50,9 @@ public class SyncFormatter extends Formatter {
     
     public static final String QP_NOHDR = "nohdr";
 
-    public String getType() {
-        return "sync";
+    @Override
+    public FormatType getType() {
+        return FormatType.SYNC;
     }
 
     public String getDefaultSearchTypes() {
@@ -87,7 +89,7 @@ public class SyncFormatter extends Formatter {
     	return getXZimbraHeadersBytes(getXZimbraHeaders(item));
     }
     
-    private static void addXZimbraHeaders(Context context, MailItem item, long size) throws IOException {
+    private static void addXZimbraHeaders(UserServletContext context, MailItem item, long size) throws IOException {
     	List<Pair<String, String>> hdrs = getXZimbraHeaders(item);
     	for (Pair<String, String> pair : hdrs)
     		context.resp.addHeader(pair.getFirst(), pair.getSecond());
@@ -104,7 +106,7 @@ public class SyncFormatter extends Formatter {
     	}
     }
 
-    public void formatCallback(Context context) throws IOException, ServiceException, UserServletException {
+    public void formatCallback(UserServletContext context) throws IOException, ServiceException, UserServletException {
         try {
             if (context.hasPart()) {
                 handleMessagePart(context, context.target);
@@ -123,7 +125,7 @@ public class SyncFormatter extends Formatter {
         }
     }
 
-    private void handleCalendarItem(Context context, CalendarItem calItem) throws IOException, ServiceException, MessagingException {
+    private void handleCalendarItem(UserServletContext context, CalendarItem calItem) throws IOException, ServiceException, MessagingException {
         context.resp.setContentType(MimeConstants.CT_TEXT_PLAIN);
         if (context.itemId.hasSubpart()) {
             Pair<MimeMessage,Integer> calItemMsgData = calItem.getSubpartMessageData(context.itemId.getSubpartId());
@@ -159,7 +161,7 @@ public class SyncFormatter extends Formatter {
         }        
     }
 
-    private void handleMessage(Context context, Message msg) throws IOException, ServiceException {
+    private void handleMessage(UserServletContext context, Message msg) throws IOException, ServiceException {
         context.resp.setContentType(MimeConstants.CT_TEXT_PLAIN);
         InputStream is = msg.getContentStream();
         long size = msg.getSize();
@@ -173,7 +175,7 @@ public class SyncFormatter extends Formatter {
         ByteUtil.copy(is, true, context.resp.getOutputStream(), false);
     }
 
-    private void handleMessagePart(Context context, MailItem item) throws IOException, ServiceException, MessagingException, UserServletException {
+    private void handleMessagePart(UserServletContext context, MailItem item) throws IOException, ServiceException, MessagingException, UserServletException {
         if (!(item instanceof Message))
             throw UserServletException.notImplemented("can only handle messages");
         Message message = (Message) item;
@@ -219,7 +221,7 @@ public class SyncFormatter extends Formatter {
     }
 
     // FIXME: need to support tags, flags, date, etc...
-    public void saveCallback(Context context, String contentType, Folder folder, String filename) throws IOException, ServiceException, UserServletException {
+    public void saveCallback(UserServletContext context, String contentType, Folder folder, String filename) throws IOException, ServiceException, UserServletException {
         byte[] body = context.getPostBody();
         try {
             Mailbox mbox = folder.getMailbox();

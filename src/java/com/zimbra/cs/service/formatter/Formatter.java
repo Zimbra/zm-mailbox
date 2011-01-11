@@ -43,14 +43,16 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
-import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 
 public abstract class Formatter {
 
     protected static final int TIME_UNSPECIFIED = -1;
 
-    public abstract String getType();
+    public abstract FormatType getType();
+    
     private static String PROGRESS = "-progress";
 
     public String[] getDefaultMimeTypes() {
@@ -94,31 +96,31 @@ public abstract class Formatter {
         return set;
     }
 
-    private void formatStarted(UserServlet.Context context) throws ServiceException {
+    private void formatStarted(UserServletContext context) throws ServiceException {
         for (FormatListener listener : getClassListeners()) {
             listener.formatCallbackStarted(context);
         }
     }
     
-    private void formatEnded(UserServlet.Context context) throws ServiceException {
+    private void formatEnded(UserServletContext context) throws ServiceException {
         for (FormatListener listener : getClassListeners()) {
             listener.formatCallbackEnded(context);
         }
     }
     
-    private void saveStarted(UserServlet.Context context) throws ServiceException {
+    private void saveStarted(UserServletContext context) throws ServiceException {
         for (FormatListener listener : getClassListeners()) {
             listener.saveCallbackStarted(context);
         }
     }
     
-    private void saveEnded(UserServlet.Context context) throws ServiceException {
+    private void saveEnded(UserServletContext context) throws ServiceException {
         for (FormatListener listener : getClassListeners()) {
             listener.saveCallbackEnded(context);
         }
     }
     
-    public final void format(UserServlet.Context context)
+    public final void format(UserServletContext context)
         throws UserServletException, IOException, ServletException, ServiceException {
 
         try {
@@ -132,7 +134,7 @@ public abstract class Formatter {
         }
     }
 
-    public final void save(UserServlet.Context context, String contentType, Folder folder, String filename)
+    public final void save(UserServletContext context, String contentType, Folder folder, String filename)
         throws UserServletException, IOException, ServletException, ServiceException {
 
         Mailbox mbox = context.targetMailbox;
@@ -149,10 +151,10 @@ public abstract class Formatter {
         }
     }
 
-    public abstract void formatCallback(UserServlet.Context context)
+    public abstract void formatCallback(UserServletContext context)
         throws UserServletException, ServiceException, IOException, ServletException;
 
-    public void saveCallback(UserServlet.Context context, String contentType, Folder folder, String filename)
+    public void saveCallback(UserServletContext context, String contentType, Folder folder, String filename)
         throws UserServletException, ServiceException, IOException, ServletException {
 
         throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "format not supported for save");
@@ -164,7 +166,7 @@ public abstract class Formatter {
 
     // Caller is responsible for filtering out Appointments/Tasks marked private if the requester
     // is not the mailbox owner.
-    public Iterator<? extends MailItem> getMailItems(Context context, long startTime, long endTime, long chunkSize) throws ServiceException {
+    public Iterator<? extends MailItem> getMailItems(UserServletContext context, long startTime, long endTime, long chunkSize) throws ServiceException {
         if (context.respListItems != null) {
             return context.respListItems.iterator();
         }
@@ -197,7 +199,7 @@ public abstract class Formatter {
         }
     }
 
-    protected Collection<? extends MailItem> getMailItemsFromFolder(Context context, Folder folder, long startTime, long endTime, long chunkSize) throws ServiceException {
+    protected Collection<? extends MailItem> getMailItemsFromFolder(UserServletContext context, Folder folder, long startTime, long endTime, long chunkSize) throws ServiceException {
         switch (folder.getDefaultView()) {
             case MailItem.TYPE_APPOINTMENT:
             case MailItem.TYPE_TASK:
@@ -275,7 +277,7 @@ public abstract class Formatter {
         }
     }
 
-    protected PrintWriter updateClient(Context context, boolean flush) throws IOException {
+    protected PrintWriter updateClient(UserServletContext context, boolean flush) throws IOException {
         PrintWriter pw;
 
         if (context.params.get(PROGRESS) == null) {
@@ -294,13 +296,13 @@ public abstract class Formatter {
         return pw;
     }
 
-    protected void updateClient(UserServlet.Context context, Exception e)
+    protected void updateClient(UserServletContext context, Exception e)
         throws UserServletException, IOException, ServletException,
         ServiceException {
         updateClient(context, e, null);
     }
 
-    protected void updateClient(UserServlet.Context context, Exception e,
+    protected void updateClient(UserServletContext context, Exception e,
         List<ServiceException> w) throws UserServletException, IOException,
         ServletException, ServiceException {
         String callback = context.params.get("callback");
@@ -399,7 +401,7 @@ public abstract class Formatter {
         }
     }
 
-    protected String getContentType(Context context, String fallback) {
+    protected String getContentType(UserServletContext context, String fallback) {
         String mime = context.req.getParameter("mime");
         if (mime != null && !mime.equals("")) {
             return mime;
@@ -410,7 +412,7 @@ public abstract class Formatter {
         }
     }
 
-    protected boolean mayAttach(Context context) {
+    protected boolean mayAttach(UserServletContext context) {
         String noAttach = context.req.getParameter("noAttach");
         return !(noAttach != null && (noAttach.equals("1") || noAttach.equalsIgnoreCase("true")));
     }

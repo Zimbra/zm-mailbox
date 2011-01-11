@@ -33,9 +33,9 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZICalendarParseHandler;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
-import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 
 import javax.mail.Part;
 import javax.servlet.ServletException;
@@ -49,8 +49,9 @@ import java.util.List;
 
 public class IcsFormatter extends Formatter {
 
-    public String getType() {
-        return "ics";
+    @Override
+    public FormatType getType() {
+        return FormatType.ICS;
     }
 
     public String[] getDefaultMimeTypes() {
@@ -61,7 +62,7 @@ public class IcsFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_APPOINTMENTS;
     }
 
-    public void formatCallback(Context context) throws IOException, ServiceException {
+    public void formatCallback(UserServletContext context) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         List<CalendarItem> calItems = new ArrayList<CalendarItem>();
         //ZimbraLog.mailbox.info("start = "+new Date(context.getStartTime()));
@@ -136,7 +137,7 @@ public class IcsFormatter extends Formatter {
         return true;
     }
 
-    public void saveCallback(UserServlet.Context context, String contentType, Folder folder, String filename)
+    public void saveCallback(UserServletContext context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException, ServletException {
         boolean continueOnError = context.ignoreAndContinueOnError();
         boolean preserveExistingAlarms = context.preserveAlarms();

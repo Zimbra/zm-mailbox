@@ -29,8 +29,9 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
-import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.cs.service.mail.ImportContacts;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.common.service.ServiceException;
@@ -41,8 +42,8 @@ import com.zimbra.common.mime.MimeConstants;
 public class CsvFormatter extends Formatter {
 
     @Override
-    public String getType() {
-        return "csv";
+    public FormatType getType() {
+        return FormatType.CSV;
     }
 
     @Override
@@ -56,7 +57,7 @@ public class CsvFormatter extends Formatter {
     }
 
     @Override
-    public void formatCallback(Context context) throws IOException, ServiceException {
+    public void formatCallback(UserServletContext context) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         StringBuffer sb = new StringBuffer();
         try {
@@ -95,7 +96,7 @@ public class CsvFormatter extends Formatter {
     }
 
     @Override
-    public void saveCallback(Context context, String contentType, Folder folder, String filename)
+    public void saveCallback(UserServletContext context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException {
         InputStreamReader isr = new InputStreamReader(
                 context.getRequestInputStream(), context.getCharset());

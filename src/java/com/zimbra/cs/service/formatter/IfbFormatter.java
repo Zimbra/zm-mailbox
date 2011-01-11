@@ -25,8 +25,9 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
-import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -36,8 +37,9 @@ public class IfbFormatter extends Formatter {
    
     private static final long ONE_MONTH = Constants.MILLIS_PER_DAY*31;
     
-    public String getType() {
-        return "ifb";
+    @Override
+    public FormatType getType() {
+        return FormatType.IFB;
     }
 
     public boolean requiresAuth() {
@@ -48,7 +50,7 @@ public class IfbFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_APPOINTMENTS;
     }
 
-    public void formatCallback(Context context) throws IOException, ServiceException, UserServletException {
+    public void formatCallback(UserServletContext context) throws IOException, ServiceException, UserServletException {
         context.resp.setCharacterEncoding("UTF-8");
         context.resp.setContentType(MimeConstants.CT_TEXT_CALENDAR);
 

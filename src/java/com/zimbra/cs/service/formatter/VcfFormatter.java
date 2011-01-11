@@ -25,9 +25,10 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
-import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.cs.service.formatter.VCard;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.mime.MimeConstants;
@@ -35,8 +36,8 @@ import com.zimbra.common.mime.MimeConstants;
 public class VcfFormatter extends Formatter {
 
     @Override
-    public String getType() {
-        return "vcf";
+    public FormatType getType() {
+        return FormatType.VCF;
     }
 
     @Override
@@ -54,7 +55,7 @@ public class VcfFormatter extends Formatter {
     }
 
     @Override
-    public void formatCallback(Context context) throws IOException, ServiceException {
+    public void formatCallback(UserServletContext context) throws IOException, ServiceException {
         Charset charset = context.getCharset();
         Iterator<? extends MailItem> iterator = null;
         try {
@@ -89,7 +90,7 @@ public class VcfFormatter extends Formatter {
     }
 
     @Override
-    public void saveCallback(Context context, String contentType, Folder folder, String filename)
+    public void saveCallback(UserServletContext context, String contentType, Folder folder, String filename)
         throws ServiceException, IOException, UserServletException {
 
         byte[] body = context.getPostBody();

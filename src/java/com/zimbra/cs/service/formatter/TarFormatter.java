@@ -22,8 +22,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.tar.TarEntry;
 import com.zimbra.common.util.tar.TarInputStream;
 import com.zimbra.common.util.tar.TarOutputStream;
+import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
-import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 
 public class TarFormatter extends ArchiveFormatter {
     public class TarArchiveInputStream implements ArchiveInputStream {
@@ -98,20 +99,24 @@ public class TarFormatter extends ArchiveFormatter {
         }
     }
 
-    @Override public String[] getDefaultMimeTypes() {
+    @Override 
+    public String[] getDefaultMimeTypes() {
         return new String[] { "application/x-tar" };
     }
 
-    @Override public String getType() { return "tar"; }
+    @Override 
+    public FormatType getType() { 
+        return FormatType.TAR;
+     }
     
-    protected ArchiveInputStream getInputStream(Context context,
+    protected ArchiveInputStream getInputStream(UserServletContext context,
         String charset) throws IOException, ServiceException, UserServletException {
 
         return new TarArchiveInputStream(context.getRequestInputStream(-1),
             charset);
     }
 
-    protected ArchiveOutputStream getOutputStream(Context context, String
+    protected ArchiveOutputStream getOutputStream(UserServletContext context, String
         charset) throws IOException {
         return new TarArchiveOutputStream(context.resp.getOutputStream(), charset);
     }

@@ -26,8 +26,9 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServlet.HttpInputStream;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.cs.service.UserServletException;
 
 import javax.servlet.RequestDispatcher;
@@ -66,17 +67,17 @@ public class HtmlFormatter extends Formatter {
     private static final String ATTR_TARGET_ACCOUNT_PREF_CALENDAR_DAY_HOUR_END  = "zimbra_target_account_prefCalendarDayHourEnd";
 
     @Override
-    public void formatCallback(Context context) throws UserServletException,
+    public void formatCallback(UserServletContext context) throws UserServletException,
             ServiceException, IOException, ServletException {
         dispatchJspRest(context.getServlet(), context);
     }
 
     @Override
-    public String getType() {
-        return "html";
+    public FormatType getType() {
+        return FormatType.HTML;
     }
 
-    static void dispatchJspRest(Servlet servlet, Context context)
+    static void dispatchJspRest(Servlet servlet, UserServletContext context)
     throws ServiceException, ServletException, IOException {
         AuthToken auth = null;
         long expiration = System.currentTimeMillis() + AUTH_EXPIRATION;

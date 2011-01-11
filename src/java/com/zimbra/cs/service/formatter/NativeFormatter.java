@@ -51,8 +51,9 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
-import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 
 public class NativeFormatter extends Formatter {
 
@@ -64,10 +65,10 @@ public class NativeFormatter extends Formatter {
     public static final String ATTR_CONTENTTYPE = "contenttype";
     public static final String ATTR_CONTENTLENGTH = "contentlength";
 
-    public static final String FMT_NATIVE = "native";
-
-    public String getType() {
-        return FMT_NATIVE;
+    
+    @Override
+    public FormatType getType() {
+        return FormatType.HTML_CONVERTED;
     }
 
     public String getDefaultSearchTypes() {
@@ -75,7 +76,7 @@ public class NativeFormatter extends Formatter {
         return MailboxIndex.SEARCH_FOR_MESSAGES;
     }
 
-    public void formatCallback(Context context) throws IOException, ServiceException, UserServletException, ServletException {
+    public void formatCallback(UserServletContext context) throws IOException, ServiceException, UserServletException, ServletException {
         try {
         	sendZimbraHeaders(context.resp, context.target);
             if (context.target instanceof Message) {
@@ -99,7 +100,7 @@ public class NativeFormatter extends Formatter {
         }
     }
 
-    private void handleMessage(Context context, Message msg) throws IOException, ServiceException, MessagingException, ServletException {
+    private void handleMessage(UserServletContext context, Message msg) throws IOException, ServiceException, MessagingException, ServletException {
         if (context.hasBody()) {
             List<MPartInfo> parts = Mime.getParts(msg.getMimeMessage());
             MPartInfo body = Mime.getTextBody(parts, false);
@@ -121,7 +122,7 @@ public class NativeFormatter extends Formatter {
         }
     }
 
-    private void handleCalendarItem(Context context, CalendarItem calItem) throws IOException, ServiceException, MessagingException, ServletException {
+    private void handleCalendarItem(UserServletContext context, CalendarItem calItem) throws IOException, ServiceException, MessagingException, ServletException {
         if (context.hasPart()) {
             MimePart mp = null;
             if (context.itemId.hasSubpart()) {
@@ -139,7 +140,7 @@ public class NativeFormatter extends Formatter {
         }
     }
 
-    private void handleContact(Context context, Contact con) throws IOException, ServiceException, MessagingException, ServletException {
+    private void handleContact(UserServletContext context, Contact con) throws IOException, ServiceException, MessagingException, ServletException {
         if (!con.hasAttachment()) {
             context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "body not found");
         } else if (context.hasPart()) {
@@ -154,7 +155,7 @@ public class NativeFormatter extends Formatter {
 
     private static final String HTML_VIEW = "html";
     
-    private void handleMessagePart(Context context, MimePart mp, MailItem item) throws IOException, MessagingException, ServletException {
+    private void handleMessagePart(UserServletContext context, MimePart mp, MailItem item) throws IOException, MessagingException, ServletException {
         if (mp == null) {
             context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "part not found");
         } else {
@@ -188,7 +189,7 @@ public class NativeFormatter extends Formatter {
         }
     }
     
-    private void handleDocument(Context context, Document doc) throws IOException, ServiceException, ServletException {
+    private void handleDocument(UserServletContext context, Document doc) throws IOException, ServiceException, ServletException {
         String v = context.params.get(UserServlet.QP_VERSION);
         int version = v != null ? Integer.parseInt(v) : -1;
         String contentType = doc.getContentType();
@@ -207,7 +208,7 @@ public class NativeFormatter extends Formatter {
         }
     }
     
-    private void handleConversion(Context ctxt, InputStream is, String filename, String ct, String digest, long length) throws IOException, ServletException {
+    private void handleConversion(UserServletContext ctxt, InputStream is, String filename, String ct, String digest, long length) throws IOException, ServletException {
         try {
             ctxt.req.setAttribute(ATTR_INPUTSTREAM, is);
             ctxt.req.setAttribute(ATTR_MSGDIGEST, digest);
@@ -284,7 +285,7 @@ public class NativeFormatter extends Formatter {
         return true;
     }
 
-    public void saveCallback(Context context, String contentType, Folder folder, String filename) throws IOException, ServiceException, UserServletException {
+    public void saveCallback(UserServletContext context, String contentType, Folder folder, String filename) throws IOException, ServiceException, UserServletException {
         Mailbox mbox = folder.getMailbox();
         MailItem item = null;
         if (filename == null) {
