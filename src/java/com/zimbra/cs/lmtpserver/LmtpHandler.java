@@ -81,6 +81,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
     }
 
     protected boolean processCommand(String cmd) throws IOException {
+        ZimbraLog.addIpToContext(mRemoteAddress);
         mCurrentCommandLine = cmd;
         String arg = null;
 
