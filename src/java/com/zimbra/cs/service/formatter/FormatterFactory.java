@@ -21,7 +21,7 @@ public class FormatterFactory {
             CSV("csv"),
             FREE_BUSY("freebusy"),
             HTML("html"),
-            HTML_CONVERTED("html_converted"),
+            HTML_CONVERTED("native"),
             ICS("ics"),
             IFB("ifb"),
             JSON("json"),
