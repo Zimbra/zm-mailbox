@@ -21,6 +21,7 @@ import com.zimbra.cs.account.Provisioning.AclGroups;
 import com.zimbra.cs.account.Provisioning.DataSourceBy;
 import com.zimbra.cs.account.Provisioning.IdentityBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.Provisioning.SetPasswordResult;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.auth.AuthContext;
 
@@ -69,8 +70,8 @@ public class Account extends ZAttrAccount implements GroupedEntry {
         getProvisioning().checkPasswordStrength(this, password);
     }
 
-    public void setPassword(String password) throws ServiceException {
-        getProvisioning().setPassword(this, password);
+    public SetPasswordResult setPassword(String password) throws ServiceException {
+        return getProvisioning().setPassword(this, password);
     }
 
     public AclGroups getAclGroups(boolean adminGroupsOnly) throws ServiceException {

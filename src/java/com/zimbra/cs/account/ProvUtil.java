@@ -85,6 +85,7 @@ import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.account.Provisioning.RightsDoc;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.account.Provisioning.SetPasswordResult;
 import com.zimbra.cs.account.Provisioning.SignatureBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
 import com.zimbra.cs.account.Provisioning.XMPPComponentBy;
@@ -1015,7 +1016,10 @@ public class ProvUtil implements HttpDebugListener {
             doSyncGal(args);
             break;
         case SET_PASSWORD:
-            mProv.setPassword(lookupAccount(args[1]), args[2]);
+            SetPasswordResult result = mProv.setPassword(lookupAccount(args[1]), args[2]);
+            if (result.hasMessage()) {
+                System.out.println(result.getMessage());
+            }
             break;
         case CHECK_PASSWORD_STRENGTH:
             mProv.checkPasswordStrength(lookupAccount(args[1]), args[2]);

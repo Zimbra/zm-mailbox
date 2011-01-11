@@ -211,9 +211,14 @@ Access: domain admin sufficient
   <newPassword>...</newPassword>
 </SetPasswordRequest>
 
-<SetPasswordResponse/>
+<SetPasswordResponse>
+  [<message>...</message>]
+</SetPasswordResponse>
 
 Access: domain admin sufficient
+
+<message> : If the password had violated any policy, it is returned in the 
+            <message> element, and the password is still set successfully.
 
    note: this request is by default proxied to the account's home server
 

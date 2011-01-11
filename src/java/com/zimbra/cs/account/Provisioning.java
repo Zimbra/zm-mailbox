@@ -850,7 +850,30 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract void changePassword(Account acct, String currentPassword, String newPassword) throws ServiceException;
 
-    public abstract void setPassword(Account acct, String newPassword) throws ServiceException;
+    public static class SetPasswordResult {
+        String msg;
+        
+        public SetPasswordResult() {
+        }
+        
+        public SetPasswordResult(String msg) {
+            setMessage(msg);
+        }
+        
+        public boolean hasMessage() {
+            return msg != null;
+        }
+        
+        public void setMessage(String msg) {
+            this.msg = msg;
+        }
+        
+        public String getMessage() {
+            return msg;
+        }
+    }
+    
+    public abstract SetPasswordResult setPassword(Account acct, String newPassword) throws ServiceException;
 
     public abstract void checkPasswordStrength(Account acct, String password) throws ServiceException;
 

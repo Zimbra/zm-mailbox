@@ -27,6 +27,7 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
+import com.zimbra.cs.account.Provisioning.SetPasswordResult;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.service.ServiceException;
@@ -69,12 +70,19 @@ public class SetPassword extends AdminDocumentHandler {
         } else
             checkAccountRight(zsc, account, Admin.R_setAccountPassword);
  
-        prov.setPassword(account, newPassword);
+        SetPasswordResult result = prov.setPassword(account, newPassword);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "SetPassword","name", account.getName()}));
 
+
 	    Element response = zsc.createElement(AdminConstants.SET_PASSWORD_RESPONSE);
+	            
+        if (result.hasMessage()) {
+            ZimbraLog.security.info(result.getMessage());
+            response.addElement(AdminConstants.E_MESSAGE).setText(result.getMessage());
+        }
+        
 	    return response;
 	}
 

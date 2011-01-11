@@ -49,6 +49,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.account.Provisioning.SetPasswordResult;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
@@ -1281,11 +1282,19 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public void setPassword(Account acct, String newPassword) throws ServiceException {
+    public SetPasswordResult setPassword(Account acct, String newPassword) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.SET_PASSWORD_REQUEST);
         req.addElement(AdminConstants.E_ID).setText(acct.getId());
         req.addElement(AdminConstants.E_NEW_PASSWORD).setText(newPassword);
-        invoke(req);
+        
+        Element response = invoke(req);
+        Element eMsg = response.getOptionalElement(AdminConstants.E_MESSAGE);
+        
+        SetPasswordResult result = new SetPasswordResult();
+        if (eMsg != null) {
+            result.setMessage(eMsg.getText());
+        }
+        return result;
     }
 
     @Override
