@@ -670,7 +670,7 @@ public final class LC {
     public static final KnownKey wiki_user = KnownKey.newKey("wiki");
 
     @Supported
-    public static final KnownKey calendar_outlook_compatible_allday_events = KnownKey.newKey(true);
+    public static final KnownKey calendar_outlook_compatible_allday_events = KnownKey.newKey(false);
 
     @Supported
     public static final KnownKey calendar_entourage_compatible_timezones = KnownKey.newKey(true);
