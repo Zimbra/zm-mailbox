@@ -37,20 +37,28 @@ public interface NioHandler {
     void connectionClosed() throws IOException;
 
     /**
-     * Called when the connection becomes idle after a specified period of
-     * inactivity.
+     * Called when the connection becomes idle after a specified period of inactivity.
      *
      * @throws IOException if an I/O error occurs
      */
     void connectionIdle() throws IOException;
 
     /**
-     * Called when a new message has been received on the connection
-     * \
+     * Called when a new message has been received on the connection.
+     *
      * @param msg the message that has been received
      * @throws IOException if an I/O error occurs
      */
     void messageReceived(Object msg) throws IOException;
+
+    /**
+     * Called when any exception is thrown by user IoHandler implementation or by MINA. If cause is instanceof
+     * IOException, MINA will close the connection automatically.
+     *
+     * @param e
+     * @throws IOException
+     */
+    void exceptionCaught(Throwable e) throws IOException;
 
     /**
      * Drop the connection and wait up to writeTimeout in the session config for last write to complete before the

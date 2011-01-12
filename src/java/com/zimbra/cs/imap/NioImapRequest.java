@@ -17,87 +17,50 @@ package com.zimbra.cs.imap;
 
 import java.io.IOException;
 
-public class NioImapRequest extends ImapRequest {
+final class NioImapRequest extends ImapRequest {
     private Literal literal;    // current literal data
     private int literalCount;   // remaining byte count for current literal
     private boolean complete;   // if true then request is complete
 
-    public NioImapRequest(ImapHandler handler) {
+    NioImapRequest(ImapHandler handler) {
         super(handler);
     }
 
-    public boolean parse(Object obj) throws IOException {
-        try {
-            if (literal != null) {
-                parseLiteral((byte[]) obj);
-            } else {
-                parseCommand((String) obj);
-            }
-            return complete;
-        } catch (ImapParseException e) {
-            cleanup();
-            mHandler.handleParseException(e);
-            throw new IllegalArgumentException("Bad request line", e);
+    boolean parse(Object obj) throws IOException {
+        if (literal != null) {
+            parseLiteral((byte[]) obj);
+        } else {
+            parseCommand((String) obj);
         }
-    }
-
-    public boolean isComplete() {
         return complete;
     }
 
     private void parseLiteral(byte[] b) throws IOException {
-        //System.out.println("XXX parseLiteral: len = " + b.length);
         assert b.length <= literalCount;
-        if (isMaxRequestSizeExceeded()) {
-            literalCount -= Math.min(literalCount, b.length);
-        } else {
-            literalCount -= literal.put(b, 0, b.length);
-        }
+        literalCount -= literal.put(b, 0, b.length);
         if (literalCount <= 0) {
             assert literal.remaining() == 0;
-            if (!isMaxRequestSizeExceeded()) {
-                addPart(literal);
-            }
+            addPart(literal);
             literal = null;
         }
     }
 
-    private void parseCommand(String line) throws IOException, ImapParseException {
-        //System.out.println("XXX parseCommand: line = |" + line + "|");
-        incrementSize(line.length());
+    private void parseCommand(String line) throws IOException {
         addPart(line);
-        LiteralInfo li;
-        try {
-            li = LiteralInfo.parse(line);
-        } catch (IllegalArgumentException e) {
-            throw new ImapParseException(getTag(), "bad literal format");
-        }
+        LiteralInfo li = LiteralInfo.parse(line); // literal format is already validated in decoder
         if (li != null) {
             literalCount = li.getCount();
-            if (!isAppend()) {
-                incrementSize(literalCount);
-            }
-            if (!isMaxRequestSizeExceeded()) {
-                literal = Literal.newInstance(literalCount, isAppend());
-            }
+            literal = Literal.newInstance(literalCount, isAppend());
             if (li.isBlocking()) {
-                sendContinuation();
+                mHandler.sendContinuation("send literal data");
             }
         } else {
             complete = true;
         }
     }
 
-    private void sendContinuation() throws IOException, ImapParseException {
-        if (isMaxRequestSizeExceeded()) {
-            // If this request is too long then send an error response
-            // rather than a continuation request
-            throw new ImapParseException(getTag(), "maximum request size exceeded");
-        }
-        mHandler.sendContinuation("send literal data");
-    }
-
-    @Override public Literal readLiteral() throws ImapParseException {
+    @Override
+    public Literal readLiteral() throws ImapParseException {
         skipChar('{');
         if (mIndex + 1 >= mParts.size()) {
             throw new ImapParseException(mTag, "no next literal");
@@ -108,7 +71,8 @@ public class NioImapRequest extends ImapRequest {
         return part.getLiteral();
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         StringBuilder sb = new StringBuilder();
         for (Part part : mParts) {
             sb.append(part);

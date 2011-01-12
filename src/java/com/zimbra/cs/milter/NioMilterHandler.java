@@ -93,4 +93,8 @@ final class NioMilterHandler extends MilterHandler implements NioHandler {
     @Override
     public void setLoggingContext() {
     }
+
+    @Override
+    public void exceptionCaught(Throwable e) {
+    }
 }

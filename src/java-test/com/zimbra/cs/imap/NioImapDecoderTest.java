@@ -26,6 +26,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
+import com.zimbra.cs.imap.NioImapDecoder.InvalidLiteralFormatException;
+import com.zimbra.cs.imap.NioImapDecoder.TooBigLiteralException;
+import com.zimbra.cs.imap.NioImapDecoder.TooLongLineException;
 
 /**
  * Unit test for {@link NioImapDecoder}.
@@ -41,7 +44,7 @@ public class NioImapDecoderTest {
 
     @Before
     public void setUp() {
-        decoder = new NioImapDecoder(1024);
+        decoder = new NioImapDecoder();
         session = new ProtocolCodecSession();
         session.setTransportMetadata(new DefaultTransportMetadata("test", "test", false, true, // Enable fragmentation
                 SocketAddress.class, IoSessionConfig.class, Object.class));
@@ -97,6 +100,64 @@ public class NioImapDecoderTest {
         Assert.assertArrayEquals(literal, (byte[]) session.getDecoderOutputQueue().poll());
 
         Assert.assertEquals(0, session.getDecoderOutputQueue().size());
+    }
+
+    @Test
+    public void maxLineLength() throws Exception {
+        IN.clear().fill(1024).putString("\r\nrecover\r\n", CHARSET).flip();
+        try {
+            decoder.decode(session, IN, session.getDecoderOutput());
+            Assert.fail();
+        } catch (TooLongLineException expected) {
+        }
+        Assert.assertEquals(0, session.getDecoderOutputQueue().size());
+
+        decoder.decode(session, IN, session.getDecoderOutput());
+        Assert.assertEquals("recover", session.getDecoderOutputQueue().poll());
+    }
+
+    @Test
+    public void badLiteral() throws Exception {
+        IN.clear().putString("XXX {-1}\r\n", CHARSET).flip();
+        try {
+            decoder.decode(session, IN, session.getDecoderOutput());
+            Assert.fail();
+        } catch (InvalidLiteralFormatException expected) {
+        }
+        Assert.assertEquals(0, session.getDecoderOutputQueue().size());
+
+        IN.clear().putString("XXX {2147483648}\r\n", CHARSET).flip();
+        try {
+            decoder.decode(session, IN, session.getDecoderOutput());
+            Assert.fail();
+        } catch (InvalidLiteralFormatException expected) {
+        }
+        Assert.assertEquals(0, session.getDecoderOutputQueue().size());
+    }
+
+    @Test
+    public void maxLiteralSize() throws Exception {
+        IN.clear().putString("XXX {1025}\r\nrecover\r\n", CHARSET).flip();
+        try {
+            decoder.decode(session, IN, session.getDecoderOutput());
+            Assert.fail();
+        } catch (TooBigLiteralException expected) {
+        }
+        Assert.assertEquals(0, session.getDecoderOutputQueue().size());
+
+        decoder.decode(session, IN, session.getDecoderOutput());
+        Assert.assertEquals("recover", session.getDecoderOutputQueue().poll());
+
+        IN.clear().putString("XXX {1025+}\r\n", CHARSET).fill(1025).putString("recover\r\n", CHARSET).flip();
+        try {
+            decoder.decode(session, IN, session.getDecoderOutput());
+            Assert.fail();
+        } catch (TooBigLiteralException expected) {
+        }
+        Assert.assertEquals(0, session.getDecoderOutputQueue().size());
+
+        decoder.decode(session, IN, session.getDecoderOutput());
+        Assert.assertEquals("recover", session.getDecoderOutputQueue().poll());
     }
 
 }

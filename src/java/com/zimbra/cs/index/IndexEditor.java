@@ -382,7 +382,7 @@ public class IndexEditor {
 
     public static void StartTcpEditor() throws ServiceException {
         ServerSocket serverSocket = NetUtil.getTcpServerSocket(null, sPortNo);
-        sTcpServer = new IndexEditorTcpServer("IndexEditorTcpServer", 3, Thread.NORM_PRIORITY, serverSocket);
+        sTcpServer = new IndexEditorTcpServer(3, Thread.NORM_PRIORITY, serverSocket);
         sIndexEditorProtocolHandler = new IndexEditorProtocolhandler(sTcpServer);
         sTcpServer.addActiveHandler(sIndexEditorProtocolHandler);
         sThread = new Thread(new IndexEditorTcpThread(), "IndexEditor-TcpServer");
@@ -422,9 +422,13 @@ public class IndexEditor {
     }
 
     private static class IndexEditorTcpServer extends TcpServer {
-        IndexEditorTcpServer(String name, int numThreads, int threadPriority,
-                ServerSocket serverSocket) {
-            super(name, numThreads, threadPriority, serverSocket);
+        IndexEditorTcpServer(int numThreads, int threadPriority, ServerSocket serverSocket) {
+            super(numThreads, threadPriority, serverSocket);
+        }
+
+        @Override
+        public String getName() {
+            return "IndexEditorTcpServer";
         }
 
         @Override

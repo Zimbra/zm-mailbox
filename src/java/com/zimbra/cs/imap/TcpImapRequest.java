@@ -19,7 +19,7 @@ import com.zimbra.cs.server.TcpServerInputStream;
 
 import java.io.IOException;
 
-public class TcpImapRequest extends ImapRequest {
+final class TcpImapRequest extends ImapRequest {
     final class ImapTerminatedException extends ImapParseException {
         private static final long serialVersionUID = 6105950126307803418L;
     }
@@ -30,34 +30,39 @@ public class TcpImapRequest extends ImapRequest {
         ImapContinuationException(boolean send)  { super(); sendContinuation = send; }
     }
 
-    private TcpServerInputStream mStream;
-    private long mLiteral = -1;
-    private boolean mUnlogged;
+    private TcpServerInputStream input;
+    private long literalCounter = -1;
+    private boolean unlogged;
+    private long requestSize = 0;
+    private boolean maxRequestSizeExceeded = false;
 
     TcpImapRequest(String line, ImapHandler handler) {
         super(handler);
         addPart(line);
     }
 
-    TcpImapRequest(TcpServerInputStream tsis, ImapHandler handler) {
+    TcpImapRequest(TcpServerInputStream input, ImapHandler handler) {
         super(handler);
-        mStream = tsis;
+        this.input = input;
     }
 
     void continuation() throws IOException, ImapParseException {
-        if (mLiteral >= 0) continueLiteral();
+        if (literalCounter >= 0) {
+            continueLiteral();
+        }
 
-        String line = mStream.readLine(), logline = line;
+        String line = input.readLine();
+        String logline = line;
         // TcpServerInputStream.readLine() returns null on end of stream!
         if (line == null)
             throw new ImapTerminatedException();
         incrementSize(line.length());
         addPart(line);
 
-        if (mParts.size() == 1 && !isMaxRequestSizeExceeded()) {
+        if (mParts.size() == 1 && !maxRequestSizeExceeded) {
             // check for "LOGIN" command and elide if necessary
-            mUnlogged = isLogin();
-            if (mUnlogged) {
+            unlogged = isLogin();
+            if (unlogged) {
                 logline = line.substring(0, line.indexOf(' ') + 7) + "...";
             }
         }
@@ -80,7 +85,7 @@ public class TcpImapRequest extends ImapRequest {
                     if (!isAppend()) {
                         incrementSize(size);
                     }
-                    mLiteral = size;
+                    literalCounter = size;
                     continuation();
                 } else {
                     if (mTag == null && mIndex == 0 && mOffset == 0) {
@@ -93,39 +98,42 @@ public class TcpImapRequest extends ImapRequest {
     }
 
     private void continueLiteral() throws IOException, ImapParseException {
-        if (isMaxRequestSizeExceeded()) {
-            long skipped = mStream.skip(mLiteral);
-            if (mLiteral > 0 && skipped == 0)
+        if (maxRequestSizeExceeded) {
+            long skipped = input.skip(literalCounter);
+            if (literalCounter > 0 && skipped == 0) {
                 throw new ImapTerminatedException();
-            mLiteral -= skipped;
+            }
+            literalCounter -= skipped;
         } else {
             Part part = mParts.get(mParts.size() - 1);
             Literal literal;
             if (part.isLiteral()) {
                 literal = part.getLiteral();
             } else {
-                literal = Literal.newInstance((int) mLiteral, isAppend());
+                literal = Literal.newInstance((int) literalCounter, isAppend());
                 addPart(literal);
             }
-            int read = literal.copy(mStream);
+            int read = literal.copy(input);
             if (read == -1)
                 throw new ImapTerminatedException();
             // TODO How to log literal data now...
-            if (!mUnlogged && ZimbraLog.imap.isTraceEnabled()) {
+            if (!unlogged && ZimbraLog.imap.isTraceEnabled()) {
                 ZimbraLog.imap.trace("C: {%s}", read);
             }
-            mLiteral -= read;
+            literalCounter -= read;
         }
-        if (mLiteral > 0)
+        if (literalCounter > 0) {
             throw new ImapContinuationException(false);
-        mLiteral = -1;
+        }
+        literalCounter = -1;
     }
 
     private Literal getCurrentBuffer() throws ImapParseException {
         return mParts.get(mIndex).getLiteral();
     }
 
-    @Override protected Literal readLiteral() throws IOException, ImapParseException {
+    @Override
+    protected Literal readLiteral() throws IOException, ImapParseException {
         boolean blocking = true;
         skipChar('{');
         long length = Long.parseLong(readNumber());
@@ -139,17 +147,18 @@ public class TcpImapRequest extends ImapRequest {
             throw new ImapParseException(mTag, "extra characters after literal declaration");
 
         boolean lastPart = (mIndex == mParts.size() - 1);
-        if (lastPart || (mIndex == mParts.size() - 2 && mLiteral != -1)) {
-            if (mLiteral == -1) {
+        if (lastPart || (mIndex == mParts.size() - 2 && literalCounter != -1)) {
+            if (literalCounter == -1) {
                 if (!isAppend()) {
                     incrementSize(length);
                 }
-                mLiteral = length;
+                literalCounter = length;
             }
-            if (!blocking && mStream.available() >= mLiteral)
+            if (!blocking && input.available() >= literalCounter) {
                 continuation();
-            else
+            } else {
                 throw new ImapContinuationException(blocking && lastPart);
+            }
         }
         mIndex++;
         Literal result = getCurrentBuffer();
@@ -157,4 +166,27 @@ public class TcpImapRequest extends ImapRequest {
         mOffset = 0;
         return result;
     }
+
+    void incrementSize(long increment) {
+        requestSize += increment;
+        if (requestSize > mHandler.config.getMaxRequestSize()) {
+            maxRequestSizeExceeded = true;
+        }
+    }
+
+    boolean isMaxRequestSizeExceeded() {
+        return maxRequestSizeExceeded;
+    }
+
+    /**
+     * This implementation doesn't add any more parts if we have exceeded the maximum request size. The exception is if
+     * this is the first part (request line) so we can recover the tag when sending an error response.
+     */
+    @Override
+    void addPart(Part part) {
+        if (!maxRequestSizeExceeded || mParts.isEmpty()) {
+            super.addPart(part);
+        }
+    }
+
 }

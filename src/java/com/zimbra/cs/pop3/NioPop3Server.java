@@ -33,7 +33,12 @@ public final class NioPop3Server extends NioServer implements Pop3Server {
 
     public NioPop3Server(Pop3Config config) throws ServiceException {
         super(config);
-        registerMBean(config.isSslEnabled() ? "NioPop3SSLServer" : "NioPop3Server");
+        registerMBean(getName());
+    }
+
+    @Override
+    public String getName() {
+        return config.isSslEnabled() ? "NioPop3SSLServer" : "NioPop3Server";
     }
 
     @Override

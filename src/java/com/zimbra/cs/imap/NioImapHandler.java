@@ -23,6 +23,9 @@ import com.zimbra.cs.stats.ZimbraPerf;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+import org.apache.mina.filter.codec.ProtocolDecoderException;
+import org.apache.mina.filter.codec.RecoverableProtocolDecoderException;
+
 final class NioImapHandler extends ImapHandler implements NioHandler {
     private final ImapConfig config;
     private final NioConnection connection;
@@ -52,8 +55,6 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
                 if (!processRequest(request)) {
                     dropConnection();
                 }
-            } catch (ImapParseException ipe) {
-                handleParseException(ipe);
             } finally {
                 ZimbraLog.clearContext();
                 if (request != null) {
@@ -67,10 +68,17 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
         }
     }
 
-    private boolean processRequest(NioImapRequest req) throws IOException, ImapParseException {
-        if (req.isMaxRequestSizeExceeded())
-            throw new ImapParseException(req.getTag(), "maximum request size exceeded");
+    @Override
+    public void exceptionCaught(Throwable e) throws IOException {
+        if (e instanceof RecoverableProtocolDecoderException) {
+            sendBAD("*", e.getMessage());
+        } else if (e instanceof ProtocolDecoderException) {
+            sendBAD("*", e.getMessage());
+            dropConnection(true);
+        }
+    }
 
+    private boolean processRequest(NioImapRequest req) throws IOException {
         ImapSession i4selected = selectedFolder;
         if (i4selected != null)
             i4selected.updateAccessTime();

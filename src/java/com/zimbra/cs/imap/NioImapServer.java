@@ -26,13 +26,20 @@ import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolEncoder;
 
-public class NioImapServer extends NioServer implements ImapServer {
-    private final ProtocolDecoder decoder;
+public final class NioImapServer extends NioServer implements ImapServer {
+    private final NioImapDecoder decoder;
 
     public NioImapServer(ImapConfig config) throws ServiceException {
         super(config);
-        decoder = new NioImapDecoder(config.getWriteChunkSize());
-        registerMBean(config.isSslEnabled() ? "NioImapSSLServer" : "NioImapServer");
+        decoder = new NioImapDecoder();
+        decoder.setMaxChunkSize(config.getWriteChunkSize());
+        decoder.setMaxLiteralSize(config.getMaxRequestSize());
+        registerMBean(getName());
+    }
+
+    @Override
+    public String getName() {
+        return config.isSslEnabled() ? "ImapSSLServer" : "ImapServer";
     }
 
     @Override

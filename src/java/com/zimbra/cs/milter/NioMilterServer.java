@@ -30,13 +30,18 @@ import com.zimbra.cs.server.NioServer;
 import com.zimbra.cs.server.NioConnection;
 import com.zimbra.cs.server.ServerConfig;
 
-public class NioMilterServer extends NioServer implements MilterServer {
+public final class NioMilterServer extends NioServer implements MilterServer {
     private final ProtocolDecoder decoder = new NioMilterDecoder();
     private final ProtocolEncoder encoder = new NioMilterEncoder();
 
     public NioMilterServer(ServerConfig config) throws ServiceException {
         super(config);
-        registerMBean("NioMilterServer");
+        registerMBean(getName());
+    }
+
+    @Override
+    public String getName() {
+        return "NioMilterServer";
     }
 
     @Override

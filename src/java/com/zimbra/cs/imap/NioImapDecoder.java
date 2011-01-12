@@ -18,12 +18,15 @@ import java.io.IOException;
 import java.nio.charset.CharsetDecoder;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.CumulativeProtocolDecoder;
+import org.apache.mina.filter.codec.ProtocolDecoderException;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
+import org.apache.mina.filter.codec.RecoverableProtocolDecoderException;
 
 /**
  * Protocol Decoder for IMAP. This decodes a text line terminated by LF or CRLF into a string, and an IMAP literal into
@@ -34,65 +37,155 @@ import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 final class NioImapDecoder extends CumulativeProtocolDecoder {
     private static final CharsetDecoder CHARSET = Charsets.ISO_8859_1.newDecoder();
 
-    private final int chunkSize;
+    private int maxChunkSize = 1024;
+    private int maxLineLength = 1024;
+    private int maxLiteralSize = 1024;
 
-    NioImapDecoder(int chunkSize) {
-        this.chunkSize = chunkSize;
+    void setMaxChunkSize(int bytes) {
+        Preconditions.checkArgument(bytes > 0);
+        maxChunkSize = bytes;
     }
 
+    /**
+     * Sets the allowed maximum size of a line to be decoded. If the size of the line to be decoded exceeds this
+     * value, the decoder will throw a {@link TooLongLineException}. The default value is 1024 (1KB).
+     *
+     * @param value max line length in bytes
+     */
+    void setMaxLineLength(int bytes) {
+        Preconditions.checkArgument(bytes > 0);
+        maxLineLength = bytes;
+    }
+
+    /**
+     * Sets the allowed maximum size of a literal to be decoded. If the size of the literal to be decoded exceeds this
+     * value, the decoder will throw a {@link TooBigLiteralException}. The default value is 1024 (1KB).
+     *
+     * @param bytes max literal size in bytes
+     */
+    void setMaxLiteralSize(int bytes) {
+        Preconditions.checkArgument(bytes > 0);
+        maxLiteralSize = bytes;
+    }
+
+    /**
+     * Decode a line or literal from the cumulative buffer.
+     *
+     * @throws TooLongLineException maximum line length exceeded
+     * @throws TooBigLiteralException maximum literal size exceeded
+     * @throws InvalidLiteralFormatException bad literal format
+     * @throws IOException socket I/O error
+     */
     @Override
-    protected boolean doDecode(IoSession session, IoBuffer in, ProtocolDecoderOutput out) throws IOException {
+    protected boolean doDecode(IoSession session, IoBuffer in, ProtocolDecoderOutput out)
+            throws ProtocolDecoderException, IOException {
         int start = in.position(); // remember the initial position
-        int literal = (Integer) session.getAttribute(getClass(), -1);
+        Context ctx = (Context) session.getAttribute(Context.class);
+        if (ctx == null) {
+            ctx = new Context();
+            session.setAttribute(Context.class, ctx);
+        }
         byte prev = -1;
 
         while (in.hasRemaining()) {
-            if (literal >= 0) {
-                int len = Ints.min(in.remaining(), literal, chunkSize);
-                byte[] chunk = new byte[len];
-                in.get(chunk);
-                try {
+            if (ctx.literal >= 0) {
+                int len = Ints.min(in.remaining(), ctx.literal, maxChunkSize);
+                if (ctx.overflow) { // swallow non-blocking literal
+                    in.skip(len);
+                } else {
+                    byte[] chunk = new byte[len];
+                    in.get(chunk);
                     out.write(chunk);
-                } finally {
-                    literal -= len;
-                    if (literal == 0) {
-                        session.removeAttribute(getClass());
-                    } else {
-                        session.setAttribute(getClass(), literal);
+                }
+                ctx.literal -= len;
+                if (ctx.literal == 0) { // end of literal
+                    ctx.literal = -1;
+                    if (ctx.overflow) {
+                        ctx.overflow = false;
+                        throw new TooBigLiteralException();
                     }
                 }
                 return true;
             } else {
-                byte b = in.get();
-                if (b == '\n') {
-                    int pos = in.position();
-                    int limit = in.limit();
-                    try {
+                if (in.position() - start > maxLineLength) {
+                    ctx.overflow = true;
+                }
+                if (ctx.overflow) {
+                    if (in.get() == '\n') {
+                        ctx.overflow = false;
+                        throw new TooLongLineException();
+                    } else {
+                        return true; // swallow
+                    }
+                } else {
+                    byte b = in.get();
+                    if (b == '\n') {
+                        int pos = in.position();
+                        int limit = in.limit();
                         in.position(start);
                         in.limit(prev == '\r' ? pos - 2 : pos - 1); // Swallow the previous CR
                         // The bytes between in.position() and in.limit() now contain a full CRLF terminated line.
                         String line = in.getString(CHARSET);
-                        LiteralInfo li = LiteralInfo.parse(line);
-                        if (li != null) {
-                            session.setAttribute(getClass(), li.count);
-                        }
-                        out.write(line);
-                    } finally {
                         // Set the position to point right after the detected line and set the limit to the old one.
                         in.limit(limit);
                         in.position(pos);
+                        LiteralInfo li;
+                        try {
+                            li = LiteralInfo.parse(line);
+                        } catch (IllegalArgumentException e) {
+                            throw new InvalidLiteralFormatException();
+                        }
+                        if (li != null) {
+                            if (li.count > maxLiteralSize) {
+                                if (li.isBlocking()) { // return a negative continuation response
+                                    throw new TooBigLiteralException();
+                                } else { // non-blocking, swallow the entire literal
+                                    ctx.literal = li.count;
+                                    ctx.overflow = true;
+                                    return true;
+                                }
+                            }
+                            ctx.literal = li.count;
+                        }
+                        out.write(line);
+                        // Decoded one line. CumulativeProtocolDecoder will call me again until I return false.
+                        // So just return true until there are no more lines in the buffer.
+                        return true;
+                    } else {
+                        prev = b;
                     }
-                    // Decoded one line. CumulativeProtocolDecoder will call me again until I return false.
-                    // So just return true until there are no more lines in the buffer.
-                    return true;
-                } else {
-                    prev = b;
                 }
             }
         }
         // Could not find EOL in the buffer. Reset the initial position to the one we recorded above.
         in.position(start);
         return false;
+    }
+
+    private static final class Context {
+        boolean overflow = false;
+        int literal = -1;
+    }
+
+    static final class TooLongLineException extends RecoverableProtocolDecoderException {
+        @Override
+        public String getMessage() {
+            return "maximum line length exceeded";
+        }
+    }
+
+    static final class TooBigLiteralException extends RecoverableProtocolDecoderException {
+        @Override
+        public String getMessage() {
+            return "maximum literal size exceeded";
+        }
+    }
+
+    static final class InvalidLiteralFormatException extends ProtocolDecoderException {
+        @Override
+        public String getMessage() {
+            return "invalid literal format";
+        }
     }
 
 }

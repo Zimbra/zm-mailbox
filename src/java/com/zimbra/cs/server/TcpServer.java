@@ -40,25 +40,23 @@ import com.zimbra.cs.server.ServerConfig;
 public abstract class TcpServer implements Runnable, Server {
     private final Log log;
     private final ThreadPoolExecutor pooledExecutor;
-    private final String name;
     private final ServerSocket serverSocket;
     private final List<ProtocolHandler> activeHandlers;
     private boolean sslEnabled;
     private ServerConfig config;
     private volatile boolean shutdownRequested;
 
-    public TcpServer(String name, ServerConfig config) throws ServiceException {
-        this(name, config.getMaxThreads(), config.getServerSocket());
+    public TcpServer(ServerConfig config) throws ServiceException {
+        this(config.getMaxThreads(), config.getServerSocket());
         this.config = config;
         this.sslEnabled = config.isSslEnabled();
     }
 
-    public TcpServer(String name, int maxThreads, ServerSocket serverSocket) {
-        this(name, maxThreads, Thread.NORM_PRIORITY, serverSocket);
+    public TcpServer(int maxThreads, ServerSocket serverSocket) {
+        this(maxThreads, Thread.NORM_PRIORITY, serverSocket);
     }
 
-    public TcpServer(String name, int maxThreads, int threadPriority, ServerSocket serverSocket) {
-        this.name = name;
+    public TcpServer(int maxThreads, int threadPriority, ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
         this.log = LogFactory.getLog(TcpServer.class.getName() + "/" + serverSocket.getLocalPort());
 
@@ -70,8 +68,8 @@ public abstract class TcpServer implements Runnable, Server {
         // Core pool size is 1, to limit the number of idle threads in thread dumps.
         // Idle threads are aged out of the pool after X minutes.
         int keepAlive = config != null ? config.getThreadKeepAliveTime() : 2 * 60;
-        this.pooledExecutor = new ThreadPoolExecutor(1, maxThreads, keepAlive, TimeUnit.SECONDS,
-                new SynchronousQueue<Runnable>(), new TcpThreadFactory(this.name, false, threadPriority));
+        pooledExecutor = new ThreadPoolExecutor(1, maxThreads, keepAlive, TimeUnit.SECONDS,
+                new SynchronousQueue<Runnable>(), new TcpThreadFactory(getName(), false, threadPriority));
 
         // TODO a linked list is probably the wrong datastructure here
         // TODO write tests with multiple concurrent client
@@ -138,11 +136,9 @@ public abstract class TcpServer implements Runnable, Server {
 
     @Override
     public void start() {
-        Thread t = new Thread(this);
-        if (name != null) {
-            t.setName(name);
-        }
-        t.start();
+        Thread thread = new Thread(this);
+        thread.setName(getName());
+        thread.start();
     }
 
     @Override
@@ -152,14 +148,14 @@ public abstract class TcpServer implements Runnable, Server {
 
     @Override
     public void stop(int forceShutdownAfterSeconds) {
-        log.info(name + " initiating shutdown");
+        log.info(getName() + " initiating shutdown");
         shutdownRequested = true;
 
         try {
             serverSocket.close();
             Thread.yield();
         } catch (IOException ioe) {
-            log.warn(name + " error closing server socket", ioe);
+            log.warn(getName() + " error closing server socket", ioe);
         }
 
         pooledExecutor.shutdown();
@@ -167,31 +163,31 @@ public abstract class TcpServer implements Runnable, Server {
         shutdownActiveHandlers(true);
 
         if (numActiveHandlers() == 0) {
-            log.info(name + " shutting down idle thread pool");
+            log.info(getName() + " shutting down idle thread pool");
             pooledExecutor.shutdownNow();
             return;
         }
 
-        log.info(name + " waiting " + forceShutdownAfterSeconds + " seconds for thread pool shutdown");
+        log.info(getName() + " waiting " + forceShutdownAfterSeconds + " seconds for thread pool shutdown");
         try {
             pooledExecutor.awaitTermination(forceShutdownAfterSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException ie) {
-            log.warn(name + " interrupted while waiting for graceful shutdown", ie);
+            log.warn(getName() + " interrupted while waiting for graceful shutdown", ie);
         }
 
         if (numActiveHandlers() == 0) {
-            log.info(name + " thread pool terminated");
+            log.info(getName() + " thread pool terminated");
             return;
         }
 
         shutdownActiveHandlers(false);
 
-        log.info(name + " shutdown complete");
+        log.info(getName() + " shutdown complete");
     }
 
     @Override
     public void run() {
-        Thread.currentThread().setName(name);
+        Thread.currentThread().setName(getName());
 
         log.info("Starting accept loop: %d core threads, %d max threads.",
             pooledExecutor.getCorePoolSize(), pooledExecutor.getMaximumPoolSize());

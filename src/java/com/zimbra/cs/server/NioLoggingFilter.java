@@ -24,6 +24,7 @@ import org.apache.mina.core.filterchain.IoFilterAdapter;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.core.write.WriteException;
 import org.apache.mina.core.write.WriteRequest;
+import org.apache.mina.filter.codec.ProtocolDecoderException;
 
 import java.nio.ByteBuffer;
 import java.net.SocketException;
@@ -44,7 +45,9 @@ class NioLoggingFilter extends IoFilterAdapter {
     public void exceptionCaught(NextFilter nextFilter, IoSession session, Throwable cause) {
         NioHandlerDispatcher.getHandler(session).setLoggingContext();
         String msg = "Exception caught: " + cause;
-        if (isSocketError(cause)) {
+        if (cause instanceof ProtocolDecoderException) {
+            log.debug(msg, cause);
+        } else if (isSocketError(cause)) {
             // If connection error, then only log full stack trace if debug enabled
             if (log.isDebugEnabled()) {
                 log.debug(msg, cause);

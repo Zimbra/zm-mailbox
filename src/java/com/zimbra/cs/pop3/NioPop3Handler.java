@@ -23,6 +23,8 @@ import com.zimbra.cs.server.NioOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+import org.apache.mina.filter.codec.RecoverableProtocolDecoderException;
+
 final class NioPop3Handler extends Pop3Handler implements NioHandler {
     private final NioConnection connection;
 
@@ -54,6 +56,13 @@ final class NioPop3Handler extends Pop3Handler implements NioHandler {
     public void messageReceived(Object msg) throws IOException {
         if (!processCommand((String) msg)) {
             dropConnection();
+        }
+    }
+
+    @Override
+    public void exceptionCaught(Throwable e) throws IOException {
+        if (e instanceof RecoverableProtocolDecoderException) {
+            sendERR(e.getMessage());
         }
     }
 

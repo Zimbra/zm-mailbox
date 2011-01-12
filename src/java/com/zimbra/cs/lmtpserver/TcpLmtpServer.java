@@ -23,10 +23,15 @@ import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.server.ProtocolHandler;
 import com.zimbra.cs.server.TcpServer;
 
-public class TcpLmtpServer extends TcpServer implements LmtpServer, RealtimeStatsCallback {
+public final class TcpLmtpServer extends TcpServer implements LmtpServer, RealtimeStatsCallback {
     public TcpLmtpServer(LmtpConfig config) throws ServiceException {
-        super("LmtpServer", config);
+        super(config);
         ZimbraPerf.addStatsCallback(this);
+    }
+
+    @Override
+    public String getName() {
+        return "LmtpServer";
     }
 
     @Override

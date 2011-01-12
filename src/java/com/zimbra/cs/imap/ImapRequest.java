@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -11,10 +11,6 @@
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Apr 30, 2005
  */
 package com.zimbra.cs.imap;
 
@@ -50,6 +46,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * @since Apr 30, 2005
+ */
 abstract class ImapRequest {
     private static final boolean[] TAG_CHARS      = new boolean[128];
     private static final boolean[] ATOM_CHARS     = new boolean[128];
@@ -85,8 +84,6 @@ abstract class ImapRequest {
     String mTag;
     List<Part> mParts = new ArrayList<Part>();
     int mIndex, mOffset;
-    private long mSize;
-    private boolean mMaxRequestSizeExceeded;
     private boolean mIsAppend;
     private boolean mIsLogin;
 
@@ -97,21 +94,6 @@ abstract class ImapRequest {
     ImapRequest rewind() {
         mIndex = mOffset = 0;
         return this;
-    }
-
-    void incrementSize(long increment) {
-        mSize += increment;
-        if (mSize > getMaxRequestSize()) {
-            mMaxRequestSizeExceeded = true;
-        }
-    }
-
-    long getSize() {
-        return mSize;
-    }
-
-    int getMaxRequestSize() {
-        return mHandler.getConfig().getMaxRequestSize();
     }
 
     protected abstract class Part {
@@ -145,17 +127,37 @@ abstract class ImapRequest {
 
         LiteralPart(Literal l)  { lit = l; }
 
-        @Override int size()                            { return lit.size(); }
-        @Override byte[] getBytes() throws IOException  { return lit.getBytes(); }
-        @Override boolean isLiteral()                   { return true; }
-        @Override Literal getLiteral()                  { return lit; }
-        @Override void cleanup()                        { lit.cleanup(); }
+        @Override int size() {
+            return lit.size();
+        }
 
-        @Override public String getString() throws ImapParseException {
+        @Override
+        byte[] getBytes() throws IOException {
+            return lit.getBytes();
+        }
+
+        @Override
+        boolean isLiteral() {
+            return true;
+        }
+
+        @Override
+        Literal getLiteral() {
+            return lit;
+        }
+
+        @Override
+        void cleanup() {
+            lit.cleanup();
+        }
+
+        @Override
+        public String getString() throws ImapParseException {
             throw new ImapParseException(mTag, "not inside string");
         }
 
-        @Override public String toString() {
+        @Override
+        public String toString() {
             try {
                 return new String(lit.getBytes(), "US-ASCII");
             } catch (IOException e) {
@@ -180,13 +182,8 @@ abstract class ImapRequest {
         addPart(new StringPart(line));
     }
 
-    private void addPart(Part part) {
-        // Do not add any more parts if we have exceeded the maximum request
-        // size. The exception is if this is the first part (request line) so
-        // we can recover the tag when sending an error response.
-        if (!isMaxRequestSizeExceeded() || mParts.isEmpty()) {
-            mParts.add(part);
-        }
+    void addPart(Part part) {
+        mParts.add(part);
     }
 
     void cleanup() {
@@ -216,10 +213,6 @@ abstract class ImapRequest {
 
     String getCurrentLine() throws ImapParseException {
         return mParts.get(mIndex).getString();
-    }
-
-    boolean isMaxRequestSizeExceeded() {
-        return mMaxRequestSizeExceeded;
     }
 
     byte[] toByteArray() throws IOException {

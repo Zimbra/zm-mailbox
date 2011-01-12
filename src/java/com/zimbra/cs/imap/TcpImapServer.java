@@ -23,17 +23,24 @@ import com.zimbra.cs.server.TcpServer;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TcpImapServer extends TcpServer implements ImapServer, RealtimeStatsCallback {
+public final class TcpImapServer extends TcpServer implements ImapServer, RealtimeStatsCallback {
     public TcpImapServer(ImapConfig config) throws ServiceException {
-        super(config.isSslEnabled() ? "ImapSSLServer" : "ImapServer", config);
+        super(config);
         ZimbraPerf.addStatsCallback(this);
     }
 
-    @Override protected ProtocolHandler newProtocolHandler() {
+    @Override
+    public String getName() {
+        return getConfig().isSslEnabled() ? "ImapSSLServer" : "ImapServer";
+    }
+
+    @Override
+    protected ProtocolHandler newProtocolHandler() {
         return new TcpImapHandler(this);
     }
 
-    @Override public ImapConfig getConfig() {
+    @Override
+    public ImapConfig getConfig() {
         return (ImapConfig) super.getConfig();
     }
 
@@ -41,7 +48,8 @@ public class TcpImapServer extends TcpServer implements ImapServer, RealtimeStat
      * Implementation of {@link RealtimeStatsCallback} that returns the number
      * of active handlers and number of threads for this server.
      */
-    @Override public Map<String, Object> getStatData() {
+    @Override
+    public Map<String, Object> getStatData() {
         Map<String, Object> data = new HashMap<String, Object>();
         if (getConfig().isSslEnabled()) {
             data.put(ZimbraPerf.RTS_IMAP_SSL_CONN, numActiveHandlers());

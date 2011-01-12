@@ -91,7 +91,7 @@ final class NioHandlerDispatcher extends IoHandlerAdapter {
 
     @Override
     public void exceptionCaught(IoSession session, Throwable e) throws IOException {
-        getHandler(session).connectionClosed();
+        getHandler(session).exceptionCaught(e);
     }
 
     public static NioHandler getHandler(IoSession session) {

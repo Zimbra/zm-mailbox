@@ -172,7 +172,7 @@ public abstract class NioServer implements Server {
         acceptor = new ZimbraSocketAcceptor(config.getServerSocketChannel(), IO_PROCESSOR_POOL);
         executorFilter = new ExecutorFilter(1, config.getMaxThreads(),
                 config.getThreadKeepAliveTime(), TimeUnit.SECONDS,
-                new ThreadFactoryBuilder().setNameFormat(config.getProtocol() + "Server-%d").build());
+                new ThreadFactoryBuilder().setNameFormat(getName() + "-%d").build());
     }
 
     /**
@@ -207,10 +207,9 @@ public abstract class NioServer implements Server {
         try {
             acceptor.bind();
         } catch (Throwable e) {
-            Zimbra.halt(config.getProtocol() + " NioServer failed to start", e);
+            Zimbra.halt(getName() + " failed to start", e);
         }
-        getLog().info("Starting %s NioServer on %s%s", getConfig().getProtocol(), acceptor.getLocalAddress(),
-                sc.isSslEnabled() ? " (SSL)" : "");
+        getLog().info("Starting %s on %s", getName(), acceptor.getLocalAddress());
     }
 
     /**

@@ -24,10 +24,15 @@ import com.zimbra.cs.server.TcpServer;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TcpPop3Server extends TcpServer implements Pop3Server, RealtimeStatsCallback {
+public final class TcpPop3Server extends TcpServer implements Pop3Server, RealtimeStatsCallback {
     public TcpPop3Server(Pop3Config config) throws ServiceException {
-        super(config.isSslEnabled() ? "Pop3SSLServer" : "Pop3Server", config);
+        super(config);
         ZimbraPerf.addStatsCallback(this);
+    }
+
+    @Override
+    public String getName() {
+        return getConfig().isSslEnabled() ? "Pop3SSLServer" : "Pop3Server";
     }
 
     @Override
