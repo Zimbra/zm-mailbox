@@ -71,10 +71,16 @@ public class GetWorkingHours extends GetFreeBusy {
             String acctId = entry.getValue();
             Account acct = acctId != null ? prov.get(AccountBy.id, acctId) : null;
             FreeBusy workHours;
-            if (acct != null)
-                workHours = WorkingHours.getWorkingHours(authAcct, asAdmin, acct, rangeStart, rangeEnd);
-            else
+            if (acct != null) {
+                String name; 
+                if (!idOrName.equalsIgnoreCase(acctId))  // requested by name; use the same name in the response
+                    name = idOrName;
+                else
+                    name = acct.getName();
+                workHours = WorkingHours.getWorkingHours(authAcct, asAdmin, acct, name, rangeStart, rangeEnd);
+            } else {
                 workHours = FreeBusy.nodataFreeBusy(idOrName, rangeStart, rangeEnd);
+            }
             ToXML.encodeFreeBusy(response, workHours);
         }
         return response;
