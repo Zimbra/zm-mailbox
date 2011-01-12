@@ -42,7 +42,7 @@ import com.zimbra.cs.mailbox.calendar.ZRecur.ZWeekDay;
 
 public class WorkingHours {
 
-    public static FreeBusy getWorkingHours(Account authAcct, boolean asAdmin, Account account, long start, long end)
+    public static FreeBusy getWorkingHours(Account authAcct, boolean asAdmin, Account account, String name, long start, long end)
     throws ServiceException {
         // If free/busy viewing is blocked, so is viewing working hours.
         AccessManager accessMgr = AccessManager.getInstance();
@@ -77,7 +77,7 @@ public class WorkingHours {
             String status = interval.getStatus();
             interval.setStatus(invertStatus(status));
         }
-        return new FreeBusy(account.getName(), intervals, start, end);
+        return new FreeBusy(name, intervals, start, end);
     }
 
     public static void validateWorkingHoursPref(String pref) throws ServiceException {
