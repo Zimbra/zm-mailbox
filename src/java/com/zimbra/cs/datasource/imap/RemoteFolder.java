@@ -36,7 +36,7 @@ import java.util.List;
 
 final class RemoteFolder {
     private final ImapConnection connection;
-    private final String path;
+    private String path;
     private int deleted;
 
     private static final Log LOG = ZimbraLog.datasource;
@@ -198,6 +198,9 @@ final class RemoteFolder {
         // Bug 35554: If server does not provide UIDVALIDITY, then assume a value of 1
         if (mi.getUidValidity() <= 0) {
             mi.setUidValidity(1);
+        }
+        if (!path.equals(mi.getName())) {
+            path = mi.getName();
         }
         return mi;
     }

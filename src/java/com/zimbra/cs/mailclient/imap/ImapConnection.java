@@ -278,7 +278,6 @@ public final class ImapConnection extends MailConnection {
         if (results.isEmpty()) {
             throw new MailException("Missing STATUS response data");
         }
-        results.get(0).setName(name);
         return results.get(0);
     }
 
