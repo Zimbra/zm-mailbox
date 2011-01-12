@@ -94,10 +94,11 @@ On the Windows Server AD domain controller:
     - Fill in the following:
           Full name: {a display name}
 
-          User Logon Name: HTTP/{zimbra mailbox server name} (the domain is automatically filled)
-          (Note: this is the value to be set for the zimbraSpnegoAuthTargetName server attribute in LDAP.)
+          User Logon Name: HTTP/{zimbra-mailbox-server-name} (the domain is automatically filled)
+          (Note: this is the value for the {zimbra-mailbox-server-name} parameter in the setspn command (see below), and 
+                 this is the value to be set for the zimbraSpnegoAuthTargetName server attribute in LDAP.)
 
-          User Logon Name (pre-Windows 2000): {AD user name} 
+          User Logon Name (pre-Windows 2000): {Active Directory service account name} 
           (Note: this is the name you use for the -mapUser {AD-user} parameter in the setspn and ktpass commands (see below).)
 
       e.g.
@@ -121,7 +122,7 @@ On the Windows Server AD domain controller:
 
 (B) Add the Service Principal Names (SPN) directory property for an Active Directory service account. 
 
-    setspn -A {Service-Principal-Name-for-the-http-server} {AD-user}
+    setspn -A {zimbra-mailbox-server-name} {AD-user}
     
     e.g.
     - list registered SPNs (there is none)
