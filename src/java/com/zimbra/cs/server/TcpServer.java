@@ -38,27 +38,28 @@ import com.zimbra.cs.server.ServerConfig;
  * Base class for TCP servers using thread per connection model.
  */
 public abstract class TcpServer implements Runnable, Server {
-    private final Log log;
-    private final ThreadPoolExecutor pooledExecutor;
-    private final ServerSocket serverSocket;
-    private final List<ProtocolHandler> activeHandlers;
+    private Log log;
+    private ThreadPoolExecutor pooledExecutor;
+    private ServerSocket serverSocket;
+    private List<ProtocolHandler> activeHandlers;
     private boolean sslEnabled;
-    private ServerConfig config;
+    private final ServerConfig config;
     private volatile boolean shutdownRequested;
 
     public TcpServer(ServerConfig config) throws ServiceException {
-        this(config.getMaxThreads(), config.getServerSocket());
         this.config = config;
         this.sslEnabled = config.isSslEnabled();
+        init(config.getMaxThreads(), config.getServerSocket());
     }
 
     public TcpServer(int maxThreads, ServerSocket serverSocket) {
-        this(maxThreads, Thread.NORM_PRIORITY, serverSocket);
+        config = null;
+        init(maxThreads, serverSocket);
     }
 
-    public TcpServer(int maxThreads, int threadPriority, ServerSocket serverSocket) {
+    private void init(int maxThreads, ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
-        this.log = LogFactory.getLog(TcpServer.class.getName() + "/" + serverSocket.getLocalPort());
+        log = LogFactory.getLog(TcpServer.class.getName() + "/" + serverSocket.getLocalPort());
 
         if (maxThreads <= 0) {
             log.warn("max handler threads " + maxThreads + " invalid; will use 10 threads instead");
@@ -69,12 +70,12 @@ public abstract class TcpServer implements Runnable, Server {
         // Idle threads are aged out of the pool after X minutes.
         int keepAlive = config != null ? config.getThreadKeepAliveTime() : 2 * 60;
         pooledExecutor = new ThreadPoolExecutor(1, maxThreads, keepAlive, TimeUnit.SECONDS,
-                new SynchronousQueue<Runnable>(), new TcpThreadFactory(getName(), false, threadPriority));
+                new SynchronousQueue<Runnable>(), new TcpThreadFactory(getName(), false, Thread.NORM_PRIORITY));
 
         // TODO a linked list is probably the wrong datastructure here
         // TODO write tests with multiple concurrent client
         // TODO write some tests for shutdown/startup
-        this.activeHandlers = new LinkedList<ProtocolHandler>();
+        activeHandlers = new LinkedList<ProtocolHandler>();
     }
 
     @Override
