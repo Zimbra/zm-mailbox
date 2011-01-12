@@ -52,15 +52,15 @@ extends TestCase {
     private static final String USER2_NAME = "user2";
     private static final String NAME_PREFIX = TestLmtp.class.getSimpleName();
     
-    private ZMailbox mMbox;
-    private Account mAccount;
-    private String mOriginalWarnInterval;
-    private int mOriginalWarnPercent;
-    private String mOriginalServerDiskThreshold;
-    private String mOriginalConfigDiskThreshold;
-    private String mOriginalQuota;
-    private String mOriginalAllowReceiveButNotSendWhenOverQuota;
-    private String mOriginalDedupeCacheSize;
+    private ZMailbox mbox;
+    private Account account;
+    private String originalWarnInterval;
+    private int originalWarnPercent;
+    private String originalServerDiskThreshold;
+    private String originalConfigDiskThreshold;
+    private String originalQuota;
+    private String originalAllowReceiveButNotSendWhenOverQuota;
+    private String originalDedupeCacheSize;
     
     private class LmtpClientThread
     implements Runnable {
@@ -84,18 +84,18 @@ extends TestCase {
     
     public void setUp()
     throws Exception {
-        mMbox = TestUtil.getZMailbox("user1");
-        mAccount = TestUtil.getAccount("user1");
-        mOriginalWarnInterval = mAccount.getAttr(Provisioning.A_zimbraQuotaWarnInterval);
-        mOriginalWarnPercent = mAccount.getIntAttr(Provisioning.A_zimbraQuotaWarnPercent, 0);
-        mOriginalServerDiskThreshold =
+        mbox = TestUtil.getZMailbox("user1");
+        account = TestUtil.getAccount("user1");
+        originalWarnInterval = account.getAttr(Provisioning.A_zimbraQuotaWarnInterval);
+        originalWarnPercent = account.getIntAttr(Provisioning.A_zimbraQuotaWarnPercent, 0);
+        originalServerDiskThreshold =
             TestUtil.getServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold);
-        mOriginalConfigDiskThreshold = TestUtil.getConfigAttr(
+        originalConfigDiskThreshold = TestUtil.getConfigAttr(
             Provisioning.A_zimbraMailDiskStreamingThreshold);
-        mOriginalQuota = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota);
-        mOriginalAllowReceiveButNotSendWhenOverQuota =
+        originalQuota = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota);
+        originalAllowReceiveButNotSendWhenOverQuota =
             TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota);
-        mOriginalDedupeCacheSize = TestUtil.getConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize);
+        originalDedupeCacheSize = TestUtil.getConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize);
         cleanUp();
     }
     
@@ -144,53 +144,52 @@ extends TestCase {
     public void testQuotaWarning()
     throws Exception {
         // Initialize
-        String address = TestUtil.getAddress(USER_NAME);
-        Map<String, String> attrs = new HashMap<String, String>();
-        attrs.put(Provisioning.A_zimbraQuotaLastWarnTime, "");
-        Provisioning.getInstance().modifyAttrs(mAccount, attrs);
+        Account account = TestUtil.getAccount(USER_NAME);
+        account.setQuotaLastWarnTimeAsString("");
+        account.setMailQuota(62914560);
         
         // Make sure there are no warnings already in the mailbox
         validateNumWarnings(0);
         
         // Make sure we haven't already hit the quota warning level
-        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 1", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 1", USER_NAME, USER_NAME);
         validateNumWarnings(0);
         
         // Make sure setting quota warning to 0 is a no-op
         setQuotaWarnPercent(0);
-        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 2", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 2", USER_NAME, USER_NAME);
         validateNumWarnings(0);
         
         // Make sure setting quota warning to 99 doesn't trigger the warning
         setQuotaWarnPercent(0);
-        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 3", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 3", USER_NAME, USER_NAME);
         validateNumWarnings(0);
         
         // Make sure setting quota warning to 1 triggers the warning
         setQuotaWarnPercent(1);
-        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 4", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 4", USER_NAME, USER_NAME);
         validateNumWarnings(1);
         
         // Make sure a second warning doesn't get sent (interval not exceeded)
-        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 5", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 5", USER_NAME, USER_NAME);
         validateNumWarnings(1);
         
         // Make sure that a warning is triggered when the interval is exceeded
         setQuotaWarnInterval("1s");
         Thread.sleep(1000);
-        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 6", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 6", USER_NAME, USER_NAME);
         validateNumWarnings(2);
         
         // Make sure that a second warning is not triggered when the interval is not set
         // (default: 1 day)
         setQuotaWarnInterval("");
-        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 7", address, address);
+        TestUtil.addMessageLmtp(NAME_PREFIX + " testQuotaWarning 7", USER_NAME, USER_NAME);
         validateNumWarnings(2);
     }
     
     private void validateNumWarnings(int numWarnings)
     throws Exception {
-        List<ZMessage> messages = TestUtil.search(mMbox, "Quota warning");
+        List<ZMessage> messages = TestUtil.search(mbox, "Quota warning");
         assertEquals("Number of quota warnings", numWarnings, messages.size());
     }
     
@@ -198,14 +197,14 @@ extends TestCase {
     throws Exception {
         Map<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraQuotaWarnPercent, Integer.toString(percent));
-        Provisioning.getInstance().modifyAttrs(mAccount, attrs);
+        Provisioning.getInstance().modifyAttrs(account, attrs);
     }
     
     private void setQuotaWarnInterval(String interval)
     throws Exception {
         Map<String, String> attrs = new HashMap<String, String>();
         attrs.put(Provisioning.A_zimbraQuotaWarnInterval, interval);
-        Provisioning.getInstance().modifyAttrs(mAccount, attrs);
+        Provisioning.getInstance().modifyAttrs(account, attrs);
     }
     
     public void testLmtpMessageInputStream()
@@ -477,7 +476,7 @@ extends TestCase {
         assertFalse("LMTP should not have succeeded", TestUtil.addMessageLmtp(recipients, USER_NAME, content));
         
         // Reset quota, retry, and make sure the delivery succeeds.
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota, mOriginalQuota);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota, originalQuota);
         TestUtil.addMessageLmtp(recipients, USER_NAME, content);
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         TestUtil.getMessage(mbox, "in:inbox subject:\"" + subject + "\"");
@@ -595,14 +594,14 @@ extends TestCase {
     
     public void tearDown()
     throws Exception {
-        setQuotaWarnPercent(mOriginalWarnPercent);
-        setQuotaWarnInterval(mOriginalWarnInterval);
-        TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, mOriginalServerDiskThreshold);
-        TestUtil.setConfigAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, mOriginalConfigDiskThreshold);
-        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota, mOriginalQuota);
+        setQuotaWarnPercent(originalWarnPercent);
+        setQuotaWarnInterval(originalWarnInterval);
+        TestUtil.setServerAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, originalServerDiskThreshold);
+        TestUtil.setConfigAttr(Provisioning.A_zimbraMailDiskStreamingThreshold, originalConfigDiskThreshold);
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailQuota, originalQuota);
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota,
-            mOriginalAllowReceiveButNotSendWhenOverQuota);
-        TestUtil.setConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize, mOriginalDedupeCacheSize);
+            originalAllowReceiveButNotSendWhenOverQuota);
+        TestUtil.setConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize, originalDedupeCacheSize);
         cleanUp();
     }
     
