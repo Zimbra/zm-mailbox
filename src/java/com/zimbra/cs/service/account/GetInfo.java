@@ -111,9 +111,10 @@ public class GetInfo extends AccountDocumentHandler  {
             if (server != null)
                 response.addAttribute(AccountConstants.A_DOCUMENT_SIZE_LIMIT, server.getFileUploadMaxSize());
             Config config = prov.getConfig();
-            if (config != null)
+            if (config != null) {
                 response.addAttribute(AccountConstants.A_ATTACHMENT_SIZE_LIMIT, config.getMtaMaxMessageSize());
-            
+                response.addAttribute(Provisioning.A_zimbraAttachmentsBlocked, config.getBooleanAttr(Provisioning.A_zimbraAttachmentsBlocked,false) ? Provisioning.TRUE : Provisioning.FALSE);
+            }
         } catch (ServiceException e) {}
         
         if (sections.contains(Section.MBOX) && Provisioning.onLocalServer(account)) {
