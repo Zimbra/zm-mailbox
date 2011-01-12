@@ -1567,9 +1567,11 @@ public class Invite {
         vcal.addProperty(new ZProperty(ICalTok.METHOD, mMethod.toString()));
 
         // timezones
-        for (Iterator<ICalTimeZone> iter = mTzMap.tzIterator(); iter.hasNext();) {
-            ICalTimeZone cur = iter.next();
-            vcal.addComponent(cur.newToVTimeZone());
+        if (!isAllDayEvent() || useOutlookCompatMode) {  // Don't write any VTIMEZONE for all-day appointments.
+            for (Iterator<ICalTimeZone> iter = mTzMap.tzIterator(); iter.hasNext();) {
+                ICalTimeZone cur = iter.next();
+                vcal.addComponent(cur.newToVTimeZone());
+            }
         }
 
         vcal.addComponent(newToVComponent(useOutlookCompatMode, includePrivateData));
