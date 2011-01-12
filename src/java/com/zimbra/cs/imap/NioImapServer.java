@@ -14,19 +14,24 @@
  */
 package com.zimbra.cs.imap;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.server.NioHandler;
-import com.zimbra.cs.server.NioServer;
-import com.zimbra.cs.server.NioConnection;
+import java.util.Map;
 
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolEncoder;
 
-public final class NioImapServer extends NioServer implements ImapServer {
+import com.google.common.collect.ImmutableMap;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.stats.RealtimeStatsCallback;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.server.NioConnection;
+import com.zimbra.cs.server.NioHandler;
+import com.zimbra.cs.server.NioServer;
+import com.zimbra.cs.stats.ZimbraPerf;
+
+public final class NioImapServer extends NioServer implements ImapServer, RealtimeStatsCallback {
     private final NioImapDecoder decoder;
 
     public NioImapServer(ImapConfig config) throws ServiceException {
@@ -35,6 +40,7 @@ public final class NioImapServer extends NioServer implements ImapServer {
         decoder.setMaxChunkSize(config.getWriteChunkSize());
         decoder.setMaxLiteralSize(config.getMaxRequestSize());
         registerMBean(getName());
+        ZimbraPerf.addStatsCallback(this);
     }
 
     @Override
@@ -70,5 +76,12 @@ public final class NioImapServer extends NioServer implements ImapServer {
     @Override
     public Log getLog() {
         return ZimbraLog.imap;
+    }
+
+    @Override
+    public Map<String, Object> getStatData() {
+        String connStatName = getConfig().isSslEnabled() ? ZimbraPerf.RTS_IMAP_SSL_CONN : ZimbraPerf.RTS_IMAP_CONN;
+        String threadStatName = getConfig().isSslEnabled() ? ZimbraPerf.RTS_IMAP_SSL_THREADS : ZimbraPerf.RTS_IMAP_THREADS;
+        return ImmutableMap.of(connStatName, (Object) getNumConnections(), threadStatName, getNumThreads()); 
     }
 }

@@ -15,11 +15,7 @@
 
 package com.zimbra.cs.pop3;
 
-import com.google.common.base.Charsets;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.server.NioHandler;
-import com.zimbra.cs.server.NioServer;
-import com.zimbra.cs.server.NioConnection;
+import java.util.Map;
 
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
@@ -28,12 +24,22 @@ import org.apache.mina.filter.codec.ProtocolEncoder;
 import org.apache.mina.filter.codec.textline.LineDelimiter;
 import org.apache.mina.filter.codec.textline.TextLineDecoder;
 
-public final class NioPop3Server extends NioServer implements Pop3Server {
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.stats.RealtimeStatsCallback;
+import com.zimbra.cs.server.NioConnection;
+import com.zimbra.cs.server.NioHandler;
+import com.zimbra.cs.server.NioServer;
+import com.zimbra.cs.stats.ZimbraPerf;
+
+public final class NioPop3Server extends NioServer implements Pop3Server, RealtimeStatsCallback {
     private static final ProtocolDecoder DECODER = new TextLineDecoder(Charsets.ISO_8859_1, LineDelimiter.AUTO);
 
     public NioPop3Server(Pop3Config config) throws ServiceException {
         super(config);
         registerMBean(getName());
+        ZimbraPerf.addStatsCallback(this);
     }
 
     @Override
@@ -64,5 +70,12 @@ public final class NioPop3Server extends NioServer implements Pop3Server {
     @Override
     public Pop3Config getConfig() {
         return (Pop3Config) super.getConfig();
+    }
+
+    @Override
+    public Map<String, Object> getStatData() {
+        String connStatName = getConfig().isSslEnabled() ? ZimbraPerf.RTS_POP_SSL_CONN : ZimbraPerf.RTS_POP_CONN;
+        String threadStatName = getConfig().isSslEnabled() ? ZimbraPerf.RTS_POP_SSL_THREADS : ZimbraPerf.RTS_POP_THREADS;
+        return ImmutableMap.of(connStatName, (Object) getNumConnections(), threadStatName, getNumThreads()); 
     }
 }

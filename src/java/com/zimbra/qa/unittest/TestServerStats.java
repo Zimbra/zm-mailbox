@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -90,6 +91,10 @@ extends TestCase {
     private int getStatValue(String statName)
     throws Exception {
         GetServerStatsResponse stats = prov.invokeJaxb(new GetServerStatsRequest(statName));
+        String s = stats.getValue(statName);
+        if (StringUtil.isNullOrEmpty(s)) {
+            return 0;
+        }
         return Integer.parseInt(stats.getValue(statName));
     }
     

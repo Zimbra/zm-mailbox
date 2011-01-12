@@ -15,14 +15,23 @@
 
 package com.zimbra.cs.server;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.NetUtil;
-import com.zimbra.cs.server.Server;
-import com.zimbra.cs.server.ServerConfig;
-import com.zimbra.cs.util.Zimbra;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.security.KeyStore;
+import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
@@ -40,20 +49,13 @@ import org.apache.mina.transport.socket.nio.NioProcessor;
 import org.apache.mina.transport.socket.nio.NioSession;
 import org.apache.mina.transport.socket.nio.ZimbraSocketAcceptor;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.TrustManagerFactory;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.security.KeyStore;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.NetUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * Base class for MINA-based IMAP/POP3/LMTP servers. Handles creation of new NIO request and connection handler
@@ -192,7 +194,7 @@ public abstract class NioServer implements Server {
      * @throws IOException if an I/O error occured while starting the server
      */
     @Override
-    public void start() throws ServiceException {
+    public void start() {
         ServerConfig sc = getConfig();
         DefaultIoFilterChainBuilder fc = acceptor.getFilterChain();
         if (sc.isSslEnabled()) {
@@ -289,5 +291,24 @@ public abstract class NioServer implements Server {
             }
         }
     };
+    
+    /**
+     * Returns the number of connections currently established.
+     */
+    protected int getNumConnections() {
+        return acceptor.getManagedSessionCount();
+    }
 
+    /**
+     * Returns the number of threads in the thread pool.
+     */
+    protected int getNumThreads() {
+        Executor ex = executorFilter.getExecutor();
+        if (!(ex instanceof ThreadPoolExecutor)) {
+            ZimbraLog.perf.debug("Unexpected Executor type %s.  NioServer.getNumThreads() returning 0.",
+                ex.getClass().getName());
+            return 0;
+        }
+        return ((ThreadPoolExecutor) ex).getPoolSize();
+    }
 }
