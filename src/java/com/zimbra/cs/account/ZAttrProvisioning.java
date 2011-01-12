@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110106-1444 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110112-1413 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2699,7 +2699,8 @@ public class ZAttrProvisioning {
 
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
-     * in a domain
+     * in a domain. Values are in the format of
+     * {zimraId-of-a-cos}:{max-accounts}
      *
      * @since ZCS 5.0.10
      */

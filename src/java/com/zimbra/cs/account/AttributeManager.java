@@ -2223,7 +2223,7 @@ public class AttributeManager {
                 break;
             case TYPE_GENTIME:
                 javaType = "Date";
-                putParam = String.format("DateUtil.toGeneralizedTime(%s)", name);
+                putParam = String.format("%s==null ? \"\" : DateUtil.toGeneralizedTime(%s)", name, name);
                 break;
             case TYPE_ENUM:
                 javaType = "ZAttrProvisioning." + enumName(ai);

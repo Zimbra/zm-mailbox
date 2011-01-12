@@ -33,7 +33,7 @@ public class ZAttrCalendarResource extends Account {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110106-1444 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110112-1413 */
 
     /**
      * RFC2798: preferred name to be used when displaying entries
@@ -1289,7 +1289,7 @@ public class ZAttrCalendarResource extends Account {
     @ZAttr(id=790)
     public void setCreateTimestamp(Date zimbraCreateTimestamp) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp==null ? "" : DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -1305,7 +1305,7 @@ public class ZAttrCalendarResource extends Account {
     @ZAttr(id=790)
     public Map<String,Object> setCreateTimestamp(Date zimbraCreateTimestamp, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp==null ? "" : DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
         return attrs;
     }
 

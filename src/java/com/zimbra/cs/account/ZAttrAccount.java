@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110106-1444 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110112-1413 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -5684,7 +5684,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=790)
     public void setCreateTimestamp(Date zimbraCreateTimestamp) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp==null ? "" : DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -5700,7 +5700,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=790)
     public Map<String,Object> setCreateTimestamp(Date zimbraCreateTimestamp, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp==null ? "" : DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
         return attrs;
     }
 
@@ -15290,7 +15290,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=113)
     public void setLastLogonTimestamp(Date zimbraLastLogonTimestamp) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLastLogonTimestamp, DateUtil.toGeneralizedTime(zimbraLastLogonTimestamp));
+        attrs.put(Provisioning.A_zimbraLastLogonTimestamp, zimbraLastLogonTimestamp==null ? "" : DateUtil.toGeneralizedTime(zimbraLastLogonTimestamp));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -15305,7 +15305,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=113)
     public Map<String,Object> setLastLogonTimestamp(Date zimbraLastLogonTimestamp, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraLastLogonTimestamp, DateUtil.toGeneralizedTime(zimbraLastLogonTimestamp));
+        attrs.put(Provisioning.A_zimbraLastLogonTimestamp, zimbraLastLogonTimestamp==null ? "" : DateUtil.toGeneralizedTime(zimbraLastLogonTimestamp));
         return attrs;
     }
 
@@ -20458,7 +20458,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=383)
     public void setPasswordLockoutFailureTime(Date zimbraPasswordLockoutFailureTime) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPasswordLockoutFailureTime, DateUtil.toGeneralizedTime(zimbraPasswordLockoutFailureTime));
+        attrs.put(Provisioning.A_zimbraPasswordLockoutFailureTime, zimbraPasswordLockoutFailureTime==null ? "" : DateUtil.toGeneralizedTime(zimbraPasswordLockoutFailureTime));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -20473,7 +20473,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=383)
     public Map<String,Object> setPasswordLockoutFailureTime(Date zimbraPasswordLockoutFailureTime, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPasswordLockoutFailureTime, DateUtil.toGeneralizedTime(zimbraPasswordLockoutFailureTime));
+        attrs.put(Provisioning.A_zimbraPasswordLockoutFailureTime, zimbraPasswordLockoutFailureTime==null ? "" : DateUtil.toGeneralizedTime(zimbraPasswordLockoutFailureTime));
         return attrs;
     }
 
@@ -20566,7 +20566,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=382)
     public void setPasswordLockoutLockedTime(Date zimbraPasswordLockoutLockedTime) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPasswordLockoutLockedTime, DateUtil.toGeneralizedTime(zimbraPasswordLockoutLockedTime));
+        attrs.put(Provisioning.A_zimbraPasswordLockoutLockedTime, zimbraPasswordLockoutLockedTime==null ? "" : DateUtil.toGeneralizedTime(zimbraPasswordLockoutLockedTime));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -20580,7 +20580,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=382)
     public Map<String,Object> setPasswordLockoutLockedTime(Date zimbraPasswordLockoutLockedTime, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPasswordLockoutLockedTime, DateUtil.toGeneralizedTime(zimbraPasswordLockoutLockedTime));
+        attrs.put(Provisioning.A_zimbraPasswordLockoutLockedTime, zimbraPasswordLockoutLockedTime==null ? "" : DateUtil.toGeneralizedTime(zimbraPasswordLockoutLockedTime));
         return attrs;
     }
 
@@ -21232,7 +21232,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=39)
     public void setPasswordModifiedTime(Date zimbraPasswordModifiedTime) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(zimbraPasswordModifiedTime));
+        attrs.put(Provisioning.A_zimbraPasswordModifiedTime, zimbraPasswordModifiedTime==null ? "" : DateUtil.toGeneralizedTime(zimbraPasswordModifiedTime));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -21246,7 +21246,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=39)
     public Map<String,Object> setPasswordModifiedTime(Date zimbraPasswordModifiedTime, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPasswordModifiedTime, DateUtil.toGeneralizedTime(zimbraPasswordModifiedTime));
+        attrs.put(Provisioning.A_zimbraPasswordModifiedTime, zimbraPasswordModifiedTime==null ? "" : DateUtil.toGeneralizedTime(zimbraPasswordModifiedTime));
         return attrs;
     }
 
@@ -32094,7 +32094,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=384)
     public void setPrefOutOfOfficeFromDate(Date zimbraPrefOutOfOfficeFromDate) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeFromDate, DateUtil.toGeneralizedTime(zimbraPrefOutOfOfficeFromDate));
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeFromDate, zimbraPrefOutOfOfficeFromDate==null ? "" : DateUtil.toGeneralizedTime(zimbraPrefOutOfOfficeFromDate));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -32109,7 +32109,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=384)
     public Map<String,Object> setPrefOutOfOfficeFromDate(Date zimbraPrefOutOfOfficeFromDate, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeFromDate, DateUtil.toGeneralizedTime(zimbraPrefOutOfOfficeFromDate));
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeFromDate, zimbraPrefOutOfOfficeFromDate==null ? "" : DateUtil.toGeneralizedTime(zimbraPrefOutOfOfficeFromDate));
         return attrs;
     }
 
@@ -32329,7 +32329,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=385)
     public void setPrefOutOfOfficeUntilDate(Date zimbraPrefOutOfOfficeUntilDate) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeUntilDate, DateUtil.toGeneralizedTime(zimbraPrefOutOfOfficeUntilDate));
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeUntilDate, zimbraPrefOutOfOfficeUntilDate==null ? "" : DateUtil.toGeneralizedTime(zimbraPrefOutOfOfficeUntilDate));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -32344,7 +32344,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=385)
     public Map<String,Object> setPrefOutOfOfficeUntilDate(Date zimbraPrefOutOfOfficeUntilDate, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeUntilDate, DateUtil.toGeneralizedTime(zimbraPrefOutOfOfficeUntilDate));
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeUntilDate, zimbraPrefOutOfOfficeUntilDate==null ? "" : DateUtil.toGeneralizedTime(zimbraPrefOutOfOfficeUntilDate));
         return attrs;
     }
 
@@ -32443,7 +32443,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=653)
     public void setPrefPop3DownloadSince(Date zimbraPrefPop3DownloadSince) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefPop3DownloadSince, DateUtil.toGeneralizedTime(zimbraPrefPop3DownloadSince));
+        attrs.put(Provisioning.A_zimbraPrefPop3DownloadSince, zimbraPrefPop3DownloadSince==null ? "" : DateUtil.toGeneralizedTime(zimbraPrefPop3DownloadSince));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -32459,7 +32459,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=653)
     public Map<String,Object> setPrefPop3DownloadSince(Date zimbraPrefPop3DownloadSince, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefPop3DownloadSince, DateUtil.toGeneralizedTime(zimbraPrefPop3DownloadSince));
+        attrs.put(Provisioning.A_zimbraPrefPop3DownloadSince, zimbraPrefPop3DownloadSince==null ? "" : DateUtil.toGeneralizedTime(zimbraPrefPop3DownloadSince));
         return attrs;
     }
 
@@ -35773,7 +35773,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=484)
     public void setQuotaLastWarnTime(Date zimbraQuotaLastWarnTime) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraQuotaLastWarnTime, DateUtil.toGeneralizedTime(zimbraQuotaLastWarnTime));
+        attrs.put(Provisioning.A_zimbraQuotaLastWarnTime, zimbraQuotaLastWarnTime==null ? "" : DateUtil.toGeneralizedTime(zimbraQuotaLastWarnTime));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -35787,7 +35787,7 @@ public class ZAttrAccount  extends MailTarget {
     @ZAttr(id=484)
     public Map<String,Object> setQuotaLastWarnTime(Date zimbraQuotaLastWarnTime, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraQuotaLastWarnTime, DateUtil.toGeneralizedTime(zimbraQuotaLastWarnTime));
+        attrs.put(Provisioning.A_zimbraQuotaLastWarnTime, zimbraQuotaLastWarnTime==null ? "" : DateUtil.toGeneralizedTime(zimbraQuotaLastWarnTime));
         return attrs;
     }
 

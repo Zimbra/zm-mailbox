@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110106-1444 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110112-1413 */
 
     /**
      * RFC2256: descriptive information
@@ -1884,7 +1884,7 @@ public class ZAttrDomain extends NamedEntry {
     @ZAttr(id=790)
     public void setCreateTimestamp(Date zimbraCreateTimestamp) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp==null ? "" : DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -1900,7 +1900,7 @@ public class ZAttrDomain extends NamedEntry {
     @ZAttr(id=790)
     public Map<String,Object> setCreateTimestamp(Date zimbraCreateTimestamp, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp==null ? "" : DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
         return attrs;
     }
 
@@ -2115,7 +2115,8 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
-     * in a domain
+     * in a domain. Values are in the format of
+     * {zimraId-of-a-cos}:{max-accounts}
      *
      * @return zimbraDomainCOSMaxAccounts, or empty array if unset
      *
@@ -2128,7 +2129,8 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
-     * in a domain
+     * in a domain. Values are in the format of
+     * {zimraId-of-a-cos}:{max-accounts}
      *
      * @param zimbraDomainCOSMaxAccounts new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2144,7 +2146,8 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
-     * in a domain
+     * in a domain. Values are in the format of
+     * {zimraId-of-a-cos}:{max-accounts}
      *
      * @param zimbraDomainCOSMaxAccounts new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2161,7 +2164,8 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
-     * in a domain
+     * in a domain. Values are in the format of
+     * {zimraId-of-a-cos}:{max-accounts}
      *
      * @param zimbraDomainCOSMaxAccounts new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2177,7 +2181,8 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
-     * in a domain
+     * in a domain. Values are in the format of
+     * {zimraId-of-a-cos}:{max-accounts}
      *
      * @param zimbraDomainCOSMaxAccounts new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -2194,7 +2199,8 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
-     * in a domain
+     * in a domain. Values are in the format of
+     * {zimraId-of-a-cos}:{max-accounts}
      *
      * @param zimbraDomainCOSMaxAccounts existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2210,7 +2216,8 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
-     * in a domain
+     * in a domain. Values are in the format of
+     * {zimraId-of-a-cos}:{max-accounts}
      *
      * @param zimbraDomainCOSMaxAccounts existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -2227,7 +2234,8 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
-     * in a domain
+     * in a domain. Values are in the format of
+     * {zimraId-of-a-cos}:{max-accounts}
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2242,7 +2250,8 @@ public class ZAttrDomain extends NamedEntry {
 
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
-     * in a domain
+     * in a domain. Values are in the format of
+     * {zimraId-of-a-cos}:{max-accounts}
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
