@@ -72,10 +72,6 @@ This feature is used for securing admin server in hosted deployment (bug# 30510)
     <value>true</value>
   </key>
 
-  <key name="calendar_outlook_compatible_allday_events">
-    <value>true</value>
-  </key>
-
   <key name="debug_disable_mailbox_group">
     <value>false</value>
   </key>
