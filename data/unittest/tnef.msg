@@ -1,6 +1,6 @@
 From: "Phil Bates" <pillb@foobarbaz.com>
 To: <user1@example.zimbra.com>
-Subject: Rich text (TNEF) test
+Subject: TestConversion Rich text (TNEF) test
 Date: Mon, 27 Jun 2005 10:08:18 -0700
 MIME-Version: 1.0
 Content-Type: multipart/mixed;

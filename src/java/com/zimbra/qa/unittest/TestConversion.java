@@ -15,19 +15,20 @@
 
 package com.zimbra.qa.unittest;
 
+import java.io.File;
+
 import junit.framework.TestCase;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZMessage.ZMimePart;
 
-
-/**
- * @author bburtin
- */
 public class TestConversion extends TestCase {
 
     private static final String USER_NAME = "user1";
+    private static final String NAME_PREFIX = TestConversion.class.getSimpleName();
     
     /**
      * Tests downloading attachments from a TNEF message (bug 44263).
@@ -35,6 +36,13 @@ public class TestConversion extends TestCase {
     public void testTnef()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+
+        // Add the TNEF message
+        String msgContent = new String(ByteUtil.getContent(new File(
+            LC.zimbra_home.value() + "/unittest/tnef.msg")));
+        TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, msgContent);
+        
+        // Test downloading attachments.
         ZMessage msg = TestUtil.getMessage(mbox, "in:inbox subject:\"Rich text (TNEF) test\"");
         byte[] data = TestUtil.getContent(mbox, msg.getId(), "upload.gif");
         assertEquals(73, data.length);
@@ -45,6 +53,11 @@ public class TestConversion extends TestCase {
         assertEquals(73, part.getSize());
         part = TestUtil.getPart(msg, "upload2.gif");
         assertEquals(851, part.getSize());
+    }
+    
+    public void tearDown()
+    throws Exception {
+        TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
     }
     
     public static void main(String[] args)
