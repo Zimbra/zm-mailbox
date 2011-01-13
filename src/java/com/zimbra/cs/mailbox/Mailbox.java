@@ -4396,7 +4396,6 @@ public class Mailbox {
                 if (cpi != null && CalendarItem.isAcceptableInvite(getAccount(), cpi)) {
                     if (ICalTok.REPLY.equals(cpi.method)) {
                         processICalReplies(octxt, cpi.cal);
-                        noICal = true;
                     }
                 }
             } catch (Exception e) {

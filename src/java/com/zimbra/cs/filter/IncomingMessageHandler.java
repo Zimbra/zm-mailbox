@@ -48,14 +48,16 @@ extends FilterHandler {
     private Mailbox mMailbox;
     private int mDefaultFolderId;
     private String mRecipientAddress;
+    private boolean mNoICal;
     
     public IncomingMessageHandler(DeliveryContext context, Mailbox mbox,
-                                  String recipientAddress, ParsedMessage pm, int defaultFolderId) {
+                                  String recipientAddress, ParsedMessage pm, int defaultFolderId, boolean noICal) {
         mContext = context;
         mMailbox = mbox;
         mRecipientAddress = recipientAddress;
         mParsedMessage = pm;
         mDefaultFolderId = defaultFolderId;
+        mNoICal = noICal;
     }
     
     public MimeMessage getMimeMessage() {
@@ -111,7 +113,7 @@ extends FilterHandler {
         Message msg = null;
         try {
             msg = mMailbox.addMessage(null, mParsedMessage, folderId,
-                false, getFlagBitmask(flagActions), tags, mRecipientAddress, mContext);
+                mNoICal, getFlagBitmask(flagActions), tags, mRecipientAddress, mContext);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add incoming message", e);
         }

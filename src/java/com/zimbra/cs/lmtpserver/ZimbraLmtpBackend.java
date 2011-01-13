@@ -450,7 +450,7 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                                 // file if Mailbox.addMessageInternal() closes it.
                                 pm.getMessageID();
                                 addedMessageIds = RuleManager.applyRulesToIncomingMessage(mbox, pm,
-                                    rcptEmail, sharedDeliveryCtxt, Mailbox.ID_FOLDER_INBOX);
+                                    rcptEmail, sharedDeliveryCtxt, Mailbox.ID_FOLDER_INBOX, false);
                             } else {
                                 pm.getMessageID();
                                 Message msg = mbox.addMessage(null, pm, Mailbox.ID_FOLDER_INBOX, false, Flag.BITMASK_UNREAD, null,
