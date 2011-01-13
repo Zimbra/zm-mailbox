@@ -15,6 +15,7 @@
 package com.zimbra.qa.unittest;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.zclient.ZSearchParams;
 import junit.framework.TestCase;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ByteUtil;
@@ -154,7 +156,14 @@ public class TestSendAndReceive extends TestCase {
     public void testZimbraReceivedHeader()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        List<ZMessage> messages = TestUtil.search(mbox, "subject:\"Test Phone Number Formats\"");
+
+        // Add message.
+        String msgContent = new String(ByteUtil.getContent(new File(
+            LC.zimbra_home.value() + "/unittest/testZimbraReceivedHeader.msg")));
+        TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, msgContent);
+        
+        // Test date.
+        List<ZMessage> messages = TestUtil.search(mbox, "subject:testZimbraReceivedHeader");
         assertEquals("Unexpected message count", 1, messages.size());
         ZMessage msg = messages.get(0);
         Calendar cal = Calendar.getInstance(mbox.getPrefs().getTimeZone());
