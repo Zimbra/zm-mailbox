@@ -48,6 +48,7 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
@@ -115,8 +116,9 @@ public class DbMailItem {
     private static final int RESULTS_STREAMING_MIN_ROWS = 10000;
 
     public static final int setMailboxId(PreparedStatement stmt, Mailbox mbox, int pos) throws SQLException {
-        if (!DebugConfig.disableMailboxGroups)
+        if (!DebugConfig.disableMailboxGroups) {
             stmt.setInt(pos++, mbox.getId());
+        }
         return pos;
     }
 
@@ -125,8 +127,9 @@ public class DbMailItem {
             return "";
 
         StringBuilder sb = new StringBuilder(miAlias).append(".mailbox_id = ").append(mboxId).append(" AND ");
-        if (apAlias != null)
+        if (apAlias != null) {
             sb.append(apAlias).append(".mailbox_id = ").append(mboxId).append(" AND ");
+        }
         return sb.toString();
     }
 
@@ -470,7 +473,7 @@ public class DbMailItem {
             }
 
             if (source instanceof Message && source.getParentId() <= 0)
-                changeOpenTarget(Mailbox.getHash(((Message) source).getNormalizedSubject()), source, data.id);
+                changeOpenTargets(source, data.id);
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
@@ -597,11 +600,13 @@ public class DbMailItem {
                             " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             }
             stmt.setInt(pos++, folder.getId());
-            if (hasIndexId)
-                if (item.getIndexId() == -1)
+            if (hasIndexId) {
+                if (item.getIndexId() == -1) {
                     stmt.setNull(pos++, Types.INTEGER);
-                else
+                } else {
                     stmt.setInt(pos++, item.getIndexId());
+                }
+            }
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             pos = setMailboxId(stmt, mbox, pos);
@@ -692,8 +697,7 @@ public class DbMailItem {
                     SetMultimap<MailItem.Type, Integer> result = Multimaps.newSetMultimap(
                             new EnumMap<MailItem.Type, Collection<Integer>>(MailItem.Type.class),
                             new Supplier<Set<Integer>>() {
-                                @Override
-                                public Set<Integer> get() {
+                                @Override public Set<Integer> get() {
                                     return new HashSet<Integer>();
                                 }
                             });
@@ -853,10 +857,11 @@ public class DbMailItem {
                         " SET parent_id = ?, mod_metadata = ?, change_date = ?" +
                         " WHERE " + IN_THIS_MAILBOX_AND + relation);
             int pos = 1;
-            if (newParent instanceof VirtualConversation)
+            if (newParent instanceof VirtualConversation) {
                 stmt.setNull(pos++, Types.INTEGER);
-            else
+            } else {
                 stmt.setInt(pos++, newParent.getId());
+            }
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
             pos = setMailboxId(stmt, mbox, pos);
@@ -1200,8 +1205,9 @@ public class DbMailItem {
         }
     }
 
-    public static void changeOpenTarget(String hash, MailItem oldTarget, int newTargetId) throws ServiceException {
+    public static void changeOpenTargets(MailItem oldTarget, int newTargetId) throws ServiceException {
         Mailbox mbox = oldTarget.getMailbox();
+        int oldTargetId = oldTarget instanceof VirtualConversation ? ((VirtualConversation) oldTarget).getMessageId() : oldTarget.getId();
 
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
@@ -1209,12 +1215,11 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getConversationTableName(oldTarget) +
-                        " SET conv_id = ? WHERE " + IN_THIS_MAILBOX_AND + "hash = ? AND conv_id = ?");
+                        " SET conv_id = ? WHERE " + IN_THIS_MAILBOX_AND + "conv_id = ?");
             int pos = 1;
             stmt.setInt(pos++, newTargetId);
             pos = setMailboxId(stmt, mbox, pos);
-            stmt.setString(pos++, hash);
-            stmt.setInt(pos++, oldTarget.getId());
+            stmt.setInt(pos++, oldTargetId);
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("switching open conversation association for item " + oldTarget.getId(), e);
@@ -2521,7 +2526,7 @@ public class DbMailItem {
     }
 
     public static UnderlyingData getByName(Mailbox mbox, int folderId, String name, MailItem.Type type)
-            throws ServiceException {
+    throws ServiceException {
         if (Mailbox.isCachedType(type)) {
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
         }
@@ -2563,31 +2568,41 @@ public class DbMailItem {
     }
 
     public static UnderlyingData getByHash(Mailbox mbox, String hash) throws ServiceException {
+        return ListUtil.getFirstElement(getByHashes(mbox, Arrays.asList(hash)));
+    }
+
+    public static List<UnderlyingData> getByHashes(Mailbox mbox, List<String> hashes) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
+        if (ListUtil.isEmpty(hashes))
+            return null;
 
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
-                        " FROM " + getMailItemTableName(mbox, "mi") + ", " + getConversationTableName(mbox, "oc") +
-                        " WHERE oc.hash = ? AND mi.id = oc.conv_id" +
-                        (DebugConfig.disableMailboxGroups ? "" : " AND oc.mailbox_id = ? AND mi.mailbox_id = oc.mailbox_id"));
-            int pos = 1;
-            stmt.setString(pos++, hash);
+            stmt = conn.prepareStatement("SELECT " + DB_FIELDS + " FROM " + getMailItemTableName(mbox, "mi") +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "mi.id IN" +
+                    " (SELECT DISTINCT conv_id FROM " + getConversationTableName(mbox, "oc") +
+                    "  WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("oc.hash", hashes.size()) + ")");
+            int pos = setMailboxId(stmt, mbox, 1);
             pos = setMailboxId(stmt, mbox, pos);
+            for (String hash : hashes) {
+                stmt.setString(pos++, hash);
+            }
             rs = stmt.executeQuery();
 
-            if (!rs.next()) {
-                return null;
+            List<UnderlyingData> dlist = new ArrayList<UnderlyingData>(3);
+            while (rs.next()) {
+                UnderlyingData data = constructItem(rs);
+                if (data.type == MailItem.Type.CONVERSATION.toByte()) {
+                    completeConversation(mbox, data);
+                }
+                dlist.add(data);
             }
-            UnderlyingData data = constructItem(rs);
-            if (data.type == MailItem.Type.CONVERSATION.toByte()) {
-                completeConversation(mbox, data);
-            }
-            return data;
+            return dlist.isEmpty() ? null : dlist;
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("fetching conversation for hash " + hash, e);
+            throw ServiceException.FAILURE("fetching conversation for hash " + hashes, e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);

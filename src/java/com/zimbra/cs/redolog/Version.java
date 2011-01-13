@@ -28,7 +28,7 @@ public class Version {
 
     // These should be incremented with changes to serialization format.
     private static final short CURRENT_MAJOR = 1;   // range: 0 - Short.MAX_VALUE
-    private static final short CURRENT_MINOR = 30;  // range: 0 - Short.MAX_VALUE
+    private static final short CURRENT_MINOR = 31;  // range: 0 - Short.MAX_VALUE
 
     /**
      * Returns a version object with latest major and minor version
@@ -56,25 +56,18 @@ public class Version {
         this(b.mMajorVer, b.mMinorVer);
     }
 
-    /**
-     * Returns if this version is at least as high as the version specified
-     * by major and minor.
-     * @param major
-     * @param minor
+    /** Returns if this version is at least as high as the version specified
+     *  by major and minor.
      * @return true if this version is higher than or equal to major/minor,
-     *         false if this version is lower
-     */
+     *         false if this version is lower */
     public boolean atLeast(int major, int minor) {
         return (mMajorVer > major ||
                 (mMajorVer == major && mMinorVer >= minor));
     }
 
-    /**
-     * Returns if this version is at least as high as version b.
-     * @param b
+    /** Returns if this version is at least as high as version b.
      * @return true if this version is higher than or equal to version b,
-     *         false if this version is lower than version b
-     */
+     *         false if this version is lower than version b */
     public boolean atLeast(Version b) {
         return atLeast(b.mMajorVer, b.mMinorVer);
     }

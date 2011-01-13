@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110112-1413 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -11887,6 +11887,241 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetMailSpamLifetime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailSpamLifetime, "");
+        return attrs;
+    }
+
+    /**
+     * The algorithm to use when aggregating new messages into conversations.
+     * Possible values are: - &quot;none&quot;: no conversation threading is
+     * performed. - &quot;subject&quot;: the message will be threaded based
+     * solely on its normalized subject. - &quot;strict&quot;: only the
+     * threading message headers (References, In-Reply-To, Message-ID, and
+     * Resent-Message-ID) are used to correlate messages. No checking of
+     * normalized subjects is performed. - &quot;references&quot;: the same
+     * logic as &quot;strict&quot; with the constraints slightly altered so
+     * that the non-standard Thread-Index header is considered when threading
+     * messages and that a reply message lacking References and In-Reply-To
+     * headers will fall back to using subject-based threading. -
+     * &quot;subjrefs&quot;: the same logic as &quot;references&quot; with
+     * the further caveat that changes in the normalized subject will break a
+     * thread in two.
+     *
+     * <p>Valid values: [none, references, strict, subjrefs, subject]
+     *
+     * @return zimbraMailThreadingAlgorithm, or ZAttrProvisioning.MailThreadingAlgorithm.references if unset and/or has invalid value
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1160)
+    public ZAttrProvisioning.MailThreadingAlgorithm getMailThreadingAlgorithm() {
+        try { String v = getAttr(Provisioning.A_zimbraMailThreadingAlgorithm); return v == null ? ZAttrProvisioning.MailThreadingAlgorithm.references : ZAttrProvisioning.MailThreadingAlgorithm.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.MailThreadingAlgorithm.references; }
+    }
+
+    /**
+     * The algorithm to use when aggregating new messages into conversations.
+     * Possible values are: - &quot;none&quot;: no conversation threading is
+     * performed. - &quot;subject&quot;: the message will be threaded based
+     * solely on its normalized subject. - &quot;strict&quot;: only the
+     * threading message headers (References, In-Reply-To, Message-ID, and
+     * Resent-Message-ID) are used to correlate messages. No checking of
+     * normalized subjects is performed. - &quot;references&quot;: the same
+     * logic as &quot;strict&quot; with the constraints slightly altered so
+     * that the non-standard Thread-Index header is considered when threading
+     * messages and that a reply message lacking References and In-Reply-To
+     * headers will fall back to using subject-based threading. -
+     * &quot;subjrefs&quot;: the same logic as &quot;references&quot; with
+     * the further caveat that changes in the normalized subject will break a
+     * thread in two.
+     *
+     * <p>Valid values: [none, references, strict, subjrefs, subject]
+     *
+     * @return zimbraMailThreadingAlgorithm, or "references" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1160)
+    public String getMailThreadingAlgorithmAsString() {
+        return getAttr(Provisioning.A_zimbraMailThreadingAlgorithm, "references");
+    }
+
+    /**
+     * The algorithm to use when aggregating new messages into conversations.
+     * Possible values are: - &quot;none&quot;: no conversation threading is
+     * performed. - &quot;subject&quot;: the message will be threaded based
+     * solely on its normalized subject. - &quot;strict&quot;: only the
+     * threading message headers (References, In-Reply-To, Message-ID, and
+     * Resent-Message-ID) are used to correlate messages. No checking of
+     * normalized subjects is performed. - &quot;references&quot;: the same
+     * logic as &quot;strict&quot; with the constraints slightly altered so
+     * that the non-standard Thread-Index header is considered when threading
+     * messages and that a reply message lacking References and In-Reply-To
+     * headers will fall back to using subject-based threading. -
+     * &quot;subjrefs&quot;: the same logic as &quot;references&quot; with
+     * the further caveat that changes in the normalized subject will break a
+     * thread in two.
+     *
+     * <p>Valid values: [none, references, strict, subjrefs, subject]
+     *
+     * @param zimbraMailThreadingAlgorithm new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1160)
+    public void setMailThreadingAlgorithm(ZAttrProvisioning.MailThreadingAlgorithm zimbraMailThreadingAlgorithm) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailThreadingAlgorithm, zimbraMailThreadingAlgorithm.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The algorithm to use when aggregating new messages into conversations.
+     * Possible values are: - &quot;none&quot;: no conversation threading is
+     * performed. - &quot;subject&quot;: the message will be threaded based
+     * solely on its normalized subject. - &quot;strict&quot;: only the
+     * threading message headers (References, In-Reply-To, Message-ID, and
+     * Resent-Message-ID) are used to correlate messages. No checking of
+     * normalized subjects is performed. - &quot;references&quot;: the same
+     * logic as &quot;strict&quot; with the constraints slightly altered so
+     * that the non-standard Thread-Index header is considered when threading
+     * messages and that a reply message lacking References and In-Reply-To
+     * headers will fall back to using subject-based threading. -
+     * &quot;subjrefs&quot;: the same logic as &quot;references&quot; with
+     * the further caveat that changes in the normalized subject will break a
+     * thread in two.
+     *
+     * <p>Valid values: [none, references, strict, subjrefs, subject]
+     *
+     * @param zimbraMailThreadingAlgorithm new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1160)
+    public Map<String,Object> setMailThreadingAlgorithm(ZAttrProvisioning.MailThreadingAlgorithm zimbraMailThreadingAlgorithm, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailThreadingAlgorithm, zimbraMailThreadingAlgorithm.toString());
+        return attrs;
+    }
+
+    /**
+     * The algorithm to use when aggregating new messages into conversations.
+     * Possible values are: - &quot;none&quot;: no conversation threading is
+     * performed. - &quot;subject&quot;: the message will be threaded based
+     * solely on its normalized subject. - &quot;strict&quot;: only the
+     * threading message headers (References, In-Reply-To, Message-ID, and
+     * Resent-Message-ID) are used to correlate messages. No checking of
+     * normalized subjects is performed. - &quot;references&quot;: the same
+     * logic as &quot;strict&quot; with the constraints slightly altered so
+     * that the non-standard Thread-Index header is considered when threading
+     * messages and that a reply message lacking References and In-Reply-To
+     * headers will fall back to using subject-based threading. -
+     * &quot;subjrefs&quot;: the same logic as &quot;references&quot; with
+     * the further caveat that changes in the normalized subject will break a
+     * thread in two.
+     *
+     * <p>Valid values: [none, references, strict, subjrefs, subject]
+     *
+     * @param zimbraMailThreadingAlgorithm new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1160)
+    public void setMailThreadingAlgorithmAsString(String zimbraMailThreadingAlgorithm) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailThreadingAlgorithm, zimbraMailThreadingAlgorithm);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The algorithm to use when aggregating new messages into conversations.
+     * Possible values are: - &quot;none&quot;: no conversation threading is
+     * performed. - &quot;subject&quot;: the message will be threaded based
+     * solely on its normalized subject. - &quot;strict&quot;: only the
+     * threading message headers (References, In-Reply-To, Message-ID, and
+     * Resent-Message-ID) are used to correlate messages. No checking of
+     * normalized subjects is performed. - &quot;references&quot;: the same
+     * logic as &quot;strict&quot; with the constraints slightly altered so
+     * that the non-standard Thread-Index header is considered when threading
+     * messages and that a reply message lacking References and In-Reply-To
+     * headers will fall back to using subject-based threading. -
+     * &quot;subjrefs&quot;: the same logic as &quot;references&quot; with
+     * the further caveat that changes in the normalized subject will break a
+     * thread in two.
+     *
+     * <p>Valid values: [none, references, strict, subjrefs, subject]
+     *
+     * @param zimbraMailThreadingAlgorithm new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1160)
+    public Map<String,Object> setMailThreadingAlgorithmAsString(String zimbraMailThreadingAlgorithm, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailThreadingAlgorithm, zimbraMailThreadingAlgorithm);
+        return attrs;
+    }
+
+    /**
+     * The algorithm to use when aggregating new messages into conversations.
+     * Possible values are: - &quot;none&quot;: no conversation threading is
+     * performed. - &quot;subject&quot;: the message will be threaded based
+     * solely on its normalized subject. - &quot;strict&quot;: only the
+     * threading message headers (References, In-Reply-To, Message-ID, and
+     * Resent-Message-ID) are used to correlate messages. No checking of
+     * normalized subjects is performed. - &quot;references&quot;: the same
+     * logic as &quot;strict&quot; with the constraints slightly altered so
+     * that the non-standard Thread-Index header is considered when threading
+     * messages and that a reply message lacking References and In-Reply-To
+     * headers will fall back to using subject-based threading. -
+     * &quot;subjrefs&quot;: the same logic as &quot;references&quot; with
+     * the further caveat that changes in the normalized subject will break a
+     * thread in two.
+     *
+     * <p>Valid values: [none, references, strict, subjrefs, subject]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1160)
+    public void unsetMailThreadingAlgorithm() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailThreadingAlgorithm, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The algorithm to use when aggregating new messages into conversations.
+     * Possible values are: - &quot;none&quot;: no conversation threading is
+     * performed. - &quot;subject&quot;: the message will be threaded based
+     * solely on its normalized subject. - &quot;strict&quot;: only the
+     * threading message headers (References, In-Reply-To, Message-ID, and
+     * Resent-Message-ID) are used to correlate messages. No checking of
+     * normalized subjects is performed. - &quot;references&quot;: the same
+     * logic as &quot;strict&quot; with the constraints slightly altered so
+     * that the non-standard Thread-Index header is considered when threading
+     * messages and that a reply message lacking References and In-Reply-To
+     * headers will fall back to using subject-based threading. -
+     * &quot;subjrefs&quot;: the same logic as &quot;references&quot; with
+     * the further caveat that changes in the normalized subject will break a
+     * thread in two.
+     *
+     * <p>Valid values: [none, references, strict, subjrefs, subject]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1160)
+    public Map<String,Object> unsetMailThreadingAlgorithm(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailThreadingAlgorithm, "");
         return attrs;
     }
 

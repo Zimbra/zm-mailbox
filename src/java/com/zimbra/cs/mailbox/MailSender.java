@@ -15,7 +15,9 @@
 
 package com.zimbra.cs.mailbox;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -36,10 +38,14 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailInternetHeaders;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -58,6 +64,7 @@ import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.Threader.ThreadIndex;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedAddress;
@@ -65,6 +72,7 @@ import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
@@ -443,9 +451,8 @@ public class MailSender {
                 size = (int) ByteUtil.getDataLength(Mime.getInputStream(mm));
             }
 
-            if (size > maxSize) {
+            if (size > maxSize)
                 throw MailServiceException.MESSAGE_TOO_BIG(maxSize, size);
-            }
 
             Account acct = mbox.getAccount();
             Account authuser = octxt == null ? null : octxt.getAuthenticatedUser();
@@ -626,12 +633,7 @@ public class MailSender {
             Address[] validUnsentAddrs = sfe.getValidUnsentAddresses();
             if (invalidAddrs != null && invalidAddrs.length > 0) {
                 StringBuilder msg = new StringBuilder("Invalid address").append(invalidAddrs.length > 1 ? "es: " : ": ");
-                for (int i = 0; i < invalidAddrs.length; i++) {
-                    if (i > 0)
-                        msg.append(",");
-                    msg.append(invalidAddrs[i]);
-                }
-                msg.append(".  ").append(sfe.toString());
+                msg.append(Joiner.on(",").join(invalidAddrs)).append(".  ").append(sfe.toString());
 
                 if (isSendPartial())
                     throw MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE(msg.toString(), sfe, invalidAddrs, validUnsentAddrs);
@@ -705,11 +707,11 @@ public class MailSender {
             if (origMsgId != null) {
                 msg.append(", origMsgId=" + origMsgId);
             }
-            if (uploads != null && !uploads.isEmpty()) {
-                msg.append(", uploads=" + uploads);
-            }
             if (replyType != null) {
                 msg.append(", replyType=" + replyType);
+            }
+            if (uploads != null && uploads.size() > 0) {
+                msg.append(", uploads=" + uploads);
             }
             ZimbraLog.smtp.info(msg);
         }
@@ -732,8 +734,9 @@ public class MailSender {
         Provisioning prov = Provisioning.getInstance();
         if (originIP != null) {
             boolean addOriginatingIP = prov.getConfig().isSmtpSendAddOriginatingIP();
-            if (addOriginatingIP)
+            if (addOriginatingIP) {
                 mm.addHeader(X_ORIGINATING_IP, formatXOrigIpHeader(originIP));
+            }
         }
 
         boolean addMailer = prov.getConfig().isSmtpSendAddMailer();
@@ -767,6 +770,8 @@ public class MailSender {
                 mm.setReplyTo(new Address[] {sender});
             }
         }
+
+        updateReferenceHeaders(mm, octxt, authuser);
 
         mm.saveChanges();
     }
@@ -829,13 +834,86 @@ public class MailSender {
         return new Pair<Address, Address>(from, sender);
     }
 
+    protected void updateReferenceHeaders(MimeMessage mm, OperationContext octxt, Account authuser) {
+        boolean isReply = mOriginalMessageId != null && (MSGTYPE_REPLY.equals(mReplyType) || MSGTYPE_FORWARD.equals(mReplyType));
+
+        try {
+            String irt = mm.getHeader("In-Reply-To", null);
+            String refs = mm.getHeader("References", null);
+            String tindex = mm.getHeader("Thread-Index", null);
+            String ttopic = mm.getHeader("Thread-Topic", null);
+
+            if (!isReply) {
+                if (Strings.isNullOrEmpty(tindex) || Strings.isNullOrEmpty(ttopic)) {
+                    // generate new Thread-Topic and Thread-Index headers
+                    mm.setHeader("Thread-Topic", ThreadIndex.newThreadTopic(mm.getSubject()));
+                    mm.setHeader("Thread-Index", ThreadIndex.newThreadIndex());
+                }
+                return;
+            }
+
+            if (!Strings.isNullOrEmpty(irt) && !Strings.isNullOrEmpty(refs) && !Strings.isNullOrEmpty(tindex) && !Strings.isNullOrEmpty(ttopic))
+                return;
+
+            // fetch the parent message's headers (no such item just short circuits the header update)
+            JavaMailInternetHeaders hblock;
+            if (mOriginalMessageId.isLocal()) {
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(mOriginalMessageId.getAccountId());
+                Message msg = mbox.getMessageById(octxt, mOriginalMessageId.getId());
+                InputStream is = msg.getContentStream();
+                try {
+                    hblock = new JavaMailInternetHeaders(is);
+                } finally {
+                    ByteUtil.closeStream(is);
+                }
+            } else {
+                AuthToken authToken = octxt == null ? null : octxt.getAuthToken(false);
+                if (authToken == null) {
+                    boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
+                    authToken = AuthProvider.getAuthToken(authuser, isAdminRequest);
+                }
+                // using the sync formatter is suboptimal, but it should work
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("fmt", "sync");  params.put("body", "0");  params.put("nohdr", "1");
+                byte[] content = UserServlet.getRemoteContent(authToken, mOriginalMessageId, params);
+                hblock = new JavaMailInternetHeaders(new ByteArrayInputStream(content));
+            }
+
+            // set headers appropriately, but don't override headers explicitly set by the sender...
+            String parentMsgid = ListUtil.getFirstElement(Mime.getReferences(hblock, "Message-ID"));
+            if (Strings.isNullOrEmpty(irt) && !Strings.isNullOrEmpty(parentMsgid)) {
+                mm.setHeader("In-Reply-To", "<" + parentMsgid + ">");
+            }
+            if (Strings.isNullOrEmpty(refs) && !Strings.isNullOrEmpty(parentMsgid)) {
+                List<String> parentRefs = Mime.getReferences(hblock, "References");
+                // keep the references list from growing too big, but also keep the root intact
+                while (parentRefs.size() > 7) {
+                    parentRefs.remove(1);
+                }
+                parentRefs.add(parentMsgid);
+                mm.setHeader("References", "<" + Joiner.on("> <").join(parentRefs) + ">");
+            }
+            if (Strings.isNullOrEmpty(ttopic)) {
+                String parentTopic = hblock.getHeader("Thread-Topic", null);
+                mm.setHeader("Thread-Topic", Strings.isNullOrEmpty(parentTopic) ? ThreadIndex.newThreadTopic(mm.getSubject()) : parentTopic);
+            }
+            if (Strings.isNullOrEmpty(tindex)) {
+                byte[] parentIndex = ThreadIndex.parseHeader(hblock.getHeader("Thread-Index", null));
+                mm.setHeader("Thread-Index", parentIndex == null ? ThreadIndex.newThreadIndex() : ThreadIndex.addChild(parentIndex));
+            }
+        } catch (Exception e) {
+            // if the message goes out with minimal threading headers, so be it
+        }
+    }
+
     protected void updateRepliedStatus(OperationContext octxt, Account authuser, boolean isAdminRequest, Mailbox mboxPossible) {
         try {
             Object target = null;
-            if (mboxPossible != null && mOriginalMessageId.belongsTo(mboxPossible))
+            if (mboxPossible != null && mOriginalMessageId.belongsTo(mboxPossible)) {
                 target = mboxPossible;
-            else
+            } else {
                 target = getTargetMailbox(octxt, authuser, isAdminRequest, Provisioning.getInstance().get(AccountBy.id, mOriginalMessageId.getAccountId()));
+            }
 
             if (target instanceof Mailbox) {
                 Mailbox mbox = (Mailbox) target;

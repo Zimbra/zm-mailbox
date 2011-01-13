@@ -48,6 +48,7 @@ import javax.mail.Session;
 import javax.mail.Message.RecipientType;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -1169,8 +1170,7 @@ public class Mime {
      */
     public static String getMessageID(MimeMessage mm) {
         try {
-            String msgid = mm.getMessageID();
-            return ("".equals(msgid) ? null : msgid);
+            return Strings.emptyToNull(mm.getMessageID());
         } catch (MessagingException e) {
             return null;
         }
@@ -1357,5 +1357,67 @@ public class Mime {
             size = (int) ByteUtil.getDataLength(part.getInputStream());
         }
         return size;
+    }
+
+    /** Returns the message-ids from the specified message header.  The
+     *  enclosing angle brackets and any embedded comments and quoted-strings
+     *  are stripped.  No duplicate elimination is performed. */
+    public static List<String> getReferences(MimeMessage mm, String header) {
+        try {
+            return getReferences(mm.getHeader(header, " "));
+        } catch (MessagingException e) {
+            return new ArrayList<String>(0);
+        }
+    }
+
+    /** Returns the message-ids from the specified message header.  The
+     *  enclosing angle brackets and any embedded comments and quoted-strings
+     *  are stripped.  No duplicate elimination is performed. */
+    public static List<String> getReferences(InternetHeaders headers, String header) {
+        return getReferences(headers.getHeader(header, " "));
+    }
+
+    private static List<String> getReferences(String hvalue) {
+        // going to need to send these back via SOAP, so best to sanitize them early
+        String value = StringUtil.stripControlCharacters(hvalue);
+
+        if (Strings.isNullOrEmpty(value)) {
+            return new ArrayList<String>(0);
+        }
+
+        List<String> refs = new ArrayList<String>();
+        boolean quoted = false, escaped = false, empty = true;
+        int pos = 0, astart = pos, end = value.length(), clevel = 0;
+
+        while (pos < end) {
+            char c = value.charAt(pos++);
+            if (c == '\r' || c == '\n') {
+                escaped = false;
+            } else if (quoted) {
+                quoted = escaped || c != '"';
+                escaped = !escaped && c == '\\';
+            } else if (c == '(' || clevel > 0) {
+                if (!escaped && (c == '(' || c == ')')) {
+                    clevel += c == '(' ? 1 : -1;
+                }
+                escaped = !escaped && c == '\\';
+            } else if (c == '"') {
+                quoted = true;
+                empty = false;
+            } else if (c == '>') {
+                if (!empty) {
+                    refs.add(new com.zimbra.common.mime.InternetAddress(value.substring(astart, pos)).getAddress());
+                }
+                empty = true;
+                astart = pos;
+            } else if (c != ' ' && c != '\t' && empty) {
+                empty = false;
+            }
+        }
+        if (!empty) {
+            refs.add(new com.zimbra.common.mime.InternetAddress(value.substring(astart, pos)).getAddress());
+        }
+
+        return refs;
     }
 }

@@ -21,13 +21,18 @@ package com.zimbra.cs.redolog.op;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 import javax.activation.DataSource;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -61,6 +66,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
     private int mFolderId;          // folder to which the message belongs
     private int mConvId;            // conversation to which the message belongs; may be newly created
     private int mConvFirstMsgId;    // first message of conversation, if creating new conversation
+    private List<Integer> mMergedConvIds;  // existing conversations to merge into the message's conversation
     private int mFlags;             // flags applied to the new message
     private String mTags;           // tags applied to the new message
     private int mCalendarItemId;    // new calendar item created if this is meeting or task invite message
@@ -79,6 +85,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         mFolderId = UNKNOWN_ID;
         mConvId = UNKNOWN_ID;
         mConvFirstMsgId = UNKNOWN_ID;
+        mMergedConvIds = Collections.emptyList();
         mFlags = 0;
         mMsgBodyType = MSGBODY_INLINE;
         mNoICal = false;
@@ -103,6 +110,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         mFolderId = folderId;
         mConvId = UNKNOWN_ID;
         mConvFirstMsgId = UNKNOWN_ID;
+        mMergedConvIds = Collections.emptyList();
         mFlags = flags;
         mTags = tags != null ? tags : "";
         mMsgBodyType = MSGBODY_INLINE;
@@ -112,8 +120,9 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
 
     @Override public void start(long timestamp) {
         super.start(timestamp);
-        if (mReceivedDate == RECEIVED_DATE_UNSET)
+        if (mReceivedDate == RECEIVED_DATE_UNSET) {
             mReceivedDate = timestamp;
+        }
     }
 
     @Override public synchronized void commit() {
@@ -170,23 +179,47 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         mConvFirstMsgId = convFirstMsgId;
     }
 
+    public List<Integer> getMergedConvIds() {
+        return mMergedConvIds;
+    }
+
+    public void setMergedConvIds(List<Integer> mergedConvIds) {
+        mMergedConvIds = mergedConvIds == null ? Collections.<Integer>emptyList() : mergedConvIds;
+    }
+
+    public void setMergedConversations(List<Conversation> mergedConvs) {
+        if (mergedConvs == null) {
+            mMergedConvIds = Collections.emptyList();
+        } else {
+            mMergedConvIds = Lists.newArrayList();
+            for (Conversation conv : mergedConvs) {
+                mMergedConvIds.add(conv.getId());
+            }
+        }
+    }
+
+    @Override
     public void setCalendarItemAttrs(int calItemId, int folderId) {
         mCalendarItemId = calItemId;
         mFolderId = folderId;
     }
 
+    @Override
     public int getCalendarItemId() {
         return mCalendarItemId;
     }
 
+    @Override
     public String getCalendarItemPartStat() {
         return mCalendarItemPartStat;
     }
 
+    @Override
     public void setCalendarItemPartStat(String partStat) {
         mCalendarItemPartStat = partStat;
     }
 
+    @Override
     public int getFolderId() {
         return mFolderId;
     }
@@ -204,9 +237,8 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
     }
 
     public byte[] getMessageBody() throws IOException {
-        if (mMsgBodyType == MSGBODY_LINK) {
+        if (mMsgBodyType == MSGBODY_LINK)
             return null;
-        }
         return mData.getData();
     }
 
@@ -246,17 +278,23 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         sb.append(", rcvDate=").append(mReceivedDate);
         sb.append(", shared=").append(mShared ? "true" : "false");
         sb.append(", blobDigest=\"").append(mDigest).append("\", size=").append(mMsgSize);
-        if (mData != null)
+        if (mData != null) {
             sb.append(", dataLen=").append(mData.getLength());
+        }
         sb.append(", folder=").append(mFolderId);
         sb.append(", conv=").append(mConvId);
         sb.append(", convFirstMsgId=").append(mConvFirstMsgId);
-        if (mCalendarItemId != UNKNOWN_ID)
+        if (mMergedConvIds != null && !mMergedConvIds.isEmpty()) {
+            sb.append(", mergedConvIds=").append(mMergedConvIds);
+        }
+        if (mCalendarItemId != UNKNOWN_ID) {
             sb.append(", calItemId=").append(mCalendarItemId);
+        }
         sb.append(", calItemPartStat=").append(mCalendarItemPartStat);
         sb.append(", noICal=").append(mNoICal);
-        if (mExtendedData != null)
+        if (mExtendedData != null) {
             sb.append(", extended=").append(mExtendedData);
+        }
         sb.append(", flags=").append(mFlags).append(", tags=\"").append(mTags).append("\"");
         sb.append(", bodyType=").append(mMsgBodyType);
         if (mMsgBodyType == MSGBODY_LINK) {
@@ -267,8 +305,8 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         return sb.toString();
     }
 
-    @Override public InputStream getAdditionalDataStream()
-    throws IOException {
+    @Override
+    public InputStream getAdditionalDataStream() throws IOException {
         if (mMsgBodyType == MSGBODY_INLINE) {
             return mData.getInputStream();
         } else {
@@ -276,21 +314,31 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         }
     }
     
-    @Override protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeUTF(mRcptEmail != null ? mRcptEmail : "");
-        if (getVersion().atLeast(1, 4))
+        if (getVersion().atLeast(1, 4)) {
             out.writeLong(mReceivedDate);
+        }
         out.writeBoolean(mShared);
         out.writeUTF(mDigest);
         out.writeInt(mMsgSize);
         out.writeInt(mMsgId);
         out.writeInt(mFolderId);
         out.writeInt(mConvId);
-        if (getVersion().atLeast(1, 5))
+        if (getVersion().atLeast(1, 5)) {
             out.writeInt(mConvFirstMsgId);
+        }
+        if (getVersion().atLeast(1, 31)) {
+            out.writeInt(mMergedConvIds.size());
+            for (int mergeId : mMergedConvIds) {
+                out.writeInt(mergeId);
+            }
+        }
         out.writeInt(mCalendarItemId);
-        if (getVersion().atLeast(1, 1))
+        if (getVersion().atLeast(1, 1)) {
             out.writeUTF(mCalendarItemPartStat);
+        }
         out.writeInt(mFlags);
         out.writeBoolean(mNoICal);
         out.writeUTF(mTags);
@@ -319,23 +367,34 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         }
     }
 
-    @Override protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override
+    protected void deserializeData(RedoLogInput in) throws IOException {
         mRcptEmail = in.readUTF();
-        if (getVersion().atLeast(1, 4))
+        if (getVersion().atLeast(1, 4)) {
             mReceivedDate = in.readLong();
-        else
+        } else {
             mReceivedDate = getTimestamp();
+        }
         mShared = in.readBoolean();
         mDigest = in.readUTF();
         mMsgSize = in.readInt();
         mMsgId = in.readInt();
         mFolderId = in.readInt();
         mConvId = in.readInt();
-        if (getVersion().atLeast(1, 5))
+        if (getVersion().atLeast(1, 5)) {
             mConvFirstMsgId = in.readInt();
+        }
+        if (getVersion().atLeast(1, 31)) {
+            int mergeCount = in.readInt();
+            mMergedConvIds = new ArrayList<Integer>(mergeCount);
+            for (int i = 0; i < mergeCount; i++) {
+                mMergedConvIds.add(in.readInt());
+            }
+        }
         mCalendarItemId = in.readInt();
-        if (getVersion().atLeast(1, 1))
+        if (getVersion().atLeast(1, 1)) {
             mCalendarItemPartStat = in.readUTF();
+        }
         mFlags = in.readInt();
         mNoICal = in.readBoolean();
         mTags = in.readUTF();
@@ -344,8 +403,9 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         if (getVersion().atLeast(1, 25)) {
             mExtendedData = null;
             String extendedKey = in.readUTF();
-            if (extendedKey != null)
+            if (extendedKey != null) {
                 mExtendedData = new CustomMetadata(extendedKey, in.readUTF());
+            }
         }
 
         mMsgBodyType = in.readByte();
@@ -381,7 +441,8 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         }
     }
 
-    @Override public void redo() throws Exception {
+    @Override
+    public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 

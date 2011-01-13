@@ -96,7 +96,6 @@ import com.zimbra.cs.mailbox.FoldersTagsCache.FoldersTags;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
-import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.MailboxManager.MailboxLock;
 import com.zimbra.cs.mailbox.Note.Rectangle;
@@ -1469,13 +1468,13 @@ public class Mailbox {
                 if (ftData != null) {
                     List<Metadata> foldersMeta = ftData.getFolders();
                     for (Metadata meta : foldersMeta) {
-                        UnderlyingData ud = new UnderlyingData();
+                        MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
                         ud.deserialize(meta);
                         folderData.put(ud, null);
                     }
                     List<Metadata> tagsMeta = ftData.getTags();
                     for (Metadata meta : tagsMeta) {
-                        UnderlyingData ud = new UnderlyingData();
+                        MailItem.UnderlyingData ud = new MailItem.UnderlyingData();
                         ud.deserialize(meta);
                         tagData.put(ud, null);
                     }
@@ -3069,9 +3068,9 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("getConversationByHash", octxt);
-            Conversation item = checkAccess(getConversationByHash(hash));
+            Conversation conv = checkAccess(getConversationByHash(hash));
             success = true;
-            return item;
+            return conv;
         } finally {
             endTransaction(success);
         }
@@ -3269,7 +3268,7 @@ public class Mailbox {
 
             // get the list of all visible calendar items in the specified folder
             List<CalendarItem> calItems = new ArrayList<CalendarItem>();
-            List<UnderlyingData> invData = DbMailItem.getCalendarItems(this, type, start, end, folderId, excludeFolders);
+            List<MailItem.UnderlyingData> invData = DbMailItem.getCalendarItems(this, type, start, end, folderId, excludeFolders);
             for (MailItem.UnderlyingData data : invData) {
                 try {
                     CalendarItem calItem = getCalendarItem(data);
@@ -4172,7 +4171,7 @@ public class Mailbox {
             beginTransaction("getCalendarItemsByUid", octxt);
             ArrayList<String> uidList = new ArrayList<String>(uids);
             Map<String,CalendarItem> calItems = new HashMap<String,CalendarItem>();
-            List<UnderlyingData> invData = DbMailItem.getCalendarItems(this, uids);
+            List<MailItem.UnderlyingData> invData = DbMailItem.getCalendarItems(this, uids);
             for (MailItem.UnderlyingData data : invData) {
                 try {
                     CalendarItem calItem = getCalendarItem(data);
@@ -4479,18 +4478,6 @@ public class Mailbox {
         return msg;
     }
 
-    /** The number of milliseconds of inactivity (i.e. time since last message
-     *  receipt) after which a conversation is considered "closed". */
-    private static final long CONVERSATION_REPLY_WINDOW = Constants.MILLIS_PER_MONTH;
-    /** The number of milliseconds of inactivity (i.e. time since last message
-     *  receipt) after which a non-reply is not grouped with an existing
-     *  conversation with the same subject. */
-    private static final long CONVERSATION_NONREPLY_WINDOW = 2 * Constants.MILLIS_PER_DAY;
-    /** The maximum size for a conversation beyond which non-reply messages
-     *  are not grouped with it, even if their delivery time is within
-     *  {@link #CONVERSATION_NONREPLY_WINDOW}. */
-    private static final int  CONVERSATION_NONREPLY_SIZE_LIMIT = 50;
-
     private synchronized Message addMessageInternal(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
                                                     int flags, String tagStr, int conversationId, String rcptEmail,
                                                     Message.DraftInfo dinfo, CustomMetadata customData,
@@ -4501,8 +4488,9 @@ public class Mailbox {
 
         boolean debug = ZimbraLog.mailbox.isDebugEnabled();
 
-        if (Math.abs(conversationId) <= HIGHEST_SYSTEM_ID)
+        if (Math.abs(conversationId) <= HIGHEST_SYSTEM_ID) {
             conversationId = ID_AUTO_INCREMENT;
+        }
 
         boolean needRedo = octxt == null || octxt.needRedo();
         CreateMessage redoPlayer = (octxt == null ? null : (CreateMessage) octxt.getPlayer());
@@ -4560,10 +4548,11 @@ public class Mailbox {
         flags &= ~Flag.BITMASK_UNREAD;
 
         // "having attachments" is currently tracked via flags
-        if (pm.hasAttachments())
+        if (pm.hasAttachments()) {
             flags |= Flag.BITMASK_ATTACHED;
-        else
+        } else {
             flags &= ~Flag.BITMASK_ATTACHED;
+        }
 
         // priority is calculated from headers
         flags &= ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
@@ -4578,65 +4567,72 @@ public class Mailbox {
 
         CustomMetadata.CustomMetadataList extended = MetadataCallback.preDelivery(pm);
         if (customData != null) {
-            if (extended == null)
+            if (extended == null) {
                 extended = customData.asList();
-            else
+            } else {
                 extended.addSection(customData);
+            }
         }
+
+        Threader threading = new Threader(this, pm);
+        String subject = pm.getNormalizedSubject();
 
         try {
             beginTransaction("addMessage", octxt, redoRecorder);
-            if (isRedo)
+            if (isRedo) {
                 rcptEmail = redoPlayer.getRcptEmail();
+            }
 
             Folder folder = getFolderById(folderId);
-            String subject = pm.getNormalizedSubject();
-            String hash = getHash(subject);
             long tags = Tag.tagsToBitmask(tagStr);
 
             // step 0: preemptively check for quota issues (actual update is done in Message.create)
-            if (!getAccount().isMailAllowReceiveButNotSendWhenOverQuota())
+            if (!getAccount().isMailAllowReceiveButNotSendWhenOverQuota()) {
                 checkSizeChange(getSize() + staged.getSize());
+            }
 
             // step 1: get an ID assigned for the new message
             int messageId = getNextItemId(!isRedo ? ID_AUTO_INCREMENT : redoPlayer.getMessageId());
-            if (isRedo)
+
+            List<Conversation> mergeConvs = null;
+            if (isRedo) {
                 conversationId = redoPlayer.getConvId();
+
+                // fetch the conversations that were merged in as a result of the original delivery...
+                List<Integer> mergeConvIds = redoPlayer.getMergedConvIds();
+                mergeConvs = new ArrayList<Conversation>(mergeConvIds.size());
+                for (int mergeId : mergeConvIds) {
+                    try {
+                        mergeConvs.add(getConversationById(mergeId));
+                    } catch (NoSuchItemException nsie) {
+                        if (debug)  ZimbraLog.mailbox.debug("  could not find merge conversation %d", mergeId);
+                    }
+                }
+            }
 
             // step 2: figure out where the message belongs
             Conversation conv = null;
-            if (!DebugConfig.disableConversation) {
+            if (threading.isEnabled()) {
                 boolean isReply = pm.isReply();
                 if (conversationId != ID_AUTO_INCREMENT) {
                     try {
-                        // fetch the requested conversation...
+                        // fetch the requested conversation
+                        //   (we'll ensure that it's receiving new mail after the new message is added to it)
                         conv = getConversationById(conversationId);
-                        // ... and ensure that it's receiving new mail
-                        //   (note: don't do this for virtual convs, since they get promoted to real convs in step 4)
-                        if (!(conv instanceof VirtualConversation))
-                            openConversation(conv, hash);
-                        if (debug)  ZimbraLog.mailbox.debug("  fetched explicitly-specified conversation " + conv.getId());
-                    } catch (ServiceException e) {
-                        if (!(e instanceof NoSuchItemException))
-                            throw e;
+                        if (debug)  ZimbraLog.mailbox.debug("  fetched explicitly-specified conversation %d", conv.getId());
+                    } catch (NoSuchItemException nsie) {
                         if (!isRedo) {
-                            if (debug)  ZimbraLog.mailbox.debug("  could not find explicitly-specified conversation " + conversationId);
+                            if (debug)  ZimbraLog.mailbox.debug("  could not find explicitly-specified conversation %d", conversationId);
                             conversationId = ID_AUTO_INCREMENT;
                         }
                     }
-                } else if (!isRedo && !isSpam && !isDraft && (isReply || (!isSent && !subject.equals("")))) {
-                    conv = getConversationByHash(hash);
-                    if (debug && conv != null)  ZimbraLog.mailbox.debug("  found conversation " + conv.getId() + " for hash: " + hash);
-                    // the caller can specify the received date via ParsedMessge constructor or X-Zimbra-Received header
-                    if (conv != null && pm.getReceivedDate() > conv.getDate() + (isReply ? CONVERSATION_REPLY_WINDOW : CONVERSATION_NONREPLY_WINDOW)) {
-                        // if the last message in the conv was more than 1 month ago, it's probably not related...
-                        conv = null;
-                        if (debug)  ZimbraLog.mailbox.debug("  but rejected it because it's too old");
-                    }
-                    if (conv != null && !isReply && conv.getSize() > CONVERSATION_NONREPLY_SIZE_LIMIT) {
-                        // put a cap on the number of non-reply messages accumulating in a conversation
-                        conv = null;
-                        if (debug)  ZimbraLog.mailbox.debug("  but rejected it because it's too big to add a non-reply");
+                } else if (!isRedo && !isSpam && !isDraft && (isReply || (!isSent && !subject.isEmpty()))) {
+                    List<Conversation> matches = threading.lookupConversation();
+                    if (matches != null && !matches.isEmpty()) {
+                        // file the message into the largest conversation, then later merge any other matching convs
+                        Collections.sort(matches, new MailItem.SortSizeDescending());
+                        conv = matches.remove(0);
+                        mergeConvs = matches;
                     }
                 }
             }
@@ -4644,19 +4640,21 @@ public class Mailbox {
             // step 3: create the message and update the cache
             //         and if the message is also an invite, deal with the calendar item
             Conversation convTarget = (conv instanceof VirtualConversation ? null : conv);
-            if (convTarget != null && debug)
+            if (convTarget != null && debug) {
                 ZimbraLog.mailbox.debug("  placing message in existing conversation " + convTarget.getId());
+            }
 
             CalendarPartInfo cpi = pm.getCalendarPartInfo();
             ZVCalendar iCal = null;
-            if (cpi != null && CalendarItem.isAcceptableInvite(getAccount(), cpi))
+            if (cpi != null && CalendarItem.isAcceptableInvite(getAccount(), cpi)) {
                 iCal = cpi.cal;
+            }
             msg = Message.create(messageId, folder, convTarget, pm, staged, unread, flags, tags, dinfo, noICal, iCal, extended);
 
             redoRecorder.setMessageId(msg.getId());
 
             // step 4: create a conversation for the message, if necessary
-            if (!DebugConfig.disableConversation && convTarget == null) {
+            if (threading.isEnabled() && convTarget == null) {
                 if (conv == null && conversationId == ID_AUTO_INCREMENT) {
                     conv = VirtualConversation.create(this, msg);
                     if (debug)  ZimbraLog.mailbox.debug("  placed message " + msg.getId() + " in vconv " + conv.getId());
@@ -4692,23 +4690,39 @@ public class Mailbox {
                                 vconv = new VirtualConversation(this, convFirstMsg);
                             }
                         }
-                        if (contents == null)
+                        if (contents == null) {
                             contents = new Message[] { msg };
+                        }
                     }
                     redoRecorder.setConvFirstMsgId(vconv != null ? vconv.getMessageId() : -1);
-                    conv = createConversation(contents, conversationId);
+                    conv = createConversation(conversationId, contents);
                     if (vconv != null) {
                         if (debug)  ZimbraLog.mailbox.debug("  removed vconv " + vconv.getId());
                         vconv.removeChild(vconv.getMessage());
                     }
+                    // if we're threading by references and promoting a virtual conversation to a real one,
+                    //   associate the first message's reference hashes with the new conversation
+                    if (contents.length == 2) {
+                        threading.changeThreadingTargets(contents[0], conv);
+                    }
                 }
-                if (!isSpam && !isDraft)
-                    openConversation(conv, hash);
             } else {
                 // conversation feature turned off
                 redoRecorder.setConvFirstMsgId(-1);
             }
             redoRecorder.setConvId(conv != null && !(conv instanceof VirtualConversation) ? conv.getId() : -1);
+            // if we're threading by references, associate the new message's reference hashes with its conversation
+            if (!isSpam && !isDraft) {
+                threading.recordAddedMessage(conv);
+            }
+
+            if (conv != null && mergeConvs != null) {
+                redoRecorder.setMergedConversations(mergeConvs);
+                for (Conversation smaller : mergeConvs) {
+                    ZimbraLog.mailbox.info("  merging conversation %d for references threading", smaller.getId());
+                    conv.merge(smaller);
+                }
+            }
 
             // step 5: write the redolog entries
             if (dctxt.getShared()) {
@@ -4768,47 +4782,45 @@ public class Mailbox {
         }
 
         // step 8: remember the Message-ID header so that we can avoid receiving duplicates
-        if (isSent && checkDuplicates)
-            mSentMessageIDs.put(msgidHeader, new Integer(msg.getId()));
+        if (isSent && checkDuplicates) {
+            mSentMessageIDs.put(msgidHeader, msg.getId());
+        }
 
         return msg;
     }
 
     public static String getHash(String subject) {
-        if (subject == null)
-            subject = "";
         try {
-            return ByteUtil.getSHA1Digest(subject.getBytes("utf-8"), true);
+            return ByteUtil.getSHA1Digest(Strings.nullToEmpty(subject).getBytes("utf-8"), true);
         } catch (UnsupportedEncodingException uee) {
-            return ByteUtil.getSHA1Digest(subject.getBytes(), true);
+            return ByteUtil.getSHA1Digest(Strings.nullToEmpty(subject).getBytes(), true);
         }
     }
 
     // please keep this package-visible but not public
-    void openConversation(Conversation conv, String hash) throws ServiceException {
-        if (hash == null)
-            hash = getHash(conv.getNormalizedSubject());
+    void openConversation(Conversation conv, String subjectHash) throws ServiceException {
+        String hash = subjectHash != null ? subjectHash : getHash(conv.getNormalizedSubject());
         conv.open(hash);
         markOtherItemDirty(hash);
         mConvHashes.put(hash, new Integer(conv.getId()));
     }
 
     // please keep this package-visible but not public
-    void closeConversation(Conversation conv, String hash) throws ServiceException {
-        if (hash == null)
-            hash = getHash(conv.getSubject());
+    void closeConversation(Conversation conv, String subjectHash) throws ServiceException {
+        String hash = subjectHash != null ? subjectHash : getHash(conv.getNormalizedSubject());
         conv.close(hash);
         mConvHashes.remove(hash);
     }
 
     // please keep this package-visible but not public
-    Conversation createConversation(Message[] contents, int id) throws ServiceException {
-        id = Math.max(id, ID_AUTO_INCREMENT);
+    Conversation createConversation(int convId, Message... contents) throws ServiceException {
+        int id = Math.max(convId, ID_AUTO_INCREMENT);
         Conversation conv = Conversation.create(this, getNextItemId(id), contents);
         if (ZimbraLog.mailbox.isDebugEnabled()) {
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < contents.length; i++)
+            for (int i = 0; i < contents.length; i++) {
                 sb.append(i == 0 ? "" : ",").append(contents[i].getId());
+            }
             ZimbraLog.mailbox.debug("  created conv " + conv.getId() + " holding msg(s): " + sb);
         }
         return conv;
@@ -6733,11 +6745,14 @@ public class Mailbox {
             }
             // deletes have already been collected, so fetch the tombstones and write once
             TypedIdList tombstones = collectPendingTombstones();
-            if (tombstones != null && !tombstones.isEmpty())
+            if (tombstones != null && !tombstones.isEmpty()) {
                 DbMailItem.writeTombstones(this, tombstones);
+            }
 
-            int convTimeout = (int) (LC.conversation_max_age_ms.longValue() / 1000);
-            DbMailItem.closeOldConversations(this, getOperationTimestamp() - convTimeout);
+            if (Threader.isHashPurgeAllowed(acct)) {
+                int convTimeout = (int) (LC.conversation_max_age_ms.longValue() / 1000);
+                DbMailItem.closeOldConversations(this, getOperationTimestamp() - convTimeout);
+            }
 
             // TODO: reenamble tombstone purging once we're able to add the client
             // support described in bug 12965.

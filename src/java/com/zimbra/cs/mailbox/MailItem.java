@@ -1063,6 +1063,26 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
     }
 
+    public static final class SortSizeAscending implements Comparator<MailItem> {
+        @Override public int compare(MailItem m1, MailItem m2) {
+            long t1 = m1.getSize(), t2 = m2.getSize();
+
+            if (t1 < t2)        return -1;
+            else if (t1 == t2)  return 0;
+            else                return 1;
+        }
+    }
+
+    public static final class SortSizeDescending implements Comparator<MailItem> {
+        @Override public int compare(MailItem m1, MailItem m2) {
+            long t1 = m1.getSize(), t2 = m2.getSize();
+
+            if (t1 < t2)        return 1;
+            else if (t1 == t2)  return 0;
+            else                return -1;
+        }
+    }
+
     public static final class SortImapUid implements Comparator<MailItem> {
         @Override public int compare(MailItem m1, MailItem m2) {
             return m1.getImapUid() - m2.getImapUid();
@@ -1086,29 +1106,35 @@ public abstract class MailItem implements Comparable<MailItem> {
             public char[] buf;
             public int    pos;
             public int    len;
+
             public Name(String n) {
                 buf = n.toCharArray();
                 pos = 0;
                 len = buf.length;
             }
+
             public char getChar() {
                 if (pos < len)
                     return buf[pos];
                 return 0;
             }
+
             public Name next() {
                 if (pos < len)
                     pos++;
                 return this;
             }
         }
-        @Override public int compare(MailItem m1, MailItem m2) {
+
+        @Override
+        public int compare(MailItem m1, MailItem m2) {
             if (m1.getName() == null)
                 return returnResult(1);
             else if (m2.getName() == null)
                 return returnResult(-1);
             return compareString(new Name(m1.getName()), new Name(m2.getName()));
         }
+
         public int compareString(Name n1, Name n2) {
             char first = n1.getChar();
             char second = n2.getChar();
@@ -1122,6 +1148,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
             return compareString(n1.next(), n2.next());
         }
+
         public int compareNumeric(Name n1, Name n2) {
             int firstNum = readInt(n1);
             int secondNum = readInt(n2);
@@ -1131,6 +1158,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
             return compareString(n1.next(), n2.next());
         }
+
         public int readInt(Name n) {
             int start = n.pos;
             int end = 0;
@@ -1145,9 +1173,11 @@ public abstract class MailItem implements Comparable<MailItem> {
                 return 0;
             }
         }
+
         public boolean isDigit(char c) {
             return Character.isDigit(c);
         }
+
         protected abstract int returnResult(int result);
     }
 
@@ -1168,6 +1198,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         switch (sort.getCriterion()) {
             case ID:       return ascending ? new SortIdAscending() : new SortIdDescending();
             case DATE:     return ascending ? new SortDateAscending() : new SortDateDescending();
+            case SIZE:     return ascending ? new SortSizeAscending() : new SortSizeDescending();
             case SUBJECT:  return ascending ? new SortSubjectAscending() : new SortSubjectDescending();
             case NAME_NATURAL_ORDER: return ascending ? new SortNameNaturalOrderAscending() : new SortNameNaturalOrderDescending();
             default:       return null;

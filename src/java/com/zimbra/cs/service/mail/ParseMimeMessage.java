@@ -40,6 +40,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
@@ -105,7 +106,8 @@ public class ParseMimeMessage {
     private static class ForceBase64MimeBodyPart extends JavaMailMimeBodyPart {
         public ForceBase64MimeBodyPart()  { }
 
-        @Override protected void updateHeaders() throws MessagingException {
+        @Override
+        protected void updateHeaders() throws MessagingException {
             super.updateHeaders();
             if (LC.text_attachments_base64.booleanValue()) {
                 String ct = Mime.getContentType(this);
@@ -288,10 +290,11 @@ public class ParseMimeMessage {
         ctxt.zsc = zsc;
         ctxt.octxt = octxt;
         ctxt.mbox = mbox;
-        ctxt.use2231 = target.getBooleanAttr(Provisioning.A_zimbraPrefUseRfc2231, false);
-        ctxt.defaultCharset = target.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
-        if (ctxt.defaultCharset.equals(""))
+        ctxt.use2231 = target.isPrefUseRfc2231();
+        ctxt.defaultCharset = target.getPrefMailDefaultCharset();
+        if (Strings.isNullOrEmpty(ctxt.defaultCharset)) {
             ctxt.defaultCharset = MimeConstants.P_CHARSET_UTF8;
+        }
 
         try {
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
@@ -313,8 +316,9 @@ public class ParseMimeMessage {
 
             if (inviteElem != null) {
                 int additionalLen = 0;
-                if (additionalParts != null)
+                if (additionalParts != null) {
                     additionalLen += additionalParts.length;
+                }
                 alternatives = new MimeBodyPart[additionalLen+1];
                 int curAltPart = 0;
 
@@ -345,20 +349,23 @@ public class ParseMimeMessage {
                 alternatives[curAltPart++] = mbp;
 
                 if (additionalParts != null) {
-                    for (int i = 0; i < additionalParts.length; i++)
+                    for (int i = 0; i < additionalParts.length; i++) {
                         alternatives[curAltPart++] = additionalParts[i];
+                    }
                 }
             } else {
                 alternatives = additionalParts;
             }
 
             // handle the content from the client, if any
-            if (hasContent)
+            if (hasContent) {
                 setContent(mm, mmp, partElem != null ? partElem : inviteElem, alternatives, ctxt);
+            }
 
             // attachments go into the toplevel "mixed" part
-            if (isMultipart && attachElem != null)
+            if (isMultipart && attachElem != null) {
                 handleAttachments(attachElem, mmp, ctxt, null);
+            }
 
             // <m> attributes: id, f[lags], s[ize], d[ate], cid(conv-id), l(parent folder)
             // <m> child elements: <e> (email), <s> (subject), <f> (fragment), <mp>, <attach>
@@ -390,16 +397,19 @@ public class ParseMimeMessage {
             String subject = msgElem.getAttribute(MailConstants.E_SUBJECT, "");
             mm.setSubject(subject, StringUtil.checkCharset(subject, ctxt.defaultCharset));
 
-            String irt = msgElem.getAttribute(MailConstants.E_IN_REPLY_TO, null);
-            if (irt != null)
+            String irt = cleanReference(msgElem.getAttribute(MailConstants.E_IN_REPLY_TO, null));
+            if (irt != null) {
                 mm.setHeader("In-Reply-To", irt);
+            }
 
             // can have no addresses specified if it's a draft...
-            if (!maddrs.isEmpty())
+            if (!maddrs.isEmpty()) {
                 addAddressHeaders(mm, maddrs, ctxt.defaultCharset);
+            }
 
-            if (!hasContent && !isMultipart)
+            if (!hasContent && !isMultipart) {
                 mm.setText("", MimeConstants.P_CHARSET_DEFAULT);
+            }
 
             String flagStr = msgElem.getAttribute(MailConstants.A_FLAGS, "");
             if (flagStr.indexOf(Flag.getAbbreviation(Flag.ID_FLAG_HIGH_PRIORITY)) != -1) {
@@ -413,8 +423,9 @@ public class ParseMimeMessage {
             // JavaMail tip: don't forget to call this, it is REALLY confusing.
             mm.saveChanges();
 
-            if (mLog.isDebugEnabled())
+            if (mLog.isDebugEnabled()) {
                 dumpMessage(mm);
+            }
 
             return mm;
         } catch (UnsupportedEncodingException encEx) {
@@ -882,47 +893,68 @@ public class ParseMimeMessage {
 
     private static void addAddressHeaders(MimeMessage mm, MessageAddresses maddrs, String defaultCharset)
     throws MessagingException {
+        boolean debug = mLog.isDebugEnabled();
+
         InternetAddress[] addrs = maddrs.get(EmailType.TO.toString());
         if (addrs != null && addrs.length > 0) {
             mm.addRecipients(javax.mail.Message.RecipientType.TO, addrs);
-            mLog.debug("\t\tTO: " + Arrays.toString(addrs));
+            if (debug)  mLog.debug("\t\tTO: %s", Arrays.toString(addrs));
         }
 
         addrs = maddrs.get(EmailType.CC.toString());
         if (addrs != null && addrs.length > 0) {
             mm.addRecipients(javax.mail.Message.RecipientType.CC, addrs);
-            mLog.debug("\t\tCC: " + Arrays.toString(addrs));
+            if (debug)  mLog.debug("\t\tCC: %s", Arrays.toString(addrs));
         }
 
         addrs = maddrs.get(EmailType.BCC.toString());
         if (addrs != null && addrs.length > 0) {
             mm.addRecipients(javax.mail.Message.RecipientType.BCC, addrs);
-            mLog.debug("\t\tBCC: " + Arrays.toString(addrs));
+            if (debug)  mLog.debug("\t\tBCC: %s", Arrays.toString(addrs));
         }
 
         addrs = maddrs.get(EmailType.FROM.toString());
         if (addrs != null && addrs.length == 1) {
             mm.setFrom(addrs[0]);
-            mLog.debug("\t\tFrom: " + addrs[0]);
+            if (debug)  mLog.debug("\t\tFrom: %s", addrs[0]);
         }
 
         addrs = maddrs.get(EmailType.SENDER.toString());
         if (addrs != null && addrs.length == 1) {
             mm.setSender(addrs[0]);
-            mLog.debug("\t\tSender: " + addrs[0]);
+            if (debug)  mLog.debug("\t\tSender: %s", addrs[0]);
         }
 
         addrs = maddrs.get(EmailType.REPLY_TO.toString());
         if (addrs != null && addrs.length > 0) {
             mm.setReplyTo(addrs);
-            mLog.debug("\t\tReply-To: " + addrs[0]);
+            if (debug)  mLog.debug("\t\tReply-To: %s", addrs[0]);
         }
 
         addrs = maddrs.get(EmailType.READ_RECEIPT.toString());
         if (addrs != null && addrs.length > 0) {
             mm.addHeader("Disposition-Notification-To", InternetAddress.toString(addrs));
-            mLog.debug("\t\tDisposition-Notification-To: " + Arrays.toString(addrs));
+            if (debug)  mLog.debug("\t\tDisposition-Notification-To: %s", Arrays.toString(addrs));
         }
+    }
+
+    /** Strips leading and trailing whitespace from the given message-id and
+     *  adds the surrounding angle brackets if absent.  If the message-id was
+     *  {@code null} or just whitespace, returns {@code null}. */
+    private static String cleanReference(String refStr) {
+        if (refStr == null)
+            return null;
+        String reference = refStr.trim();
+        if (reference.isEmpty())
+            return null;
+
+        if (!reference.startsWith("<")) {
+            reference = "<" + reference;
+        }
+        if (!reference.endsWith(">")) {
+            reference = reference + ">";
+        }
+        return reference;
     }
 
     private static void dumpMessage(MimeMessage mm) {

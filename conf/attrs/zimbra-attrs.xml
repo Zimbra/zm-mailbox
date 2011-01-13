@@ -5298,5 +5298,24 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-</attrs>
+<attr id="1160" name="zimbraMailThreadingAlgorithm" type="enum" value="subject,subjrefs,references,strict,none" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
+  <defaultCOSValue>references</defaultCOSValue>
+  <defaultCOSValueUpgrade>subject</defaultCOSValueUpgrade>
+  <desc>
+    The algorithm to use when aggregating new messages into conversations.
+    Possible values are:
+      - "none": no conversation threading is performed.
+      - "subject": the message will be threaded based solely on its normalized subject.
+      - "strict": only the threading message headers (References, In-Reply-To, Message-ID,
+         and Resent-Message-ID) are used to correlate messages.  No checking of normalized
+         subjects is performed.
+      - "references": the same logic as "strict" with the constraints slightly altered so
+        that the non-standard Thread-Index header is considered when threading messages and
+        that a reply message lacking References and In-Reply-To headers will fall back to
+        using subject-based threading.
+      - "subjrefs": the same logic as "references" with the further caveat that changes
+        in the normalized subject will break a thread in two.
+  </desc>
+</attr>
 
+</attrs>

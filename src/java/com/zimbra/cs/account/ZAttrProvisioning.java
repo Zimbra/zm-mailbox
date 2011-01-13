@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110112-1413 */
+    /* build: unknown unknown unknown unknown */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -434,6 +434,28 @@ public class ZAttrProvisioning {
         }
         public boolean isEnabled() { return this == enabled;}
         public boolean isDisabled() { return this == disabled;}
+    }
+
+    public static enum MailThreadingAlgorithm {
+        references("references"),
+        subject("subject"),
+        none("none"),
+        strict("strict"),
+        subjrefs("subjrefs");
+        private String mValue;
+        private MailThreadingAlgorithm(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static MailThreadingAlgorithm fromString(String s) throws ServiceException {
+            for (MailThreadingAlgorithm value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isReferences() { return this == references;}
+        public boolean isSubject() { return this == subject;}
+        public boolean isNone() { return this == none;}
+        public boolean isStrict() { return this == strict;}
+        public boolean isSubjrefs() { return this == subjrefs;}
     }
 
     public static enum MtaSaslAuthEnable {
@@ -4791,6 +4813,27 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=15)
     public static final String A_zimbraMailStatus = "zimbraMailStatus";
+
+    /**
+     * The algorithm to use when aggregating new messages into conversations.
+     * Possible values are: - &quot;none&quot;: no conversation threading is
+     * performed. - &quot;subject&quot;: the message will be threaded based
+     * solely on its normalized subject. - &quot;strict&quot;: only the
+     * threading message headers (References, In-Reply-To, Message-ID, and
+     * Resent-Message-ID) are used to correlate messages. No checking of
+     * normalized subjects is performed. - &quot;references&quot;: the same
+     * logic as &quot;strict&quot; with the constraints slightly altered so
+     * that the non-standard Thread-Index header is considered when threading
+     * messages and that a reply message lacking References and In-Reply-To
+     * headers will fall back to using subject-based threading. -
+     * &quot;subjrefs&quot;: the same logic as &quot;references&quot; with
+     * the further caveat that changes in the normalized subject will break a
+     * thread in two.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1160)
+    public static final String A_zimbraMailThreadingAlgorithm = "zimbraMailThreadingAlgorithm";
 
     /**
      * where to deliver parameter for use in postfix transport_maps

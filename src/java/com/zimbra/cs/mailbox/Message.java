@@ -1024,8 +1024,8 @@ public class Message extends MailItem {
 
         Conversation parent = (Conversation) getParent();
         if (parent instanceof VirtualConversation && parent.getId() == parentId && !isDraft() && inSpam() == folder.inSpam()) {
-            Conversation conv = mMailbox.createConversation(new Message[] { this, copy }, Mailbox.ID_AUTO_INCREMENT);
-            DbMailItem.changeOpenTarget(Mailbox.getHash(getNormalizedSubject()), this, conv.getId());
+            Conversation conv = mMailbox.createConversation(Mailbox.ID_AUTO_INCREMENT, this, copy);
+            DbMailItem.changeOpenTargets(this, conv.getId());
             parent.removeChild(this);
         }
         return copy;

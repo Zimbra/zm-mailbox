@@ -606,6 +606,27 @@ public class ParsedMessage {
         return Mime.getMessageID(getMimeMessage());
     }
 
+    /** Returns all message-ids referenced by this message's headers.  This
+     *  includes those in the message's {@code Message-ID} header, its {@code
+     *  In-Reply-To} header, and its {@code References} header.  The enclosing
+     *  angle brackets and any embedded comments and quoted-strings are
+     *  stripped from the message-ids.
+     * @return a non-{@code null}, mutable {@code Set} containing the message's
+     *         references. */
+    public Set<String> getAllReferences() {
+        MimeMessage mm = getMimeMessage();
+
+        Set<String> refs = new HashSet<String>();
+        refs.addAll(Mime.getReferences(mm, "Message-ID"));
+        refs.addAll(Mime.getReferences(mm, "In-Reply-To"));
+        refs.addAll(Mime.getReferences(mm, "References"));
+        refs.addAll(Mime.getReferences(mm, "Resent-Message-ID"));
+
+        refs.remove(null);
+        refs.remove("");
+        return refs;
+    }
+
     public String getRecipients() {
         if (mRecipients == null) {
             try {
