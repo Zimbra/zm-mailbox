@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110107-1109 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110112-1619 */
 
     /**
      * RFC2256: descriptive information
@@ -5783,7 +5783,7 @@ public class ZAttrConfig extends Entry {
     @ZAttr(id=790)
     public void setCreateTimestamp(Date zimbraCreateTimestamp) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp==null ? "" : DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -5799,7 +5799,7 @@ public class ZAttrConfig extends Entry {
     @ZAttr(id=790)
     public Map<String,Object> setCreateTimestamp(Date zimbraCreateTimestamp, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
+        attrs.put(Provisioning.A_zimbraCreateTimestamp, zimbraCreateTimestamp==null ? "" : DateUtil.toGeneralizedTime(zimbraCreateTimestamp));
         return attrs;
     }
 
@@ -30756,7 +30756,7 @@ public class ZAttrConfig extends Entry {
     @ZAttr(id=1056)
     public void setVersionCheckLastAttempt(Date zimbraVersionCheckLastAttempt) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraVersionCheckLastAttempt, DateUtil.toGeneralizedTime(zimbraVersionCheckLastAttempt));
+        attrs.put(Provisioning.A_zimbraVersionCheckLastAttempt, zimbraVersionCheckLastAttempt==null ? "" : DateUtil.toGeneralizedTime(zimbraVersionCheckLastAttempt));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -30772,7 +30772,7 @@ public class ZAttrConfig extends Entry {
     @ZAttr(id=1056)
     public Map<String,Object> setVersionCheckLastAttempt(Date zimbraVersionCheckLastAttempt, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraVersionCheckLastAttempt, DateUtil.toGeneralizedTime(zimbraVersionCheckLastAttempt));
+        attrs.put(Provisioning.A_zimbraVersionCheckLastAttempt, zimbraVersionCheckLastAttempt==null ? "" : DateUtil.toGeneralizedTime(zimbraVersionCheckLastAttempt));
         return attrs;
     }
 
@@ -30952,7 +30952,7 @@ public class ZAttrConfig extends Entry {
     @ZAttr(id=1057)
     public void setVersionCheckLastSuccess(Date zimbraVersionCheckLastSuccess) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraVersionCheckLastSuccess, DateUtil.toGeneralizedTime(zimbraVersionCheckLastSuccess));
+        attrs.put(Provisioning.A_zimbraVersionCheckLastSuccess, zimbraVersionCheckLastSuccess==null ? "" : DateUtil.toGeneralizedTime(zimbraVersionCheckLastSuccess));
         getProvisioning().modifyAttrs(this, attrs);
     }
 
@@ -30968,7 +30968,7 @@ public class ZAttrConfig extends Entry {
     @ZAttr(id=1057)
     public Map<String,Object> setVersionCheckLastSuccess(Date zimbraVersionCheckLastSuccess, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraVersionCheckLastSuccess, DateUtil.toGeneralizedTime(zimbraVersionCheckLastSuccess));
+        attrs.put(Provisioning.A_zimbraVersionCheckLastSuccess, zimbraVersionCheckLastSuccess==null ? "" : DateUtil.toGeneralizedTime(zimbraVersionCheckLastSuccess));
         return attrs;
     }
 
