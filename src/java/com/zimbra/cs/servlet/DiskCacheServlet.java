@@ -64,7 +64,12 @@ public abstract class DiskCacheServlet extends ZimbraServlet {
 
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        cacheKeyPrefix = getServletContext().getServletContextName().replaceAll("[^a-zA-Z0-9_]","");
+        String contextName = getServletContext().getServletContextName();
+        if(contextName != null) {
+            cacheKeyPrefix = contextName.replaceAll("[^a-zA-Z0-9_]","");
+        } else {
+            cacheKeyPrefix = "_";
+        }
         createCache();
         createCacheDir();
     }
