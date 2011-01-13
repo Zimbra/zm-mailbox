@@ -146,7 +146,11 @@ extends TestCase {
         // Initialize
         Account account = TestUtil.getAccount(USER_NAME);
         account.setQuotaLastWarnTimeAsString("");
-        account.setMailQuota(62914560);
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        
+        // Set the quota so that we trigger the warning for an empty mailbox
+        // and don't exceed the quota for a mailbox that already has content.
+        account.setMailQuota(Math.max(mbox.getSize() * 2, 10000));
         
         // Make sure there are no warnings already in the mailbox
         validateNumWarnings(0);
