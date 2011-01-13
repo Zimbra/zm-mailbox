@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -78,6 +78,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.Zimbra;
 
 /**
  * @since Apr 17, 2004
@@ -756,7 +757,13 @@ public class Mime {
         InternetAddress[] addresses;
         try {
             addresses = JavaMailInternetAddress.parseHeader(header, false);
-        } catch (AddressException e) {
+        } catch (Throwable e) {
+            // Catch everything in case MIME parser was not robust enough to handle a malformed header.
+            if (e instanceof OutOfMemoryError) {
+                Zimbra.halt("MIME parser failed: " + header, e);
+            } else if (!(e instanceof AddressException)) {
+                sLog.error("MIME parser failed: " + header, e);
+            }
             try {
                 return new InternetAddress[] { new JavaMailInternetAddress(null, header, MimeConstants.P_CHARSET_UTF8) };
             } catch (UnsupportedEncodingException e1) {

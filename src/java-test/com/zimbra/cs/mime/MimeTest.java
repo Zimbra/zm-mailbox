@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,6 +15,8 @@
 package com.zimbra.cs.mime;
 
 import java.io.Reader;
+
+import javax.mail.internet.InternetAddress;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
@@ -41,6 +43,13 @@ public class MimeTest {
         reader = Mime.getTextReader(getClass().getResourceAsStream("p4-notification.txt"), "text/plain", null);
         result = IOUtils.toString(reader);
         Assert.assertTrue(result.startsWith("Change 259706"));
+    }
+
+    @Test
+    public void parseAddressHeader() throws Exception {
+        InternetAddress[] addrs = Mime.parseAddressHeader("\" <test@zimbra.com>");
+        Assert.assertEquals(1, addrs.length);
+        // Only verify an exception is not thrown. The new parser and the old parser don't get the same result.
     }
 
 }
