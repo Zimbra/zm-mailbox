@@ -19,6 +19,7 @@
 package com.zimbra.cs.service.account;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -72,6 +73,17 @@ public class GetInfo extends AccountDocumentHandler  {
             }
         }
     }
+    /*
+     * The subset of global config keys that should override account/cos keys
+     * The caveat here is that key global config and account/cos need to use the same
+     * name for the setting
+     * 
+     * Note: Boolean values will be ORed with their cos values. This works best for keys that default to false.
+     *       All other types will just the global value INSTEAD OF the cos value.
+     */
+    private static Set<String> GLOBAL_OVERRIDE_KEYS = new HashSet<String>(Arrays.asList(new String [] {
+       Provisioning.A_zimbraAttachmentsBlocked     
+    }));
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -113,7 +125,6 @@ public class GetInfo extends AccountDocumentHandler  {
             Config config = prov.getConfig();
             if (config != null) {
                 response.addAttribute(AccountConstants.A_ATTACHMENT_SIZE_LIMIT, config.getMtaMaxMessageSize());
-                response.addAttribute(Provisioning.A_zimbraAttachmentsBlocked, config.getBooleanAttr(Provisioning.A_zimbraAttachmentsBlocked,false) ? Provisioning.TRUE : Provisioning.FALSE);
             }
         } catch (ServiceException e) {}
         
@@ -192,8 +203,40 @@ public class GetInfo extends AccountDocumentHandler  {
 
     static void doAttrs(Account acct, String locale, Element response, Map attrsMap) throws ServiceException {
         Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInfo);
-        for (String key : attrList)
-            doAttr(response, key, key.equals(Provisioning.A_zimbraLocale) ? locale : attrsMap.get(key));
+        Config config = Provisioning.getInstance().getConfig();
+        Set<String> overriddenKeys = new HashSet<String>();
+        for (String key : attrList) {
+            Object value = attrsMap.get(key);
+            // First check to see if we are dealing with the locale since that comes 
+            // from its own special place
+            if (Provisioning.A_zimbraLocale.equals(key)) {
+                value = locale;
+            }
+            
+            // Next up, see if its in the global override list
+            if (GLOBAL_OVERRIDE_KEYS.contains(key)) {
+                overriddenKeys.add(key);
+                String strValue = config.getAttr(key);
+                if (Provisioning.TRUE.equals(strValue) || Provisioning.FALSE.equals(strValue)) {
+                    // We working with a boolean. OR the result
+                    value = Provisioning.TRUE.equals(strValue) || Provisioning.TRUE.equals(value) ? Provisioning.TRUE : Provisioning.FALSE;
+                } else if (strValue != null && !strValue.isEmpty()) {
+                    // For other types of values.. we will override the value with the global config setting if it exists
+                    value = strValue;
+                }
+            }
+            doAttr(response, key, value);
+        }
+
+        // Add the remaining keys in if they exist
+        Set<String> remainingOverrideKeys = new HashSet<String>(GLOBAL_OVERRIDE_KEYS);
+        remainingOverrideKeys.removeAll(overriddenKeys);
+        for (String key: remainingOverrideKeys) {
+            String strValue = config.getAttr(key);
+            if(strValue != null) {
+                doAttr(response, key, strValue);
+            }
+        }
     }
     
     static void doAttr(Element response, String key, Object value) {
@@ -209,7 +252,8 @@ public class GetInfo extends AccountDocumentHandler  {
                 response.addKeyValuePair(key, (String) value, AccountConstants.E_ATTR, AccountConstants.A_NAME);
         }        
     }
-
+    
+    
     private static void doZimlets(Element response, Account acct) {
         try {
             // bug 34517
