@@ -18,9 +18,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Set;
 
+import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -37,7 +37,8 @@ import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.service.AuthProvider;
 
-class ImapProxy {
+final class ImapProxy {
+    private static final Set<String> UNSTRUCTURED_CODES = ImmutableSet.of("OK", "NO", "BAD", "PREAUTH", "BYE");
     private static final AuthenticatorFactory sAuthenticatorFactory = new AuthenticatorFactory();
     static {
         sAuthenticatorFactory.register(ZimbraAuthenticator.MECHANISM, ZimbraClientAuthenticator.class);
@@ -45,7 +46,7 @@ class ImapProxy {
 
     private final ImapHandler mHandler;
     private final ImapPath mPath;
-    private ImapConnection mConnection;
+    private ImapConnection connection;
     private Thread mIdleThread;
 
     ImapProxy(final ImapHandler handler, final ImapPath path) throws ServiceException {
@@ -76,7 +77,7 @@ class ImapProxy {
 
         ZimbraLog.imap.info("opening proxy connection (user=" + acct.getName() + ", host=" + host + ", path=" + path.getReferent().asImapPath() + ')');
 
-        ImapConnection conn = mConnection = new ImapConnection(config);
+        ImapConnection conn = connection = new ImapConnection(config);
         try {
             conn.connect();
             conn.authenticate(AuthProvider.getAuthToken(acct).getEncoded());
@@ -91,8 +92,8 @@ class ImapProxy {
     }
 
     void dropConnection() {
-        ImapConnection conn = mConnection;
-        mConnection = null;
+        ImapConnection conn = connection;
+        connection = null;
         if (conn == null)
             return;
 
@@ -102,13 +103,15 @@ class ImapProxy {
     }
 
 
-    /** Performs a <tt>SELECT</tt> on the remote folder passed into the
-     *  constructor.  Writes all tagged and untagged responses back to the
-     *  handler's output stream.
-     * @return whether the SELECT was successful (i.e. it returned a tagged
-     *         <tt>OK</tt> response)
-     * @see #ImapProxy(ImapHandler, ImapPath) */
-    boolean select(final String tag, final byte params, final ImapHandler.QResyncInfo qri) throws IOException, ServiceException {
+    /**
+     * Performs a {@code SELECT} on the remote folder passed into the constructor. Writes all tagged and untagged
+     * responses back to the handler's output stream.
+     *
+     * @return whether the SELECT was successful (i.e. it returned a tagged {@code OK} response)
+     * @throws ImapProxyException network error with the remote IMAP server
+     */
+    boolean select(final String tag, final byte params, final ImapHandler.QResyncInfo qri)
+            throws ImapProxyException, ServiceException {
         // FIXME: may need to send an ENABLE before the SELECT
 
         String command = (params & ImapFolder.SELECT_READONLY) == 0 ? "SELECT" : "EXAMINE";
@@ -130,18 +133,29 @@ class ImapProxy {
             select.append(')');
         }
 
-        return proxyCommand(tag, select.append("\r\n").toString().getBytes(), true, false);
+        return proxyCommand(select.append("\r\n").toString().getBytes(), true, false);
     }
 
-    boolean idle(final ImapRequest req, final boolean begin) throws IOException {
+    /**
+     * Proxy IDLE command.
+     *
+     * @param req IMAP request
+     * @param begin true to start, false to stop
+     * @return true to continue, false to close the connection
+     * @throws ImapProxyException network error with the remote IMAP server
+     * @throws IOException error on reading the request data
+     */
+    boolean idle(final ImapRequest req, final boolean begin) throws ImapProxyException, IOException {
         if (begin == ImapHandler.IDLE_STOP) {
             // check state -- don't want to send DONE if we're somehow not in IDLE
             ImapHandler handler = mHandler;
-            if (handler == null)
-                throw new IOException("proxy connection already closed");
+            if (handler == null) {
+                throw new ImapProxyException("client connection already closed");
+            }
             Thread idle = mIdleThread;
-            if (idle == null)
-                throw new IOException("bad proxy state: no IDLE thread active when attempting DONE");
+            if (idle == null) {
+                throw new ImapProxyException("bad proxy state: no IDLE thread active when attempting DONE");
+            }
             // send the DONE, which elicits the tagged response that causes the IDLE thread (below) to exit
             writeRequest(req.toByteArray());
             // make sure that the idle thread actually exits; otherwise we're in a bad place and we must kill the whole session
@@ -153,10 +167,10 @@ class ImapProxy {
                 handler.dropConnection(false);
         } else {
             final ImapHandler handler = mHandler;
-            final ImapConnection conn = mConnection;
-            if (conn == null)
-                throw new IOException("proxy connection already closed");
-
+            final ImapConnection conn = connection;
+            if (conn == null) {
+                throw new ImapProxyException("proxy connection already closed");
+            }
             ImapConfig config = conn.getImapConfig();
             final int oldTimeout = config != null ? config.getReadTimeout() : LC.javamail_imap_timeout.intValue();
             // necessary because of subsequent race condition with req.cleanup()
@@ -170,7 +184,7 @@ class ImapProxy {
                         // the standard aggressive read timeout is inappropriate for IDLE
                         conn.setReadTimeout(handler.getConfig().getAuthenticatedMaxIdleTime());
                         // send the IDLE command; this call waits until the subsequent DONE is acknowledged
-                        boolean ok = proxyCommand(req.getTag(), payload, true, true);
+                        boolean ok = proxyCommand(payload, true, true);
                         // restore the old read timeout
                         conn.setReadTimeout(oldTimeout);
                         // don't set <code>success</code> until we're past things that can throw IOExceptions
@@ -189,141 +203,171 @@ class ImapProxy {
         return true;
     }
 
-    /** Proxies the request to the remote server and writes all tagged and
-     *  untagged responses back to the handler's output stream.
-     * @return <tt>true</tt> in all cases. */
-    boolean proxy(final ImapRequest req) throws IOException {
-        proxyCommand(req.getTag(), req.toByteArray(), true, false);
+    /**
+     * Proxies the request to the remote server and writes all tagged and untagged responses back to the handler's
+     * output stream.
+     *
+     * @param req IMAP request
+     * @return always true
+     * @throws ImapProxyException network error with the remote IMAP server
+     * @throws IOException error on reading the request data
+     */
+    boolean proxy(final ImapRequest req) throws ImapProxyException, IOException {
+        proxyCommand(req.toByteArray(), true, false);
         return true;
     }
 
-    boolean proxy(final String tag, final String command) throws IOException {
-        proxyCommand(tag, (tag + ' ' + command + "\r\n").getBytes(), true, false);
+    /**
+     * Proxies the request to the remote server.
+     *
+     * @param tag IMAP command tag
+     * @param command IMAP command
+     * @return always true
+     * @throws ImapProxyException network error with the remote IMAP server
+     */
+    boolean proxy(final String tag, final String command) throws ImapProxyException {
+        proxyCommand((tag + ' ' + command + "\r\n").getBytes(), true, false);
         return true;
     }
 
-    /** Retrieves the set of notifications pending on the remote server. */
-    void fetchNotifications() throws IOException {
-        String tag = mConnection == null ? "1" : mConnection.newTag();
-        proxyCommand(tag, (tag + " NOOP\r\n").getBytes(), false, false);
+    /**
+     * Retrieves the set of notifications pending on the remote server.
+     *
+     * @throws ImapProxyException network error with the remote IMAP server
+     */
+    void fetchNotifications() throws ImapProxyException {
+        String tag = connection == null ? "1" : connection.newTag();
+        proxyCommand((tag + " NOOP\r\n").getBytes(), false, false);
     }
 
-    private static final HashSet<String> UNSTRUCTURED_CODES = new HashSet<String>(Arrays.asList(
-            "OK", "NO", "BAD", "PREAUTH", "BYE"
-    ));
-
-    private ImapConnection writeRequest(final byte[] payload) throws IOException {
-        ImapConnection conn = mConnection;
-        if (conn == null)
-            throw new IOException("proxy connection already closed");
-
+    private ImapConnection writeRequest(final byte[] payload) throws ImapProxyException {
+        ImapConnection conn = connection;
+        if (conn == null) {
+            throw new ImapProxyException("proxy connection already closed");
+        }
         // proxy the request over to the remote server
         OutputStream remote = conn.getOutputStream();
         if (remote == null) {
             dropConnection();
-            throw new IOException("proxy connection already closed");
+            throw new ImapProxyException("proxy connection already closed");
         }
-        remote.write(payload);  remote.flush();
-
+        try {
+            remote.write(payload);
+            remote.flush();
+        } catch (IOException e) {
+            throw new ImapProxyException(e);
+        }
         return conn;
     }
 
-    boolean proxyCommand(final String tag, final byte[] payload, final boolean includeTaggedResponse, final boolean isIdle)
-    throws IOException {
+    private boolean proxyCommand(byte[] payload, boolean includeTaggedResponse, boolean isIdle)
+            throws ImapProxyException {
         ImapConnection conn = writeRequest(payload);
         MailInputStream min = conn.getInputStream();
         OutputStream out = mHandler.output;
         if (out == null) {
             dropConnection();
-            throw new IOException("proxy connection already closed");
+            throw new ImapProxyException("client connection already closed");
         }
 
         // copy the response back to the handler's output (i.e. the original client)
         boolean success = false;
         int first;
-        while ((first = min.peek()) != -1) {
-            // XXX: may want to check that the "tagged" response's tag actually matches the request's tag...
-            boolean tagged = first != '*' && first != '+';
-            boolean structured = first == '*';
-            boolean proxy = (first != '+' || isIdle) && (!tagged || includeTaggedResponse);
+        try {
+            while ((first = min.peek()) != -1) {
+                // XXX: may want to check that the "tagged" response's tag actually matches the request's tag...
+                boolean tagged = first != '*' && first != '+';
+                boolean structured = first == '*';
+                boolean proxy = (first != '+' || isIdle) && (!tagged || includeTaggedResponse);
 
-            ByteArrayOutputStream line = proxy ? new ByteArrayOutputStream() : null;
-            StringBuilder debug = proxy && ZimbraLog.imap.isDebugEnabled() ? new StringBuilder("  pxy: ") : null;
-            StringBuilder condition = new StringBuilder(10);
+                ByteArrayOutputStream line = proxy ? new ByteArrayOutputStream() : null;
+                StringBuilder debug = proxy && ZimbraLog.imap.isDebugEnabled() ? new StringBuilder("  pxy: ") : null;
+                StringBuilder condition = new StringBuilder(10);
 
-            boolean quoted = false, escaped = false, space1 = false, space2 = false;
-            int c, literal = -1;
-            while ((c = min.read()) != -1) {
-                // check for success and also determine whether we should be paying attention to structure
-                if (!space2) {
-                    if (c == ' ' && !space1) {
-                        space1 = true;
-                    } else if (c == ' ') {
-                        space2 = true;
-                        String code = condition.toString().toUpperCase();
-                        if (tagged)
-                            success = code.equals("OK") || (isIdle && code.equals("BAD"));
-                        structured &= !UNSTRUCTURED_CODES.contains(code);
-                    } else if (space1) {
-                        condition.append((char) c);
+                boolean quoted = false, escaped = false, space1 = false, space2 = false;
+                int c, literal = -1;
+                while ((c = min.read()) != -1) {
+                    // check for success and also determine whether we should be paying attention to structure
+                    if (!space2) {
+                        if (c == ' ' && !space1) {
+                            space1 = true;
+                        } else if (c == ' ') {
+                            space2 = true;
+                            String code = condition.toString().toUpperCase();
+                            if ("BYE".equals(code)) { // unexpected BYE
+                                dropConnection();
+                                throw new ImapProxyException("proxy connection already closed");
+                            }
+                            if (tagged) {
+                                success = "OK".equals(code) || (isIdle && "BAD".equals(code));
+                            }
+                            structured &= !UNSTRUCTURED_CODES.contains(code);
+                        } else if (space1) {
+                            condition.append((char) c);
+                        }
                     }
-                }
 
-                // if it's a structured response, pay attention to quoting, literals, etc.
-                if (structured) {
-                    if (escaped)
-                        escaped = false;
-                    else if (quoted && c == '\\')
-                        escaped = true;
-                    else if (c == '"')
-                        quoted = !quoted;
-                    else if (!quoted && c == '{')
-                        literal = 0;
-                    else if (literal != -1 && c >= '0' && c <= '9')
-                        literal = literal * 10 + (c - '0');
-                }
+                    // if it's a structured response, pay attention to quoting, literals, etc.
+                    if (structured) {
+                        if (escaped)
+                            escaped = false;
+                        else if (quoted && c == '\\')
+                            escaped = true;
+                        else if (c == '"')
+                            quoted = !quoted;
+                        else if (!quoted && c == '{')
+                            literal = 0;
+                        else if (literal != -1 && c >= '0' && c <= '9')
+                            literal = literal * 10 + (c - '0');
+                    }
 
-                if (!quoted && c == '\r' && min.peek() == '\n') {
-                    // skip the terminal LF
-                    min.read();
-                    // write the line back to the client
-                    if (proxy) {
-                        out.write(line.toByteArray());  out.write(ImapHandler.LINE_SEPARATOR_BYTES);
-                        line.reset();
+                    if (!quoted && c == '\r' && min.peek() == '\n') {
+                        // skip the terminal LF
+                        min.read();
+                        // write the line back to the client
+                        if (proxy) {
+                            out.write(line.toByteArray());
+                            out.write(ImapHandler.LINE_SEPARATOR_BYTES);
+                            line.reset();
+                            if (isIdle)
+                                out.flush();
+                        }
+                        // if it's end of line (i.e. no literal), we're done
+                        if (literal == -1)
+                            break;
+                        // if there's a literal, copy it and then handle the following line
+                        byte buffer[] = literal == 0 ? null : new byte[Math.min(literal, 65536)];
+                        while (literal > 0) {
+                            int read = min.read(buffer, 0, Math.min(literal, buffer.length));
+                            if (read == -1)
+                                break;
+                            if (proxy)
+                                out.write(buffer, 0, read);
+                            literal -= read;
+                        }
+                        literal = -1;
                         if (isIdle)
                             out.flush();
+                    } else if (proxy) {
+                        line.write(c);
+                        if (debug != null)
+                            debug.append((char) c);
                     }
-                    // if it's end of line (i.e. no literal), we're done
-                    if (literal == -1)
-                        break;
-                    // if there's a literal, copy it and then handle the following line
-                    byte buffer[] = literal == 0 ? null : new byte[Math.min(literal, 65536)];
-                    while (literal > 0) {
-                        int read = min.read(buffer, 0, Math.min(literal, buffer.length));
-                        if (read == -1)
-                            break;
-                        if (proxy)
-                            out.write(buffer, 0, read);
-                        literal -= read;
-                    }
-                    literal = -1;
-                    if (isIdle)
-                        out.flush();
-                } else if (proxy) {
-                    line.write(c);
-                    if (debug != null)
-                        debug.append((char) c);
                 }
+
+                if (debug != null)
+                    ZimbraLog.imap.debug(debug.toString());
+
+                if (tagged)
+                    break;
             }
 
-            if (debug != null)
-                ZimbraLog.imap.debug(debug.toString());
-
-            if (tagged)
-                break;
+            out.flush();
+        } catch (ImapProxyException e) {
+            throw e;
+        } catch (IOException e) {
+            throw new ImapProxyException(e);
         }
-
-        out.flush();
         return success;
     }
 
