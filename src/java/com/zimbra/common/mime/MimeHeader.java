@@ -115,10 +115,13 @@ public class MimeHeader implements Cloneable {
         MESSAGE_ID("Message-ID", 12, true),
         IN_REPLY_TO("In-Reply-To", 13, true),
         REFERENCES("References", 14, true),
-        CONTENT_TYPE("Content-Type", 15, true),
-        CONTENT_DISPOSITION("Content-Disposition", 16, true),
-        CONTENT_TRANSFER_ENCODING("Content-Transfer-Encoding", 17, true),
-        DEFAULT(null, 30),
+        THREAD_TOPIC("Thread-Topic", 15, true),
+        THREAD_INDEX("Thread-Index", 16, true),
+        CONTENT_TYPE("Content-Type", 17, true),
+        CONTENT_DISPOSITION("Content-Disposition", 18, true),
+        CONTENT_TRANSFER_ENCODING("Content-Transfer-Encoding", 19, true),
+        MIME_VERSION("MIME-Version", 20, true),
+        DEFAULT(null, 35),
         CONTENT_LENGTH("Content-Length", 49, true),
         STATUS("Status", 50, true);
 
