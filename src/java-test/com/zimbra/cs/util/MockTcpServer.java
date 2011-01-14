@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.mailclient;
+package com.zimbra.cs.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,11 +20,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.MessageFormat;
+import java.util.Deque;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.junit.Assert;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -70,6 +77,10 @@ public final class MockTcpServer {
                     sock.close();
                 } catch (Throwable e) {
                     e.printStackTrace();
+                }
+                try {
+                    serverSocket.close();
+                } catch (IOException ignore) {
                 }
             }
         });
@@ -119,7 +130,7 @@ public final class MockTcpServer {
 
     public static final class Scenario {
         private final Queue<Command> commands = new ConcurrentLinkedQueue<Command>();
-        private final Queue<String> record = new ConcurrentLinkedQueue<String>();
+        private final Deque<String> record = new LinkedBlockingDeque<String>();
 
         private Scenario() {
         }
@@ -153,6 +164,11 @@ public final class MockTcpServer {
             return this;
         }
 
+        public Scenario reply(Pattern regex, String format) {
+            commands.add(new Reply(regex, format, record));
+            return this;
+        }
+
         public Scenario recvLine() {
             commands.add(new Recv(new byte[]{'\n'}, record));
             return this;
@@ -161,7 +177,6 @@ public final class MockTcpServer {
         public Scenario recvUntil(String until) {
             commands.add(new Recv(until.getBytes(Charsets.UTF_8), record));
             return this;
-
         }
 
         public Scenario swallowUntil(String until) {
@@ -174,7 +189,7 @@ public final class MockTcpServer {
         void exec(InputStream in, OutputStream out) throws IOException;
     }
 
-    private static class Send implements Command {
+    private static final class Send implements Command {
         private final byte[] data;
 
         Send(byte[] data) {
@@ -188,7 +203,33 @@ public final class MockTcpServer {
         }
     }
 
-    private static class Recv implements Command {
+    private static final class Reply implements Command {
+        private final Pattern regex;
+        private final String format;
+        private final Deque<String> record;
+
+        Reply(Pattern regex, String format, Deque<String> record) {
+            this.regex = regex;
+            this.format = format;
+            this.record = record;
+        }
+
+        @Override
+        public void exec(InputStream in, OutputStream out) throws IOException {
+            String prev = record.peekLast();
+            Matcher matcher = regex.matcher(prev);
+            Assert.assertTrue(matcher.find());
+            int count = matcher.groupCount();
+            Object[] args = new Object[count];
+            for (int i = 0; i < count; i++) {
+                args[i] = matcher.group(i + 1);
+            }
+            out.write(MessageFormat.format(format, args).getBytes(Charsets.UTF_8));
+            out.flush();
+        }
+    }
+
+    private static final class Recv implements Command {
         private final byte[] until;
         private final Queue<String> record;
 
@@ -218,7 +259,7 @@ public final class MockTcpServer {
 
     }
 
-    private static class Swallow implements Command {
+    private static final class Swallow implements Command {
         private final byte[] until;
 
         Swallow(byte[] until) {

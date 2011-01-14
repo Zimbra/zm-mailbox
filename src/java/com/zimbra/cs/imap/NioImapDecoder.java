@@ -15,7 +15,6 @@
 package com.zimbra.cs.imap;
 
 import java.io.IOException;
-import java.nio.charset.CharsetDecoder;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -35,7 +34,6 @@ import org.apache.mina.filter.codec.RecoverableProtocolDecoderException;
  * @author ysasaki
  */
 final class NioImapDecoder extends CumulativeProtocolDecoder {
-    private static final CharsetDecoder CHARSET = Charsets.ISO_8859_1.newDecoder();
 
     private int maxChunkSize = 1024;
     private int maxLineLength = 1024;
@@ -125,7 +123,7 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
                         in.position(start);
                         in.limit(prev == '\r' ? pos - 2 : pos - 1); // Swallow the previous CR
                         // The bytes between in.position() and in.limit() now contain a full CRLF terminated line.
-                        String line = in.getString(CHARSET);
+                        String line = in.getString(Charsets.ISO_8859_1.newDecoder());
                         // Set the position to point right after the detected line and set the limit to the old one.
                         in.limit(limit);
                         in.position(pos);

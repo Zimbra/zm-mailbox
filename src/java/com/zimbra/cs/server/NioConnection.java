@@ -18,15 +18,11 @@ import com.zimbra.cs.security.sasl.SaslFilter;
 
 import javax.security.sasl.SaslServer;
 
-import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.ssl.SslFilter;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.net.SocketException;
-import java.nio.ByteBuffer;
 
 public class NioConnection {
     private final NioServer server;
@@ -38,7 +34,7 @@ public class NioConnection {
         this.server = server;
         this.session = session;
         remoteAddress = (InetSocketAddress) session.getRemoteAddress();
-        out = new NioOutputStream(this);
+        out = new NioOutputStream(session, server.getConfig().getWriteChunkSize());
     }
 
     public OutputStream getOutputStream() {
@@ -61,47 +57,32 @@ public class NioConnection {
         session.getConfig().setBothIdleTime(secs);
     }
 
-    public synchronized void startTls() throws IOException {
-        ensureOpened();
+    public void startTls() {
         SslFilter filter = server.newSSLFilter();
         session.getFilterChain().addFirst("ssl", filter);
         session.setAttribute(SslFilter.DISABLE_ENCRYPTION_ONCE, true);
     }
 
-    public synchronized void startSasl(SaslServer sasl) throws IOException {
-        ensureOpened();
+    public void startSasl(SaslServer sasl) {
         SaslFilter filter = new SaslFilter(sasl);
         session.getFilterChain().addFirst("sasl", filter);
         session.setAttribute(SaslFilter.DISABLE_ENCRYPTION_ONCE, true);
     }
 
-    public synchronized void send(ByteBuffer bb) throws IOException {
-        ensureOpened();
-        session.write(IoBuffer.wrap(bb));
-    }
-
-    public synchronized void send(Object obj) throws IOException {
-        ensureOpened();
+    public void send(Object obj) {
         session.write(obj);
     }
 
-    public synchronized long getScheduledWriteBytes() {
+    public long getScheduledWriteBytes() {
         return session.getScheduledWriteBytes();
     }
 
-    public synchronized void close() {
-        if (isOpen()) {
-            session.close(false);
-        }
-    }
-
-    public synchronized boolean isOpen() {
+    public boolean isOpen() {
         return session.isConnected();
     }
 
-    private void ensureOpened() throws SocketException {
-        if (!isOpen()) {
-            throw new SocketException("Session is closed");
-        }
+    public void close() {
+        session.close(false);
     }
+
 }

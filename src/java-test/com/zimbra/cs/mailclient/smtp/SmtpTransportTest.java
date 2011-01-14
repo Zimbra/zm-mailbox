@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -29,7 +29,7 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
-import com.zimbra.cs.mailclient.MockTcpServer;
+import com.zimbra.cs.util.MockTcpServer;
 import com.zimbra.cs.util.JMSession;
 
 /**

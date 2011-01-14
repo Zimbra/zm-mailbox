@@ -149,7 +149,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
         NioOutputStream out = (NioOutputStream) output;
         if (out != null) {
             out.write(line);
-            out.write("\r\n");
+            out.write(LINE_SEPARATOR_BYTES);
             if (flush) {
                 out.flush();
             }

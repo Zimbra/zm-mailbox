@@ -44,7 +44,7 @@ public final class NioPop3Server extends NioServer implements Pop3Server, Realti
 
     @Override
     public String getName() {
-        return config.isSslEnabled() ? "NioPop3SSLServer" : "NioPop3Server";
+        return config.isSslEnabled() ? "Pop3SSLServer" : "Pop3Server";
     }
 
     @Override
@@ -76,6 +76,6 @@ public final class NioPop3Server extends NioServer implements Pop3Server, Realti
     public Map<String, Object> getStatData() {
         String connStatName = getConfig().isSslEnabled() ? ZimbraPerf.RTS_POP_SSL_CONN : ZimbraPerf.RTS_POP_CONN;
         String threadStatName = getConfig().isSslEnabled() ? ZimbraPerf.RTS_POP_SSL_THREADS : ZimbraPerf.RTS_POP_THREADS;
-        return ImmutableMap.of(connStatName, (Object) getNumConnections(), threadStatName, getNumThreads()); 
+        return ImmutableMap.of(connStatName, (Object) getNumConnections(), threadStatName, getNumThreads());
     }
 }

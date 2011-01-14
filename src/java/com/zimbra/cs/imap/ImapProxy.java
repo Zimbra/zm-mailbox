@@ -18,7 +18,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.InetSocketAddress;
 import java.util.Set;
+
+import javax.security.auth.login.LoginException;
 
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.localconfig.LC;
@@ -39,19 +42,19 @@ import com.zimbra.cs.service.AuthProvider;
 
 final class ImapProxy {
     private static final Set<String> UNSTRUCTURED_CODES = ImmutableSet.of("OK", "NO", "BAD", "PREAUTH", "BYE");
-    private static final AuthenticatorFactory sAuthenticatorFactory = new AuthenticatorFactory();
+    private static final AuthenticatorFactory AUTH_FACTORY = new AuthenticatorFactory();
     static {
-        sAuthenticatorFactory.register(ZimbraAuthenticator.MECHANISM, ZimbraClientAuthenticator.class);
+        AUTH_FACTORY.register(ZimbraAuthenticator.MECHANISM, ZimbraClientAuthenticator.class);
     }
 
-    private final ImapHandler mHandler;
-    private final ImapPath mPath;
+    private final ImapHandler handler;
+    private final ImapPath path;
     private ImapConnection connection;
-    private Thread mIdleThread;
+    private Thread idleThread;
 
     ImapProxy(final ImapHandler handler, final ImapPath path) throws ServiceException {
-        mHandler = handler;
-        mPath = path;
+        this.handler = handler;
+        this.path = path;
 
         Account acct = handler.getCredentials().getAccount();
         Server server = Provisioning.getInstance().getServer(path.getOwnerAccount());
@@ -62,7 +65,7 @@ final class ImapProxy {
         ImapConfig config = new ImapConfig();
         config.setAuthenticationId(acct.getName());
         config.setMechanism(ZimbraAuthenticator.MECHANISM);
-        config.setAuthenticatorFactory(sAuthenticatorFactory);
+        config.setAuthenticatorFactory(AUTH_FACTORY);
         config.setReadTimeout(LC.javamail_imap_timeout.intValue());
         config.setConnectTimeout(config.getReadTimeout());
         config.setHost(host);
@@ -77,18 +80,36 @@ final class ImapProxy {
 
         ZimbraLog.imap.info("opening proxy connection (user=" + acct.getName() + ", host=" + host + ", path=" + path.getReferent().asImapPath() + ')');
 
-        ImapConnection conn = connection = new ImapConnection(config);
+        connection = new ImapConnection(config);
         try {
-            conn.connect();
-            conn.authenticate(AuthProvider.getAuthToken(acct).getEncoded());
+            connection.connect();
+            connection.authenticate(AuthProvider.getAuthToken(acct).getEncoded());
         } catch (Exception e) {
             dropConnection();
             throw ServiceException.PROXY_ERROR(e, null);
         }
     }
 
+    /**
+     * For testing.
+     */
+    ImapProxy(InetSocketAddress remote, String username, String password, ImapHandler handler)
+            throws IOException, LoginException {
+        this.handler = handler;
+        path = null;
+        ImapConfig config = new ImapConfig();
+        config.setAuthenticationId(username);
+        config.setMechanism(ZimbraAuthenticator.MECHANISM);
+        config.setAuthenticatorFactory(AUTH_FACTORY);
+        config.setHost(remote.getHostName());
+        config.setPort(remote.getPort());
+        connection = new ImapConnection(config);
+        connection.connect();
+        connection.authenticate(password);
+    }
+
     ImapPath getPath() {
-        return mPath;
+        return path;
     }
 
     void dropConnection() {
@@ -117,7 +138,7 @@ final class ImapProxy {
         String command = (params & ImapFolder.SELECT_READONLY) == 0 ? "SELECT" : "EXAMINE";
         StringBuilder select = new StringBuilder(100);
         select.append(tag).append(' ').append(command).append(' ');
-        select.append(mPath.getReferent().asUtf7String());
+        select.append(path.getReferent().asUtf7String());
         if ((params & ImapFolder.SELECT_CONDSTORE) != 0) {
             select.append(" (");
             if (qri == null) {
@@ -148,25 +169,23 @@ final class ImapProxy {
     boolean idle(final ImapRequest req, final boolean begin) throws ImapProxyException, IOException {
         if (begin == ImapHandler.IDLE_STOP) {
             // check state -- don't want to send DONE if we're somehow not in IDLE
-            ImapHandler handler = mHandler;
             if (handler == null) {
                 throw new ImapProxyException("client connection already closed");
             }
-            Thread idle = mIdleThread;
+            Thread idle = idleThread;
             if (idle == null) {
                 throw new ImapProxyException("bad proxy state: no IDLE thread active when attempting DONE");
             }
             // send the DONE, which elicits the tagged response that causes the IDLE thread (below) to exit
             writeRequest(req.toByteArray());
             // make sure that the idle thread actually exits; otherwise we're in a bad place and we must kill the whole session
-            mIdleThread = null;
+            idleThread = null;
             try {
                 idle.join(5 * Constants.MILLIS_PER_SECOND);
             } catch (InterruptedException ie) { }
             if (idle.isAlive())
                 handler.dropConnection(false);
         } else {
-            final ImapHandler handler = mHandler;
             final ImapConnection conn = connection;
             if (conn == null) {
                 throw new ImapProxyException("proxy connection already closed");
@@ -176,7 +195,7 @@ final class ImapProxy {
             // necessary because of subsequent race condition with req.cleanup()
             final byte[] payload = req.toByteArray();
 
-            mIdleThread = new Thread() {
+            idleThread = new Thread() {
                 @Override
                 public void run() {
                     boolean success = false;
@@ -197,8 +216,8 @@ final class ImapProxy {
                     }
                 }
             };
-            mIdleThread.setName("Imap-Idle-Proxy-" + Thread.currentThread().getName());
-            mIdleThread.start();
+            idleThread.setName("Imap-Idle-Proxy-" + Thread.currentThread().getName());
+            idleThread.start();
         }
         return true;
     }
@@ -264,7 +283,7 @@ final class ImapProxy {
             throws ImapProxyException {
         ImapConnection conn = writeRequest(payload);
         MailInputStream min = conn.getInputStream();
-        OutputStream out = mHandler.output;
+        OutputStream out = handler.output;
         if (out == null) {
             dropConnection();
             throw new ImapProxyException("client connection already closed");

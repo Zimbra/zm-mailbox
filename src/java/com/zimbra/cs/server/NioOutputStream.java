@@ -16,29 +16,31 @@
 package com.zimbra.cs.server;
 
 import com.google.common.base.Charsets;
-import com.zimbra.cs.server.ServerConfig;
 
-import java.nio.ByteBuffer;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class NioOutputStream extends OutputStream {
-    private NioConnection connection;
-    private ByteBuffer buf;
+import org.apache.mina.core.buffer.IoBuffer;
+import org.apache.mina.core.session.IoSession;
 
-    public NioOutputStream(NioConnection conn) {
-        connection = conn;
+public final class NioOutputStream extends OutputStream {
+    private final IoSession session;
+    private final int chunkSize;
+    private IoBuffer buf;
+
+    public NioOutputStream(IoSession session, int chunkSize) {
+        this.session = session;
+        this.chunkSize = chunkSize;
     }
 
     @Override
-    public synchronized void write(byte[] b, int off, int len)
-            throws IOException {
+    public void write(byte[] b, int off, int len) throws IOException {
         if ((off | len | (b.length - (len + off)) | (off + len)) < 0) {
             throw new IndexOutOfBoundsException();
         }
         while (len > 0) {
             if (buf == null) {
-                buf = ByteBuffer.allocate(Math.max(len, getConfig().getWriteChunkSize()));
+                buf = IoBuffer.allocate(chunkSize);
             }
             int count = Math.min(len, buf.remaining());
             buf.put(b, off, count);
@@ -50,35 +52,41 @@ public class NioOutputStream extends OutputStream {
         }
     }
 
-     public void write(String s) throws IOException {
-         write(s.getBytes(Charsets.UTF_8));
-     }
+    public void write(String s) throws IOException {
+        assert s.length() <= chunkSize : s;
+        if (buf == null) {
+            buf = IoBuffer.allocate(chunkSize);
+        } else if (buf.remaining() < s.length()) {
+            flush();
+            buf = IoBuffer.allocate(chunkSize);
+        }
+        buf.putString(s, Charsets.UTF_8.newEncoder());
+    }
 
-     @Override
-     public void write(int b) throws IOException {
-         write(new byte[] { (byte) b });
-     }
+    @Override
+    public void write(int b) throws IOException {
+        if (buf == null) {
+            buf = IoBuffer.allocate(chunkSize);
+        }
+        buf.put((byte) b);
+    }
 
-     @Override
-     public void flush() throws IOException {
-         if (buf != null && buf.position() > 0) {
-             buf.flip();
-             send(buf);
-             buf = null;
-         }
-     }
+    @Override
+    public void flush() throws IOException {
+        if (buf != null && buf.position() > 0) {
+            buf.flip();
+            session.write(buf);
+            buf = null;
+        }
+    }
 
-     private void send(ByteBuffer bb) throws IOException {
-         connection.send(bb);
-     }
-
-     private ServerConfig getConfig() {
-         return connection.getServer().getConfig();
-     }
-
-     @Override
-     public void close() throws IOException {
-         flush();
-         connection.close();
-     }
+    @Override
+    public void close() throws IOException {
+        flush();
+        if (buf != null) {
+            buf.free();
+            buf = null;
+        }
+        session.close(false);
+    }
 }
