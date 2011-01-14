@@ -111,9 +111,9 @@ public class GetInfo extends AccountDocumentHandler  {
             if (server != null)
                 response.addAttribute(AccountConstants.A_DOCUMENT_SIZE_LIMIT, server.getFileUploadMaxSize());
             Config config = prov.getConfig();
-            if (config != null)
+            if (config != null) {
                 response.addAttribute(AccountConstants.A_ATTACHMENT_SIZE_LIMIT, config.getMtaMaxMessageSize());
-            
+            }
         } catch (ServiceException e) {}
         
         if (sections.contains(Section.MBOX) && Provisioning.onLocalServer(account)) {
@@ -189,10 +189,21 @@ public class GetInfo extends AccountDocumentHandler  {
         }
     }
 
-    static void doAttrs(Account acct, String locale, Element response, Map attrsMap) throws ServiceException {
+    static void doAttrs(Account acct, String locale, Element response, Map<String,Object> attrsMap) throws ServiceException {
         Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInfo);
-        for (String key : attrList)
-            doAttr(response, key, key.equals(Provisioning.A_zimbraLocale) ? locale : attrsMap.get(key));
+        Config config = Provisioning.getInstance().getConfig();
+        for (String key : attrList) {
+            Object value = null;
+            if (Provisioning.A_zimbraLocale.equals(key)) {
+                value = locale;
+            } else if (Provisioning.A_zimbraAttachmentsBlocked.equals(key)) {
+                value = config.isAttachmentsBlocked() || acct.isAttachmentsBlocked() ? Provisioning.TRUE : Provisioning.FALSE;
+            } else {
+                value = attrsMap.get(key);
+            }
+
+            doAttr(response, key, value);
+        }
     }
     
     static void doAttr(Element response, String key, Object value) {
@@ -208,7 +219,8 @@ public class GetInfo extends AccountDocumentHandler  {
                 response.addKeyValuePair(key, (String) value, AccountConstants.E_ATTR, AccountConstants.A_NAME);
         }        
     }
-
+    
+    
     private static void doZimlets(Element response, Account acct) {
         try {
             // bug 34517
