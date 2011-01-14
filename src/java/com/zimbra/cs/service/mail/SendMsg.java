@@ -110,7 +110,8 @@ public class SendMsg extends MailDocumentHandler {
         ItemId iidOrigId = origId == null ? null : new ItemId(origId, zsc);
         String replyType = msgElem.getAttribute(MailConstants.A_REPLY_TYPE, MailSender.MSGTYPE_REPLY);
         String identityId = msgElem.getAttribute(MailConstants.A_IDENTITY_ID, null);
-
+        String draftId = msgElem.getAttribute(MailConstants.A_DRAFT_ID, null);
+        ItemId iidDraft = draftId == null ? null : new ItemId(draftId, zsc);
 
         SendState state = SendState.NEW;
         ItemId savedMsgId = null;
@@ -151,7 +152,7 @@ public class SendMsg extends MailDocumentHandler {
                 }
 
                 savedMsgId = doSendMessage(octxt, mbox, mm, mimeData.newContacts, mimeData.uploads, iidOrigId,
-                    replyType, identityId, noSaveToSent, needCalendarSentByFixup);
+                    replyType, identityId, noSaveToSent, needCalendarSentByFixup, iidDraft);
 
                 // (need to make sure that *something* gets recorded, because caching
                 //   a null ItemId makes the send appear to still be PENDING)
@@ -179,17 +180,17 @@ public class SendMsg extends MailDocumentHandler {
 
     public static ItemId doSendMessage(OperationContext oc, Mailbox mbox, MimeMessage mm, List<InternetAddress> newContacts,
                                        List<Upload> uploads, ItemId origMsgId, String replyType, String identityId,
-                                       boolean noSaveToSent, boolean needCalendarSentByFixup)
+                                       boolean noSaveToSent, boolean needCalendarSentByFixup, ItemId draftId)
     throws ServiceException {
         
         if (needCalendarSentByFixup)
             fixupICalendarFromOutlook(mbox, mm);
-
+        MailSender sender = mbox.getMailSender().setSavedDraftId(draftId);
         if (noSaveToSent)
-            return mbox.getMailSender().sendMimeMessage(oc, mbox, false, mm, newContacts, uploads,
+            return sender.sendMimeMessage(oc, mbox, false, mm, newContacts, uploads,
                                                         origMsgId, replyType, null, false);
         else
-            return mbox.getMailSender().sendMimeMessage(oc, mbox, mm, newContacts, uploads,
+            return sender.sendMimeMessage(oc, mbox, mm, newContacts, uploads,
                                                         origMsgId, replyType, identityId, false);
     }
 

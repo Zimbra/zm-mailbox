@@ -2108,7 +2108,7 @@ u attribute is present iff count > 0
 +  can set priority high (!) or low (?) on sent message by specifying "f" attr on <m>
 
 <SendMsgRequest [suid="{send-uid}"] [needCalendarSentByFixup="0|1"] [noSave="0|1"]>
-  <m [f="!|?"] [origid="..." rt="r|w"] [idnt="{identity-id}"]>
+  <m [f="!|?"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [did="{saved-draft-id}"]>
     <e t="{type}" a="{email-address}" p="{personal-name}" [add="1"]/>+
     <su>{subject}</su>*
     [<irt>{Message-ID header for message being replied to}</irt>]
