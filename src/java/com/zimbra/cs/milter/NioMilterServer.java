@@ -41,7 +41,7 @@ public final class NioMilterServer extends NioServer implements MilterServer {
 
     @Override
     public String getName() {
-        return "NioMilterServer";
+        return "MilterServer";
     }
 
     @Override
