@@ -820,6 +820,13 @@ public final class LC {
      * ({@code com.sun.mail.smtp.SMTPTransport}).
      */
     public static final KnownKey javamail_zsmtp = KnownKey.newKey(true);
+    /**
+     * {@code true} to use Zimbra's MIME parser implementation
+     * ({@code com.zimbra.common.mime.shim.JavaMailMimeMessage}),
+     * otherwise use JavaMail's default implementation
+     * ({@code javax.mail.internet.MimemMessage}).
+     */
+    public static final KnownKey javamail_zparser = KnownKey.newKey(true);
     public static final KnownKey javamail_pop3_debug = KnownKey.newKey(false);
     public static final KnownKey javamail_imap_debug = KnownKey.newKey(false);
     public static final KnownKey javamail_smtp_debug = KnownKey.newKey(false);

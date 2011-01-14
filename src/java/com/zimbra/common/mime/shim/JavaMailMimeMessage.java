@@ -40,17 +40,10 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
-public class JavaMailMimeMessage extends MimeMessage implements JavaMailShim {
-    static final boolean ZPARSER = isZimbraParserEnabled();
+import com.zimbra.common.localconfig.LC;
 
-    private static boolean isZimbraParserEnabled() {
-        try {
-            String val = com.zimbra.common.localconfig.LC.get("debug_alternate_mime_parser");
-            return val.isEmpty() ? false : Boolean.valueOf(val).booleanValue();
-        } catch (Exception e) {
-            return false;
-        }
-    }
+public class JavaMailMimeMessage extends MimeMessage implements JavaMailShim {
+    static final boolean ZPARSER = LC.javamail_zparser.booleanValue();
 
     public static boolean usingZimbraParser() {
         return ZPARSER;
