@@ -534,7 +534,27 @@ public class ImapPath implements Comparable<ImapPath> {
         return (mReferent == this ? true : mReferent.isSelectable());
     }
 
+    /**
+     * Calendars, briefcases, etc. are not surfaced in IMAP.
+     */
+    private boolean isVisible(MailItem.Type type) {
+        switch (type) {
+        case APPOINTMENT:
+        case TASK:
+        case WIKI:
+        case DOCUMENT:
+            return false;
+        default:
+            return true;
+        }
+    }
+
     boolean isVisible() throws ServiceException {
+        // check the folder type before hitting a remote server if it's a mountpoint
+        if (mFolder instanceof Folder && !isVisible(((Folder) mFolder).getDefaultView())) {
+            return false;
+        }
+
         if (mCredentials != null) {
             if (mCredentials.isFolderHidden(this))
                 return false;
@@ -561,16 +581,13 @@ public class ImapPath implements Comparable<ImapPath> {
         if (mFolder instanceof Folder) {
             Folder folder = (Folder) mFolder;
             // hide all system folders and the user root folder
-            if (folder.isHidden())
+            if (folder.isHidden()) {
                 return false;
-            if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE)
+            }
+            if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE) {
                 return false;
-            // calendars, briefcases, etc. are not surfaced in IMAP
-            switch (folder.getDefaultView()) {
-            case APPOINTMENT:
-            case TASK:
-            case WIKI:
-            case DOCUMENT:
+            }
+            if (!isVisible(folder.getDefaultView())) {
                 return false;
             }
             // hide subfolders of trashed mountpoints
