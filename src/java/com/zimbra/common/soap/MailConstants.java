@@ -613,6 +613,7 @@ public class MailConstants {
     public static final String A_ID = "id";
     public static final String A_IDS = "ids";
     public static final String A_CONV_ID = "cid";
+    public static final String A_DRAFT_ID = "did";
     public static final String A_MESSAGE_ID = "mid";
     public static final String A_REF = "ref";
     public static final String A_TARGET_CONSTRAINT = "tcon";
