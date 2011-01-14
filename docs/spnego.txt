@@ -266,7 +266,7 @@ zimbraSpnegoAuthPrincipal   : {zimbraSpnegoAuthTargetName}@{zimbraSpnegoAuthReal
 
 (E) Setup web client logout URL and UAs allowed for the logout URL on the domain
     - Set logout URL.  Logout URL is the URL to redirect to when user clicks on "Logout".
-      zmprov md {domain} zimbraWebClientLogoutURL '../../spnego/spnego_preauth.jsp'
+      zmprov md {domain} zimbraWebClientLogoutURL '../?sso=1'
     
     - Honor only supported platforms and browsers.  
       zimbraWebClientLoginURLAllowedUA is a multi-valued attribute, values are regex.
