@@ -4133,7 +4133,9 @@ public class Mailbox {
                                                          preserveExistingAlarms, discardExistingInvites);
                 }
 
-                queueForIndexing(calItem, !calItemIsNew, null);
+                if (Invite.isOrganizerMethod(inv.getMethod()))  // Don't update the index for replies. (bug 55317)
+                    queueForIndexing(calItem, !calItemIsNew, null);
+
                 redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId());
 
                 success = true;
