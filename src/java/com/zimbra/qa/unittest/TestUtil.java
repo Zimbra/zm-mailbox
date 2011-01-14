@@ -209,8 +209,8 @@ extends Assert {
     {
         // Authenticate
         LmcAdminAuthRequest auth = new LmcAdminAuthRequest();
-        auth.setUsername(getAddress("admin"));
-        auth.setPassword(DEFAULT_PASSWORD);
+        auth.setUsername(LC.zimbra_ldap_user.value());
+        auth.setPassword(LC.zimbra_ldap_password.value());
         LmcAdminAuthResponse authResp = (LmcAdminAuthResponse) auth.invoke(getAdminSoapUrl());
         return authResp.getSession();
     }
@@ -857,7 +857,7 @@ extends Assert {
     }
 
     /**
-     * Returns an authenticated transport for the <tt>admin</tt> account.
+     * Returns an authenticated transport for the <tt>zimbra</tt> account.
      */
     public static SoapTransport getAdminSoapTransport()
     throws SoapFaultException, IOException, ServiceException {
@@ -865,8 +865,8 @@ extends Assert {
 
         // Create auth element
         Element auth = new XMLElement(AdminConstants.AUTH_REQUEST);
-        auth.addElement(AdminConstants.E_NAME).setText(getAddress("admin"));
-        auth.addElement(AdminConstants.E_PASSWORD).setText(DEFAULT_PASSWORD);
+        auth.addElement(AdminConstants.E_NAME).setText(LC.zimbra_ldap_user.value());
+        auth.addElement(AdminConstants.E_PASSWORD).setText(LC.zimbra_ldap_password.value());
 
         // Authenticate and get auth token
         Element response = transport.invoke(auth);
