@@ -849,7 +849,7 @@ public class CalendarMailSender {
         reply.setLocalOnly(false);  // suppress X-ZIMBRA-LOCAL-ONLY property
 
         reply.getTimeZoneMap().add(oldInv.getTimeZoneMap());
-//        reply.setIsAllDayEvent(oldInv.isAllDayEvent());
+        reply.setIsAllDayEvent(oldInv.isAllDayEvent());
 
         Identity identity = null;
         if (identityId != null) {
