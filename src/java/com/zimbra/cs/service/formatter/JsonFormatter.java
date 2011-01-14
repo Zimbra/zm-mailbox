@@ -15,12 +15,13 @@
 package com.zimbra.cs.service.formatter;
 
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 
 public class JsonFormatter extends XmlFormatter {
 
     @Override
-    public String getType() {
-        return "json";
+    public FormatType getType() {
+        return FormatType.JSON;
     }
 
     @Override

@@ -25,15 +25,16 @@ import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
-import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.cs.service.UserServletContext;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 
 public class XmlFormatter extends Formatter {
 
     @Override
-    public String getType() {
-        return "xml";
+    public FormatType getType() {
+        return FormatType.XML;
     }
 
    
@@ -44,7 +45,7 @@ public class XmlFormatter extends Formatter {
     }
 
     @Override
-    public void formatCallback(Context context) throws ServiceException, IOException {
+    public void formatCallback(UserServletContext context) throws ServiceException, IOException {
         Element elt = getFactory().createElement("items");
         ItemIdFormatter ifmt = new ItemIdFormatter(context.authAccount, context.targetMailbox, false);
 

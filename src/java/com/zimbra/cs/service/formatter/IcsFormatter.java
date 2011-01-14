@@ -14,12 +14,24 @@
  */
 package com.zimbra.cs.service.formatter;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import javax.mail.Part;
+import javax.servlet.ServletException;
+
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileBufferedWriter;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.HttpUtil.Browser;
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -32,27 +44,15 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZICalendarParseHandler;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
-import com.zimbra.cs.service.UserServlet.Context;
-
-import javax.mail.Part;
-import javax.servlet.ServletException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 
 public class IcsFormatter extends Formatter {
 
     @Override
-    public String getType() {
-        return "ics";
+    public FormatType getType() {
+        return FormatType.ICS;
     }
 
     @Override
@@ -66,7 +66,7 @@ public class IcsFormatter extends Formatter {
     }
 
     @Override
-    public void formatCallback(Context context) throws IOException, ServiceException {
+    public void formatCallback(UserServletContext context) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         List<CalendarItem> calItems = new ArrayList<CalendarItem>();
         //ZimbraLog.mailbox.info("start = "+new Date(context.getStartTime()));
@@ -144,7 +144,7 @@ public class IcsFormatter extends Formatter {
     }
 
     @Override
-    public void saveCallback(UserServlet.Context context, String contentType, Folder folder, String filename)
+    public void saveCallback(UserServletContext context, String contentType, Folder folder, String filename)
     throws UserServletException, ServiceException, IOException, ServletException {
         boolean continueOnError = context.ignoreAndContinueOnError();
         boolean preserveExistingAlarms = context.preserveAlarms();

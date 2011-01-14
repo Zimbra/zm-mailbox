@@ -20,6 +20,10 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.fb.FreeBusy;
@@ -27,20 +31,17 @@ import com.zimbra.cs.mailbox.Appointment;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
-import com.zimbra.cs.service.UserServlet.Context;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 
 public class IfbFormatter extends Formatter {
 
     private static final long ONE_MONTH = Constants.MILLIS_PER_DAY*31;
-
+    
     @Override
-    public String getType() {
-        return "ifb";
+    public FormatType getType() {
+        return FormatType.IFB;
     }
 
     @Override
@@ -54,7 +55,7 @@ public class IfbFormatter extends Formatter {
     }
 
     @Override
-    public void formatCallback(Context context) throws IOException, ServiceException, UserServletException {
+    public void formatCallback(UserServletContext context) throws IOException, ServiceException, UserServletException {
         context.resp.setCharacterEncoding("UTF-8");
         context.resp.setContentType(MimeConstants.CT_TEXT_CALENDAR);
 

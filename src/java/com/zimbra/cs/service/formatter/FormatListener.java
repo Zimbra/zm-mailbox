@@ -15,7 +15,7 @@
 package com.zimbra.cs.service.formatter;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.UserServletContext;
 
 /**
  * Interface for classes which need to known when a formatter is running
@@ -25,20 +25,20 @@ public interface FormatListener {
     /**
      * Called when the format callback begins
      */
-    public void formatCallbackStarted(UserServlet.Context context) throws ServiceException;
+    public void formatCallbackStarted(UserServletContext context) throws ServiceException;
 
     /**
      * Called when the format callback completes
      */
-    public void formatCallbackEnded(UserServlet.Context context) throws ServiceException;
+    public void formatCallbackEnded(UserServletContext context) throws ServiceException;
 
     /**
      * Called when the save callback begins
      */
-    public void saveCallbackStarted(UserServlet.Context context) throws ServiceException;
+    public void saveCallbackStarted(UserServletContext context) throws ServiceException;
     
     /**
      * Called when the save callback completes
      */
-    public void saveCallbackEnded(UserServlet.Context context) throws ServiceException;
+    public void saveCallbackEnded(UserServletContext context) throws ServiceException;
 }

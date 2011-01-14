@@ -20,18 +20,19 @@ import java.util.Set;
 
 import javax.servlet.ServletException;
 
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.service.UserServletException;
-import com.zimbra.cs.service.UserServlet.Context;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.service.UserServletContext;
+import com.zimbra.cs.service.UserServletException;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 
 public class FreeBusyFormatter extends Formatter {
 
     private static final String ATTR_FREEBUSY = "zimbra_freebusy";
 
     @Override
-    public String getType() {
-        return "freebusy";
+    public FormatType getType() {
+        return FormatType.FREE_BUSY;
     }
 
     @Override
@@ -45,7 +46,7 @@ public class FreeBusyFormatter extends Formatter {
     }
 
     @Override
-    public void formatCallback(Context context)
+    public void formatCallback(UserServletContext context)
             throws IOException, ServiceException, UserServletException, ServletException {
         context.req.setAttribute(ATTR_FREEBUSY, "true");
         HtmlFormatter.dispatchJspRest(context.getServlet(), context);

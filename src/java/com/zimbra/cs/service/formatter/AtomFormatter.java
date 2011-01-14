@@ -19,21 +19,22 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.DateUtil;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.CalendarItem.Instance;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
-import com.zimbra.cs.service.UserServlet.Context;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.soap.Element;
+import com.zimbra.cs.service.UserServletContext;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 
 public class AtomFormatter extends Formatter {
     
-    public void formatCallback(Context context) throws IOException, ServiceException {
+    public void formatCallback(UserServletContext context) throws IOException, ServiceException {
         Iterator<? extends MailItem> iterator = null;
         StringBuffer sb = new StringBuffer();
         Element.XMLElement feed = new Element.XMLElement("feed");
@@ -89,7 +90,7 @@ public class AtomFormatter extends Formatter {
         return System.currentTimeMillis() + (7*Constants.MILLIS_PER_DAY);
     }
     
-    private void addCalendarItem(CalendarItem calItem, Element feed, Context context) throws ServiceException {
+    private void addCalendarItem(CalendarItem calItem, Element feed, UserServletContext context) throws ServiceException {
         Collection<Instance> instances = calItem.expandInstances(context.getStartTime(), context.getEndTime(), false);
         for (Iterator<Instance> instIt = instances.iterator(); instIt.hasNext(); ) {
             CalendarItem.Instance inst = instIt.next();
@@ -109,7 +110,7 @@ public class AtomFormatter extends Formatter {
         
     }
      
-    private void addMessage(Message m, Element feed, Context context) {
+    private void addMessage(Message m, Element feed, UserServletContext context) {
         Element entry = feed.addElement("entry");
         entry.addElement("title").setText(m.getSubject());
         entry.addElement("summary").setText(m.getFragment());
@@ -120,8 +121,9 @@ public class AtomFormatter extends Formatter {
         entry.addElement("modified").setText(DateUtil.toISO8601(new Date(m.getDate())));
     }
 
-    public String getType() {
-        return "atom";
+    @Override
+    public FormatType getType() {
+        return FormatType.ATOM;
     }
 
 }

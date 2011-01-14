@@ -28,8 +28,9 @@ import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
-import com.zimbra.cs.service.UserServlet.Context;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 
 public class ContactFolderFormatter extends Formatter {
@@ -43,7 +44,7 @@ public class ContactFolderFormatter extends Formatter {
     
 
     @Override
-    public void formatCallback(Context context) throws UserServletException,
+    public void formatCallback(UserServletContext context) throws UserServletException,
             ServiceException, IOException, ServletException {
         if (!(context.target instanceof Folder))
             throw UserServletException.notImplemented("can only handle Folders");
@@ -134,9 +135,12 @@ public class ContactFolderFormatter extends Formatter {
         }
     }
 
-    @Override
-    public String getType() {
-        return "cf";
-    }
+	
+	@Override
+	public FormatType getType() {
+		return FormatType.CONTACT_FOLDER;
+	}
+
+    
 
 }
