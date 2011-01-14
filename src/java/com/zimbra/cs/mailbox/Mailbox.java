@@ -467,8 +467,11 @@ public class Mailbox {
                 // bug 39647: wiki to document migration
                 if (!version.atLeast(1, 10)) {
                     ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.10", getVersion());
-                    migrateWikiFolders();
+                    // update the version first so that the same mailbox
+                    // don't have to go through the migration again
+                    // if it was called to open() during the migration.
                     updateVersion(new MailboxVersion((short) 1, (short) 10));
+                    migrateWikiFolders();
                 }
 
                 if (!version.atLeast(1, 11)) {
