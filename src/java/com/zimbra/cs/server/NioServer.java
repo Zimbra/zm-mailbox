@@ -35,6 +35,7 @@ import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
+import org.apache.mina.core.filterchain.IoFilter;
 import org.apache.mina.core.service.IoProcessor;
 import org.apache.mina.core.service.SimpleIoProcessorPool;
 import org.apache.mina.core.session.IoSession;
@@ -49,6 +50,8 @@ import org.apache.mina.transport.socket.nio.NioProcessor;
 import org.apache.mina.transport.socket.nio.NioSession;
 import org.apache.mina.transport.socket.nio.ZimbraSocketAcceptor;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -62,6 +65,7 @@ import com.zimbra.cs.util.Zimbra;
  * instances.
  */
 public abstract class NioServer implements Server {
+    private static final Multimap<Class<? extends NioServer>, IoFilter> FILTERS = ArrayListMultimap.create();
     protected static final ProtocolEncoder DEFAULT_ENCODER = new DefaultEncoder();
     protected final ExecutorFilter executorFilter;
     protected final ZimbraSocketAcceptor acceptor;
@@ -74,6 +78,16 @@ public abstract class NioServer implements Server {
     private static final IoProcessor<NioSession> IO_PROCESSOR_POOL =
         new SimpleIoProcessorPool<NioSession>(NioProcessor.class, Executors.newCachedThreadPool(
                 new ThreadFactoryBuilder().setNameFormat("NioProcessor-%d").build()));
+
+    /**
+     * Extensions may add a custom {@link IoFilter} to the filter chain. Must call before the server starts.
+     *
+     * @param server {@link NioServer} implementation to which the filter is added
+     * @param filter a custom filter
+     */
+    public static void addFilter(Class<? extends NioServer> server, IoFilter filter) {
+        FILTERS.put(server, filter);
+    }
 
     private static synchronized SSLContext getSSLContext() {
         if (sslContext == null) {
@@ -202,6 +216,9 @@ public abstract class NioServer implements Server {
         }
         fc.addLast("codec", new ProtocolCodecFilter(getProtocolCodecFactory()));
         fc.addLast("executer", executorFilter);
+        for (IoFilter filter : FILTERS.get(getClass())) { // insert custom filters
+            fc.addLast(filter.getClass().getName(), filter);
+        }
         fc.addLast("logger", new NioLoggingFilter(this, false));
         acceptor.getSessionConfig().setBothIdleTime(sc.getMaxIdleTime());
         acceptor.getSessionConfig().setWriteTimeout(sc.getWriteTimeout());
@@ -291,7 +308,7 @@ public abstract class NioServer implements Server {
             }
         }
     };
-    
+
     /**
      * Returns the number of connections currently established.
      */
