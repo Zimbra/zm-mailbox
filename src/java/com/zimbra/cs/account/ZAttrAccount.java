@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 7.0.0_BETA1_1111 pshao 20110117-1442 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -12794,13 +12794,13 @@ public class ZAttrAccount  extends MailTarget {
      * Maximum number of messages that can be processed in a single
      * ApplyFilterRules operation.
      *
-     * @return zimbraFilterBatchSize, or 1000 if unset
+     * @return zimbraFilterBatchSize, or 10000 if unset
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1158)
     public int getFilterBatchSize() {
-        return getIntAttr(Provisioning.A_zimbraFilterBatchSize, 1000);
+        return getIntAttr(Provisioning.A_zimbraFilterBatchSize, 10000);
     }
 
     /**

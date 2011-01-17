@@ -5285,7 +5285,7 @@ TODO: delete them permerntly from here
 </attr>
 
 <attr id="1158" name="zimbraFilterBatchSize" type="integer" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable,accountInfo" since="7.0.0">
-  <defaultCOSValue>1000</defaultCOSValue>
+  <defaultCOSValue>10000</defaultCOSValue>
   <desc>Maximum number of messages that can be processed in a single ApplyFilterRules operation.</desc>
 </attr>
 

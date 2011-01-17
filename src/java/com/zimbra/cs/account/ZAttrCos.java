@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 7.0.0_BETA1_1111 pshao 20110117-1442 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -8646,13 +8646,13 @@ public class ZAttrCos extends NamedEntry {
      * Maximum number of messages that can be processed in a single
      * ApplyFilterRules operation.
      *
-     * @return zimbraFilterBatchSize, or 1000 if unset
+     * @return zimbraFilterBatchSize, or 10000 if unset
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1158)
     public int getFilterBatchSize() {
-        return getIntAttr(Provisioning.A_zimbraFilterBatchSize, 1000);
+        return getIntAttr(Provisioning.A_zimbraFilterBatchSize, 10000);
     }
 
     /**
