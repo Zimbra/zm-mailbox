@@ -97,7 +97,10 @@ public class ExchangeFreeBusyProvider extends FreeBusyProvider {
             info.scheme = AuthScheme.valueOf(scheme);
             info.org = getAttr(Provisioning.A_zimbraFreebusyExchangeUserOrg, emailAddr);
             try {
-                Account acct = Provisioning.getInstance().get(AccountBy.name, emailAddr);
+                Account acct = null;
+                if (emailAddr != null) {
+                    acct = Provisioning.getInstance().get(AccountBy.name, emailAddr);
+                }
                 if (acct != null) {
                     String fps[] = acct.getMultiAttr(Provisioning.A_zimbraForeignPrincipal);
                     if (fps != null && fps.length > 0) {
