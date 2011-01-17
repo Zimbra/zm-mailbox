@@ -61,38 +61,38 @@ public class WaitSetRequest extends MailDocumentHandler {
     private static final long DEFAULT_ADMIN_TIMEOUT;
     private static final long MIN_ADMIN_TIMEOUT;
     private static final long MAX_ADMIN_TIMEOUT;
-    private static final long INITIAL_SLEEP_TIME;
-    private static final long NODATA_SLEEP_TIME;
+    private static final long INITIAL_SLEEP_TIME_MILLIS;
+    private static final long NODATA_SLEEP_TIME_MILLIS;
 
     static {
-        DEFAULT_TIMEOUT = LC.zimbra_waitset_default_request_timeout.longValueWithinRange(0, Constants.SECONDS_PER_DAY) * 1000;
-        MIN_TIMEOUT = LC.zimbra_waitset_min_request_timeout.longValueWithinRange(0, Constants.SECONDS_PER_DAY) * 1000;
-        MAX_TIMEOUT = LC.zimbra_waitset_max_request_timeout.longValueWithinRange(0, Constants.SECONDS_PER_DAY) * 1000;
+        DEFAULT_TIMEOUT = LC.zimbra_waitset_default_request_timeout.longValueWithinRange(1, Constants.SECONDS_PER_DAY);
+        MIN_TIMEOUT = LC.zimbra_waitset_min_request_timeout.longValueWithinRange(1, Constants.SECONDS_PER_DAY);
+        MAX_TIMEOUT = LC.zimbra_waitset_max_request_timeout.longValueWithinRange(1, Constants.SECONDS_PER_DAY);
 
-        DEFAULT_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_default_request_timeout.longValueWithinRange(0, Constants.SECONDS_PER_DAY) * 1000;
-        MIN_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_min_request_timeout.longValueWithinRange(0, Constants.SECONDS_PER_DAY) * 1000;
-        MAX_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_max_request_timeout.longValueWithinRange(0, Constants.SECONDS_PER_DAY) * 1000;
+        DEFAULT_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_default_request_timeout.longValueWithinRange(1, Constants.SECONDS_PER_DAY);
+        MIN_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_min_request_timeout.longValueWithinRange(1, Constants.SECONDS_PER_DAY);
+        MAX_ADMIN_TIMEOUT = LC.zimbra_admin_waitset_max_request_timeout.longValueWithinRange(1, Constants.SECONDS_PER_DAY);
 
-        INITIAL_SLEEP_TIME = LC.zimbra_waitset_initial_sleep_time.longValueWithinRange(0,5*Constants.SECONDS_PER_MINUTE * 1000);
-        NODATA_SLEEP_TIME = LC.zimbra_waitset_nodata_sleep_time.longValueWithinRange(0,5*Constants.SECONDS_PER_MINUTE * 1000);
+        INITIAL_SLEEP_TIME_MILLIS = LC.zimbra_waitset_initial_sleep_time.longValueWithinRange(1, 5 * Constants.SECONDS_PER_MINUTE * 1000);
+        NODATA_SLEEP_TIME_MILLIS = LC.zimbra_waitset_nodata_sleep_time.longValueWithinRange(1, 5 * Constants.SECONDS_PER_MINUTE * 1000);
     }
 
-    private static long getTimeout(Element request, boolean isAdminRequest) throws ServiceException {
+    private static long getTimeoutMillis(Element request, boolean isAdminRequest) throws ServiceException {
+        long to;
         if (!isAdminRequest) {
-            long to = request.getAttributeLong(MailConstants.A_TIMEOUT, DEFAULT_TIMEOUT);
+            to = request.getAttributeLong(MailConstants.A_TIMEOUT, DEFAULT_TIMEOUT);
             if (to < MIN_TIMEOUT)
                 to = MIN_TIMEOUT;
             if (to > MAX_TIMEOUT)
                 to = MAX_TIMEOUT;
-            return to;
         } else {
-            long to = request.getAttributeLong(MailConstants.A_TIMEOUT, DEFAULT_ADMIN_TIMEOUT);
+            to = request.getAttributeLong(MailConstants.A_TIMEOUT, DEFAULT_ADMIN_TIMEOUT);
             if (to < MIN_ADMIN_TIMEOUT)
                 to = MIN_ADMIN_TIMEOUT;
             if (to > MAX_ADMIN_TIMEOUT)
                 to = MAX_ADMIN_TIMEOUT;
-            return to;
         }
+        return to * 1000;
     }
 
     /*
@@ -157,10 +157,12 @@ public class WaitSetRequest extends MailDocumentHandler {
         Callback cb;
 
         if (context.containsKey(SoapServlet.IS_RESUMED_REQUEST)) {
+            ZimbraLog.session.debug("<WaitSetRequest> - resumed request (jetty continuation)");
             cb  = (Callback)servletRequest.getAttribute(VARS_ATTR_NAME);
             // load variables here
             continuation = ContinuationSupport.getContinuation(servletRequest, cb);
         } else {
+            ZimbraLog.session.debug("<WaitSetRequest> - initial request");
             cb = new Callback();
             continuation = ContinuationSupport.getContinuation(servletRequest, cb);
             cb.continuation = continuation;
@@ -215,7 +217,7 @@ public class WaitSetRequest extends MailDocumentHandler {
 
             // Force the client to wait briefly before processing -- this will stop 'bad' clients from polling
             // the server in a very fast loop (they should be using the 'block' mode)
-            try { Thread.sleep(INITIAL_SLEEP_TIME); } catch (InterruptedException ex) {}
+            try { Thread.sleep(INITIAL_SLEEP_TIME_MILLIS); } catch (InterruptedException ex) {}
 
             cb.errors.addAll(cb.ws.removeAccounts(remove));
             synchronized(cb.ws) { // bug 28190: always grab the WS lock before the CB lock.
@@ -233,11 +235,11 @@ public class WaitSetRequest extends MailDocumentHandler {
                 // before going into the notification wait...basically we're just
                 // trying to let the server coalesce notification data a little
                 // bit.
-                try { Thread.sleep(NODATA_SLEEP_TIME); } catch (InterruptedException ex) {}
+                try { Thread.sleep(NODATA_SLEEP_TIME_MILLIS); } catch (InterruptedException ex) {}
 
                 synchronized (cb) {
                     if (!cb.completed) { // don't wait if it completed right away
-                        continuation.suspend(getTimeout(request, adminAllowed));
+                        continuation.suspend(getTimeoutMillis(request, adminAllowed));
                     }
                 }
             }
@@ -266,6 +268,7 @@ public class WaitSetRequest extends MailDocumentHandler {
 
         encodeErrors(response, cb.errors);
 
+        ZimbraLog.session.debug("<WaitSetResponse> - returning waitset response");
         return response;
     }
 
