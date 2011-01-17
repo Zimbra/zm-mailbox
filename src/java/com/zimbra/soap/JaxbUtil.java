@@ -23,6 +23,10 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import org.dom4j.Document;
+import org.dom4j.io.DocumentResult;
+import org.dom4j.io.DocumentSource;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
@@ -38,10 +42,6 @@ import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
 import com.zimbra.soap.account.message.ModifyPropertiesRequest;
 import com.zimbra.soap.account.message.ModifyPropertiesResponse;
-import com.zimbra.soap.admin.message.GetServerStatsRequest;
-import com.zimbra.soap.admin.message.GetServerStatsResponse;
-import com.zimbra.soap.admin.message.ReloadLocalConfigRequest;
-import com.zimbra.soap.admin.message.ReloadLocalConfigResponse;
 import com.zimbra.soap.mail.message.ExportContactsRequest;
 import com.zimbra.soap.mail.message.ExportContactsResponse;
 import com.zimbra.soap.mail.message.GetDataSourcesRequest;
@@ -83,10 +83,108 @@ public final class JaxbUtil {
             ImportContactsResponse.class,
 
             // zimbraAdmin
-            ReloadLocalConfigRequest.class,
-            ReloadLocalConfigResponse.class,
-            GetServerStatsRequest.class,
-            GetServerStatsResponse.class
+            com.zimbra.soap.admin.message.AddAccountAliasRequest.class,
+            com.zimbra.soap.admin.message.AddAccountAliasResponse.class,
+            com.zimbra.soap.admin.message.AuthRequest.class,
+            com.zimbra.soap.admin.message.AuthResponse.class,
+            com.zimbra.soap.admin.message.CheckHealthRequest.class,
+            com.zimbra.soap.admin.message.CheckHealthResponse.class,
+            com.zimbra.soap.admin.message.CheckPasswordStrengthRequest.class,
+            com.zimbra.soap.admin.message.CheckPasswordStrengthResponse.class,
+            com.zimbra.soap.admin.message.CopyCosRequest.class,
+            com.zimbra.soap.admin.message.CopyCosResponse.class,
+            com.zimbra.soap.admin.message.CountAccountRequest.class,
+            com.zimbra.soap.admin.message.CountAccountResponse.class,
+            com.zimbra.soap.admin.message.CreateAccountRequest.class,
+            com.zimbra.soap.admin.message.CreateAccountResponse.class,
+            com.zimbra.soap.admin.message.CreateCosRequest.class,
+            com.zimbra.soap.admin.message.CreateCosResponse.class,
+            com.zimbra.soap.admin.message.CreateDomainRequest.class,
+            com.zimbra.soap.admin.message.CreateDomainResponse.class,
+            com.zimbra.soap.admin.message.CreateServerRequest.class,
+            com.zimbra.soap.admin.message.CreateServerResponse.class,
+            com.zimbra.soap.admin.message.DelegateAuthRequest.class,
+            com.zimbra.soap.admin.message.DelegateAuthResponse.class,
+            com.zimbra.soap.admin.message.DeleteAccountRequest.class,
+            com.zimbra.soap.admin.message.DeleteAccountResponse.class,
+            com.zimbra.soap.admin.message.DeleteCosRequest.class,
+            com.zimbra.soap.admin.message.DeleteCosResponse.class,
+            com.zimbra.soap.admin.message.DeleteDomainRequest.class,
+            com.zimbra.soap.admin.message.DeleteDomainResponse.class,
+            com.zimbra.soap.admin.message.DeleteMailboxRequest.class,
+            com.zimbra.soap.admin.message.DeleteMailboxResponse.class,
+            com.zimbra.soap.admin.message.DeleteServerRequest.class,
+            com.zimbra.soap.admin.message.DeleteServerResponse.class,
+            com.zimbra.soap.admin.message.FlushCacheRequest.class,
+            com.zimbra.soap.admin.message.FlushCacheResponse.class,
+            com.zimbra.soap.admin.message.GetAccountInfoRequest.class,
+            com.zimbra.soap.admin.message.GetAccountInfoResponse.class,
+            com.zimbra.soap.admin.message.GetAccountMembershipRequest.class,
+            com.zimbra.soap.admin.message.GetAccountMembershipResponse.class,
+            com.zimbra.soap.admin.message.GetAccountRequest.class,
+            com.zimbra.soap.admin.message.GetAccountResponse.class,
+            com.zimbra.soap.admin.message.GetAllAccountsRequest.class,
+            com.zimbra.soap.admin.message.GetAllAccountsResponse.class,
+            com.zimbra.soap.admin.message.GetAllAdminAccountsRequest.class,
+            com.zimbra.soap.admin.message.GetAllAdminAccountsResponse.class,
+            com.zimbra.soap.admin.message.GetAllConfigRequest.class,
+            com.zimbra.soap.admin.message.GetAllConfigResponse.class,
+            com.zimbra.soap.admin.message.GetAllCosRequest.class,
+            com.zimbra.soap.admin.message.GetAllCosResponse.class,
+            com.zimbra.soap.admin.message.GetAllDomainsRequest.class,
+            com.zimbra.soap.admin.message.GetAllDomainsResponse.class,
+            com.zimbra.soap.admin.message.GetAllLocalesRequest.class,
+            com.zimbra.soap.admin.message.GetAllLocalesResponse.class,
+            com.zimbra.soap.admin.message.GetAllMailboxesRequest.class,
+            com.zimbra.soap.admin.message.GetAllMailboxesResponse.class,
+            com.zimbra.soap.admin.message.GetAllServersRequest.class,
+            com.zimbra.soap.admin.message.GetAllServersResponse.class,
+            com.zimbra.soap.admin.message.GetConfigRequest.class,
+            com.zimbra.soap.admin.message.GetConfigResponse.class,
+            com.zimbra.soap.admin.message.GetCosRequest.class,
+            com.zimbra.soap.admin.message.GetCosResponse.class,
+            com.zimbra.soap.admin.message.GetDomainInfoRequest.class,
+            com.zimbra.soap.admin.message.GetDomainInfoResponse.class,
+            com.zimbra.soap.admin.message.GetDomainRequest.class,
+            com.zimbra.soap.admin.message.GetDomainResponse.class,
+            com.zimbra.soap.admin.message.GetMailboxRequest.class,
+            com.zimbra.soap.admin.message.GetMailboxResponse.class,
+            com.zimbra.soap.admin.message.GetMailboxStatsRequest.class,
+            com.zimbra.soap.admin.message.GetMailboxStatsResponse.class,
+            com.zimbra.soap.admin.message.GetServerRequest.class,
+            com.zimbra.soap.admin.message.GetServerResponse.class,
+            com.zimbra.soap.admin.message.GetServerStatsRequest.class,
+            com.zimbra.soap.admin.message.GetServerStatsResponse.class,
+            com.zimbra.soap.admin.message.GetServiceStatusRequest.class,
+            com.zimbra.soap.admin.message.GetServiceStatusResponse.class,
+            com.zimbra.soap.admin.message.ModifyAccountRequest.class,
+            com.zimbra.soap.admin.message.ModifyAccountResponse.class,
+            com.zimbra.soap.admin.message.ModifyConfigRequest.class,
+            com.zimbra.soap.admin.message.ModifyConfigResponse.class,
+            com.zimbra.soap.admin.message.ModifyCosRequest.class,
+            com.zimbra.soap.admin.message.ModifyCosResponse.class,
+            com.zimbra.soap.admin.message.ModifyDomainRequest.class,
+            com.zimbra.soap.admin.message.ModifyDomainResponse.class,
+            com.zimbra.soap.admin.message.ModifyServerRequest.class,
+            com.zimbra.soap.admin.message.ModifyServerResponse.class,
+            com.zimbra.soap.admin.message.NoOpRequest.class,
+            com.zimbra.soap.admin.message.NoOpResponse.class,
+            com.zimbra.soap.admin.message.PingRequest.class,
+            com.zimbra.soap.admin.message.PingResponse.class,
+            com.zimbra.soap.admin.message.RecalculateMailboxCountsRequest.class,
+            com.zimbra.soap.admin.message.RecalculateMailboxCountsResponse.class,
+            com.zimbra.soap.admin.message.ReloadLocalConfigRequest.class,
+            com.zimbra.soap.admin.message.ReloadLocalConfigResponse.class,
+            com.zimbra.soap.admin.message.RemoveAccountAliasRequest.class,
+            com.zimbra.soap.admin.message.RemoveAccountAliasResponse.class,
+            com.zimbra.soap.admin.message.RenameAccountRequest.class,
+            com.zimbra.soap.admin.message.RenameAccountResponse.class,
+            com.zimbra.soap.admin.message.RenameCosRequest.class,
+            com.zimbra.soap.admin.message.RenameCosResponse.class,
+            com.zimbra.soap.admin.message.SearchDirectoryRequest.class,
+            com.zimbra.soap.admin.message.SearchDirectoryResponse.class,
+            com.zimbra.soap.admin.message.SetPasswordRequest.class,
+            com.zimbra.soap.admin.message.SetPasswordResponse.class
         };
 
         try {
@@ -104,10 +202,11 @@ public final class JaxbUtil {
         try {
             Marshaller marshaller = getContext().createMarshaller();
             // marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            marshaller.marshal(o, out);
-            byte[] content = out.toByteArray();
-            return Element.parseXML(new ByteArrayInputStream(content));
+            DocumentResult dr = new DocumentResult();
+            marshaller.marshal(o, dr); 
+            Document theDoc = dr.getDocument();
+            org.dom4j.Element rootElem = theDoc.getRootElement();
+            return Element.convertDOM(rootElem);
         } catch (Exception e) {
             throw ServiceException.FAILURE("Unable to convert " + o.getClass().getName() + " to Element", e);
         }
@@ -118,12 +217,12 @@ public final class JaxbUtil {
     throws ServiceException {
         try {
             Unmarshaller unmarshaller = getContext().createUnmarshaller();
-            String responseXml = e.prettyPrint();
-            return (T) unmarshaller.unmarshal(new ByteArrayInputStream(responseXml.getBytes()));
+            org.dom4j.Element rootElem = e.toXML();
+            DocumentSource docSrc = new DocumentSource(rootElem);
+            return (T) unmarshaller.unmarshal(docSrc);
         } catch (JAXBException ex) {
             throw ServiceException.FAILURE("Unable to unmarshal response for " + e.getName(), ex);
         }
-
     }
 
     private static JAXBContext getContext()
