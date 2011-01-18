@@ -21,13 +21,24 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class DomainSelector {
-    // TODO: Change com.zimbra.cs.account.Provisioning.DomainBy to use this
     @XmlEnum
-    public enum DomainBy { id, name, virtualHostname, krb5Realm, foreignName }
+    public enum DomainBy {
+        // case must match protocol
+        id, name, virtualHostname, krb5Realm, foreignName;
+
+        public static DomainBy fromString(String s) throws ServiceException {
+            try {
+                return DomainBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    }
 
     @XmlValue private final String key;
     @XmlAttribute(name=AdminConstants.A_BY) private final DomainBy domainBy;

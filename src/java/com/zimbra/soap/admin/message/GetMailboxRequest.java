@@ -30,12 +30,17 @@ import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 public class GetMailboxRequest {
 
     @XmlElement(name=AdminConstants.E_MAILBOX, required=false)
-    private MailboxByAccountIdSelector mbox;
+    private final MailboxByAccountIdSelector mbox;
 
-    public GetMailboxRequest() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private GetMailboxRequest() {
+        this(null);
     }
 
-    public void setMbox(MailboxByAccountIdSelector mbox) {
+    public GetMailboxRequest(MailboxByAccountIdSelector mbox) {
         this.mbox = mbox;
     }
 

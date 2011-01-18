@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -18,30 +18,23 @@ package com.zimbra.soap.admin.message;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.DomainInfo;
 
-@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_ALL_DOMAINS_RESPONSE)
-@XmlType(propOrder = {})
 public class GetAllDomainsResponse {
 
     @XmlElement(name=AdminConstants.E_DOMAIN)
-    private List <DomainInfo> domain = new ArrayList<DomainInfo>();
+    private List <DomainInfo> domainList = new ArrayList<DomainInfo>();
 
     public GetAllDomainsResponse() {
     }
 
     public void addDomain(DomainInfo domain ) {
-        this.getDomain().add(domain);
+        this.getDomainList().add(domain);
     }
 
-    public List <DomainInfo> getDomain() {
-        return domain;
-    }
+    public List <DomainInfo> getDomainList() { return domainList; }
 }

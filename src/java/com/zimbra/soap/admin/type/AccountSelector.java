@@ -22,14 +22,25 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class AccountSelector {
 
-    // TODO: Change com.zimbra.cs.account.Provisioning.AccountBy to use this
     @XmlEnum
-    public enum AccountBy { name, id, foreignPrincipal, adminName, appAdminName, krb5Principal }
+    public enum AccountBy {
+        // case must match protocol
+        name, id, foreignPrincipal, adminName, appAdminName, krb5Principal;
+        
+        public static AccountBy fromString(String s) throws ServiceException {
+            try {
+                return AccountBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    }
 
     @XmlValue private final String key;
     @XmlAttribute(name=AdminConstants.A_BY) private final AccountBy accountBy;

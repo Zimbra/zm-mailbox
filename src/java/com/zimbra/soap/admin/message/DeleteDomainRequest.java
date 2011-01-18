@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,30 +15,25 @@
 
 package com.zimbra.soap.admin.message;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_DELETE_DOMAIN_REQUEST)
-@XmlType(propOrder = {})
 public class DeleteDomainRequest {
 
     @XmlAttribute(name=AdminConstants.E_ID, required=true)
-    private String id;
+    private final String id;
 
-    public DeleteDomainRequest() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private DeleteDomainRequest() {
+        this(null);
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
+    public DeleteDomainRequest(String id) { this.id = id; }
 
-    public String getId() {
-        return id;
-    }
+    public String getId() { return id; }
 }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -31,12 +31,18 @@ import com.zimbra.soap.admin.type.AccountSelector;
 @XmlType(propOrder = {})
 public class AuthRequest {
 
-    @XmlElement(name=AccountConstants.E_AUTH_TOKEN) private String authToken;
-    @XmlAttribute(name=AdminConstants.E_NAME, required=false) private String name;
+    // TODO: authToken can be more complex than this and needs to be extendable.
+    @XmlElement(name=AccountConstants.E_AUTH_TOKEN)
+    private String authToken;
+    @XmlAttribute(name=AdminConstants.E_NAME, required=false)
+    private String name;
     // password must be present if not using AuthToken
-    @XmlAttribute(name=AdminConstants.E_PASSWORD, required=false) private String password;
-    @XmlElement(name=AccountConstants.E_ACCOUNT, required=false) private AccountSelector account;
-    @XmlElement(name=AccountConstants.E_VIRTUAL_HOST, required=false) private String virtualHost;
+    @XmlAttribute(name=AdminConstants.E_PASSWORD, required=false)
+    private String password;
+    @XmlElement(name=AccountConstants.E_ACCOUNT, required=false)
+    private AccountSelector account;
+    @XmlElement(name=AccountConstants.E_VIRTUAL_HOST, required=false)
+    private String virtualHost;
     public AuthRequest() {
         this.authToken = null;
         this.name = null;

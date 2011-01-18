@@ -17,9 +17,13 @@ package com.zimbra.soap.admin.type;
 
 import java.util.List;
 import java.util.Collection;
+import java.util.Map;
+
+import com.zimbra.common.service.ServiceException;
 
 public interface AdminAttrs {
-    public AdminAttrs setA(Collection<Attr> attrs);
-    public AdminAttrs addA(Attr attr);
-    public List<Attr> getA();
+    public AdminAttrs setAttrs(Collection<Attr> attrs);
+    public AdminAttrsImpl setAttrs(Map<String, ? extends Object> attrs) throws ServiceException;
+    public AdminAttrs addAttr(Attr attr);
+    public List<Attr> getAttrs();
 }

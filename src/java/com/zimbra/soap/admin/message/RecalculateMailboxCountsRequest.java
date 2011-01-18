@@ -15,27 +15,26 @@
 
 package com.zimbra.soap.admin.message;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
 
-@XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_RECALCULATE_MAILBOX_COUNTS_REQUEST)
-@XmlType(propOrder = {})
 public class RecalculateMailboxCountsRequest {
 
     @XmlElement(name=AdminConstants.E_MAILBOX, required=true)
-    private MailboxByAccountIdSelector mbox;
+    private final MailboxByAccountIdSelector mbox;
 
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
     public RecalculateMailboxCountsRequest() {
+        this(null);
     }
 
-    public void setMbox(MailboxByAccountIdSelector mbox) {
+    public RecalculateMailboxCountsRequest(MailboxByAccountIdSelector mbox) {
         this.mbox = mbox;
     }
 

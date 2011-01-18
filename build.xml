@@ -23,6 +23,9 @@
 
   <property name="xml.schema.dir" location="${build.dir}/schema"/>
 
+  <property name="TESTNAME" value="com.zimbra.soap.admin.GetServerTest" />
+  <property name="WSDLTEST" value="com.zimbra.soap.account.WSDLAuthRequestTest" />
+
   <path id="all.java.path">
     <pathelement location="${src.java.dir}" />
   </path>
@@ -168,6 +171,18 @@
     <echo>WSDL Test Report: ${wsdl.test.dir}/report/index.html</echo>
   </target>
 
+  <!-- e.g. ant -DWSDLTEST=com.zimbra.soap.account.WSDLAuthRequestTest one-wsdl-test -->
+  <target name="one-wsdl-test" depends="wsdl-test-compile" description="Run a single unit test">
+    <delete dir="${wsdl.test.dir}-one" quiet="true"/>
+    <mkdir dir="${wsdl.test.dir}-one/output"/>
+    <junit printsummary="on" haltonfailure="on" tempdir="${wsdl.test.dir}-one">
+      <classpath refid="wsdl.test.class.path"/>
+      <classpath path="${wsdl.test.classes.dir}"/>
+      <formatter type="xml"/>
+      <test name="${WSDLTEST}" todir="${wsdl.test.dir}-one/output" />
+    </junit>
+  </target>
+
   <target name="test-compile" depends="compile">
     <mkdir dir="${test.classes.dir}"/>
     <javac srcdir="${test.src.dir}" destdir="${test.classes.dir}"
@@ -197,6 +212,18 @@
       <report todir="${test.dir}/report"/>
     </junitreport>
     <echo>Test Report: ${test.dir}/report/index.html</echo>
+  </target>
+
+  <!-- e.g. ant -DTESTNAME=com.zimbra.soap.admin.GetServerTest one-test -->
+  <target name="one-test" depends="test-compile" description="Run unit tests">
+    <delete dir="${test.dir}-one" quiet="true"/>
+    <mkdir dir="${test.dir}-one/output"/>
+    <junit printsummary="on" haltonfailure="on" tempdir="${test.dir}-one">
+      <classpath refid="test.class.path"/>
+      <classpath path="${test.classes.dir}"/>
+      <formatter type="xml"/>
+      <test name="${TESTNAME}" todir="${test.dir}-one/output" />
+    </junit>
   </target>
 
 </project>

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,32 +15,26 @@
 
 package com.zimbra.soap.admin.message;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_ALL_ADMIN_ACCOUNTS_REQUEST)
-@XmlType(propOrder = {})
 public class GetAllAdminAccountsRequest {
 
     @XmlAttribute(name=AdminConstants.A_APPLY_COS, required=false)
-    private boolean applyCos = true;
+    private Boolean applyCos = true;
 
     public GetAllAdminAccountsRequest() {
     }
 
-    public void setApplyCos(boolean applyCos) {
+    public GetAllAdminAccountsRequest(Boolean applyCos) {
+        setApplyCos(applyCos);
+    }
+
+    public void setApplyCos(Boolean applyCos) {
         this.applyCos = applyCos;
     }
 
-    public boolean isApplyCos() {
-        return applyCos;
-    }
-
+    public Boolean isApplyCos() { return applyCos; }
 }

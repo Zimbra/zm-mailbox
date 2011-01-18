@@ -22,14 +22,25 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CosSelector {
 
-    // TODO: Change com.zimbra.cs.account.Provisioning.CosBy to use this
     @XmlEnum
-    public static enum CosBy { id, name }
+    public static enum CosBy { 
+        // case must match protocol
+        id, name;
+        
+        public static CosBy fromString(String s) throws ServiceException {
+            try {
+                return CosBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    }
 
     @XmlValue private final String key;
     @XmlAttribute(name=AdminConstants.A_BY) private final CosBy cosBy;

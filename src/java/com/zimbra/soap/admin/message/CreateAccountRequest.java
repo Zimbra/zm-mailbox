@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,63 +15,47 @@
 
 package com.zimbra.soap.admin.message;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Map;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.Attr;
+import com.zimbra.soap.admin.type.AdminAttrsImpl;
 
-@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_CREATE_ACCOUNT_REQUEST)
-@XmlType(propOrder = {})
-public class CreateAccountRequest {
+public class CreateAccountRequest extends AdminAttrsImpl {
 
     @XmlAttribute(name=AdminConstants.E_NAME, required=true) private String name;
     @XmlAttribute(name=AdminConstants.E_PASSWORD, required=true) private String password;
-    @XmlElement(name=AdminConstants.E_A)
-    private List<Attr> attrs = new ArrayList<Attr>();
 
     public CreateAccountRequest() {
+        this(null, null, (Collection <Attr>) null);
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public CreateAccountRequest(String name, String password) {
+        this(name, password, (Collection <Attr>) null);
     }
 
-    public String getName() {
-        return name;
+    public CreateAccountRequest(String name, String password, Collection<Attr> attrs) {
+        setName(name);
+        setPassword(password);
+        super.setAttrs(attrs);
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public CreateAccountRequest(String name, String password,
+            Map<String, ? extends Object> attrs)
+    throws ServiceException {
+        setName(name);
+        setPassword(password);
+        super.setAttrs(attrs);
     }
 
-    public String getPassword() {
-        return password;
-    }
+    public void setName(String name) { this.name = name; }
+    public void setPassword(String password) { this.password = password; }
 
-    public CreateAccountRequest setAttrs(Collection<Attr> attrs) {
-        this.attrs.clear();
-        if (attrs != null) {
-            this.attrs.addAll(attrs);
-        }
-        return this;
-    }
-
-    public CreateAccountRequest addAttr(Attr attr) {
-        attrs.add(attr);
-        return this;
-    }
-
-    public List<Attr> getAttrs() {
-        return Collections.unmodifiableList(attrs);
-    }
+    public String getName() { return name; }
+    public String getPassword() { return password; }
 }

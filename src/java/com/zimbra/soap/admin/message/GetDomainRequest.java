@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,41 +15,37 @@
 
 package com.zimbra.soap.admin.message;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AttributeSelectorImpl;
 import com.zimbra.soap.admin.type.DomainSelector;
 
-@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_DOMAIN_REQUEST)
-@XmlType(propOrder = {})
 public class GetDomainRequest extends AttributeSelectorImpl {
     @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
-    private boolean applyConfig = true;
+    private Boolean applyConfig = true;
     @XmlElement(name=AdminConstants.E_DOMAIN)
     private DomainSelector domain;
 
     public GetDomainRequest() {
+        this(null, null);
     }
 
-    public void setApplyConfig(boolean applyConfig) {
-        this.applyConfig = applyConfig;
+    public GetDomainRequest(DomainSelector domain, Boolean applyConfig) {
+        setDomain(domain);
+        setApplyConfig(applyConfig);
     }
 
-    public boolean isApplyConfig() {
-        return applyConfig;
-    }
-
-    public void setDomain(DomainSelector domain) {
+    void setDomain(DomainSelector domain) {
         this.domain = domain;
     }
 
-    public DomainSelector getDomain() {
-        return domain;
+    public void setApplyConfig(Boolean applyConfig) {
+        this.applyConfig = applyConfig;
     }
+
+    public DomainSelector getDomain() { return domain; }
+    public Boolean isApplyConfig() { return applyConfig; }
 }

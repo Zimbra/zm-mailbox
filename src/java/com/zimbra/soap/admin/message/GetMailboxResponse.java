@@ -15,27 +15,26 @@
 
 package com.zimbra.soap.admin.message;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.MailboxWithMailboxId;
 
-@XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_MAILBOX_RESPONSE)
-@XmlType(propOrder = {})
 public class GetMailboxResponse {
 
     @XmlElement(name=AdminConstants.E_MAILBOX, required=true)
-    private MailboxWithMailboxId mbox;
+    private final MailboxWithMailboxId mbox;
 
-    public GetMailboxResponse() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private GetMailboxResponse() {
+        this(null);
     }
 
-    public void setMbox(MailboxWithMailboxId mbox) {
+    public GetMailboxResponse(MailboxWithMailboxId mbox) {
         this.mbox = mbox;
     }
 

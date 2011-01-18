@@ -17,7 +17,6 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
@@ -31,21 +30,26 @@ import com.zimbra.soap.admin.type.CosSelector;
 public class CopyCosRequest {
 
     @XmlElement(name=AdminConstants.E_NAME)
-    private String name;
+    private String newName;
     @XmlElement(name=AdminConstants.E_COS)
     private CosSelector cos;
 
     public CopyCosRequest() {
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public CopyCosRequest(CosSelector cos, String newName) {
+        this.newName = newName;
+        this.cos = cos;
+    }
+
+    public void setNewName(String name) {
+        this.newName = name;
     }
 
     public void setCos(CosSelector cos) {
         this.cos = cos;
     }
 
-    public String getName() { return name; }
+    public String getNewName() { return newName; }
     public CosSelector getCos() { return cos; }
 }

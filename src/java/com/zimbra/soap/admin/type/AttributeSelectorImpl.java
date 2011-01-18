@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -34,10 +34,21 @@ abstract public class AttributeSelectorImpl implements AttributeSelector {
     private static Joiner COMMA_JOINER = Joiner.on(",");
     private List<String> attrs = Lists.newArrayList();
     
-    @XmlAttribute(name=AdminConstants.A_ATTRS) public String getAttrs() {
-        return COMMA_JOINER.join(attrs);
+    public AttributeSelectorImpl() {
     }
-    
+
+    public AttributeSelectorImpl(String attrs) {
+        setAttrs(attrs);
+    }
+
+    public AttributeSelectorImpl(String ... attrNames) {
+        addAttrs(attrNames);
+    }
+
+    public AttributeSelectorImpl(Iterable<String> attrs) {
+        addAttrs(attrs);
+    }
+
     public AttributeSelector setAttrs(String attrs) {
         this.attrs.clear();
         if (attrs != null) {
@@ -47,7 +58,8 @@ abstract public class AttributeSelectorImpl implements AttributeSelector {
     }
     
     public AttributeSelector addAttrs(String attr) {
-        attrs.add(attr);
+        if (attr != null)
+            attrs.add(attr);
         return this;
     }
     
@@ -65,5 +77,11 @@ abstract public class AttributeSelectorImpl implements AttributeSelector {
             }
         }
         return this;
+    }
+
+    @XmlAttribute(name=AdminConstants.A_ATTRS, required=false) public String getAttrs() {
+        if (attrs.size() == 0)
+            return null;
+        return COMMA_JOINER.join(attrs);
     }
 }

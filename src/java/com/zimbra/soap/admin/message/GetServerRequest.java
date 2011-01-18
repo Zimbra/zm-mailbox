@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,41 +15,38 @@
 
 package com.zimbra.soap.admin.message;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.admin.type.AttributeSelectorImpl;
 
-@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_SERVER_REQUEST)
-@XmlType(propOrder = {})
 public class GetServerRequest extends AttributeSelectorImpl {
 
     @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
-    private boolean applyConfig = true;
+    private Boolean applyConfig;
     @XmlElement(name=AdminConstants.E_SERVER)
     private ServerSelector server;
 
     public GetServerRequest() {
+        this(null, null);
     }
 
-    public void setApplyConfig(boolean applyConfig) {
-        this.applyConfig = applyConfig;
-    }
-
-    public boolean isApplyConfig() {
-        return applyConfig;
+    public GetServerRequest(ServerSelector server, Boolean applyConfig) {
+        setServer(server);
+        setApplyConfig(applyConfig);
     }
 
     public void setServer(ServerSelector server) {
         this.server = server;
     }
 
+    public void setApplyConfig(Boolean applyConfig) {
+        this.applyConfig = applyConfig;
+    }
+
     public ServerSelector getServer() { return server; }
+    public Boolean isApplyConfig() { return applyConfig; }
 }

@@ -36,6 +36,10 @@ public class GetCosRequest extends AttributeSelectorImpl {
     public GetCosRequest() {
     }
 
+    public GetCosRequest(CosSelector cos) {
+        this.cos = cos;
+    }
+
     public void setCos(CosSelector cos) {
         this.cos = cos;
     }

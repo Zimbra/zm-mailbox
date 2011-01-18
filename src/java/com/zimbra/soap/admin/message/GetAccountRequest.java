@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,43 +15,48 @@
 
 package com.zimbra.soap.admin.message;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AccountSelector;
 import com.zimbra.soap.admin.type.AttributeSelectorImpl;
 
 
-@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_GET_ACCOUNT_REQUEST)
-@XmlType(propOrder = {AdminConstants.E_ACCOUNT})
 public class GetAccountRequest extends AttributeSelectorImpl {
 
     @XmlAttribute(name=AdminConstants.A_APPLY_COS, required=false)
-    private boolean applyCos = true;
+    private Boolean applyCos = true;
     @XmlElement(name=AdminConstants.E_ACCOUNT)
     private AccountSelector account;
 
     public GetAccountRequest() {
     }
 
-    public void setAccount(AccountSelector account) {
-        this.account = account;
-    }
-    public AccountSelector getAccount() {
-        return account;
+    public GetAccountRequest(AccountSelector account) {
+        this(account, (Boolean) null, (Iterable<String>) null);
     }
 
-    public void setApplyCos(boolean applyCos) {
+    public GetAccountRequest(AccountSelector account, Boolean applyCos) {
+        this(account, applyCos, (Iterable<String>) null);
+    }
+
+    public GetAccountRequest(AccountSelector account, Boolean applyCos,
+            Iterable<String> attrs) {
+        super(attrs);
+        this.account = account;
         this.applyCos = applyCos;
     }
 
-    public boolean isApplyCos() {
-        return applyCos;
+    public void setAccount(AccountSelector account) {
+        this.account = account;
     }
+
+    public void setApplyCos(Boolean applyCos) {
+        this.applyCos = applyCos;
+    }
+
+    public AccountSelector getAccount() { return account; }
+    public Boolean isApplyCos() { return applyCos; }
 }

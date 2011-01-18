@@ -21,13 +21,25 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ServerSelector {
     // TODO: Change com.zimbra.cs.account.Provisioning.ServerBy to use this
     @XmlEnum
-    public enum ServerBy { id, name, serviceHostname }
+    public enum ServerBy {
+        // case must match protocol
+        id, name, serviceHostname;
+        
+        public static ServerBy fromString(String s) throws ServiceException {
+            try {
+                return ServerBy.valueOf(s);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
+            }
+        }
+    }
 
     @XmlValue private final String key;
     @XmlAttribute(name=AdminConstants.A_BY) private final ServerBy serverBy;
