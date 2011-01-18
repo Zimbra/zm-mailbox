@@ -128,7 +128,8 @@ public final class SoapEngine {
 
     private void logRequest(Map<String, Object> context, Element envelope) {
         if (ZimbraLog.soap.isTraceEnabled() && !context.containsKey(SoapEngine.SOAP_REQUEST_LOGGED)) {
-            ZimbraLog.soap.trace("C:\n%s", envelope.prettyPrint(true));
+            boolean isResumed = context.containsKey(SoapServlet.IS_RESUMED_REQUEST);
+            ZimbraLog.soap.trace(!isResumed ? "C:\n%s" : "C: (resumed)\n%s", envelope.prettyPrint(true));
             context.put(SOAP_REQUEST_LOGGED, Boolean.TRUE);
         }
     }
@@ -245,8 +246,9 @@ public final class SoapEngine {
 
         Element doc = soapProto.getBodyElement(envelope);
 
+        boolean isResumed = context.containsKey(SoapServlet.IS_RESUMED_REQUEST);
         if (mLog.isDebugEnabled())
-            mLog.debug("dispatch: doc " + doc.getQualifiedName());
+            mLog.debug("dispatch: doc " + doc.getQualifiedName() + (isResumed ? " (resumed)" : ""));
 
         Element responseBody = null;
         if (!zsc.isProxyRequest()) {
@@ -256,13 +258,15 @@ public final class SoapEngine {
             if (doc.getQName().equals(ZimbraNamespace.E_BATCH_REQUEST)) {
                 boolean contOnError = doc.getAttribute(ZimbraNamespace.A_ONERROR, ZimbraNamespace.DEF_ONERROR).equals("continue");
                 responseBody = zsc.createElement(ZimbraNamespace.E_BATCH_RESPONSE);
-                ZimbraLog.soap.info(doc.getName());
+                if (!isResumed)
+                    ZimbraLog.soap.info(doc.getName());
                 for (Element req : doc.listElements()) {
                     // if (mLog.isDebugEnabled())
                     //     mLog.debug("dispatch: multi " + req.getQualifiedName());
 
                     String id = req.getAttribute(A_REQUEST_CORRELATOR, null);
-                    ZimbraLog.soap.info("(batch) " + req.getName());
+                    if (!isResumed)
+                        ZimbraLog.soap.info("(batch) " + req.getName());
                     Element br = dispatchRequest(req, context, zsc);
                     if (id != null)
                         br.addAttribute(A_REQUEST_CORRELATOR, id);
@@ -272,7 +276,8 @@ public final class SoapEngine {
                 }
             } else {
                 String id = doc.getAttribute(A_REQUEST_CORRELATOR, null);
-                ZimbraLog.soap.info(doc.getName());
+                if (!isResumed)
+                    ZimbraLog.soap.info(doc.getName());
                 responseBody = dispatchRequest(doc, context, zsc);
                 if (id != null)
                     responseBody.addAttribute(A_REQUEST_CORRELATOR, id);

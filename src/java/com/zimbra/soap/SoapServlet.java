@@ -298,7 +298,7 @@ public class SoapServlet extends ZimbraServlet {
             }
 
             if (ZimbraLog.soap.isTraceEnabled() && !context.containsKey(SoapEngine.SOAP_REQUEST_LOGGED)) {
-                ZimbraLog.soap.trace("C:\n%s", new String(buffer, Charsets.UTF_8));
+                ZimbraLog.soap.trace(!isResumed ? "C:\n%s" : "C: (resumed)\n%s", new String(buffer, Charsets.UTF_8));
             }
 
             // don't interfere with Jetty Continuations -- pass the exception right up

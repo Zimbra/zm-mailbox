@@ -157,12 +157,10 @@ public class WaitSetRequest extends MailDocumentHandler {
         Callback cb;
 
         if (context.containsKey(SoapServlet.IS_RESUMED_REQUEST)) {
-            ZimbraLog.session.debug("<WaitSetRequest> - resumed request (jetty continuation)");
             cb  = (Callback)servletRequest.getAttribute(VARS_ATTR_NAME);
             // load variables here
             continuation = ContinuationSupport.getContinuation(servletRequest, cb);
         } else {
-            ZimbraLog.session.debug("<WaitSetRequest> - initial request");
             cb = new Callback();
             continuation = ContinuationSupport.getContinuation(servletRequest, cb);
             cb.continuation = continuation;
@@ -239,7 +237,10 @@ public class WaitSetRequest extends MailDocumentHandler {
 
                 synchronized (cb) {
                     if (!cb.completed) { // don't wait if it completed right away
-                        continuation.suspend(getTimeoutMillis(request, adminAllowed));
+                        long timeout = getTimeoutMillis(request, adminAllowed);
+                        if (ZimbraLog.soap.isTraceEnabled())
+                            ZimbraLog.soap.trace("Suspending <WaitSetRequest> for %dms", timeout);
+                        continuation.suspend(timeout);
                     }
                 }
             }
@@ -268,7 +269,6 @@ public class WaitSetRequest extends MailDocumentHandler {
 
         encodeErrors(response, cb.errors);
 
-        ZimbraLog.session.debug("<WaitSetResponse> - returning waitset response");
         return response;
     }
 
