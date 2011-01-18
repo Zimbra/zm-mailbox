@@ -32,6 +32,10 @@ import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.soap.admin.type.AccountSelector;
+import com.zimbra.soap.admin.type.CosSelector;
+import com.zimbra.soap.admin.type.DomainSelector;
+import com.zimbra.soap.admin.type.ServerSelector;
 
 import javax.mail.internet.InternetAddress;
 
@@ -646,6 +650,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }
         }
+
+        /* Convert to equivalent JAXB object */
+        public static AccountSelector.AccountBy toJaxb(AccountBy provAccountBy) throws ServiceException {
+            return AccountSelector.AccountBy.fromString(provAccountBy.toString());
+        }
     }
 
     /**
@@ -958,6 +967,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }
         }
+
+        /* Convert to equivalent JAXB object */
+        public static DomainSelector.DomainBy toJaxb(DomainBy provDomainBy) throws ServiceException {
+            return DomainSelector.DomainBy.fromString(provDomainBy.toString());
+        }
     }
 
     public abstract Domain get(DomainBy keyType, String key) throws ServiceException;
@@ -1010,6 +1024,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
             }
         }
 
+        /* Convert to equivalent JAXB object */
+        public static CosSelector.CosBy toJaxb(CosBy provCosBy) throws ServiceException {
+            return CosSelector.CosBy.fromString(provCosBy.toString());
+        }
     }
 
     public abstract Cos get(CosBy keyType, String key) throws ServiceException;
@@ -1044,6 +1062,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
             }
         }
 
+        /* Convert to equivalent JAXB object */
+        public static ServerSelector.ServerBy toJaxb(ServerBy provServerBy) throws ServiceException {
+            return ServerSelector.ServerBy.fromString(provServerBy.toString());
+        }
     }
 
     public abstract Server get(ServerBy keyName, String key) throws ServiceException;

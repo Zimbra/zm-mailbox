@@ -25,10 +25,18 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 
+import com.zimbra.soap.admin.type.Attr;
+import com.zimbra.soap.admin.type.AccountInfo;
+
 class SoapAccount extends Account implements SoapEntry {
         
     SoapAccount(String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(name, id, attrs, null, prov);
+    }
+
+    SoapAccount(AccountInfo accountInfo, Provisioning prov) throws ServiceException {
+        super(accountInfo.getName(), accountInfo.getId(),
+                Attr.collectionToMap(accountInfo.getAttrList()), null, prov);
     }
 
     SoapAccount(Element e, Provisioning prov) throws ServiceException {

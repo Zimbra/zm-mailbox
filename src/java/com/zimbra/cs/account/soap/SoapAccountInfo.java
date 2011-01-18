@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -22,6 +22,8 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.soap.admin.message.GetAccountInfoResponse;
+import com.zimbra.soap.admin.type.Attr;
 
 
 public class SoapAccountInfo {
@@ -31,6 +33,14 @@ public class SoapAccountInfo {
     private List<String> mSoapURL;
     private String mAdminSoapURL;
     
+    SoapAccountInfo(GetAccountInfoResponse resp)
+    throws ServiceException {
+        mAttrs = Attr.collectionToMap(resp.getAttrList());
+        mName = resp.getName();
+        mSoapURL = resp.getSoapURLList();
+        mAdminSoapURL = resp.getAdminSoapURL();
+    }
+
      SoapAccountInfo(Element e) throws ServiceException {
         mAttrs = SoapProvisioning.getAttrs(e);
         mName = e.getElement(AdminConstants.E_NAME).getText();
