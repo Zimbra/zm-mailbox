@@ -31,6 +31,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.SoapServlet;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -102,7 +103,10 @@ public class NoOp extends MailDocumentHandler  {
                     synchronized (zsc) {
                         if (zsc.waitingForNotifications()) {
                             assert (!(continuation instanceof WaitingContinuation) || ((WaitingContinuation) continuation).getMutex() == zsc); 
-                            continuation.suspend(parseTimeout(request));
+                            long timeout = parseTimeout(request);
+                            if (ZimbraLog.soap.isTraceEnabled())
+                                ZimbraLog.soap.trace("Suspending <NoOpRequest> for %dms", timeout);
+                            continuation.suspend(timeout);
                         }
                         assert(continuation instanceof WaitingContinuation); // this part of code only reached if we're using WaitingContinuations
                         
