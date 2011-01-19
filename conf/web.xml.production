@@ -288,6 +288,12 @@
   </init-param>
   </servlet>
 
+  <servlet>
+    <servlet-name>RobotsServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.servlet.RobotsServlet</servlet-class>
+    <load-on-startup>11</load-on-startup>
+  </servlet>
+
   <servlet-mapping>
     <servlet-name>ExtensionDispatcherServlet</servlet-name>
     <url-pattern>/extension/*</url-pattern>
@@ -371,6 +377,11 @@
   <servlet-mapping>
     <servlet-name>ZimletResources</servlet-name>
     <url-pattern>/zimlet/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>RobotsServlet</servlet-name>
+    <url-pattern>/robots.txt</url-pattern>
   </servlet-mapping>
 
   <!-- HTTPSBEGIN %%comment VAR:zimbraMailMode,-->,https,redirect%%

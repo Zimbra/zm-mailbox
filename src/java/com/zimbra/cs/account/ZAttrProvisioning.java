@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110117-1442 */
+    /* build: unknown unknown unknown unknown */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4639,6 +4639,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=147)
     public static final String A_zimbraMailIdleSessionTimeout = "zimbraMailIdleSessionTimeout";
+
+    /**
+     * When set to true, robots.txt on mailboxd will be set up to keep web
+     * crawlers out
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1161)
+    public static final String A_zimbraMailKeepOutWebCrawlers = "zimbraMailKeepOutWebCrawlers";
 
     /**
      * Deprecated since: 5.0.7. deprecated per bug 28842. Orig desc: The id

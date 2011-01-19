@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110117-1442 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: descriptive information
@@ -13773,6 +13773,83 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailFileDescriptorCacheSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailFileDescriptorCacheSize, "");
+        return attrs;
+    }
+
+    /**
+     * When set to true, robots.txt on mailboxd will be set up to keep web
+     * crawlers out
+     *
+     * @return zimbraMailKeepOutWebCrawlers, or false if unset
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1161)
+    public boolean isMailKeepOutWebCrawlers() {
+        return getBooleanAttr(Provisioning.A_zimbraMailKeepOutWebCrawlers, false);
+    }
+
+    /**
+     * When set to true, robots.txt on mailboxd will be set up to keep web
+     * crawlers out
+     *
+     * @param zimbraMailKeepOutWebCrawlers new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1161)
+    public void setMailKeepOutWebCrawlers(boolean zimbraMailKeepOutWebCrawlers) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailKeepOutWebCrawlers, zimbraMailKeepOutWebCrawlers ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When set to true, robots.txt on mailboxd will be set up to keep web
+     * crawlers out
+     *
+     * @param zimbraMailKeepOutWebCrawlers new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1161)
+    public Map<String,Object> setMailKeepOutWebCrawlers(boolean zimbraMailKeepOutWebCrawlers, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailKeepOutWebCrawlers, zimbraMailKeepOutWebCrawlers ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * When set to true, robots.txt on mailboxd will be set up to keep web
+     * crawlers out
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1161)
+    public void unsetMailKeepOutWebCrawlers() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailKeepOutWebCrawlers, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When set to true, robots.txt on mailboxd will be set up to keep web
+     * crawlers out
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1161)
+    public Map<String,Object> unsetMailKeepOutWebCrawlers(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailKeepOutWebCrawlers, "");
         return attrs;
     }
 

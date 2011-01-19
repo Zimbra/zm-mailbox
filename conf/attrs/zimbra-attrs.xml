@@ -5318,4 +5318,9 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
+<attr id="1161" name="zimbraMailKeepOutWebCrawlers" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="7.0.1">
+  <globalConfigValue>FALSE</globalConfigValue>
+  <desc>When set to true, robots.txt on mailboxd will be set up to keep web crawlers out</desc>
+</attr>
+
 </attrs>
