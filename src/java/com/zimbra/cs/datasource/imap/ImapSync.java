@@ -15,6 +15,7 @@
 package com.zimbra.cs.datasource.imap;
 
 import com.zimbra.cs.datasource.DataSourceManager;
+import com.zimbra.cs.datasource.IOExceptionHandler;
 import com.zimbra.cs.datasource.MailItemImport;
 import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.mailclient.auth.Authenticator;
@@ -240,6 +241,7 @@ public class ImapSync extends MailItemImport {
         } else {
             purgeLocalFolders(getLocalFolders());
         }
+        IOExceptionHandler.getInstance().resetSyncCounter(mbox);
         syncMessages(folderIds);
         finishSync();
     }

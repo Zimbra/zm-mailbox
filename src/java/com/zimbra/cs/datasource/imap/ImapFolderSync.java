@@ -33,6 +33,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.datasource.DataSourceManager;
+import com.zimbra.cs.datasource.IOExceptionHandler;
 import com.zimbra.cs.datasource.MessageContent;
 import com.zimbra.cs.datasource.SyncErrorManager;
 import com.zimbra.cs.datasource.SyncUtil;
@@ -331,6 +332,7 @@ class ImapFolderSync {
         }
 
         // Fetch new messages
+        IOExceptionHandler.getInstance().resetSyncCounter(mailbox);
         maxUid = uidNext > 0 ? uidNext - 1 : 0;
         if (maxUid <= 0 || lastFetchedUid < maxUid) {
             List<Long> uids = remoteFolder.getUids(lastFetchedUid + 1, maxUid);
@@ -342,6 +344,7 @@ class ImapFolderSync {
             Collections.sort(addedUids, Collections.reverseOrder());
             fetchMessages(addedUids);
         }
+        IOExceptionHandler.getInstance().checkpointIOExceptionRate(mailbox);
 
         // Delete and expunge messages
         if(!ds.isImportOnly()) {
@@ -811,14 +814,17 @@ class ImapFolderSync {
             @Override
             public void handleFetchResponse(MessageData md) throws Exception {
                 long uid = md.getUid();
+                IOExceptionHandler.getInstance().trackSyncItem(mailbox, uid);
                 try {
                     handleFetch(md, flagsByUid);
                     clearError(uid);
                 } catch (OutOfMemoryError e) {
                     Zimbra.halt("Out of memory");
                 } catch (Exception e) {
-                    syncFailed("Fetch failed for uid " + uid, e);
-                    SyncErrorManager.incrementErrorCount(ds, remoteId(uid));
+                    if (!IOExceptionHandler.getInstance().isRecoverable(mailbox, uid, "Exception syncing UID "+uid+" in folder "+remoteFolder.getPath(), e)) {
+                        syncFailed("Fetch failed for uid " + uid, e);
+                        SyncErrorManager.incrementErrorCount(ds, remoteId(uid));
+                    }
                 }
                 uidSet.remove(uid);
             }
