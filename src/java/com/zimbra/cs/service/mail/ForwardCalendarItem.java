@@ -137,6 +137,7 @@ public class ForwardCalendarItem extends CalendarRequest {
                         if (seriesInv == null)
                             throw ServiceException.INVALID_REQUEST("Instance specified but no recurrence series found", null);
                         Invite exceptInv = seriesInv.newCopy();
+                        exceptInv.clearAlarms();
                         exceptInv.setRecurrence(null);
                         exceptInv.setRecurId(rid);
                         long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();

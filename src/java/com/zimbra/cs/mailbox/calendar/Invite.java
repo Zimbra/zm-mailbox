@@ -2383,7 +2383,7 @@ public class Invite {
         return thisSeq >= otherSeq;
     }
 
-    public Invite newCopy() {
+    public Invite newCopy() throws ServiceException {
         List<ZAttendee> attendees = new ArrayList<ZAttendee>(mAttendees.size());
         for (ZAttendee at : mAttendees) {
             attendees.add(new ZAttendee(at));  // add a copy of attendee
@@ -2403,6 +2403,11 @@ public class Invite {
         inv.setDontIndexMimeMessage(getDontIndexMimeMessage());
         inv.mLocalOnly = mLocalOnly;
         inv.mDescInMeta = mDescInMeta;
+
+        inv.clearAlarms();
+        for (Alarm alarm : mAlarms) {
+            inv.addAlarm(alarm.newCopy());
+        }
         return inv;
     }
 
@@ -2613,7 +2618,7 @@ public class Invite {
      * @param recurIdDt
      * @return
      */
-    public Invite makeInstanceInvite(ParsedDateTime recurIdDt) {
+    public Invite makeInstanceInvite(ParsedDateTime recurIdDt) throws ServiceException {
         if (!isRecurrence())
             return null;
         Invite instInv = newCopy();
