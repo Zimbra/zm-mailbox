@@ -327,12 +327,7 @@ public class ContactAutoComplete {
         if (!rankingTableMatches.isEmpty()) {
             for (ContactEntry entry : rankingTableMatches) {
                 String emailAddr = entry.getKey();
-                GalGroup.GroupInfo groupInfo = GalGroup.getGroupInfo(emailAddr, mNeedCanExpand, mRequestedAcct, mAuthedAcct);
-                if (groupInfo != null) {
-                    boolean canExpand = (GalGroup.GroupInfo.CAN_EXPAND == groupInfo);
-                    entry.setIsGalGroup(canExpand);
-                    entry.mFolderId = FOLDER_ID_GAL;
-                }
+                resolveGroupInfo(entry, emailAddr);
                 result.addEntry(entry);
             }
         }
@@ -355,6 +350,29 @@ public class ContactAutoComplete {
 
         ZimbraLog.gal.info("autocomplete: overall="+(t3-t0)+"ms, ranking="+(t1-t0)+"ms, folder="+(t2-t1)+"ms, gal="+(t3-t2)+"ms");
         return result;
+    }
+    
+    /**
+     * ranking table and local contact matches don't have group indicator persisted on them, 
+     * cross-ref GAL to check if the address is a group.
+     * 
+     * If the address is a group, set group info in the ContactEntry object.  Also, change the 
+     * folder ID to GAL.  Client relies on this to display the expand icon, otherwise it would 
+     * consider the entry a local contact group and will not offer to expand it.
+     * 
+     * @param entry
+     * @param email
+     * @return true if the address is a group, false otherwise
+     */
+    private void resolveGroupInfo(ContactEntry entry, String email) {
+        GalGroup.GroupInfo groupInfo = GalGroup.getGroupInfo(email, mNeedCanExpand, mRequestedAcct, mAuthedAcct);
+        if (groupInfo != null) {
+            boolean canExpand = (GalGroup.GroupInfo.CAN_EXPAND == groupInfo);
+            entry.setIsGalGroup(canExpand);
+            
+            // set folder ID to GAL, client relies on this to display the expand icon
+            entry.mFolderId = FOLDER_ID_GAL;
+        }
     }
 
     private void queryGal(String str, AutoCompleteResult result) throws ServiceException {
@@ -485,9 +503,13 @@ public class ContactAutoComplete {
                     entry.setName(fullName);
                     entry.mId = id;
                     entry.mFolderId = folderId;
-                    if (Contact.isGroup(attrs))
+                    if (Contact.isGroup(attrs)) {
                         entry.setIsGalGroup(email, attrs, mAuthedAcct, mNeedCanExpand);
-
+                    } else if (entry.mFolderId != FOLDER_ID_GAL) {
+                        // is a local contact
+                        // bug 55673, check if the addr is a group
+                        resolveGroupInfo(entry, email);
+                    }
                     result.addEntry(entry);
                     ZimbraLog.gal.debug("adding " + entry.getEmail());
                     if (folderId == FOLDER_ID_GAL) {
