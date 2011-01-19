@@ -1074,6 +1074,8 @@ public final class LC {
 
     public static final KnownKey command_line_editing_enabled = KnownKey.newKey(true);
     public static final KnownKey thread_pool_warn_percent = KnownKey.newKey(100);
+    
+    public static final KnownKey robots_txt = KnownKey.newKey("${zimbra_home}/conf/robots.txt");
 
     static {
         // Automatically set the key name with the variable name.
