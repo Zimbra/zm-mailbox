@@ -774,6 +774,7 @@ public final class LC {
     public static final KnownKey data_source_xsync_class = KnownKey.newKey("");
     public static final KnownKey data_source_xsync_factory_class = KnownKey.newKey("");
     public static final KnownKey data_source_config = KnownKey.newKey("${zimbra_home}/conf/datasource.xml");
+    public static final KnownKey data_source_ioexception_handler_class = KnownKey.newKey("com.zimbra.cs.datasource.IOExceptionHandler");
 
     @Supported
     public static final KnownKey timezone_file = KnownKey.newKey("${zimbra_home}/conf/timezones.ics");
