@@ -15,9 +15,9 @@
 package com.zimbra.cs.datasource;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -178,19 +178,31 @@ public class Pop3Sync extends MailItemImport {
     }
 
     private void fetchAndDeleteMessages()
-        throws ServiceException, IOException {
+        throws Exception {
         Integer sizes[] = connection.getMessageSizes();
 
         LOG.info("Found %d new message(s) on remote server", sizes.length);
+        IOExceptionHandler.getInstance().resetSyncCounter(mbox);
         for (int msgno = sizes.length; msgno > 0; --msgno) {
             LOG.debug("Fetching message number %d", msgno);
-            fetchAndAddMessage(msgno, sizes[msgno - 1], null, true);
+            IOExceptionHandler.getInstance().trackSyncItem(mbox, msgno);
+            try {
+                fetchAndAddMessage(msgno, sizes[msgno - 1], null, true);
+            } catch (Exception e) {
+                if (IOExceptionHandler.getInstance().isRecoverable(mbox, msgno, "pop sync fail", e)) {
+                    //don't delete msg; if we end up aborting we want it still to exist
+                    //skip it; will be retried on every subsequent sync
+                    continue;
+                }
+                throw e;
+            }
             connection.deleteMessage(msgno);
         }
+        IOExceptionHandler.getInstance().checkpointIOExceptionRate(mbox);
     }
 
     private void fetchAndRetainMessages()
-        throws ServiceException, IOException {
+        throws Exception {
         String[] uids = connection.getMessageUids();
         Set<String> existingUids = PopMessage.getMatchingUids(dataSource, uids);
         int count = uids.length - existingUids.size();
@@ -203,17 +215,28 @@ public class Pop3Sync extends MailItemImport {
             throw ServiceException.INVALID_REQUEST(
                 "User attempted to import messages from his own mailbox", null);
         }
+        IOExceptionHandler.getInstance().resetSyncCounter(mbox);
         for (int msgno = uids.length; msgno > 0; --msgno) {
             String uid = uids[msgno - 1];
 
             if (!existingUids.contains(uid)) {
                 LOG.debug("Fetching message with uid %s", uid);
+                IOExceptionHandler.getInstance().trackSyncItem(mbox, msgno);
                 // Don't allow filtering to a mountpoint when retaining the
                 // message.  We don't have a local id, so we can't keep track
                 // of it in the data_source_item table.
-                fetchAndAddMessage(msgno, connection.getMessageSize(msgno), uid, false);
+                try {
+                    fetchAndAddMessage(msgno, connection.getMessageSize(msgno), uid, false);
+                } catch (Exception e) {
+                    if (IOExceptionHandler.getInstance().isRecoverable(mbox, msgno, "pop sync fail", e)) {
+                        //skip it; will be retried on every subsequent sync
+                        continue;
+                    }
+                    throw e;
+                }
             }
         }
+        IOExceptionHandler.getInstance().checkpointIOExceptionRate(mbox);
     }
 
     private void fetchAndAddMessage(int msgno, int size, String uid, boolean allowFilterToMountpoint)
