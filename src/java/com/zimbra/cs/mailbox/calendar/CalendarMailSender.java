@@ -632,6 +632,7 @@ public class CalendarMailSender {
         List<Invite> filteredInvs = new ArrayList<Invite>();
         for (Invite inv : invites) {
             Invite filtered = inv.newCopy();
+            filtered.clearAlarms();
             filtered.clearPrivateInfo();
             filtered.setName(subject);
             // Add ATTENDEE for forwarder.
