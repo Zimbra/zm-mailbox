@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -14,27 +14,16 @@
  */
 package com.zimbra.cs.imap;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.TimerTask;
 
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -51,61 +40,86 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
-import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.Zimbra;
 
-public class ImapSessionManager {
-    private static final LinkedHashMap<ImapSession, Object> sSessionMap = new LinkedHashMap<ImapSession, Object>(128, (float) 0.75, true);
+final class ImapSessionManager {
+    private static final ImapSessionManager SINGLETON = new ImapSessionManager();
 
-    static void recordAccess(ImapSession session) {
-        synchronized (sSessionMap) {
+    private static final long SERIALIZER_INTERVAL_MSEC =
+            DebugConfig.imapSessionSerializerFrequency * Constants.MILLIS_PER_SECOND;
+    private static final long SESSION_INACTIVITY_SERIALIZATION_TIME =
+            DebugConfig.imapSessionInactivitySerializationTime * Constants.MILLIS_PER_SECOND;
+    private static final int TOTAL_SESSION_FOOTPRINT_LIMIT = DebugConfig.imapTotalNonserializedSessionFootprintLimit;
+    private static final int MAX_NONINTERACTIVE_SESSIONS = DebugConfig.imapNoninteractiveSessionLimit;
+    private static final boolean CONSISTENCY_CHECK = DebugConfig.imapCacheConsistencyCheck;
+
+    private static final boolean TERMINATE_ON_CLOSE = DebugConfig.imapTerminateSessionOnClose;
+    private static final boolean SERIALIZE_ON_CLOSE = DebugConfig.imapSerializeSessionOnClose;
+
+    private final LinkedHashMap<ImapSession, Object> sessions =
+            new LinkedHashMap<ImapSession, Object>(128, 0.75F, true);
+    private final MemcachedImapCache memcache; // null if memcached is not available
+    private final DiskImapCache diskcache;
+
+    private ImapSessionManager() {
+        if (SERIALIZER_INTERVAL_MSEC > 0) {
+            Zimbra.sTimer.schedule(new SessionSerializerTask(), SERIALIZER_INTERVAL_MSEC, SERIALIZER_INTERVAL_MSEC);
+            ZimbraLog.imap.debug("initializing IMAP session serializer task");
+        }
+
+        diskcache = new DiskImapCache();
+        if (MemcachedConnector.isConnected()) {
+            ZimbraLog.imap.info("Using Memcached");
+            memcache = new MemcachedImapCache();
+        } else {
+            memcache = null;
+        }
+    }
+
+    static ImapSessionManager getInstance() {
+        return SINGLETON;
+    }
+
+    void recordAccess(ImapSession session) {
+        synchronized (sessions) {
             // LinkedHashMap bumps to beginning of iterator order on access
-            sSessionMap.get(session);
+            sessions.get(session);
         }
     }
 
-    static void uncacheSession(ImapSession session) {
-        synchronized (sSessionMap) {
-            sSessionMap.remove(session);
+    void uncacheSession(ImapSession session) {
+        synchronized (sessions) {
+            sessions.remove(session);
         }
     }
 
-    private static final long SERIALIZER_INTERVAL_MSEC = DebugConfig.imapSessionSerializerFrequency * Constants.MILLIS_PER_SECOND;
-    private static SessionSerializerTask sSerializerTask = null;
+    /**
+     * <ol>
+     *  <li>deserialize/reserialize sessions with notification overflow
+     *  <li>serialize enough sessions to get under the max memory footprint
+     *  <li>prune noninteractive sessions beyond a specified count
+     *  <li>maybe checkpoint a few "dirty" sessions if we're not doing anything else?
+     * </ol>
+     */
+    final class SessionSerializerTask extends TimerTask {
 
-    static void startup() {
-        synchronized (sSessionMap) {
-            if (SERIALIZER_INTERVAL_MSEC > 0 && sSerializerTask == null) {
-                Zimbra.sTimer.schedule(sSerializerTask = new SessionSerializerTask(), SERIALIZER_INTERVAL_MSEC, SERIALIZER_INTERVAL_MSEC);
-                ZimbraLog.imap.debug("initializing IMAP session serializer task");
-            }
-        }
-    }
-
-    // things to do during the task:
-    //   1. deserialize/reserialize sessions with notification overflow
-    //   2. serialize enough sessions to get under the max memory footprint
-    //   3. prune noninteractive sessions beyond a specified count
-    //   4. maybe checkpoint a few "dirty" sessions if we're not doing anything else?
-    static class SessionSerializerTask extends TimerTask {
-        private static final long SESSION_INACTIVITY_SERIALIZATION_TIME = DebugConfig.imapSessionInactivitySerializationTime * Constants.MILLIS_PER_SECOND;
-        private static final int TOTAL_SESSION_FOOTPRINT_LIMIT = DebugConfig.imapTotalNonserializedSessionFootprintLimit;
-        private static final int MAX_NONINTERACTIVE_SESSIONS = DebugConfig.imapNoninteractiveSessionLimit;
-
-        @Override public void run() {
+        @Override
+        public void run() {
             ZimbraLog.imap.debug("running IMAP session serializer task");
 
-            long cutoff = SESSION_INACTIVITY_SERIALIZATION_TIME > 0 ? System.currentTimeMillis() - SESSION_INACTIVITY_SERIALIZATION_TIME : Long.MIN_VALUE;
+            long cutoff = SESSION_INACTIVITY_SERIALIZATION_TIME > 0 ?
+                    System.currentTimeMillis() - SESSION_INACTIVITY_SERIALIZATION_TIME : Long.MIN_VALUE;
 
             List<ImapSession> overflow = new ArrayList<ImapSession>();
             List<ImapSession> pageable = new ArrayList<ImapSession>();
             List<ImapSession> droppable = new ArrayList<ImapSession>();
 
-            synchronized (sSessionMap) {
+            synchronized (sessions) {
                 // first, figure out the set of sessions that'll need to be brought into memory and reserialized
                 int footprint = 0, maxOverflow = 0, noninteractive = 0;
-                for (ImapSession session : sSessionMap.keySet()) {
+                for (ImapSession session : sessions.keySet()) {
                     if (session.requiresReload()) {
                         overflow.add(session);
                         // note that these will add to the memory footprint temporarily, so need the largest size...
@@ -115,7 +129,7 @@ public class ImapSessionManager {
                 footprint += Math.min(maxOverflow, TOTAL_SESSION_FOOTPRINT_LIMIT - 1000);
 
                 // next, get the set of in-memory sessions that need to get serialized out
-                for (ImapSession session : sSessionMap.keySet()) {
+                for (ImapSession session : sessions.keySet()) {
                     int size = session.getEstimatedSize();
                     // want to serialize enough sessions to get below the memory threshold
                     // also going to serialize anything that's been idle for a while
@@ -132,8 +146,9 @@ public class ImapSessionManager {
 
             for (ImapSession session : pageable) {
                 try {
-                    ZimbraLog.imap.debug("  ** paging out session due to staleness or total memory footprint: %s (sid %s)", session.getPath(), session.getSessionId());
-                    session.unload();
+                    ZimbraLog.imap.debug("Paging out session due to staleness or total memory footprint: %s (sid %s)",
+                            session.getPath(), session.getSessionId());
+                    session.unload(false);
                 } catch (Exception e) {
                     ZimbraLog.imap.warn("error serializing session; clearing", e);
                     // XXX: make sure this doesn't result in a loop
@@ -143,9 +158,10 @@ public class ImapSessionManager {
 
             for (ImapSession session : overflow) {
                 try {
-                    ZimbraLog.imap.debug("  ** loading/unloading paged session due to queued notification overflow: %s (sid %s)", session.getPath(), session.getSessionId());
+                    ZimbraLog.imap.debug("Loading/unloading paged session due to queued notification overflow: %s (sid %s)",
+                            session.getPath(), session.getSessionId());
                     session.reload();
-                    session.unload();
+                    session.unload(false);
                 } catch (Exception e) {
                     ZimbraLog.imap.warn("error deserializing overflowed session; clearing", e);
                     // XXX: make sure this doesn't result in a loop
@@ -154,13 +170,14 @@ public class ImapSessionManager {
             }
 
             for (ImapSession session : droppable) {
-                ZimbraLog.imap.debug("  ** removing session due to having too many noninteractive sessions: %s (sid %s)", session.getPath(), session.getSessionId());
+                ZimbraLog.imap.debug("Removing session due to having too many noninteractive sessions: %s (sid %s)",
+                        session.getPath(), session.getSessionId());
                 // only noninteractive sessions get added to droppable list, so this next conditional should never be true
                 quietRemoveSession(session);
             }
         }
 
-        private static void quietRemoveSession(ImapSession session) {
+        private void quietRemoveSession(ImapSession session) {
             // XXX: make sure this doesn't result in a loop
             try {
                 if (session.isInteractive())
@@ -172,7 +189,6 @@ public class ImapSessionManager {
         }
     }
 
-
     static class InitialFolderValues {
         final int uidnext, modseq;
         int firstUnread = -1;
@@ -183,11 +199,8 @@ public class ImapSessionManager {
         }
     }
 
-    static final boolean CONSISTENCY_CHECK = DebugConfig.imapCacheConsistencyCheck;
-
-    static Pair<ImapSession, InitialFolderValues> openFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
-        boolean debug = ZimbraLog.imap.isDebugEnabled();
-        if (debug)  ZimbraLog.imap.debug("  ** opening folder: " + path);
+    Pair<ImapSession, InitialFolderValues> openFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {
+        ZimbraLog.imap.debug("Opening folder: %s", path);
 
         if (!path.isSelectable())
             throw ServiceException.PERM_DENIED("cannot select folder: " + path);
@@ -239,22 +252,21 @@ public class ImapSessionManager {
             // can't set these until *after* loading the folder because UID renumbering affects them
             InitialFolderValues initial = new InitialFolderValues(folder);
 
-            StringBuilder added = debug ? new StringBuilder("  ** added: ") : null;
             for (ImapMessage i4msg : i4list) {
                 i4folder.cache(i4msg, i4msg.imapUid > recentCutoff);
-                if (initial.firstUnread == -1 && (i4msg.flags & Flag.BITMASK_UNREAD) != 0)
+                if (initial.firstUnread == -1 && (i4msg.flags & Flag.BITMASK_UNREAD) != 0) {
                     initial.firstUnread = i4msg.sequence;
-                if (debug)  added.append(' ').append(i4msg.msgId);
+                }
             }
             i4folder.setInitialSize();
-            if (debug)  ZimbraLog.imap.debug(added);
+            ZimbraLog.imap.debug("added %s", i4list);
 
             ImapSession session = null;
             try {
                 session = new ImapSession(i4folder, handler);
                 session.register();
-                synchronized (sSessionMap) {
-                    sSessionMap.put(session, null);
+                synchronized (sessions) {
+                    sessions.put(session, null);
                 }
                 return new Pair<ImapSession, InitialFolderValues>(session, initial);
             } catch (ServiceException e) {
@@ -311,51 +323,59 @@ public class ImapSessionManager {
             if (i4listener.getFolderId() == folderId) {
                 //   FIXME: may want to prefer loaded folders over paged-out folders
                 synchronized (i4listener) {
-                    try {
-                        // found a matching session, so just copy its contents!
-                        ZimbraLog.imap.debug("  ** copying message data from existing session: " + i4listener.getPath());
-
-                        ImapFolder i4selected = i4listener.getImapFolder();
-                        List<ImapMessage> i4list = new ArrayList<ImapMessage>(i4selected.getSize());
-                        for (ImapMessage i4msg : i4selected) {
-                            if (!i4msg.isExpunged())
-                                i4list.add(new ImapMessage(i4msg));
-                        }
-
-                        // if we're duplicating an inactive session, nuke that other session
-                        // XXX: watch out for deadlock between this and the SessionCache
-                        if (!i4listener.isInteractive())
-                            i4listener.unregister();
-
-                        return i4list;
-                    } catch (IOException ioe) {
-                        ZimbraLog.imap.warn("skipping error while trying to page in for copy (" + i4listener.getPath() + ")", ioe);
+                    ImapFolder i4selected = i4listener.getImapFolder();
+                    if (i4selected == null) {
+                        return null;
                     }
+                    // found a matching session, so just copy its contents!
+                    ZimbraLog.imap.debug("Copying message data from existing session: %s", i4listener.getPath());
+
+                    List<ImapMessage> i4list = new ArrayList<ImapMessage>(i4selected.getSize());
+                    for (ImapMessage i4msg : i4selected) {
+                        if (!i4msg.isExpunged()) {
+                            i4list.add(new ImapMessage(i4msg));
+                        }
+                    }
+
+                    // if we're duplicating an inactive session, nuke that other session
+                    // XXX: watch out for deadlock between this and the SessionCache
+                    if (!i4listener.isInteractive()) {
+                        i4listener.unregister();
+                    }
+                    return i4list;
                 }
             }
         }
         return null;
     }
 
-    private static List<ImapMessage> duplicateSerializedFolder(Folder folder) {
-        try {
-            ImapFolder i4folder = mSerializer.deserialize(cacheKey(folder));
-            if (i4folder == null)
-                return null;
-
-            ZimbraLog.imap.debug("  ** copying message data from serialized session: " + folder.getPath());
-
-            List<ImapMessage> i4list = new ArrayList<ImapMessage>(i4folder.getSize());
-            for (ImapMessage i4msg : i4folder) {
-                if (!i4msg.isExpunged())
-                    i4list.add(i4msg.reset());
+    /**
+     * Try to retrieve from memcache if available, then fall back to disk cache.
+     */
+    private ImapFolder getCache(Folder folder) {
+        if (memcache != null) {
+            ImapFolder i4folder = memcache.get(cacheKey(folder, true));
+            if (i4folder != null) {
+                return i4folder;
             }
-            return i4list;
-        } catch (IOException ioe) {
-            if (!(ioe instanceof FileNotFoundException))
-                ZimbraLog.imap.warn("skipping error while trying to deserialize for copy (" + new ItemId(folder) + ")", ioe);
+        }
+        return diskcache.get(cacheKey(folder, false));
+    }
+
+    private List<ImapMessage> duplicateSerializedFolder(Folder folder) {
+        ImapFolder i4folder = getCache(folder);
+        if (i4folder == null) { // cache miss
             return null;
         }
+        ZimbraLog.imap.debug("Copying message data from serialized session: %s", folder.getPath());
+
+        List<ImapMessage> i4list = new ArrayList<ImapMessage>(i4folder.getSize());
+        for (ImapMessage i4msg : i4folder) {
+            if (!i4msg.isExpunged()) {
+                i4list.add(i4msg.reset());
+            }
+        }
+        return i4list;
     }
 
     private static List<ImapMessage> consistencyCheck(List<ImapMessage> i4list, Mailbox mbox, OperationContext octxt, int folderId) {
@@ -404,11 +424,7 @@ public class ImapSessionManager {
         }
     }
 
-
-    private static final boolean TERMINATE_ON_CLOSE = DebugConfig.imapTerminateSessionOnClose;
-    private static final boolean SERIALIZE_ON_CLOSE = DebugConfig.imapSerializeSessionOnClose;
-
-    static void closeFolder(ImapSession session, boolean isUnregistering) {
+    void closeFolder(ImapSession session, boolean isUnregistering) {
         // XXX: does this require synchronization?
 
         // detach session from handler and jettison session state from folder
@@ -425,10 +441,10 @@ public class ImapSessionManager {
         if (SERIALIZE_ON_CLOSE) {
             try {
                 // could use session.serialize() if we want to leave it in memory...
-                ZimbraLog.imap.debug("  ** paging session during close: " + session.getPath());
-                session.unload();
+                ZimbraLog.imap.debug("Paging session during close: %s", session.getPath());
+                session.unload(true);
             } catch (Exception e) {
-                ZimbraLog.imap.warn("  ** skipping error while trying to serialize during close (" + session.getPath() + ")", e);
+                ZimbraLog.imap.warn("Skipping error while trying to serialize during close (%s)", session.getPath(), e);
             }
         }
 
@@ -457,125 +473,64 @@ public class ImapSessionManager {
         }
     }
 
-
-    public static String cacheKey(ImapSession session) throws ServiceException {
+    /**
+     * Generates a cache key for the {@link ImapSession}.
+     *
+     * @param session IMAP session
+     * @param mem true to use memcache if available, otherwise false. Note that memcache can get LRUed.
+     * @return cache key
+     */
+    String cacheKey(ImapSession session, boolean mem) throws ServiceException {
         Mailbox mbox = session.getMailbox();
         if (mbox == null)
             mbox = MailboxManager.getInstance().getMailboxByAccountId(session.getTargetAccountId());
 
-        String cachekey = cacheKey(mbox.getFolderById(session.getFolderId()));
+        String cachekey = cacheKey(mbox.getFolderById(session.getFolderId()), mem);
         // if there are unnotified expunges, *don't* use the default cache key
         //   ('+' is a good separator because it alpha-sorts before the '.' of the filename extension)
         return session.hasExpunges() ? cachekey + "+" + session.getQualifiedSessionId() : cachekey;
     }
 
-    public static String cacheKey(Folder folder) {
+    private String cacheKey(Folder folder, boolean mem) {
         Mailbox mbox = folder.getMailbox();
         int modseq = folder instanceof SearchFolder ? mbox.getLastChangeID() : folder.getImapMODSEQ();
         int uvv = folder instanceof SearchFolder ? mbox.getLastChangeID() : ImapFolder.getUIDValidity(folder);
         // 0-pad the MODSEQ and UVV so alpha ordering sorts properly
-        return String.format("%s_%d_%010d_%010d", mbox.getAccountId(), folder.getId(), modseq, uvv);
-    }
-
-    private static final FolderSerializer mSerializer = new DiskSerializer();
-
-    static void serialize(String cachekey, ImapFolder i4folder) throws IOException {
-        mSerializer.serialize(cachekey, i4folder);
-    }
-
-    static ImapFolder deserialize(String cachekey) throws IOException {
-        return mSerializer.deserialize(cachekey);
-    }
-
-    interface FolderSerializer {
-        void serialize(String cachekey, ImapFolder i4folder) throws IOException;
-        ImapFolder deserialize(String cachekey) throws IOException;
-    }
-
-    static class DiskSerializer implements FolderSerializer {
-        private static final String CACHE_DATA_SUBDIR = "data" + File.separator + "mailboxd" + File.separator + "imap" + File.separator + "cache";
-        private static final File sCacheDir = new File(LC.zimbra_home.value() + File.separator + CACHE_DATA_SUBDIR);
-        private static final String IMAP_CACHEFILE_SUFFIX = ".i4c";
-
-        DiskSerializer() {
-            sCacheDir.mkdirs();
-
-            // iterate over all serialized folders and delete all but the most recent
-            File[] allCached = sCacheDir.listFiles();
-            Arrays.sort(allCached, new Comparator<File>() {
-                @Override public int compare(File o1, File o2)  { return o1.getName().compareTo(o2.getName()); }
-            });
-            File previous = null;
-            String lastOwner = "", lastId = "";
-            for (File cached : allCached) {
-                String[] parts = cached.getName().split("_");
-                if (previous != null && parts.length >= 4) {
-                    if (lastOwner.equals(parts[0]) && lastId.equals(parts[1]))
-                        previous.delete();
-                    else
-                        removeSessionFromFilename(previous);
-                }
-                lastOwner = parts[0];  lastId = parts[1];
-                previous = cached;
-            }
-            removeSessionFromFilename(previous);
-        }
-
-        /** Renames the passed-in <code>File</code> by removing everything
-         *  from the <tt>+</tt> character to the extension.  If the filename
-         *  does not contain '<tt>+</tt>', does nothing. */
-        private static void removeSessionFromFilename(File file) {
-            if (file == null)
-                return;
-            String filename = file.getName();
-            if (filename.indexOf("+") != -1)
-                file.renameTo(new File(sCacheDir, filename.substring(0, filename.lastIndexOf("+")) + IMAP_CACHEFILE_SUFFIX));
-        }
-
-        @Override public void serialize(String cachekey, ImapFolder i4folder) throws IOException {
-            File pagefile = new File(sCacheDir, cachekey + IMAP_CACHEFILE_SUFFIX);
-            if (pagefile.exists())
-                return;
-
-            FileOutputStream fos = null;
-            ObjectOutputStream oos = null;
-            try {
-                oos = new ObjectOutputStream(fos = new FileOutputStream(pagefile));
-                oos.writeObject(i4folder);
-            } catch (IOException ioe) {
-                ByteUtil.closeStream(oos);  oos = null;
-                ByteUtil.closeStream(fos);  fos = null;
-                pagefile.delete();
-                throw ioe;
-            } finally {
-                ByteUtil.closeStream(oos);
-                ByteUtil.closeStream(fos);
-            }
-        }
-
-        @Override public ImapFolder deserialize(String cachekey) throws IOException {
-            File pagefile = new File(sCacheDir, cachekey + IMAP_CACHEFILE_SUFFIX);
-            if (!pagefile.exists())
-                throw new FileNotFoundException("unable to deserialize folder state (pagefile not found)");
-
-            FileInputStream fis = null;
-            ObjectInputStream ois = null;
-            try {
-                // read serialized ImapFolder from cache
-                ois = new ObjectInputStream(fis = new FileInputStream(pagefile));
-                return (ImapFolder) ois.readObject();
-            } catch (Exception e) {
-                ByteUtil.closeStream(ois);  ois = null;
-                ByteUtil.closeStream(fis);  fis = null;
-                pagefile.delete();
-                // IOException(String, Throwable) exists only since 1.6.
-                IOException ioe = new IOException("unable to deserialize folder state");
-                ioe.initCause(e);
-                throw ioe;
-            } finally {
-                ByteUtil.closeStream(ois);
-                ByteUtil.closeStream(fis);
-            }
+        if (mem && memcache != null) { // use ':' as a separator, and produce a shorter key
+            return String.format("%s:%d:%d:%d", mbox.getAccountId(), folder.getId(), modseq, uvv);
+        } else { // use '_' as a separator
+            return String.format("%s_%d_%010d_%010d", mbox.getAccountId(), folder.getId(), modseq, uvv);
         }
     }
+
+    void serialize(String key, ImapFolder folder) {
+        if (key.contains(":")) {
+            memcache.put(key, folder);
+        } else {
+            diskcache.put(key, folder);
+        }
+    }
+
+    ImapFolder deserialize(String key) {
+        if (key.contains(":")) {
+            return memcache.get(key);
+        } else {
+            return diskcache.get(key);
+        }
+    }
+
+    static interface Cache {
+
+        /**
+         * Stores the folder into cache, or does nothing if failed to do so.
+         */
+        void put(String key, ImapFolder folder);
+
+        /**
+         * Retrieves the folder from cache, or returns null if it's not cached or an error occurred.
+         */
+        ImapFolder get(String key);
+
+    }
+
 }

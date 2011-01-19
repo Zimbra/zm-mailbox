@@ -827,7 +827,7 @@ abstract class ImapHandler {
         return getState() == State.LOGOUT ? null : selectedFolder;
     }
 
-    ImapFolder getSelectedFolder() throws IOException {
+    ImapFolder getSelectedFolder() {
         ImapSession i4selected = getCurrentSession();
         return i4selected == null ? null : i4selected.getImapFolder();
     }
@@ -836,7 +836,7 @@ abstract class ImapHandler {
         ImapSession i4selected = selectedFolder;
         selectedFolder = null;
         if (i4selected != null) {
-            ImapSessionManager.closeFolder(i4selected, false);
+            ImapSessionManager.getInstance().closeFolder(i4selected, false);
             if (sendClosed && sessionActivated(ImapExtension.QRESYNC))
                 sendUntagged("OK [CLOSED] mailbox closed");
         }
@@ -856,7 +856,7 @@ abstract class ImapHandler {
         if (path == null)
             return new Pair<ImapSession, InitialFolderValues>(null, null);
 
-        Pair<ImapSession, InitialFolderValues> selectdata = ImapSessionManager.openFolder(path, params, this);
+        Pair<ImapSession, InitialFolderValues> selectdata = ImapSessionManager.getInstance().openFolder(path, params, this);
         selectedFolder = selectdata.getFirst();
 
         ZimbraLog.imap.info("selected folder " + selectdata.getFirst().getPath());
@@ -2047,7 +2047,7 @@ abstract class ImapHandler {
         return true;
     }
 
-    String status(ImapPath path, byte status) throws ServiceException, IOException {
+    String status(ImapPath path, byte status) throws ServiceException {
         StringBuilder data = new StringBuilder("STATUS ").append(path.asUtf7String()).append(" (");
         int empty = data.length();
 

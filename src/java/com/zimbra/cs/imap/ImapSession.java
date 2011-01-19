@@ -43,6 +43,7 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
 
 public class ImapSession extends Session {
+    private static final ImapSessionManager MANAGER = ImapSessionManager.getInstance();
 
     interface ImapFolderData {
         int getId();
@@ -85,8 +86,8 @@ public class ImapSession extends Session {
         return mHandler;
     }
 
-    ImapFolder getImapFolder() throws IOException {
-        ImapSessionManager.recordAccess(this);
+    ImapFolder getImapFolder() {
+        MANAGER.recordAccess(this);
         return reload();
     }
 
@@ -194,13 +195,14 @@ public class ImapSession extends Session {
     }
 
     // XXX: need to handle the abrupt disconnect case, the LOGOUT case, the timeout case, and the too-many-sessions disconnect case
-    @Override public Session unregister() {
-        ImapSessionManager.closeFolder(this, true);
+    @Override
+    public Session unregister() {
+        MANAGER.closeFolder(this, true);
         return detach();
     }
 
     Session detach() {
-        ImapSessionManager.uncacheSession(this);
+        MANAGER.uncacheSession(this);
         return isRegistered() ? super.unregister() : this;
     }
 
@@ -213,12 +215,14 @@ public class ImapSession extends Session {
         }
     }
 
-    /** Serializes this <code>ImapSession</code> to the session manager's
-     *  current {@link ImapSessionManager.FolderSerializer} if it's not
-     *  already serialized there.
-     * @return The cachekey under which we serialized the folder, or
-     *         <tt>null</tt> if the folder was already serialized. */
-    synchronized String serialize() throws IOException, ServiceException {
+    /**
+     * Serializes this {@link ImapSession} to the session manager's current {@link ImapSessionManager.FolderSerializer}
+     * if it's not already serialized there.
+     *
+     * @param mem true to use memcached if available, otherwise false
+     * @return the cachekey under which we serialized the folder, or {@code null} if the folder was already serialized
+     */
+    private String serialize(boolean mem) throws ServiceException {
         // if the data's already paged out, we can short-circuit
         ImapFolder i4folder = mFolder instanceof ImapFolder ? (ImapFolder) mFolder : null;
         if (i4folder == null) {
@@ -226,7 +230,7 @@ public class ImapSession extends Session {
         }
 
         if (!isRegistered()) {
-            throw ServiceException.FAILURE("cannot serialized unregistered session", null);
+            throw ServiceException.FAILURE("cannot serialize unregistered session", null);
         }
 
         // if it's a disconnected session, no need to track expunges
@@ -234,33 +238,39 @@ public class ImapSession extends Session {
             i4folder.collapseExpunged(false);
         }
 
-        String cachekey = ImapSessionManager.cacheKey(this);
-        ImapSessionManager.serialize(cachekey, i4folder);
+        String cachekey = MANAGER.cacheKey(this, mem);
+        MANAGER.serialize(cachekey, i4folder);
         return cachekey;
     }
 
-    synchronized void unload() throws IOException, ServiceException {
+    /**
+     * Unload this session data into cache.
+     *
+     * @param mem true to use memcached if available, otherwise false
+     */
+    synchronized void unload(boolean mem) throws ServiceException {
         if (isRegistered()) {
             // if the data's already paged out, we can short-circuit
             ImapFolder i4folder = mFolder instanceof ImapFolder ? (ImapFolder) mFolder : null;
             if (i4folder != null) {
-                mFolder = new PagedFolderData(serialize(), i4folder);
+                mFolder = new PagedFolderData(serialize(mem), i4folder);
             }
         }
     }
 
-    synchronized ImapFolder reload() throws IOException {
+    synchronized ImapFolder reload() {
         // if the data's already paged in, we can short-circuit
-        PagedFolderData paged = mFolder instanceof PagedFolderData ? (PagedFolderData) mFolder : null;
-        if (paged != null) {
-            ImapFolder i4folder = ImapSessionManager.deserialize(paged.getCacheKey());
+        if (mFolder instanceof PagedFolderData) {
+            PagedFolderData paged = (PagedFolderData) mFolder;
+            ImapFolder i4folder = MANAGER.deserialize(paged.getCacheKey());
+            if (i4folder == null) {
+                return null;
+            }
             try {
                 paged.restore(i4folder);
             } catch (ServiceException e) {
-                // IOException(String, Throwable) exists only since 1.6
-                IOException ioe = new IOException("unable to deserialize folder state");
-                ioe.initCause(e);
-                throw ioe;
+                ZimbraLog.imap.warn("Failed to restore folder %s", paged.getCacheKey(), e);
+                return null;
             }
             // need to switch target before replay (yes, this is inelegant)
             mFolder = i4folder;
