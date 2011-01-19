@@ -72,10 +72,12 @@ public class DebugConfig {
     /** If true, turns off object detection feature. */
     public static boolean disableObjects;
 
-    /** If true, allow VALARMs whose ACTION is not DISPLAY, namely AUDIO,
-     *  EMAIL, and PROCEDURE.  False by default, which means only DISPLAY
-     *  alarms are supported and others are ignored. */
-    public static boolean calendarAllowNonDisplayAlarms;
+    /** If true, allow VALARMs whose ACTION is PROCEDURE. (false by default) */
+    public static boolean calendarAllowProcedureAlarms;
+
+    /** If true, convert AUDIO and PROCEDURE VALARMs to DISPLAY when serializing to xml,
+     *  so ZWC can see them as regular alarms. (true by default) */
+    public static boolean calendarConvertNonDisplayAlarm;
 
     /** If true, use alarms specified by organizer in an invite email.  If
      *  false (default), discard organizer alarms and set one based on
@@ -166,7 +168,8 @@ public class DebugConfig {
     public static boolean imapSerializeSessionOnClose;
 
     static {
-        calendarAllowNonDisplayAlarms = booleanValue("debug_calendar_allow_non_display_alarms", false);
+        calendarAllowProcedureAlarms = booleanValue("debug_calendar_allow_procedure_alarms", false);
+        calendarConvertNonDisplayAlarm = booleanValue("debug_calendar_convert_non_display_alarms", true);
         calendarAllowOrganizerSpecifiedAlarms = booleanValue("debug_calendar_allow_organizer_specified_alarms", false);
         calendarForceUTC = booleanValue("debug_calendar_force_utc", false);
         validateOutgoingICalendar = booleanValue("debug_validate_outgoing_icalendar", false);

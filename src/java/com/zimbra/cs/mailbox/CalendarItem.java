@@ -50,6 +50,7 @@ import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.calendar.Alarm;
+import com.zimbra.cs.mailbox.calendar.Alarm.Action;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.CalendarUser;
 import com.zimbra.cs.mailbox.calendar.ICalTimeZone;
@@ -3282,7 +3283,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     }
 
     /**
-     * Recompute the next DISPLAY alarm trigger time that is at or later than "nextAlarm".
+     * Recompute the next non-EMAIL alarm trigger time that is at or later than "nextAlarm".
      * @param nextAlarm next alarm should go off at or after this time
      *                  special values:
      *                  CalendarItem.NEXT_ALARM_KEEP_CURRENT - keep current value
@@ -3292,7 +3293,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
      */
     private void recomputeNextAlarm(long nextAlarm, boolean skipAlarmDefChangeCheck)
     throws ServiceException {
-        mAlarmData = getNextAlarm(nextAlarm, skipAlarmDefChangeCheck, Alarm.Action.DISPLAY, mAlarmData);
+        mAlarmData = getNextAlarm(nextAlarm, skipAlarmDefChangeCheck, mAlarmData, false);
     }
 
     /**
@@ -3302,10 +3303,10 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
      * @throws ServiceException
      */
     public AlarmData getNextEmailAlarm() throws ServiceException {
-        return getNextAlarm(System.currentTimeMillis(), true, Alarm.Action.EMAIL, null);
+        return getNextAlarm(System.currentTimeMillis(), true, null, true);
     }
 
-    private AlarmData getNextAlarm(long nextAlarm, boolean skipAlarmDefChangeCheck, Alarm.Action alarmAction, AlarmData currentNextAlarmData)
+    private AlarmData getNextAlarm(long nextAlarm, boolean skipAlarmDefChangeCheck, AlarmData currentNextAlarmData, boolean forEmailAction)
     throws ServiceException {
         if (nextAlarm == NEXT_ALARM_ALL_DISMISSED || !hasAlarm()) {
             return null;
@@ -3405,7 +3406,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             InviteInfo invId = inst.getInviteInfo();
             Invite inv = getInvite(invId.getMsgId(), invId.getComponentId());
             Pair<Long, Alarm> curr =
-                getAlarmTriggerTime(atOrAfter, inv.alarmsIterator(), instStart, instEnd, alarmAction);
+                getAlarmTriggerTime(atOrAfter, inv.alarmsIterator(), instStart, instEnd, forEmailAction);
             if (curr != null) {
                 long currAt = curr.getFirst();
                 if (atOrAfter <= currAt && currAt < triggerAt) {
@@ -3424,7 +3425,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         if (this instanceof Task) {
             // Unlike appointments, tasks may have alarms that go off after instance start time and even after
             // instance end time (as defined by DUE property), and these alarms must be computed differently.
-            return getNextAbsoluteTriggerAlarm(atOrAfter, alarmAction);
+            return getNextAbsoluteTriggerAlarm(atOrAfter, forEmailAction);
         } else {
             return null;
         }
@@ -3439,7 +3440,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
      *                  CalendarItem.NEXT_ALARM_FROM_NOW - compute next trigger time from current time
      * @param skipAlarmDefChangeCheck
      */
-    private AlarmData getNextAbsoluteTriggerAlarm(long atOrAfter, Alarm.Action alarmAction)
+    private AlarmData getNextAbsoluteTriggerAlarm(long atOrAfter, boolean forEmailAction)
     throws ServiceException {
         long triggerAt = Long.MAX_VALUE;
         Alarm theAlarm = null;
@@ -3449,7 +3450,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                 continue;
             for (Iterator<Alarm> alarms = inv.alarmsIterator(); alarms.hasNext(); ) {
                 Alarm alarm = alarms.next();
-                if (alarm.getAction() == alarmAction && alarm.getTriggerAbsolute() != null) {
+                if (Action.EMAIL.equals(alarm.getAction()) == forEmailAction && alarm.getTriggerAbsolute() != null) {
                     long absTrig = alarm.getTriggerAbsolute().getUtcTime();
                     if (atOrAfter <= absTrig && absTrig < triggerAt) {
                         triggerAt = absTrig;
@@ -3467,14 +3468,15 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         }
     }
 
-    // Find the earliest alarm with action alarmAction whose trigger time is at or after nextAlarm.
+    // Find the earliest alarm whose trigger time is at or after nextAlarm.
+    // Only alarms with email action are examined if forEmailAction==true.  If false, all other alarms are examined.
     private static Pair<Long, Alarm> getAlarmTriggerTime(
-            long nextAlarm, Iterator<Alarm> alarms, long instStart, long instEnd, Alarm.Action alarmAction) {
+            long nextAlarm, Iterator<Alarm> alarms, long instStart, long instEnd, boolean forEmailAction) {
         long triggerAt = Long.MAX_VALUE;
         Alarm theAlarm = null;
         for (; alarms.hasNext(); ) {
             Alarm alarm = alarms.next();
-            if (alarm.getAction() == alarmAction) {
+            if (Action.EMAIL.equals(alarm.getAction()) == forEmailAction) {
                 long currTrigger = alarm.getTriggerTime(instStart, instEnd);
                 if (nextAlarm <= currTrigger && currTrigger < triggerAt) {
                     triggerAt = currTrigger;

@@ -194,7 +194,12 @@ public class Alarm {
 
     public Element toXml(Element parent) {
         Element alarm = parent.addElement(MailConstants.E_CAL_ALARM);
-        alarm.addAttribute(MailConstants.A_CAL_ALARM_ACTION, mAction.toString());
+        Action action;
+        if ((Action.AUDIO.equals(mAction) || Action.PROCEDURE.equals(mAction)) && DebugConfig.calendarConvertNonDisplayAlarm)
+            action = Action.DISPLAY;
+        else
+            action = mAction;
+        alarm.addAttribute(MailConstants.A_CAL_ALARM_ACTION, action.toString());
         Element trigger = alarm.addElement(MailConstants.E_CAL_ALARM_TRIGGER);
         if (TriggerType.ABSOLUTE.equals(mTriggerType)) {
             Element absolute = trigger.addElement(MailConstants.E_CAL_ALARM_ABSOLUTE);
@@ -208,11 +213,12 @@ public class Alarm {
             Element repeat = mRepeatDuration.toXml(alarm, MailConstants.E_CAL_ALARM_REPEAT);
             repeat.addAttribute(MailConstants.A_CAL_ALARM_COUNT, mRepeatCount);
         }
-        if (!Action.AUDIO.equals(mAction) && mDescription != null) {
+        if (!Action.AUDIO.equals(action)) {
             Element desc = alarm.addElement(MailConstants.E_CAL_ALARM_DESCRIPTION);
-            desc.setText(mDescription);
+            if (mDescription != null)
+                desc.setText(mDescription);
         }
-        if (mAttach != null)
+        if (!Action.DISPLAY.equals(action) && mAttach != null)
             mAttach.toXml(alarm);
         if (Action.EMAIL.equals(mAction) ||
             Action.X_YAHOO_CALENDAR_ACTION_IM.equals(mAction) ||
@@ -232,15 +238,12 @@ public class Alarm {
     }
 
     public static boolean actionAllowed(Action action) {
-        if (!DebugConfig.calendarAllowNonDisplayAlarms) {
-            if (action != null && !Action.AUDIO.equals(action) && !Action.PROCEDURE.equals(action))
-                return true;
-            ZimbraLog.calendar.warn(
-                    "Action " + (action != null ? action.toString() : "null") +
-                    " is not allowed; ignoring alarm");
+        if (Action.PROCEDURE.equals(action) && !DebugConfig.calendarAllowProcedureAlarms) {
+            ZimbraLog.calendar.warn("Action " + action.toString() + " is not allowed; ignoring alarm");
             return false;
-        } else
+        } else {
             return true;
+        }
     }
 
     /**
