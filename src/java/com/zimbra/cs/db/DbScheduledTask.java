@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -35,9 +35,9 @@ import com.zimbra.cs.mailbox.ScheduledTask;
  * Database persistence code for <tt>DataSourceTask</tt>s.
  */
 public class DbScheduledTask {
-    
+
     public static String TABLE_SCHEDULED_TASK = "scheduled_task";
-    
+
     /**
      * Saves the given task to the database.
      */
@@ -70,10 +70,10 @@ public class DbScheduledTask {
             DbPool.closeStatement(stmt);
         }
     }
-    
+
     /**
      * Retrieves scheduled tasks from the database.
-     * 
+     *
      * @param className the <tt>ScheduledTask</tt> class name, or <tt>null</tt>
      * for all classes
      * @param mailboxId the mailbox ID, or <tt>0</tt> for all mailboxes
@@ -81,7 +81,7 @@ public class DbScheduledTask {
     public static List<ScheduledTask> getTasks(String className, int mailboxId)
     throws ServiceException {
         ZimbraLog.scheduler.debug("Retrieving tasks for class %s, mailbox %d", className, mailboxId);
-        
+
         List<ScheduledTask> tasks = new ArrayList<ScheduledTask>();
 
         synchronized (DbMailbox.getSynchronizer()) {
@@ -111,13 +111,13 @@ public class DbScheduledTask {
                 if (mailboxId > 0) {
                     stmt.setInt(i++, mailboxId);
                 }
-    
+
                 rs = stmt.executeQuery();
                 while (rs.next()) {
                     className = rs.getString("class_name");
                     String name = rs.getString("name");
                     ScheduledTask task = null;
-                    
+
                     // Instantiate task
                     try {
                         Object obj = Class.forName(className).newInstance();
@@ -134,19 +134,19 @@ public class DbScheduledTask {
                             className, name, ScheduledTask.class.getSimpleName(), e);
                         continue;
                     }
-                    
+
                     // Set member vars
                     task.setMailboxId(rs.getInt("mailbox_id"));
                     task.setExecTime(DbUtil.timestampToDate(rs.getTimestamp("exec_time")));
                     task.setIntervalMillis(rs.getLong("interval_millis"));
-                    
+
                     try {
                         setProperties(task, rs.getString("metadata"));
                     } catch (ServiceException e) {
                         ZimbraLog.scheduler.warn("Unable to read metadata for %s.  Not scheduling this task.", task, e);
                         continue;
                     }
-                    
+
                     tasks.add(task);
                 }
             } catch (SQLException e) {
@@ -165,7 +165,7 @@ public class DbScheduledTask {
     public static void updateTask(Connection conn, ScheduledTask task)
     throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
-        
+
         ZimbraLog.scheduler.debug("Updating %s", task);
 
         PreparedStatement stmt = null;
@@ -214,7 +214,7 @@ public class DbScheduledTask {
     public static void deleteTask(Connection conn, String className, String taskName)
     throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(MailboxManager.getInstance()));
-        
+
         ZimbraLog.scheduler.debug("Deleting scheduled task from the database.  className=%s, taskName=%s",
             className, taskName);
 
@@ -233,7 +233,7 @@ public class DbScheduledTask {
             DbPool.closeStatement(stmt);
         }
     }
-    
+
     private static String getEncodedMetadata(ScheduledTask task) {
         boolean hasProperties = false;
         Metadata metadata = new Metadata();
@@ -247,19 +247,17 @@ public class DbScheduledTask {
         }
         return metadata.toString();
     }
-    
-    private static void setProperties(ScheduledTask task, String encodedMetadata)
-    throws ServiceException {
+
+    private static void setProperties(ScheduledTask task, String encodedMetadata) throws ServiceException {
         if (StringUtil.isNullOrEmpty(encodedMetadata)) {
             return;
         }
-        
+
         Metadata metadata = new Metadata(encodedMetadata);
-        Map map = metadata.asMap();
-        for (Object key : map.keySet()) {
-            Object value = map.get(key);
-            if (key instanceof String && value instanceof String) {
-                task.setProperty((String) key, (String) value);
+        Map<String, ?> map = metadata.asMap();
+        for (Map.Entry<String, ?> entry : map.entrySet()) {
+            if (entry.getValue() instanceof String) {
+                task.setProperty(entry.getKey(), (String) entry.getValue());
             }
         }
     }

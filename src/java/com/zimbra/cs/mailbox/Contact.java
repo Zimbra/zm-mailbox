@@ -755,8 +755,9 @@ public class Contact extends MailItem {
         }
 
         mFields = new HashMap<String, String>();
-        for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) metaAttrs.asMap()).entrySet())
-            mFields.put(entry.getKey().toString(), entry.getValue().toString());
+        for (Map.Entry<String, ?> entry : metaAttrs.asMap().entrySet()) {
+            mFields.put(entry.getKey(), entry.getValue().toString());
+        }
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {

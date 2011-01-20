@@ -1,20 +1,16 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/**
- * 
  */
 package com.zimbra.cs.mailbox.calendar;
 
@@ -47,15 +43,15 @@ public class TimeZoneMap {
     private Map<String /* real TZID */, ICalTimeZone> mTzMap;
     private Map<String /* alias */, String /* real TZID */> mAliasMap;
     private ICalTimeZone mLocalTZ;
-    
-    
+
+
     /**
-     * 
+     *
      * @param localTZ local time zone of user account
      */
     public TimeZoneMap(ICalTimeZone localTZ) {
-    	mTzMap = new HashMap<String, ICalTimeZone>();
-    	mAliasMap = new HashMap<String, String>();
+        mTzMap = new HashMap<String, ICalTimeZone>();
+        mAliasMap = new HashMap<String, String>();
         mLocalTZ = localTZ;
     }
 
@@ -67,7 +63,7 @@ public class TimeZoneMap {
     }
 
     /**
-     * 
+     *
      * @param localTZ local time zone of user account
      */
     private TimeZoneMap(Map<String, ICalTimeZone> z, Map<String, String> a, ICalTimeZone localTZ) {
@@ -88,13 +84,13 @@ public class TimeZoneMap {
     }
 
     public ICalTimeZone getLocalTimeZone() {
-    	return mLocalTZ;
+        return mLocalTZ;
     }
 
     public Iterator<ICalTimeZone> tzIterator() {
         return mTzMap.values().iterator();
     }
-    
+
     public Metadata encodeAsMetadata() {
         Metadata meta = new Metadata();
         Map<String /* real TZID */, Integer /* index */> tzIndex = new HashMap<String, Integer>();
@@ -125,20 +121,19 @@ public class TimeZoneMap {
     }
 
     /**
-     * 
+     *
      * @param meta
      * @param localTZ local time zone of user account
      * @return
      * @throws ServiceException
      */
     public static TimeZoneMap decodeFromMetadata(Metadata meta, ICalTimeZone localTZ) throws ServiceException {
-        Map map = meta.asMap();
+        Map<String, ?> map = meta.asMap();
         Map<String, String> aliasMap = new HashMap<String, String>();
         ICalTimeZone[] tzlist = new ICalTimeZone[map.size()];
         // first time, find the tz's
-        for (Iterator it = map.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Entry) it.next();
-            String key = (String)entry.getKey();
+        for (Map.Entry<String, ?> entry : map.entrySet()) {
+            String key = entry.getKey();
             if (key != null && key.length() > 0) {  // ignore null/empty TZIDs (bug 25183)
                 if (key.charAt(0) == '#') {
                     int idx = Integer.parseInt(key.substring(1));
@@ -167,9 +162,8 @@ public class TimeZoneMap {
                 tzmap.put(tz.getID(), tz);
         }
         // second time, build the real map
-        for (Iterator it = map.entrySet().iterator(); it.hasNext(); ) {
-            Map.Entry entry = (Entry) it.next();
-            String tzid = (String) entry.getKey();
+        for (Map.Entry<String, ?> entry : map.entrySet()) {
+            String tzid = entry.getKey();
             if (tzid != null && tzid.length() > 0) {  // ignore null/empty TZIDs (bug 25183)
                 if (tzid.charAt(0) != '#') {
                     int idx = -1;
@@ -187,13 +181,13 @@ public class TimeZoneMap {
                 }
             }
         }
-        
+
         return new TimeZoneMap(tzmap, aliasMap, localTZ);
     }
-    
+
     /**
      * Merge the other timezone map into this one
-     * 
+     *
      * @param other
      */
     public void add(TimeZoneMap other) {
@@ -229,7 +223,7 @@ public class TimeZoneMap {
                 return;
             }
         }
-    	mTzMap.put(tzid, tz);
+        mTzMap.put(tzid, tz);
     }
 
     public static String sanitizeTZID(String tzid) {
@@ -242,8 +236,7 @@ public class TimeZoneMap {
         return tzid;
     }
 
-    public ICalTimeZone lookupAndAdd(String tzId)
-    throws ServiceException {
+    public ICalTimeZone lookupAndAdd(String tzId) {
         tzId = sanitizeTZID(tzId);
         if (tzId.equals(""))
             return null;
@@ -266,17 +259,14 @@ public class TimeZoneMap {
         return zone;
     }
 
+    @Override
     public String toString() {
-        String s = "{";
-
-        s += "LocalTz = " + mLocalTZ + "; others {";
-
+        StringBuilder buf = new StringBuilder("{");
+        buf.append("LocalTz = ").append(mLocalTZ).append("; others {");
         for (ICalTimeZone i : mTzMap.values()) {
-            s += i +"; ";
+            buf.append(i).append("; ");
         }
-
-        s += "} }";
-        return s;
+        return buf.append("} }").toString();
     }
 
     // Reduce the timezone map to contain only the TZIDs passed in.

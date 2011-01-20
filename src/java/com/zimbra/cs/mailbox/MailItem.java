@@ -487,11 +487,11 @@ public abstract class MailItem implements Comparable<MailItem> {
             mSerializedValue = serialized;
         }
 
-        @SuppressWarnings("unchecked")
         static CustomMetadata deserialize(Pair<String, String> serialized) throws ServiceException {
             CustomMetadata custom = new CustomMetadata(serialized.getFirst());
-            for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) new Metadata(serialized.getSecond()).asMap()).entrySet())
-                custom.put(entry.getKey().toString(), entry.getValue().toString());
+            for (Map.Entry<String, ?> entry : new Metadata(serialized.getSecond()).asMap().entrySet()) {
+                custom.put(entry.getKey(), entry.getValue().toString());
+            }
             return custom;
         }
 
@@ -2974,7 +2974,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
     }
 
-    @SuppressWarnings("unchecked")
     void decodeMetadata(Metadata meta) throws ServiceException {
         if (meta == null)
             return;
@@ -2983,11 +2982,12 @@ public abstract class MailItem implements Comparable<MailItem> {
         mVersion = (int) meta.getLong(Metadata.FN_VERSION, 1);
 
         mExtendedData = null;
-        for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) meta.asMap()).entrySet()) {
-            String key = entry.getKey().toString();
+        for (Map.Entry<String, ?> entry : meta.asMap().entrySet()) {
+            String key = entry.getKey();
             if (key.startsWith(CUSTOM_META_PREFIX)) {
-                if (mExtendedData == null)
+                if (mExtendedData == null) {
                     mExtendedData = new CustomMetadataList();
+                }
                 mExtendedData.addSection(key.substring(CUSTOM_META_PREFIX.length()), entry.getValue().toString());
             }
         }
