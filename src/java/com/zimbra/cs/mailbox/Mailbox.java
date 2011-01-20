@@ -6405,8 +6405,14 @@ public class Mailbox {
                                     // with the same RECURRENCE-ID.  Treat it as a changed item.
                                     changed = true;
                                 } else {
-                                    changed = inv.getSeqNo() > curInv.getSeqNo() ||
-                                              (inv.getSeqNo() == curInv.getSeqNo() && inv.getDTStamp() > curInv.getDTStamp());
+                                    if (inv.getSeqNo() > curInv.getSeqNo()) {
+                                        changed = true;
+                                    } else if (inv.getSeqNo() == curInv.getSeqNo()) {
+                                        // Compare LAST-MODIFIED rather than DTSTAMP. (bug 55735)
+                                        changed = inv.getLastModified() > curInv.getLastModified();
+                                    } else {
+                                        changed = false;
+                                    }
                                 }
                                 importIt = sameFolder && changed;
                             }
