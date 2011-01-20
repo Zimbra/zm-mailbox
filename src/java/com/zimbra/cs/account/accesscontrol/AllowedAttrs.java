@@ -19,11 +19,11 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.Right.RightType;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 
 public class AllowedAttrs implements AccessManager.AttrRightChecker {
@@ -75,7 +75,7 @@ public class AllowedAttrs implements AccessManager.AttrRightChecker {
         }
     }
     
-    boolean canAccessAttrs(Set<String> attrsNeeded, Entry target) throws ServiceException {
+    boolean canAccessAttrs(Set<String> attrsNeeded, Entry target, AttrRight rightNeeded) throws ServiceException {
         
         if (sLog.isDebugEnabled()) {
             sLog.debug("canAccessAttrs attrsAllowed: " + dump());
@@ -90,7 +90,7 @@ public class AllowedAttrs implements AccessManager.AttrRightChecker {
             sLog.debug("canAccessAttrs attrsNeeded: " + sb.toString());
         }
         
-        if (mResult == AllowedAttrs.Result.ALLOW_ALL)
+        if (mResult == AllowedAttrs.Result.ALLOW_ALL && rightNeeded.getRightType() == RightType.getAttrs)
             return true;
         else if (mResult == AllowedAttrs.Result.DENY_ALL)
             return false;
@@ -107,6 +107,9 @@ public class AllowedAttrs implements AccessManager.AttrRightChecker {
         Set<String> allowed = getAllowed();
         for (String attr : attrsNeeded) {
             String attrName = getActualAttrName(attr);
+            
+            HardRules.checkForbiddenAttr(attrName);
+            
             if (!allowed.contains(attrName)) {
                 /*
                  * throw instead of return false, so it is easier for users to 
@@ -132,7 +135,7 @@ public class AllowedAttrs implements AccessManager.AttrRightChecker {
      * @param attrsNeeded attrs needed to be set.  Cannot be null, must specify which attrs/values to set
      * @return
      */
-    boolean canSetAttrs(Grantee grantee, Entry target, Map<String, Object> attrsNeeded) throws ServiceException {
+    boolean canSetAttrsWithinConstraints(Grantee grantee, Entry target, Map<String, Object> attrsNeeded) throws ServiceException {
         
         if (attrsNeeded == null)
             throw ServiceException.FAILURE("internal error", null);
@@ -162,6 +165,8 @@ public class AllowedAttrs implements AccessManager.AttrRightChecker {
         
         for (Map.Entry<String, Object> attr : attrsNeeded.entrySet()) {
             String attrName = getActualAttrName(attr.getKey());
+            
+            HardRules.checkForbiddenAttr(attrName);
             
             if (!allowAll && !allowed.contains(attrName)) {
                 /*

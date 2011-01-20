@@ -231,7 +231,15 @@ public class CollectAllEffectiveRights {
                         tt.getCode(), null, null, 
                         mRightBearer.getId(), mRightBearer.getName());
                 
-                CollectEffectiveRights.getEffectiveRights(mRightBearer, null, tt, mExpandSetAttrs, mExpandGetAttrs, er);
+                Entry target;
+                if (TargetType.config == tt) {
+                    target = mProv.getConfig();
+                } else if (TargetType.global == tt) {
+                    target = mProv.getGlobalGrant();
+                } else {
+                    target = PseudoTarget.createPseudoTarget(mProv, tt, null, null, true, null, null, null);
+                }
+                CollectEffectiveRights.getEffectiveRights(mRightBearer, target, tt, mExpandSetAttrs, mExpandGetAttrs, er);
                 mResult.setAll(tt, er);
             }
             return;

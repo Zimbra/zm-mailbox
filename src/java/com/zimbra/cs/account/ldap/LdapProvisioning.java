@@ -6142,7 +6142,7 @@ public class LdapProvisioning extends Provisioning {
      */
     public Right getRight(String rightName, boolean expandAllAttrs) throws ServiceException {
         if (expandAllAttrs)
-            throw ServiceException.FAILURE("expandAllAttrs == TRUE is not supported", null);
+            throw ServiceException.FAILURE("expandAllAttrs is not supported", null);
         return RightCommand.getRight(rightName);
     }
 

@@ -448,10 +448,10 @@ public class RightManager {
         if (InlineAttrRight.looksLikeOne(right))
             return InlineAttrRight.newInlineAttrRight(right);
         else
-            return getRight(right, true);
+            return getRightInternal(right, true);
     }
     
-    private Right getRight(String right, boolean mustFind) throws ServiceException {
+    private Right getRightInternal(String right, boolean mustFind) throws ServiceException {
         Right r = sUserRights.get(right);
         if (r == null)
             r = sAdminRights.get(right);
@@ -664,8 +664,9 @@ public class RightManager {
             
             Set<String> domainAdminModifiableAttrs = new HashSet<String>();
             for (String attr : allAttrs) {
-                if (am.isDomainAdminModifiable(attr, klass))
+                if (am.isDomainAdminModifiable(attr, klass)) {
                     domainAdminModifiableAttrs.add(attr);
+                }
             }
             return domainAdminModifiableAttrs;
         }

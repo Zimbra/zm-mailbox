@@ -72,7 +72,7 @@ public class InlineAttrRight extends AttrRight {
             return false;
     }
     
-    private InlineAttrRight(String name, RightType rightType) {
+    private InlineAttrRight(String name, RightType rightType) throws ServiceException {
         super(name, rightType);
     }
     

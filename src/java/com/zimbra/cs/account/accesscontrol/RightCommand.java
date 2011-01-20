@@ -40,6 +40,7 @@ import com.zimbra.cs.account.Provisioning.CosBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
 import com.zimbra.cs.account.Provisioning.TargetBy;
+import com.zimbra.cs.account.accesscontrol.Right.RightType;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
 
@@ -1259,7 +1260,14 @@ public class RightCommand {
         }
         
         // right
-        Right r = RightManager.getInstance().getRight(right);
+        // note: if a forbidden attr is persisted in an ACL in an inline attr right
+        //       (it can get in in a release before the attr is considered forbidden),
+        //       the getRight() call will throw exception.
+        //       Such grants will have to be removed by "zmprov modify{Entry} zimbraACE ..."
+        //       command.  We do NOT want to do any special treatment here because those 
+        //       grants are not even loaded into memory, which is nice and clean, we don't 
+        //       want to hack that part.
+        Right r = RightManager.getInstance().getRight(right); 
         
         if (granteeEntry != null)
             validateGrant(authedAcct, tt, targetEntry, gt, granteeEntry, null, r, rightModifier, true);
@@ -1331,8 +1339,12 @@ public class RightCommand {
                 eAttrs.addAttribute(AdminConstants.A_ALL, true);
                 if (expandAllAtrts) {
                     Set<String> attrs = attrRight.getAllAttrs();
-                    for (String attr : attrs)
-                        eAttrs.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, attr);
+                    for (String attr : attrs) {
+                        if (right.getRightType() != RightType.setAttrs || !HardRules.isForbiddenAttr(attr)) {
+                            eAttrs.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, attr);
+                        }
+                    }
+                    
                 }
             } else {
                 for (String attrName :attrRight.getAttrs())

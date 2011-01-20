@@ -216,7 +216,7 @@ public class PseudoTarget {
      * @param createPseudoDomain
      * @param cosBy
      * @param cosStr
-     * @param domainName only looked at when targetType is domain, ignored otherwise.
+     * @param domainName used only when targetType is domain, ignored otherwise.
      *                   if not null, the pseudo domain will be created with the provided domainName, 
      *                   not a pseudo name.
      *                   This is only used/needed for computing settable attrs when creating a domain.

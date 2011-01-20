@@ -74,13 +74,17 @@ public class CollectEffectiveRights {
         
     }
     
+    private boolean isGlobalAdmin() {
+        return (mRightBearer instanceof GlobalAdmin);
+    }
+    
     private void collect() throws ServiceException {
         
         Set<Right> presetRights;
         AllowedAttrs allowSetAttrs;
         AllowedAttrs allowGetAttrs;
         
-        if (mRightBearer instanceof GlobalAdmin) {
+        if (isGlobalAdmin()) {
             // all preset rights on the target type
             presetRights = getAllExecutableAdminPresetRights();
             
@@ -116,18 +120,18 @@ public class CollectEffectiveRights {
         if (allowSetAttrs.getResult() == AllowedAttrs.Result.ALLOW_ALL) {
             mResult.setCanSetAllAttrs();
             if (mExpandSetAttrs)
-                mResult.setCanSetAttrs(expandAttrs());
+                mResult.setCanSetAttrs(expandAttrs(AdminRight.PR_SET_ATTRS));
         } else if (allowSetAttrs.getResult() == AllowedAttrs.Result.ALLOW_SOME) {
-            mResult.setCanSetAttrs(fillDefault(allowSetAttrs));
+            mResult.setCanSetAttrs(fillDefault(allowSetAttrs, AdminRight.PR_SET_ATTRS));
         }
         
         // getAttrs
         if (allowGetAttrs.getResult() == AllowedAttrs.Result.ALLOW_ALL) {
             mResult.setCanGetAllAttrs();
             if (mExpandGetAttrs)
-                mResult.setCanGetAttrs(expandAttrs());
+                mResult.setCanGetAttrs(expandAttrs(AdminRight.PR_GET_ATTRS));
         } else if (allowGetAttrs.getResult() == AllowedAttrs.Result.ALLOW_SOME) {
-            mResult.setCanGetAttrs(fillDefault(allowGetAttrs));
+            mResult.setCanGetAttrs(fillDefault(allowGetAttrs, AdminRight.PR_GET_ATTRS));
         }
     }
     
@@ -322,15 +326,24 @@ public class CollectEffectiveRights {
         return list;
     }
     
-    private SortedMap<String, RightCommand.EffectiveAttr> fillDefault(AllowedAttrs allowSetAttrs) throws ServiceException {
-        return fillDefaultAndConstratint(allowSetAttrs.getAllowed());
+    private SortedMap<String, RightCommand.EffectiveAttr> fillDefault(AllowedAttrs allowSetAttrs, 
+            AttrRight rightNeeded) throws ServiceException {
+        return fillDefaultAndConstratint(allowSetAttrs.getAllowed(), rightNeeded);
     }
     
-    private SortedMap<String, RightCommand.EffectiveAttr> expandAttrs() throws ServiceException {
-        return fillDefaultAndConstratint(TargetType.getAttrsInClass(mTarget));
+    private SortedMap<String, RightCommand.EffectiveAttr> expandAttrs(AttrRight rightNeeded) throws ServiceException {
+        return fillDefaultAndConstratint(TargetType.getAttrsInClass(mTarget), rightNeeded);
     }
     
-    private SortedMap<String, RightCommand.EffectiveAttr> fillDefaultAndConstratint(Set<String> attrs) throws ServiceException {
+    /**
+     * 
+     * @param attrs
+     * @param rightNeeded PR_GET_ATTRS or PR_SET_ATTRS
+     * @return
+     * @throws ServiceException
+     */
+    private SortedMap<String, RightCommand.EffectiveAttr> fillDefaultAndConstratint(Set<String> attrs, 
+            AttrRight rightNeeded) throws ServiceException {
         SortedMap<String, RightCommand.EffectiveAttr> effAttrs = new TreeMap<String, RightCommand.EffectiveAttr>();
         
         Entry constraintEntry = AttributeConstraint.getConstraintEntry(mTarget);
@@ -340,6 +353,9 @@ public class CollectEffectiveRights {
         boolean hasConstraints = (constraints != null && !constraints.isEmpty());
 
         for (String attrName : attrs) {
+            if (rightNeeded == AdminRight.PR_SET_ATTRS && !isGlobalAdmin() && HardRules.isForbiddenAttr(attrName))
+                continue;
+            
             Set<String> defaultValues = null;
             
             Object defaultValue = mTarget.getAttrDefault(attrName);

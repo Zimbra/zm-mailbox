@@ -30,8 +30,11 @@ public class AttrRight extends AdminRight {
     private Set<String> mAttrs;
     
     
-    AttrRight(String name, RightType rightType) {
+    AttrRight(String name, RightType rightType) throws ServiceException {
         super(name, rightType);
+        
+        if (rightType != RightType.getAttrs && rightType != RightType.setAttrs)
+            throw ServiceException.FAILURE("internal error", null);
     }
     
     @Override
@@ -154,12 +157,18 @@ public class AttrRight extends AdminRight {
         return sb.toString();
     }
     
-    void addAttr(String attrName) {
-        if (mAttrs == null)
+    void addAttr(String attrName) throws ServiceException {
+        if (getRightType() == RightType.setAttrs) {
+            HardRules.checkForbiddenAttr(attrName);
+        }
+        
+        if (mAttrs == null) {
             mAttrs = new HashSet<String>();
+        }
+        
         mAttrs.add(attrName);
     }
-    
+
     public boolean allAttrs() {
         return (mAttrs == null);
     }
