@@ -491,6 +491,10 @@ public class MimeDetect {
         
         while ((c = is.read()) != -1 && c != '\n')
             sb.append((char)c);
+        if (sb.length() > 0 && sb.charAt(sb.length() - 1) == '\r') {
+            // drop trailing \r
+            sb.deleteCharAt(sb.length() - 1);
+        }
         return sb.length() == 0 ? null : sb.toString();
     }
     
