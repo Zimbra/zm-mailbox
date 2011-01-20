@@ -114,6 +114,7 @@ public class Invite {
             boolean rsvp,
             RecurId recurrenceId,
             long dtstamp,
+            long lastModified,
             int seqno,
             int mailboxId,
             int mailItemId,
@@ -154,6 +155,7 @@ public class Invite {
         mRsvp = rsvp;
         mSeqNo = seqno;
         setDtStamp(dtstamp);
+        setLastModified(lastModified);
 
         mMailboxId = mailboxId;
         mMailItemId = mailItemId;
@@ -220,8 +222,9 @@ public class Invite {
      * @param name Name of this calendar item
      * @param location Location of this calendar item
      * @param description Description of this calendar item
-     * @param dtStampOrZero RFC2445 sequencing. If 0, then will use current timestamp
-     * @param sequenceNoOrZero RFC2445 sequencying.  If 0, then will use current highest sequence no, or 1
+     * @param dtStamp RFC2445 sequencing
+     * @param lastModified
+     * @param seqNo RFC2445 sequencing
      * @param partStat IcalXMLStrMap.PARTSTAT_* RFC2445 Participant Status of this mailbox
      * @param rsvp RFC2445 RSVP
      * @param sentByMe TRUE if this mailbox sent this invite 
@@ -257,8 +260,9 @@ public class Invite {
             List<String> contacts,
             Geo geo,
             String url,
-            long dtStampOrZero,
-            int sequenceNoOrZero,
+            long dtStamp,
+            long lastModified,
+            int seqNo,
             String partStat,
             boolean rsvp,
             boolean sentByMe)
@@ -289,8 +293,9 @@ public class Invite {
                 partStat,
                 rsvp,
                 recurId,
-                dtStampOrZero,
-                sequenceNoOrZero,
+                dtStamp,
+                lastModified,
+                seqNo,
                 mailboxId,
                 0, // mailItemId MUST BE SET
                 0, // component num
@@ -339,6 +344,7 @@ public class Invite {
     private static final String FN_LOCATION        = "l";
     private static final String FN_LOCAL_ONLY      = "lo";
     private static final String FN_INVMSGID        = "mid";
+    private static final String FN_LAST_MODIFIED   = "lastMod";
     private static final String FN_METHOD          = "mthd";
     private static final String FN_NAME            = "n";
     private static final String FN_NUM_ATTENDEES   = "numAt";
@@ -429,6 +435,8 @@ public class Invite {
             meta.put(FN_RECUR_ID, inv.getRecurId().encodeMetadata());
         }
         meta.put(FN_DTSTAMP, inv.getDTStamp());
+        if (inv.getLastModified() != 0)
+            meta.put(FN_LAST_MODIFIED, inv.getLastModified());
         meta.put(FN_SEQ_NO, inv.getSeqNo());
         
         if (inv.hasOrganizer()) {
@@ -622,6 +630,7 @@ public class Invite {
         // For existing invites with no RSVP, default to true.
         boolean rsvp = meta.getBool(FN_RSVP, true);
         long dtstamp = meta.getLong(FN_DTSTAMP, 0);
+        long lastModified = meta.getLong(FN_LAST_MODIFIED, 0);
         int seqno = (int) meta.getLong(FN_SEQ_NO, 0);
 
         ZOrganizer org = null;
@@ -712,7 +721,7 @@ public class Invite {
                 priority, pctComplete, completed, freebusy, transp, classProp,
                 dtStart, dtEnd, duration, recurrence, isOrganizer, org, attendees,
                 name, loc, flags, partStat, rsvp,
-                recurrenceId, dtstamp, seqno,
+                recurrenceId, dtstamp, lastModified, seqno,
                 mailboxId, mailItemId, componentNum, sentByMe, desc, descHtml, fragment,
                 comments, categories, contacts, geo, url);
         invite.mDescInMeta = descInMeta;  // a little hacky, but necessary
@@ -1042,6 +1051,12 @@ public class Invite {
     public long getDTStamp() { return mDTStamp; }
     public void setDtStamp(long stamp) {
         mDTStamp = stamp / 1000 * 1000;  // IMPORTANT: Remove millis resolution. (bug 20641)
+        if (mLastModified == 0)
+            setLastModified(mDTStamp);
+    }
+    public long getLastModified() { return mLastModified; }
+    public void setLastModified(long lastModified) {
+        mLastModified = lastModified / 1000 * 1000;  // drop millis resolution
     }
 
     public boolean isPublic() {
@@ -1231,6 +1246,7 @@ public class Invite {
         sb.append(", isRecur: ").append(isRecurrence());
         sb.append(", recurId: ").append(getRecurId());
         sb.append(", DTStamp: ").append(mDTStamp);
+        sb.append(", lastMod: ").append(mLastModified);
         sb.append(", mSeqNo ").append(mSeqNo);
         if (isDraft())
             sb.append(", draft: ").append(true);
@@ -1282,6 +1298,7 @@ public class Invite {
     protected String mLocation;
     protected int mFlags = APPT_FLAG_EVENT;
     protected long mDTStamp = 0;
+    protected long mLastModified = 0;
     protected int mSeqNo = 0;
     
     // Participation status for this calendar user.  Values are the
@@ -1815,6 +1832,10 @@ public class Invite {
                                     ParsedDateTime dtstamp = ParsedDateTime.parse(prop, tzmap);
                                     newInv.setDtStamp(dtstamp.getUtcTime());
                                     break;
+                                case LAST_MODIFIED:
+                                    ParsedDateTime lastModified = ParsedDateTime.parse(prop, tzmap);
+                                    newInv.setLastModified(lastModified.getUtcTime());
+                                    break;
                                 case RECURRENCE_ID:
                                     ParsedDateTime rid = ParsedDateTime.parse(prop, tzmap);
                                     newInv.setRecurId(new RecurId(rid, RecurId.RANGE_NONE));
@@ -2322,10 +2343,17 @@ public class Invite {
         RecurId recurId = getRecurId();
         if (recurId != null) 
             component.addProperty(recurId.toProperty(useOutlookCompatAllDayEvents));
-        
+
+        // LAST-MODIFIED
+        long lastModified = getLastModified();
+        if (lastModified != 0) {
+            ParsedDateTime dtLastModified = ParsedDateTime.fromUTCTime(lastModified);
+            component.addProperty(dtLastModified.toProperty(ICalTok.LAST_MODIFIED, false));
+        }
+
         // DTSTAMP
         ParsedDateTime dtStamp = ParsedDateTime.fromUTCTime(getDTStamp());
-        component.addProperty(dtStamp.toProperty(ICalTok.DTSTAMP, useOutlookCompatAllDayEvents));
+        component.addProperty(dtStamp.toProperty(ICalTok.DTSTAMP, false));
         
         // SEQUENCE
         component.addProperty(new ZProperty(ICalTok.SEQUENCE, getSeqNo()));
@@ -2485,7 +2513,7 @@ public class Invite {
                 mRecurrence,
                 mIsOrganizer, org, attendees,
                 mName, mLocation,
-                mFlags, mPartStat, mRsvp, mRecurrenceId, mDTStamp, mSeqNo,
+                mFlags, mPartStat, mRsvp, mRecurrenceId, mDTStamp, mLastModified, mSeqNo,
                 0, // mMailboxId
                 0, // mMailItemId
                 0, // mComponentNum
@@ -2629,6 +2657,10 @@ public class Invite {
         // Clean up the time zone map to remove unreferenced TZs.
         Set<String> tzids = getReferencedTZIDs();
         mTzMap.reduceTo(tzids);
+
+        // Set LAST-MODIFIED to DTSTAMP if unset.
+        if (mLastModified == 0)
+            mLastModified = mDTStamp;
     }
 
     /**
@@ -2724,7 +2756,6 @@ public class Invite {
         instInv.setRecurrence(null);
         RecurId rid = new RecurId(recurIdDt, RecurId.RANGE_NONE);
         instInv.setRecurId(rid);
-        instInv.setDtStamp(System.currentTimeMillis());
         ParsedDateTime dtEnd = recurIdDt.add(instInv.getEffectiveDuration());
         instInv.setDtStart(recurIdDt);
         instInv.setDtEnd(dtEnd);
