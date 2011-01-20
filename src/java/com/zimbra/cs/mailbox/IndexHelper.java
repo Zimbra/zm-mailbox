@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -511,7 +511,7 @@ public final class IndexHelper {
                 continue;
             }
             try {
-                chunk.add(new Mailbox.IndexItemEntry(false, item, item.generateIndexData(true)));
+                chunk.add(new Mailbox.IndexItemEntry(item, item.generateIndexData(true)));
             } catch (MailItem.TemporaryIndexingException e) {
                 ZimbraLog.index.warn("Temporary index failure id=%d", id, e);
                 lastFailedTime = System.currentTimeMillis();
@@ -588,12 +588,12 @@ public final class IndexHelper {
     /**
      * Entry point for Redo-logging system only. Everybody else should use queueItemForIndexing inside a transaction.
      */
-    public void redoIndexItem(MailItem item, boolean deleteFirst, int itemId, List<IndexDocument> docList) {
+    public void redoIndexItem(MailItem item, int itemId, List<IndexDocument> docList) {
         synchronized (mailbox) {
             try {
                 mailboxIndex.beginWrite();
                 try {
-                    mailboxIndex.indexMailItem(mailbox, deleteFirst, docList, item);
+                    mailboxIndex.indexMailItem(mailbox, docList, item);
                 } finally {
                     mailboxIndex.endWrite();
                 }
@@ -642,7 +642,7 @@ public final class IndexHelper {
                 ZimbraLog.mailbox.debug("index item=%s", entry);
 
                 try {
-                    mailboxIndex.indexMailItem(mailbox, entry.deleteFirst, entry.documents, entry.item);
+                    mailboxIndex.indexMailItem(mailbox, entry.documents, entry.item);
                 } catch (ServiceException e) {
                     ZimbraLog.index.warn("Failed to index item=%s", entry, e);
                     lastFailedTime = System.currentTimeMillis();
@@ -661,7 +661,7 @@ public final class IndexHelper {
 
         DbMailItem.setIndexIds(mailbox, indexed);
         for (MailItem item : indexed) {
-            item.indexIdChanged(item.getId());
+            item.mData.indexId = item.getId();
             removeDeferredId(item.getId());
         }
     }

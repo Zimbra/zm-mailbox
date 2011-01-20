@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -392,14 +392,35 @@ public class Message extends MailItem {
         return MessageCache.getMimeMessage(this, runConverters);
     }
 
-    @Override boolean isTaggable()      { return true; }
-    @Override boolean isCopyable()      { return true; }
-    @Override boolean isMovable()       { return true; }
-    @Override boolean isMutable()       { return isTagged(Flag.ID_FLAG_DRAFT); }
-    @Override boolean isIndexed()       { return true; }
-    @Override boolean canHaveChildren() { return false; }
+    @Override
+    boolean isTaggable() {
+        return true;
+    }
 
-    @Override boolean canParent(MailItem item)  { return false; }
+    @Override
+    boolean isCopyable() {
+        return true;
+    }
+
+    @Override
+    boolean isMovable() {
+        return true;
+    }
+
+    @Override
+    boolean isMutable() {
+        return isTagged(Flag.ID_FLAG_DRAFT);
+    }
+
+    @Override
+    boolean canHaveChildren() {
+        return false;
+    }
+
+    @Override
+    boolean canParent(MailItem item) {
+        return false;
+    }
 
     static class MessageCreateFactory {
         Message create(Mailbox mbox, UnderlyingData data) throws ServiceException {
@@ -473,7 +494,7 @@ public class Message extends MailItem {
             data.parentId = conv.getId();
         data.folderId    = folder.getId();
         if (!folder.inSpam() || acct.getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
-            data.indexId = 0;
+            data.indexId = IndexStatus.DEFERRED.id();
         }
         data.locator     = staged.getLocator();
         data.imapId      = id;
@@ -840,8 +861,9 @@ public class Message extends MailItem {
                     CalendarItemInfo info = new CalendarItemInfo(calItemId, cur.getComponentNum(), cur, invChanges);
                     mCalendarItemInfos.add(info);
                     updatedMetadata = true;
-                    if (calItem != null && (calItemIsNew || modifiedCalItem))
-                        mMailbox.queueForIndexing(calItem, !calItemIsNew, null);
+                    if (calItem != null && (calItemIsNew || modifiedCalItem)) {
+                        mMailbox.queueForIndexing(calItem, null);
+                    }
                 } else {
                     // Not intended for me.  Just save the invite detail in metadata.
                     CalendarItemInfo info = new CalendarItemInfo(

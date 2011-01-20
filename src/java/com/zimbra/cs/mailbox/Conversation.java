@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -201,16 +201,35 @@ public class Conversation extends MailItem {
         return true;
     }
 
+    @Override
+    boolean isTaggable() {
+        return false;
+    }
 
-    @Override boolean isTaggable()      { return false; }
-    @Override boolean isCopyable()      { return false; }
-    @Override boolean isMovable()       { return true; }
-    @Override boolean isMutable()       { return true; }
-    @Override boolean isIndexed()       { return false; }
-    @Override boolean canHaveChildren() { return true; }
+    @Override
+    boolean isCopyable() {
+        return false;
+    }
 
-    @Override boolean canParent(MailItem item) { return (item instanceof Message); }
+    @Override
+    boolean isMovable() {
+        return true;
+    }
 
+    @Override
+    boolean isMutable() {
+        return true;
+    }
+
+    @Override
+    boolean canHaveChildren() {
+        return true;
+    }
+
+    @Override
+    boolean canParent(MailItem item) {
+        return (item instanceof Message);
+    }
 
     static Conversation create(Mailbox mbox, int id, Message... msgs) throws ServiceException {
         if (ZimbraLog.mailop.isDebugEnabled()) {
@@ -514,11 +533,8 @@ public class Conversation extends MailItem {
             }
 
             // moved an item out of the spam folder, need to index it
-            if (msg.inSpam() && !target.inSpam()) {
-                if (msg.isIndexed() && msg.getIndexId() != -1) {
-                    msg.indexIdChanged(msg.getId());
-                    indexUpdated.add(msg);
-                }
+            if (msg.inSpam() && !target.inSpam() && msg.getIndexStatus() != IndexStatus.NO) {
+                indexUpdated.add(msg);
             }
 
             // if a draft is being moved to Trash then remove any "send-later" info from it
@@ -558,9 +574,8 @@ public class Conversation extends MailItem {
             DbMailItem.setFolder(moved, target);
 
             if (!indexUpdated.isEmpty()) {
-                DbMailItem.setIndexIds(mMailbox, indexUpdated);
                 for (MailItem msg : indexUpdated) {
-                    mMailbox.queueForIndexing(msg, false, null);
+                    mMailbox.queueForIndexing(msg, null);
                 }
             }
         }

@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,7 +28,7 @@ public class ItemData {
     public String sender, extra, flags, path, tags;
     public MailItem.UnderlyingData ud;
     private String tagsOldFmt = null;
-    
+
     private static enum Keys {
         id, type, parent_id, folder_id, index_id, imap_id, date, size,
         volume_id, blob_digest, unread, flags, tags, subject, name,
@@ -53,12 +53,12 @@ public class ItemData {
             throw new IOException("data error: " + e);
         }
     }
-    
+
     public ItemData(final String encoded) throws IOException {
         try {
             JSONObject json = new JSONObject(encoded);
             int version = (byte)json.getInt(Keys.Ver.toString());
-            
+
             if (version > Metadata.CURRENT_METADATA_VERSION)
                 throw new IOException("unsupported data version");
             ud = new MailItem.UnderlyingData();
@@ -66,14 +66,8 @@ public class ItemData {
             ud.type = (byte)json.getInt(Keys.type.toString());
             ud.parentId = json.getInt(Keys.parent_id.toString());
             ud.folderId = json.getInt(Keys.folder_id.toString());
-            /*
-             * indexId and volumeId changed to optional strings from mandatory
-             *  ints which breaks sync with 5.0 clients 
-            
-             * ud.indexId = json.optString(Keys.index_id.toString());
-             * ud.locator = json.getString(Keys.volume_id.toString());
-             */
-            ud.indexId = -1;
+            // indexId and volumeId changed to optional strings from mandatory ints which breaks sync with 5.0 clients
+            ud.indexId = MailItem.IndexStatus.NO.id();
             ud.locator = null;
             ud.imapId = json.getInt(Keys.imap_id.toString());
             ud.date = json.getInt(Keys.date.toString());
@@ -98,11 +92,11 @@ public class ItemData {
             throw new IOException("decode error: " + e);
         }
     }
-  
+
     public ItemData(final byte[] encoded) throws IOException {
         this(new String(encoded, "UTF-8"));
     }
-    
+
     public JSONObject toJSON() throws IOException {
         try {
             return new JSONObject().
@@ -169,21 +163,21 @@ public class ItemData {
         }
         return tags;
     }
-    
+
     private boolean isOldTags() {
         return tags.length() > 0 && Character.isDigit(tags.charAt(0)) && tags.indexOf(":") == -1;
     }
-    
+
     private void getTagsFromJson(JSONObject json) {
         tags = json.optString(Keys.TagNames.toString()); // 6.0.7+ format (TagNames="<tag-name>[:<tag-name>]")
         if (tags.length() == 0) {
             // either 6.0.6 format (TagStr=":<tag-name>[:<tag-name>]"), or pre-6.0.6 format (TagStr="<tag int>[,<tag int>]")
-            tags = json.optString(Keys.TagStr.toString()); 
+            tags = json.optString(Keys.TagStr.toString());
             if (isOldTags()) // is pre-6.0.6
                 tagsOldFmt = tags;
         }
     }
-    
+
     public boolean tagsEqual(MailItem mi) throws IOException {
         return isOldTags() ? tags.equals(mi.getTagString()) : tags.equals(getTagString(mi));
     }

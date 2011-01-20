@@ -1,6 +1,6 @@
 /*
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Yahoo! Public License
  * Version 1.0 ("License"); you may not use this file except in
@@ -185,12 +185,46 @@ public abstract class MailItem implements Comparable<MailItem> {
     public static final byte DEFAULT_COLOR = 0;
     public static final Color DEFAULT_COLOR_RGB = new Color(DEFAULT_COLOR);
 
+    public enum IndexStatus {
+        /** Not indexable. */
+        NO(-1),
+        /** Not indexed yet (add only). */
+        DEFERRED(0),
+        /** Not re-indexed yet (delete & add). */
+        STALE(1),
+        /** Indexed. */
+        DONE(Integer.MAX_VALUE);
+
+        private final int id;
+
+        private IndexStatus(int id) {
+            this.id = id;
+        }
+
+        public int id() {
+            return id;
+        }
+
+        static IndexStatus of(int id) {
+            switch (id) {
+                case -1:
+                    return NO;
+                case 0:
+                    return DEFERRED;
+                case 1:
+                    return STALE;
+                default:
+                    return DONE;
+            }
+        }
+    }
+
     public static final class UnderlyingData implements Cloneable {
         public int    id;
         public byte   type;
         public int    parentId = -1;
         public int    folderId = -1;
-        public int    indexId  = -1; // -1 = NULL (don't index), 0 = not indexed yet
+        public int    indexId = IndexStatus.NO.id();
         public int    imapId   = -1;
         public String locator;
         private String blobDigest;
@@ -308,7 +342,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             type = (byte) meta.getLong(FN_TYPE, 0);
             parentId = (int) meta.getLong(FN_PARENT_ID, -1);
             folderId = (int) meta.getLong(FN_FOLDER_ID, -1);
-            indexId = meta.getInt(FN_INDEX_ID, -1);
+            indexId = meta.getInt(FN_INDEX_ID, IndexStatus.NO.id());
             imapId = (int) meta.getLong(FN_IMAP_ID, -1);
             locator = meta.get(FN_LOCATOR, null);
             blobDigest = meta.get(FN_BLOB_DIGEST, null);
@@ -640,6 +674,10 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  case, the "index ID" is the same as the original item's "index ID". */
     public int getIndexId() {
         return mData.indexId;
+    }
+
+    public IndexStatus getIndexStatus() {
+        return IndexStatus.of(mData.indexId);
     }
 
     /** Returns the UID the item is referenced by in the IMAP server.  Returns
@@ -1259,12 +1297,10 @@ public abstract class MailItem implements Comparable<MailItem> {
         return mMailbox.getFolderById(mData.folderId);
     }
 
-
     abstract boolean isTaggable();
     abstract boolean isCopyable();
     abstract boolean isMovable();
     abstract boolean isMutable();
-    abstract boolean isIndexed();
     abstract boolean canHaveChildren();
     boolean isDeletable()             { return true; }
     boolean isLeafNode()              { return true; }
@@ -1614,9 +1650,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         mData.setBlobDigest(staged == null ? null : staged.getDigest());
         mData.date   = mMailbox.getOperationTimestamp();
         mData.imapId = mMailbox.isTrackingImap() ? 0 : mData.id;
-        if (mData.indexId > 0) {
-            mData.indexId = 0; // mark to re-index
-        }
         mData.contentChanged(mMailbox);
 
         // write the content (if any) to the store
@@ -2055,22 +2088,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         // We'll share the index entry if this item can't change out from under us. Re-index the copy if existing item
         // (a) wasn't indexed or (b) is mutable or (c) existing item is in dumpster (which implies copy is not in
         // dumpster)
-        int indexId;
-        if (isIndexed() && !folder.inSpam()) {
-            if (isMutable() || inDumpster() || mData.indexId == 0) { // index
-                indexId = 0;
-            } else { // share index
-                indexId = mData.indexId;
-            }
-        } else { // don't index
-            indexId = -1;
-        }
+        boolean shareIndex = !isMutable() && getIndexStatus() == IndexStatus.DONE && !folder.inSpam();
 
         // if the copy or original is in Spam, put the copy in its own conversation
         boolean detach = parentId <= 0 || isTagged(Flag.ID_FLAG_DRAFT) || inSpam() != folder.inSpam();
         MailItem parent = detach ? null : getParent();
 
-        if (indexId > 0 && !isTagged(Flag.ID_FLAG_COPIED)) {
+        if (shareIndex && !isTagged(Flag.ID_FLAG_COPIED)) {
             alterSystemFlag(mMailbox.getFlagById(Flag.ID_FLAG_COPIED), true);
             if (ZimbraLog.mailop.isDebugEnabled())
                 ZimbraLog.mailop.debug("setting copied flag for %s", getMailopContext(this));
@@ -2090,8 +2114,8 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         UnderlyingData data = mData.duplicate(copyId, folder.getId(), locator);
         data.parentId = detach ? -1 : parentId;
-        data.indexId = indexId;
-        data.flags &= indexId > 0 ? ~0 : ~Flag.BITMASK_COPIED;
+        data.indexId = shareIndex ? getIndexId() : IndexStatus.DEFERRED.id();
+        data.flags &= shareIndex ? ~0 : ~Flag.BITMASK_COPIED;
         data.metadata = encodeMetadata();
         data.contentChanged(mMailbox);
 
@@ -2121,8 +2145,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         copy.finishCreation(parent);
 
         // if the copy needs to be re-indexed, just set the deferred flag now and index it later
-        if (indexId == 0) {
-            mMailbox.queueForIndexing(copy, false, null);
+        if (!shareIndex) {
+            mMailbox.queueForIndexing(copy, null);
         }
 
         return copy;
@@ -2189,37 +2213,24 @@ public abstract class MailItem implements Comparable<MailItem> {
             locator = mblob.getLocator();
         }
 
+        // We'll share the index entry if this item can't change out from under us. Re-index the copy if existing item
+        // (a) wasn't indexed or (b) is mutable.
+        boolean shareIndex = !isMutable() && getIndexStatus() == IndexStatus.DONE && !target.inSpam();
+
         UnderlyingData data = mData.duplicate(copyId, target.getId(), locator);
         data.metadata = encodeMetadata();
         data.imapId = copyId;
+        data.indexId = shareIndex ? getIndexId() : IndexStatus.DEFERRED.id();
         data.contentChanged(mMailbox);
-
-        // We'll share the index entry if this item can't change out from under us. Re-index the copy if existing item
-        // (a) wasn't indexed or (b) is mutable.
-        int indexId;
-        if (isIndexed() && !target.inSpam()) {
-            if (isMutable() || mData.indexId == 0) { // index
-                indexId = 0;
-            } else { // share index
-                indexId = mData.indexId;
-            }
-        } else { // don't index
-            indexId = -1;
-        }
-
-        // if the copy needs to be reindexed, just set the deferred flag now and index it later
-        if (data.indexId == 0) {
-            mMailbox.queueForIndexing(this, false, null);
-        }
 
         ZimbraLog.mailop.info("Performing IMAP copy of %s: copyId=%d, folderId=%d, folderName=%s, parentId=%d.",
             getMailopContext(this), copyId, target.getId(), target.getName(), data.parentId);
-        DbMailItem.icopy(this, data, indexId == mData.indexId);
+        DbMailItem.icopy(this, data, shareIndex);
 
         MailItem copy = constructItem(mMailbox, data);
         copy.finishCreation(null);
 
-        if (indexId == mData.indexId && !isTagged(Flag.ID_FLAG_COPIED)) {
+        if (shareIndex && !isTagged(Flag.ID_FLAG_COPIED)) {
             Flag copiedFlag = mMailbox.getFlagById(Flag.ID_FLAG_COPIED);
             tagChanged(copiedFlag, true);
             copy.tagChanged(copiedFlag, true);
@@ -2232,6 +2243,10 @@ public abstract class MailItem implements Comparable<MailItem> {
             parent.markItemModified(Change.MODIFIED_CHILDREN);
             mData.metadataChanged(mMailbox);
             mData.parentId = mData.type == Type.MESSAGE.toByte() ? -mId : -1;
+        }
+
+        if (!shareIndex) {
+            mMailbox.queueForIndexing(copy, null);
         }
 
         return copy;
@@ -2437,22 +2452,14 @@ public abstract class MailItem implements Comparable<MailItem> {
             detach();
 
         // item moved out of spam, so update the index id (will be written to DB in DbMailItem.setFolder());
-        if (inSpam() && !target.inSpam() && isIndexed() && mData.indexId >= 0) {
-            mData.indexId = 0;
-            getMailbox().queueForIndexing(this, false, null);
+        if (inSpam() && !target.inSpam() && getIndexStatus() == IndexStatus.DONE) {
+            mMailbox.queueForIndexing(this, null);
         }
 
         ZimbraLog.mailop.info("moving " + getMailopContext(this) + " to " + getMailopContext(target));
         DbMailItem.setFolder(this, target);
         folderChanged(target, 0);
         return true;
-    }
-
-    /** Records all relevant changes to the in-memory object for when an item's
-     *  index_id is changed.  Does <u>not</u> persist those
-     *  changes to the database. */
-    void indexIdChanged(int indexId) {
-        mData.indexId = indexId;
     }
 
     /** Records all relevant changes to the in-memory object for when an item
@@ -2774,8 +2781,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         // 2) permantently deleting an item from dumpster
         // In other words, skip the blob/index deletes when soft-deleting item to dumpster.
         if (!getMailbox().dumpsterEnabled() || inDumpster() || (inSpam() && !getMailbox().useDumpsterForSpam())) {
-            if (mData.indexId != -1) {
-                int indexId = mData.indexId > 0 ? mData.indexId : mData.id;
+            if (getIndexStatus() != IndexStatus.NO) {
+                int indexId = getIndexStatus() == IndexStatus.DONE ? mData.indexId : mData.id;
                 if (isTagged(Flag.ID_FLAG_COPIED)) {
                     info.sharedIndex = Sets.newHashSet(indexId);
                 } else {

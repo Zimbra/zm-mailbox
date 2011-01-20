@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -77,12 +77,30 @@ public class Document extends MailItem {
         return mDescription == null ? "" : mDescription;
     }
 
-    @Override boolean isTaggable()      { return true; }
-    @Override boolean isCopyable()      { return true; }
-    @Override boolean isMovable()       { return true; }
-    @Override boolean isMutable()       { return true; }
-    @Override boolean isIndexed()       { return true; }
-    @Override boolean canHaveChildren() { return false; }
+    @Override
+    boolean isTaggable() {
+        return true;
+    }
+
+    @Override
+    boolean isCopyable() {
+        return true;
+    }
+
+    @Override
+    boolean isMovable() {
+        return true;
+    }
+
+    @Override
+    boolean isMutable() {
+        return true;
+    }
+
+    @Override
+    boolean canHaveChildren() {
+        return false;
+    }
 
     @Override int getMaxRevisions() throws ServiceException {
         return getAccount().getIntAttr(Provisioning.A_zimbraNotebookMaxRevisions, 0);
@@ -174,7 +192,7 @@ public class Document extends MailItem {
         data.type        = type.toByte();
         data.folderId    = folder.getId();
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
-            data.indexId = 0;
+            data.indexId = IndexStatus.DEFERRED.id();
         }
         data.imapId      = id;
         data.date        = (int) (pd.getCreatedDate() / 1000L);

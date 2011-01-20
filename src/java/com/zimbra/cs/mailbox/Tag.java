@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -134,18 +134,34 @@ public class Tag extends MailItem {
         return tags;
     }
 
+    @Override
+    boolean isTaggable() {
+        return false;
+    }
 
-    @Override boolean isTaggable()      { return false; }
-    @Override boolean isCopyable()      { return false; }
-    @Override boolean isMovable()       { return false; }
-    @Override boolean isMutable()       { return true; }
-    @Override boolean isIndexed()       { return false; }
-    @Override boolean canHaveChildren() { return false; }
+    @Override
+    boolean isCopyable() {
+        return false;
+    }
+
+    @Override
+    boolean isMovable() {
+        return false;
+    }
+
+    @Override
+    boolean isMutable() {
+        return true;
+    }
+
+    @Override
+    boolean canHaveChildren() {
+        return false;
+    }
 
     boolean canTag(MailItem item) {
         return item.isTaggable();
     }
-
 
     static Tag create(Mailbox mbox, int id, String name, Color color)
     throws ServiceException {

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -341,7 +341,7 @@ public final class MailboxIndex {
         luceneIndex.deleteIndex();
     }
 
-    public void indexMailItem(Mailbox mbox, boolean deleteFirst, List<IndexDocument> docs, MailItem item)
+    public void indexMailItem(Mailbox mbox, List<IndexDocument> docs, MailItem item)
             throws ServiceException {
 
         if (docs == null || docs.isEmpty()) {
@@ -351,7 +351,7 @@ public final class MailboxIndex {
         initAnalyzer(mbox);
         synchronized (mailbox) {
             try {
-                luceneIndex.addDocument(item, docs, deleteFirst);
+                luceneIndex.addDocument(item, docs);
             } catch (IOException e) {
                 throw ServiceException.FAILURE("Failed to index id=" + item.getId(), e);
             }

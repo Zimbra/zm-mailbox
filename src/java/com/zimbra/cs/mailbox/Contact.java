@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -577,13 +577,30 @@ public class Contact extends MailItem {
         return result;
     }
 
-    @Override boolean isTaggable()      { return true; }
-    @Override boolean isCopyable()      { return true; }
-    @Override boolean isMovable()       { return true; }
-    @Override boolean isMutable()       { return true; }
-    @Override boolean isIndexed()       { return true; }
-    @Override boolean canHaveChildren() { return false; }
+    @Override
+    boolean isTaggable() {
+        return true;
+    }
 
+    @Override
+    boolean isCopyable() {
+        return true;
+    }
+
+    @Override
+    boolean isMovable() {
+        return true;
+    }
+
+    @Override
+    boolean isMutable() {
+        return true;
+    }
+
+    @Override
+    boolean canHaveChildren() {
+        return false;
+    }
 
     /** Creates a new <tt>Contact</tt> and persists it to the database.
      *  A real nonnegative item ID must be supplied from a previous call to
@@ -621,7 +638,7 @@ public class Contact extends MailItem {
         data.type        = Type.CONTACT.toByte();
         data.folderId    = folder.getId();
         if (!folder.inSpam() || mbox.getAccount().getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
-            data.indexId = 0;
+            data.indexId = IndexStatus.DEFERRED.id();
         }
         data.imapId      = id;
         data.locator     = mblob == null ? null : mblob.getLocator();

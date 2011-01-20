@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -159,10 +159,10 @@ public final class LuceneIndex {
     /**
      * Adds the list of documents to the index.
      * <p>
-     * If {@code deleteFirst} is false, then we are sure that this item is not
-     * already in the index, and so we can skip the check-update step.
+     * If the index status is stale, delete the stale documents first, then add new documents. If the index status is
+     * deferred, we are sure that this item is not already in the index, and so we can skip the check-update step.
      */
-    void addDocument(MailItem item, List<IndexDocument> docs, boolean deleteFirst) throws IOException {
+    void addDocument(MailItem item, List<IndexDocument> docs) throws IOException {
         for (IndexDocument doc : docs) {
             // doc can be shared by multiple threads if multiple mailboxes
             // are referenced in a single email
@@ -185,11 +185,16 @@ public final class LuceneIndex {
                 doc.addSortSize(item.getSize());
                 doc.addAll();
 
-                if (deleteFirst) {
-                    Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(item.getId()));
-                    writerRef.get().updateDocument(term, doc.toDocument());
-                } else {
-                    writerRef.get().addDocument(doc.toDocument());
+                switch (item.getIndexStatus()) {
+                    case STALE:
+                        Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(item.getId()));
+                        writerRef.get().updateDocument(term, doc.toDocument());
+                        break;
+                    case DEFERRED:
+                        writerRef.get().addDocument(doc.toDocument());
+                        break;
+                    default:
+                        assert false : item.getIndexId();
                 }
             }
         }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -33,7 +33,7 @@ public class IndexItem extends RedoableOp {
 
     private int mId;
     private MailItem.Type type;
-    private boolean mDeleteFirst;
+    private boolean mDeleteFirst; // obsolete
     private boolean mCommitAllowed;
     private boolean mCommitAbortDone;
 
@@ -109,7 +109,7 @@ public class IndexItem extends RedoableOp {
 
         try {
             List<IndexDocument> docList = item.generateIndexData(true);
-            mbox.index.redoIndexItem(item, mDeleteFirst, mId, docList);
+            mbox.index.redoIndexItem(item, mId, docList);
         } catch (Exception e) {
             // TODO - update the item and set the item's "unindexed" flag
             ZimbraLog.index.info("Caught exception attempting to replay IndexItem for ID "+mId+" item will not be indexed", e);

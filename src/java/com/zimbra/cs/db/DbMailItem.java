@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -162,7 +162,7 @@ public class DbMailItem {
                 stmt.setInt(pos++, data.parentId);
             }
             stmt.setInt(pos++, data.folderId);
-            if (data.indexId < 0) {
+            if (data.indexId == MailItem.IndexStatus.NO.id()) {
                 stmt.setNull(pos++, Types.INTEGER);
             } else {
                 stmt.setInt(pos++, data.indexId);
@@ -287,10 +287,11 @@ public class DbMailItem {
             else
                 stmt.setInt(pos++, parentId);                  //   or, PARENT_ID specified by caller
             stmt.setInt(pos++, folder.getId());                // FOLDER_ID
-            if (indexId <= 0)                                  // INDEX_ID
+            if (indexId == MailItem.IndexStatus.NO.id()) {
                 stmt.setNull(pos++, Types.INTEGER);
-            else
+            } else {
                 stmt.setInt(pos++, indexId);
+            }
             stmt.setInt(pos++, id);                            // IMAP_ID is initially the same as ID
             if (locator != null)
                 stmt.setString(pos++, locator);      // VOLUME_ID specified by caller
@@ -433,10 +434,11 @@ public class DbMailItem {
             int pos = 1;
             stmt.setInt(pos++, data.id);                       // ID
             stmt.setInt(pos++, data.folderId);                 // FOLDER_ID
-            if (data.indexId < 0)                             // INDEX_ID
+            if (data.indexId == MailItem.IndexStatus.NO.id()) {
                 stmt.setNull(pos++, Types.INTEGER);
-            else
+            } else {
                 stmt.setInt(pos++, data.indexId);
+            }
             stmt.setInt(pos++, data.imapId);                   // IMAP_ID
             if (data.locator != null)
                 stmt.setString(pos++, data.locator);           // VOLUME_ID
@@ -601,7 +603,7 @@ public class DbMailItem {
             }
             stmt.setInt(pos++, folder.getId());
             if (hasIndexId) {
-                if (item.getIndexId() == -1) {
+                if (item.getIndexStatus() == MailItem.IndexStatus.NO) {
                     stmt.setNull(pos++, Types.INTEGER);
                 } else {
                     stmt.setInt(pos++, item.getIndexId());
@@ -689,7 +691,7 @@ public class DbMailItem {
         Connection conn = DbPool.getConnection(mbox);
         try {
             PreparedStatement stmt = conn.prepareStatement("SELECT type, id FROM " + getMailItemTableName(mbox) +
-                    " WHERE " + IN_THIS_MAILBOX_AND + "index_id = 0");
+                    " WHERE " + IN_THIS_MAILBOX_AND + "index_id <= 1"); // 0: deferred, 1: stale
             try {
                 setMailboxId(stmt, mbox, 1);
                 ResultSet rs = stmt.executeQuery();
@@ -1035,10 +1037,10 @@ public class DbMailItem {
             } else {
                 stmt.setNull(pos++, Types.INTEGER);
             }
-            if (item.getIndexId() >= 0) {
-                stmt.setInt(pos++, item.getIndexId());
-            } else {
+            if (item.getIndexStatus() == MailItem.IndexStatus.NO) {
                 stmt.setNull(pos++, Types.INTEGER);
+            } else {
+                stmt.setInt(pos++, item.getIndexId());
             }
             // messages in virtual conversations are stored with a null parent_id
             if (item.getParentId() <= 0)
@@ -2983,7 +2985,7 @@ public class DbMailItem {
                     if (shared) {
                         info.sharedIndex.add(indexId);
                     } else {
-                        info.indexIds.add(indexId > 0 ? indexId : id);
+                        info.indexIds.add(indexId > MailItem.IndexStatus.STALE.id() ? indexId : id);
                     }
                 }
             }
@@ -3368,8 +3370,9 @@ public class DbMailItem {
         data.parentId    = rs.getInt(CI_PARENT_ID + offset);
         data.folderId    = rs.getInt(CI_FOLDER_ID + offset);
         data.indexId     = rs.getInt(CI_INDEX_ID + offset);
-        if (rs.wasNull())
-            data.indexId = -1;
+        if (rs.wasNull()) {
+            data.indexId = MailItem.IndexStatus.NO.id();
+        }
         data.imapId      = rs.getInt(CI_IMAP_ID + offset);
         if (rs.wasNull())
             data.imapId = -1;
@@ -3405,7 +3408,7 @@ public class DbMailItem {
         data.type        = item.getType().toByte();
         data.parentId    = item.getParentId();
         data.folderId    = item.getFolderId();
-        data.indexId     = -1;
+        data.indexId = MailItem.IndexStatus.NO.id();
         data.imapId      = -1;
         data.date        = rs.getInt(1);
         data.size        = rs.getLong(2);

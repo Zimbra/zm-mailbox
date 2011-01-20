@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -222,22 +222,17 @@ public class Mailbox {
     }
 
     static final class IndexItemEntry {
-        final boolean deleteFirst;
         final List<IndexDocument> documents;
         final MailItem item;
 
-        IndexItemEntry(boolean deleteFirst, MailItem item, List<IndexDocument> docs) {
+        IndexItemEntry(MailItem item, List<IndexDocument> docs) {
             this.item = item;
-            this.deleteFirst = deleteFirst;
             this.documents = docs;
         }
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
-                .add("id", item.getId())
-                .add("del", deleteFirst)
-                .toString();
+            return Objects.toStringHelper(this).add("id", item.getId()).toString();
         }
     }
 
@@ -1032,29 +1027,29 @@ public class Mailbox {
             mCurrentChange.mOtherDirtyStuff.add(obj);
     }
 
-    /** Adds the MailItem to the current change's list of things that need
-     *  to be added to the Lucene index once the current transaction has
-     *  committed.
+    /**
+     * Adds the {@link MailItem} to the current change's list of things that need to be added to the Lucene index once
+     * the current transaction has committed.
      *
-     * @param item  The MailItem to be indexed.
-     * @param deleteFirst True if we need to delete this item from the index before indexing it again
-     * @param data  The list of documents to be added.  If this is NULL then indexing will be deferred for this item.
-     * @see #commitCache(Mailbox.MailboxChange) */
-    void queueForIndexing(MailItem item, boolean deleteFirst, List<IndexDocument> data) {
+     * @param item item to index
+     * @param docs list of index documents. If this is null, indexing will be deferred for this item.
+     * @see #commitCache(Mailbox.MailboxChange)
+     */
+    void queueForIndexing(MailItem item, List<IndexDocument> docs) {
         assert(Thread.holdsLock(this));
 
-        if (item.getIndexId() == -1) {
-            // this item shouldn't be indexed
-            return;
+        switch (item.getIndexStatus()) {
+            case NO:
+                return;
+            case DONE:
+                item.mData.indexId = MailItem.IndexStatus.STALE.id();
+                break;
+            default:
+                break;
         }
 
-        // currently we cannot defer index deletion
-        if (deleteFirst) {
-            mCurrentChange.indexDeleteIds.add(item.getId());
-        }
-
-        if (data != null && indexImmediately()) {
-            mCurrentChange.indexItems.add(new IndexItemEntry(deleteFirst, item, data));
+        if (docs != null && indexImmediately()) {
+            mCurrentChange.indexItems.add(new IndexItemEntry(item, docs));
         } else { // defer
             index.addDeferredId(item.getType(), item.getId());
         }
@@ -3771,7 +3766,6 @@ public class Mailbox {
             redoRecorder.setData(defaultInv, exceptions, replies, nextAlarm);
 
             boolean first = true;
-            boolean calItemIsNew = true;
             long oldNextAlarm = 0;
             for (SetCalendarItemData scid : scidList) {
                 if (scid.mPm == null) {
@@ -3786,9 +3780,7 @@ public class Mailbox {
                 if (first) {
                     // usually the default invite
                     first = false;
-                    calItemIsNew = calItem == null;
-                    if (calItemIsNew) {
-
+                    if (calItem == null) {
                         // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
                         String method = scid.mInv.getMethod();
                         if ("REQUEST".equals(method) || "PUBLISH".equals(method)) {
@@ -3833,7 +3825,7 @@ public class Mailbox {
             if (replies != null)
                 calItem.setReplies(replies);
 
-            queueForIndexing(calItem, !calItemIsNew, null);
+            queueForIndexing(calItem, null);
 
             success = true;
             return calItem;
@@ -4110,14 +4102,12 @@ public class Mailbox {
                     inv.setInviteId(getNextItemId(currId));
                 }
 
-                boolean calItemIsNew = false;
                 CalendarItem calItem = getCalendarItemByUid(inv.getUid());
                 boolean processed = true;
                 if (calItem == null) {
                     // ONLY create an calendar item if this is a REQUEST method...otherwise don't.
                     if (inv.getMethod().equals("REQUEST") || inv.getMethod().equals("PUBLISH")) {
                         calItem = createCalendarItem(folderId, 0, 0, inv.getUid(), pm, inv, null);
-                        calItemIsNew = true;
                     } else {
                         return null; // for now, just ignore this Invitation
                     }
@@ -4137,7 +4127,7 @@ public class Mailbox {
                 }
 
                 if (Invite.isOrganizerMethod(inv.getMethod()))  // Don't update the index for replies. (bug 55317)
-                    queueForIndexing(calItem, !calItemIsNew, null);
+                    queueForIndexing(calItem, null);
 
                 redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId());
 
@@ -4761,7 +4751,7 @@ public class Mailbox {
 
             // step 7: queue new message for inline indexing
             //        (don't call pm.generateLuceneDocuments() if we're deferring indexing -- don't want to force message analysis!)
-            queueForIndexing(msg, false, deferIndexing ? null : pm.getLuceneDocuments());
+            queueForIndexing(msg, deferIndexing ? null : pm.getLuceneDocuments());
             success = true;
 
             // step 8: send lawful intercept message
@@ -4909,7 +4899,7 @@ public class Mailbox {
                 // update the content and increment the revision number
                 msg.setContent(staged, pm);
 
-                queueForIndexing(msg, true, deferIndexing ? null : pm.getLuceneDocuments());
+                queueForIndexing(msg, deferIndexing ? null : pm.getLuceneDocuments());
 
                 success = true;
 
@@ -5877,7 +5867,7 @@ public class Mailbox {
 
             Note note = Note.create(noteId, getFolderById(folderId), content, location, color, null);
 
-            queueForIndexing(note, false, null);
+            queueForIndexing(note, null);
             success = true;
             return note;
         } finally {
@@ -5900,7 +5890,7 @@ public class Mailbox {
             checkItemChangeID(note);
 
             note.setContent(content);
-            queueForIndexing(note, true, null);
+            queueForIndexing(note, null);
 
             success = true;
         } finally {
@@ -5999,7 +5989,7 @@ public class Mailbox {
                 int flags = 0;
                 Contact con = Contact.create(contactId, getFolderById(folderId), mblob, pc, flags, tags, null);
 
-                queueForIndexing(con, false, deferIndexing ? null : indexData);
+                queueForIndexing(con, deferIndexing ? null : indexData);
 
                 success = true;
                 return con;
@@ -6058,7 +6048,7 @@ public class Mailbox {
                     throw ServiceException.FAILURE("could not save contact blob", ioe);
                 }
 
-                queueForIndexing(con, true, indexData);
+                queueForIndexing(con, indexData);
                 success = true;
             } finally {
                 endTransaction(success);
@@ -6875,7 +6865,7 @@ public class Mailbox {
                 MailboxBlob mailboxBlob = doc.setContent(staged, pd);
                 redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
 
-                queueForIndexing(doc, false, (pd.hasTemporaryAnalysisFailure() || !indexImmediately()) ? null : pd.getDocumentList());
+                queueForIndexing(doc, (pd.hasTemporaryAnalysisFailure() || !indexImmediately()) ? null : pd.getDocumentList());
 
                 success = true;
                 return doc;
@@ -6928,7 +6918,7 @@ public class Mailbox {
                 MailboxBlob mailboxBlob = doc.setContent(staged, pd);
                 redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
 
-                queueForIndexing(doc, false, deferIndexing ? null : pd.getDocumentList());
+                queueForIndexing(doc, deferIndexing ? null : pd.getDocumentList());
 
                 success = true;
                 return doc;
@@ -7011,7 +7001,7 @@ public class Mailbox {
                 //   make sure that data actually matches the final blob in the store
                 chat.updateBlobData(mblob);
 
-                queueForIndexing(chat, false, docList);
+                queueForIndexing(chat, docList);
                 success = true;
                 return chat;
             } finally {
@@ -7069,7 +7059,7 @@ public class Mailbox {
                 chat.setContent(staged, pm);
 
                 // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
-                queueForIndexing(chat, true, docList);
+                queueForIndexing(chat, docList);
 
                 success = true;
                 return chat;

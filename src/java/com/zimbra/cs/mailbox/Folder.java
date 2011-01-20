@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -621,19 +621,57 @@ public class Folder extends MailItem {
                                 mData.size, mDeletedCount, mData.unreadCount, mDeletedUnreadCount, mTotalSize);
     }
 
-    @Override boolean isTaggable()       { return false; }
-    @Override boolean isCopyable()       { return false; }
-    @Override boolean isMovable()        { return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0); }
-    @Override boolean isMutable()        { return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0); }
-    @Override boolean isIndexed()        { return false; }
-    @Override boolean canHaveChildren()  { return true; }
-    @Override public boolean isDeletable()  { return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0); }
-    @Override boolean isLeafNode()       { return false; }
-    @Override boolean trackUnread()      { return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0); }
-    boolean trackSize()                  { return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0); }
-    boolean trackImapStats()             { return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0); }
+    @Override
+    boolean isTaggable() {
+        return false;
+    }
 
-    @Override boolean canParent(MailItem child)  { return (child instanceof Folder); }
+    @Override
+    boolean isCopyable() {
+        return false;
+    }
+
+    @Override
+    boolean isMovable() {
+        return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0);
+    }
+    @Override
+    boolean isMutable() {
+        return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0);
+    }
+
+    @Override
+    boolean canHaveChildren() {
+        return true;
+    }
+
+    @Override
+    public boolean isDeletable() {
+        return ((mAttributes & FOLDER_IS_IMMUTABLE) == 0);
+    }
+
+    @Override
+    boolean isLeafNode() {
+        return false;
+    }
+
+    @Override
+    boolean trackUnread() {
+        return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0);
+    }
+
+    boolean trackSize() {
+        return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0);
+    }
+
+    boolean trackImapStats() {
+        return ((mAttributes & FOLDER_DONT_TRACK_COUNTS) == 0);
+    }
+
+    @Override
+    boolean canParent(MailItem child) {
+        return (child instanceof Folder);
+    }
 
     /** Returns whether the folder can contain the given item.  We make
      *  the same checks as in {@link #canContain(byte)}, and we also make
