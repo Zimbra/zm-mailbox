@@ -21,6 +21,7 @@ import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
@@ -3713,7 +3714,7 @@ public class LdapProvisioning extends Provisioning {
         boolean locked = acct.getBooleanAttr(Provisioning.A_zimbraPasswordLocked, false);
         if (locked)
             throw AccountServiceException.PASSWORD_LOCKED();
-        setPassword(acct, newPassword, true);
+        setPassword(acct, newPassword, true, false);
     }
 
     /**
@@ -3785,8 +3786,27 @@ public class LdapProvisioning extends Provisioning {
     }
 
     @Override
-    public void setPassword(Account acct, String newPassword) throws ServiceException {
-        setPassword(acct, newPassword, false);
+    public SetPasswordResult setPassword(Account acct, String newPassword) throws ServiceException {
+        SetPasswordResult result = new SetPasswordResult();
+        String msg = null;
+        
+        try {
+            // dry run to pick up policy violation, if any
+            setPassword(acct, newPassword, false, true);
+        } catch (ServiceException e) {
+            msg = e.getMessage();
+        }
+        
+        setPassword(acct, newPassword, false, false);
+        
+        if (msg != null) {
+            msg = L10nUtil.getMessage(L10nUtil.MsgKey.passwordViolation, 
+                    acct.getLocale(), acct.getName(), msg);
+            
+            result.setMessage(msg);
+        }
+        
+        return result;
     }
 
     @Override
@@ -3884,11 +3904,11 @@ public class LdapProvisioning extends Provisioning {
     /* (non-Javadoc)
      * @see com.zimbra.cs.account.Account#setPassword(java.lang.String)
      */
-    void setPassword(Account acct, String newPassword, boolean enforcePolicy) throws ServiceException {
+    void setPassword(Account acct, String newPassword, boolean enforcePolicy, boolean dryRun) throws ServiceException {
 
         boolean mustChange = acct.getBooleanAttr(Provisioning.A_zimbraPasswordMustChange, false);
 
-        if (enforcePolicy) {
+        if (enforcePolicy || dryRun) {
             checkPasswordStrength(newPassword, acct, null, null);
 
             // skip min age checking if mustChange is set
@@ -3915,9 +3935,15 @@ public class LdapProvisioning extends Provisioning {
                     acct.getAttr(Provisioning.A_userPassword),
                     enforceHistory);
             attrs.put(Provisioning.A_zimbraPasswordHistory, newHistory);
-            checkHistory(newPassword, newHistory);
+            
+            if (enforcePolicy || dryRun)
+                checkHistory(newPassword, newHistory);
         }
 
+        if (dryRun) {
+            return;
+        }
+        
         String encodedPassword = PasswordUtil.SSHA.generateSSHA(newPassword, null);
 
         // unset it so it doesn't take up space...

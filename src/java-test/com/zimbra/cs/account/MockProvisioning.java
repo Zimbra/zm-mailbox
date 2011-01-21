@@ -225,7 +225,7 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public void setPassword(Account acct, String newPassword) {
+    public SetPasswordResult setPassword(Account acct, String newPassword) {
         throw new UnsupportedOperationException();
     }
 
