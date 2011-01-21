@@ -29,22 +29,22 @@ import com.zimbra.common.util.ByteUtil;
 
 public class MimeBodyPart extends MimePart {
 
-    private ContentTransferEncoding mEncoding, mTargetEncoding;
+    private ContentTransferEncoding encoding, targetEncoding;
 
     public MimeBodyPart(ContentType ctype) {
         super(ctype != null ? ctype : new ContentType(ContentType.TEXT_PLAIN));
-        mEncoding = mTargetEncoding = ContentTransferEncoding.BINARY;
+        encoding = targetEncoding = ContentTransferEncoding.BINARY;
     }
 
     MimeBodyPart(ContentType ctype, MimePart parent, long start, long body, MimeHeaderBlock headers) {
         super(ctype, parent, start, body, headers);
-        mEncoding = mTargetEncoding = ContentTransferEncoding.forString(getMimeHeader("Content-Transfer-Encoding"));
+        encoding = targetEncoding = ContentTransferEncoding.forString(getMimeHeader("Content-Transfer-Encoding"));
     }
 
     MimeBodyPart(MimeBodyPart mbp) {
         super(mbp);
-        mEncoding = mbp.mEncoding;
-        mTargetEncoding = mbp.mTargetEncoding;
+        encoding = mbp.encoding;
+        targetEncoding = mbp.targetEncoding;
     }
 
 
@@ -63,7 +63,7 @@ public class MimeBodyPart extends MimePart {
     }
 
     public ContentTransferEncoding getTransferEncoding() {
-        return mTargetEncoding;
+        return targetEncoding;
     }
 
     public MimeBodyPart setTransferEncoding(ContentTransferEncoding cte) {
@@ -83,17 +83,17 @@ public class MimeBodyPart extends MimePart {
 
     @Override public InputStream getRawContentStream() throws IOException {
         InputStream stream = super.getRawContentStream();
-        if (mEncoding.normalize() != mTargetEncoding.normalize()) {
+        if (encoding.normalize() != targetEncoding.normalize()) {
             // decode the raw version if necessary
-            if (mEncoding == ContentTransferEncoding.BASE64) {
+            if (encoding == ContentTransferEncoding.BASE64) {
                 stream = new ContentTransferEncoding.Base64DecoderStream(stream);
-            } else if (mEncoding == ContentTransferEncoding.QUOTED_PRINTABLE) {
+            } else if (encoding == ContentTransferEncoding.QUOTED_PRINTABLE) {
                 stream = new ContentTransferEncoding.QuotedPrintableDecoderStream(stream);
             }
             // encode to the target encoding if necessary
-            if (mTargetEncoding == ContentTransferEncoding.BASE64) {
+            if (targetEncoding == ContentTransferEncoding.BASE64) {
                 stream = new ContentTransferEncoding.Base64EncoderStream(stream);
-            } else if (mTargetEncoding == ContentTransferEncoding.QUOTED_PRINTABLE) {
+            } else if (targetEncoding == ContentTransferEncoding.QUOTED_PRINTABLE) {
                 stream = new ContentTransferEncoding.QuotedPrintableEncoderStream(stream, getContentType());
             }
         }
@@ -101,7 +101,7 @@ public class MimeBodyPart extends MimePart {
     }
 
     @Override public byte[] getRawContent() throws IOException {
-        if (mEncoding.normalize() == mTargetEncoding.normalize()) {
+        if (encoding.normalize() == targetEncoding.normalize()) {
             return super.getRawContent();
         } else {
             return ByteUtil.getContent(getRawContentStream(), -1);
@@ -110,9 +110,9 @@ public class MimeBodyPart extends MimePart {
 
     @Override public InputStream getContentStream() throws IOException {
         InputStream raw = super.getRawContentStream();
-        if (mEncoding == ContentTransferEncoding.BASE64) {
+        if (encoding == ContentTransferEncoding.BASE64) {
             return new ContentTransferEncoding.Base64DecoderStream(raw);
-        } else if (mEncoding == ContentTransferEncoding.QUOTED_PRINTABLE) {
+        } else if (encoding == ContentTransferEncoding.QUOTED_PRINTABLE) {
             return new ContentTransferEncoding.QuotedPrintableDecoderStream(raw);
         } else {
             return raw;
@@ -121,10 +121,10 @@ public class MimeBodyPart extends MimePart {
 
     @Override public byte[] getContent() throws IOException {
         // certain encodings mean that the decoded content is the same as the raw content
-        if (mEncoding.normalize() == ContentTransferEncoding.BINARY) {
+        if (encoding.normalize() == ContentTransferEncoding.BINARY) {
             return super.getRawContent();
         } else {
-            return ByteUtil.getContent(getContentStream(), (int) (getSize() * (mEncoding == ContentTransferEncoding.BASE64 ? 0.75 : 1.0)));
+            return ByteUtil.getContent(getContentStream(), (int) (getSize() * (encoding == ContentTransferEncoding.BASE64 ? 0.75 : 1.0)));
         }
     }
 
@@ -228,7 +228,7 @@ public class MimeBodyPart extends MimePart {
 
     private MimeBodyPart setContent(PartSource psource, ContentTransferEncoding cte) throws IOException {
         super.setContent(psource);
-        mEncoding = ContentTransferEncoding.BINARY;
+        encoding = ContentTransferEncoding.BINARY;
         // cascade: set header, which marks dirty, which sets the target encoding
         setTransferEncoding(cte == null ? pickEncoding() : cte);
         return this;
@@ -272,12 +272,12 @@ public class MimeBodyPart extends MimePart {
 
     @Override void markDirty(Dirty dirty) {
         ContentTransferEncoding cte = ContentTransferEncoding.forString(getMimeHeader("Content-Transfer-Encoding"));
-        ContentTransferEncoding cteCurrent = mTargetEncoding == null ? ContentTransferEncoding.BINARY : mTargetEncoding;
+        ContentTransferEncoding cteCurrent = targetEncoding == null ? ContentTransferEncoding.BINARY : targetEncoding;
         if (cte.normalize() != cteCurrent.normalize()) {
             super.markDirty(dirty.combine(Dirty.CTE));
         } else {
             super.markDirty(dirty);
         }
-        mTargetEncoding = cte;
+        targetEncoding = cte;
     }
 }

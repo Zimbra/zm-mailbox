@@ -619,6 +619,12 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
     @Override public void setHeader(String name, String value) throws MessagingException {
         if (ZPARSER) {
             headerDelegate().setHeader(name, value);
+            if (name.equalsIgnoreCase("Content-Disposition")) {
+                String filename = zpart.getContentDisposition().getParameter("filename");
+                if (filename != null) {
+                    zpart.setContentType(zpart.getContentType().setParameter("name", filename));
+                }
+            }
         } else {
             super.setHeader(name, value);
         }
