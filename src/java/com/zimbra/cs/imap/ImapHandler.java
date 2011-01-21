@@ -3254,7 +3254,14 @@ abstract class ImapHandler {
                 MimeMessage mm;
 
                 if (!fullMessage.isEmpty() || (parts != null && !parts.isEmpty()) || (attributes & ~FETCH_FROM_CACHE) != 0) {
-                    item = mbox.getItemById(getContext(), i4msg.msgId, i4msg.getType());
+                    try {
+                        item = mbox.getItemById(getContext(), i4msg.msgId, i4msg.getType());
+                    } catch (NoSuchItemException nsie) {
+                        // just in case we're out of sync, force this message back into sync
+                        i4folder.markMessageExpunged(i4msg);
+                        fetchStub(i4msg, i4folder, attributes, parts, fullMessage, result);
+                        continue;
+                    }
                 }
 
                 if ((attributes & FETCH_UID) != 0) {

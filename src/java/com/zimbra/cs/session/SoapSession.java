@@ -163,17 +163,10 @@ public class SoapSession extends Session {
                 if (!force && mNextFolderCheck > now)
                     return mVisibleFolderIds != null;
 
-                Set<Folder> visible = mbox.getVisibleFolders(new OperationContext(getAuthenticatedAccountId()));
-                Set<Integer> ids = null;
-                if (visible != null) {
-                    ids = new HashSet<Integer>(visible.size());
-                    for (Folder folder : visible)
-                        ids.add(folder.getId());
-                }
-    
-                mVisibleFolderIds = ids;
+                Set<Integer> visible = mbox.getVisibleFolderIds(new OperationContext(getAuthenticatedAccountId()));
+                mVisibleFolderIds = visible;
                 mNextFolderCheck = now + SOAP_SESSION_TIMEOUT_MSEC / 2;
-                return ids != null;
+                return visible != null;
             }
         }
 

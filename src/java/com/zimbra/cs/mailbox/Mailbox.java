@@ -1510,7 +1510,7 @@ public class Mailbox {
                 Folder parent = mFolderCache.get(folder.getFolderId());
                 // FIXME: side effect of this is that parent is marked as dirty...
                 if (parent != null)
-                    parent.addChild(folder);
+                    parent.addChild(folder, false);
                 // some broken upgrades ended up with CHANGE_DATE = NULL; patch it here
                 boolean badChangeDate = folder.getChangeDate() <= 0;
                 if (badChangeDate) {
@@ -1823,6 +1823,132 @@ public class Mailbox {
         if (item == null || item.canAccess(ACL.RIGHT_READ))
             return item;
         throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+    }
+
+    /** Makes a copy of the given item with {@link Flag#BITMASK_UNCACHED} set.                                                                                                                                                 
+     *  This copy is not linked to its {@code Mailbox} and thus will not change                                                                                                                                                
+     *  when modifications are subsequently made to the original item.  The                                                                                                                                                    
+     *  original item is unchanged.                                                                                                                                                                                            
+     *  <p>                                                                                                                                                                                                                    
+     *  This method should only be called <i>immediately</i> before returning                                                                                                                                                  
+     *  an item from a public {@code Mailbox} method.  In order to handle                                                                                                                                                      
+     *  recursive calls, item duplication occurs only when we're in a top-level                                                                                                                                                
+     *  transaction; otherwise, the original item is returned.                                                                                                                                                                 
+     * @see #snapshotFolders() */
+    @SuppressWarnings("unchecked")
+    private <T extends MailItem> T snapshotItem(T item) throws ServiceException {
+        if (item == null || item.isTagged(Flag.ID_FLAG_UNCACHED) || mCurrentChange.depth != 1)
+            return item;
+
+        if (item instanceof Folder) {
+            return (T) snapshotFolders().get(item.getId());
+        } else if (item instanceof VirtualConversation) {
+            // snapshotting the wrapped message passes BITMASK_UNCACHED onto the virual conversation                                                                                                                           
+            return (T) new VirtualConversation(this, snapshotItem(((VirtualConversation) item).getMessage()));
+        }
+
+        MailItem.UnderlyingData data = item.getUnderlyingData().clone();
+        data.flags   |= Flag.BITMASK_UNCACHED;
+        data.metadata = item.encodeMetadata();
+        return (T) MailItem.constructItem(this, data);
+    }
+
+    /** Makes a copy of the {@code Mailbox}'s entire {@code Folder} tree with                                                                                                                                                  
+     *  {@link Flag#BITMASK_UNCACHED} set on each copied folder.  This copy is                                                                                                                                                 
+     *  not linked to its {@code Mailbox} and thus will not change when                                                                                                                                                        
+     *  modifications are subsequently made to any of the folders.  The                                                                                                                                                        
+     *  original folders are unchanged.                                                                                                                                                                                        
+     *  <p>                                                                                                                                                                                                                    
+     *  This method should only be called <i>immediately</i> before returning                                                                                                                                                  
+     *  the folder set from a public {@code Mailbox} method.  In order to                                                                                                                                                      
+     *  handle recursive calls, item duplication occurs only when we're in a                                                                                                                                                   
+     *  top-level transaction; otherwise, the live folder cache is returned. */
+    private Map<Integer, Folder> snapshotFolders() throws ServiceException {
+        if (mCurrentChange.depth > 1)
+            return mFolderCache;
+
+        Map<Integer, Folder> copies = new HashMap<Integer, Folder>();
+        for (Folder folder : mFolderCache.values()) {
+            MailItem.UnderlyingData data = folder.getUnderlyingData().clone();
+            data.flags   |= Flag.BITMASK_UNCACHED;
+            data.metadata = folder.encodeMetadata();
+            copies.put(folder.getId(), (Folder) MailItem.constructItem(this, data));
+        }
+        for (Folder folder : copies.values()) {
+            Folder parent = copies.get(folder.getFolderId());
+            if (parent != null) {
+                parent.addChild(folder, false);
+            }
+        }
+        return copies;
+    }
+
+    private static Set<MailItem.Type> FOLDER_TYPES = EnumSet.of(MailItem.Type.FOLDER, MailItem.Type.SEARCHFOLDER, MailItem.Type.MOUNTPOINT);
+
+    /** Makes a deep copy of the {@code PendingModifications} object with                                                                                                                                                      
+     *  {@link Flag#BITMASK_UNCACHED} set on each {@code MailItem} present in                                                                                                                                                  
+     *  the {@code created} and {@code modified} hashes.  These copied {@code                                                                                                                                                  
+     *  MailItem}s are not linked to their {@code Mailbox} and thus will not                                                                                                                                                   
+     *  change when modifications are subsequently made to the contents of the                                                                                                                                                 
+     *  {@code Mailbox}.  The original {@code PendingModifications} object and                                                                                                                                                 
+     *  the {@code MailItem}s it references are unchanged.                                                                                                                                                                     
+     *  <p>                                                                                                                                                                                                                    
+     *  This method should only be called <i>immediately</i> before notifying                                                                                                                                                  
+     *  listeners of the changes from the currently-ending transaction. */
+    private PendingModifications snapshotModifications(PendingModifications pms) throws ServiceException {
+        if (pms == null)
+            return null;
+        assert(mCurrentChange.depth == 0);
+
+        Map<Integer, MailItem> cache = mItemCache.get();
+        Map<Integer, Folder> folders = Collections.disjoint(pms.changedTypes, FOLDER_TYPES) ? mFolderCache : snapshotFolders();
+
+        PendingModifications snapshot = new PendingModifications();
+
+        if (pms.deleted != null && !pms.deleted.isEmpty()) {
+            snapshot.recordDeleted(pms.deleted.keySet(), pms.changedTypes);
+        }
+
+        if (pms.created != null && !pms.created.isEmpty()) {
+            for (MailItem item : pms.created.values()) {
+                if (item instanceof Folder) {
+                    Folder folder = folders.get(item.getId());
+                    if (folder != null) {
+                        snapshot.recordCreated(folder);
+                    } else {
+                        ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: " + item.getId());
+                    }
+                } else {
+                    boolean copy = item instanceof Tag || (cache != null && cache.containsKey(item.getId()));
+                    snapshot.recordCreated(copy ? snapshotItem(item) : item);
+                }
+            }
+        }
+
+        if (pms.modified != null && !pms.modified.isEmpty()) {
+            for (Map.Entry<PendingModifications.ModificationKey, Change> entry : pms.modified.entrySet()) {
+                Change chg = entry.getValue();
+                if (!(chg.what instanceof MailItem)) {
+                    snapshot.recordModified(entry.getKey(), chg);
+                    continue;
+                }
+
+                MailItem item = (MailItem) chg.what;
+                if (item instanceof Folder) {
+                    Folder folder = folders.get(item.getId());
+                    if (folder != null) {
+                        snapshot.recordModified(folder, chg.why);
+                    } else {
+                        ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: " + item.getId());
+                    }
+                } else {
+                    boolean copy = item instanceof Tag || (cache != null && cache.containsKey(item.getId()));
+                    snapshot.recordModified(copy ? snapshotItem(item) : item, chg.why);
+                }
+            }
+        }
+
+        return snapshot;
     }
 
     /**
@@ -2666,6 +2792,22 @@ public class Mailbox {
             else
                 incomplete = true;
         return incomplete ? visible : null;
+    }
+
+    /** Returns a list of the IDs of all <code>Folder</code>s that the
+     *  current transaction's authenticated user has {@link ACL#RIGHT_READ}
+     *  access on.  Returns <tt>null</tt> if the authenticated user has read
+     *  access on the entire Mailbox. */
+    public synchronized Set<Integer> getVisibleFolderIds(OperationContext octxt) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("getVisibleFolderIds", octxt);
+            Set<Integer> visible = getVisibleFolderIds();
+            success = true;
+            return visible;
+        } finally {
+            endTransaction(success);
+        }
     }
 
     /** Returns a list of the IDs of all <code>Folder</code>s that the
@@ -7437,7 +7579,7 @@ public class Mailbox {
         if (change == null)
             return;
 
-        // save for notifications (below)
+        // save for notifications (below)                                                                                                                                                                       
         PendingModifications dirty = null;
         if (change.mDirty != null && change.mDirty.hasNotifications()) {
             dirty = change.mDirty;
@@ -7448,34 +7590,44 @@ public class Mailbox {
 
         try {
             // the mailbox data has changed, so commit the changes
-            if (change.sync != null)
+            if (change.sync != null) {
                 mData.trackSync = change.sync;
-            if (change.imap != null)
+            }
+            if (change.imap != null) {
                 mData.trackImap = change.imap;
-            if (change.size != MailboxChange.NO_CHANGE)
+            }
+            if (change.size != MailboxChange.NO_CHANGE) {
                 mData.size = change.size;
-            if (change.itemId != MailboxChange.NO_CHANGE)
+            }
+            if (change.itemId != MailboxChange.NO_CHANGE) {
                 mData.lastItemId = change.itemId;
-            if (change.contacts != MailboxChange.NO_CHANGE)
+            }
+            if (change.contacts != MailboxChange.NO_CHANGE) {
                 mData.contacts = change.contacts;
+            }
             if (change.changeId != MailboxChange.NO_CHANGE && change.changeId > mData.lastChangeId) {
                 mData.lastChangeId   = change.changeId;
                 mData.lastChangeDate = change.timestamp;
             }
-            if (change.accessed != MailboxChange.NO_CHANGE)
+            if (change.accessed != MailboxChange.NO_CHANGE) {
                 mData.lastWriteDate = change.accessed;
-            if (change.recent != MailboxChange.NO_CHANGE)
+            }
+            if (change.recent != MailboxChange.NO_CHANGE) {
                 mData.recentMessages = change.recent;
+            }
             if (change.config != null) {
                 if (change.config.getSecond() == null) {
-                    if (mData.configKeys != null)
+                    if (mData.configKeys != null) {
                         mData.configKeys.remove(change.config.getFirst());
+                    }
                 } else {
-                    if (mData.configKeys == null)
+                    if (mData.configKeys == null) {
                         mData.configKeys = new HashSet<String>(1);
+                    }
                     mData.configKeys.add(change.config.getFirst());
                 }
             }
+
             PendingDelete deletes = mCurrentChange.deletes;
             if (deletes != null) {
                 if (!deletes.indexIds.isEmpty()) {
@@ -7511,7 +7663,13 @@ public class Mailbox {
         }
 
         // committed changes, so notify any listeners
-        if (dirty != null && dirty.hasNotifications()) {
+        if (dirty != null && dirty.hasNotifications() && !mListeners.isEmpty()) {
+            try {
+                // try to get a copy of the changeset that *isn't* live
+                dirty = snapshotModifications(dirty);
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.warn("error copying notifications; will notify with live set", e);
+            }
             for (Session session : mListeners) {
                 try {
                     session.notifyPendingChanges(dirty, mData.lastChangeId, source);
@@ -7687,7 +7845,8 @@ public class Mailbox {
     private static final String CN_NEXT_ID    = "next_item_id";
     private static final String CN_SIZE       = "size";
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("mailbox: {");
         sb.append(CN_ID).append(": ").append(mId).append(", ");

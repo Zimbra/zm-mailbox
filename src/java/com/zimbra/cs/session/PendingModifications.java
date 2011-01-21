@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -61,19 +61,71 @@ public final class PendingModifications {
         public Object what;
         public int    why;
 
-        Change(Object thing, int reason)  { what = thing;  why = reason; }
+        Change(Object thing, int reason) {
+            what = thing;  why = reason;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            if (what instanceof MailItem) {
+                MailItem item = (MailItem) what;
+                sb.append(item.getType()).append(' ').append(item.getId()).append(":");
+            } else if (what instanceof Mailbox) {
+                sb.append("mailbox:");
+            }
+
+            if (why == 0)                        sb.append(" **UNMODIFIED**");
+            if ((why & MODIFIED_UNREAD) != 0)    sb.append(" UNREAD");
+            if ((why & MODIFIED_TAGS) != 0)      sb.append(" TAGS");
+            if ((why & MODIFIED_FLAGS) != 0)     sb.append(" FLAGS");
+            if ((why & MODIFIED_CONFIG) != 0)    sb.append(" CONFIG");
+            if ((why & MODIFIED_SIZE) != 0)      sb.append(" SIZE");
+            if ((why & MODIFIED_DATE) != 0)      sb.append(" DATE");
+            if ((why & MODIFIED_SUBJECT) != 0)   sb.append(" SUBJECT");
+            if ((why & MODIFIED_IMAP_UID) != 0)  sb.append(" IMAP_UID");
+            if ((why & MODIFIED_FOLDER) != 0)    sb.append(" FOLDER");
+            if ((why & MODIFIED_PARENT) != 0)    sb.append(" PARENT");
+            if ((why & MODIFIED_CHILDREN) != 0)  sb.append(" CHILDREN");
+            if ((why & MODIFIED_SENDERS) != 0)   sb.append(" SENDERS");
+            if ((why & MODIFIED_NAME) != 0)      sb.append(" NAME");
+            if ((why & MODIFIED_COLOR) != 0)     sb.append(" COLOR");
+            if ((why & MODIFIED_POSITION) != 0)  sb.append(" POSITION");
+            if ((why & MODIFIED_QUERY) != 0)     sb.append(" QUERY");
+            if ((why & MODIFIED_CONTENT) != 0)   sb.append(" CONTENT");
+            if ((why & MODIFIED_INVITE) != 0)    sb.append(" INVITE");
+            if ((why & MODIFIED_URL) != 0)       sb.append(" URL");
+            if ((why & MODIFIED_METADATA) != 0)  sb.append(" METADATA");
+            if ((why & MODIFIED_VIEW) != 0)      sb.append(" VIEW");
+            if ((why & MODIFIED_ACL) != 0)       sb.append(" ACL");
+            if ((why & MODIFIED_CONFLICT) != 0)  sb.append(" CONFLICT");
+            if ((why & MODIFIED_LOCK) != 0)      sb.append(" LOCK");
+            if ((why & INTERNAL_ONLY) != 0)      sb.append(" **INTERNAL**");
+
+            return sb.toString();
+        }
     }
 
     public static final class ModificationKey extends Pair<String, Integer> {
         public ModificationKey(String accountId, Integer itemId) {
             super(accountId, itemId);
         }
+
         public ModificationKey(MailItem item) {
             super(item.getMailbox().getAccountId(), item.getId());
         }
 
-        public String getAccountId()  { return getFirst(); }
-        public Integer getItemId()    { return getSecond(); }
+        public ModificationKey(ModificationKey mkey) {
+            super(mkey.getAccountId(), mkey.getItemId());
+        }
+
+        public String getAccountId() {
+            return getFirst();
+        }
+
+        public Integer getItemId() {
+            return getSecond();
+        }
     }
 
 
@@ -105,19 +157,22 @@ public final class PendingModifications {
     public boolean overlapsWithAccount(String accountId) {
         accountId = accountId == null ? null : accountId.toLowerCase();
         if (deleted != null) {
-            for (ModificationKey mkey : deleted.keySet())
+            for (ModificationKey mkey : deleted.keySet()) {
                 if (mkey.getAccountId().equals(accountId))
                     return true;
+            }
         }
         if (created != null) {
-            for (ModificationKey mkey : created.keySet())
+            for (ModificationKey mkey : created.keySet()) {
                 if (mkey.getAccountId().equals(accountId))
                     return true;
+            }
         }
         if (modified != null) {
-            for (ModificationKey mkey : modified.keySet())
+            for (ModificationKey mkey : modified.keySet()) {
                 if (mkey.getAccountId().equals(accountId))
                     return true;
+            }
         }
         return false;
     }
@@ -161,11 +216,17 @@ public final class PendingModifications {
     private void delete(ModificationKey key, Object value) {
         if (created != null && created.remove(key) != null)
             return;
-        if (modified != null)
+        if (modified != null) {
             modified.remove(key);
-        if (deleted == null)
+        }
+        if (deleted == null) {
             deleted = new HashMap<ModificationKey, Object>();
+        }
         deleted.put(key, value);
+    }
+
+    public void recordModified(ModificationKey mkey, Change chg) {
+        recordModified(mkey, chg.what, chg.why);
     }
 
     public void recordModified(Mailbox mbox, int reason) {

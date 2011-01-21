@@ -1067,6 +1067,10 @@ public class Folder extends MailItem {
     }
 
     @Override void addChild(MailItem child) throws ServiceException {
+        addChild(child, true);
+    }
+
+    void addChild(MailItem child, boolean newChild) throws ServiceException {
         if (child == null || !canParent(child)) {
             throw MailServiceException.CANNOT_CONTAIN();
         } else if (child == this) {
@@ -1075,7 +1079,9 @@ public class Folder extends MailItem {
         } else if (!(child instanceof Folder)) {
             super.addChild(child);
         } else {
-            markItemModified(Change.MODIFIED_CHILDREN);
+            if (newChild) {
+                markItemModified(Change.MODIFIED_CHILDREN);
+            }
             Folder subfolder = (Folder) child;
             if (mSubfolders == null) {
                 mSubfolders = new ArrayList<Folder>();
@@ -1083,7 +1089,7 @@ public class Folder extends MailItem {
                 Folder existing = findSubfolder(subfolder.getName());
                 if (existing == child)
                     return;
-                else if (existing != null)
+                if (existing != null)
                     throw MailServiceException.ALREADY_EXISTS(subfolder.getName());
             }
             mSubfolders.add(subfolder);
