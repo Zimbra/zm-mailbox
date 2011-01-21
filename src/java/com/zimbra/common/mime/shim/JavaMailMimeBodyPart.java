@@ -704,7 +704,12 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
 
     @Override protected void updateHeaders() throws MessagingException {
         if (ZPARSER) {
-            // this is a no-op for us
+            if (zpart instanceof com.zimbra.common.mime.MimeMultipart) {
+                if (jmcontent == null) {
+                    jmcontent = new JavaMailMimeMultipart((com.zimbra.common.mime.MimeMultipart) zpart);
+                }
+                ((JavaMailMimeMultipart) jmcontent).updateHeaders();
+            }
         } else {
             super.updateHeaders();
         }
