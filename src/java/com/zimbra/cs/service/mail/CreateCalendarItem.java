@@ -74,7 +74,7 @@ public class CreateCalendarItem extends CalendarRequest {
         ItemId iidFolder = new ItemId(folderIdStr, zsc);
 
         // Don't allow creating in Trash folder/subfolder.  We don't want to invite attendees to an appointment in trash.
-        Folder folder = mbox.getFolderById(iidFolder.getId());
+        Folder folder = mbox.getFolderById(octxt, iidFolder.getId());
         if (folder.inTrash())
             throw ServiceException.INVALID_REQUEST("cannot create a calendar item under trash", null);
 
