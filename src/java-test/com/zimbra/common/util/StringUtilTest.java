@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -124,4 +125,24 @@ public class StringUtilTest {
         Assert.assertEquals("consecutive surrogates", StringUtil.removeSurrogates("\uFFFFvx\uDBFF\uDC00\uDBFF\uDC00"), "\uFFFFvx??");
     }
 
+    /**
+     * Tests {@link StringUtil#newMatcher(String, String)} and the regex pattern cache.
+     */
+    @Test
+    public void testPatternCache() {
+        String s = "abcdefghijklmnopqrstuvwxyz";
+        Matcher m = StringUtil.newMatcher("(g.*j)", s);
+        Assert.assertTrue(m.find());
+        Assert.assertEquals("ghij", m.group(1));
+    }
+    
+    @Test
+    public void testReplaceAll() {
+        Assert.assertEquals("abc456def456ghi", StringUtil.replaceAll("abc123def12223ghi", "1\\d+3", "456"));
+    }
+
+    @Test
+    public void testLfToCrlf() {
+        Assert.assertEquals("abc\r\ndef\r\nhij\r\n", StringUtil.lfToCrlf("abc\r\ndef\nhij\n"));
+    }
 }
