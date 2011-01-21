@@ -113,7 +113,7 @@ public class ModifyCalendarItem extends CalendarRequest {
                 throw ServiceException.INVALID_REQUEST("cannot modify a calendar item under trash", null);
             if (!isInterMboxMove && iidFolder != null) {
                 if (iidFolder.getId() != calItem.getFolderId()) {
-                    Folder destFolder = mbox.getFolderById(iidFolder.getId());
+                    Folder destFolder = mbox.getFolderById(octxt, iidFolder.getId());
                     if (destFolder.inTrash())
                         throw ServiceException.INVALID_REQUEST("cannot combine with a move to trash", null);
                 }

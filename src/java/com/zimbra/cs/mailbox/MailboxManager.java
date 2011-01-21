@@ -626,11 +626,8 @@ public class MailboxManager {
                     assert(lock == mbox.getMailboxLock() ||
                            mbox.getMailboxLock() == null);  // restore case
 
-                    // Backend data may have changed while mailbox was in
-                    // maintenance mode.  Invalidate all caches.
-                    mbox.purge(MailItem.Type.UNKNOWN);
-
                     if (removeFromCache) {
+                        mbox.purge(MailItem.Type.UNKNOWN);
                         // We're going to let the Mailbox drop out of the
                         // cache and eventually get GC'd.  Some immediate
                         // cleanup is necessary though.
