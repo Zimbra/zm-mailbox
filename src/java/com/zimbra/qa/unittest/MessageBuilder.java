@@ -167,7 +167,7 @@ public class MessageBuilder {
 
             MimeBodyPart attachment = new JavaMailMimeBodyPart();
             attachment.setContent(mAttachment, mAttachmentContentType);
-            attachment.setDisposition("attachment; filename=" + mAttachmentFilename);
+            attachment.setHeader("Content-Disposition", "attachment; filename=" + mAttachmentFilename);
             multi.addBodyPart(attachment);
 
             msg.setContent(multi);
