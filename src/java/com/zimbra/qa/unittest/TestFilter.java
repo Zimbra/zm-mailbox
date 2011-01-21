@@ -521,6 +521,54 @@ extends TestCase {
         assertTrue(tagIds.contains(mTag1.getId()));
     }
 
+    public void testCaseSensitiveComparison()
+    throws Exception {
+
+        // Create case sensitive header and body filter rules
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("Subject", HeaderOp.CONTAINS, true, "CHECK THIS"));
+        conditions.add(new ZBodyCondition(BodyOp.CONTAINS, true, "CHECK THIS"));
+        actions.add(new ZTagAction(mTag1.getName()));
+        rules.add(new ZFilterRule("header rule case sensitive", true, false, conditions, actions));
+        saveIncomingRules(mMbox, new ZFilterRules(rules));
+
+        // Deliver message having lower case subject substring and make sure that tag1 was not applied
+        String subject = NAME_PREFIX + " testCaseSensitiveComparison1 check this";
+        TestUtil.addMessageLmtp(subject, USER_NAME, USER_NAME);
+        ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
+        assertTrue("message should not have been tagged", msg.getTagIds() == null || msg.getTagIds().isEmpty());
+
+        // Deliver message having upper case subject substring and make sure that tag1 was applied
+        subject = NAME_PREFIX + " testCaseSensitiveComparison2 CHECK THIS";
+        TestUtil.addMessageLmtp(subject, USER_NAME, USER_NAME);
+        msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
+        assertNotNull("message should have been tagged", msg.getTagIds());
+        Set<String> tagIds = new HashSet<String>();
+        for (String tagId : msg.getTagIds().split(","))
+            tagIds.add(tagId);
+        assertTrue("message should have been tagged with tag1", tagIds.contains(mTag1.getId()));
+
+        // Deliver message having lower case body content substring and make sure that tag1 was not applied
+        subject = NAME_PREFIX + " testCaseSensitiveComparison3";
+        String content = new MessageBuilder().withSubject(subject).withToRecipient(USER_NAME).withBody("Hi check this").create();
+        TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, content);
+        msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
+        assertTrue("message should not have been tagged", msg.getTagIds() == null || msg.getTagIds().isEmpty());
+
+        // Deliver message having upper case body content substring and make sure that tag1 was applied
+        subject = NAME_PREFIX + " testCaseSensitiveComparison4";
+        content = new MessageBuilder().withSubject(subject).withToRecipient(USER_NAME).withBody("Hi CHECK THIS").create();
+        TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, content);
+        msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
+        assertNotNull("message should have been tagged", msg.getTagIds());
+        tagIds = new HashSet<String>();
+        for (String tagId : msg.getTagIds().split(","))
+            tagIds.add(tagId);
+        assertTrue("message should have been tagged with tag1", tagIds.contains(mTag1.getId()));
+    }
+
     public void testMarkRead()
     throws Exception {
         String folderName = NAME_PREFIX + " testMarkRead";
