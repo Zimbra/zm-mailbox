@@ -1410,6 +1410,16 @@ abstract class ImapHandler {
             if (!path.isVisible())
                 throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
 
+            // don't want the DELETE to cause *this* connection to drop if the deleted folder is currently selected
+            if (getState() == State.SELECTED) {
+                ImapSession i4selected = getCurrentSession();
+                if (i4selected != null && path.isEquivalent(i4selected.getPath())) {
+                    unsetSelectedFolder(true);
+                } else if (imapProxy != null && path.isEquivalent(imapProxy.getPath())) {
+                    unsetSelectedFolder(true);
+                }
+            }
+
             Object mboxobj = path.getOwnerMailbox();
             if (path.useReferent()) {
                 // when users try to remove mountpoints, the IMAP client hard-deletes the subfolders!
@@ -1422,16 +1432,6 @@ abstract class ImapHandler {
                 Folder folder = (Folder) path.getFolder();
                 if (!folder.isDeletable())
                     throw ImapServiceException.CANNOT_DELETE_SYSTEM_FOLDER(folder.getPath());
-
-                // don't want the DELETE to cause *this* connection to drop if the deleted folder is currently selected
-                if (getState() == State.SELECTED) {
-                    ImapSession i4selected = getCurrentSession();
-                    if (i4selected != null && path.isEquivalent(i4selected.getPath())) {
-                        unsetSelectedFolder(true);
-                    } else if (imapProxy != null && path.isEquivalent(imapProxy.getPath())) {
-                        unsetSelectedFolder(true);
-                    }
-                }
 
                 if (!folder.hasSubfolders()) {
                     mbox.delete(getContext(), folder.getId(), MailItem.Type.FOLDER);
