@@ -30,6 +30,7 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeFlag;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.AuthToken;
@@ -190,16 +191,37 @@ public class GetInfo extends AccountDocumentHandler  {
     }
 
     static void doAttrs(Account acct, String locale, Element response, Map<String,Object> attrsMap) throws ServiceException {
-        Set<String> attrList = AttributeManager.getInstance().getAttrsWithFlag(AttributeFlag.accountInfo);
+        AttributeManager attrMgr = AttributeManager.getInstance();
+        
+        Set<String> attrList = attrMgr.getAttrsWithFlag(AttributeFlag.accountInfo);
+        
+        Set<String> acctAttrs = attrMgr.getAllAttrsInClass(AttributeClass.account);
+        Set<String> serverAttrs = attrMgr.getAllAttrsInClass(AttributeClass.server);
+        Set<String> configAttrs = attrMgr.getAllAttrsInClass(AttributeClass.globalConfig);
+        
+        Server server = acct.getServer();
         Config config = Provisioning.getInstance().getConfig();
+        
         for (String key : attrList) {
             Object value = null;
             if (Provisioning.A_zimbraLocale.equals(key)) {
                 value = locale;
             } else if (Provisioning.A_zimbraAttachmentsBlocked.equals(key)) {
+                // leave this a special case for now, until we have enough incidences to make it a pattern
                 value = config.isAttachmentsBlocked() || acct.isAttachmentsBlocked() ? Provisioning.TRUE : Provisioning.FALSE;
             } else {
                 value = attrsMap.get(key);
+                
+                if (value == null) { // no value on account/cos
+                    if (!acctAttrs.contains(key)) { // not an account attr
+                        // see if it is on server or globalconfig
+                        if (serverAttrs.contains(key)) {
+                            value = server.getAttr(key); // value on server/global config (serverInherited)
+                        } else if (configAttrs.contains(key)) {
+                            value = config.getAttr(key); // value on global config
+                        }
+                    }
+                }
             }
 
             doAttr(response, key, value);
