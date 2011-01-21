@@ -559,6 +559,7 @@ public class MailConstants {
     public static final String E_ACTION_STOP = "actionStop";
 
     public static final String A_STRING_COMPARISON = "stringComparison";
+    public static final String A_CASE_SENSITIVE = "caseSensitive";
     public static final String A_NUMBER_COMPARISON = "numberComparison";
     public static final String A_DATE_COMPARISON = "dateComparison";
     public static final String A_CONDITION = "condition";
