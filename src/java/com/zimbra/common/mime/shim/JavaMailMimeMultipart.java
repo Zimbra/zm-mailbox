@@ -235,8 +235,13 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
     }
 
     @Override protected synchronized void updateHeaders() throws MessagingException {
-        // to preserve functionality, use the superclass' method to propagate this call to the body parts
-        super.updateHeaders();
+        if (ZPARSER) {
+            for (int i = 0; i < getCount(); i++) {
+                ((JavaMailMimeBodyPart) getBodyPart(i)).updateHeaders();
+            }
+        } else {
+            super.updateHeaders();
+        }
     }
 
     @Override public synchronized void writeTo(OutputStream os) throws IOException, MessagingException {
