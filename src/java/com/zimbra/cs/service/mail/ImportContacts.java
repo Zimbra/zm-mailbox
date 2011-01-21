@@ -27,6 +27,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -74,10 +75,13 @@ public class ImportContacts extends MailDocumentHandler  {
         BufferedReader reader = null;
         String attachment = content.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         try {
-            if (attachment == null)
-                reader = new BufferedReader(new StringReader(content.getText()));
-            else
+            if (attachment == null) {
+                // Convert LF to CRLF because the XML parser normalizes element text to LF.
+                String text = StringUtil.lfToCrlf(content.getText());
+                reader = new BufferedReader(new StringReader(text));
+            } else {
                 reader = parseUploadedContent(zsc, attachment, uploads = new ArrayList<Upload>());
+            }
             
             contacts = ContactCSV.getContacts(reader, format, locale);
             reader.close();
