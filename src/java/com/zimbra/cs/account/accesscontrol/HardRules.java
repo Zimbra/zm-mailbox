@@ -1,13 +1,27 @@
 package com.zimbra.cs.account.accesscontrol;
 
+import java.util.Collections;
+import java.util.Set;
+import java.util.HashSet;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Provisioning;
 
 public class HardRules {
 
+    private static Set<String> ALWAYS_FORBIDDEN_ATTRS;
+    
+    static {
+        Set<String> forbiddenAttr = new HashSet<String>();
+        forbiddenAttr.add(Provisioning.A_zimbraIsAdminAccount.toLowerCase());
+        
+        ALWAYS_FORBIDDEN_ATTRS = Collections.unmodifiableSet(forbiddenAttr);
+    }
+    
     /**
-     * entry point for each and every ACL checking calls.
+     * strict rules for each and every ACL checking calls.
      * 
      * Currently, the only check is if the authed account is a system admin.
      * 
@@ -40,6 +54,15 @@ public class HardRules {
         
         // hard rules are not applicable
         return null;
+    }
+    
+    public static void checkForbiddenAttr(String attrName) throws ServiceException {
+        if (isForbiddenAttr(attrName))
+            throw ServiceException.PERM_DENIED("delegated admin is not allowed to modify " + attrName);
+    }
+    
+    public static boolean isForbiddenAttr(String attrName) {
+        return ALWAYS_FORBIDDEN_ATTRS.contains(attrName.toLowerCase());
     }
 
 }
