@@ -2374,9 +2374,9 @@ public class ToXML {
         return cn;
     }
 
-    private static void encodeAddrsWithGroupInfo(Provisioning prov, Element eMsg,
-            Account requestedAcct, Account authedAcct) {
-        for (Element eEmail : eMsg.listElements(MailConstants.E_EMAIL)) {
+    private static void encodeAddrsWithGroupInfo(Provisioning prov, Element eParent,
+            String emailElem, Account requestedAcct, Account authedAcct) {
+        for (Element eEmail : eParent.listElements(emailElem)) {
             String addr = eEmail.getAttribute(MailConstants.A_ADDRESS, null);
             if (addr != null) {
                 // shortcut the check if the email address is the authed or requested account - it cannot be a group
@@ -2399,7 +2399,15 @@ public class ToXML {
         Provisioning prov = Provisioning.getInstance();
         Element eMsg = response.getOptionalElement(MailConstants.E_MSG);
         if (eMsg != null) {
-            encodeAddrsWithGroupInfo(prov, eMsg, requestedAcct, authedAcct);
+            encodeAddrsWithGroupInfo(prov, eMsg, MailConstants.E_EMAIL, requestedAcct, authedAcct);
+            
+            Element eInvite = eMsg.getOptionalElement(MailConstants.E_INVITE);
+            if (eInvite != null) {
+                Element eComp = eInvite.getOptionalElement(MailConstants.E_INVITE_COMPONENT);
+                if (eComp != null) {
+                    encodeAddrsWithGroupInfo(prov, eComp, MailConstants.E_CAL_ATTENDEE, requestedAcct, authedAcct);
+                }
+            }
         }
     }
 
@@ -2410,7 +2418,7 @@ public class ToXML {
         for (Element eMsg : response.listElements(MailConstants.E_MSG)) {
             String msgId = eMsg.getAttribute(MailConstants.A_ID, null);
             if (fetch != null && fetch.equals(msgId)) {
-                encodeAddrsWithGroupInfo(prov, eMsg, requestedAcct, authedAcct);
+                encodeAddrsWithGroupInfo(prov, eMsg, MailConstants.E_EMAIL, requestedAcct, authedAcct);
             }
         }
     }
