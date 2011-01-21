@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -11,10 +11,6 @@
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Sep 29, 2004
  */
 package com.zimbra.cs.service.mail;
 
@@ -40,6 +36,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
@@ -48,6 +45,7 @@ import com.zimbra.common.mime.DataSourceWrapper;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
+import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -80,7 +78,6 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZCalendar;
 import com.zimbra.cs.mime.MailboxBlobDataSource;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.UploadDataSource;
 import com.zimbra.cs.service.UserServlet;
@@ -92,6 +89,9 @@ import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 
+/**
+ * @since Sep 29, 2004
+ */
 public class ParseMimeMessage {
 
     static Log mLog = LogFactory.getLog(ParseMimeMessage.class);
@@ -404,7 +404,7 @@ public class ParseMimeMessage {
 
             // can have no addresses specified if it's a draft...
             if (!maddrs.isEmpty()) {
-                addAddressHeaders(mm, maddrs, ctxt.defaultCharset);
+                addAddressHeaders(mm, maddrs);
             }
 
             if (!hasContent && !isMultipart) {
@@ -500,18 +500,9 @@ public class ParseMimeMessage {
      * of this MimeMessage.  The alternatives[] all need to be "alternative" to whatever the client sends
      * us....but we want to be careful so that we do NOT create a nested multipart/alternative structure
      * within another one (that would be very tacky)....so this is a bit complicated.
-     *
-     * @param mm
-     * @param mmp
-     * @param elem
-     * @param alternatives
-     * @param defaultCharset TODO
-     * @throws MessagingException
-     * @throws IOException
-     * @throws ServiceException
      */
-    private static void setContent(MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives, ParseMessageContext ctxt)
-    throws MessagingException, ServiceException, IOException {
+    private static void setContent(MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives,
+            ParseMessageContext ctxt) throws MessagingException, ServiceException, IOException {
         String type = elem.getAttribute(MailConstants.A_CONTENT_TYPE, MimeConstants.CT_DEFAULT).trim();
         ContentType ctype = new ContentType(type, ctxt.use2231).cleanup();
 
@@ -547,21 +538,22 @@ public class ParseMimeMessage {
         // once we get here, mmp is either NULL, a multipart/mixed from the toplevel,
         // or a multipart/alternative created just above....either way we are safe to stick
         // the client's nice and simple body right here
-        String data = elem.getAttribute(MailConstants.E_CONTENT, "");
-        ctxt.incrementSize("message body", data.getBytes().length);
+        String text = elem.getAttribute(MailConstants.E_CONTENT, "");
+        byte[] raw = text.getBytes(Charsets.UTF_8);
+        ctxt.incrementSize("message body", raw.length);
 
         // if the user has specified an alternative charset, make sure it exists and can encode the content
-        String charset = StringUtil.checkCharset(data, ctxt.defaultCharset);
+        String charset = StringUtil.checkCharset(text, ctxt.defaultCharset);
         ctype.setCharset(charset).setParameter(MimeConstants.P_CHARSET, charset);
 
+        Object content = ctype.getContentType().equals(ContentType.MESSAGE_RFC822) ?
+                new JavaMailMimeMessage(JMSession.getSession(), new ByteArrayInputStream(raw)) : text;
         if (mmp != null) {
             MimeBodyPart mbp = new JavaMailMimeBodyPart();
-            mbp.setText(data, charset);
-            mbp.setHeader("Content-Type", ctype.toString());
+            mbp.setContent(content, ctype.toString());
             mmp.addBodyPart(mbp);
         } else {
-            mm.setText(data, charset);
-            mm.setHeader("Content-Type", ctype.toString());
+            mm.setContent(content, ctype.toString());
         }
 
         if (alternatives != null) {
@@ -891,8 +883,7 @@ public class ParseMimeMessage {
         }
     }
 
-    private static void addAddressHeaders(MimeMessage mm, MessageAddresses maddrs, String defaultCharset)
-    throws MessagingException {
+    private static void addAddressHeaders(MimeMessage mm, MessageAddresses maddrs) throws MessagingException {
         boolean debug = mLog.isDebugEnabled();
 
         InternetAddress[] addrs = maddrs.get(EmailType.TO.toString());
@@ -985,20 +976,4 @@ public class ParseMimeMessage {
         mLog.debug("--------------------------------------\n");
     }
 
-    public static void main(String[] args) throws ServiceException, IOException, MessagingException, com.zimbra.cs.account.AuthTokenException {
-        Element m = new Element.JSONElement(MailConstants.E_MSG);
-        m.addAttribute(MailConstants.E_SUBJECT, "dinner appt");
-        m.addUniqueElement(MailConstants.E_MIMEPART).addAttribute(MailConstants.A_CONTENT_TYPE, "text/plain").addAttribute(MailConstants.E_CONTENT, "foo bar");
-        m.addElement(MailConstants.E_EMAIL).addAttribute(MailConstants.A_ADDRESS_TYPE, EmailType.TO.toString()).addAttribute(MailConstants.A_ADDRESS, "test@localhost");
-        System.out.println(m.prettyPrint());
-
-        Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.name, "user1");
-        HashMap<String, Object> context = new HashMap<String, Object>();
-        context.put(com.zimbra.soap.SoapServlet.ZIMBRA_AUTH_TOKEN, AuthProvider.getAuthToken(acct).getEncoded());
-        ZimbraSoapContext zsc = new ZimbraSoapContext(null, context, com.zimbra.common.soap.SoapProtocol.SoapJS);
-        OperationContext octxt = new OperationContext(acct);
-
-        MimeMessage mm = parseMimeMsgSoap(zsc, octxt, null, m, null, new MimeMessageData());
-        mm.writeTo(System.out);
-    }
 }
