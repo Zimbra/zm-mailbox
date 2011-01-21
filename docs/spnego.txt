@@ -269,10 +269,10 @@ zimbraSpnegoAuthPrincipal   : {zimbraSpnegoAuthTargetName}@{zimbraSpnegoAuthReal
       zmprov md {domain} zimbraWebClientLogoutURL '../?sso=1'
     
     - Honor only supported platforms and browsers.  
-      zimbraWebClientLoginURLAllowedUA is a multi-valued attribute, values are regex.
+      zimbraWebClientLogoutURLAllowedUA is a multi-valued attribute, values are regex.
       If not set, all UAs are allowed. If multiple values are set, an UA is allowed 
       as long as it matches any one of the values.  
-      zmprov md {domain} +zimbraWebClientLogoutURLAllowedUA {UA-regex-1} +zimbraWebClientLoginURLAllowedUA {UA-regex-2} ...
+      zmprov md {domain} +zimbraWebClientLogoutURLAllowedUA {UA-regex-1} +zimbraWebClientLogoutURLAllowedUA {UA-regex-2} ...
       
       e.g. honor zimbraWebClientLogoutURL only for Firefox/IE/Chrome/Safari on Windows, and Safari on Mac)
       zmprov md {domain} +zimbraWebClientLogoutURLAllowedUA '.*Windows.*Firefox/3.*'
