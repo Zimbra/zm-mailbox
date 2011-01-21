@@ -19,16 +19,18 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PushbackReader;
-import java.io.Reader;
-import java.io.StringReader;
-import java.util.ListIterator;
-
-import javax.mail.Part;
-
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.HtmlTextExtractor;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.filter.FilterUtil.Comparator;
+import com.zimbra.cs.filter.ZimbraMailAdapter;
+import com.zimbra.cs.mime.MPartInfo;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.ParsedMessage;
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.SieveContext;
@@ -39,26 +41,25 @@ import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.HtmlTextExtractor;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.filter.ZimbraMailAdapter;
-import com.zimbra.cs.mime.MPartInfo;
-import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.ParsedMessage;
+import javax.mail.Part;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PushbackReader;
+import java.io.Reader;
+import java.io.StringReader;
+import java.util.ListIterator;
 
 public class BodyTest extends AbstractTest {
 
     static final String CONTAINS = ":contains";
-    
+    static final String COMPARATOR = ":comparator";
+
     @Override
     protected boolean executeBasic(MailAdapter mail, Arguments arguments, SieveContext context)
             throws SieveException {
-        String comparator = null;
+        String comparison = null;
+        boolean caseSensitive = false;
         String key = null;
         @SuppressWarnings("unchecked")
         ListIterator<Argument> argumentsIter = arguments.getArgumentList().listIterator();
@@ -72,22 +73,50 @@ public class BodyTest extends AbstractTest {
             {
                 String tag = ((TagArgument) argument).getTag();
                 if (tag.equals(CONTAINS))
-                    comparator = tag;
+                    comparison = tag;
                 else
                     throw new SyntaxException(
                         "Found unexpected TagArgument: \"" + tag + "\"");
             }
         }
-        if (null == comparator)
+        if (null == comparison)
             throw new SyntaxException("Expecting \"" + CONTAINS + "\"");
 
-        // Second argument MUST be a string
+        // Second argument could be :comparator tag or else the value (string)
         if (argumentsIter.hasNext())
         {
             Object argument = argumentsIter.next();
+            if (argument instanceof TagArgument)
+            {
+                String tag = ((TagArgument) argument).getTag();
+                if (tag.equals(COMPARATOR)) {
+                    if (argumentsIter.hasNext()) {
+                        argument = argumentsIter.next();
+                        if (argument instanceof StringListArgument) {
+                            StringListArgument strList = (StringListArgument) argument;
+                            try {
+                                caseSensitive = Comparator.ioctet == Comparator.fromString(strList.getList().get(0));
+                            } catch (ServiceException e) {
+                                throw new SyntaxException(e.getMessage());
+                            }
+
+                            // Move to the last argument
+                            if (argumentsIter.hasNext())
+                                argument = argumentsIter.next();
+                        } else {
+                            throw new SyntaxException("Found unexpected argument after :comparator");
+                        }
+                    } else {
+                        throw new SyntaxException("Unexpected end of arguments");
+                    }
+                } else {
+                    throw new SyntaxException("Found unexpected TagArgument: \"" + tag + "\"");
+                }
+            }
+
             if (argument instanceof StringListArgument) {
                 StringListArgument strList = (StringListArgument) argument;
-                key = (String) strList.getList().get(0);
+                key = strList.getList().get(0);
             }
         }
         if (null == key)
@@ -95,10 +124,9 @@ public class BodyTest extends AbstractTest {
 
         // There MUST NOT be any further arguments
         if (argumentsIter.hasNext())
-            throw new SyntaxException("Found unexpected argument(s)");               
-        if (!(mail instanceof ZimbraMailAdapter))
-            return false;
-        return test(mail, key);
+            throw new SyntaxException("Found unexpected argument(s)");
+
+        return mail instanceof ZimbraMailAdapter && test(mail, caseSensitive, key);
 
     }
     
@@ -107,7 +135,7 @@ public class BodyTest extends AbstractTest {
         // override validation -- it's already done in executeBasic above
     }
 
-    private boolean test(MailAdapter mail, String substring) {
+    private boolean test(MailAdapter mail, boolean caseSensitive, String substring) {
         ZimbraMailAdapter zimbraMail = (ZimbraMailAdapter) mail;
         ParsedMessage pm = zimbraMail.getParsedMessage();
         if (pm == null) {
@@ -117,7 +145,9 @@ public class BodyTest extends AbstractTest {
         Account acct = null;
         try {
             acct = zimbraMail.getMailbox().getAccount();
-        } catch (ServiceException e) { }
+        } catch (ServiceException e) {
+            ZimbraLog.filter.warn("Error in getting account", e);
+        }
         String charset = (acct == null ? null : acct.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null));
 
         for (MPartInfo mpi : pm.getMessageParts()) {
@@ -129,7 +159,7 @@ public class BodyTest extends AbstractTest {
                     try {
                         in = mpi.getMimePart().getInputStream();
                         Reader reader = (charset == null ? new InputStreamReader(in) : new InputStreamReader(in, charset));
-                        if (contains(reader, substring)) {
+                        if (contains(reader, caseSensitive, substring)) {
                             return true;
                         }
                     } catch (Exception e) {
@@ -145,7 +175,7 @@ public class BodyTest extends AbstractTest {
                         in = mpi.getMimePart().getInputStream();
                         Reader reader = Mime.getTextReader(in, cType, charset);
                         String text = HtmlTextExtractor.extract(reader, 1024 * 1024);
-                        if (contains(new StringReader(text), substring)) {
+                        if (contains(new StringReader(text), caseSensitive, substring)) {
                             return true;
                         }
                     } catch (Exception e) {
@@ -159,14 +189,16 @@ public class BodyTest extends AbstractTest {
         return false;
     }
     
-    private boolean contains(Reader reader, String substring)
+    private boolean contains(Reader reader, boolean caseSensitive, String substring)
     throws IOException {
         int matchIndex = 0;
-        substring = substring.toLowerCase(); // Do case-insensitive matching, like we do with headers.
+        if (!caseSensitive)
+            substring = substring.toLowerCase();
         PushbackReader pb = new PushbackReader(reader);
-        int c = -1;
+        int c;
         while ((c = getNextChar(pb)) > 0) {
-            if (substring.charAt(matchIndex) == Character.toLowerCase(c)) {
+            if ((!caseSensitive && substring.charAt(matchIndex) == Character.toLowerCase(c)) ||
+                    (caseSensitive && substring.charAt(matchIndex) == c)) {
                 matchIndex++;
             } else {
                 matchIndex = 0;

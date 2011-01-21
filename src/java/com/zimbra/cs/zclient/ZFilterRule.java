@@ -268,7 +268,15 @@ public class ZFilterRule implements ToZJSONObject {
                 conditions.add(new ZAttachmentExistsCondition(args[i++].equals("exists")));
             } else if (a.equals("body")) {
                 if (i + 2 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
-                conditions.add(new ZBodyCondition(BodyOp.fromString(args[i++]), args[i++]));
+                String op = args[i++];
+                String nextArg = args[i++];
+                boolean caseSensitive = false;
+                if (ZFilterCondition.C_CASE_SENSITIVE.equals(nextArg)) {
+                    caseSensitive = true;
+                    if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                    nextArg = args[i++];
+                }
+                conditions.add(new ZBodyCondition(BodyOp.fromString(op), caseSensitive, nextArg));
             } else if (a.equals("size")) {
                 if (i + 2 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
                 conditions.add(new ZSizeCondition(SizeOp.fromString(args[i++]), args[i++]));
@@ -285,15 +293,27 @@ public class ZFilterRule implements ToZJSONObject {
                     conditions.add(new ZHeaderExistsCondition(headerName, false));
                 } else {
                     if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
-                    String value = args[i++];
-                    conditions.add(new ZHeaderCondition(headerName, HeaderOp.fromString(op), value));
+                    String nextArg = args[i++];
+                    boolean caseSensitive = false;
+                    if (ZFilterCondition.C_CASE_SENSITIVE.equals(nextArg)) {
+                        caseSensitive = true;
+                        if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                        nextArg = args[i++];
+                    }
+                    conditions.add(new ZHeaderCondition(headerName, HeaderOp.fromString(op), caseSensitive, nextArg));
                 }
             } else if (a.equals("mime_header")) {
                 if (i + 3 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
                 String headerName = args[i++];
                 String op = args[i++];
-                String value = args[i++];
-                conditions.add(new ZMimeHeaderCondition(headerName, HeaderOp.fromString(op), value));
+                String nextArg = args[i++];
+                boolean caseSensitive = false;
+                if (ZFilterCondition.C_CASE_SENSITIVE.equals(nextArg)) {
+                    caseSensitive = true;
+                    if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                    nextArg = args[i++];
+                }
+                conditions.add(new ZMimeHeaderCondition(headerName, HeaderOp.fromString(op), caseSensitive, nextArg));
             } else if (a.equals("invite")) {
                 if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing exists arg", null);
                 ZInviteCondition cond = new ZInviteCondition(args[i++].equals("exists"));

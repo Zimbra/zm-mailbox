@@ -242,12 +242,12 @@ public class ZMailboxUtil implements DebugListener {
         CONVERSATION("help on conversation-related commands"),
         FILTER("help on filter-realted commnds",
                         "  {conditions}:\n" +
-                        "    header \"comma-separated-names\" is|not_is|contains|not_contains|matches|not_matches \"value\"\n" +
+                        "    header \"comma-separated-names\" is|not_is|contains|not_contains|matches|not_matches [case_sensitive] \"value\"\n" +
                         "    header \"comma-separated-names\" exists|not_exists\n" +
-                        "    mime_header \"name\" is|not_is|contains|not_contains|matches|not_matches \"value\"\n" +
+                        "    mime_header \"name\" is|not_is|contains|not_contains|matches|not_matches [case_sensitive] \"value\"\n" +
                         "    date before|not_before|after|not_after \"YYYYMMDD\"\n" +
                         "    size under|not_under|over|not_over \"1|1K|1M\"\n" +
-                        "    body contains|not_contains \"text\"\n" +
+                        "    body contains|not_contains [case_sensitive] \"text\"\n" +
                         "    addressbook in|not_in \"header-name\"\n" +
                         "    attachment exists|not_exists\n" +
                         "    invite exists|not_exists\n" +

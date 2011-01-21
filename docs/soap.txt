@@ -2689,12 +2689,12 @@ to work in ZCS 6.0, and will be removed in the next major release.
 
 Tests:
 
-  <headerTest header="{comma-separated-header-names}" stringComparison="{type}" value="{value}" />
+  <headerTest header="{comma-separated-header-names}" stringComparison="{type}" [caseSensitive="{0|1}"] value="{value}" />
   <headerExistsTest header="{header-name}" />
-  <mimeHeaderTest header="{header-name}" stringComparison="{type}" value="{value}" />
+  <mimeHeaderTest header="{header-name}" stringComparison="{type}" [caseSensitive="{0|1}"] value="{value}" />
   <sizeTest numberComparison="{over|under}" s="{size}" />
   <dateTest dateComparison="{before|after}" d="{date}" />
-  <bodyTest value="{value}" />
+  <bodyTest [caseSensitive="{0|1}"] value="{value}" />
   <attachmentTest />
   <addressBookTest header="{header-name}" folderPath="{folder-path}" />
   <inviteTest>

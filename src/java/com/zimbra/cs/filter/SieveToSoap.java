@@ -103,10 +103,13 @@ public class SieveToSoap extends SieveVisitor {
     }
 
     @Override
-    protected void visitBodyTest(Node node, VisitPhase phase, RuleProperties props, String value) 
+    protected void visitBodyTest(Node node, VisitPhase phase, RuleProperties props, boolean caseSensitive, String value)
     throws ServiceException {
         if (phase == VisitPhase.begin) {
-            addTest(MailConstants.E_BODY_TEST, props).addAttribute(MailConstants.A_VALUE, value);
+            Element test = addTest(MailConstants.E_BODY_TEST, props);
+            if (caseSensitive)
+                test.addAttribute(MailConstants.A_CASE_SENSITIVE, caseSensitive);
+            test.addAttribute(MailConstants.A_VALUE, value);
         }
     }
 
@@ -133,24 +136,28 @@ public class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitHeaderTest(Node node, VisitPhase phase, RuleProperties props,
-                                   List<String> headers, StringComparison comparison, String value)
+                                   List<String> headers, StringComparison comparison, boolean caseSensitive, String value)
     throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_HEADER_TEST, props);
             test.addAttribute(MailConstants.A_HEADER, StringUtil.join(",", headers));
             test.addAttribute(MailConstants.A_STRING_COMPARISON, comparison.toString());
+            if (caseSensitive)
+                test.addAttribute(MailConstants.A_CASE_SENSITIVE, caseSensitive);
             test.addAttribute(MailConstants.A_VALUE, value);
         }
     }
 
     @Override
     protected void visitMimeHeaderTest(Node node, VisitPhase phase, RuleProperties props,
-                                             String header, StringComparison comparison, String value)
+                                       String header, StringComparison comparison, boolean caseSensitive, String value)
     throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_MIME_HEADER_TEST, props);
             test.addAttribute(MailConstants.A_HEADER, header);
             test.addAttribute(MailConstants.A_STRING_COMPARISON, comparison.toString());
+            if (caseSensitive)
+                test.addAttribute(MailConstants.A_CASE_SENSITIVE, caseSensitive);
             test.addAttribute(MailConstants.A_VALUE, value);
         }
     }

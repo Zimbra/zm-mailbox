@@ -14,25 +14,25 @@
  */
 package com.zimbra.cs.filter;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.filter.FilterUtil.Comparator;
+import com.zimbra.cs.filter.FilterUtil.Condition;
+import com.zimbra.cs.filter.FilterUtil.DateComparison;
+import com.zimbra.cs.filter.FilterUtil.Flag;
+import com.zimbra.cs.filter.FilterUtil.NumberComparison;
+import com.zimbra.cs.filter.FilterUtil.StringComparison;
+import org.apache.jsieve.parser.SieveNode;
+import org.apache.jsieve.parser.generated.ASTcommand;
+import org.apache.jsieve.parser.generated.ASTtest;
+import org.apache.jsieve.parser.generated.Node;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.apache.jsieve.parser.SieveNode;
-import org.apache.jsieve.parser.generated.ASTcommand;
-import org.apache.jsieve.parser.generated.ASTtest;
-import org.apache.jsieve.parser.generated.Node;
-
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.filter.FilterUtil.Condition;
-import com.zimbra.cs.filter.FilterUtil.DateComparison;
-import com.zimbra.cs.filter.FilterUtil.Flag;
-import com.zimbra.cs.filter.FilterUtil.NumberComparison;
-import com.zimbra.cs.filter.FilterUtil.StringComparison;
 
 /**
  * Iterates a Sieve node tree and calls callbacks at various
@@ -61,12 +61,12 @@ public abstract class SieveVisitor {
     
     @SuppressWarnings("unused")
     protected void visitHeaderTest(Node node, VisitPhase phase, RuleProperties props,
-        List<String> headers, StringComparison comparison, String value)
+                                   List<String> headers, StringComparison comparison, boolean caseSensitive, String value)
     throws ServiceException { }
     
     @SuppressWarnings("unused")
     protected void visitMimeHeaderTest(Node node, VisitPhase phase, RuleProperties props,
-        String header, StringComparison comparison, String value)
+                                       String header, StringComparison comparison, boolean caseSensitive, String value)
     throws ServiceException { }
     
     @SuppressWarnings("unused")
@@ -89,7 +89,7 @@ public abstract class SieveVisitor {
     throws ServiceException { }
     
     @SuppressWarnings("unused")
-    protected void visitBodyTest(Node node, VisitPhase phase, RuleProperties props, String value)
+    protected void visitBodyTest(Node node, VisitPhase phase, RuleProperties props, boolean caseSensitive, String value)
     throws ServiceException { }
     
     @SuppressWarnings("unused")
@@ -198,21 +198,45 @@ public abstract class SieveVisitor {
             } else if ("header".equalsIgnoreCase(nodeName)) {
                 String s = stripLeadingColon(getValue(node, 0, 0));
                 StringComparison comparison = StringComparison.fromString(s);
-                List<String> headers = getMultiValue(node, 0, 1, 0);
-                String value = getValue(node, 0, 2, 0, 0);
+                boolean caseSensitive = false;
+                List<String> headers;
+                String value;
+                if (getNode(node, 0, 1).jjtGetNumChildren() == 0) {
+                    // must be :comparator
+                    if (!":comparator".equals(getValue(node, 0, 1)))
+                        throw ServiceException.PARSE_ERROR("Expected :comparator argument", null);
+                    caseSensitive = Comparator.ioctet == Comparator.fromString(getValue(node, 0, 2, 0, 0));
+                    headers = getMultiValue(node, 0, 3, 0);
+                    value = getValue(node, 0, 4, 0, 0);
+                } else {
+                    headers = getMultiValue(node, 0, 1, 0);
+                    value = getValue(node, 0, 2, 0, 0);
+                }
 
-                visitHeaderTest(node, VisitPhase.begin, props, headers, comparison, value);
+                visitHeaderTest(node, VisitPhase.begin, props, headers, comparison, caseSensitive, value);
                 accept(node, props);
-                visitHeaderTest(node, VisitPhase.end, props, headers, comparison, value);
+                visitHeaderTest(node, VisitPhase.end, props, headers, comparison, caseSensitive, value);
             } else if ("mime_header".equalsIgnoreCase(nodeName)) {
                 String s = stripLeadingColon(getValue(node, 0, 0));
                 StringComparison comparison = StringComparison.fromString(s);
-                String header = getValue(node, 0, 1, 0, 0);
-                String value = getValue(node, 0, 2, 0, 0);
+                boolean caseSensitive = false;
+                String header;
+                String value;
+                if (getNode(node, 0, 1).jjtGetNumChildren() == 0) {
+                    // must be :comparator
+                    if (!":comparator".equals(getValue(node, 0, 1)))
+                        throw ServiceException.PARSE_ERROR("Expected :comparator argument", null);
+                    caseSensitive = Comparator.ioctet == Comparator.fromString(getValue(node, 0, 2, 0, 0));
+                    header = getValue(node, 0, 3, 0, 0);
+                    value = getValue(node, 0, 4, 0, 0);
+                } else {
+                    header = getValue(node, 0, 1, 0, 0);
+                    value = getValue(node, 0, 2, 0, 0);
+                }
 
-                visitMimeHeaderTest(node, VisitPhase.begin, props, header, comparison, value);
+                visitMimeHeaderTest(node, VisitPhase.begin, props, header, comparison, caseSensitive, value);
                 accept(node, props);
-                visitMimeHeaderTest(node, VisitPhase.end, props, header, comparison, value);
+                visitMimeHeaderTest(node, VisitPhase.end, props, header, comparison, caseSensitive, value);
             } else if ("exists".equalsIgnoreCase(nodeName)) {
                 String header = getValue(node, 0, 0, 0, 0);
 
@@ -247,11 +271,21 @@ public abstract class SieveVisitor {
                 accept(node, props);
                 visitDateTest(node, VisitPhase.end, props, comparison, date);
             } else if ("body".equalsIgnoreCase(nodeName)) {
-                String value = getValue(node, 0, 1, 0, 0);
+                boolean caseSensitive = false;
+                String value;
+                if (getNode(node, 0, 1).jjtGetNumChildren() == 0) {
+                    // must be :comparator
+                    if (!":comparator".equals(getValue(node, 0, 1)))
+                        throw ServiceException.PARSE_ERROR("Expected :comparator argument", null);
+                    caseSensitive = Comparator.ioctet == Comparator.fromString(getValue(node, 0, 2, 0, 0));
+                    value = getValue(node, 0, 3, 0, 0);
+                } else {
+                    value = getValue(node, 0, 1, 0, 0);
+                }
 
-                visitBodyTest(node, VisitPhase.begin, props, value);
+                visitBodyTest(node, VisitPhase.begin, props, caseSensitive, value);
                 accept(node, props);
-                visitBodyTest(node, VisitPhase.end, props, value);
+                visitBodyTest(node, VisitPhase.end, props, caseSensitive, value);
             } else if ("attachment".equalsIgnoreCase(nodeName)) {
                 visitAttachmentTest(node, VisitPhase.begin, props);
                 accept(node, props);
