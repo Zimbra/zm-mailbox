@@ -20,6 +20,7 @@ package com.zimbra.common.util;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
 
@@ -875,5 +876,46 @@ public class StringUtil {
 
     public static String enclose(String strToEnclose, char encloseWith) {
         return new StringBuilder().append(encloseWith).append(strToEnclose).append(encloseWith).toString();
+    }
+    
+    private static Map<String, Pattern> patternCache = MapUtil.newLruMap(1000);
+    
+    /**
+     * Returns a new {@code Matcher} object for the given regular expression and
+     * string.  The underlying {@link Pattern} is cached, so that regular expressions
+     * aren't recompiled.
+     */
+    public static Matcher newMatcher(String regex, CharSequence s) {
+        Pattern pattern = null;
+        synchronized (patternCache) {
+            pattern = patternCache.get(regex);
+        }
+        
+        if (pattern == null) {
+            pattern = Pattern.compile(regex);
+            synchronized (patternCache) {
+                patternCache.put(regex, pattern);
+            }
+        }
+        return pattern.matcher(s);
+    }
+    
+    /**
+     * Does the same thing as {@link String#replaceAll(String, String)}, but uses
+     * the pattern cache to avoid recompiling.
+     */
+    public static String replaceAll(CharSequence s, String regex, String replacement) {
+        if (s == null) {
+            return null;
+        }
+        Matcher m = newMatcher(regex, s);
+        return m.replaceAll(replacement);
+    }
+
+    /**
+     * Converts all instances of LF to CRLF.  Preserves existing CRLF combinations.
+     */
+    public static String lfToCrlf(CharSequence s) {
+        return replaceAll(s, "\r?\n", "\r\n");
     }
 }
