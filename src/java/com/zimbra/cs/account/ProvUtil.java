@@ -495,6 +495,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_RIGHTS_DOC("getRightsDoc", "grd", "[java packages]", Category.RIGHT, 0, Integer.MAX_VALUE),
         GET_SERVER("getServer", "gs", "[-e] {name|id} [attr1 [attr2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
         GET_SHARE_INFO("getShareInfo", "gsi", "{owner-name|owner-id}", Category.SHARE, 1, 1),
+        GET_SPNEGO_DOMAIN("getSpnegoDomain", "gsd", "", Category.MISC, 0, 0),
         GET_XMPP_COMPONENT("getXMPPComponent", "gxc", "{name|id} [attr1 [attr2...]]", Category.CONFIG, 1, Integer.MAX_VALUE),
         GRANT_RIGHT("grantRight", "grr", "{target-type} [{target-id|target-name}] {grantee-type} [{grantee-id|grantee-name} [secret]] {[-]right}", Category.RIGHT, 3, 6, null, new RightCommandHelp()),
         HELP("help", "?", "commands", Category.MISC, 0, 1),
@@ -1115,6 +1116,9 @@ public class ProvUtil implements HttpDebugListener {
         case GET_SHARE_INFO:
             doGetShareInfo(args);
             break;
+        case GET_SPNEGO_DOMAIN:
+            doGetSpnegoDomain();
+            break;
         case INIT_NOTEBOOK:
             initNotebook(args);
             break;
@@ -1615,6 +1619,16 @@ public class ProvUtil implements HttpDebugListener {
         mProv.getShareInfo(owner, new ShareInfoVisitor());
     }
 
+    private void doGetSpnegoDomain() throws ServiceException{
+        Config config = mProv.getConfig();
+        String spnegoAuthRealm = config.getSpnegoAuthRealm();
+        if (spnegoAuthRealm != null) {
+            Domain domain = mProv.get(DomainBy.krb5Realm, spnegoAuthRealm);
+            if (domain != null) {
+                System.out.println(domain.getName());
+            }
+        }
+    }
 
     private void doDeleteAccount(String[] args) throws ServiceException {
         String key = args[1];
