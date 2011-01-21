@@ -126,7 +126,9 @@ public class ParseMimeMessage {
 
         byte[] content;
         try {
-            content = contentElement.getText().getBytes("utf-8");
+            // Convert LF to CRLF because the XML parser normalizes element text to LF.
+            String text = StringUtil.lfToCrlf(contentElement.getText());
+            content = text.getBytes("utf-8");
         } catch (UnsupportedEncodingException e) {
             throw ServiceException.FAILURE("encoding error", e);
         }

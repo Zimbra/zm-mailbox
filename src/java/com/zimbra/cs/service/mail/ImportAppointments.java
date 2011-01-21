@@ -18,6 +18,7 @@ package com.zimbra.cs.service.mail;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -83,7 +84,9 @@ public class ImportAppointments extends MailDocumentHandler  {
                         zsc, octxt, mbox, iid, part, null, MimeConstants.P_CHARSET_UTF8);
                 is = new ByteArrayInputStream(partStr.getBytes(MimeConstants.P_CHARSET_UTF8));
             } else {
-                is = new ByteArrayInputStream(content.getText().getBytes(MimeConstants.P_CHARSET_UTF8));
+                // Convert LF to CRLF because the XML parser normalizes element text to LF.
+                String text = StringUtil.lfToCrlf(content.getText());
+                is = new ByteArrayInputStream(text.getBytes(MimeConstants.P_CHARSET_UTF8));
             }
 
             List<ZVCalendar> icals = ZCalendarBuilder.buildMulti(is, MimeConstants.P_CHARSET_UTF8);
