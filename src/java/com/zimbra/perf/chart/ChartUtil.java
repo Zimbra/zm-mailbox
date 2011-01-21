@@ -753,26 +753,27 @@ public class ChartUtil {
     }
 
     private Date readTS(CsvReader r, String ctx) throws ParseException {
-	Date ts = null;
-	String tstamp = r.getValue(PlotSettings.TSTAMP_COLUMN);
-	if (tstamp == null) {
-	    throw new ParseException(ctx + ": no timestamp found.", 0);
-	}
+        Date ts = null;
+        String tstamp = r.getValue(PlotSettings.TSTAMP_COLUMN);
+        if (tstamp == null) {
+            throw new ParseException(ctx + ": no timestamp found.", 0);
+        }
 
-	// Try all date parsers until one succeeds
-	ParseException lastException = null;
-	for (int i = 0; i < sDateFormats.length && ts == null; i++) {
-	    try {
-		synchronized (sDateFormats[i]) {
-		    ts = sDateFormats[i].parse(tstamp);
-		}
-	    } catch (ParseException e) {
-		lastException = e;
-	    }
-	    if (lastException != null)
-		throw lastException;
-	}
-	return ts;
+        // Try all date parsers until one succeeds
+        ParseException lastException = null;
+        for (int i = 0; i < sDateFormats.length && ts == null; i++) {
+            try {
+                synchronized (sDateFormats[i]) {
+                    ts = sDateFormats[i].parse(tstamp);
+                }
+            } catch (ParseException e) {
+                    lastException = e;
+            }
+            if (lastException != null) {
+                throw lastException;
+            }
+        }
+        return ts;
     }
     private void readCsvFiles() throws Exception {
         Date minDate = null;
@@ -787,48 +788,53 @@ public class ChartUtil {
             Reader reader = null;
             StringSeries data = mStringSeries.get(c);
             try {
-        	reader = new MultipleDirsFileReader(inFilename, mSrcDirs);
+                reader = new MultipleDirsFileReader(inFilename, mSrcDirs);
             }
             catch (FileNotFoundException e) {
                 System.out.printf("CSV file %s not found; Skipping...\n",
                         inFilename);
-        	continue;
+                continue;
             }
             CsvReader csv = null;
             
             try {
-        	csv = new CsvReader(reader);
-        	int line = 1;
-        	while (csv.hasNext()) {
-        	    line++;
-        	    String ctx = inFilename + ", line " + line;
-        	    Date ts = null;
-        	    try {
-        		ts = readTS(csv, ctx);
-        	    }
-        	    catch (ParseException e) {
-                        System.out.println(ctx + ": " + e);
+                csv = new CsvReader(reader);
+                int line = 1;
+                while (csv.hasNext()) {
+                    line++;
+                    String ctx = inFilename + ", line " + line;
+                    Date ts = null;
+                    try {
+                        ts = readTS(csv, ctx);
+                    }              
+                    catch (ParseException e) {
+                        if (e.getMessage().compareTo(
+                                "Unparseable date: \"timestamp\"") != 0) {
+                            //bug 54626, ignored the repeat timestamp header
+                            System.out.println(ctx + ": " + e);
+                        }
                         continue;
-        	    }
+                    }
+                    
                     if (ts.before(mStartAt) || ts.after(mEndAt))
                         continue;
                     if (minDate == null) {
-                	minDate = ts;
-                	maxDate = ts;
+                        minDate = ts;
+                        maxDate = ts;
                     } else {
                         if (ts.compareTo(minDate) < 0)
                             minDate = ts;
                         if (ts.compareTo(maxDate) > 0)
                             maxDate = ts;
                     }
-        	    
+                    
                     String value = csv.getValue(c.getColumn());
                     data.AddEntry(ts, value);
-        	}
+                }
             }
             finally {
-        	if (csv != null)
-        	    csv.close();
+                if (csv != null)
+                    csv.close();
             }
         }
         // Read CSVs and populate data series.
@@ -859,10 +865,14 @@ public class ChartUtil {
 
                     Date ts = null;
                     try {
-                	ts = readTS(csv, context);
+                        ts = readTS(csv, context);
                     }
                     catch (ParseException e) {
-                        System.out.println(context + ": " + e);
+                        if (e.getMessage().compareTo(
+                        "Unparseable date: \"timestamp\"") != 0) {
+                            //bug 54626, ignored the repeat timestamp header
+                            System.out.println(context + ": " + e);
+                        }
                         continue;
                     }
 
