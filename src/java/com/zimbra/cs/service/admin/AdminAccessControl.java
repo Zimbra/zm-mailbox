@@ -48,6 +48,7 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
 import com.zimbra.cs.account.accesscontrol.GlobalAccessManager;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.HardRules;
 import com.zimbra.cs.account.accesscontrol.PseudoTarget;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
@@ -907,7 +908,7 @@ public abstract class AdminAccessControl {
         private boolean hasRightImplBulk(NamedEntry target, AdminRight rightNeeded) throws ServiceException {
             
             try {
-                Boolean hardRulesResult = AccessControlUtil.checkHardRules(mAC.mAuthedAcct, true, target, rightNeeded);
+                Boolean hardRulesResult = HardRules.checkHardRules(mAC.mAuthedAcct, true, target, rightNeeded);
                 if (hardRulesResult != null)
                     return hardRulesResult.booleanValue();
             } catch (ServiceException e) {
