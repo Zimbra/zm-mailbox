@@ -52,11 +52,11 @@ public abstract class AdminRight extends Right {
         super(name, rightType);
     }
     
-    static AdminRight newAdminSystemRight(String name, RightType rightType) {
+    static AdminRight newAdminSystemRight(String name, RightType rightType) throws ServiceException {
         return newAdminRight(name, rightType);
     }
     
-    private static AdminRight newAdminRight(String name, RightType rightType) {
+    private static AdminRight newAdminRight(String name, RightType rightType) throws ServiceException {
         if (rightType == RightType.getAttrs || rightType == RightType.setAttrs)
             return new AttrRight(name, rightType);
         else if (rightType == RightType.combo)

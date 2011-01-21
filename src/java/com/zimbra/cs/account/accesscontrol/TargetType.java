@@ -306,29 +306,7 @@ public enum TargetType {
     }
     
     static AttributeClass getAttributeClass(Entry target) throws ServiceException {
-        
-        if (target instanceof CalendarResource)
-            return AttributeClass.calendarResource;
-        else if (target instanceof Account)
-            return AttributeClass.account;
-        else if (target instanceof Domain)
-            return AttributeClass.domain;
-        else if (target instanceof Cos)
-            return AttributeClass.cos;
-        else if (target instanceof DistributionList)
-            return AttributeClass.distributionList;
-        else if (target instanceof Server)
-            return AttributeClass.server;
-        else if (target instanceof Config)
-            return AttributeClass.globalConfig;
-        else if (target instanceof GlobalGrant)
-            return AttributeClass.aclTarget;
-        else if (target instanceof Zimlet)
-            return AttributeClass.zimletEntry;
-        else if (target instanceof XMPPComponent)
-            return AttributeClass.xmppComponent;
-        else
-            throw ServiceException.FAILURE("internal error", null);
+        return TargetType.getTargetType(target).getAttributeClass();
     }
     
     public static TargetType getTargetType(Entry target) throws ServiceException{
