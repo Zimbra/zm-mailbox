@@ -1034,7 +1034,7 @@
 
     <target name="dev-dist-unix" if="is-unix">
         <copy tofile="${dist.dir}/lib/libzimbra-native.${native.so}"
-              file="${lib.dir}/libzimbra-native.${native.so}.${native.os}${native.arch}" verbose="true" failonerror="false"
+              file="${lib.dir}/libzimbra-native.${native.so}.${native.os}${native.arch}" verbose="true" failonerror="true"
               overwrite="true"/>
     </target>
 
