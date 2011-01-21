@@ -80,8 +80,8 @@ public class JavaMailMimeMessage extends MimeMessage implements JavaMailShim {
         } else {
             modified = false;
             super.parse(is);
-            saved = true;
         }
+        saved = true;
     }
 
     public JavaMailMimeMessage(MimeMessage mm) throws MessagingException {
@@ -100,12 +100,12 @@ public class JavaMailMimeMessage extends MimeMessage implements JavaMailShim {
                 SharedByteArrayInputStream bais = new SharedByteArrayInputStream(asByteArray(mm));
                 parse(bais);
                 bais.close();
-                saved = true;
             } catch (IOException ioe) {
                 // should never happen, but just in case...
                 throw new MessagingException("IOException while copying message", ioe);
             }
         }
+        saved = true;
     }
 
     private static byte[] asByteArray(MimeMessage mm) throws MessagingException {
@@ -695,6 +695,9 @@ public class JavaMailMimeMessage extends MimeMessage implements JavaMailShim {
 
     @Override public void writeTo(OutputStream os) throws IOException, MessagingException {
         if (ZPARSER) {
+            if (!saved) {
+                saveChanges();
+            }
             bodyDelegate().writeTo(os);
         } else {
             super.writeTo(os);
@@ -829,6 +832,7 @@ public class JavaMailMimeMessage extends MimeMessage implements JavaMailShim {
     @Override public void saveChanges() throws MessagingException {
         if (ZPARSER) {
             // this is default JavaMail behavior, although not what our library does
+            saved = true;
             updateHeaders();
         } else {
             super.saveChanges();
