@@ -513,6 +513,7 @@ public class Notification implements LmtpCallback {
                             attached.addHeaderLine((String) e.nextElement());
                         }
                         attached.setContent("", msg.getContentType());
+                        attached.saveChanges();
                     }
 
                     SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
