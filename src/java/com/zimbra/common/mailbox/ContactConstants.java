@@ -77,6 +77,7 @@ public final class ContactConstants {
     public static final String A_jobTitle = Attr.jobTitle.name();
     public static final String A_lastName = Attr.lastName.name();
     public static final String A_phoneticLastName = Attr.phoneticLastName.name();
+    public static final String A_maidenName = Attr.maidenName.name();
     public static final String A_member = Attr.member.name();
     public static final String A_middleName = Attr.middleName.name();
     public static final String A_mobilePhone = Attr.mobilePhone.name();
@@ -175,6 +176,7 @@ public final class ContactConstants {
         jobTitle,
         lastName,
         phoneticLastName,
+        maidenName,
         member,
         middleName,
         mobilePhone,
