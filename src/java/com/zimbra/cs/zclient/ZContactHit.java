@@ -43,6 +43,16 @@ public class ZContactHit implements ZSearchHit {
     private long mMetaDataDate;
     private long mDate;
     private String mFullName;
+    private String mNamePrefix;
+    private String mFirstName;
+    private String mPhoneticFirstName;
+    private String mMiddleName;
+    private String mMaidenName;
+    private String mLastName;
+    private String mPhoneticLastName;
+    private String mNameSuffix;
+    private String mCompany;
+    private String mPhoneticCompany;
 
     public ZContactHit(Element e) throws ServiceException {
         mId = e.getAttribute(MailConstants.A_ID);
@@ -73,6 +83,16 @@ public class ZContactHit implements ZSearchHit {
 
         mDlist = attrs.get(ContactConstants.A_dlist);
         mFullName = attrs.get(ContactConstants.A_fullName);
+        mNamePrefix = attrs.get(ContactConstants.A_namePrefix);
+        mFirstName = attrs.get(ContactConstants.A_firstName);
+        mPhoneticFirstName = attrs.get(ContactConstants.A_phoneticFirstName);
+        mMiddleName = attrs.get(ContactConstants.A_middleName);
+        mMaidenName = attrs.get(ContactConstants.A_maidenName);
+        mLastName = attrs.get(ContactConstants.A_lastName);
+        mPhoneticLastName = attrs.get(ContactConstants.A_phoneticLastName);
+        mNameSuffix = attrs.get(ContactConstants.A_nameSuffix);
+        mCompany= attrs.get(ContactConstants.A_company);
+        mPhoneticCompany= attrs.get(ContactConstants.A_phoneticCompany);
     }
 
     public ZJSONObject toZJSONObject() throws JSONException {
@@ -201,6 +221,17 @@ public class ZContactHit implements ZSearchHit {
     public String getFullName() {
         return mFullName;
     }
+
+    public String getNamePrefix() { return mNamePrefix; }
+    public String getFirstName() { return mFirstName; };
+    public String getPhoneticFirstName() { return mPhoneticFirstName; }
+    public String getMiddleName() { return mMiddleName; }
+    public String getMaidenName() { return mMaidenName; }
+    public String getLastName() { return mLastName; }
+    public String getPhoneticLastName() { return mPhoneticLastName; }
+    public String getNameSuffix() { return mNameSuffix; }
+    public String getCompany() { return mCompany; };
+    public String getPhoneticCompany() { return mPhoneticCompany; }
 
     public void modifyNotification(ZModifyEvent event) throws ServiceException {
 		if (event instanceof ZModifyContactEvent) {
