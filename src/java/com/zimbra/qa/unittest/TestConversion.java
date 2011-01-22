@@ -30,10 +30,16 @@ public class TestConversion extends TestCase {
     private static final String USER_NAME = "user1";
     private static final String NAME_PREFIX = TestConversion.class.getSimpleName();
     
+    public void setUp()
+    throws Exception {
+        cleanUp();
+    }
+    
     /**
      * Tests downloading attachments from a TNEF message (bug 44263).
      */
-    public void testTnef()
+    // Disabled until bug 55859 is fixed.
+    public void disabledTestTnef()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
 
@@ -56,6 +62,11 @@ public class TestConversion extends TestCase {
     }
     
     public void tearDown()
+    throws Exception {
+        cleanUp();
+    }
+    
+    private void cleanUp()
     throws Exception {
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
     }
