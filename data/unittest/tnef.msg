@@ -9,7 +9,6 @@ X-Mailer: Microsoft Office Outlook, Build 11.0.6353
 X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2900.2180
 Thread-Index: AcV49fwjmEMD/XlYSree+ZQMn/GSSACRM1QA
 X-MS-TNEF-Correlator: 000000007CDBCA190B3F7D45AE2B857BDD66870C44922200
-Message-ID: <EXCH1pIIof7Ob2Fow3W0000067c@example.zimbra.com>
 X-OriginalArrivalTime: 27 Jun 2005 17:08:24.0109 (UTC) FILETIME=[D3C415D0:01C57B3A]
 
 This is a multi-part message in MIME format.
