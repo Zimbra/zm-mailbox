@@ -309,6 +309,9 @@ public class ImapPath implements Comparable<ImapPath> {
         if (useReferent())
             return getReferent().getFolder();
 
+        if (mCredentials != null && mCredentials.isFolderHidden(this))
+            throw MailServiceException.NO_SUCH_FOLDER(asImapPath());
+
         if (mFolder == null) {
             Object mboxobj = getOwnerMailbox();
             if (mboxobj instanceof Mailbox) {
