@@ -24,6 +24,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimePart;
 
 import com.zimbra.common.mime.ContentType;
+import com.zimbra.common.mime.MimeConstants;
 
 public class MPartInfo {
     MimePart mPart;
@@ -88,12 +89,20 @@ public class MPartInfo {
         return mPartNum;
     }
 
+    public int getSize() {
+        return mSize;
+    }
+
     public String getContentType() {
         return mContentType;
     }
 
-    public int getSize() {
-        return mSize;
+    public boolean isMultipart() {
+        return mContentType.startsWith(MimeConstants.CT_MULTIPART_PREFIX);
+    }
+
+    public boolean isMessage() {
+        return mContentType.equals(MimeConstants.CT_MESSAGE_RFC822);
     }
 
     public String getContentTypeParameter(String name) {
