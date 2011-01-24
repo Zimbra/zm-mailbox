@@ -73,7 +73,7 @@ public class JavaMailMimeMessage extends MimeMessage implements JavaMailShim {
                 is = new JavaMailMimeBodyPart.SharedInputStreamSource((SharedInputStream) is);
             }
             try {
-                mMessage = new com.zimbra.common.mime.MimeMessage(is, session.getProperties());
+                mMessage = new com.zimbra.common.mime.MimeMessage(is, session == null ? null : session.getProperties());
             } catch (IOException ioe) {
                 throw new MessagingException("error instantiating MimeMessage", ioe);
             }
