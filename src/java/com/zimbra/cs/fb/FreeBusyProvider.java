@@ -199,6 +199,7 @@ public abstract class FreeBusyProvider {
         sPROVIDERS = new HashSet<FreeBusyProvider>();
         sPUSHQUEUES = new HashMap<String,FreeBusySyncQueue>();
         new ExchangeFreeBusyProvider();  // load the class
+        new ExchangeEWSFreeBusyProvider();
     }
 
     public String getQueueFilename() {

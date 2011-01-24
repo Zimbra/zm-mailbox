@@ -38,6 +38,7 @@ import com.zimbra.cs.account.Provisioning.GalMode;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
+import com.zimbra.cs.fb.ExchangeEWSFreeBusyProvider;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ExceptionToString;
@@ -230,6 +231,23 @@ public class Check {
         }
     	return new Result(STATUS_OK, "", null);
     }
+    
+  public static Result checkExchangeEWSAuth(ExchangeFreeBusyProvider.ServerInfo sinfo, Account acct) throws ServiceException {
+	try {
+    	int code = ExchangeEWSFreeBusyProvider.checkAuth(sinfo, acct);
+    	switch (code) {
+    	case 400:
+    	case 404:
+            return new Result(STATUS_BAD_URL, "", null);
+    	case 401:
+    	case 403:
+            return new Result(STATUS_AUTH_FAILED, "", null);
+    	}
+	} catch (IOException e) {
+	    return toResult(e, "");
+    }
+	return new Result(STATUS_OK, "", null);
+}    
     
     private static Result toResult(IOException e, String dn) {
         if (e instanceof UnknownHostException) {
