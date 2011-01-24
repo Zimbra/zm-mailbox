@@ -651,16 +651,16 @@ public class Mime {
      * @return
      */
      private static boolean isFilterableAttachment(MPartInfo mpi, Set<MPartInfo> bodies) {
+        // multiparts are never attachments
+        if (mpi.isMultipart())
+            return false;
+
         MPartInfo parent = mpi.getParent();
         String ctype = mpi.getContentType();
 
-        // multiparts are never attachments
-        if (ctype.startsWith(MimeConstants.CT_MULTIPART_PREFIX))
-            return false;
-
         if (ctype.startsWith(MimeConstants.CT_TEXT_PREFIX)) {
             // ignore top-level text/* types
-            if (parent == null || (mpi.getPartNum() == 1 && parent.getContentType().equals(MimeConstants.CT_MESSAGE_RFC822)))
+            if (parent == null || (mpi.getPartNum() == 1 && parent.isMessage()))
                 return false;
 
             // inlined text parts are not filterable attachments
@@ -674,9 +674,9 @@ public class Mime {
             // ignore if: it is the first body part, and has a multipart/* parent, and that
             //   multipart's parent is null or message/rfc822
             if (mpi.getPartNum() == 1) {
-                if (parent.getContentType().startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
+                if (parent.isMultipart()) {
                     MPartInfo pp = parent.getParent();
-                    if (pp == null || pp.getContentType().equals(MimeConstants.CT_MESSAGE_RFC822))
+                    if (pp == null || pp.isMessage())
                         return false;
                 }
             }
@@ -1106,7 +1106,7 @@ public class Mime {
 
          // if top-level has no children, then it is the body
          MPartInfo top = parts.get(0);
-         if (!top.getContentType().startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
+         if (!top.isMultipart()) {
             if (!top.getDisposition().equals(Part.ATTACHMENT)) {
                 (bodies = new HashSet<MPartInfo>(1)).add(top);
             }
@@ -1215,10 +1215,10 @@ public class Mime {
 
     private static Set<MPartInfo> getBodySubparts(MPartInfo base, boolean preferHtml) {
         // short-circuit malformed messages and message subparts
-        String ctype = base.getContentType();
-        if (!base.hasChildren() || ctype.equals(MimeConstants.CT_MESSAGE_RFC822))
+        if (!base.hasChildren() || base.isMessage())
             return null;
 
+        String ctype = base.getContentType();
         List<MPartInfo> children;
         if (ctype.equals(MimeConstants.CT_MULTIPART_ALTERNATIVE))
             return getAlternativeBodySubpart(base.getChildren(), preferHtml);
@@ -1231,15 +1231,14 @@ public class Mime {
 
         Set<MPartInfo> bodies = null;
         for (MPartInfo mpi : children) {
-            String childType = mpi.getContentType();
-            if (childType.startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
+            if (mpi.isMultipart()) {
                 Set<MPartInfo> found = getBodySubparts(mpi, preferHtml);
                 if (found != null) {
                     if (bodies == null)
                         bodies = new LinkedHashSet<MPartInfo>(found.size());
                     bodies.addAll(found);
                 }
-            } else if (!mpi.getDisposition().equals(Part.ATTACHMENT) && !childType.equalsIgnoreCase(MimeConstants.CT_MESSAGE_RFC822)) {
+            } else if (!mpi.getDisposition().equals(Part.ATTACHMENT) && !mpi.isMessage()) {
                 if (bodies == null)
                     bodies = new LinkedHashSet<MPartInfo>(1);
                 bodies.add(mpi);
@@ -1268,9 +1267,10 @@ public class Mime {
             if (!isAttachment && ctype.equals(wantType)) {
                 return setContaining(mpi);
             } else if (!isAttachment && altTypes.contains(ctype)) {
-                if (alternative == null || !alternative.getContentType().equalsIgnoreCase(ctype))
+                if (alternative == null || !alternative.getContentType().equalsIgnoreCase(ctype)) {
                     alternative = mpi;
-            } else if (ctype.startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
+                }
+            } else if (mpi.isMultipart()) {
                 Set<MPartInfo> body;
                 if ((body = getBodySubparts(mpi, preferHtml)) != null)
                     return body;
@@ -1289,20 +1289,20 @@ public class Mime {
                 if (!parentCID.equals(mpi.getContentID()))
                     continue;
 
-                if (mpi.getContentType().startsWith(MimeConstants.CT_MULTIPART_PREFIX))
+                if (mpi.isMultipart()) {
                     return getBodySubparts(mpi, preferHtml);
-                else
+                } else {
                     return setContaining(mpi);
+                }
             }
         }
 
         // return the first text subpart, or, if none exists, the first subpart, period
         MPartInfo first = null;
         for (MPartInfo mpi : children) {
-            String ctype = mpi.getContentType();
-            if (ctype.startsWith(MimeConstants.CT_TEXT_PREFIX)) {
+            if (mpi.getContentType().startsWith(MimeConstants.CT_TEXT_PREFIX)) {
                 return setContaining(mpi);
-            } else if (ctype.startsWith(MimeConstants.CT_MULTIPART_PREFIX)) {
+            } else if (mpi.isMultipart()) {
                 return getBodySubparts(mpi, preferHtml);
             } else if (first == null) {
                 first = mpi;

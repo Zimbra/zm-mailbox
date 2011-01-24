@@ -999,9 +999,9 @@ public class ParsedMessage {
         mCalendarPartInfo.wasForwarded = false;
         MPartInfo parent = mpi;
         while ((parent = parent.getParent()) != null) {
-            String ct = parent.getContentType();
-            if (MimeConstants.CT_MESSAGE_RFC822.equals(ct))
+            if (parent.isMessage()) {
                 mCalendarPartInfo.wasForwarded = true;
+            }
         }
     }
 
@@ -1023,11 +1023,11 @@ public class ParsedMessage {
 
         String toRet = "";
         try {
-            String ctype = mpi.getContentType();
             // ignore multipart "container" parts
-            if (ctype.startsWith(MimeConstants.CT_MULTIPART_PREFIX))
+            if (mpi.isMultipart())
                 return toRet;
 
+            String ctype = mpi.getContentType();
             MimeHandler handler = MimeHandlerManager.getMimeHandler(ctype, mpi.getFilename());
             assert(handler != null);
 

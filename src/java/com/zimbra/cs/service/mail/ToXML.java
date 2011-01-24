@@ -1721,8 +1721,9 @@ public class ToXML {
 
     private enum VisitPhase { PREVISIT, POSTVISIT }
 
-    private static void addParts(Element root, MPartInfo mpi, Set<MPartInfo> bodies, String prefix, int maxSize,
+    private static void addParts(Element root, MPartInfo mpiRoot, Set<MPartInfo> bodies, String prefix, int maxSize,
                                  boolean neuter, boolean excludeCalendarParts, String defaultCharset) {
+        MPartInfo mpi = mpiRoot;
         LinkedList<Pair<Element, LinkedList<MPartInfo>>> queue = new LinkedList<Pair<Element, LinkedList<MPartInfo>>>();
         Pair<Element, LinkedList<MPartInfo>> level = new Pair<Element, LinkedList<MPartInfo>>(root, new LinkedList<MPartInfo>());
         level.getSecond().add(mpi);
@@ -1757,8 +1758,7 @@ public class ToXML {
             // A true calendar part has "method" parameter in the content type.  Otherwise it's just an attachment
             // that happens to be a .ics file.
             try {
-                String ctStr = mpi.getMimePart().getContentType();
-                ContentType ct = new ContentType(ctStr);
+                ContentType ct = new ContentType(mpi.getMimePart().getContentType());
                 if (ct.getParameter("method") != null)
                     return null;
             } catch (MessagingException e) {}
@@ -1771,6 +1771,11 @@ public class ToXML {
         part = prefix + (prefix.equals("") || part.equals("") ? "" : ".") + part;
         elem.addAttribute(MailConstants.A_PART, part);
 
+        if (mpi.isMultipart()) {
+            // none of the below stuff is relevant for a multipart, so just return now...
+            return elem;
+        }
+
         String fname = Mime.getFilename(mp);
         if (MimeConstants.CT_XML_ZIMBRA_SHARE.equals(ctype)) {
             // the <shr> share info goes underneath the top-level <m>
@@ -1778,8 +1783,7 @@ public class ToXML {
             try {
                 addContent(shr, mpi, maxSize, defaultCharset);
             } catch (IOException e) {
-                if (mLog.isWarnEnabled())
-                    mLog.warn("error writing body part: ", e);
+                mLog.warn("error writing body part: ", e);
             } catch (MessagingException e) {
             }
         } else if (MimeConstants.CT_TEXT_ENRICHED.equals(ctype)) {
@@ -1787,8 +1791,9 @@ public class ToXML {
             ctype = MimeConstants.CT_TEXT_HTML;
         } else if (fname != null && (MimeConstants.CT_APPLICATION_OCTET_STREAM.equals(ctype) || MimeConstants.CT_APPLICATION_TNEF.equals(ctype))) {
             String guess = MimeDetect.getMimeDetect().detect(fname);
-            if (guess != null)
+            if (guess != null) {
                 ctype = guess;
+            }
         }
         elem.addAttribute(MailConstants.A_CONTENT_TYPE, ctype);
 
@@ -1819,8 +1824,9 @@ public class ToXML {
                 if (content instanceof MimeMessage)
                     fname = Mime.getSubject((MimeMessage) content);
             }
-            if (fname != null && !fname.equals(""))
+            if (fname != null && !fname.equals("")) {
                 elem.addAttribute(MailConstants.A_CONTENT_FILENAME, StringUtil.stripControlCharacters(fname));
+            }
         } catch (MessagingException me) {
         } catch (IOException ioe) {
         }
@@ -1833,20 +1839,22 @@ public class ToXML {
         // figure out content-location (used in displaying attached images)
         try {
             String cl = mp.getHeader("Content-Location", null);
-            if (cl != null)
+            if (cl != null) {
                 elem.addAttribute(MailConstants.A_CONTENT_LOCATION, StringUtil.stripControlCharacters(cl));
+            }
         } catch (MessagingException me) { }
 
         // include the part's content if this is the displayable "memo part",
         // or if it was requested to include all parts
         if (bodies == null || bodies.contains(mpi)) {
-            if (bodies != null)
+            if (bodies != null) {
                 elem.addAttribute(MailConstants.A_BODY, true);
+            }
+
             try {
                 addContent(elem, mpi, maxSize, neuter, defaultCharset);
             } catch (IOException ioe) {
-                if (mLog.isWarnEnabled())
-                    mLog.warn("error writing body part: ", ioe);
+                mLog.warn("error writing body part: ", ioe);
             } catch (MessagingException me) {
             }
         }
