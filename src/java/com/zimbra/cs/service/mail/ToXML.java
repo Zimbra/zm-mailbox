@@ -1771,11 +1771,6 @@ public class ToXML {
         part = prefix + (prefix.equals("") || part.equals("") ? "" : ".") + part;
         elem.addAttribute(MailConstants.A_PART, part);
 
-        if (mpi.isMultipart()) {
-            // none of the below stuff is relevant for a multipart, so just return now...
-            return elem;
-        }
-
         String fname = Mime.getFilename(mp);
         if (MimeConstants.CT_XML_ZIMBRA_SHARE.equals(ctype)) {
             // the <shr> share info goes underneath the top-level <m>
@@ -1796,6 +1791,11 @@ public class ToXML {
             }
         }
         elem.addAttribute(MailConstants.A_CONTENT_TYPE, ctype);
+
+        if (mpi.isMultipart()) {
+            // none of the below stuff is relevant for a multipart, so just return now...
+            return elem;
+        }
 
         // figure out attachment size
         try {
