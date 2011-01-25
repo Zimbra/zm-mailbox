@@ -125,6 +125,26 @@ public class SieveToSoap extends SieveVisitor {
     }
 
     @Override
+    protected void visitCurrentTimeTest(Node node, VisitPhase phase, RuleProperties props,
+                                        DateComparison comparison, String timeStr)
+    throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            Element test = addTest(MailConstants.E_CURRENT_TIME_TEST, props);
+            test.addAttribute(MailConstants.A_DATE_COMPARISON, comparison.toString());
+            test.addAttribute(MailConstants.A_TIME, timeStr);
+        }
+    }
+
+    @Override
+    protected void visitCurrentDayOfWeekTest(Node node, VisitPhase phase, RuleProperties props, List<String> days)
+    throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            Element test = addTest(MailConstants.E_CURRENT_DAY_OF_WEEK_TEST, props);
+            test.addAttribute(MailConstants.A_VALUE, StringUtil.join(",", days));
+        }
+    }
+
+    @Override
     protected void visitHeaderExistsTest(Node node, VisitPhase phase, RuleProperties props,
                                          String header)
     throws ServiceException {

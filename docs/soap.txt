@@ -2700,6 +2700,8 @@ Tests:
   <inviteTest>
     <method>{method}</method>+
   </inviteTest>
+  <currentTimeTest dateComparison="{before|after}" d="time-in-HHmm-format}" />
+  <currentDayOfWeekTest value="comma-separated-day-of-week-indices" />
 
 Each test has the following optional attributes:
     * "negative": specifies a "not" condition for that test
@@ -2723,16 +2725,15 @@ numberComparison values: over, under
 dateComparison values: before, after
 size values are in bytes (no suffix), kilobytes (50K), megabytes (50M) or gigabytes (2G)
 flag values: flagged, read
-date values are in seconds since epoch, and are truncated to the day. Hours, minutes,
-  and seconds are ignored.
+<dateTest>: date values are are truncated to the day. Hours, minutes, and seconds are ignored.
 index is an integer, used to maintain the order of filter tests and actions.
 method values: anyrequest, anyreply, publish, request, reply, add, cancel, refresh,
   counter, declinecounter.  anyrequest matches publish, request, add, cancel,
   declinecounter.  anyreply matches reply, refresh, counter.  If no methods are
   specified, the test returns true for all invites.
-
-<mimeHeaderTest> behaves just like <headerTest>, but matches headers on
+<mimeHeaderTest>: behaves just like <headerTest>, but matches headers on
   all MIME parts, instead of just the top-level headers.
+<currentDayOfWeekTest>: 0=Sunday, 6=Saturday
 
 ---------------------------
 

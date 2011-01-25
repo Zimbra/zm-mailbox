@@ -40,6 +40,8 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     public static final String C_ATTACHMENT = "attachment";
     public static final String C_BODY = "body";
     public static final String C_DATE = "date";
+    public static final String C_CURRENT_TIME = "current_time";
+    public static final String C_CURRENT_DAY = "current_day_of_week";
     public static final String C_EXISTS = "exists";
     public static final String C_NOT_EXISTS = "not exists";
     public static final String C_HEADER = "header";
@@ -160,6 +162,19 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         }
     }
 
+    public enum SimpleOp {
+        IS, NOT_IS;
+
+        public static SimpleOp fromString(String s) throws ServiceException {
+            try {
+                return SimpleOp.valueOf(s.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR(
+                        "invalid op: " + s + ", value values: " + Arrays.asList(SimpleOp.values()), null);
+            }
+        }
+    }
+
     public enum AddressBookOp {
         IN, NOT_IN;
 
@@ -207,11 +222,21 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             DateComparison comparison = DateComparison.fromString(s);
             Date date = new Date(condEl.getAttributeLong(MailConstants.A_DATE) * 1000);
             return new ZDateCondition(DateOp.fromDateComparison(comparison, isNegative), date);
+        } else if (name.equals(MailConstants.E_CURRENT_TIME_TEST)) {
+            String s = condEl.getAttribute(MailConstants.A_DATE_COMPARISON);
+            s = s.toLowerCase();
+            DateComparison comparison = DateComparison.fromString(s);
+            String timeStr = condEl.getAttribute(MailConstants.A_TIME);
+            return new ZCurrentTimeCondition(DateOp.fromDateComparison(comparison, isNegative), timeStr);
         } else if (name.equals(MailConstants.E_BODY_TEST)) {
             String value = condEl.getAttribute(MailConstants.A_VALUE);
             BodyOp op = (isNegative ? BodyOp.NOT_CONTAINS : BodyOp.CONTAINS);
             boolean caseSensitive = condEl.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
             return new ZBodyCondition(op, caseSensitive, value);
+        } else if (name.equals(MailConstants.E_CURRENT_DAY_OF_WEEK_TEST)) {
+            String value = condEl.getAttribute(MailConstants.A_VALUE);
+            SimpleOp op = (isNegative ? SimpleOp.NOT_IS : SimpleOp.IS);
+            return new ZCurrentDayOfWeekCondition(op, value);
         } else if (name.equals(MailConstants.E_ADDRESS_BOOK_TEST)) {
             String header = condEl.getAttribute(MailConstants.A_HEADER);
             // String folderPath = condEl.getAttribute(MailConstants.A_FOLDER_PATH);
@@ -340,6 +365,38 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
     }
 
+    public static class ZCurrentDayOfWeekCondition extends ZFilterCondition {
+        private SimpleOp op;
+        private String days;
+
+        public ZCurrentDayOfWeekCondition(SimpleOp op, String days) {
+            this.op = op;
+            this.days = days;
+        }
+
+        @Override
+        public String getName() {
+            return C_CURRENT_DAY;
+        }
+
+        public SimpleOp getOp() { return op; }
+        public String getDays() { return days; }
+
+        public String toConditionString() {
+            return "current_day_of_week " + (op == SimpleOp.IS ? "is " : "not_is ") + days;
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_CURRENT_DAY_OF_WEEK_TEST);
+            test.addAttribute(MailConstants.A_VALUE, days);
+            if (op == SimpleOp.NOT_IS) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            return test;
+        }
+    }
+
     public static class ZSizeCondition extends ZFilterCondition {
         private SizeOp mSizeOp;
         private String mSize;
@@ -435,6 +492,39 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             return test;
         }
         
+    }
+
+    public static class ZCurrentTimeCondition extends ZFilterCondition {
+        private DateOp dateOp;
+        private String timeStr;
+
+        public ZCurrentTimeCondition(DateOp op, String timeStr) {
+            this.dateOp = op;
+            this.timeStr = timeStr;
+        }
+
+        public DateOp getDateOp() { return dateOp; }
+        public String getTimeStr() { return timeStr; }
+
+        public String toConditionString() {
+            return "current_time " + dateOp.name().toLowerCase() + " " + timeStr;
+        }
+
+        @Override
+        public String getName() {
+            return C_CURRENT_TIME;
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_CURRENT_TIME_TEST);
+            test.addAttribute(MailConstants.A_DATE_COMPARISON, dateOp.toDateComparison().toString());
+            if (dateOp.isNegative()) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            test.addAttribute(MailConstants.A_TIME, timeStr);
+            return test;
+        }
     }
 
     public static class ZHeaderCondition extends ZFilterCondition {

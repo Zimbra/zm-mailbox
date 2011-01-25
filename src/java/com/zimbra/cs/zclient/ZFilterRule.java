@@ -31,15 +31,18 @@ import com.zimbra.cs.zclient.ZFilterCondition.AddressBookOp;
 import com.zimbra.cs.zclient.ZFilterCondition.BodyOp;
 import com.zimbra.cs.zclient.ZFilterCondition.DateOp;
 import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
+import com.zimbra.cs.zclient.ZFilterCondition.SimpleOp;
 import com.zimbra.cs.zclient.ZFilterCondition.SizeOp;
 import com.zimbra.cs.zclient.ZFilterCondition.ZAddressBookCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZAttachmentExistsCondition;
-import com.zimbra.cs.zclient.ZFilterCondition.ZMimeHeaderCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZBodyCondition;
+import com.zimbra.cs.zclient.ZFilterCondition.ZCurrentDayOfWeekCondition;
+import com.zimbra.cs.zclient.ZFilterCondition.ZCurrentTimeCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZDateCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderExistsCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZInviteCondition;
+import com.zimbra.cs.zclient.ZFilterCondition.ZMimeHeaderCondition;
 import com.zimbra.cs.zclient.ZFilterCondition.ZSizeCondition;
 import org.json.JSONException;
 
@@ -256,6 +259,12 @@ public class ZFilterRule implements ToZJSONObject {
             } else if (a.equals("date")) {
                 if (i + 2 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
                 conditions.add(new ZDateCondition(DateOp.fromString(args[i++]), args[i++]));
+            } else if (a.equals("current_time")) {
+                if (i + 2 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                conditions.add(new ZCurrentTimeCondition(DateOp.fromString(args[i++]), args[i++]));
+            } else if (a.equals("current_day_of_week")) {
+                if (i + 2 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                conditions.add(new ZCurrentDayOfWeekCondition(SimpleOp.fromString(args[i++]), args[i++]));
             } else if (a.equals("header")) {
                 if (i + 2 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
                 String headerName = args[i++];

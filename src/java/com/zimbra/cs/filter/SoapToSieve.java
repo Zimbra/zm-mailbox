@@ -149,6 +149,20 @@ public class SoapToSieve {
             snippet = "attachment";
         } else if (name.equals(MailConstants.E_INVITE_TEST)) {
             snippet = convertInviteTest(test);
+        } else if (name.equals(MailConstants.E_CURRENT_TIME_TEST)) {
+            String s = test.getAttribute(MailConstants.A_DATE_COMPARISON);
+            s = s.toLowerCase();
+            DateComparison comparison = DateComparison.fromString(s);
+            snippet = String.format("current_time :%s \"%s\"", comparison, test.getAttribute(MailConstants.A_TIME));
+        } else if (name.equals(MailConstants.E_CURRENT_DAY_OF_WEEK_TEST)) {
+            String value = test.getAttribute(MailConstants.A_VALUE);
+            String[] daysOfWeek = value.split(",");
+            for (int i = 0; i < daysOfWeek.length; i ++)
+                daysOfWeek[i] = StringUtil.enclose(daysOfWeek[i], '"');
+            snippet = String.format("current_day_of_week :is %s",
+                                    new StringBuilder().append('[').
+                                            append(StringUtil.join(",", daysOfWeek)).
+                                            append(']').toString());
         } else {
             ZimbraLog.soap.debug("Ignoring unexpected test %s.", name);
         }
