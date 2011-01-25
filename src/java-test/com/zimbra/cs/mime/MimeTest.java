@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.mime;
 
+import java.io.IOException;
 import java.io.Reader;
 
 import javax.mail.internet.InternetAddress;
@@ -29,6 +30,12 @@ import org.junit.Test;
  */
 public class MimeTest {
 
+    private void testCP932(String contentType) throws IOException {
+        Reader reader = Mime.getTextReader(getClass().getResourceAsStream("cp932.txt"), contentType, null);
+        String result = IOUtils.toString(reader);
+        Assert.assertTrue(result.equals("2010/4/2,\u2161\u53f7\u5e97  \u30ab\u30aa\u30b9\u9928,\u3054\u672c\u4eba,1\u56de\u6255\u3044,,'10/05,9960,9960,,,,,\r\n"));
+    }
+
     @Test
     public void getTextReader() throws Exception {
         Reader reader = Mime.getTextReader(getClass().getResourceAsStream("zimbra-shift-jis.txt"), "text/plain", null);
@@ -43,6 +50,11 @@ public class MimeTest {
         reader = Mime.getTextReader(getClass().getResourceAsStream("p4-notification.txt"), "text/plain", null);
         result = IOUtils.toString(reader);
         Assert.assertTrue(result.startsWith("Change 259706"));
+
+        testCP932("text/plain");
+        testCP932("text/plain; charset=shift_jis");
+        testCP932("text/plain; charset=windows-31j");
+        testCP932("text/plain; charset=cp932");
     }
 
     @Test

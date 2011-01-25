@@ -118,9 +118,11 @@ public class Mime {
      */
     private static final int MAX_PREAMBLE_LENGTH = 1024;
 
-    private static final Charset CP1252 = toCharset(MimeConstants.P_CHARSET_CP1252);
-    private static final Charset GB2312 = toCharset(MimeConstants.P_CHARSET_GB2312);
-    private static final Charset GBK    = toCharset(MimeConstants.P_CHARSET_GBK);
+    private static final Charset WINDOWS_1252 = toCharset(MimeConstants.P_CHARSET_WINDOWS_1252);
+    private static final Charset GB2312       = toCharset(MimeConstants.P_CHARSET_GB2312);
+    private static final Charset GBK          = toCharset(MimeConstants.P_CHARSET_GBK);
+    private static final Charset WINDOWS_31J  = toCharset(MimeConstants.P_CHARSET_WINDOWS_31J);
+    private static final Charset SHIFT_JIS    = toCharset(MimeConstants.P_CHARSET_SHIFT_JIS);
 
     public static class FixedMimeMessage extends com.zimbra.common.mime.shim.JavaMailMimeMessage {
         public FixedMimeMessage(Session session)  {
@@ -908,6 +910,12 @@ public class Mime {
         if (Strings.isNullOrEmpty(name)) {
             return null;
         }
+
+        // "Windows-31J" is supported but "CP932" is not; force the mapping here...
+        if (name.equalsIgnoreCase("cp932") && WINDOWS_31J != null) {
+            return WINDOWS_31J;
+        }
+
         try {
             return Charset.forName(name.trim());
         } catch (Exception e) {
@@ -923,12 +931,16 @@ public class Mime {
      */
     private static Charset normalizeCharset(Charset charset) {
         // windows-1252 is a superset of iso-8859-1 and they're often confused, so use cp1252 in its place
-        if (CP1252 != null && Charsets.ISO_8859_1.equals(charset)) {
-            return CP1252;
+        if (WINDOWS_1252 != null && Charsets.ISO_8859_1.equals(charset)) {
+            return WINDOWS_1252;
         }
 
         if (GBK != null && charset.equals(GB2312)) {
             return GBK;
+        }
+
+        if (WINDOWS_31J != null && charset.equals(SHIFT_JIS)) {
+            return WINDOWS_31J;
         }
 
         return charset;
