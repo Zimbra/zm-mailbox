@@ -7777,20 +7777,23 @@ public class Mailbox {
         }
 
         // committed changes, so notify any listeners
-        if (dirty != null && dirty.hasNotifications() && !mListeners.isEmpty()) {
-            try {
-                // try to get a copy of the changeset that *isn't* live
-                dirty = snapshotModifications(dirty);
-            } catch (ServiceException e) {
-                ZimbraLog.mailbox.warn("error copying notifications; will notify with live set", e);
-            }
-            for (Session session : mListeners) {
+        if (dirty != null && dirty.hasNotifications()) {
+            if (!mListeners.isEmpty()) {
                 try {
-                    session.notifyPendingChanges(dirty, mData.lastChangeId, source);
-                } catch (RuntimeException e) {
-                    ZimbraLog.mailbox.error("ignoring error during notification", e);
+                    // try to get a copy of the changeset that *isn't* live
+                    dirty = snapshotModifications(dirty);
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.warn("error copying notifications; will notify with live set", e);
+                }
+                for (Session session : mListeners) {
+                    try {
+                        session.notifyPendingChanges(dirty, mData.lastChangeId, source);
+                    } catch (RuntimeException e) {
+                        ZimbraLog.mailbox.error("ignoring error during notification", e);
+                    }
                 }
             }
+
             MailboxListener.mailboxChanged(getAccountId(), dirty, change.octxt, mData.lastChangeId);
         }
     }
@@ -7805,17 +7808,19 @@ public class Mailbox {
             for (Map<?, ?> map : new Map[] {change.mDirty.created, change.mDirty.deleted, change.mDirty.modified}) {
                 if (map != null) {
                     for (Object obj : map.values()) {
-                        if (obj instanceof Change)
+                        if (obj instanceof Change) {
                             obj = ((Change) obj).what;
+                        }
 
-                        if (obj instanceof Tag)
+                        if (obj instanceof Tag) {
                             purge(MailItem.TYPE_TAG);
-                        else if (obj instanceof Folder)
+                        } else if (obj instanceof Folder) {
                             purge(MailItem.TYPE_FOLDER);
-                        else if (obj instanceof MailItem && cache != null)
+                        } else if (obj instanceof MailItem && cache != null) {
                             cache.remove(new Integer(((MailItem) obj).getId()));
-                        else if (obj instanceof Integer && cache != null)
+                        } else if (obj instanceof Integer && cache != null) {
                             cache.remove(obj);
+                        }
                     }
                 }
             }
