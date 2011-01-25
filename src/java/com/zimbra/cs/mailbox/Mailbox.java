@@ -1921,7 +1921,7 @@ public class Mailbox {
             return item;
 
         if (item instanceof Folder) {
-            return (T) snapshotFolders().get(item.getId());
+            return mFolderCache == null ? item : (T) snapshotFolders().get(item.getId());
         } else if (item instanceof VirtualConversation) {
             // snapshotting the wrapped message passes BITMASK_UNCACHED onto the virual conversation                                                                                                                           
             return (T) new VirtualConversation(this, snapshotItem(((VirtualConversation) item).getMessage()));
@@ -1942,9 +1942,12 @@ public class Mailbox {
      *  This method should only be called <i>immediately</i> before returning                                                                                                                                                  
      *  the folder set from a public {@code Mailbox} method.  In order to                                                                                                                                                      
      *  handle recursive calls, item duplication occurs only when we're in a                                                                                                                                                   
-     *  top-level transaction; otherwise, the live folder cache is returned. */
+     *  top-level transaction; otherwise, the live folder cache is returned.
+     *  <p>
+     *  If the {@code Mailbox}'s folder cache is {@code null}, this method will
+     *  also return {@code null}. */
     private Map<Integer, Folder> snapshotFolders() throws ServiceException {
-        if (mCurrentChange.depth > 1)
+        if (mCurrentChange.depth > 1 || mFolderCache == null)
             return mFolderCache;
 
         Map<Integer, Folder> copies = new HashMap<Integer, Folder>();
@@ -1983,7 +1986,7 @@ public class Mailbox {
         assert(mCurrentChange.depth == 0);
 
         Map<Integer, MailItem> cache = mItemCache.get();
-        Map<Integer, Folder> folders = (pms.changedTypes & FOLDER_TYPES) == 0 ? mFolderCache : snapshotFolders();
+        Map<Integer, Folder> folders = mFolderCache == null || (pms.changedTypes & FOLDER_TYPES) == 0 ? mFolderCache : snapshotFolders();
 
         PendingModifications snapshot = new PendingModifications();
 
@@ -1993,7 +1996,7 @@ public class Mailbox {
 
         if (pms.created != null && !pms.created.isEmpty()) {
             for (MailItem item : pms.created.values()) {
-                if (item instanceof Folder) {
+                if (item instanceof Folder && folders != null) {
                     Folder folder = folders.get(item.getId());
                     if (folder != null) {
                         snapshot.recordCreated(folder);
@@ -2001,6 +2004,7 @@ public class Mailbox {
                         ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: " + item.getId());
                     }
                 } else {
+                    // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
                     boolean copy = item instanceof Tag || (cache != null && cache.containsKey(item.getId()));
                     snapshot.recordCreated(copy ? snapshotItem(item) : item);
                 }
@@ -2016,7 +2020,7 @@ public class Mailbox {
                 }
 
                 MailItem item = (MailItem) chg.what;
-                if (item instanceof Folder) {
+                if (item instanceof Folder && folders != null) {
                     Folder folder = folders.get(item.getId());
                     if (folder != null) {
                         snapshot.recordModified(folder, chg.why);
@@ -2024,6 +2028,7 @@ public class Mailbox {
                         ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: " + item.getId());
                     }
                 } else {
+                    // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
                     boolean copy = item instanceof Tag || (cache != null && cache.containsKey(item.getId()));
                     snapshot.recordModified(copy ? snapshotItem(item) : item, chg.why);
                 }
