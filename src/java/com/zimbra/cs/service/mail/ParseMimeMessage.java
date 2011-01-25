@@ -321,7 +321,7 @@ public class ParseMimeMessage {
                 if (additionalParts != null) {
                     additionalLen += additionalParts.length;
                 }
-                alternatives = new MimeBodyPart[additionalLen+1];
+                alternatives = new MimeBodyPart[additionalLen + 1];
                 int curAltPart = 0;
 
                 // goes into the "content" subpart
@@ -451,8 +451,9 @@ public class ParseMimeMessage {
 
     private static void handleAttachments(Element attachElem, MimeMultipart mmp, ParseMessageContext ctxt, String contentID)
     throws ServiceException, MessagingException, IOException {
-        if (contentID != null)
+        if (contentID != null) {
             contentID = '<' + contentID + '>';
+        }
 
         String attachIds = attachElem.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         if (attachIds != null) {
@@ -504,7 +505,8 @@ public class ParseMimeMessage {
      * within another one (that would be very tacky)....so this is a bit complicated.
      */
     private static void setContent(MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives,
-            ParseMessageContext ctxt) throws MessagingException, ServiceException, IOException {
+            ParseMessageContext ctxt)
+    throws MessagingException, ServiceException, IOException {
         String type = elem.getAttribute(MailConstants.A_CONTENT_TYPE, MimeConstants.CT_DEFAULT).trim();
         ContentType ctype = new ContentType(type, ctxt.use2231).cleanup();
 
