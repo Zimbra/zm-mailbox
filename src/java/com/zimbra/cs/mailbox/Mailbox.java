@@ -1354,23 +1354,23 @@ public class Mailbox {
      * uncaches all items. */
     public synchronized void purge(MailItem.Type type) {
         switch (type) {
-        case FOLDER:
-        case MOUNTPOINT:
-        case SEARCHFOLDER:
-            mFolderCache = null;
-            break;
-        case FLAG:
-        case TAG:
-            mTagCache = null;
-            break;
-        default:
-            clearItemCache();
-            break;
-        case UNKNOWN:
-            mFolderCache = null;
-            mTagCache = null;
-            clearItemCache();
-            break;
+            case FOLDER:
+            case MOUNTPOINT:
+            case SEARCHFOLDER:
+                mFolderCache = null;
+                break;
+            case FLAG:
+            case TAG:
+                mTagCache = null;
+                break;
+            default:
+                clearItemCache();
+                break;
+            case UNKNOWN:
+                mFolderCache = null;
+                mTagCache = null;
+                clearItemCache();
+                break;
         }
 
         if (ZimbraLog.cache.isDebugEnabled())
@@ -1808,14 +1808,14 @@ public class Mailbox {
      */
     public static boolean isCachedType(MailItem.Type type) {
         switch (type) {
-        case FOLDER:
-        case SEARCHFOLDER:
-        case TAG:
-        case FLAG:
-        case MOUNTPOINT:
-            return true;
-        default:
-            return false;
+            case FOLDER:
+            case SEARCHFOLDER:
+            case TAG:
+            case FLAG:
+            case MOUNTPOINT:
+                return true;
+            default:
+                return false;
         }
     }
 
@@ -2167,26 +2167,26 @@ public class Mailbox {
     MailItem getCachedItem(Integer key, MailItem.Type type) throws ServiceException {
         MailItem item = null;
         switch (type) {
-        case UNKNOWN:
-            return getCachedItem(key);
-        case FLAG:
-        case TAG:
-            if (key < 0) {
-                item = Flag.getFlag(this, key);
-            } else if (mTagCache != null) {
-                item = mTagCache.get(key);
-            }
-            break;
-        case MOUNTPOINT:
-        case SEARCHFOLDER:
-        case FOLDER:
-            if (mFolderCache != null) {
-                item = mFolderCache.get(key);
-            }
-            break;
-        default:
-            item = getItemCache().get(key);
-            break;
+            case UNKNOWN:
+                return getCachedItem(key);
+            case FLAG:
+            case TAG:
+                if (key < 0) {
+                    item = Flag.getFlag(this, key);
+                } else if (mTagCache != null) {
+                    item = mTagCache.get(key);
+                }
+                break;
+            case MOUNTPOINT:
+            case SEARCHFOLDER:
+            case FOLDER:
+                if (mFolderCache != null) {
+                    item = mFolderCache.get(key);
+                }
+                break;
+            default:
+                item = getItemCache().get(key);
+                break;
         }
 
         if (item != null && !MailItem.isAcceptableType(type, MailItem.Type.of(item.mData.type))) {
@@ -2421,64 +2421,64 @@ public class Mailbox {
             }
 
             switch (type) {
-            case FOLDER:
-            case SEARCHFOLDER:
-            case MOUNTPOINT:
-                result = new ArrayList<MailItem>(mFolderCache.size());
-                for (Folder subfolder : mFolderCache.values()) {
-                    if (subfolder.getType() == type || type == MailItem.Type.FOLDER) {
-                        if (folder == null || subfolder.getFolderId() == folderId) {
-                            result.add(subfolder);
+                case FOLDER:
+                case SEARCHFOLDER:
+                case MOUNTPOINT:
+                    result = new ArrayList<MailItem>(mFolderCache.size());
+                    for (Folder subfolder : mFolderCache.values()) {
+                        if (subfolder.getType() == type || type == MailItem.Type.FOLDER) {
+                            if (folder == null || subfolder.getFolderId() == folderId) {
+                                result.add(subfolder);
+                            }
                         }
                     }
-                }
-                success = true;
-                break;
-            case TAG:
-                if (folderId != -1 && folderId != ID_FOLDER_TAGS) {
-                    return Collections.emptyList();
-                }
-                result = new ArrayList<MailItem>(mTagCache.size() / 2);
-                for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
-                    if (entry.getKey() instanceof String) {
-                        result.add(entry.getValue());
+                    success = true;
+                    break;
+                case TAG:
+                    if (folderId != -1 && folderId != ID_FOLDER_TAGS) {
+                        return Collections.emptyList();
                     }
-                }
-                success = true;
-                break;
-            case FLAG:
-                if (folderId != -1 && folderId != ID_FOLDER_TAGS) {
-                    return Collections.emptyList();
-                }
-                List<Flag> allFlags = Flag.getAllFlags(this);
-                result = new ArrayList<MailItem>(allFlags.size());
-                for (Flag flag : allFlags) {
-                    result.add(flag);
-                }
-                success = true;
-                break;
-            default:
-                List<MailItem.UnderlyingData> dataList;
-                if (folder != null) {
-                    dataList = DbMailItem.getByFolder(folder, type, sort);
-                } else {
-                    dataList = DbMailItem.getByType(this, type, sort);
-                }
-                if (dataList == null) {
-                    return Collections.emptyList();
-                }
-                result = new ArrayList<MailItem>(dataList.size());
-                for (MailItem.UnderlyingData data : dataList) {
-                    if (data != null) {
-                        result.add(getItem(data));
+                    result = new ArrayList<MailItem>(mTagCache.size() / 2);
+                    for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
+                        if (entry.getKey() instanceof String) {
+                            result.add(entry.getValue());
+                        }
                     }
-                }
-                // DbMailItem call handles all sorts except SORT_BY_NAME_NAT
-                if (sort.getCriterion() == SortBy.SortCriterion.NAME_NATURAL_ORDER) {
-                    sort = SortBy.NONE;
-                }
-                success = true;
-                break;
+                    success = true;
+                    break;
+                case FLAG:
+                    if (folderId != -1 && folderId != ID_FOLDER_TAGS) {
+                        return Collections.emptyList();
+                    }
+                    List<Flag> allFlags = Flag.getAllFlags(this);
+                    result = new ArrayList<MailItem>(allFlags.size());
+                    for (Flag flag : allFlags) {
+                        result.add(flag);
+                    }
+                    success = true;
+                    break;
+                default:
+                    List<MailItem.UnderlyingData> dataList;
+                    if (folder != null) {
+                        dataList = DbMailItem.getByFolder(folder, type, sort);
+                    } else {
+                        dataList = DbMailItem.getByType(this, type, sort);
+                    }
+                    if (dataList == null) {
+                        return Collections.emptyList();
+                    }
+                    result = new ArrayList<MailItem>(dataList.size());
+                    for (MailItem.UnderlyingData data : dataList) {
+                        if (data != null) {
+                            result.add(getItem(data));
+                        }
+                    }
+                    // DbMailItem call handles all sorts except SORT_BY_NAME_NAT
+                    if (sort.getCriterion() == SortBy.SortCriterion.NAME_NATURAL_ORDER) {
+                        sort = SortBy.NONE;
+                    }
+                    success = true;
+                    break;
             }
         } finally {
             endTransaction(success);
@@ -6991,14 +6991,14 @@ public class Mailbox {
 
                 Document doc;
                 switch (type) {
-                case DOCUMENT:
-                    doc = Document.create(itemId, getFolderById(folderId), pd.getFilename(), pd.getContentType(), pd, null);
-                    break;
-                case WIKI:
-                    doc = WikiItem.create(itemId, getFolderById(folderId), pd.getFilename(), pd, null);
-                    break;
-                default:
-                    throw MailServiceException.INVALID_TYPE(type.toString());
+                    case DOCUMENT:
+                        doc = Document.create(itemId, getFolderById(folderId), pd.getFilename(), pd.getContentType(), pd, null);
+                        break;
+                    case WIKI:
+                        doc = WikiItem.create(itemId, getFolderById(folderId), pd.getFilename(), pd, null);
+                        break;
+                    default:
+                        throw MailServiceException.INVALID_TYPE(type.toString());
                 }
 
                 redoRecorder.setMessageId(itemId);
@@ -7663,20 +7663,23 @@ public class Mailbox {
         }
 
         // committed changes, so notify any listeners
-        if (dirty != null && dirty.hasNotifications() && !mListeners.isEmpty()) {
-            try {
-                // try to get a copy of the changeset that *isn't* live
-                dirty = snapshotModifications(dirty);
-            } catch (ServiceException e) {
-                ZimbraLog.mailbox.warn("error copying notifications; will notify with live set", e);
-            }
-            for (Session session : mListeners) {
+        if (dirty != null && dirty.hasNotifications()) {
+            if (!mListeners.isEmpty()) {
                 try {
-                    session.notifyPendingChanges(dirty, mData.lastChangeId, source);
-                } catch (RuntimeException e) {
-                    ZimbraLog.mailbox.error("ignoring error during notification", e);
+                    // try to get a copy of the changeset that *isn't* live
+                    dirty = snapshotModifications(dirty);
+                } catch (ServiceException e) {
+                    ZimbraLog.mailbox.warn("error copying notifications; will notify with live set", e);
+                }
+                for (Session session : mListeners) {
+                    try {
+                        session.notifyPendingChanges(dirty, mData.lastChangeId, source);
+                    } catch (RuntimeException e) {
+                        ZimbraLog.mailbox.error("ignoring error during notification", e);
+                    }
                 }
             }
+
             MailboxListener.mailboxChanged(getAccountId(), dirty, change.octxt, mData.lastChangeId);
         }
     }
@@ -7693,7 +7696,9 @@ public class Mailbox {
                     for (Object obj : map.values()) {
                         if (obj instanceof Change) {
                             obj = ((Change) obj).what;
-                        } else if (obj instanceof Tag) {
+                        }
+
+                        if (obj instanceof Tag) {
                             purge(MailItem.Type.TAG);
                         } else if (obj instanceof Folder) {
                             purge(MailItem.Type.FOLDER);
