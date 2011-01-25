@@ -33,6 +33,7 @@ import javax.mail.Multipart;
 import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.SharedInputStream;
+import javax.mail.util.ByteArrayDataSource;
 
 import com.sun.mail.util.ASCIIUtility;
 import com.sun.mail.util.PropUtil;
@@ -43,7 +44,7 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
 
     private com.zimbra.common.mime.MimePart zpart;
     private JavaMailMimeMultipart jmparent;
-    private Object jmcontent;  // JavaMailMimeMultipart or JavaMailMimeMessage or null
+    private Object jmcontent; // JavaMailMimeMultipart or JavaMailMimeMessage or null
 
     JavaMailMimeBodyPart(com.zimbra.common.mime.MimePart mp) {
         this(mp, null);
@@ -94,9 +95,9 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
             if (!(is instanceof ByteArrayInputStream) && !(is instanceof BufferedInputStream) && !(is instanceof SharedInputStream)) {
                 is = new BufferedInputStream(is);
             }
-            
+
             this.headers = new JavaMailInternetHeaders(is);
-            
+
             if (is instanceof SharedInputStream) {
                 SharedInputStream sis = (SharedInputStream) is;
                 this.contentStream = sis.newStream(sis.getPosition(), -1);
@@ -149,11 +150,13 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
             }
         }
 
-        @Override public InputStream newStream(long start, long end) {
+        @Override
+        public InputStream newStream(long start, long end) {
             return stream.newStream(start, end);
         }
 
-        @Override public long getSize() {
+        @Override
+        public long getSize() {
             return size;
         }
     }
@@ -162,7 +165,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         return zpart;
     }
 
-    @Override public int getSize() throws MessagingException {
+    @Override
+    public int getSize() throws MessagingException {
         if (ZPARSER) {
             try {
                 return (int) zpart.getSize();
@@ -174,7 +178,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public int getLineCount() throws MessagingException {
+    @Override
+    public int getLineCount() throws MessagingException {
         if (ZPARSER) {
             return zpart.getLineCount();
         } else {
@@ -182,7 +187,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public String getContentType() throws MessagingException {
+    @Override
+    public String getContentType() throws MessagingException {
         if (ZPARSER) {
             return zpart.getContentType().toString();
         } else {
@@ -190,7 +196,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public boolean isMimeType(String mimeType) throws MessagingException {
+    @Override
+    public boolean isMimeType(String mimeType) throws MessagingException {
         if (ZPARSER) {
             String type = zpart.getContentType().getContentType();
             if (mimeType.endsWith("/*")) {
@@ -203,7 +210,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public String getDisposition() throws MessagingException {
+    @Override
+    public String getDisposition() throws MessagingException {
         if (ZPARSER) {
             if (zpart.getRawMimeHeader("Content-Disposition") != null) {
                 return zpart.getContentDisposition().getDisposition();
@@ -215,7 +223,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void setDisposition(String disposition) throws MessagingException {
+    @Override
+    public void setDisposition(String disposition) throws MessagingException {
         if (ZPARSER) {
             boolean hasDisposition = zpart.getRawMimeHeader("Content-Disposition") != null;
             if (hasDisposition && disposition != null) {
@@ -228,7 +237,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public String getEncoding() throws MessagingException {
+    @Override
+    public String getEncoding() throws MessagingException {
         if (ZPARSER) {
             if (zpart.getRawMimeHeader("Content-Transfer-Encoding") == null) {
                 return null;
@@ -242,7 +252,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public String getContentID() throws MessagingException {
+    @Override
+    public String getContentID() throws MessagingException {
         if (ZPARSER) {
             return zpart.getMimeHeader("Content-ID");
         } else {
@@ -250,7 +261,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void setContentID(String cid) throws MessagingException {
+    @Override
+    public void setContentID(String cid) throws MessagingException {
         if (ZPARSER) {
             zpart.setMimeHeader("Content-ID", cid);
         } else {
@@ -258,7 +270,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public String getContentMD5() throws MessagingException {
+    @Override
+    public String getContentMD5() throws MessagingException {
         if (ZPARSER) {
             return zpart.getMimeHeader("Content-MD5");
         } else {
@@ -266,7 +279,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void setContentMD5(String md5) throws MessagingException {
+    @Override
+    public void setContentMD5(String md5) throws MessagingException {
         if (ZPARSER) {
             zpart.setMimeHeader("Content-MD5", md5);
         } else {
@@ -274,7 +288,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public String[] getContentLanguage() throws MessagingException {
+    @Override
+    public String[] getContentLanguage() throws MessagingException {
         if (ZPARSER) {
             // TODO Auto-generated method stub
             return super.getContentLanguage();
@@ -283,7 +298,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void setContentLanguage(String[] languages) throws MessagingException {
+    @Override
+    public void setContentLanguage(String[] languages) throws MessagingException {
         if (ZPARSER) {
             if (languages == null) {
                 zpart.setMimeHeader("Content-Language", (String) null);
@@ -301,7 +317,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public String getDescription() throws MessagingException {
+    @Override
+    public String getDescription() throws MessagingException {
         if (ZPARSER) {
             return zpart.getMimeHeader("Content-Description");
         } else {
@@ -309,7 +326,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void setDescription(String description) throws MessagingException {
+    @Override
+    public void setDescription(String description) throws MessagingException {
         if (ZPARSER) {
             zpart.setMimeHeader("Content-Description", description);
         } else {
@@ -317,7 +335,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void setDescription(String description, String charset) throws MessagingException {
+    @Override
+    public void setDescription(String description, String charset) throws MessagingException {
         if (ZPARSER) {
             zpart.setMimeHeader("Content-Description", description, charset);
         } else {
@@ -327,7 +346,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
 
     private static boolean decodeFileName = PropUtil.getBooleanSystemProperty("mail.mime.decodefilename", false);
 
-    @Override public String getFileName() throws MessagingException {
+    @Override
+    public String getFileName() throws MessagingException {
         if (ZPARSER) {
             String filename = zpart.getFilename();
             if (filename != null && !decodeFileName) {
@@ -339,7 +359,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void setFileName(String filename) throws MessagingException {
+    @Override
+    public void setFileName(String filename) throws MessagingException {
         if (ZPARSER) {
             // does the right thing regardless of whether the filename is encoded or not
             zpart.setFilename(filename);
@@ -348,7 +369,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public InputStream getInputStream() throws IOException, MessagingException  {
+    @Override
+    public InputStream getInputStream() throws IOException, MessagingException {
         if (ZPARSER) {
             return zpart.getContentStream();
         } else {
@@ -356,7 +378,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override protected InputStream getContentStream() throws MessagingException {
+    @Override
+    protected InputStream getContentStream() throws MessagingException {
         if (ZPARSER) {
             try {
                 return zpart.getRawContentStream();
@@ -368,7 +391,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public InputStream getRawInputStream() throws MessagingException {
+    @Override
+    public InputStream getRawInputStream() throws MessagingException {
         if (ZPARSER) {
             return getContentStream();
         } else {
@@ -383,19 +407,23 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
             jmpart = part;
         }
 
-        @Override public InputStream getInputStream() throws IOException {
+        @Override
+        public InputStream getInputStream() throws IOException {
             return jmpart.getZimbraMimePart().getContentStream();
         }
 
-        @Override public OutputStream getOutputStream() throws IOException {
+        @Override
+        public OutputStream getOutputStream() throws IOException {
             throw new UnsupportedOperationException();
         }
 
-        @Override public String getContentType() {
+        @Override
+        public String getContentType() {
             return jmpart.getZimbraMimePart().getContentType().toString();
         }
 
-        @Override public String getName() {
+        @Override
+        public String getName() {
             try {
                 return jmpart.getFileName();
             } catch (MessagingException me) {
@@ -403,12 +431,14 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
             }
         }
 
-        @Override public MessageContext getMessageContext() {
+        @Override
+        public MessageContext getMessageContext() {
             return new MessageContext(jmpart);
         }
     }
 
-    @Override public DataHandler getDataHandler() throws MessagingException {
+    @Override
+    public DataHandler getDataHandler() throws MessagingException {
         if (ZPARSER) {
             return new DataHandler(new MimePartDataSource(this));
         } else {
@@ -416,7 +446,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public Object getContent() throws IOException, MessagingException {
+    @Override
+    public Object getContent() throws IOException, MessagingException {
         if (ZPARSER) {
             if (jmcontent != null) {
                 return jmcontent;
@@ -487,7 +518,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         setHeader("Content-Type", ds.getContentType());
     }
 
-    @Override public void setDataHandler(DataHandler dh) throws MessagingException {
+    @Override
+    public void setDataHandler(DataHandler dh) throws MessagingException {
         if (ZPARSER) {
             setDataSource(dh.getDataSource());
         } else {
@@ -495,7 +527,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void setContent(Object o, String type) throws MessagingException {
+    @Override
+    public void setContent(Object o, String type) throws MessagingException {
         if (ZPARSER) {
             com.zimbra.common.mime.ContentType ctype = new com.zimbra.common.mime.ContentType(type);
             if (o instanceof JavaMailMimeMultipart) {
@@ -505,9 +538,17 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
                 replaceInParent(((JavaMailMimeMessage) o).getZimbraMimeMessage());
                 setHeader("Content-Type", type);
                 this.jmcontent = o;
-            } else if (o instanceof String && ctype.getPrimaryType().equals("text")) {
-                setText((String) o, ctype.getParameter("charset"), ctype.getSubType());
-                setHeader("Content-Type", type);
+            } else if (o instanceof String) {
+                if (ctype.getPrimaryType().equals("text")) {
+                    setText((String) o, ctype.getParameter("charset"), ctype.getSubType());
+                    setHeader("Content-Type", type);
+                } else {
+                    try {
+                        setDataSource(new ByteArrayDataSource((String) o, type));
+                    } catch (IOException ioe) {
+                        throw new MessagingException("error setting string content", ioe);
+                    }
+                }
             } else {
                 setDataHandler(new DataHandler(o, type));
             }
@@ -516,7 +557,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void setContent(Multipart mp) throws MessagingException {
+    @Override
+    public void setContent(Multipart mp) throws MessagingException {
         if (ZPARSER) {
             if (mp instanceof JavaMailMimeMultipart) {
                 replaceInParent(((JavaMailMimeMultipart) mp).getZimbraMimeMultipart());
@@ -530,7 +572,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void setText(String text) throws MessagingException {
+    @Override
+    public void setText(String text) throws MessagingException {
         if (ZPARSER) {
             setText(text, null, null);
         } else {
@@ -538,7 +581,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void setText(String text, String charset) throws MessagingException {
+    @Override
+    public void setText(String text, String charset) throws MessagingException {
         if (ZPARSER) {
             setText(text, charset, null);
         } else {
@@ -546,12 +590,13 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void setText(String text, String charset, String subtype) throws MessagingException {
+    @Override
+    public void setText(String text, String charset, String subtype) throws MessagingException {
         if (ZPARSER) {
             if (!(zpart instanceof com.zimbra.common.mime.MimeBodyPart)) {
                 // need to switch from multipart or message to body part in enclosing part
                 replaceInParent(new com.zimbra.common.mime.MimeBodyPart(null));
-            } 
+            }
             try {
                 ((com.zimbra.common.mime.MimeBodyPart) zpart).setText(text, charset, subtype, null);
             } catch (IOException ioe) {
@@ -562,7 +607,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void attachFile(File file) throws IOException, MessagingException {
+    @Override
+    public void attachFile(File file) throws IOException, MessagingException {
         if (ZPARSER) {
             com.zimbra.common.mime.ContentType ctype = new com.zimbra.common.mime.ContentType("application/octet-stream");
             com.zimbra.common.mime.MimeBodyPart mp = new com.zimbra.common.mime.MimeBodyPart(ctype);
@@ -588,7 +634,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void writeTo(OutputStream os) throws IOException, MessagingException  {
+    @Override
+    public void writeTo(OutputStream os) throws IOException, MessagingException {
         if (ZPARSER) {
             writeTo(zpart.getInputStream(), os);
         } else {
@@ -600,7 +647,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         return new JavaMailInternetHeaders(zpart.getMimeHeaderBlock(), zpart.getDefaultCharset());
     }
 
-    @Override public String[] getHeader(String name) throws MessagingException {
+    @Override
+    public String[] getHeader(String name) throws MessagingException {
         if (ZPARSER) {
             return headerDelegate().getHeader(name);
         } else {
@@ -608,7 +656,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public String getHeader(String name, String delimiter) throws MessagingException {
+    @Override
+    public String getHeader(String name, String delimiter) throws MessagingException {
         if (ZPARSER) {
             return headerDelegate().getHeader(name, delimiter);
         } else {
@@ -616,7 +665,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void setHeader(String name, String value) throws MessagingException {
+    @Override
+    public void setHeader(String name, String value) throws MessagingException {
         if (ZPARSER) {
             headerDelegate().setHeader(name, value);
             if (name.equalsIgnoreCase("Content-Disposition")) {
@@ -630,7 +680,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void addHeader(String name, String value) throws MessagingException {
+    @Override
+    public void addHeader(String name, String value) throws MessagingException {
         if (ZPARSER) {
             headerDelegate().addHeader(name, value);
         } else {
@@ -638,7 +689,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void removeHeader(String name) throws MessagingException {
+    @Override
+    public void removeHeader(String name) throws MessagingException {
         if (ZPARSER) {
             headerDelegate().removeHeader(name);
         } else {
@@ -647,7 +699,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
     }
 
     @SuppressWarnings("unchecked")
-    @Override public Enumeration<Header> getAllHeaders() throws MessagingException {
+    @Override
+    public Enumeration<Header> getAllHeaders() throws MessagingException {
         if (ZPARSER) {
             return headerDelegate().getAllHeaders();
         } else {
@@ -656,7 +709,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
     }
 
     @SuppressWarnings("unchecked")
-    @Override public Enumeration<Header> getMatchingHeaders(String[] names) throws MessagingException {
+    @Override
+    public Enumeration<Header> getMatchingHeaders(String[] names) throws MessagingException {
         if (ZPARSER) {
             return headerDelegate().getMatchingHeaders(names);
         } else {
@@ -665,7 +719,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
     }
 
     @SuppressWarnings("unchecked")
-    @Override public Enumeration<Header> getNonMatchingHeaders(String[] names) throws MessagingException {
+    @Override
+    public Enumeration<Header> getNonMatchingHeaders(String[] names) throws MessagingException {
         if (ZPARSER) {
             return headerDelegate().getNonMatchingHeaders(names);
         } else {
@@ -673,7 +728,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public void addHeaderLine(String line) throws MessagingException {
+    @Override
+    public void addHeaderLine(String line) throws MessagingException {
         if (ZPARSER) {
             headerDelegate().addHeaderLine(line);
         } else {
@@ -682,7 +738,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
     }
 
     @SuppressWarnings("unchecked")
-    @Override public Enumeration<String> getAllHeaderLines() throws MessagingException {
+    @Override
+    public Enumeration<String> getAllHeaderLines() throws MessagingException {
         if (ZPARSER) {
             return headerDelegate().getAllHeaderLines();
         } else {
@@ -691,7 +748,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
     }
 
     @SuppressWarnings("unchecked")
-    @Override public Enumeration<String> getMatchingHeaderLines(String[] names) throws MessagingException {
+    @Override
+    public Enumeration<String> getMatchingHeaderLines(String[] names) throws MessagingException {
         if (ZPARSER) {
             return headerDelegate().getMatchingHeaderLines(names);
         } else {
@@ -700,7 +758,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
     }
 
     @SuppressWarnings("unchecked")
-    @Override public Enumeration<String> getNonMatchingHeaderLines(String[] names) throws MessagingException {
+    @Override
+    public Enumeration<String> getNonMatchingHeaderLines(String[] names) throws MessagingException {
         if (ZPARSER) {
             return headerDelegate().getNonMatchingHeaderLines(names);
         } else {
@@ -708,7 +767,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override protected void updateHeaders() throws MessagingException {
+    @Override
+    protected void updateHeaders() throws MessagingException {
         if (ZPARSER) {
             if (zpart instanceof com.zimbra.common.mime.MimeMultipart) {
                 if (jmcontent == null) {
@@ -725,7 +785,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         this.jmparent = jmmulti;
     }
 
-    @Override public Multipart getParent() {
+    @Override
+    public Multipart getParent() {
         if (ZPARSER) {
             return jmparent;
         } else {
@@ -733,7 +794,8 @@ public class JavaMailMimeBodyPart extends MimeBodyPart implements JavaMailShim {
         }
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         if (ZPARSER) {
             return zpart.toString();
         } else {
