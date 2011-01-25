@@ -65,13 +65,15 @@ public class MimeConstants {
     public static final String ET_DEFAULT = ET_7BIT;
 
     // parameters
-    public static final String P_CHARSET = "charset";// default value for charset
+    public static final String P_CHARSET = "charset";
     public static final String P_CHARSET_ASCII = "us-ascii";
     public static final String P_CHARSET_UTF8 = "utf-8";
     public static final String P_CHARSET_LATIN1 = "iso-8859-1";
-    public static final String P_CHARSET_CP1252 = "windows-1252";
+    public static final String P_CHARSET_WINDOWS_1252 = "windows-1252";
     public static final String P_CHARSET_EUC_CN = "euc_cn";
     public static final String P_CHARSET_GB2312 = "gb2312";
     public static final String P_CHARSET_GBK = "gbk";
+    public static final String P_CHARSET_WINDOWS_31J = "Windows-31J";
+    public static final String P_CHARSET_SHIFT_JIS = "shift_jis";
     public static final String P_CHARSET_DEFAULT = P_CHARSET_ASCII;
 }
