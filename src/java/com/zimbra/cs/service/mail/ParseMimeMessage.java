@@ -291,10 +291,11 @@ public class ParseMimeMessage {
         ctxt.zsc = zsc;
         ctxt.octxt = octxt;
         ctxt.mbox = mbox;
-        ctxt.use2231 = target.getBooleanAttr(Provisioning.A_zimbraPrefUseRfc2231, false);
+        ctxt.use2231 = target.isPrefUseRfc2231();
         ctxt.defaultCharset = target.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
-        if (ctxt.defaultCharset.equals(""))
+        if (ctxt.defaultCharset.equals("")) {
             ctxt.defaultCharset = MimeConstants.P_CHARSET_UTF8;
+        }
 
         try {
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
@@ -316,9 +317,10 @@ public class ParseMimeMessage {
 
             if (inviteElem != null) {
                 int additionalLen = 0;
-                if (additionalParts != null)
+                if (additionalParts != null) {
                     additionalLen += additionalParts.length;
-                alternatives = new MimeBodyPart[additionalLen+1];
+                }
+                alternatives = new MimeBodyPart[additionalLen + 1];
                 int curAltPart = 0;
 
                 // goes into the "content" subpart
@@ -348,20 +350,23 @@ public class ParseMimeMessage {
                 alternatives[curAltPart++] = mbp;
 
                 if (additionalParts != null) {
-                    for (int i = 0; i < additionalParts.length; i++)
+                    for (int i = 0; i < additionalParts.length; i++) {
                         alternatives[curAltPart++] = additionalParts[i];
+                    }
                 }
             } else {
                 alternatives = additionalParts;
             }
 
             // handle the content from the client, if any
-            if (hasContent)
+            if (hasContent) {
                 setContent(mm, mmp, partElem != null ? partElem : inviteElem, alternatives, ctxt);
+            }
 
             // attachments go into the toplevel "mixed" part
-            if (isMultipart && attachElem != null)
+            if (isMultipart && attachElem != null) {
                 handleAttachments(attachElem, mmp, ctxt, null);
+            }
 
             // <m> attributes: id, f[lags], s[ize], d[ate], cid(conv-id), l(parent folder)
             // <m> child elements: <e> (email), <s> (subject), <f> (fragment), <mp>, <attach>
@@ -394,15 +399,18 @@ public class ParseMimeMessage {
             mm.setSubject(subject, StringUtil.checkCharset(subject, ctxt.defaultCharset));
 
             String irt = msgElem.getAttribute(MailConstants.E_IN_REPLY_TO, null);
-            if (irt != null)
+            if (irt != null) {
                 mm.setHeader("In-Reply-To", irt);
+            }
 
             // can have no addresses specified if it's a draft...
-            if (!maddrs.isEmpty())
+            if (!maddrs.isEmpty()) {
                 addAddressHeaders(mm, maddrs);
+            }
 
-            if (!hasContent && !isMultipart)
+            if (!hasContent && !isMultipart) {
                 mm.setText("", MimeConstants.P_CHARSET_DEFAULT);
+            }
 
             String flagStr = msgElem.getAttribute(MailConstants.A_FLAGS, "");
             if (flagStr.indexOf(Flag.getAbbreviation(Flag.ID_FLAG_HIGH_PRIORITY)) != -1) {
@@ -416,8 +424,9 @@ public class ParseMimeMessage {
             // JavaMail tip: don't forget to call this, it is REALLY confusing.
             mm.saveChanges();
 
-            if (mLog.isDebugEnabled())
+            if (mLog.isDebugEnabled()) {
                 dumpMessage(mm);
+            }
 
             return mm;
         } catch (UnsupportedEncodingException encEx) {
@@ -441,8 +450,9 @@ public class ParseMimeMessage {
 
     private static void handleAttachments(Element attachElem, MimeMultipart mmp, ParseMessageContext ctxt, String contentID)
     throws ServiceException, MessagingException, IOException {
-        if (contentID != null)
+        if (contentID != null) {
             contentID = '<' + contentID + '>';
+        }
 
         String attachIds = attachElem.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
         if (attachIds != null) {
@@ -494,7 +504,8 @@ public class ParseMimeMessage {
      * within another one (that would be very tacky)....so this is a bit complicated.
      */
     private static void setContent(MimeMessage mm, MimeMultipart mmp, Element elem, MimeBodyPart[] alternatives,
-            ParseMessageContext ctxt) throws MessagingException, ServiceException, IOException {
+            ParseMessageContext ctxt)
+    throws MessagingException, ServiceException, IOException {
         String type = elem.getAttribute(MailConstants.A_CONTENT_TYPE, MimeConstants.CT_DEFAULT).trim();
         ContentType ctype = new ContentType(type, ctxt.use2231).cleanup();
 
