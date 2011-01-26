@@ -3030,6 +3030,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureConfirmationPageEnabled = "zimbraFeatureConfirmationPageEnabled";
 
     /**
+     * whether detailed contact search UI is enabled
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1164)
+    public static final String A_zimbraFeatureContactsDetailedSearch = "zimbraFeatureContactsDetailedSearch";
+
+    /**
      * contact features
      */
     @ZAttr(id=135)
