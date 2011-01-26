@@ -24,7 +24,6 @@ import javax.activation.DataSource;
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.MultipartDataSource;
-import javax.mail.Part;
 import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
@@ -36,17 +35,16 @@ import com.zimbra.common.util.ZimbraLog;
 public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim {
     private static final boolean ZPARSER = JavaMailMimeMessage.ZPARSER;
 
-    private com.zimbra.common.mime.MimeMultipart mMultipart;
-    private Map<com.zimbra.common.mime.MimePart, JavaMailMimeBodyPart> mPartMap = new HashMap<com.zimbra.common.mime.MimePart, JavaMailMimeBodyPart>();
-    private MimePart mParent;
+    private com.zimbra.common.mime.MimeMultipart zmultipart;
+    private Map<com.zimbra.common.mime.MimePart, JavaMailMimeBodyPart> partMap = new HashMap<com.zimbra.common.mime.MimePart, JavaMailMimeBodyPart>();
 
     JavaMailMimeMultipart(com.zimbra.common.mime.MimeMultipart multi) {
         this(multi, null);
     }
 
-    JavaMailMimeMultipart(com.zimbra.common.mime.MimeMultipart multi, MimePart parent) {
-        mMultipart = multi;
-        mParent = parent;
+    JavaMailMimeMultipart(com.zimbra.common.mime.MimeMultipart multi, MimePart jmparent) {
+        zmultipart = multi;
+        parent = jmparent;
     }
 
     public JavaMailMimeMultipart() {
@@ -55,13 +53,13 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
 
     public JavaMailMimeMultipart(String subtype) {
         super(subtype);
-        mMultipart = new com.zimbra.common.mime.MimeMultipart(subtype);
+        zmultipart = new com.zimbra.common.mime.MimeMultipart(subtype);
     }
 
     public JavaMailMimeMultipart(DataSource ds) throws MessagingException {
         super(new com.zimbra.common.mime.ContentType(ds.getContentType()).getSubType());
         if (ZPARSER) {
-            mMultipart = (com.zimbra.common.mime.MimeMultipart) JavaMailMimeBodyPart.parsePart(ds);
+            zmultipart = (com.zimbra.common.mime.MimeMultipart) JavaMailMimeBodyPart.parsePart(ds);
         } else {
             parsed = false;
             this.ds = ds;
@@ -70,36 +68,39 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
     }
 
     com.zimbra.common.mime.MimePart getZimbraMimeMultipart() {
-        return mMultipart;
+        return zmultipart;
     }
 
-    @Override public synchronized void setSubType(String subtype) throws MessagingException {
+    @Override
+    public synchronized void setSubType(String subtype) throws MessagingException {
         if (ZPARSER) {
-            mMultipart.setContentType(mMultipart.getContentType().setSubType(subtype));
+            zmultipart.setContentType(zmultipart.getContentType().setSubType(subtype));
         } else {
             super.setSubType(subtype);
         }
     }
 
-    @Override public synchronized int getCount() throws MessagingException {
+    @Override
+    public synchronized int getCount() throws MessagingException {
         if (ZPARSER) {
-            return mMultipart.getCount();
+            return zmultipart.getCount();
         } else {
             return super.getCount();
         }
     }
 
     private JavaMailMimeBodyPart partWrapper(com.zimbra.common.mime.MimePart mp) {
-        JavaMailMimeBodyPart jmpart = mPartMap.get(mp);
+        JavaMailMimeBodyPart jmpart = partMap.get(mp);
         if (jmpart == null) {
-            mPartMap.put(mp, jmpart = new JavaMailMimeBodyPart(mp, this));
+            partMap.put(mp, jmpart = new JavaMailMimeBodyPart(mp, this));
         }
         return jmpart;
     }
 
-    @Override public synchronized BodyPart getBodyPart(int index) throws MessagingException {
+    @Override
+    public synchronized BodyPart getBodyPart(int index) throws MessagingException {
         if (ZPARSER) {
-            return partWrapper(mMultipart.getSubpart(index));
+            return partWrapper(zmultipart.getSubpart(index));
         } else {
             return super.getBodyPart(index);
         }
@@ -107,18 +108,19 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
 
     int getBodyPartIndex(JavaMailMimeBodyPart jmpart) {
         com.zimbra.common.mime.MimePart mp = jmpart.getZimbraMimePart();
-        for (int i = 1; i <= mMultipart.getCount(); i++) {
-            if (mMultipart.getSubpart(i) == mp) {
+        for (int i = 1; i <= zmultipart.getCount(); i++) {
+            if (zmultipart.getSubpart(i) == mp) {
                 return i;
             }
         }
         return -1;
     }
 
-    @Override public synchronized BodyPart getBodyPart(String cid) throws MessagingException {
+    @Override
+    public synchronized BodyPart getBodyPart(String cid) throws MessagingException {
         if (ZPARSER) {
             if (cid != null) {
-                for (com.zimbra.common.mime.MimePart mp : mMultipart) {
+                for (com.zimbra.common.mime.MimePart mp : zmultipart) {
                     if (cid.equals(mp.getMimeHeader("Content-ID"))) {
                         return partWrapper(mp);
                     }
@@ -130,14 +132,15 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
         }
     }
 
-    @Override public boolean removeBodyPart(BodyPart part) throws MessagingException {
+    @Override
+    public boolean removeBodyPart(BodyPart part) throws MessagingException {
         if (ZPARSER) {
             if (part instanceof JavaMailMimeBodyPart) {
                 JavaMailMimeBodyPart jmmbp = (JavaMailMimeBodyPart) part;
                 com.zimbra.common.mime.MimePart mp = jmmbp.getZimbraMimePart();
-                mPartMap.remove(mp);
+                partMap.remove(mp);
 
-                boolean removed = mMultipart.removePart(mp);
+                boolean removed = zmultipart.removePart(mp);
                 if (removed) {
                     jmmbp.setParent(null);
                 }
@@ -151,15 +154,16 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
     }
 
     com.zimbra.common.mime.MimePart removePart(int index) {
-        com.zimbra.common.mime.MimePart mp = mMultipart.removePart(index);
-        JavaMailMimeBodyPart jmmbp = mPartMap.remove(mp);
+        com.zimbra.common.mime.MimePart mp = zmultipart.removePart(index);
+        JavaMailMimeBodyPart jmmbp = partMap.remove(mp);
         if (jmmbp != null) {
             jmmbp.setParent(null);
         }
         return mp;
     }
 
-    @Override public void removeBodyPart(int index) throws MessagingException {
+    @Override
+    public void removeBodyPart(int index) throws MessagingException {
         if (ZPARSER) {
             removePart(index);
         } else {
@@ -167,15 +171,17 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
         }
     }
 
-    @Override public synchronized void addBodyPart(BodyPart part) throws MessagingException {
+    @Override
+    public synchronized void addBodyPart(BodyPart part) throws MessagingException {
         if (ZPARSER) {
-            addBodyPart(part, mMultipart.getCount());
+            addBodyPart(part, zmultipart.getCount());
         } else {
             super.addBodyPart(part);
         }
     }
 
-    @Override public synchronized void addBodyPart(BodyPart part, int index) throws MessagingException {
+    @Override
+    public synchronized void addBodyPart(BodyPart part, int index) throws MessagingException {
         if (ZPARSER) {
             if (part.getParent() != null) {
                 ZimbraLog.misc.warn("adding part that already has a parent");
@@ -183,8 +189,8 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
             if (part instanceof JavaMailMimeBodyPart) {
                 JavaMailMimeBodyPart jmpart = (JavaMailMimeBodyPart) part;
                 com.zimbra.common.mime.MimePart mp = jmpart.getZimbraMimePart();
-                mMultipart.addPart(mp, index);
-                mPartMap.put(mp, jmpart);
+                zmultipart.addPart(mp, index);
+                partMap.put(mp, jmpart);
                 jmpart.setParent(this);
             } else {
                 // FIXME: turn the non-shim body part into a shim body part
@@ -195,7 +201,8 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
         }
     }
 
-    @Override public synchronized boolean isComplete() throws MessagingException {
+    @Override
+    public synchronized boolean isComplete() throws MessagingException {
         if (ZPARSER) {
             // TODO Auto-generated method stub
             return super.isComplete();
@@ -204,9 +211,10 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
         }
     }
 
-    @Override public synchronized String getPreamble() throws MessagingException {
+    @Override
+    public synchronized String getPreamble() throws MessagingException {
         if (ZPARSER) {
-            com.zimbra.common.mime.MimeBodyPart part = mMultipart.getPreamble();
+            com.zimbra.common.mime.MimeBodyPart part = zmultipart.getPreamble();
             try {
                 return part == null ? null : part.getText();
             } catch (IOException ioe) {
@@ -217,7 +225,8 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
         }
     }
 
-    @Override public synchronized void setPreamble(String preamble) throws MessagingException {
+    @Override
+    public synchronized void setPreamble(String preamble) throws MessagingException {
         if (ZPARSER) {
             com.zimbra.common.mime.MimeBodyPart part = null;
             if (preamble != null) {
@@ -228,13 +237,14 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
                     throw new MessagingException("error converting preamble to byte[]", ioe);
                 }
             }
-            mMultipart.setPreamble(part);
+            zmultipart.setPreamble(part);
         } else {
             super.setPreamble(preamble);
         }
     }
 
-    @Override protected synchronized void updateHeaders() throws MessagingException {
+    @Override
+    protected synchronized void updateHeaders() throws MessagingException {
         if (ZPARSER) {
             for (int i = 0; i < getCount(); i++) {
                 ((JavaMailMimeBodyPart) getBodyPart(i)).updateHeaders();
@@ -244,15 +254,18 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
         }
     }
 
-    @Override public synchronized void writeTo(OutputStream os) throws IOException, MessagingException {
+    @Override
+    public synchronized void writeTo(OutputStream os) throws IOException, MessagingException {
         if (ZPARSER) {
-            new JavaMailMimeBodyPart(mMultipart).writeTo(os);
+            InputStream is = parent instanceof JavaMailShim ? zmultipart.getInputStream() : zmultipart.getRawContentStream();
+            JavaMailMimeBodyPart.writeTo(is, os);
         } else {
             super.writeTo(os);
         }
     }
 
-    @Override protected synchronized void parse() throws MessagingException {
+    @Override
+    protected synchronized void parse() throws MessagingException {
         if (ZPARSER) {
             // we parse on create, so this is a no-op for us
         } else {
@@ -260,27 +273,31 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
         }
     }
 
-    @Override protected JavaMailInternetHeaders createInternetHeaders(InputStream is) throws MessagingException {
+    @Override
+    protected JavaMailInternetHeaders createInternetHeaders(InputStream is) throws MessagingException {
         return new JavaMailInternetHeaders(is);
     }
 
-    @Override protected JavaMailMimeBodyPart createMimeBodyPart(InternetHeaders headers, byte[] content) throws MessagingException {
+    @Override
+    protected JavaMailMimeBodyPart createMimeBodyPart(InternetHeaders headers, byte[] content) throws MessagingException {
         return new JavaMailMimeBodyPart(headers, content);
     }
 
-    @Override protected MimeBodyPart createMimeBodyPart(InputStream is) throws MessagingException {
+    @Override
+    protected MimeBodyPart createMimeBodyPart(InputStream is) throws MessagingException {
         return new JavaMailMimeBodyPart(is);
     }
 
-    @Override protected synchronized void setMultipartDataSource(MultipartDataSource mpds) throws MessagingException {
+    @Override
+    protected synchronized void setMultipartDataSource(MultipartDataSource mpds) throws MessagingException {
         if (ZPARSER) {
             com.zimbra.common.mime.ContentType ctype = new com.zimbra.common.mime.ContentType(mpds.getContentType(), "multipart/mixed");
             if (!ctype.getPrimaryType().equals("multipart")) {
                 throw new MessagingException("invalid (non-multipart) Content-Type: " + mpds.getContentType());
             }
             // clear out the old contents
-            while (mMultipart.getCount() > 0) {
-                mMultipart.removePart(0);
+            while (zmultipart.getCount() > 0) {
+                zmultipart.removePart(0);
             }
             // need to parse the data source ourselves so that our offsets match up with the stream
             com.zimbra.common.mime.MimeHeaderBlock headers = new com.zimbra.common.mime.MimeHeaderBlock(ctype);
@@ -291,8 +308,8 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
                 JavaMailMimeBodyPart.writeTo(mpis, null);
                 com.zimbra.common.mime.MimePart mp = mpis.getPart();
                 if (mp instanceof com.zimbra.common.mime.MimeMultipart) {
-//                    if (mParent instanceof )
-                    mMultipart = (com.zimbra.common.mime.MimeMultipart) mp;
+//                    if (parent instanceof )
+                    zmultipart = (com.zimbra.common.mime.MimeMultipart) mp;
                 } else {
                     throw new MessagingException("multipart data source did not contain multipart");
                 }
@@ -306,33 +323,19 @@ public class JavaMailMimeMultipart extends MimeMultipart implements JavaMailShim
         }
     }
 
-    @Override public String getContentType() {
+    @Override
+    public String getContentType() {
         if (ZPARSER) {
-            return mMultipart.getContentType().toString();
+            return zmultipart.getContentType().toString();
         } else {
             return super.getContentType();
         }
     }
 
-    @Override public synchronized Part getParent() {
+    @Override
+    public String toString() {
         if (ZPARSER) {
-            return mParent;
-        } else {
-            return super.getParent();
-        }
-    }
-
-    @Override public synchronized void setParent(Part parent) {
-        if (ZPARSER) {
-            mParent = (MimePart) parent;
-        } else {
-            super.setParent(parent);
-        }
-    }
-
-    @Override public String toString() {
-        if (ZPARSER) {
-            return mMultipart.toString();
+            return zmultipart.toString();
         } else {
             return super.toString();
         }
