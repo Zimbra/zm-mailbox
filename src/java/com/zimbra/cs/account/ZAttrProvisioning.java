@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110124-1402 */
+    /* build: 7.0.0_BETA1_1111 ysasaki 20110125-1611 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -792,6 +792,26 @@ public class ZAttrProvisioning {
         }
         public boolean isOutlook() { return this == outlook;}
         public boolean isInternet() { return this == internet;}
+    }
+
+    public static enum PrefPop3DeleteOption {
+        delete("delete"),
+        trash("trash"),
+        read("read"),
+        keep("keep");
+        private String mValue;
+        private PrefPop3DeleteOption(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefPop3DeleteOption fromString(String s) throws ServiceException {
+            for (PrefPop3DeleteOption value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isDelete() { return this == delete;}
+        public boolean isTrash() { return this == trash;}
+        public boolean isRead() { return this == read;}
+        public boolean isKeep() { return this == keep;}
     }
 
     public static enum PrefReadingPaneLocation {
@@ -6901,6 +6921,19 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=385)
     public static final String A_zimbraPrefOutOfOfficeUntilDate = "zimbraPrefOutOfOfficeUntilDate";
+
+    /**
+     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
+     * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
+     * messages to Trash, and mark them as read. - delete: Hard-delete
+     * DELE&#039;ed messages. This is the straightforward POP3
+     * implementation.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1165)
+    public static final String A_zimbraPrefPop3DeleteOption = "zimbraPrefPop3DeleteOption";
 
     /**
      * download pop3 messages since

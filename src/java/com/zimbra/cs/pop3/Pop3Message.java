@@ -1,68 +1,72 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Nov 26, 2004
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
  */
 package com.zimbra.cs.pop3;
 
 import com.zimbra.cs.mailbox.Message;
 
-
 /**
  * one for each message in the mailbox
- * @author schemers
  *
+ * @since Nov 26, 2004
+ * @author schemers
  */
-public class Pop3Message {
-    boolean mDeleted;
-    private int mId;
-    private long mSize; // raw size from blob store
-    String mDigest;
-    
+public final class Pop3Message {
+    private boolean retrieved = false;
+    private boolean deleted = false;
+    private int id;
+    private long size; // raw size from blob store
+    private String digest;
+
     /**
      * save enough info from the Message so we don't have to keep a reference to it.
-     * @param msg
      */
     public Pop3Message(Message msg) {
         this(msg.getId(), msg.getSize(), msg.getDigest());
     }
 
     public Pop3Message(int id, long size, String digest) {
-        mId = id;
-        mSize = size;
-        mDeleted = false;
-        mDigest = digest;
+        this.id = id;
+        this.size = size;
+        this.digest = digest;
     }
-    
+
     long getSize() {
-        return mSize;
+        return size;
     }
-    
+
     int getId() {
-        return mId;
+        return id;
     }
-    
+
+    void setRetrieved(boolean value) {
+        retrieved = value;
+    }
+
+    boolean isRetrieved() {
+        return retrieved;
+    }
+
+    void setDeleted(boolean value) {
+        deleted = value;
+    }
+
     boolean isDeleted() {
-        return mDeleted;
+        return deleted;
     }
-    
+
     String getDigest() {
-        return mDigest;
+        return digest;
     }
 }

@@ -5336,4 +5336,17 @@ TODO: delete them permerntly from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether detailed contact search UI is enabled</desc>
 </attr>
+
+<attr id="1165" name="zimbraPrefPop3DeleteOption" type="enum" value="keep,read,trash,delete" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
+  <defaultCOSValue>delete</defaultCOSValue>
+  <desc>
+    When messages are DELE'ed via POP3:
+    - keep: Leave DELE'ed messages in Inbox.
+    - read: Mark RETR'ed messages as read, and leave DELE'ed messages in Inbox.
+    - trash: Move DELE'ed messages to Trash, and mark them as read.
+    - delete: Hard-delete DELE'ed messages. This is the straightforward POP3 implementation.
+  </desc>
+ </attr>
+
 </attrs>
+

@@ -3182,10 +3182,6 @@ public class DbMailItem {
         }
     }
 
-
-    private static final String POP3_FIELDS = "mi.id, mi.size, mi.blob_digest";
-    private static final String POP3_TYPES = "(" + MailItem.Type.MESSAGE.toByte() + ")";
-
     public static List<Pop3Message> loadPop3Folder(Folder folder, Date popSince) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
 
@@ -3199,10 +3195,10 @@ public class DbMailItem {
         ResultSet rs = null;
         try {
             String dateConstraint = popDate < 0 ? "" : " AND date > ?";
-            stmt = conn.prepareStatement("SELECT " + POP3_FIELDS +
-                        " FROM " + getMailItemTableName(mbox, " mi") +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type IN " + POP3_TYPES +
-                        " AND NOT " + Db.bitmaskAND("flags", Flag.BITMASK_DELETED) + dateConstraint);
+            stmt = conn.prepareStatement(
+                    "SELECT mi.id, mi.size, mi.blob_digest FROM " + getMailItemTableName(mbox, " mi") +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type = " + MailItem.Type.MESSAGE.toByte() +
+                    " AND NOT " + Db.bitmaskAND("flags", Flag.BITMASK_DELETED | Flag.BITMASK_POPED) + dateConstraint);
             if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS) {
                 Db.getInstance().enableStreaming(stmt);
             }

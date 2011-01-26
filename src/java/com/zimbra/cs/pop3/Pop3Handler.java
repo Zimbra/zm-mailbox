@@ -24,7 +24,6 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.auth.AuthContext;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.security.sasl.Authenticator;
@@ -63,7 +62,7 @@ abstract class Pop3Handler {
     private String query;
     private String accountId;
     private String accountName;
-    private Pop3Mailbox mMbx;
+    private Pop3Mailbox mailbox;
     private String command;
     private long startTime;
     int state;
@@ -383,11 +382,14 @@ abstract class Pop3Handler {
 
     private void doQUIT() throws IOException, ServiceException, Pop3CmdException {
         dropConnection = true;
-        if (mMbx != null && mMbx.getNumDeletedMessages() > 0) {
+        if (mailbox != null) {
             state = STATE_UPDATE;
-            // TODO: hard/soft could be a user/cos pref
-            int count = mMbx.deleteMarked(true);
-            sendOK("deleted "+count+" message(s)");
+            int count = mailbox.expungeDeletes();
+            if (count > 0) {
+                sendOK("deleted " + count + " message(s)");
+            } else {
+                sendOK(config.getGoodbye());
+            }
         } else {
             sendOK(config.getGoodbye());
         }
@@ -402,7 +404,7 @@ abstract class Pop3Handler {
         if (state != STATE_TRANSACTION) {
             throw new Pop3CmdException("this command is only valid after a login");
         }
-        int numUndeleted = mMbx.undeleteMarked();
+        int numUndeleted = mailbox.undeleteMarked();
         sendOK(numUndeleted+ " message(s) undeleted");
     }
 
@@ -531,8 +533,7 @@ abstract class Pop3Handler {
             ZimbraLog.pop.info("user %s authenticated, mechanism=%s %s",
                     accountName, mechanism, startedTLS ? "[TLS]" : "");
 
-            Mailbox mailbox = MailboxManager.getInstance().getMailboxByAccount(acct);
-            mMbx = new Pop3Mailbox(mailbox, acct, query);
+            mailbox = new Pop3Mailbox(MailboxManager.getInstance().getMailboxByAccount(acct), acct, query);
             state = STATE_TRANSACTION;
             expire = (int) (acct.getTimeInterval(Provisioning.A_zimbraMailMessageLifetime, 0) / Constants.MILLIS_PER_DAY);
             if (expire > 0 && expire < MIN_EXPIRE_DAYS) {
@@ -566,7 +567,7 @@ abstract class Pop3Handler {
         if (state != STATE_TRANSACTION) {
             throw new Pop3CmdException("this command is only valid after a login");
         }
-        sendOK(mMbx.getNumMessages()+" "+mMbx.getSize());
+        sendOK(mailbox.getNumMessages() + " " + mailbox.getSize());
     }
 
     private void doSTLS() throws Pop3CmdException, IOException {
@@ -588,15 +589,16 @@ abstract class Pop3Handler {
             throw new Pop3CmdException("this command is only valid after a login");
         }
         if (msg != null) {
-            Pop3Message pm = mMbx.getPop3Msg(msg);
-            sendOK(msg+" "+pm.getSize());
+            Pop3Message pm = mailbox.getPop3Msg(msg);
+            sendOK(msg + " " + pm.getSize());
         } else {
-            sendOK(mMbx.getNumMessages()+" messages", false);
-            int totNumMsgs = mMbx.getTotalNumMessages();
+            sendOK(mailbox.getNumMessages()+" messages", false);
+            int totNumMsgs = mailbox.getTotalNumMessages();
             for (int n=0; n < totNumMsgs; n++) {
-                Pop3Message pm = mMbx.getMsg(n);
-                if (!pm.isDeleted())
-                    sendLine((n+1)+" "+pm.getSize(), false);
+                Pop3Message pm = mailbox.getMsg(n);
+                if (!pm.isDeleted()) {
+                    sendLine((n + 1) + " " + pm.getSize(), false);
+                }
             }
             sendLine(TERMINATOR, true);
         }
@@ -607,13 +609,13 @@ abstract class Pop3Handler {
             throw new Pop3CmdException("this command is only valid after a login");
         }
         if (msg != null) {
-            Pop3Message pm = mMbx.getPop3Msg(msg);
+            Pop3Message pm = mailbox.getPop3Msg(msg);
             sendOK(msg + " " + pm.getId() + "." + pm.getDigest());
         } else {
-            sendOK(mMbx.getNumMessages() + " messages", false);
-            int totNumMsgs = mMbx.getTotalNumMessages();
+            sendOK(mailbox.getNumMessages() + " messages", false);
+            int totNumMsgs = mailbox.getTotalNumMessages();
             for (int n=0; n < totNumMsgs; n++) {
-                Pop3Message pm = mMbx.getMsg(n);
+                Pop3Message pm = mailbox.getMsg(n);
                 if (!pm.isDeleted()) {
                     sendLine((n+1) + " " + pm.getId() + "." + pm.getDigest(), false);
                 }
@@ -637,7 +639,7 @@ abstract class Pop3Handler {
         if (msg == null) {
             throw new Pop3CmdException("please specify a message");
         }
-        Message m = mMbx.getMessage(msg);
+        Message m = mailbox.getMessage(msg);
         InputStream is = null;
         try {
             is = m.getContentStream();
@@ -646,6 +648,7 @@ abstract class Pop3Handler {
         } finally {
             ByteUtil.closeStream(is);
         }
+        mailbox.getPop3Msg(msg).setRetrieved(true);
     }
 
     private void doTOP(String arg) throws Pop3CmdException, IOException, ServiceException {
@@ -665,7 +668,7 @@ abstract class Pop3Handler {
         if (msg == null || msg.equals("")) {
             throw new Pop3CmdException("please specify a message");
         }
-        Message m = mMbx.getMessage(msg);
+        Message m = mailbox.getMessage(msg);
         InputStream is = null;
         try {
             is = m.getContentStream();
@@ -683,8 +686,8 @@ abstract class Pop3Handler {
         if (msg == null) {
             throw new Pop3CmdException("please specify a message");
         }
-        Pop3Message pm = mMbx.getPop3Msg(msg);
-        mMbx.delete(pm);
+        Pop3Message pm = mailbox.getPop3Msg(msg);
+        mailbox.delete(pm);
         sendOK("message "+msg+" marked for deletion");
     }
 

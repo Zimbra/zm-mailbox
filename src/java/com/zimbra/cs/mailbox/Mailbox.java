@@ -1825,15 +1825,15 @@ public class Mailbox {
         throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
     }
 
-    /** Makes a copy of the given item with {@link Flag#BITMASK_UNCACHED} set.                                                                                                                                                 
-     *  This copy is not linked to its {@code Mailbox} and thus will not change                                                                                                                                                
-     *  when modifications are subsequently made to the original item.  The                                                                                                                                                    
-     *  original item is unchanged.                                                                                                                                                                                            
-     *  <p>                                                                                                                                                                                                                    
-     *  This method should only be called <i>immediately</i> before returning                                                                                                                                                  
-     *  an item from a public {@code Mailbox} method.  In order to handle                                                                                                                                                      
-     *  recursive calls, item duplication occurs only when we're in a top-level                                                                                                                                                
-     *  transaction; otherwise, the original item is returned.                                                                                                                                                                 
+    /** Makes a copy of the given item with {@link Flag#BITMASK_UNCACHED} set.
+     *  This copy is not linked to its {@code Mailbox} and thus will not change
+     *  when modifications are subsequently made to the original item.  The
+     *  original item is unchanged.
+     *  <p>
+     *  This method should only be called <i>immediately</i> before returning
+     *  an item from a public {@code Mailbox} method.  In order to handle
+     *  recursive calls, item duplication occurs only when we're in a top-level
+     *  transaction; otherwise, the original item is returned.
      * @see #snapshotFolders() */
     @SuppressWarnings("unchecked")
     private <T extends MailItem> T snapshotItem(T item) throws ServiceException {
@@ -1843,7 +1843,7 @@ public class Mailbox {
         if (item instanceof Folder) {
             return mFolderCache == null ? item : (T) snapshotFolders().get(item.getId());
         } else if (item instanceof VirtualConversation) {
-            // snapshotting the wrapped message passes BITMASK_UNCACHED onto the virual conversation                                                                                                                           
+            // snapshotting the wrapped message passes BITMASK_UNCACHED onto the virual conversation
             return (T) new VirtualConversation(this, snapshotItem(((VirtualConversation) item).getMessage()));
         }
 
@@ -1853,15 +1853,15 @@ public class Mailbox {
         return (T) MailItem.constructItem(this, data);
     }
 
-    /** Makes a copy of the {@code Mailbox}'s entire {@code Folder} tree with                                                                                                                                                  
-     *  {@link Flag#BITMASK_UNCACHED} set on each copied folder.  This copy is                                                                                                                                                 
-     *  not linked to its {@code Mailbox} and thus will not change when                                                                                                                                                        
-     *  modifications are subsequently made to any of the folders.  The                                                                                                                                                        
-     *  original folders are unchanged.                                                                                                                                                                                        
-     *  <p>                                                                                                                                                                                                                    
-     *  This method should only be called <i>immediately</i> before returning                                                                                                                                                  
-     *  the folder set from a public {@code Mailbox} method.  In order to                                                                                                                                                      
-     *  handle recursive calls, item duplication occurs only when we're in a                                                                                                                                                   
+    /** Makes a copy of the {@code Mailbox}'s entire {@code Folder} tree with
+     *  {@link Flag#BITMASK_UNCACHED} set on each copied folder.  This copy is
+     *  not linked to its {@code Mailbox} and thus will not change when
+     *  modifications are subsequently made to any of the folders.  The
+     *  original folders are unchanged.
+     *  <p>
+     *  This method should only be called <i>immediately</i> before returning
+     *  the folder set from a public {@code Mailbox} method.  In order to
+     *  handle recursive calls, item duplication occurs only when we're in a
      *  top-level transaction; otherwise, the live folder cache is returned.
      *  <p>
      *  If the {@code Mailbox}'s folder cache is {@code null}, this method will
@@ -1888,15 +1888,15 @@ public class Mailbox {
 
     private static Set<MailItem.Type> FOLDER_TYPES = EnumSet.of(MailItem.Type.FOLDER, MailItem.Type.SEARCHFOLDER, MailItem.Type.MOUNTPOINT);
 
-    /** Makes a deep copy of the {@code PendingModifications} object with                                                                                                                                                      
-     *  {@link Flag#BITMASK_UNCACHED} set on each {@code MailItem} present in                                                                                                                                                  
-     *  the {@code created} and {@code modified} hashes.  These copied {@code                                                                                                                                                  
-     *  MailItem}s are not linked to their {@code Mailbox} and thus will not                                                                                                                                                   
-     *  change when modifications are subsequently made to the contents of the                                                                                                                                                 
-     *  {@code Mailbox}.  The original {@code PendingModifications} object and                                                                                                                                                 
-     *  the {@code MailItem}s it references are unchanged.                                                                                                                                                                     
-     *  <p>                                                                                                                                                                                                                    
-     *  This method should only be called <i>immediately</i> before notifying                                                                                                                                                  
+    /** Makes a deep copy of the {@code PendingModifications} object with
+     *  {@link Flag#BITMASK_UNCACHED} set on each {@code MailItem} present in
+     *  the {@code created} and {@code modified} hashes.  These copied {@code
+     *  MailItem}s are not linked to their {@code Mailbox} and thus will not
+     *  change when modifications are subsequently made to the contents of the
+     *  {@code Mailbox}.  The original {@code PendingModifications} object and
+     *  the {@code MailItem}s it references are unchanged.
+     *  <p>
+     *  This method should only be called <i>immediately</i> before notifying
      *  listeners of the changes from the currently-ending transaction. */
     private PendingModifications snapshotModifications(PendingModifications pms) throws ServiceException {
         if (pms == null)
@@ -2541,12 +2541,12 @@ public class Mailbox {
         }
     }
 
-    public synchronized List<Pop3Message> openPop3Folder(OperationContext octxt, int folderId, Date popSince) throws ServiceException {
+    public synchronized List<Pop3Message> openPop3Folder(OperationContext octxt, Date popSince) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("openPop3Folder", octxt);
 
-            Folder folder = getFolderById(folderId);
+            Folder folder = getFolderById(ID_FOLDER_INBOX);
             List<Pop3Message> p3list = DbMailItem.loadPop3Folder(folder, popSince);
             success = true;
             return p3list;
@@ -7584,7 +7584,7 @@ public class Mailbox {
         if (change == null)
             return;
 
-        // save for notifications (below)                                                                                                                                                                       
+        // save for notifications (below)
         PendingModifications dirty = null;
         if (change.mDirty != null && change.mDirty.hasNotifications()) {
             dirty = change.mDirty;

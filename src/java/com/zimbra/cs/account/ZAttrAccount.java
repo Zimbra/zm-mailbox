@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110124-1402 */
+    /* build: 7.0.0_BETA1_1111 ysasaki 20110125-1611 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -32852,6 +32852,177 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefOutOfOfficeUntilDate(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeUntilDate, "");
+        return attrs;
+    }
+
+    /**
+     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
+     * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
+     * messages to Trash, and mark them as read. - delete: Hard-delete
+     * DELE&#039;ed messages. This is the straightforward POP3
+     * implementation.
+     *
+     * <p>Valid values: [trash, delete, read, keep]
+     *
+     * @return zimbraPrefPop3DeleteOption, or ZAttrProvisioning.PrefPop3DeleteOption.delete if unset and/or has invalid value
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1165)
+    public ZAttrProvisioning.PrefPop3DeleteOption getPrefPop3DeleteOption() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefPop3DeleteOption); return v == null ? ZAttrProvisioning.PrefPop3DeleteOption.delete : ZAttrProvisioning.PrefPop3DeleteOption.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefPop3DeleteOption.delete; }
+    }
+
+    /**
+     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
+     * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
+     * messages to Trash, and mark them as read. - delete: Hard-delete
+     * DELE&#039;ed messages. This is the straightforward POP3
+     * implementation.
+     *
+     * <p>Valid values: [trash, delete, read, keep]
+     *
+     * @return zimbraPrefPop3DeleteOption, or "delete" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1165)
+    public String getPrefPop3DeleteOptionAsString() {
+        return getAttr(Provisioning.A_zimbraPrefPop3DeleteOption, "delete");
+    }
+
+    /**
+     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
+     * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
+     * messages to Trash, and mark them as read. - delete: Hard-delete
+     * DELE&#039;ed messages. This is the straightforward POP3
+     * implementation.
+     *
+     * <p>Valid values: [trash, delete, read, keep]
+     *
+     * @param zimbraPrefPop3DeleteOption new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1165)
+    public void setPrefPop3DeleteOption(ZAttrProvisioning.PrefPop3DeleteOption zimbraPrefPop3DeleteOption) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3DeleteOption, zimbraPrefPop3DeleteOption.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
+     * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
+     * messages to Trash, and mark them as read. - delete: Hard-delete
+     * DELE&#039;ed messages. This is the straightforward POP3
+     * implementation.
+     *
+     * <p>Valid values: [trash, delete, read, keep]
+     *
+     * @param zimbraPrefPop3DeleteOption new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1165)
+    public Map<String,Object> setPrefPop3DeleteOption(ZAttrProvisioning.PrefPop3DeleteOption zimbraPrefPop3DeleteOption, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3DeleteOption, zimbraPrefPop3DeleteOption.toString());
+        return attrs;
+    }
+
+    /**
+     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
+     * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
+     * messages to Trash, and mark them as read. - delete: Hard-delete
+     * DELE&#039;ed messages. This is the straightforward POP3
+     * implementation.
+     *
+     * <p>Valid values: [trash, delete, read, keep]
+     *
+     * @param zimbraPrefPop3DeleteOption new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1165)
+    public void setPrefPop3DeleteOptionAsString(String zimbraPrefPop3DeleteOption) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3DeleteOption, zimbraPrefPop3DeleteOption);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
+     * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
+     * messages to Trash, and mark them as read. - delete: Hard-delete
+     * DELE&#039;ed messages. This is the straightforward POP3
+     * implementation.
+     *
+     * <p>Valid values: [trash, delete, read, keep]
+     *
+     * @param zimbraPrefPop3DeleteOption new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1165)
+    public Map<String,Object> setPrefPop3DeleteOptionAsString(String zimbraPrefPop3DeleteOption, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3DeleteOption, zimbraPrefPop3DeleteOption);
+        return attrs;
+    }
+
+    /**
+     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
+     * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
+     * messages to Trash, and mark them as read. - delete: Hard-delete
+     * DELE&#039;ed messages. This is the straightforward POP3
+     * implementation.
+     *
+     * <p>Valid values: [trash, delete, read, keep]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1165)
+    public void unsetPrefPop3DeleteOption() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3DeleteOption, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
+     * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
+     * messages to Trash, and mark them as read. - delete: Hard-delete
+     * DELE&#039;ed messages. This is the straightforward POP3
+     * implementation.
+     *
+     * <p>Valid values: [trash, delete, read, keep]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1165)
+    public Map<String,Object> unsetPrefPop3DeleteOption(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3DeleteOption, "");
         return attrs;
     }
 

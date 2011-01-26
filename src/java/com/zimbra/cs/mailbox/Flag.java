@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -53,6 +53,7 @@ public class Flag extends Tag {
     /** @deprecated Use indexId = 0 */
     @Deprecated
     public static final int ID_FLAG_INDEXING_DEFERRED = -14;
+    public static final int ID_FLAG_POPPED = -15;
     public static final int ID_FLAG_SUBSCRIBED    = -20;
     public static final int ID_FLAG_EXCLUDE_FREEBUSY = -21;
     public static final int ID_FLAG_CHECKED       = -22;
@@ -90,6 +91,7 @@ public class Flag extends Tag {
             new FlagInfo("\\Bulk",        '?',    (byte) (FLAG_MESSAGE_ONLY | FLAG_CALITEM_ONLY), true, ID_FLAG_LOW_PRIORITY);
             new FlagInfo("\\Versioned",   '/',    FLAG_GENERIC,      true,  ID_FLAG_VERSIONED);
             new FlagInfo("\\IdxDeferred", HIDDEN, FLAG_GENERIC,      true,  ID_FLAG_INDEXING_DEFERRED);
+            new FlagInfo("\\Popped",      'p',    FLAG_MESSAGE_ONLY, false, ID_FLAG_POPPED);
             new FlagInfo("\\Subscribed",  '*',    FLAG_FOLDER_ONLY,  false, ID_FLAG_SUBSCRIBED);
             new FlagInfo("\\ExcludeFB",   'b',    FLAG_FOLDER_ONLY,  false, ID_FLAG_EXCLUDE_FREEBUSY);
             new FlagInfo("\\Checked",     '#',    FLAG_FOLDER_ONLY,  false, ID_FLAG_CHECKED);
@@ -254,6 +256,7 @@ public class Flag extends Tag {
     /** @deprecated Use indexId = 0 */
     @Deprecated
     public static final int BITMASK_INDEXING_DEFERRED = FlagInfo.getBitmask(ID_FLAG_INDEXING_DEFERRED); // 8192
+    public static final int BITMASK_POPED         = FlagInfo.getBitmask(ID_FLAG_POPPED);        // 16384
     public static final int BITMASK_SUBSCRIBED    = FlagInfo.getBitmask(ID_FLAG_SUBSCRIBED);    // 524288
     public static final int BITMASK_EXCLUDE_FREEBUSY = FlagInfo.getBitmask(ID_FLAG_EXCLUDE_FREEBUSY); // 1048576
     public static final int BITMASK_CHECKED       = FlagInfo.getBitmask(ID_FLAG_CHECKED);       // 2097152
