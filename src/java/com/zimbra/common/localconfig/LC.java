@@ -1255,7 +1255,7 @@ public class LC {
         wiki_user.setDefault("wiki");
 
         calendar_outlook_compatible_allday_events = new KnownKey("calendar_outlook_compatible_allday_events");
-        calendar_outlook_compatible_allday_events.setDefault("true");
+        calendar_outlook_compatible_allday_events.setDefault("false");
 
         calendar_entourage_compatible_timezones = new KnownKey("calendar_entourage_compatible_timezones");
         calendar_entourage_compatible_timezones.setDefault("true");
