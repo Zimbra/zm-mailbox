@@ -5340,13 +5340,18 @@ TODO: delete them permerntly from here
 <attr id="1165" name="zimbraPrefPop3DeleteOption" type="enum" value="keep,read,trash,delete" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
   <defaultCOSValue>delete</defaultCOSValue>
   <desc>
-    When messages are DELE'ed via POP3:
+    When messages are accessed via POP3:
     - keep: Leave DELE'ed messages in Inbox.
     - read: Mark RETR'ed messages as read, and leave DELE'ed messages in Inbox.
     - trash: Move DELE'ed messages to Trash, and mark them as read.
     - delete: Hard-delete DELE'ed messages. This is the straightforward POP3 implementation.
   </desc>
- </attr>
+</attr>
+
+<attr id="1166" name="zimbraPrefPop3IncludeSpam" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether or not to include spam messages in POP3 access</desc>
+</attr>
 
 </attrs>
 

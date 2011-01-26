@@ -256,7 +256,7 @@ public class Flag extends Tag {
     /** @deprecated Use indexId = 0 */
     @Deprecated
     public static final int BITMASK_INDEXING_DEFERRED = FlagInfo.getBitmask(ID_FLAG_INDEXING_DEFERRED); // 8192
-    public static final int BITMASK_POPED         = FlagInfo.getBitmask(ID_FLAG_POPPED);        // 16384
+    public static final int BITMASK_POPPED = FlagInfo.getBitmask(ID_FLAG_POPPED); // 16384
     public static final int BITMASK_SUBSCRIBED    = FlagInfo.getBitmask(ID_FLAG_SUBSCRIBED);    // 524288
     public static final int BITMASK_EXCLUDE_FREEBUSY = FlagInfo.getBitmask(ID_FLAG_EXCLUDE_FREEBUSY); // 1048576
     public static final int BITMASK_CHECKED       = FlagInfo.getBitmask(ID_FLAG_CHECKED);       // 2097152

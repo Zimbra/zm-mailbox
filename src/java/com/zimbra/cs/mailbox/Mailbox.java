@@ -43,6 +43,7 @@ import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.zimbra.cs.upgrade.MailboxUpgrade;
 import com.zimbra.common.util.MapUtil;
 
@@ -2541,13 +2542,16 @@ public class Mailbox {
         }
     }
 
-    public synchronized List<Pop3Message> openPop3Folder(OperationContext octxt, Date popSince) throws ServiceException {
+    public synchronized List<Pop3Message> openPop3Folder(OperationContext octxt, Set<Integer> folderIds, Date popSince)
+            throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("openPop3Folder", octxt);
-
-            Folder folder = getFolderById(ID_FOLDER_INBOX);
-            List<Pop3Message> p3list = DbMailItem.loadPop3Folder(folder, popSince);
+            ImmutableSet.Builder<Folder> folders = ImmutableSet.builder();
+            for (int folderId : folderIds) {
+                folders.add(getFolderById(folderId));
+            }
+            List<Pop3Message> p3list = DbMailItem.loadPop3Folder(folders.build(), popSince);
             success = true;
             return p3list;
         } finally {

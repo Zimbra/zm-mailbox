@@ -6923,7 +6923,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefOutOfOfficeUntilDate = "zimbraPrefOutOfOfficeUntilDate";
 
     /**
-     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * When messages are accessed via POP3: - keep: Leave DELE&#039;ed
      * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
      * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
      * messages to Trash, and mark them as read. - delete: Hard-delete
@@ -6942,6 +6942,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=653)
     public static final String A_zimbraPrefPop3DownloadSince = "zimbraPrefPop3DownloadSince";
+
+    /**
+     * whether or not to include spam messages in POP3 access
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1166)
+    public static final String A_zimbraPrefPop3IncludeSpam = "zimbraPrefPop3IncludeSpam";
 
     /**
      * Deprecated since: 6.0.0_BETA2. deprecated in favor of

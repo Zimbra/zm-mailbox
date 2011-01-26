@@ -44,6 +44,7 @@ import org.apache.commons.codec.net.BCodec;
 
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.zimbra.common.service.ServiceException;
@@ -3182,9 +3183,9 @@ public class DbMailItem {
         }
     }
 
-    public static List<Pop3Message> loadPop3Folder(Folder folder, Date popSince) throws ServiceException {
-        Mailbox mbox = folder.getMailbox();
-
+    public static List<Pop3Message> loadPop3Folder(Set<Folder> folders, Date popSince) throws ServiceException {
+        assert !folders.isEmpty() : folders;
+        Mailbox mbox = Iterables.get(folders, 0).getMailbox();
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         long popDate = popSince == null ? -1 : Math.max(popSince.getTime(), -1);
@@ -3197,23 +3198,30 @@ public class DbMailItem {
             String dateConstraint = popDate < 0 ? "" : " AND date > ?";
             stmt = conn.prepareStatement(
                     "SELECT mi.id, mi.size, mi.blob_digest FROM " + getMailItemTableName(mbox, " mi") +
-                    " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type = " + MailItem.Type.MESSAGE.toByte() +
-                    " AND NOT " + Db.bitmaskAND("flags", Flag.BITMASK_DELETED | Flag.BITMASK_POPED) + dateConstraint);
-            if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS) {
+                    " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("folder_id", folders.size()) +
+                    " AND type = " + MailItem.Type.MESSAGE.toByte() +
+                    " AND NOT " + Db.bitmaskAND("flags", Flag.BITMASK_DELETED | Flag.BITMASK_POPPED) + dateConstraint);
+            if (getTotalFolderSize(folders) > RESULTS_STREAMING_MIN_ROWS) {
+                //TODO: Because of POPPED flag, the folder size no longer represent the count.
                 Db.getInstance().enableStreaming(stmt);
             }
+
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
-            stmt.setInt(pos++, folder.getId());
-            if (popDate >= 0)
+            for (Folder folder : folders) {
+                stmt.setInt(pos++, folder.getId());
+            }
+            if (popDate >= 0) {
                 stmt.setInt(pos++, (int) (popDate / 1000L));
+            }
             rs = stmt.executeQuery();
 
-            while (rs.next())
+            while (rs.next()) {
                 result.add(new Pop3Message(rs.getInt(1), rs.getLong(2), rs.getString(3)));
+            }
             return result;
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("loading POP3 folder data: " + folder.getPath(), e);
+            throw ServiceException.FAILURE("loading POP3 folder data: " + folders, e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);

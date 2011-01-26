@@ -32856,7 +32856,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * When messages are accessed via POP3: - keep: Leave DELE&#039;ed
      * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
      * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
      * messages to Trash, and mark them as read. - delete: Hard-delete
@@ -32875,7 +32875,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * When messages are accessed via POP3: - keep: Leave DELE&#039;ed
      * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
      * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
      * messages to Trash, and mark them as read. - delete: Hard-delete
@@ -32894,7 +32894,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * When messages are accessed via POP3: - keep: Leave DELE&#039;ed
      * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
      * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
      * messages to Trash, and mark them as read. - delete: Hard-delete
@@ -32916,7 +32916,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * When messages are accessed via POP3: - keep: Leave DELE&#039;ed
      * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
      * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
      * messages to Trash, and mark them as read. - delete: Hard-delete
@@ -32939,7 +32939,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * When messages are accessed via POP3: - keep: Leave DELE&#039;ed
      * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
      * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
      * messages to Trash, and mark them as read. - delete: Hard-delete
@@ -32961,7 +32961,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * When messages are accessed via POP3: - keep: Leave DELE&#039;ed
      * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
      * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
      * messages to Trash, and mark them as read. - delete: Hard-delete
@@ -32984,7 +32984,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * When messages are accessed via POP3: - keep: Leave DELE&#039;ed
      * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
      * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
      * messages to Trash, and mark them as read. - delete: Hard-delete
@@ -33005,7 +33005,7 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * When messages are DELE&#039;ed via POP3: - keep: Leave DELE&#039;ed
+     * When messages are accessed via POP3: - keep: Leave DELE&#039;ed
      * messages in Inbox. - read: Mark RETR&#039;ed messages as read, and
      * leave DELE&#039;ed messages in Inbox. - trash: Move DELE&#039;ed
      * messages to Trash, and mark them as read. - delete: Hard-delete
@@ -33142,6 +33142,78 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefPop3DownloadSince(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefPop3DownloadSince, "");
+        return attrs;
+    }
+
+    /**
+     * whether or not to include spam messages in POP3 access
+     *
+     * @return zimbraPrefPop3IncludeSpam, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1166)
+    public boolean isPrefPop3IncludeSpam() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefPop3IncludeSpam, false);
+    }
+
+    /**
+     * whether or not to include spam messages in POP3 access
+     *
+     * @param zimbraPrefPop3IncludeSpam new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1166)
+    public void setPrefPop3IncludeSpam(boolean zimbraPrefPop3IncludeSpam) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3IncludeSpam, zimbraPrefPop3IncludeSpam ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to include spam messages in POP3 access
+     *
+     * @param zimbraPrefPop3IncludeSpam new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1166)
+    public Map<String,Object> setPrefPop3IncludeSpam(boolean zimbraPrefPop3IncludeSpam, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3IncludeSpam, zimbraPrefPop3IncludeSpam ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not to include spam messages in POP3 access
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1166)
+    public void unsetPrefPop3IncludeSpam() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3IncludeSpam, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to include spam messages in POP3 access
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1166)
+    public Map<String,Object> unsetPrefPop3IncludeSpam(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefPop3IncludeSpam, "");
         return attrs;
     }
 

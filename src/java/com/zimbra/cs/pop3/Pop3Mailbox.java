@@ -16,12 +16,14 @@
 package com.zimbra.cs.pop3;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -63,9 +65,12 @@ final class Pop3Mailbox {
         deleteOption = acct.getPrefPop3DeleteOption();
 
         if (Strings.isNullOrEmpty(query)) {
+            Set<Integer> folderIds = acct.isPrefPop3IncludeSpam() ?
+                    ImmutableSet.of(Mailbox.ID_FOLDER_INBOX, Mailbox.ID_FOLDER_SPAM) :
+                        Collections.singleton(Mailbox.ID_FOLDER_INBOX);
             String dateConstraint = acct.getAttr(Provisioning.A_zimbraPrefPop3DownloadSince);
             Date popSince = dateConstraint == null ? null : DateUtil.parseGeneralizedTime(dateConstraint);
-            messages = mbox.openPop3Folder(opContext, popSince);
+            messages = mbox.openPop3Folder(opContext, folderIds, popSince);
             for (Pop3Message p3m : messages) {
                 totalSize += p3m.getSize();
             }
@@ -255,7 +260,7 @@ final class Pop3Mailbox {
         Message message = mbox.getMessageById(opContext, msgId);
         int flags = message.getFlagBitmask();
         if (poped) {
-            flags |= Flag.BITMASK_POPED; // set POPED
+            flags |= Flag.BITMASK_POPPED; // set POPPED
         }
         if (read) {
             flags &= ~Flag.BITMASK_UNREAD; // unset UNREAD
