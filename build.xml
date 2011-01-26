@@ -1779,7 +1779,10 @@
 
     <target name="stop-ldap-unix" if="is-unix">
         <if>
-            <available file="${zimbra.home.dir}/bin/ldap" type="file"/>
+            <and>
+                <available file="${zimbra.home.dir}/bin/ldap" type="file"/>
+                <available file="${zimbra.home.dir}/openldap"/>
+            </and>
             <then>
                 <exec executable="${zimbra.home.dir}/bin/ldap">
                     <arg value="stop"/>
