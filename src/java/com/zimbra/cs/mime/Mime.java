@@ -1370,7 +1370,8 @@ public class Mime {
         if (size > 0) {
             if ("base64".equalsIgnoreCase(part.getEncoding())) {
                 // MimePart.getSize() returns the encoded size.
-                size = (int) ((size * 0.75) - (size / 76));
+                int lines = (size + 77) / 78;
+                size = (int) (0.75 * (size - 2 * lines));
             }
         } else {
             size = (int) ByteUtil.getDataLength(part.getInputStream());
