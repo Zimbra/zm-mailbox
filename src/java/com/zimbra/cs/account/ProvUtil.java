@@ -126,6 +126,9 @@ public class ProvUtil implements HttpDebugListener {
     private static final String ERR_VIA_LDAP_ONLY = "can only be used with  \"zmprov -l/--ldap\"";
     private static final String ERR_INVALID_ARG_EV = "arg -e is invalid unless -v is also specified";
 
+    private static final PrintStream console = System.out;
+    private static final PrintStream errConsole = System.err;
+    
     enum SoapDebugLevel {
         none,    // no SOAP debug
         normal,  // SOAP request and response payload
@@ -173,7 +176,7 @@ public class ProvUtil implements HttpDebugListener {
     public boolean useLdap() { return mUseLdap; }
 
     private void deprecated() {
-        System.out.println("This command has been deprecated.");
+        console.println("This command has been deprecated.");
         System.exit(1);
     }
 
@@ -184,40 +187,40 @@ public class ProvUtil implements HttpDebugListener {
     private void usage(Command.Via violatedVia) {
         if (mCommand != null) {
             if (violatedVia == null) {
-                System.out.printf("usage:  %s(%s) %s\n", mCommand.getName(), mCommand.getAlias(), mCommand.getHelp());
+                console.printf("usage:  %s(%s) %s\n", mCommand.getName(), mCommand.getAlias(), mCommand.getHelp());
                 CommandHelp extraHelp = mCommand.getExtraHelp();
                 if (extraHelp != null)
                     extraHelp.printHelp();
             }
             else {
                 if (violatedVia == Command.Via.ldap)
-                    System.out.printf("%s %s\n", mCommand.getName(), ERR_VIA_LDAP_ONLY);
+                    console.printf("%s %s\n", mCommand.getName(), ERR_VIA_LDAP_ONLY);
                 else
-                    System.out.printf("%s %s\n", mCommand.getName(), ERR_VIA_SOAP_ONLY);
+                    console.printf("%s %s\n", mCommand.getName(), ERR_VIA_SOAP_ONLY);
             }
         }
 
         if (mInteractive)
             return;
 
-        System.out.println("");
-        System.out.println("zmprov [args] [cmd] [cmd-args ...]");
-        System.out.println("");
-        System.out.println("  -h/--help                             display usage");
-        System.out.println("  -f/--file                             use file as input stream");
-        System.out.println("  -s/--server   {host}[:{port}]         server hostname and optional port");
-        System.out.println("  -l/--ldap                             provision via LDAP instead of SOAP");
-        System.out.println("  -L/--logpropertyfile                  log4j property file, valid only with -l");
-        System.out.println("  -a/--account  {name}                  account name to auth as");
-        System.out.println("  -p/--password {pass}                  password for account");
-        System.out.println("  -P/--passfile {file}                  read password from file");
-        System.out.println("  -z/--zadmin                           use zimbra admin name/password from localconfig for admin/password");
-        System.out.println("  -y/--authtoken {authtoken}            " + SoapCLI.OPT_AUTHTOKEN.getDescription());
-        System.out.println("  -Y/--authtokenfile {authtoken file}   " + SoapCLI.OPT_AUTHTOKENFILE.getDescription());
-        System.out.println("  -v/--verbose                          verbose mode (dumps full exception stack trace)");
-        System.out.println("  -d/--debug                            debug mode (dumps SOAP messages)");
-        System.out.println("  -m/--master                           use LDAP master (only valid with -l)");
-        System.out.println("");
+        console.println("");
+        console.println("zmprov [args] [cmd] [cmd-args ...]");
+        console.println("");
+        console.println("  -h/--help                             display usage");
+        console.println("  -f/--file                             use file as input stream");
+        console.println("  -s/--server   {host}[:{port}]         server hostname and optional port");
+        console.println("  -l/--ldap                             provision via LDAP instead of SOAP");
+        console.println("  -L/--logpropertyfile                  log4j property file, valid only with -l");
+        console.println("  -a/--account  {name}                  account name to auth as");
+        console.println("  -p/--password {pass}                  password for account");
+        console.println("  -P/--passfile {file}                  read password from file");
+        console.println("  -z/--zadmin                           use zimbra admin name/password from localconfig for admin/password");
+        console.println("  -y/--authtoken {authtoken}            " + SoapCLI.OPT_AUTHTOKEN.getDescription());
+        console.println("  -Y/--authtokenfile {authtoken file}   " + SoapCLI.OPT_AUTHTOKENFILE.getDescription());
+        console.println("  -v/--verbose                          verbose mode (dumps full exception stack trace)");
+        console.println("  -d/--debug                            debug mode (dumps SOAP messages)");
+        console.println("  -m/--master                           use LDAP master (only valid with -l)");
+        console.println("");
         doHelp(null);
         System.exit(1);
     }
@@ -260,7 +263,7 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         static void helpCALENDAR() {
-            System.out.println("");
+            console.println("");
             StringBuilder sb = new StringBuilder();
             EntrySearchFilter.Operator vals[] = EntrySearchFilter.Operator.values();
             for (int i = 0; i < vals.length; i++) {
@@ -268,7 +271,7 @@ public class ProvUtil implements HttpDebugListener {
                     sb.append(", ");
                 sb.append(vals[i].toString());
             }
-            System.out.println("    op = " + sb.toString());
+            console.println("    op = " + sb.toString());
         }
 
         static void helpRIGHT() {
@@ -284,8 +287,8 @@ public class ProvUtil implements HttpDebugListener {
 
         static void helpRIGHTRights(boolean printRights) {
             // rights
-            System.out.println();
-            System.out.println("    {right}: if right is prefixed with a '-', it means negative right, i.e., specifically deny");
+            console.println();
+            console.println("    {right}: if right is prefixed with a '-', it means negative right, i.e., specifically deny");
 
             if (printRights) {
                 try {
@@ -293,27 +296,27 @@ public class ProvUtil implements HttpDebugListener {
                     // print non-combo rights first
                     for (com.zimbra.cs.account.accesscontrol.Right r : allAdminRights.values()) {
                         if (RightType.combo != r.getRightType())
-                        System.out.println("        " + r.getName() + " (" + r.getRightType().toString() + ")");
+                        console.println("        " + r.getName() + " (" + r.getRightType().toString() + ")");
                     }
                     // then combo rights
                     for (com.zimbra.cs.account.accesscontrol.Right r : allAdminRights.values()) {
                         if (RightType.combo == r.getRightType())
-                            System.out.println("        " + r.getName() + " (" + r.getRightType().toString() + ")");
+                            console.println("        " + r.getName() + " (" + r.getRightType().toString() + ")");
                     }
                 } catch (ServiceException e) {
-                    System.out.println("cannot get RightManager instance: " + e.getMessage());
+                    console.println("cannot get RightManager instance: " + e.getMessage());
                 }
             } else {
-                System.out.println("             for complete list of rights, do \"zmprov [-l] gar\"");
+                console.println("             for complete list of rights, do \"zmprov [-l] gar\"");
             }
 
-            System.out.println();
+            console.println();
         }
 
         static void helpRIGHTCommon() {
 
             // target types
-            System.out.println();
+            console.println();
             StringBuilder tt = new StringBuilder();
             StringBuilder ttNeedsTargetIdentity = new StringBuilder();
             TargetType[] tts = TargetType.values();
@@ -325,13 +328,13 @@ public class ProvUtil implements HttpDebugListener {
                 if (tts[i].needsTargetIdentity())
                     ttNeedsTargetIdentity.append(tts[i].getCode() + " ");
             }
-            System.out.println("    {target-type} = " + tt.toString());
-            System.out.println();
-            System.out.println("    {target-id|target-name} is required if target-type is: " + ttNeedsTargetIdentity + ",");
-            System.out.println("        otherwise {target-id|target-name} should not be specified");
+            console.println("    {target-type} = " + tt.toString());
+            console.println();
+            console.println("    {target-id|target-name} is required if target-type is: " + ttNeedsTargetIdentity + ",");
+            console.println("        otherwise {target-id|target-name} should not be specified");
 
             // grantee types
-            System.out.println();
+            console.println();
             StringBuilder gt = new StringBuilder();
             StringBuilder gtNeedsGranteeIdentity = new StringBuilder();
             GranteeType[] gts = GranteeType.values();
@@ -343,15 +346,15 @@ public class ProvUtil implements HttpDebugListener {
                 if (gts[i].needsGranteeIdentity())
                     gtNeedsGranteeIdentity.append(gts[i].getCode() + " ");
             }
-            System.out.println("    {grantee-type} = " + gt.toString());
-            System.out.println();
-            System.out.println("    {grantee-id|grantee-name} is required if grantee-type is: " + gtNeedsGranteeIdentity + ",");
-            System.out.println("        otherwise {target-id|target-name} should not be specified");
+            console.println("    {grantee-type} = " + gt.toString());
+            console.println();
+            console.println("    {grantee-id|grantee-name} is required if grantee-type is: " + gtNeedsGranteeIdentity + ",");
+            console.println("        otherwise {target-id|target-name} should not be specified");
 
         }
 
         static void helpLOG() {
-            System.out.println("    Log categories:");
+            console.println("    Log categories:");
             int maxNameLength = 0;
             for (String name : ZimbraLog.CATEGORY_DESCRIPTIONS.keySet()) {
                 if (name.length() > maxNameLength) {
@@ -359,11 +362,11 @@ public class ProvUtil implements HttpDebugListener {
                 }
             }
             for (String name : ZimbraLog.CATEGORY_DESCRIPTIONS.keySet()) {
-                System.out.print("        " + name);
+                console.print("        " + name);
                 for (int i = 0; i < (maxNameLength - name.length()); i++) {
-                    System.out.print(" ");
+                    console.print(" ");
                 }
-                System.out.format(" - %s\n", ZimbraLog.CATEGORY_DESCRIPTIONS.get(name));
+                console.format(" - %s\n", ZimbraLog.CATEGORY_DESCRIPTIONS.get(name));
             }
         }
     }
@@ -388,30 +391,30 @@ public class ProvUtil implements HttpDebugListener {
              * Not exactly match all types in MailboxIndex
              * TODO: cleanup
              */
-            System.out.println();
-            System.out.println("Valid types:");
-            System.out.println("    appointment");
-            // System.out.println("    briefcase");
-            // System.out.println("    chat");
-            System.out.println("    contact");
-            System.out.println("    conversation");
-            System.out.println("    document");
-            System.out.println("    message");
-            System.out.println("    note");
-            // System.out.println("    tag");
-            System.out.println("    task");
-            System.out.println("    wiki");
-            System.out.println();
+            console.println();
+            console.println("Valid types:");
+            console.println("    appointment");
+            // console.println("    briefcase");
+            // console.println("    chat");
+            console.println("    contact");
+            console.println("    conversation");
+            console.println("    document");
+            console.println("    message");
+            console.println("    note");
+            // console.println("    tag");
+            console.println("    task");
+            console.println("    wiki");
+            console.println();
         }
     }
 
     static class CountObjectsHelp implements CommandHelp {
         @Override
         public void printHelp() {
-            System.out.println();
-            System.out.println("Valid types:");
+            console.println();
+            console.println("Valid types:");
             for (CountObjectsType type : CountObjectsType.values())
-                System.out.println("    " + type.toString());
+                console.println("    " + type.toString());
         }
     }
 
@@ -756,7 +759,7 @@ public class ProvUtil implements HttpDebugListener {
             doAutoCompleteGal(args);
             break;
         case COPY_COS:
-            System.out.println(mProv.copyCos(lookupCos(args[1]).getId(), args[2]).getId());
+            console.println(mProv.copyCos(lookupCos(args[1]).getId(), args[2]).getId());
             break;
         case COUNT_ACCOUNT:
             doCountAccount(args);
@@ -765,28 +768,28 @@ public class ProvUtil implements HttpDebugListener {
             doCountObjects(args);
             break;
         case CREATE_ACCOUNT:
-            System.out.println(mProv.createAccount(args[1], args[2].equals("")? null : args[2], getMapAndCheck(args, 3)).getId());
+            console.println(mProv.createAccount(args[1], args[2].equals("")? null : args[2], getMapAndCheck(args, 3)).getId());
             break;
         case CREATE_ALIAS_DOMAIN:
-            System.out.println(doCreateAliasDomain(args[1], args[2], getMapAndCheck(args, 3)).getId());
+            console.println(doCreateAliasDomain(args[1], args[2], getMapAndCheck(args, 3)).getId());
             break;
         case CREATE_COS:
-            System.out.println(mProv.createCos(args[1], getMapAndCheck(args, 2)).getId());
+            console.println(mProv.createCos(args[1], getMapAndCheck(args, 2)).getId());
             break;
         case CREATE_DOMAIN:
-            System.out.println(mProv.createDomain(args[1], getMapAndCheck(args, 2)).getId());
+            console.println(mProv.createDomain(args[1], getMapAndCheck(args, 2)).getId());
             break;
         case CREATE_IDENTITY:
             mProv.createIdentity(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3));
             break;
         case CREATE_SIGNATURE:
-            System.out.println(mProv.createSignature(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3)).getId());
+            console.println(mProv.createSignature(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3)).getId());
             break;
         case CREATE_DATA_SOURCE:
-            System.out.println(mProv.createDataSource(lookupAccount(args[1]), DataSource.Type.fromString(args[2]), args[3], getMapAndCheck(args, 4)).getId());
+            console.println(mProv.createDataSource(lookupAccount(args[1]), DataSource.Type.fromString(args[2]), args[3], getMapAndCheck(args, 4)).getId());
             break;
         case CREATE_SERVER:
-            System.out.println(mProv.createServer(args[1], getMapAndCheck(args, 2)).getId());
+            console.println(mProv.createServer(args[1], getMapAndCheck(args, 2)).getId());
             break;
         case CREATE_XMPP_COMPONENT:
             doCreateXMPPComponent(args);
@@ -1020,15 +1023,15 @@ public class ProvUtil implements HttpDebugListener {
         case SET_PASSWORD:
             SetPasswordResult result = mProv.setPassword(lookupAccount(args[1]), args[2]);
             if (result.hasMessage()) {
-                System.out.println(result.getMessage());
+                console.println(result.getMessage());
             }
             break;
         case CHECK_PASSWORD_STRENGTH:
             mProv.checkPasswordStrength(lookupAccount(args[1]), args[2]);
-            System.out.println("Password passed strength check.");
+            console.println("Password passed strength check.");
             break;
         case CREATE_DISTRIBUTION_LIST:
-            System.out.println(mProv.createDistributionList(args[1], getMapAndCheck(args, 2)).getId());
+            console.println(mProv.createDistributionList(args[1], getMapAndCheck(args, 2)).getId());
             break;
         case CREATE_DISTRIBUTION_LISTS_BULK:
             doCreateDistributionListsBulk(args);
@@ -1088,7 +1091,7 @@ public class ProvUtil implements HttpDebugListener {
             mProv.renameDistributionList(lookupDistributionList(args[1]).getId(), args[2]);
             break;
         case CREATE_CALENDAR_RESOURCE:
-            System.out.println(mProv.createCalendarResource(args[1], args[2].equals("")? null : args[2], getMapAndCheck(args, 3)).getId());
+            console.println(mProv.createCalendarResource(args[1], args[2].equals("")? null : args[2], getMapAndCheck(args, 3)).getId());
             break;
         case DELETE_CALENDAR_RESOURCE:
             mProv.deleteCalendarResource(lookupCalendarResource(args[1]).getId());
@@ -1255,7 +1258,7 @@ public class ProvUtil implements HttpDebugListener {
         SoapProvisioning sp = (SoapProvisioning) mProv;
         List<QuotaUsage> result = sp.getQuotaUsage(args[1]);
         for (QuotaUsage u : result) {
-            System.out.printf("%s %d %d\n", u.getName(), u.getLimit(), u.getUsed());
+            console.printf("%s %d %d\n", u.getName(), u.getLimit(), u.getUsed());
         }
     }
 
@@ -1265,7 +1268,7 @@ public class ProvUtil implements HttpDebugListener {
         SoapProvisioning sp = (SoapProvisioning) mProv;
         Account acct = lookupAccount(args[1]);
         MailboxInfo info = sp.getMailbox(acct);
-        System.out.printf("mailboxId: %s\nquotaUsed: %d\n", info.getMailboxId(), info.getUsed());
+        console.printf("mailboxId: %s\nquotaUsed: %d\n", info.getMailboxId(), info.getUsed());
     }
 
     private void doReIndexMailbox(String[] args) throws ServiceException {
@@ -1291,9 +1294,9 @@ public class ProvUtil implements HttpDebugListener {
         }
         ReIndexInfo info = sp.reIndex(acct, args[2], by, values);
         ReIndexInfo.Progress progress = info.getProgress();
-        System.out.printf("status: %s\n", info.getStatus());
+        console.printf("status: %s\n", info.getStatus());
         if (progress != null) {
-            System.out.printf("progress: numSucceeded=%d, numFailed=%d, numRemaining=%d\n",
+            console.printf("progress: numSucceeded=%d, numFailed=%d, numRemaining=%d\n",
                     progress.getNumSucceeded(), progress.getNumFailed(), progress.getNumRemaining());
         }
     }
@@ -1302,11 +1305,11 @@ public class ProvUtil implements HttpDebugListener {
         if (!(mProv instanceof SoapProvisioning)) {
             throwSoapOnly();
         }
-        System.out.println("Verifying, on a large index it can take quite a long time...");
+        console.println("Verifying, on a large index it can take quite a long time...");
         SoapProvisioning soap = (SoapProvisioning) mProv;
         SoapProvisioning.VerifyIndexResult result = soap.verifyIndex(lookupAccount(args[1]));
-        System.out.println();
-        System.out.print(result.message);
+        console.println();
+        console.print(result.message);
         if (!result.status) {
             throw ServiceException.FAILURE("The index may be corrupted. Run reIndexMailbox(rim) to repair.", null);
         }
@@ -1318,7 +1321,7 @@ public class ProvUtil implements HttpDebugListener {
         SoapProvisioning sp = (SoapProvisioning) mProv;
         Account acct = lookupAccount(args[1]);
         long quotaUsed = sp.recalculateMailboxCounts(acct);
-        System.out.printf("account: " + acct.getName() + "\nquotaUsed: " + quotaUsed + "\n");
+        console.printf("account: " + acct.getName() + "\nquotaUsed: " + quotaUsed + "\n");
     }
 
     private class AccountLoggerOptions {
@@ -1366,7 +1369,7 @@ public class ProvUtil implements HttpDebugListener {
         SoapProvisioning sp = (SoapProvisioning) mProv;
         Account acct = lookupAccount(alo.args[1]);
         for (AccountLogger accountLogger : sp.getAccountLoggers(acct, alo.server)) {
-            System.out.printf("%s=%s\n", accountLogger.getCategory(), accountLogger.getLevel());
+            console.printf("%s=%s\n", accountLogger.getCategory(), accountLogger.getLevel());
         }
     }
 
@@ -1377,9 +1380,9 @@ public class ProvUtil implements HttpDebugListener {
 
         Map<String, List<AccountLogger>> allLoggers = sp.getAllAccountLoggers(alo.server);
         for (String accountName : allLoggers.keySet()) {
-            System.out.printf("# name %s\n", accountName);
+            console.printf("# name %s\n", accountName);
             for (AccountLogger logger : allLoggers.get(accountName)) {
-                System.out.printf("%s=%s\n", logger.getCategory(), logger.getLevel());
+                console.printf("%s=%s\n", logger.getCategory(), logger.getLevel());
             }
         }
     }
@@ -1420,7 +1423,7 @@ public class ProvUtil implements HttpDebugListener {
                 String displayName = nameMask + " N. " + Integer.toString(ix);
                 StringUtil.addToMultiMap(attrs, "displayName", displayName);
                 Account account = mProv.createAccount(name, password, attrs);
-                System.out.println(account.getId());
+                console.println(account.getId());
            }
         }
     }
@@ -1467,15 +1470,15 @@ public class ProvUtil implements HttpDebugListener {
         if (idsOnly) {
             Set<String> lists = mProv.getDistributionLists(account);
             for (String id: lists) {
-                System.out.println(id);
+                console.println(id);
             }
         } else {
             HashMap<String,String> via = new HashMap<String, String>();
             List<DistributionList> lists = mProv.getDistributionLists(account, false, via);
             for (DistributionList dl: lists) {
                 String viaDl = via.get(dl.getName());
-                if (viaDl != null) System.out.println(dl.getName()+" (via "+viaDl+")");
-                else System.out.println(dl.getName());
+                if (viaDl != null) console.println(dl.getName()+" (via "+viaDl+")");
+                else console.println(dl.getName());
             }
         }
     }
@@ -1563,7 +1566,7 @@ public class ProvUtil implements HttpDebugListener {
             "%-36.36s %-15.15s %-15.15s %-5.5s %-20.20s %-10.10s %-10.10s %-5.5s %-5.5s %-36.36s %-15.15s %-15.15s\n";
 
         private static void printHeadings() {
-            System.out.printf(mFormat,
+            console.printf(mFormat,
                               "owner id",
                               "owner email",
                               "owner display",
@@ -1577,7 +1580,7 @@ public class ProvUtil implements HttpDebugListener {
                               "grantee name",
                               "grantee display");
 
-            System.out.printf(mFormat,
+            console.printf(mFormat,
                               "------------------------------------",      // owner id
                               "---------------",                           // owner email
                               "---------------",                           // owner display
@@ -1594,7 +1597,7 @@ public class ProvUtil implements HttpDebugListener {
 
         @Override
         public void visit(ShareInfoData shareInfoData) throws ServiceException {
-            System.out.printf(mFormat,
+            console.printf(mFormat,
                     shareInfoData.getOwnerAcctId(),
                     shareInfoData.getOwnerAcctEmail(),
                     shareInfoData.getOwnerAcctDisplayName(),
@@ -1626,7 +1629,7 @@ public class ProvUtil implements HttpDebugListener {
         if (spnegoAuthRealm != null) {
             Domain domain = mProv.get(DomainBy.krb5Realm, spnegoAuthRealm);
             if (domain != null) {
-                System.out.println(domain.getName());
+                console.println(domain.getName());
             }
         }
     }
@@ -1661,11 +1664,11 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void dumpDataSource(DataSource dataSource, Set<String> argNameSet) throws ServiceException {
-        System.out.println("# name "+dataSource.getName());
-        System.out.println("# type "+dataSource.getType());
+        console.println("# name "+dataSource.getName());
+        console.println("# type "+dataSource.getType());
         Map<String, Object> attrs = dataSource.getAttrs();
         dumpAttrs(attrs, argNameSet);
-        System.out.println();
+        console.println();
     }
 
     private void doGetAccountDataSources(String[] args) throws ServiceException {
@@ -1683,8 +1686,8 @@ public class ProvUtil implements HttpDebugListener {
         List<DistributionList> lists = mProv.getDistributionLists(dist, false, via);
         for (DistributionList dl: lists) {
             String viaDl = via.get(dl.getName());
-            if (viaDl != null) System.out.println(dl.getName()+" (via "+viaDl+")");
-            else System.out.println(dl.getName());
+            if (viaDl != null) console.println(dl.getName()+" (via "+viaDl+")");
+            else console.println(dl.getName());
         }
     }
 
@@ -1708,7 +1711,7 @@ public class ProvUtil implements HttpDebugListener {
                 if (verbose)
                     dumpAccount((Account) entry, applyDefault, attrNames);
                 else
-                    System.out.println(entry.getName());
+                    console.println(entry.getName());
             }
         };
 
@@ -1743,7 +1746,7 @@ public class ProvUtil implements HttpDebugListener {
                     if (s == null)
                         s = args[i];
                     else {
-                        System.out.println("invalid arg: " + args[i] + ", already specified -s with " + s);
+                        console.println("invalid arg: " + args[i] + ", already specified -s with " + s);
                         usage();
                         return;
                     }
@@ -1755,7 +1758,7 @@ public class ProvUtil implements HttpDebugListener {
                 if (d == null)
                     d = arg;
                 else {
-                    System.out.println("invalid arg: " + arg + ", already specified domain: " + d);
+                    console.println("invalid arg: " + arg + ", already specified domain: " + d);
                     usage();
                     return;
                 }
@@ -1764,7 +1767,7 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         if (!applyDefault && !verbose) {
-            System.out.println(ERR_INVALID_ARG_EV);
+            console.println(ERR_INVALID_ARG_EV);
             usage();
             return;
         }
@@ -1858,7 +1861,7 @@ public class ProvUtil implements HttpDebugListener {
                 else if (account instanceof Domain)
                     dumpDomain((Domain)account, null);
             } else {
-                System.out.println(account.getName());
+                console.println(account.getName());
             }
         }
     }
@@ -1927,13 +1930,13 @@ public class ProvUtil implements HttpDebugListener {
         CountAccountResult result = mProv.countAccount(d);
         String formatHeading = "%-20s %-40s %s\n";
         String format = "%-20s %-40s %d\n";
-        System.out.printf(formatHeading, "cos name", "cos id", "# of accounts");
-        System.out.printf(formatHeading, "--------------------", "----------------------------------------", "--------------------");
+        console.printf(formatHeading, "cos name", "cos id", "# of accounts");
+        console.printf(formatHeading, "--------------------", "----------------------------------------", "--------------------");
         for (CountAccountResult.CountAccountByCos c : result.getCountAccountByCos()) {
-            System.out.printf(format, c.getCosName(), c.getCosId(), c.getCount());
+            console.printf(format, c.getCosName(), c.getCosId(), c.getCount());
         }
 
-        System.out.println();
+        console.println();
     }
 
     private void doCountObjects(String[] args) throws ServiceException {
@@ -1969,7 +1972,7 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         long result = mProv.countObjects(type, domain);
-        System.out.println(result);
+        console.println(result);
     }
 
     private void doSyncGal(String[] args) throws ServiceException {
@@ -1980,7 +1983,7 @@ public class ProvUtil implements HttpDebugListener {
 
         SearchGalResult result = mProv.searchGal(d, "", Provisioning.GalSearchType.all, token);
         if (result.getToken() != null)
-            System.out.println("# token = "+result.getToken() + "\n");
+            console.println("# token = "+result.getToken() + "\n");
         for (GalContact contact : result.getMatches())
             dumpContact(contact);
     }
@@ -2002,7 +2005,7 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         if (!applyDefault && !verbose) {
-            System.out.println(ERR_INVALID_ARG_EV);
+            console.println(ERR_INVALID_ARG_EV);
             usage();
             return;
         }
@@ -2020,7 +2023,7 @@ public class ProvUtil implements HttpDebugListener {
             if (verbose)
                 dumpAccount(account, applyDefault, attrNames);
             else
-                System.out.println(account.getName());
+                console.println(account.getName());
         }
     }
 
@@ -2033,15 +2036,15 @@ public class ProvUtil implements HttpDebugListener {
             if (verbose)
                 dumpCos(cos, attrNames);
             else
-                System.out.println(cos.getName());
+                console.println(cos.getName());
         }
     }
 
     private void dumpCos(Cos cos, Set<String> attrNames) throws ServiceException {
-        System.out.println("# name "+cos.getName());
+        console.println("# name "+cos.getName());
         Map<String, Object> attrs = cos.getAttrs();
         dumpAttrs(attrs, attrNames);
-        System.out.println();
+        console.println();
     }
 
     private void doGetAllDomains(String[] args) throws ServiceException {
@@ -2061,7 +2064,7 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         if (!applyDefault && !verbose) {
-            System.out.println(ERR_INVALID_ARG_EV);
+            console.println(ERR_INVALID_ARG_EV);
             usage();
             return;
         }
@@ -2080,7 +2083,7 @@ public class ProvUtil implements HttpDebugListener {
             if (verbose)
                 dumpDomain(domain, attrNames);
             else
-                System.out.println(domain.getName());
+                console.println(domain.getName());
         }
     }
 
@@ -2089,23 +2092,23 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void dumpDomain(Domain domain, boolean expandConfig, Set<String> attrNames) throws ServiceException {
-        System.out.println("# name "+domain.getName());
+        console.println("# name "+domain.getName());
         Map<String, Object> attrs = domain.getAttrs(expandConfig);
         dumpAttrs(attrs, attrNames);
-        System.out.println();
+        console.println();
     }
 
     private void dumpDistributionList(DistributionList dl, Set<String> attrNames) throws ServiceException {
         String[] members = dl.getAllMembers();
         int count = members == null ? 0 : members.length;
-        System.out.println("# distributionList " + dl.getName() + " memberCount=" + count);
+        console.println("# distributionList " + dl.getName() + " memberCount=" + count);
         Map<String, Object> attrs = dl.getAttrs();
         dumpAttrs(attrs, attrNames);
-        System.out.println();
+        console.println();
     }
 
     private void dumpAlias(Alias alias) throws ServiceException {
-        System.out.println("# alias " + alias.getName());
+        console.println("# alias " + alias.getName());
         Map<String, Object> attrs = alias.getAttrs();
         dumpAttrs(attrs, null);
     }
@@ -2141,7 +2144,7 @@ public class ProvUtil implements HttpDebugListener {
             if (verbose)
                 dumpRight(right);
             else
-                System.out.println(right.getName());
+                console.println(right.getName());
         }
     }
 
@@ -2149,39 +2152,39 @@ public class ProvUtil implements HttpDebugListener {
         String indent = "    ";
         String indent2 = "        ";
 
-        System.out.println();
-        System.out.println("------------------------------");
+        console.println();
+        console.println("------------------------------");
 
-        System.out.println(right.getName());
-        System.out.println(indent + "   description: " + right.getDesc());
-        System.out.println(indent + "    right type: " + right.getRightType().name());
+        console.println(right.getName());
+        console.println(indent + "   description: " + right.getDesc());
+        console.println(indent + "    right type: " + right.getRightType().name());
 
         String targetType = right.getTargetTypeStr();
-        System.out.println(indent + "target type(s): " + (targetType==null?"":targetType));
+        console.println(indent + "target type(s): " + (targetType==null?"":targetType));
 
-        System.out.println(indent + "    right class: " + right.getRightClass().name());
+        console.println(indent + "    right class: " + right.getRightClass().name());
         
         if (right.isAttrRight()) {
             AttrRight attrRight = (AttrRight)right;
-            System.out.println();
-            System.out.println(indent + "attributes:");
+            console.println();
+            console.println(indent + "attributes:");
             if (attrRight.allAttrs()) {
-                System.out.println(indent2 + "all attributes");
+                console.println(indent2 + "all attributes");
             } else {
                 for (String attrName : attrRight.getAttrs())
-                    System.out.println(indent2 + attrName);
+                    console.println(indent2 + attrName);
             }
         } else if (right.isComboRight()) {
             ComboRight comboRight = (ComboRight)right;
-            System.out.println();
-            System.out.println(indent + "rights:");
+            console.println();
+            console.println(indent + "rights:");
             for (Right r : comboRight.getRights()) {
                 String tt = r.getTargetTypeStr();
                 tt = tt==null?"": " (" + tt + ")";
-                System.out.format("%s%10.10s: %s %s\n", indent2, r.getRightType().name(), r.getName(), tt);
+                console.format("%s%10.10s: %s %s\n", indent2, r.getRightType().name(), r.getName(), tt);
             }
         }
-        System.out.println();
+        console.println();
     }
 
     private void doGetRightsDoc(String[] args) throws ServiceException {
@@ -2211,37 +2214,37 @@ public class ProvUtil implements HttpDebugListener {
                     "com.zimbra.xmbxsearch"};
         }
 
-        System.out.println("#");
-        System.out.println("#  Generated by: zmprov grd" + argsDump);
-        System.out.println("#");
-        System.out.println("#  Date: " + DateFormat.getDateInstance(DateFormat.LONG).format(new Date()));
-        System.out.println("# ");
-        System.out.println("#  Pacakges:");
+        console.println("#");
+        console.println("#  Generated by: zmprov grd" + argsDump);
+        console.println("#");
+        console.println("#  Date: " + DateFormat.getDateInstance(DateFormat.LONG).format(new Date()));
+        console.println("# ");
+        console.println("#  Pacakges:");
         for (String pkg : packages)
-            System.out.println("#       " + pkg);
-        System.out.println("# ");
-        System.out.println("\n");
+            console.println("#       " + pkg);
+        console.println("# ");
+        console.println("\n");
 
         Map<String, List<RightsDoc>> allDocs = mProv.getRightsDoc(packages);
         for (Map.Entry<String, List<RightsDoc>> docs : allDocs.entrySet()) {
-            System.out.println("========================================");
-            System.out.println("Package: " + docs.getKey());
-            System.out.println("========================================");
-            System.out.println();
+            console.println("========================================");
+            console.println("Package: " + docs.getKey());
+            console.println("========================================");
+            console.println();
 
             for (RightsDoc doc : docs.getValue()) {
-                System.out.println("------------------------------");
-                System.out.println(doc.getCmd() + "\n");
+                console.println("------------------------------");
+                console.println(doc.getCmd() + "\n");
 
-                System.out.println("    Related rights:");
+                console.println("    Related rights:");
                 for (String r : doc.getRights())
-                    System.out.println("        " + r);
+                    console.println("        " + r);
 
-                System.out.println();
-                System.out.println("    Notes:");
+                console.println();
+                console.println("    Notes:");
                 for (String n : doc.getNotes())
-                    System.out.println(FileGenUtil.wrapComments(StringUtil.escapeHtml(n), 70, "        ") + "\n");
-                System.out.println();
+                    console.println(FileGenUtil.wrapComments(StringUtil.escapeHtml(n), 70, "        ") + "\n");
+                console.println();
             }
         }
     }
@@ -2262,7 +2265,7 @@ public class ProvUtil implements HttpDebugListener {
                 if (service == null)
                     service = arg;
                 else {
-                    System.out.println("invalid arg: " + arg + ", already specified service: " + service);
+                    console.println("invalid arg: " + arg + ", already specified service: " + service);
                     usage();
                     return;
                 }
@@ -2271,7 +2274,7 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         if (!applyDefault && !verbose) {
-            System.out.println(ERR_INVALID_ARG_EV);
+            console.println(ERR_INVALID_ARG_EV);
             usage();
             return;
         }
@@ -2288,22 +2291,22 @@ public class ProvUtil implements HttpDebugListener {
             if (verbose)
                 dumpServer(server, applyDefault, null);
             else
-                System.out.println(server.getName());
+                console.println(server.getName());
         }
     }
 
     private void dumpServer(Server server, boolean expandConfig, Set<String> attrNames) throws ServiceException {
-        System.out.println("# name "+server.getName());
+        console.println("# name "+server.getName());
         Map<String, Object> attrs = server.getAttrs(expandConfig);
         dumpAttrs(attrs, attrNames);
-        System.out.println();
+        console.println();
     }
 
     private void dumpXMPPComponent(XMPPComponent comp, Set<String> attrNames) throws ServiceException {
-        System.out.println("# name "+comp.getName());
+        console.println("# name "+comp.getName());
         Map<String, Object> attrs = comp.getAttrs();
         dumpAttrs(attrs, attrNames);
-        System.out.println();
+        console.println();
     }
 
     private void doGetAllXMPPComponents() throws ServiceException {
@@ -2314,38 +2317,38 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void dumpAccount(Account account, boolean expandCos, Set<String> attrNames) throws ServiceException {
-        System.out.println("# name "+account.getName());
+        console.println("# name "+account.getName());
         Map<String, Object> attrs = account.getAttrs(expandCos);
         dumpAttrs(attrs, attrNames);
-        System.out.println();
+        console.println();
     }
 
     private void dumpCalendarResource(CalendarResource resource, boolean expandCos, Set<String> attrNames) throws ServiceException {
-        System.out.println("# name "+resource.getName());
+        console.println("# name "+resource.getName());
         Map<String, Object> attrs = resource.getAttrs(expandCos);
         dumpAttrs(attrs, attrNames);
-        System.out.println();
+        console.println();
     }
 
     private void dumpContact(GalContact contact) throws ServiceException {
-        System.out.println("# name "+contact.getId());
+        console.println("# name "+contact.getId());
         Map<String, Object> attrs = contact.getAttrs();
         dumpAttrs(attrs, null);
-        System.out.println();
+        console.println();
     }
 
     private void dumpIdentity(Identity identity, Set<String> attrNameSet) throws ServiceException {
-        System.out.println("# name "+identity.getName());
+        console.println("# name "+identity.getName());
         Map<String, Object> attrs = identity.getAttrs();
         dumpAttrs(attrs, attrNameSet);
-        System.out.println();
+        console.println();
     }
 
     private void dumpSignature(Signature signature, Set<String> attrNameSet) throws ServiceException {
-        System.out.println("# name "+signature.getName());
+        console.println("# name "+signature.getName());
         Map<String, Object> attrs = signature.getAttrs();
         dumpAttrs(attrs, attrNameSet);
-        System.out.println();
+        console.println();
     }
 
     private void dumpAttrs(Map<String, Object> attrsIn, Set<String> specificAttrs) throws ServiceException {
@@ -2419,7 +2422,7 @@ public class ProvUtil implements HttpDebugListener {
                 String displayName = nameMask + " N. " + Integer.toString(ix);
                 StringUtil.addToMultiMap(attrs, "displayName", displayName);
                 DistributionList dl  = mProv.createDistributionList(name, attrs);
-                System.out.println(dl.getId());
+                console.println(dl.getId());
            }
         }
     }
@@ -2436,7 +2439,7 @@ public class ProvUtil implements HttpDebugListener {
                 if (d == null)
                     d = arg;
                 else {
-                    System.out.println("invalid arg: " + arg + ", already specified domain: " + d);
+                    console.println("invalid arg: " + arg + ", already specified domain: " + d);
                     usage();
                     return;
                 }
@@ -2454,7 +2457,7 @@ public class ProvUtil implements HttpDebugListener {
                     if (verbose)
                         dumpDistributionList(dl, null);
                     else
-                        System.out.println(dl.getName());
+                        console.println(dl.getName());
                 }
             }
         } else {
@@ -2465,7 +2468,7 @@ public class ProvUtil implements HttpDebugListener {
                 if (verbose)
                     dumpDistributionList(dl, null);
                 else
-                    System.out.println(dl.getName());
+                    console.println(dl.getName());
             }
         }
     }
@@ -2490,7 +2493,7 @@ public class ProvUtil implements HttpDebugListener {
                     if (s == null)
                         s = args[i];
                     else {
-                        System.out.println("invalid arg: " + args[i] + ", already specified -s with " + s);
+                        console.println("invalid arg: " + args[i] + ", already specified -s with " + s);
                         usage();
                         return;
                     }
@@ -2502,7 +2505,7 @@ public class ProvUtil implements HttpDebugListener {
                 if (d == null)
                     d = arg;
                 else {
-                    System.out.println("invalid arg: " + arg + ", already specified domain: " + d);
+                    console.println("invalid arg: " + arg + ", already specified domain: " + d);
                     usage();
                     return;
                 }
@@ -2511,7 +2514,7 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         if (!applyDefault && !verbose) {
-            System.out.println(ERR_INVALID_ARG_EV);
+            console.println(ERR_INVALID_ARG_EV);
             usage();
             return;
         }
@@ -2544,7 +2547,7 @@ public class ProvUtil implements HttpDebugListener {
                 if (verbose) {
                     dumpCalendarResource((CalendarResource) entry, applyDefault, null);
                 } else {
-                    System.out.println(entry.getName());
+                    console.println(entry.getName());
                 }
             }
         };
@@ -2591,7 +2594,7 @@ public class ProvUtil implements HttpDebugListener {
             if (verbose)
                 dumpCalendarResource(resource, true, null);
             else
-                System.out.println(resource.getName());
+                console.println(resource.getName());
         }
     }
 
@@ -2844,13 +2847,13 @@ public class ProvUtil implements HttpDebugListener {
             
             if (ai.isDeprecated()) {
                 hadWarnings = true;
-                System.out.println("Warn: attribute " + attr + " has been deprecated since " + 
+                console.println("Warn: attribute " + attr + " has been deprecated since " + 
                         ai.getDeprecatedSince().toString());
             }
         }
         
         if (hadWarnings) {
-            System.out.println();
+            console.println();
         }
     }
     
@@ -2885,19 +2888,19 @@ public class ProvUtil implements HttpDebugListener {
         mReader = in;
         mInteractive = true;
         while (true) {
-            System.out.print("prov> ");
+            console.print("prov> ");
             String line = StringUtil.readLine(in);
             if (line == null)
                 break;
             if (mVerbose) {
-                System.out.println(line);
+                console.println(line);
             }
             String args[] = StringUtil.parseLine(line);
             if (args.length == 0)
                 continue;
             try {
                 if (!execute(args)) {
-                    System.out.println("Unknown command. Type: 'help commands' for a list");
+                    console.println("Unknown command. Type: 'help commands' for a list");
                 }
             } catch (ServiceException e) {
                 Throwable cause = e.getCause();
@@ -2906,7 +2909,7 @@ public class ProvUtil implements HttpDebugListener {
 
                 printError(errText);
 
-                if (mVerbose) e.printStackTrace(System.err);
+                if (mVerbose) e.printStackTrace(errConsole);
             } catch (ArgException e) {
                 usage();
             }
@@ -2914,7 +2917,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private static void printError(String text) {
-        PrintStream ps = System.err;
+        PrintStream ps = errConsole;
         try {
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(ps, "UTF-8"));
             writer.write(text+"\n");
@@ -2927,7 +2930,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private static void printOutput(String text) {
-        PrintStream ps = System.out;
+        PrintStream ps = console;
         try {
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(ps, "UTF-8"));
             writer.write(text+"\n");
@@ -3052,9 +3055,9 @@ public class ProvUtil implements HttpDebugListener {
                         try {
                             CliUtil.enableCommandLineEditing(LC.zimbra_home.value() + "/.zmprov_history");
                         } catch (IOException e) {
-                            System.err.println("Command line editing will be disabled: " + e);
+                            errConsole.println("Command line editing will be disabled: " + e);
                             if (pu.mVerbose) {
-                                e.printStackTrace(System.err);
+                                e.printStackTrace(errConsole);
                             }
                         }
                     }
@@ -3088,7 +3091,7 @@ public class ProvUtil implements HttpDebugListener {
 
             printError(errText);
 
-            if (pu.mVerbose) e.printStackTrace(System.err);
+            if (pu.mVerbose) e.printStackTrace(errConsole);
             System.exit(2);
         }
     }
@@ -3290,44 +3293,44 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void descAttrsUsage(Exception e) {
-        System.out.println(e.getMessage() + "\n");
+        console.println(e.getMessage() + "\n");
 
-        System.out.printf("usage:  %s(%s) %s\n", mCommand.getName(), mCommand.getAlias(), mCommand.getHelp());
+        console.printf("usage:  %s(%s) %s\n", mCommand.getName(), mCommand.getAlias(), mCommand.getHelp());
 
-        System.out.println();
-        System.out.println("Valid entry types: " + formatAllEntryTypes() + "\n");
+        console.println();
+        console.println("Valid entry types: " + formatAllEntryTypes() + "\n");
 
-        System.out.println("Examples:");
+        console.println("Examples:");
 
-        System.out.println("zmprov desc");
-        System.out.println("    print attribute name of all attributes" + "\n");
+        console.println("zmprov desc");
+        console.println("    print attribute name of all attributes" + "\n");
 
-        System.out.println("zmprov desc -v");
-        System.out.println("    print attribute name and description of all attributes" + "\n");
+        console.println("zmprov desc -v");
+        console.println("    print attribute name and description of all attributes" + "\n");
 
-        System.out.println("zmprov desc account");
-        System.out.println("    print attribute name of all account attributes" + "\n");
+        console.println("zmprov desc account");
+        console.println("    print attribute name of all account attributes" + "\n");
 
-        System.out.println("zmprov desc -ni -v account");
-        System.out.println("    print attribute name and description of all non-inherited account attributes, ");
-        System.out.println("    that is, attributes that are on account but not on cos"+ "\n");
+        console.println("zmprov desc -ni -v account");
+        console.println("    print attribute name and description of all non-inherited account attributes, ");
+        console.println("    that is, attributes that are on account but not on cos"+ "\n");
 
-        System.out.println("zmprov desc -ni domain");
-        System.out.println("    print attribute name of all non-inherited domain attributes, ");
-        System.out.println("    that is, attributes that are on domain but not on global config"+ "\n");
+        console.println("zmprov desc -ni domain");
+        console.println("    print attribute name of all non-inherited domain attributes, ");
+        console.println("    that is, attributes that are on domain but not on global config"+ "\n");
 
         /*  -only is *not* a documented option, we could expose it if we want,
          *  handy for engineering tasks, not as useful for users
          *
-        System.out.println("zmprov desc -only globalConfig");
-        System.out.println("    print attribute name of all attributes that are on global config only" + "\n");
+        console.println("zmprov desc -only globalConfig");
+        console.println("    print attribute name of all attributes that are on global config only" + "\n");
         */
 
-        System.out.println("zmprov desc -a zimbraId");
-        System.out.println("    print attribute name, description, and all properties of attribute zimbraId\n");
+        console.println("zmprov desc -a zimbraId");
+        console.println("    print attribute name, description, and all properties of attribute zimbraId\n");
 
-        System.out.println("zmprov desc account -a zimbraId");
-        System.out.println("    error: can only specify either an entry type or a specific attribute\n");
+        console.println("zmprov desc account -a zimbraId");
+        console.println("    error: can only specify either an entry type or a specific attribute\n");
 
         usage();
     }
@@ -3473,43 +3476,43 @@ public class ProvUtil implements HttpDebugListener {
         if (specificAttr != null) {
             AttributeInfo ai = am.getAttributeInfo(specificAttr);
             if (ai == null) {
-                System.out.println("no attribute info for " + specificAttr);
+                console.println("no attribute info for " + specificAttr);
                 // throw ServiceException.INVALID_REQUEST("no such attribute: " + specificAttr, null);
             } else {
 
-                System.out.println(ai.getName());
+                console.println(ai.getName());
 
                 // description
                 String desc = ai.getDescription();
-                System.out.println(FileGenUtil.wrapComments((desc==null?"":desc), 70, "    "));
-                System.out.println();
+                console.println(FileGenUtil.wrapComments((desc==null?"":desc), 70, "    "));
+                console.println();
 
                 for (DescribeArgs.Field f : DescribeArgs.Field.values()) {
-                    System.out.format("    %15s : %s\n", f.name(), DescribeArgs.Field.print(f, ai));
+                    console.format("    %15s : %s\n", f.name(), DescribeArgs.Field.print(f, ai));
                 }
             }
-            System.out.println();
+            console.println();
 
         } else {
             String indent = "    ";
             for (String attr : attrs) {
                 AttributeInfo ai = am.getAttributeInfo(attr);
                 if (ai == null) {
-                    System.out.println(attr + " (no attribute info)");
+                    console.println(attr + " (no attribute info)");
                     continue;
                 }
 
                 String attrName = ai.getName();  // camel case name
-                System.out.println(attrName);
+                console.println(attrName);
                 /* for tracking progress of bug 26161
-                System.out.format("%-48s %-25s %s\n", attr,
+                console.format("%-48s %-25s %s\n", attr,
                         DescribeArgs.Field.print(DescribeArgs.Field.requiresRestart, ai),
                         DescribeArgs.Field.print(DescribeArgs.Field.deprecatedSince, ai));
                 */
 
                 if (descArgs.mVerbose) {
                     String desc = ai.getDescription();
-                    System.out.println(FileGenUtil.wrapComments((desc==null?"":desc), 70, "    ")  + "\n");
+                    console.println(FileGenUtil.wrapComments((desc==null?"":desc), 70, "    ")  + "\n");
                 }
             }
         }
@@ -3572,9 +3575,9 @@ public class ProvUtil implements HttpDebugListener {
         HashMap<String,String> attrs = new HashMap<String,String>();
         attrs.put(Provisioning.A_zimbraPreAuthKey, preAuthKey);
         mProv.modifyAttrs(domain, attrs);
-        System.out.printf("preAuthKey: %s\n", preAuthKey);
+        console.printf("preAuthKey: %s\n", preAuthKey);
         if (curPreAuthKey != null)
-            System.out.printf("previous preAuthKey: %s\n", curPreAuthKey);
+            console.printf("previous preAuthKey: %s\n", curPreAuthKey);
     }
 
     private void doGenerateDomainPreAuth(String[] args) throws ServiceException {
@@ -3595,7 +3598,7 @@ public class ProvUtil implements HttpDebugListener {
         params.put("timestamp", timestamp+"");
         params.put("expires", expires+"");
         if (args.length == 7) params.put("admin", args[6]);
-        System.out.printf("account: %s\nby: %s\ntimestamp: %s\nexpires: %s\npreauth: %s\n", name, by, timestamp, expires,PreAuthKey.computePreAuth(params, preAuthKey));
+        console.printf("account: %s\nby: %s\ntimestamp: %s\nexpires: %s\npreauth: %s\n", name, by, timestamp, expires,PreAuthKey.computePreAuth(params, preAuthKey));
     }
 
     private void doGetAllMtaAuthURLs(String[] args) throws ServiceException {
@@ -3603,10 +3606,10 @@ public class ProvUtil implements HttpDebugListener {
         for (Server server : servers ) {
             boolean isTarget = server.getBooleanAttr(Provisioning.A_zimbraMtaAuthTarget, false);
             if (isTarget) {
-                System.out.print(URLUtil.getAdminURL(server) + " ");
+                console.print(URLUtil.getAdminURL(server) + " ");
             }
         }
-        System.out.println();
+        console.println();
     }
 
     private void doGetAllReverseProxyURLs(String[] args) throws ServiceException {
@@ -3621,10 +3624,10 @@ public class ProvUtil implements HttpDebugListener {
             boolean isTarget = server.getBooleanAttr(Provisioning.A_zimbraReverseProxyLookupTarget, false);
             if (isTarget) {
                 String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
-                System.out.print(REVERSE_PROXY_PROTO + serviceName + ":" + REVERSE_PROXY_PORT + REVERSE_PROXY_PATH + " ");
+                console.print(REVERSE_PROXY_PROTO + serviceName + ":" + REVERSE_PROXY_PORT + REVERSE_PROXY_PATH + " ");
             }
         }
-        System.out.println();
+        console.println();
     }
 
     private void doGetAllReverseProxyBackends(String[] args) throws ServiceException {
@@ -3652,13 +3655,13 @@ public class ProvUtil implements HttpDebugListener {
 
             int backendPort = server.getIntAttr(Provisioning.A_zimbraMailPort, 0);
             String serviceName = server.getAttr(Provisioning.A_zimbraServiceHostname, "");
-            System.out.println("    server " + serviceName + ":" + backendPort + ";");
+            console.println("    server " + serviceName + ":" + backendPort + ";");
             atLeastOne = true;
         }
 
         if (!atLeastOne) {
             // workaround zmmtaconfig not being able to deal with empty output
-            System.out.println("    server localhost:8080;");
+            console.println("    server localhost:8080;");
         }
     }
 
@@ -3675,7 +3678,7 @@ public class ProvUtil implements HttpDebugListener {
                     StringBuilder virtualHosts = new StringBuilder();
                     for (String vh : entry.getMultiAttr(Provisioning.A_zimbraVirtualHostname))
                         virtualHosts.append(vh + " ");
-                    System.out.println(entry.getName() + " " + virtualHosts);
+                    console.println(entry.getName() + " " + virtualHosts);
                 }
             }
         };
@@ -3688,10 +3691,10 @@ public class ProvUtil implements HttpDebugListener {
     private void doGetAllMemcachedServers(String[] args) throws ServiceException {
         List<Server> servers = mProv.getAllServers(Provisioning.SERVICE_MEMCACHED);
         for (Server server : servers ) {
-            System.out.print(server.getAttr(Provisioning.A_zimbraServiceHostname, "") + ":" +
+            console.print(server.getAttr(Provisioning.A_zimbraServiceHostname, "") + ":" +
                              server.getAttr(Provisioning.A_zimbraMemcachedBindPort, "") + " ");
         }
-        System.out.println();
+        console.println();
     }
 
     private List<Pair<String /* hostname */, Integer /* port */>> getMailboxServersFromArgs(String[] args)
@@ -3732,7 +3735,7 @@ public class ProvUtil implements HttpDebugListener {
             String hostname = server.getFirst();
             int port = server.getSecond();
             if (mVerbose)
-                System.out.print("Updating " + hostname + " ... ");
+                console.print("Updating " + hostname + " ... ");
             boolean success = false;
             try {
                 SoapProvisioning sp = new SoapProvisioning();
@@ -3749,14 +3752,14 @@ public class ProvUtil implements HttpDebugListener {
                 success = true;
             } catch (ServiceException e) {
                 if (mVerbose) {
-                    System.out.println("fail");
-                    e.printStackTrace(System.out);
+                    console.println("fail");
+                    e.printStackTrace(console);
                 } else {
-                    System.out.println("Error updating " + hostname + ": " + e.getMessage());
+                    console.println("Error updating " + hostname + ": " + e.getMessage());
                 }
             } finally {
                 if (mVerbose && success)
-                    System.out.println("ok");
+                    console.println("ok");
             }
         }
     }
@@ -3789,18 +3792,18 @@ public class ProvUtil implements HttpDebugListener {
                 MemcachedClientConfig config = sp.getMemcachedClientConfig();
                 String serverList = config.serverList != null ? config.serverList : "none";
                 if (mVerbose) {
-                    System.out.printf(hostnameFormat + " => serverList=[%s], hashAlgo=%s, binaryProto=%s, expiry=%ds, timeout=%dms\n",
+                    console.printf(hostnameFormat + " => serverList=[%s], hashAlgo=%s, binaryProto=%s, expiry=%ds, timeout=%dms\n",
                                       hostname, serverList, config.hashAlgorithm,
                                       config.binaryProtocol, config.defaultExpirySeconds, config.defaultTimeoutMillis);
                 } else if (config.serverList != null) {
                     if (HashAlgorithm.KETAMA_HASH.toString().equals(config.hashAlgorithm)) {
                         // Don't print the default hash algorithm to keep the output clutter-free.
-                        System.out.printf(hostnameFormat + " => %s\n", hostname, serverList);
+                        console.printf(hostnameFormat + " => %s\n", hostname, serverList);
                     } else {
-                        System.out.printf(hostnameFormat + " => %s (%S)\n", hostname, serverList, config.hashAlgorithm);
+                        console.printf(hostnameFormat + " => %s (%S)\n", hostname, serverList, config.hashAlgorithm);
                     }
                 } else {
-                    System.out.printf(hostnameFormat + " => none\n", hostname);
+                    console.printf(hostnameFormat + " => none\n", hostname);
                 }
 
                 String listAndAlgo = serverList + "/" + config.hashAlgorithm;
@@ -3810,13 +3813,13 @@ public class ProvUtil implements HttpDebugListener {
                     consistent = false;
                 }
             } catch (ServiceException e) {
-                System.out.printf(hostnameFormat + " => ERROR: unable to get configuration\n", hostname);
+                console.printf(hostnameFormat + " => ERROR: unable to get configuration\n", hostname);
                 if (mVerbose)
-                    e.printStackTrace(System.out);
+                    e.printStackTrace(console);
             }
         }
         if (!consistent) {
-            System.out.println("Inconsistency detected!");
+            console.println("Inconsistency detected!");
         }
     }
 
@@ -3860,7 +3863,7 @@ public class ProvUtil implements HttpDebugListener {
         map.put(Provisioning.A_zimbraXMPPComponentType, args[6]);
         Domain d = lookupDomain(args[2]);
         String routableName = args[1]+"."+d.getName();
-        System.out.println(mProv.createXMPPComponent(routableName, lookupDomain(args[2]), lookupServer(args[3]), map));
+        console.println(mProv.createXMPPComponent(routableName, lookupDomain(args[2]), lookupServer(args[3]), map));
     }
 
     private void doGetXMPPComponent(String[] args) throws ServiceException {
@@ -3960,15 +3963,15 @@ public class ProvUtil implements HttpDebugListener {
                                          granteeBy, ra.mGranteeIdOrName,
                                          ra.mRight, attrs, via);
 
-        System.out.println(allow? "ALLOWED" : "DENIED");
+        console.println(allow? "ALLOWED" : "DENIED");
         if (via.available()) {
-            System.out.println("Via:");
-            System.out.println("    target type  : " + via.getTargetType());
-            System.out.println("    target       : " + via.getTargetName());
-            System.out.println("    grantee type : " + via.getGranteeType());
-            System.out.println("    grantee      : " + via.getGranteeName());
-            System.out.println("    right        : " + (via.isNegativeGrant()?"DENY ":"") + via.getRight());
-            System.out.println();
+            console.println("Via:");
+            console.println("    target type  : " + via.getTargetType());
+            console.println("    target       : " + via.getTargetName());
+            console.println("    grantee type : " + via.getGranteeType());
+            console.println("    grantee      : " + via.getGranteeName());
+            console.println("    right        : " + (via.isNegativeGrant()?"DENY ":"") + via.getRight());
+            console.println();
         }
     }
 
@@ -4002,7 +4005,7 @@ public class ProvUtil implements HttpDebugListener {
         RightCommand.AllEffectiveRights allEffRights = mProv.getAllEffectiveRights(
                 ra.mGranteeType, granteeBy, ra.mGranteeIdOrName, expandSetAttrs, expandGetAttrs);
 
-        System.out.println(allEffRights.granteeType() + " " +
+        console.println(allEffRights.granteeType() + " " +
                 allEffRights.granteeName() + "(" + allEffRights.granteeId() + ")" +
                 " has the following rights:");
 
@@ -4015,13 +4018,13 @@ public class ProvUtil implements HttpDebugListener {
 
     private void dumpRightsByTargetType(TargetType targetType, RightCommand.RightsByTargetType rbtt,
             boolean expandSetAttrs, boolean expandGetAttrs) {
-        System.out.println("------------------------------------------------------------------");
-        System.out.println("Target type: " + targetType.getCode());
-        System.out.println("------------------------------------------------------------------");
+        console.println("------------------------------------------------------------------");
+        console.println("Target type: " + targetType.getCode());
+        console.println("------------------------------------------------------------------");
 
         RightCommand.EffectiveRights er = rbtt.all();
         if (er != null) {
-            System.out.println("On all " + targetType.getPrettyName() + " entries");
+            console.println("On all " + targetType.getPrettyName() + " entries");
             dumpEffectiveRight(er, expandSetAttrs, expandGetAttrs);
         }
 
@@ -4046,9 +4049,9 @@ public class ProvUtil implements HttpDebugListener {
 
         for (String entry : entries) {
             if (domainScope)
-                System.out.println("On " + targetType.getCode() + " entries in domain " + entry);
+                console.println("On " + targetType.getCode() + " entries in domain " + entry);
             else
-                System.out.println("On " + targetType.getCode() + " " + entry);
+                console.println("On " + targetType.getCode() + " " + entry);
         }
         dumpEffectiveRight(er, expandSetAttrs, expandGetAttrs);
     }
@@ -4085,7 +4088,7 @@ public class ProvUtil implements HttpDebugListener {
         RightCommand.EffectiveRights effRights = mProv.getEffectiveRights(ra.mTargetType, targetBy, ra.mTargetIdOrName,
                                                                           granteeBy, ra.mGranteeIdOrName, expandSetAttrs, expandGetAttrs);
 
-        System.out.println("Account " + effRights.granteeName() + " has the following rights on target " + effRights.targetType() + " " + effRights.targetName());
+        console.println("Account " + effRights.granteeName() + " has the following rights on target " + effRights.targetType() + " " + effRights.targetName());
         dumpEffectiveRight(effRights, expandSetAttrs, expandGetAttrs);
     }
 
@@ -4093,18 +4096,18 @@ public class ProvUtil implements HttpDebugListener {
 
         List<String> presetRights = effRights.presetRights();
         if (presetRights != null && presetRights.size() > 0) {
-            System.out.println("================");
-            System.out.println("Preset rights");
-            System.out.println("================");
+            console.println("================");
+            console.println("Preset rights");
+            console.println("================");
             for (String r : presetRights)
-                System.out.println("    " + r);
+                console.println("    " + r);
         }
 
         displayAttrs("set", expandSetAttrs, effRights.canSetAllAttrs(), effRights.canSetAttrs());
         displayAttrs("get", expandGetAttrs, effRights.canGetAllAttrs(), effRights.canGetAttrs());
 
-        System.out.println();
-        System.out.println();
+        console.println();
+        console.println();
     }
 
     private void displayAttrs(String op, boolean expandAll, boolean allAttrs, SortedMap<String, RightCommand.EffectiveAttr> attrs) {
@@ -4112,29 +4115,29 @@ public class ProvUtil implements HttpDebugListener {
             return;
 
         String format = "    %-50s %-30s\n";
-        System.out.println();
-        System.out.println("=========================");
-        System.out.println(op + " attributes rights");
-        System.out.println("=========================");
+        console.println();
+        console.println("=========================");
+        console.println(op + " attributes rights");
+        console.println("=========================");
         if (allAttrs)
-            System.out.println("Can " + op + " all attributes");
+            console.println("Can " + op + " all attributes");
 
         if (!allAttrs || expandAll) {
-            System.out.println("Can " + op + " the following attributes");
-            System.out.println("--------------------------------");
-            System.out.printf(format, "attribute", "default");
-            System.out.printf(format, "----------------------------------------", "--------------------");
+            console.println("Can " + op + " the following attributes");
+            console.println("--------------------------------");
+            console.printf(format, "attribute", "default");
+            console.printf(format, "----------------------------------------", "--------------------");
             for (RightCommand.EffectiveAttr ea : attrs.values()) {
                 boolean first = true;
                 if (ea.getDefault().isEmpty()) {
-                    System.out.printf(format, ea.getAttrName(), "");
+                    console.printf(format, ea.getAttrName(), "");
                 } else {
                     for (String v: ea.getDefault()) {
                         if (first) {
-                            System.out.printf(format, ea.getAttrName(), v);
+                            console.printf(format, ea.getAttrName(), v);
                             first = false;
                         } else
-                            System.out.printf(format, "", v);
+                            console.printf(format, "", v);
                     }
                 }
             }
@@ -4173,10 +4176,10 @@ public class ProvUtil implements HttpDebugListener {
             grantee = args[4];
         }
 
-        System.out.println("Domain:  " + domain);
-        System.out.println("Cos:     " + cos);
-        System.out.println("Grantee: " + grantee);
-        System.out.println();
+        console.println("Domain:  " + domain);
+        console.println("Cos:     " + cos);
+        console.println("Grantee: " + grantee);
+        console.println();
 
         RightCommand.EffectiveRights effRights = mProv.getCreateObjectAttrs(targetType,
                                                                             domainBy, domain,
@@ -4217,8 +4220,8 @@ public class ProvUtil implements HttpDebugListener {
                 granteeIncludeGroupsGranteeBelongs);
 
         String format = "%-12.12s %-36.36s %-30.30s %-12.12s %-36.36s %-30.30s %s\n";
-        System.out.printf(format, "target type", "target id", "target name", "grantee type", "grantee id", "grantee name", "right");
-        System.out.printf(format,
+        console.printf(format, "target type", "target id", "target name", "grantee type", "grantee id", "grantee name", "right");
+        console.printf(format,
                 "------------",
                 "------------------------------------",
                 "------------------------------",
@@ -4231,7 +4234,7 @@ public class ProvUtil implements HttpDebugListener {
             // String deny = ace.deny()?"-":"";
             RightModifier rightModifier = ace.rightModifier();
             String rm = (rightModifier==null)?"":String.valueOf(rightModifier.getModifier());
-            System.out.printf(format,
+            console.printf(format,
                               ace.targetType(),
                               ace.targetId(),
                               ace.targetName(),
@@ -4240,7 +4243,7 @@ public class ProvUtil implements HttpDebugListener {
                               ace.granteeName(),
                               rm + ace.right());
         }
-        System.out.println();
+        console.println();
     }
 
     private void doGrantRight(String[] args) throws ServiceException, ArgException {
@@ -4281,22 +4284,22 @@ public class ProvUtil implements HttpDebugListener {
 
                 if ("exp".equals(key)) {
                     long exp = Long.parseLong(value);
-                    System.out.format("%s: %s (%s)\n", key, value, DateUtil.toRFC822Date(new Date(exp)));
+                    console.format("%s: %s (%s)\n", key, value, DateUtil.toRFC822Date(new Date(exp)));
                 } else
-                    System.out.format("%s: %s\n", key, value);
+                    console.format("%s: %s\n", key, value);
             }
         } catch (AuthTokenException e) {
-            System.out.println("Unable to parse auth token: " + e.getMessage());
+            console.println("Unable to parse auth token: " + e.getMessage());
         }
 
-        System.out.println();
+        console.println();
 
     }
 
     private void doGetAllFreeBusyProviders() throws ServiceException, IOException {
         FbCli fbcli = new FbCli();
         for (FbCli.FbProvider fbprov : fbcli.getAllFreeBusyProviders())
-            System.out.println(fbprov.toString());
+            console.println(fbprov.toString());
     }
 
     private void doGetFreeBusyQueueInfo(String[] args) throws ServiceException, IOException {
@@ -4305,7 +4308,7 @@ public class ProvUtil implements HttpDebugListener {
         if (args.length > 1)
             name = args[1];
         for (FbCli.FbQueue fbqueue : fbcli.getFreeBusyQueueInfo(name))
-            System.out.println(fbqueue.toString());
+            console.println(fbqueue.toString());
     }
 
     private void doPushFreeBusy(String[] args) throws ServiceException, IOException {
@@ -4325,7 +4328,7 @@ public class ProvUtil implements HttpDebugListener {
             accountSet.add(acct);
         }
         for (String host : accountMap.keySet()) {
-            System.out.println("pushing to server " + host);
+            console.println("pushing to server " + host);
             fbcli.setServer(host);
             fbcli.pushFreeBusyForAccounts(accountMap.get(host));
         }
@@ -4335,7 +4338,7 @@ public class ProvUtil implements HttpDebugListener {
         lookupDomain(args[1]);
         FbCli fbcli = new FbCli();
         for (Server server : mProv.getAllServers()) {
-            System.out.println("pushing to server " + server.getName());
+            console.println("pushing to server " + server.getName());
             fbcli.setServer(server.getName());
             fbcli.pushFreeBusyForDomain(args[1]);
         }
@@ -4366,16 +4369,16 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         if (args == null || args.length == 1 || cat == null) {
-            System.out.println(" zmprov is used for provisioning. Try:");
-            System.out.println("");
+            console.println(" zmprov is used for provisioning. Try:");
+            console.println("");
             for (Category c: Category.values()) {
-                System.out.printf("     zmprov help %-15s %s\n", c.name().toLowerCase(), c.getDescription());
+                console.printf("     zmprov help %-15s %s\n", c.name().toLowerCase(), c.getDescription());
             }
 
         }
 
         if (cat != null) {
-            System.out.println("");
+            console.println("");
             for (Command c : Command.values()) {
                 if (!c.hasHelp()) continue;
                 if (cat == Category.COMMANDS || cat == c.getCategory()) {
@@ -4384,55 +4387,55 @@ public class ProvUtil implements HttpDebugListener {
                     if (via == null ||
                         (via == Command.Via.ldap && mUseLdap) ||
                         (via == Command.Via.soap && !mUseLdap))
-                        System.out.printf("  %s(%s) %s\n\n", c.getName(), c.getAlias(), c.getHelp());
+                        console.printf("  %s(%s) %s\n\n", c.getName(), c.getAlias(), c.getHelp());
                     */
-                    System.out.printf("  %s(%s) %s\n", c.getName(), c.getAlias(), c.getHelp());
+                    console.printf("  %s(%s) %s\n", c.getName(), c.getAlias(), c.getHelp());
                     if (via == Command.Via.ldap)
-                        System.out.printf("    -- NOTE: %s can only be used with \"zmprov -l/--ldap\"\n", c.getName());
-                    System.out.printf("\n");
+                        console.printf("    -- NOTE: %s can only be used with \"zmprov -l/--ldap\"\n", c.getName());
+                    console.printf("\n");
                 }
             }
 
             Category.help(cat);
         }
-        System.out.println();
+        console.println();
     }
 
     private long mSendStart;
 
     @Override
     public void receiveSoapMessage(PostMethod postMethod, Element envelope) {
-        System.out.printf("======== SOAP RECEIVE =========\n");
+        console.printf("======== SOAP RECEIVE =========\n");
 
         if (mDebug == SoapDebugLevel.high) {
             Header[] headers = postMethod.getResponseHeaders();
             for (Header header : headers) {
-                System.out.println(header.toString().trim()); // trim the ending crlf
+                console.println(header.toString().trim()); // trim the ending crlf
             }
-            System.out.println();
+            console.println();
         }
 
         long end = System.currentTimeMillis();
-        System.out.println(envelope.prettyPrint());
-        System.out.printf("=============================== (%d msecs)\n", end-mSendStart);
+        console.println(envelope.prettyPrint());
+        console.printf("=============================== (%d msecs)\n", end-mSendStart);
     }
 
     @Override
     public void sendSoapMessage(PostMethod postMethod, Element envelope) {
-        System.out.println("========== SOAP SEND ==========");
+        console.println("========== SOAP SEND ==========");
 
         if (mDebug == SoapDebugLevel.high) {
             Header[] headers = postMethod.getRequestHeaders();
             for (Header header : headers) {
-                System.out.println(header.toString().trim()); // trim the ending crlf
+                console.println(header.toString().trim()); // trim the ending crlf
             }
-            System.out.println();
+            console.println();
         }
 
         mSendStart = System.currentTimeMillis();
 
-        System.out.println(envelope.prettyPrint());
-        System.out.println("===============================");
+        console.println(envelope.prettyPrint());
+        console.println("===============================");
     }
 
     void throwSoapOnly() throws ServiceException {
