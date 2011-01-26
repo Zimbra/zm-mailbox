@@ -116,6 +116,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * LDAP implementation of {@link Provisioning}.
@@ -3835,6 +3837,24 @@ public class LdapProvisioning extends Provisioning {
         
         return cos.getIntAttr(name, defaultValue);
     }
+    
+    private String getString(Account acct, Cos cos, Attributes attrs, String name) 
+    throws ServiceException {
+        if (acct != null) {
+            return acct.getAttr(name);
+        }
+
+        try {
+            String v = LdapUtil.getAttrString(attrs, name);
+            if (v != null) {
+                return v;
+            }
+        } catch (NamingException ne) {
+            throw ServiceException.FAILURE(ne.getMessage(), ne);
+        }
+        
+        return cos.getAttr(name);
+    }
 
 
     /**
@@ -3864,8 +3884,21 @@ public class LdapProvisioning extends Provisioning {
         int minLowerCase = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinLowerCaseChars, 0);
         int minNumeric = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinNumericChars, 0);
         int minPunctuation = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinPunctuationChars, 0);
-
-        boolean hasPolicies = minUpperCase > 0 || minLowerCase > 0 || minNumeric > 0 || minPunctuation > 0;
+        int minAlpha = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinAlphaChars, 0);
+        
+        String allowedChars = getString(acct, cos, attrs, Provisioning.A_zimbraPasswordAllowedChars);
+        Pattern allowedCharsPattern = null;
+        if (allowedChars != null) {
+            try {
+                allowedCharsPattern = Pattern.compile(allowedChars);
+            } catch (PatternSyntaxException e) {
+                throw AccountServiceException.INVALID_PASSWORD(Provisioning.A_zimbraPasswordAllowedChars + 
+                        " is not valid regex: " + e.getMessage());
+            }
+        }
+        
+        boolean hasPolicies = minUpperCase > 0 || minLowerCase > 0 || minNumeric > 0 || minPunctuation > 0 ||
+                minAlpha > 0 || allowedCharsPattern != null;
             
         if (!hasPolicies) {
             return;
@@ -3873,11 +3906,13 @@ public class LdapProvisioning extends Provisioning {
 
         int upper = 0;
         int lower = 0;
-        int punctuation = 0;
         int numeric = 0;
+        int punctuation = 0;
+        int alpha = 0;
 
         for (int i=0; i < password.length(); i++) {
             int ch = password.charAt(i);
+            boolean isAlpha = true;
 
             if (Character.isUpperCase(ch)) {
                 upper++;
@@ -3885,9 +3920,24 @@ public class LdapProvisioning extends Provisioning {
                 lower++;
             } else if (Character.isDigit(ch)) {
                 numeric++;
+                isAlpha = false;
             } else if (isAsciiPunc(ch)) {
                 punctuation++;
+                isAlpha = false;
             }
+            
+            if (isAlpha) {
+                alpha++;
+            }
+            
+            if (allowedCharsPattern != null) {
+                char character = password.charAt(i);
+                if (!allowedCharsPattern.matcher(Character.toString(character)).matches()) {
+                    throw AccountServiceException.INVALID_PASSWORD(character + " is not an allowed character", 
+                            new Argument(Provisioning.A_zimbraPasswordAllowedChars, allowedChars, Argument.Type.STR));
+                }
+            }
+            
         }
 
         if (upper < minUpperCase) {
@@ -3905,6 +3955,10 @@ public class LdapProvisioning extends Provisioning {
         if (punctuation < minPunctuation) {
             throw AccountServiceException.INVALID_PASSWORD("not enough punctuation characters", 
                     new Argument(Provisioning.A_zimbraPasswordMinPunctuationChars, minPunctuation, Argument.Type.NUM));
+        }
+        if (alpha < minAlpha) {
+            throw AccountServiceException.INVALID_PASSWORD("not enough alpha characters", 
+                    new Argument(Provisioning.A_zimbraPasswordMinAlphaChars, minAlpha, Argument.Type.NUM));
         }
     }
 

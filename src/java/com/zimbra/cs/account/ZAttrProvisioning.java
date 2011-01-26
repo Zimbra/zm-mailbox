@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 7.0.0_BETA1_1111 pshao 20110124-1402 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5584,6 +5584,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraObjectType = "zimbraObjectType";
 
     /**
+     * regex of alllowed characters in password
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1163)
+    public static final String A_zimbraPasswordAllowedChars = "zimbraPasswordAllowedChars";
+
+    /**
      * registered change password listener name
      *
      * @since ZCS 5.0.1
@@ -5675,6 +5683,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=35)
     public static final String A_zimbraPasswordMinAge = "zimbraPasswordMinAge";
+
+    /**
+     * minimum number of alphabet characters required in a password
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1162)
+    public static final String A_zimbraPasswordMinAlphaChars = "zimbraPasswordMinAlphaChars";
 
     /**
      * minimum length of a password

@@ -5323,4 +5323,14 @@ TODO: delete them permerntly from here
   <desc>When set to true, robots.txt on mailboxd will be set up to keep web crawlers out</desc>
 </attr>
 
+<attr id="1162" name="zimbraPasswordMinAlphaChars" type="integer" min="0" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>minimum number of alphabet characters required in a password</desc>
+</attr>
+
+<attr id="1163" name="zimbraPasswordAllowedChars" type="cstring" max="1024" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1">
+  <desc>regex of alllowed characters in password</desc>
+</attr>
+
+
 </attrs>

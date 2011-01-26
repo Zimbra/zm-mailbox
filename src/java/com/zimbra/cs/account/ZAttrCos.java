@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 7.0.0_BETA1_1111 pshao 20110124-1402 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -14158,6 +14158,78 @@ public class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * regex of alllowed characters in password
+     *
+     * @return zimbraPasswordAllowedChars, or null if unset
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1163)
+    public String getPasswordAllowedChars() {
+        return getAttr(Provisioning.A_zimbraPasswordAllowedChars, null);
+    }
+
+    /**
+     * regex of alllowed characters in password
+     *
+     * @param zimbraPasswordAllowedChars new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1163)
+    public void setPasswordAllowedChars(String zimbraPasswordAllowedChars) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordAllowedChars, zimbraPasswordAllowedChars);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex of alllowed characters in password
+     *
+     * @param zimbraPasswordAllowedChars new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1163)
+    public Map<String,Object> setPasswordAllowedChars(String zimbraPasswordAllowedChars, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordAllowedChars, zimbraPasswordAllowedChars);
+        return attrs;
+    }
+
+    /**
+     * regex of alllowed characters in password
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1163)
+    public void unsetPasswordAllowedChars() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordAllowedChars, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex of alllowed characters in password
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1163)
+    public Map<String,Object> unsetPasswordAllowedChars(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordAllowedChars, "");
+        return attrs;
+    }
+
+    /**
      * whether or not to enforce password history. Number of unique passwords
      * a user must have before being allowed to re-use an old one. A value of
      * 0 means no password history.
@@ -14809,6 +14881,78 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPasswordMinAge(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPasswordMinAge, "");
+        return attrs;
+    }
+
+    /**
+     * minimum number of alphabet characters required in a password
+     *
+     * @return zimbraPasswordMinAlphaChars, or 0 if unset
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1162)
+    public int getPasswordMinAlphaChars() {
+        return getIntAttr(Provisioning.A_zimbraPasswordMinAlphaChars, 0);
+    }
+
+    /**
+     * minimum number of alphabet characters required in a password
+     *
+     * @param zimbraPasswordMinAlphaChars new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1162)
+    public void setPasswordMinAlphaChars(int zimbraPasswordMinAlphaChars) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMinAlphaChars, Integer.toString(zimbraPasswordMinAlphaChars));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * minimum number of alphabet characters required in a password
+     *
+     * @param zimbraPasswordMinAlphaChars new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1162)
+    public Map<String,Object> setPasswordMinAlphaChars(int zimbraPasswordMinAlphaChars, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMinAlphaChars, Integer.toString(zimbraPasswordMinAlphaChars));
+        return attrs;
+    }
+
+    /**
+     * minimum number of alphabet characters required in a password
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1162)
+    public void unsetPasswordMinAlphaChars() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMinAlphaChars, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * minimum number of alphabet characters required in a password
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1162)
+    public Map<String,Object> unsetPasswordMinAlphaChars(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordMinAlphaChars, "");
         return attrs;
     }
 
