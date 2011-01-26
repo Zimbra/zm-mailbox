@@ -5332,7 +5332,7 @@ TODO: delete them permerntly from here
   <desc>regex of alllowed characters in password</desc>
 </attr>
 
-<attr id="1164" name="zimbraFeatureContactsDetailedSearch" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.1">
+<attr id="1164" name="zimbraFeatureContactsDetailedSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.1">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether detailed contact search UI is enabled</desc>
 </attr>

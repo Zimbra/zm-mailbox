@@ -3035,7 +3035,7 @@ public class ZAttrProvisioning {
      * @since ZCS 7.1
      */
     @ZAttr(id=1164)
-    public static final String A_zimbraFeatureContactsDetailedSearch = "zimbraFeatureContactsDetailedSearch";
+    public static final String A_zimbraFeatureContactsDetailedSearchEnabled = "zimbraFeatureContactsDetailedSearchEnabled";
 
     /**
      * contact features
