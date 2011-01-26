@@ -118,8 +118,6 @@
 
     <property name="jetty.home.dir" location="${zimbra.home.dir}/jetty"/>
     <property name="jetty.conf.dir" value="${jetty.home.dir}/etc"/>
-    <property name="jetty.src.dir" location="../ThirdParty/jetty"/>
-    <property name="jetty.version" value="6.1.22.z6"/>
     <available property="jetty.start.jar.exists" file="${jetty.home.dir}/start.jar"/>
 
     <property name="ical4j.jar" value="ical4j-0.9.16-patched.jar"/>
@@ -1100,14 +1098,7 @@
   </target>
 
     <target name="reset-jetty" depends="stop-webserver,build-init" description="Resets jetty">
-        <delete dir="${jetty.home.dir}"/>
         <delete dir="${zimbra.home.dir}/data/tmp/jetty"/>
-        <gunzip src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" dest="${build.dir}/jetty-${jetty.version}.tar"/>
-        <untar src="${build.dir}/jetty-${jetty.version}.tar" dest="${zimbra.home.dir}" overwrite="true"/>
-        <move toDir="${jetty.home.dir}">
-            <fileset dir="${zimbra.home.dir}/jetty-${jetty.version}" />
-        </move>
-        <delete file="${build.dir}/jetty-${jetty.version}.tar"/>
         <mkdir dir="${jetty.home.dir}/logs"/>
         <mkdir dir="${jetty.home.dir}/webapps"/>
         <mkdir dir="${jetty.home.dir}/work"/>
@@ -1118,18 +1109,18 @@
         <mkdir dir="${zimbra.home.dir}/data/tmp/jetty"/>
     </target>
 
-    <target name="reset-open-ldap" description="Resets OpenLDAP" if="is-unix">
-        <if><available file="../ZimbraServer/src/perl/install-openldap"/> <!-- Not available for community build. -->
+    <target name="install-thirdparty" description="Installs third party binaries" if="is-unix">
+        <if><available file="../ZimbraServer/src/perl/install-thirdparty"/> <!-- Not available for community build. -->
             <then>
             <antcall target="stop-ldap"/>
-            <exec failonerror="true" executable="../ZimbraServer/src/perl/install-openldap">
+            <exec failonerror="true" executable="../ZimbraServer/src/perl/install-thirdparty">
                 <arg line="main"/>
             </exec>
             </then>
         </if>
     </target>
 
-    <target name="reset-all" depends="reset-jetty,reset-open-ldap,reset-the-world" description="Reset the world plus jetty and OpenLDAP">
+    <target name="reset-all" depends="install-thirdparty,reset-jetty,reset-the-world" description="Reset the world plus jetty and OpenLDAP">
         <ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="admin-deploy" inheritAll="false"/>
         <ant dir="../ZimbraWebClient" target="clean" inheritAll="false"/>
