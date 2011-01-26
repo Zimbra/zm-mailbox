@@ -522,4 +522,8 @@ public class AttributeInfo {
     public Version getDeprecatedSince() {
         return mDeprecatedSince;
     }
+    
+    public boolean isDeprecated() {
+        return getDeprecatedSince() != null; 
+    }
 }

@@ -1049,6 +1049,10 @@ public class AttributeManager {
             if (name.charAt(0) == '-' || name.charAt(0) == '+') name = name.substring(1);
             AttributeInfo info = mAttrs.get(name.toLowerCase());
             if (info != null) {
+                if (info.isDeprecated()) {
+                    ZimbraLog.misc.warn("Attempt to modify a deprecated attribute: " + name);
+                }
+                
                 // IDN unicode to ACE conversion needs to happen before checkValue or else
                 // regex attrs will be rejected by checkValue
                 if (idnType(name).isEmailOrIDN()) {
@@ -1056,8 +1060,9 @@ public class AttributeManager {
                     value = attrs.get(name);
                 }
                 info.checkValue(value, checkImmutable, attrs);
-                if (allowCallback && info.getCallback() != null)
+                if (allowCallback && info.getCallback() != null) {
                     info.getCallback().preModify(context, name, value, attrs, entry, isCreate);
+                }
             } else {
                 ZimbraLog.misc.warn("checkValue: no attribute info for: "+name);
             }

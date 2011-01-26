@@ -765,28 +765,28 @@ public class ProvUtil implements HttpDebugListener {
             doCountObjects(args);
             break;
         case CREATE_ACCOUNT:
-            System.out.println(mProv.createAccount(args[1], args[2].equals("")? null : args[2], getMap(args, 3)).getId());
+            System.out.println(mProv.createAccount(args[1], args[2].equals("")? null : args[2], getMapAndCheck(args, 3)).getId());
             break;
         case CREATE_ALIAS_DOMAIN:
-            System.out.println(doCreateAliasDomain(args[1], args[2], getMap(args, 3)).getId());
+            System.out.println(doCreateAliasDomain(args[1], args[2], getMapAndCheck(args, 3)).getId());
             break;
         case CREATE_COS:
-            System.out.println(mProv.createCos(args[1], getMap(args, 2)).getId());
+            System.out.println(mProv.createCos(args[1], getMapAndCheck(args, 2)).getId());
             break;
         case CREATE_DOMAIN:
-            System.out.println(mProv.createDomain(args[1], getMap(args, 2)).getId());
+            System.out.println(mProv.createDomain(args[1], getMapAndCheck(args, 2)).getId());
             break;
         case CREATE_IDENTITY:
-            mProv.createIdentity(lookupAccount(args[1]), args[2], getMap(args, 3));
+            mProv.createIdentity(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3));
             break;
         case CREATE_SIGNATURE:
-            System.out.println(mProv.createSignature(lookupAccount(args[1]), args[2], getMap(args, 3)).getId());
+            System.out.println(mProv.createSignature(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3)).getId());
             break;
         case CREATE_DATA_SOURCE:
-            System.out.println(mProv.createDataSource(lookupAccount(args[1]), DataSource.Type.fromString(args[2]), args[3], getMap(args, 4)).getId());
+            System.out.println(mProv.createDataSource(lookupAccount(args[1]), DataSource.Type.fromString(args[2]), args[3], getMapAndCheck(args, 4)).getId());
             break;
         case CREATE_SERVER:
-            System.out.println(mProv.createServer(args[1], getMap(args, 2)).getId());
+            System.out.println(mProv.createServer(args[1], getMapAndCheck(args, 2)).getId());
             break;
         case CREATE_XMPP_COMPONENT:
             doCreateXMPPComponent(args);
@@ -916,30 +916,31 @@ public class ProvUtil implements HttpDebugListener {
             doHelp(args);
             break;
         case MODIFY_ACCOUNT:
-            mProv.modifyAttrs(lookupAccount(args[1]), getMap(args,2), true);
+            mProv.modifyAttrs(lookupAccount(args[1]), getMapAndCheck(args,2), true);
             break;
         case MODIFY_DATA_SOURCE:
             account = lookupAccount(args[1]);
-            mProv.modifyDataSource(account, lookupDataSourceId(account, args[2]), getMap(args,3));
+            mProv.modifyDataSource(account, lookupDataSourceId(account, args[2]), getMapAndCheck(args,3));
             break;
         case MODIFY_IDENTITY:
-            mProv.modifyIdentity(lookupAccount(args[1]), args[2], getMap(args,3));
+            account = lookupAccount(args[1]);
+            mProv.modifyIdentity(account, args[2], getMapAndCheck(args,3));
             break;
         case MODIFY_SIGNATURE:
             account = lookupAccount(args[1]);
-            mProv.modifySignature(account, lookupSignatureId(account, args[2]), getMap(args,3));
+            mProv.modifySignature(account, lookupSignatureId(account, args[2]), getMapAndCheck(args,3));
             break;
         case MODIFY_COS:
-            mProv.modifyAttrs(lookupCos(args[1]), getMap(args, 2), true);
+            mProv.modifyAttrs(lookupCos(args[1]), getMapAndCheck(args, 2), true);
             break;
         case MODIFY_CONFIG:
-            mProv.modifyAttrs(mProv.getConfig(), getMap(args, 1), true);
+            mProv.modifyAttrs(mProv.getConfig(), getMapAndCheck(args, 1), true);
             break;
         case MODIFY_DOMAIN:
-            mProv.modifyAttrs(lookupDomain(args[1]), getMap(args, 2), true);
+            mProv.modifyAttrs(lookupDomain(args[1]), getMapAndCheck(args, 2), true);
             break;
         case MODIFY_SERVER:
-            mProv.modifyAttrs(lookupServer(args[1]), getMap(args, 2), true);
+            mProv.modifyAttrs(lookupServer(args[1]), getMapAndCheck(args, 2), true);
             break;
         case DELETE_ACCOUNT:
             doDeleteAccount(args);
@@ -1027,7 +1028,7 @@ public class ProvUtil implements HttpDebugListener {
             System.out.println("Password passed strength check.");
             break;
         case CREATE_DISTRIBUTION_LIST:
-            System.out.println(mProv.createDistributionList(args[1], getMap(args, 2)).getId());
+            System.out.println(mProv.createDistributionList(args[1], getMapAndCheck(args, 2)).getId());
             break;
         case CREATE_DISTRIBUTION_LISTS_BULK:
             doCreateDistributionListsBulk(args);
@@ -1042,7 +1043,7 @@ public class ProvUtil implements HttpDebugListener {
             doGetAllXMPPComponents();
             break;
         case MODIFY_DISTRIBUTION_LIST:
-            mProv.modifyAttrs(lookupDistributionList(args[1]), getMap(args, 2), true);
+            mProv.modifyAttrs(lookupDistributionList(args[1]), getMapAndCheck(args, 2), true);
             break;
         case DELETE_DISTRIBUTION_LIST:
             mProv.deleteDistributionList(lookupDistributionList(args[1]).getId());
@@ -1087,13 +1088,13 @@ public class ProvUtil implements HttpDebugListener {
             mProv.renameDistributionList(lookupDistributionList(args[1]).getId(), args[2]);
             break;
         case CREATE_CALENDAR_RESOURCE:
-            System.out.println(mProv.createCalendarResource(args[1], args[2].equals("")? null : args[2], getMap(args, 3)).getId());
+            System.out.println(mProv.createCalendarResource(args[1], args[2].equals("")? null : args[2], getMapAndCheck(args, 3)).getId());
             break;
         case DELETE_CALENDAR_RESOURCE:
             mProv.deleteCalendarResource(lookupCalendarResource(args[1]).getId());
             break;
         case MODIFY_CALENDAR_RESOURCE:
-            mProv.modifyAttrs(lookupCalendarResource(args[1]), getMap(args, 2), true);
+            mProv.modifyAttrs(lookupCalendarResource(args[1]), getMapAndCheck(args, 2), true);
             break;
         case RENAME_CALENDAR_RESOURCE:
             mProv.renameCalendarResource(lookupCalendarResource(args[1]).getId(), args[2]);
@@ -2832,7 +2833,36 @@ public class ProvUtil implements HttpDebugListener {
         return GranteeBy.name;
     }
 
-
+    private void checkDeprecatedAttrs(Map<String, ? extends Object> attrs) throws ServiceException {
+        AttributeManager am = AttributeManager.getInstance();
+        boolean hadWarnings = false;
+        for (String attr : attrs.keySet()) {
+            AttributeInfo ai = am.getAttributeInfo(attr);
+            if (ai == null) {
+                continue;
+            }
+            
+            if (ai.isDeprecated()) {
+                hadWarnings = true;
+                System.out.println("Warn: attribute " + attr + " has been deprecated since " + 
+                        ai.getDeprecatedSince().toString());
+            }
+        }
+        
+        if (hadWarnings) {
+            System.out.println();
+        }
+    }
+    
+    /*
+     * get map and check/warn deprecated attrs
+     */
+    private Map<String, Object> getMapAndCheck(String[] args, int offset) throws ArgException, ServiceException {
+        Map<String, Object> attrs = getMap(args, offset);
+        checkDeprecatedAttrs(attrs);
+        return attrs;
+    }
+    
     private Map<String, Object> getMap(String[] args, int offset) throws ArgException {
         try {
             return StringUtil.keyValueArrayToMultiMap(args, offset);
@@ -3824,7 +3854,7 @@ public class ProvUtil implements HttpDebugListener {
         //4 = class
         //5 = category
         //6 = type
-        Map<String,Object> map = getMap(args, 7);
+        Map<String,Object> map = getMapAndCheck(args, 7);
         map.put(Provisioning.A_zimbraXMPPComponentClassName, args[4]);
         map.put(Provisioning.A_zimbraXMPPComponentCategory, args[5]);
         map.put(Provisioning.A_zimbraXMPPComponentType, args[6]);
