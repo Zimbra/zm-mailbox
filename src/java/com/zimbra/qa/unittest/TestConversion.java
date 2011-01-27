@@ -38,8 +38,7 @@ public class TestConversion extends TestCase {
     /**
      * Tests downloading attachments from a TNEF message (bug 44263).
      */
-    // Disabled until bug 55859 is fixed.
-    public void disabledTestTnef()
+    public void testTnef()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
 
@@ -56,9 +55,16 @@ public class TestConversion extends TestCase {
         assertEquals(851, data.length);
         
         ZMimePart part = TestUtil.getPart(msg, "upload.gif");
-        assertEquals(73, part.getSize());
+        checkPartSize(73, part.getSize());
         part = TestUtil.getPart(msg, "upload2.gif");
-        assertEquals(851, part.getSize());
+        checkPartSize(851, part.getSize());
+    }
+    
+    /**
+     * The part size is calculated from the base64 content, so it may be off by a few bytes.
+     */
+    private void checkPartSize(long expected, long actual) {
+        assertTrue("expected " + expected + " +/- 4 bytes, got " + actual, Math.abs(expected - actual) <= 4);
     }
     
     public void tearDown()
