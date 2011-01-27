@@ -68,8 +68,7 @@ public final class TrustedSenderList extends AttributeCallback {
 
         Account account = (Account) entry;
 
-        int max = account.getIntAttr(
-                Provisioning.A_zimbraMailTrustedSenderListMaxNumEntries, 0);
+        int max = account.getMailTrustedSenderListMaxNumEntries();
 
         Object replace = mod.get(name);
         Object add = mod.get("+" + name);
