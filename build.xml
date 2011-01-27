@@ -428,25 +428,25 @@
                 <mkdir dir="${build.dir}/ldap-config/config"/>
 
               <!-- Zimbra schema for pre OpenLDAP 2.4 - uses zimbra.schema-template, should eventually retire zimbra.schema-template and only use zimbra-ocs.xml -->
-                <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
+                <java classname="com.zimbra.cs.account.AttributeManagerUtil" fork="true" classpathref="class.path"
                       failonerror="true">
                     <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
                     <arg line="-a generateLdapSchema -i ${build.dir}/attrs -t ${config.dir}/ldap/zimbra.schema-template -o ${build.dir}/ldap-config/zimbra.schema"/>
                 </java>
 
               <!-- Zimbra schema for OpenLDAP 2.4 - use zimbra-ocs.xml -->
-                <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
+                <java classname="com.zimbra.cs.account.AttributeManagerUtil" fork="true" classpathref="class.path"
                       failonerror="true">
                     <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
                     <arg line="-a generateSchemaLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/config/zimbra.ldif"/>
                 </java>
 
-                <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
+                <java classname="com.zimbra.cs.account.AttributeManagerUtil" fork="true" classpathref="class.path"
                       failonerror="true">
                     <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
                     <arg line="-a generateGlobalConfigLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_globalconfig.ldif"/>
                 </java>
-                <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
+                <java classname="com.zimbra.cs.account.AttributeManagerUtil" fork="true" classpathref="class.path"
                       failonerror="true">
                     <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
                     <arg line="-a generateDefaultCOSLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_defaultcos.ldif"/>
@@ -499,7 +499,7 @@
     </target>
 
     <target name="generate-getter">
-       <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
+       <java classname="com.zimbra.cs.account.AttributeManagerUtil" fork="true" classpathref="class.path"
               failonerror="true">
           <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
           <arg line="-a generateGetters -c ${getter.class} -i ${config.dir}/attrs -r ${src.java.dir}/com/zimbra/cs/account/${getter.output}"/>
@@ -507,7 +507,7 @@
     </target>
 
     <target name="generate-provisioning">
-       <java classname="com.zimbra.cs.account.AttributeManager" fork="true" classpathref="class.path"
+       <java classname="com.zimbra.cs.account.AttributeManagerUtil" fork="true" classpathref="class.path"
               failonerror="true">
           <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
           <arg line="-a generateProvisioning -i ${config.dir}/attrs -r ${src.java.dir}/com/zimbra/cs/account/ZAttrProvisioning.java"/>
