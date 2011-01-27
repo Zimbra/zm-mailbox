@@ -216,25 +216,25 @@ public final class LC {
     public static final KnownKey zimbra_index_max_pending_deletes = KnownKey.newKey(20);
 
     @Supported
-    public static final KnownKey zimbra_index_lucene_batch_merge_policy = KnownKey.newKey(true);
+    public static final KnownKey zimbra_index_lucene_merge_policy = KnownKey.newKey(true);
 
     @Supported
-    public static final KnownKey zimbra_index_lucene_batch_min_merge = KnownKey.newKey(1000);
+    public static final KnownKey zimbra_index_lucene_min_merge = KnownKey.newKey(1000);
 
     @Supported
-    public static final KnownKey zimbra_index_lucene_batch_max_merge = KnownKey.newKey(Integer.MAX_VALUE);
+    public static final KnownKey zimbra_index_lucene_max_merge = KnownKey.newKey(Integer.MAX_VALUE);
 
     @Supported
-    public static final KnownKey zimbra_index_lucene_batch_merge_factor = KnownKey.newKey(10);
+    public static final KnownKey zimbra_index_lucene_merge_factor = KnownKey.newKey(10);
 
     @Supported
-    public static final KnownKey zimbra_index_lucene_batch_use_compound_file = KnownKey.newKey(true);
+    public static final KnownKey zimbra_index_lucene_use_compound_file = KnownKey.newKey(true);
 
     @Supported
-    public static final KnownKey zimbra_index_lucene_batch_max_buffered_docs = KnownKey.newKey(200);
+    public static final KnownKey zimbra_index_lucene_max_buffered_docs = KnownKey.newKey(200);
 
     @Supported
-    public static final KnownKey zimbra_index_lucene_batch_ram_buffer_size_kb = KnownKey.newKey(10240);
+    public static final KnownKey zimbra_index_lucene_ram_buffer_size_kb = KnownKey.newKey(10240);
 
     @Supported
     public static final KnownKey zimbra_index_lucene_term_index_divisor = KnownKey.newKey(1);
@@ -244,27 +244,6 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_index_wildcard_max_terms_expanded = KnownKey.newKey(20000);
-
-    @Supported
-    public static final KnownKey zimbra_index_lucene_nobatch_merge_policy = KnownKey.newKey(true);
-
-    @Supported
-    public static final KnownKey zimbra_index_lucene_nobatch_min_merge = KnownKey.newKey(10);
-
-    @Supported
-    public static final KnownKey zimbra_index_lucene_nobatch_max_merge = KnownKey.newKey(Integer.MAX_VALUE);
-
-    @Supported
-    public static final KnownKey zimbra_index_lucene_nobatch_merge_factor = KnownKey.newKey(3);
-
-    @Supported
-    public static final KnownKey zimbra_index_lucene_nobatch_use_compound_file = KnownKey.newKey(true);
-
-    @Supported
-    public static final KnownKey zimbra_index_lucene_nobatch_max_buffered_docs = KnownKey.newKey(200);
-
-    @Supported
-    public static final KnownKey zimbra_index_lucene_nobatch_ram_buffer_size_kb = KnownKey.newKey(10240);
 
     public static final KnownKey zimbra_rights_delegated_admin_supported = KnownKey.newKey(true);
 
@@ -1075,7 +1054,7 @@ public final class LC {
 
     public static final KnownKey command_line_editing_enabled = KnownKey.newKey(true);
     public static final KnownKey thread_pool_warn_percent = KnownKey.newKey(100);
-    
+
     public static final KnownKey robots_txt = KnownKey.newKey("${zimbra_home}/conf/robots.txt");
 
     static {
