@@ -246,7 +246,6 @@ public class Mailbox {
         Connection conn      = null;
         RedoableOp recorder  = null;
         List<IndexItemEntry> indexItems = new ArrayList<IndexItemEntry>();
-        final List<Integer> indexDeleteIds = new ArrayList<Integer>();
         Map<Integer, MailItem> itemCache = null;
         OperationContext octxt = null;
         TargetConstraint tcon  = null;
@@ -342,7 +341,6 @@ public class Mailbox {
             sync = null;  config = null;  deletes = null;
             itemCache = null;
             indexItems.clear();
-            indexDeleteIds.clear();
             mDirty.clear();  mOtherDirtyStuff.clear();
             if (ZimbraLog.mailbox.isDebugEnabled())
                 ZimbraLog.mailbox.debug("clearing change");
@@ -1028,46 +1026,12 @@ public class Mailbox {
             mCurrentChange.mOtherDirtyStuff.add(obj);
     }
 
-    /**
-     * Adds the {@link MailItem} to the current change's list of things that need to be added to the Lucene index once
-     * the current transaction has committed.
-     *
-     * @param item item to index
-     * @param docs list of index documents. If this is null, indexing will be deferred for this item.
-     * @see #commitCache(Mailbox.MailboxChange)
-     */
-    void queueForIndexing(MailItem item, List<IndexDocument> docs) {
-        assert(Thread.holdsLock(this));
-
-        switch (item.getIndexStatus()) {
-            case NO:
-                return;
-            case DONE:
-                item.mData.indexId = MailItem.IndexStatus.STALE.id();
-                break;
-            default:
-                break;
-        }
-
-        if (docs != null && indexImmediately()) {
-            mCurrentChange.indexItems.add(new IndexItemEntry(item, docs));
-        } else { // defer
-            index.addDeferredId(item.getType(), item.getId());
-        }
-    }
-
-    /**
-     * @return TRUE if we are indexing items immediately, FALSE otherwise
-     */
-    private boolean indexImmediately() {
-        return index.getBatchThreshold() == 0;
-    }
-
     public synchronized Connection getOperationConnection() throws ServiceException {
         if (!mCurrentChange.isActive())
             throw ServiceException.FAILURE("cannot fetch Connection outside transaction", new Exception());
         return mCurrentChange.getConnection();
     }
+
     private synchronized void setOperationConnection(Connection conn) throws ServiceException {
         if (!mCurrentChange.isActive())
             throw ServiceException.FAILURE("cannot set Connection outside transaction", new Exception());
@@ -3976,7 +3940,7 @@ public class Mailbox {
             if (replies != null)
                 calItem.setReplies(replies);
 
-            queueForIndexing(calItem, null);
+            index.add(calItem);
 
             success = true;
             return calItem;
@@ -4277,8 +4241,9 @@ public class Mailbox {
                                                          preserveExistingAlarms, discardExistingInvites);
                 }
 
-                if (Invite.isOrganizerMethod(inv.getMethod()))  // Don't update the index for replies. (bug 55317)
-                    queueForIndexing(calItem, null);
+                if (Invite.isOrganizerMethod(inv.getMethod())) { // Don't update the index for replies. (bug 55317)
+                    index.add(calItem);
+                }
 
                 redoRecorder.setCalendarItemAttrs(calItem.getId(), calItem.getFolderId());
 
@@ -4552,13 +4517,9 @@ public class Mailbox {
         return addMessage(octxt, pm, folderId, noICal, flags, tagStr, conversationId, rcptEmail, null, customData, dctxt);
     }
 
-    private Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal,
-                              int flags, String tagStr, int conversationId, String rcptEmail,
-                              Message.DraftInfo dinfo, CustomMetadata customData, DeliveryContext dctxt)
-            throws IOException, ServiceException {
-        // make sure the message has been analyzed before taking the Mailbox lock
-        if (indexImmediately())
-            pm.analyzeFully();
+    private Message addMessage(OperationContext octxt, ParsedMessage pm, int folderId, boolean noICal, int flags,
+            String tagStr, int conversationId, String rcptEmail, Message.DraftInfo dinfo, CustomMetadata customData,
+            DeliveryContext dctxt) throws IOException, ServiceException {
 
         // and then actually add the message
         long start = ZimbraPerf.STOPWATCH_MBOX_ADD_MSG.start();
@@ -4709,7 +4670,6 @@ public class Mailbox {
 
         Message msg = null;
         boolean success = false;
-        boolean deferIndexing = (!indexImmediately() || pm.hasTemporaryAnalysisFailure());
 
         CustomMetadata.CustomMetadataList extended = MetadataCallback.preDelivery(pm);
         if (customData != null) {
@@ -4900,9 +4860,8 @@ public class Mailbox {
                 dctxt.setMailboxBlob(mblob);
             }
 
-            // step 7: queue new message for inline indexing
-            //        (don't call pm.generateLuceneDocuments() if we're deferring indexing -- don't want to force message analysis!)
-            queueForIndexing(msg, deferIndexing ? null : pm.getLuceneDocuments());
+            // step 7: queue new message for indexing
+            index.add(msg);
             success = true;
 
             // step 8: send lawful intercept message
@@ -4979,23 +4938,12 @@ public class Mailbox {
     /**
      * Saves draft.
      *
-     * @param octxt
-     * @param pm
-     * @param id
-     * @param origId
-     * @param replyType
-     * @param identityId
-     * @param accountId
      * @param autoSendTime time at which the draft needs to be auto-sent. Note that this method does not schedule
      *                     the task for auto-sending the draft. It just persists this time for tracking purposes.
-     * @return
-     * @throws IOException
-     * @throws ServiceException
      * @see com.zimbra.cs.service.mail.SaveDraft#handle(com.zimbra.common.soap.Element, java.util.Map)
      */
-    public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id,
-                             String origId, String replyType, String identityId, String accountId, long autoSendTime)
-    throws IOException, ServiceException {
+    public Message saveDraft(OperationContext octxt, ParsedMessage pm, int id, String origId, String replyType,
+            String identityId, String accountId, long autoSendTime) throws IOException, ServiceException {
         Message.DraftInfo dinfo = null;
         if ((replyType != null && origId != null) || !StringUtil.isNullOrEmpty(identityId) ||
             !StringUtil.isNullOrEmpty(accountId) || autoSendTime != 0)
@@ -5005,12 +4953,6 @@ public class Mailbox {
             return addMessage(octxt, pm, ID_FOLDER_DRAFTS, true, Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME,
                               null, ID_AUTO_INCREMENT, ":API:", dinfo, null, null);
         }
-
-        // make sure the message has been analyzed before taking the Mailbox lock
-        if (indexImmediately())
-            pm.analyzeFully();
-
-        boolean deferIndexing = !indexImmediately() || pm.hasTemporaryAnalysisFailure();
 
         // write the draft content directly to the mailbox's blob staging area
         StoreManager sm = StoreManager.getInstance();
@@ -5050,7 +4992,7 @@ public class Mailbox {
                 // update the content and increment the revision number
                 msg.setContent(staged, pm);
 
-                queueForIndexing(msg, deferIndexing ? null : pm.getLuceneDocuments());
+                index.add(msg);
 
                 success = true;
 
@@ -5996,6 +5938,7 @@ public class Mailbox {
     throws ServiceException {
         return createNote(octxt, content, location, new MailItem.Color(color), folderId);
     }
+
     public synchronized Note createNote(OperationContext octxt, String content, Rectangle location, MailItem.Color color, int folderId)
     throws ServiceException {
         content = StringUtil.stripControlCharacters(content);
@@ -6018,7 +5961,7 @@ public class Mailbox {
 
             Note note = Note.create(noteId, getFolderById(folderId), content, location, color, null);
 
-            queueForIndexing(note, null);
+            index.add(note);
             success = true;
             return note;
         } finally {
@@ -6041,7 +5984,7 @@ public class Mailbox {
             checkItemChangeID(note);
 
             note.setContent(content);
-            queueForIndexing(note, null);
+            index.add(note);
 
             success = true;
         } finally {
@@ -6089,18 +6032,6 @@ public class Mailbox {
     }
 
     public Contact createContact(OperationContext octxt, ParsedContact pc, int folderId, String tags) throws ServiceException {
-        boolean deferIndexing = !indexImmediately() || pc.hasTemporaryAnalysisFailure();
-        List<IndexDocument> indexData = null;
-        if (!deferIndexing) {
-            try {
-                indexData = pc.getLuceneDocuments(this);
-            } catch (ServiceException e) {
-                ZimbraLog.index.warn("Failed to analyze new contact in folder %d; contact will not be indexed",
-                        folderId, e);
-                indexData = Collections.emptyList();
-            }
-        }
-
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = null;
         if (pc.hasAttachment()) {
@@ -6140,7 +6071,7 @@ public class Mailbox {
                 int flags = 0;
                 Contact con = Contact.create(contactId, getFolderById(folderId), mblob, pc, flags, tags, null);
 
-                queueForIndexing(con, deferIndexing ? null : indexData);
+                index.add(con);
 
                 success = true;
                 return con;
@@ -6153,20 +6084,6 @@ public class Mailbox {
     }
 
     public void modifyContact(OperationContext octxt, int contactId, ParsedContact pc) throws ServiceException {
-        pc.analyze(this);
-
-        List<IndexDocument> indexData = null;
-        boolean deferIndexing = !indexImmediately() || pc.hasTemporaryAnalysisFailure();
-        if (!deferIndexing) {
-            try {
-                indexData = pc.getLuceneDocuments(this);
-            } catch (Exception e) {
-                ZimbraLog.index.info("caught exception analyzing contact %d; contact will not be indexed",
-                        contactId, e);
-                indexData = new ArrayList<IndexDocument>();
-            }
-        }
-
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = null;
         if (pc.hasAttachment()) {
@@ -6199,7 +6116,7 @@ public class Mailbox {
                     throw ServiceException.FAILURE("could not save contact blob", ioe);
                 }
 
-                queueForIndexing(con, indexData);
+                index.add(con);
                 success = true;
             } finally {
                 endTransaction(success);
@@ -7022,7 +6939,7 @@ public class Mailbox {
                 MailboxBlob mailboxBlob = doc.setContent(staged, pd);
                 redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
 
-                queueForIndexing(doc, (pd.hasTemporaryAnalysisFailure() || !indexImmediately()) ? null : pd.getDocumentList());
+                index.add(doc);
 
                 success = true;
                 return doc;
@@ -7048,7 +6965,6 @@ public class Mailbox {
 
     public Document addDocumentRevision(OperationContext octxt, int docId, ParsedDocument pd)
     throws IOException, ServiceException {
-        boolean deferIndexing = !indexImmediately() || pd.hasTemporaryAnalysisFailure();
 
         StoreManager sm = StoreManager.getInstance();
         StagedBlob staged = sm.stage(pd.getBlob(), this);
@@ -7075,7 +6991,7 @@ public class Mailbox {
                 MailboxBlob mailboxBlob = doc.setContent(staged, pd);
                 redoRecorder.setMessageBodyInfo(new MailboxBlobDataSource(mailboxBlob), mailboxBlob.getSize());
 
-                queueForIndexing(doc, deferIndexing ? null : pd.getDocumentList());
+                index.add(doc);
 
                 success = true;
                 return doc;
@@ -7102,26 +7018,18 @@ public class Mailbox {
     }
 
     public Message updateOrCreateChat(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
-        // make sure the message has been analzyed before taking the Mailbox lock
-        if (indexImmediately())
-            pm.analyzeFully();
         // special-case saving a new Chat
-        if (id == ID_AUTO_INCREMENT)
+        if (id == ID_AUTO_INCREMENT) {
             return createChat(octxt, pm, ID_FOLDER_IM_LOGS, Flag.BITMASK_FROM_ME, null);
-        else
+        } else {
             return updateChat(octxt, pm, id);
+        }
     }
 
     public Chat createChat(OperationContext octxt, ParsedMessage pm, int folderId, int flags, String tagsStr)
     throws IOException, ServiceException {
-        if (pm == null)
+        if (pm == null) {
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when adding chat to mailbox " + mId, null);
-
-        boolean deferIndexing = !indexImmediately();
-        List<IndexDocument> docList = null;
-        if (!deferIndexing) {
-            pm.analyzeFully();
-            docList = pm.getLuceneDocuments();
         }
 
         // write the chat content directly to the mailbox's blob staging area
@@ -7158,7 +7066,7 @@ public class Mailbox {
                 //   make sure that data actually matches the final blob in the store
                 chat.updateBlobData(mblob);
 
-                queueForIndexing(chat, docList);
+                index.add(chat);
                 success = true;
                 return chat;
             } finally {
@@ -7169,13 +7077,9 @@ public class Mailbox {
     }
 
     public Chat updateChat(OperationContext octxt, ParsedMessage pm, int id) throws IOException, ServiceException {
-        if (pm == null)
+        if (pm == null) {
             throw ServiceException.INVALID_REQUEST("null ParsedMessage when updating chat " + id + " in mailbox " + mId, null);
-
-        boolean deferIndexing = !indexImmediately() || pm.hasTemporaryAnalysisFailure();
-        List<IndexDocument> docList = null;
-        if (!deferIndexing)
-            docList = pm.getLuceneDocuments();
+        }
 
         // write the chat content directly to the mailbox's blob staging area
         StoreManager sm = StoreManager.getInstance();
@@ -7216,7 +7120,7 @@ public class Mailbox {
                 chat.setContent(staged, pm);
 
                 // NOTE: msg is now uncached (will this cause problems during commit/reindex?)
-                queueForIndexing(chat, docList);
+                index.add(chat);
 
                 success = true;
                 return chat;
@@ -7365,12 +7269,6 @@ public class Mailbox {
         mCurrentChange.addIndexItem(item);
     }
 
-    void addIndexDeleteToCurrentChange(Collection<Integer> ids) {
-        assert(mCurrentChange.isActive());
-        assert(Thread.holdsLock(this));
-        mCurrentChange.indexDeleteIds.addAll(ids);
-    }
-
     /**
      * Be very careful when changing code in this method.  The order of almost
      * every line of code is important to ensure correct redo logging and crash
@@ -7392,11 +7290,11 @@ public class Mailbox {
 
         if (success) {
             List<IndexItemEntry> indexItems = mCurrentChange.indexItems;
-            if ((!indexItems.isEmpty() || !mCurrentChange.indexDeleteIds.isEmpty())) {
+            if (!indexItems.isEmpty()) {
                 //TODO: See bug 15072 - we need to clear mCurrentChange.indexItems (it is stored in a temporary) here,
                 // just in case item.reindex() recurses into a new transaction...
                 mCurrentChange.indexItems = new ArrayList<IndexItemEntry>();
-                index.update(indexItems, mCurrentChange.indexDeleteIds);
+                index.update(indexItems, Collections.<Integer>emptyList());
             }
 
             // update mailbox size, folder unread/message counts

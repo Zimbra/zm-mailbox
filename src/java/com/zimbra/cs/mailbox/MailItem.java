@@ -2144,9 +2144,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         MailItem copy = constructItem(mMailbox, data);
         copy.finishCreation(parent);
 
-        // if the copy needs to be re-indexed, just set the deferred flag now and index it later
         if (!shareIndex) {
-            mMailbox.queueForIndexing(copy, null);
+            mMailbox.index.add(copy);
         }
 
         return copy;
@@ -2246,7 +2245,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
 
         if (!shareIndex) {
-            mMailbox.queueForIndexing(copy, null);
+            mMailbox.index.add(copy);
         }
 
         return copy;
@@ -2453,7 +2452,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         // item moved out of spam, so update the index id (will be written to DB in DbMailItem.setFolder());
         if (inSpam() && !target.inSpam() && getIndexStatus() == IndexStatus.DONE) {
-            mMailbox.queueForIndexing(this, null);
+            mMailbox.index.add(this);
         }
 
         ZimbraLog.mailop.info("moving " + getMailopContext(this) + " to " + getMailopContext(target));

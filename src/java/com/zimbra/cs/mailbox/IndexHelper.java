@@ -364,19 +364,6 @@ public final class IndexHelper {
                 clearDeferredIds();
                 indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), status, true);
             } else { // partial re-index
-                synchronized (mailbox) {
-                    boolean success = false;
-                    try {
-                        // Don't pass redoRecorder to beginTransaction.  We have already manually called log() on
-                        // redoRecorder because this is a long running transaction, and we don't want endTransaction to
-                        // log it again, resulting in two entries for the same operation in redolog.
-                        mailbox.beginTransaction("re-index-partially", octx, null);
-                        mailbox.addIndexDeleteToCurrentChange(ids);
-                        success = true;
-                    } finally {
-                        mailbox.endTransaction(success);
-                    }
-                }
                 indexLock.acquireUninterruptibly();
                 try {
                     indexItemList(ids, status);
@@ -727,12 +714,27 @@ public final class IndexHelper {
         }
     }
 
-    synchronized void addDeferredId(MailItem.Type type, int id) {
-        assert id > 0 : id;
+    /**
+     * Adds the item to the deferred queue.
+     *
+     * @param item item to index
+     */
+    synchronized void add(MailItem item) {
+        switch (item.getIndexStatus()) {
+            case NO:
+                return;
+            case DONE:
+                item.mData.indexId = MailItem.IndexStatus.STALE.id();
+                break;
+            default:
+                break;
+        }
+
         if (deferredIds == null) {
             return;
         }
-        deferredIds.put(type, id);
+
+        deferredIds.put(item.getType(), item.getId());
         ZimbraLog.index.debug("deferredIds=%s", deferredIds);
     }
 

@@ -12,10 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on Jun 13, 2004
- */
 package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
@@ -71,6 +67,9 @@ import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.util.AccountUtil;
 
+/**
+ * @since Jun 13, 2004
+ */
 public class Message extends MailItem {
 
     static class DraftInfo {
@@ -862,7 +861,7 @@ public class Message extends MailItem {
                     mCalendarItemInfos.add(info);
                     updatedMetadata = true;
                     if (calItem != null && (calItemIsNew || modifiedCalItem)) {
-                        mMailbox.queueForIndexing(calItem, null);
+                        mMailbox.index.add(calItem);
                     }
                 } else {
                     // Not intended for me.  Just save the invite detail in metadata.

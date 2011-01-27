@@ -728,7 +728,7 @@ public class DbMailItem {
         try {
             PreparedStatement stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox) +
                     " WHERE " + IN_THIS_MAILBOX_AND + "index_id IS NOT NULL" +
-                    (types.isEmpty() ? "" : DbUtil.whereIn("type", types.size())));
+                    (types.isEmpty() ? "" : " AND " + DbUtil.whereIn("type", types.size())));
             try {
                 int pos = setMailboxId(stmt, mbox, 1);
                 for (MailItem.Type type : types) {

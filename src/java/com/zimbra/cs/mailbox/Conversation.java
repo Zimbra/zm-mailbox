@@ -575,7 +575,7 @@ public class Conversation extends MailItem {
 
             if (!indexUpdated.isEmpty()) {
                 for (MailItem msg : indexUpdated) {
-                    mMailbox.queueForIndexing(msg, null);
+                    mMailbox.index.add(msg);
                 }
             }
         }

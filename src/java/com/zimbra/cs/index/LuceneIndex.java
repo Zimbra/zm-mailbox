@@ -187,6 +187,7 @@ public final class LuceneIndex {
 
                 switch (item.getIndexStatus()) {
                     case STALE:
+                    case DONE: // for partial re-index
                         Term term = new Term(LuceneFields.L_MAILBOX_BLOB_ID, String.valueOf(item.getId()));
                         writerRef.get().updateDocument(term, doc.toDocument());
                         break;
@@ -575,7 +576,7 @@ public final class LuceneIndex {
     private IndexWriterRef openWriter() throws IOException {
         assert(Thread.holdsLock(this));
 
-        LuceneConfig config = new LuceneConfig(mailboxIndex.mailbox.index.getBatchThreshold() > 0);
+        LuceneConfig config = new LuceneConfig();
 
         IndexWriter writer;
         try {
@@ -858,24 +859,14 @@ public final class LuceneIndex {
         final int maxBufferedDocs;
         final int ramBufferSizeKB;
 
-        LuceneConfig(boolean batchIndexing) {
-            if (batchIndexing) {
-                mergePolicy = LC.zimbra_index_lucene_batch_merge_policy.booleanValue();
-                minMerge = LC.zimbra_index_lucene_batch_min_merge.longValue();
-                maxMerge = LC.zimbra_index_lucene_batch_max_merge.longValue();
-                mergeFactor = LC.zimbra_index_lucene_batch_merge_factor.intValue();
-                useCompoundFile = LC.zimbra_index_lucene_batch_use_compound_file.booleanValue();
-                maxBufferedDocs = LC.zimbra_index_lucene_batch_max_buffered_docs.intValue();
-                ramBufferSizeKB = LC.zimbra_index_lucene_batch_ram_buffer_size_kb.intValue();
-            } else {
-                mergePolicy = LC.zimbra_index_lucene_nobatch_merge_policy.booleanValue();
-                minMerge = LC.zimbra_index_lucene_nobatch_min_merge.longValue();
-                maxMerge = LC.zimbra_index_lucene_nobatch_max_merge.longValue();
-                mergeFactor = LC.zimbra_index_lucene_nobatch_merge_factor.intValue();
-                useCompoundFile = LC.zimbra_index_lucene_nobatch_use_compound_file.booleanValue();
-                maxBufferedDocs = LC.zimbra_index_lucene_nobatch_max_buffered_docs.intValue();
-                ramBufferSizeKB = LC.zimbra_index_lucene_nobatch_ram_buffer_size_kb.intValue();
-            }
+        LuceneConfig() {
+            mergePolicy = LC.zimbra_index_lucene_merge_policy.booleanValue();
+            minMerge = LC.zimbra_index_lucene_min_merge.longValue();
+            maxMerge = LC.zimbra_index_lucene_max_merge.longValue();
+            mergeFactor = LC.zimbra_index_lucene_merge_factor.intValue();
+            useCompoundFile = LC.zimbra_index_lucene_use_compound_file.booleanValue();
+            maxBufferedDocs = LC.zimbra_index_lucene_max_buffered_docs.intValue();
+            ramBufferSizeKB = LC.zimbra_index_lucene_ram_buffer_size_kb.intValue();
         }
 
     }
