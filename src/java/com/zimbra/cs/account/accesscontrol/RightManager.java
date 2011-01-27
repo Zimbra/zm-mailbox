@@ -21,6 +21,7 @@ import java.io.FileWriter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -567,12 +568,37 @@ public class RightManager {
         return sb.toString();
     }
     
+    private String genMessageProperties() throws ServiceException {
+        StringBuilder result = new StringBuilder();
+        
+        result.append(FileGenUtil.genDoNotModifyDisclaimer("#", RightManager.class.getSimpleName()));
+        result.append("# Zimbra rights");
+        result.append("\n\n");
+        
+        genMessageProperties(result, getAllUserRights());
+        result.append("\n\n");
+        genMessageProperties(result, getAllAdminRights());
+        
+        return result.toString();
+    }
+    
+    private void genMessageProperties(StringBuilder result, Map<String, ? extends  Right> rights) throws ServiceException {
+        List<String> sortedRights = new ArrayList<String>(rights.keySet());
+        Collections.sort(sortedRights);
+        
+        for (String right : sortedRights) {
+            Right r = getRight(right);
+            String text = FileGenUtil.wrapComments(r.getDesc(), 80, "  ", " \\").substring(2); // strip off the 2 spaces on the first line
+            result.append(r.getName() + " = " + text + "\n");
+        }
+    }
+    
     private static class CL {
         private static Options sOptions = new Options();
         
         static {
             sOptions.addOption("h", "help", false, "display this  usage info");
-            sOptions.addOption("a", "action", true, "action, one of genRightConsts, genAdminRights, genUserRights");
+            sOptions.addOption("a", "action", true, "action, one of genRightConsts, genAdminRights, genUserRights, genMessagePrperties");
             sOptions.addOption("i", "input", true,"rights definition xml input directory");
             sOptions.addOption("r", "regenerateFile", true, "file file to regenerate");
             sOptions.addOption("t", "templateFile", true, "template file");
@@ -610,52 +636,7 @@ public class RightManager {
             templateFillers.put("DISTRIBUTION_LIST_ATTRS", dlAttrsFiller);
             templateFillers.put("DOMAIN_ATTRS", domainAttrsFiller);
             
-            genFile(outFile, templateFile, templateFillers);
-        }
-        
-        private static void genFile(String outFile, String templateFile, Map<String,String> templateFillers) 
-            throws Exception {
-            // OutputStream os = new FileOutputStream(outFile);
-            // PrintWriter pw = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "utf8")));
-            
-            byte[] templateBytes = ByteUtil.getContent(new File(templateFile));
-            String templateString = new String(templateBytes, "utf-8");
-            
-            String content = StringUtil.fillTemplate(templateString, templateFillers);
-            // pw.print(content);
-            
-            File oldFile = new File(outFile);
-            if (!oldFile.canWrite()) {
-                System.err.println("============================================");
-                System.err.println("Unable to write to: "+outFile);
-                System.err.println("============================================");
-                System.exit(1);
-            }
-            
-            BufferedWriter out = null;
-            File newFile = new File(outFile+"-autogen");
-
-            try {
-                out = new BufferedWriter(new FileWriter(newFile));
-                out.write(content);
-
-                out.close();
-                out = null;
-
-                if (!newFile.renameTo(oldFile)) {
-                    System.err.println("============================================");
-                    System.err.format("Unable to rename(%s) to (%s)%n", newFile.getName(), oldFile);
-                    System.err.println("============================================");
-                    System.exit(1);
-                }
-
-                System.out.println("======================================");
-                System.out.println("generated: "+outFile);
-                System.out.println("======================================");
-
-            } finally {
-                if (out != null) out.close();
-            }
+            FileGenUtil.replaceFile(outFile, templateFile, templateFillers);
         }
         
         private static Set<String> getDomainAdminModifiableAttrs(AttributeClass klass) throws ServiceException {
@@ -741,6 +722,8 @@ public class RightManager {
             else if ("genDomainAdminSetAttrsRights".equals(action)) {
                 String templateFile = cl.getOptionValue('t');
                 genDomainAdminSetAttrsRights(regenFile, templateFile);
+            } else if ("genMessagePrperties".equals(action)) {
+                FileGenUtil.replaceFile(regenFile, rm.genMessageProperties());
             } else if ("validate".equals(action)) {
                 // do nothing, all we need is that new RightManager(inputDir) works,
                 // which is done above.
