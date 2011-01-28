@@ -43,97 +43,85 @@ public abstract class SieveVisitor {
 
     protected enum VisitPhase { begin, end }
     
-    @SuppressWarnings("unused")
     protected void visitNode(Node node, VisitPhase phase, RuleProperties props)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
     protected void visitRule(Node node, VisitPhase phase, RuleProperties props)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
     protected void visitTest(Node node, VisitPhase phase, RuleProperties props)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
     protected void visitAction(Node node, VisitPhase phase, RuleProperties props)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
     protected void visitHeaderTest(Node node, VisitPhase phase, RuleProperties props,
                                    List<String> headers, StringComparison comparison, boolean caseSensitive, String value)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
     protected void visitMimeHeaderTest(Node node, VisitPhase phase, RuleProperties props,
                                        String header, StringComparison comparison, boolean caseSensitive, String value)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
     protected void visitHeaderExistsTest(Node node, VisitPhase phase, RuleProperties props, String header)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
     protected void visitSizeTest(Node node, VisitPhase phase, RuleProperties props,
         NumberComparison comparison, int size, String sizeString)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
     protected void visitDateTest(Node node, VisitPhase phase, RuleProperties props,
         DateComparison comparison, Date date)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
     protected void visitCurrentTimeTest(Node node, VisitPhase phase, RuleProperties props,
         DateComparison comparison, String timeStr)
     throws ServiceException { }
 
-    @SuppressWarnings("unused")
     protected void visitCurrentDayOfWeekTest(Node node, VisitPhase phase, RuleProperties props, List<String> days)
     throws ServiceException { }
 
-    @SuppressWarnings("unused")
+    protected void visitTrueTest(Node node, VisitPhase phase, RuleProperties props)
+    throws ServiceException { }
+
     protected void visitAddressBookTest(Node node, VisitPhase phase, RuleProperties props,
         String header, String folderPath)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
     protected void visitBodyTest(Node node, VisitPhase phase, RuleProperties props, boolean caseSensitive, String value)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
     protected void visitAttachmentTest(Node node, VisitPhase phase, RuleProperties props)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
     protected void visitInviteTest(Node node, VisitPhase phase, RuleProperties props, List<String> methods)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
     protected void visitKeepAction(Node node, VisitPhase phase, RuleProperties props)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
     protected void visitDiscardAction(Node node, VisitPhase phase, RuleProperties props)
     throws ServiceException { }
 
-    @SuppressWarnings("unused")
     protected void visitFileIntoAction(Node node, VisitPhase phase, RuleProperties props, String folderPath)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
     protected void visitFlagAction(Node node, VisitPhase phase, RuleProperties props, Flag flag)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
     protected void visitTagAction(Node node, VisitPhase phase, RuleProperties props, String tagName)
     throws ServiceException { }
 
-    @SuppressWarnings("unused")
     protected void visitRedirectAction(Node node, VisitPhase phase, RuleProperties props, String address)
     throws ServiceException { }
     
-    @SuppressWarnings("unused")
+    protected void visitReplyAction(Node node, VisitPhase phase, RuleProperties props, String bodyTemplate)
+    throws ServiceException { }
+
+    protected void visitNotifyAction(Node node, VisitPhase phase, RuleProperties props,
+                                     String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes)
+    throws ServiceException { }
+
     protected void visitStopAction(Node node, VisitPhase phase, RuleProperties props)
     throws ServiceException { }
     
@@ -328,6 +316,10 @@ public abstract class SieveVisitor {
                 visitCurrentDayOfWeekTest(node, VisitPhase.begin, props, days);
                 accept(node, props);
                 visitCurrentDayOfWeekTest(node, VisitPhase.end, props, days);
+            } else if ("true".equalsIgnoreCase(nodeName)) {
+                visitTrueTest(node, VisitPhase.begin, props);
+                accept(node, props);
+                visitTrueTest(node, VisitPhase.end, props);
             } else {
                 ZimbraLog.filter.debug("Ignoring unrecognized test type '%s'.", nodeName);
                 accept(node, props);
@@ -376,6 +368,20 @@ public abstract class SieveVisitor {
             visitRedirectAction(node, VisitPhase.begin, props, address);
             accept(node, props);
             visitRedirectAction(node, VisitPhase.end, props, address);
+        } else if ("reply".equalsIgnoreCase(nodeName)) {
+            String bodyTemplate = getValue(node, 0, 0, 0, 0);
+            visitReplyAction(node, VisitPhase.begin, props, bodyTemplate);
+            accept(node, props);
+            visitReplyAction(node, VisitPhase.end, props, bodyTemplate);
+        } else if ("notify".equalsIgnoreCase(nodeName)) {
+            String emailAddr = getValue(node, 0, 0, 0, 0);
+            String subjectTemplate = getValue(node, 0, 1, 0, 0);
+            String bodyTemplate = getValue(node, 0, 2, 0, 0);
+            int maxBodyBytes =
+                    getNode(node, 0).jjtGetNumChildren() == 4 ? Integer.valueOf(getValue(node, 0, 3)) : -1;
+            visitNotifyAction(node, VisitPhase.begin, props, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes);
+            accept(node, props);
+            visitNotifyAction(node, VisitPhase.end, props, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes);
         } else if ("stop".equalsIgnoreCase(nodeName)) {
             visitStopAction(node, VisitPhase.begin, props);
             accept(node, props);

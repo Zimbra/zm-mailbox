@@ -25,6 +25,8 @@ import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZKeepAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZMarkAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZRedirectAction;
+import com.zimbra.cs.zclient.ZFilterAction.ZReplyAction;
+import com.zimbra.cs.zclient.ZFilterAction.ZNotifyAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZStopAction;
 import com.zimbra.cs.zclient.ZFilterAction.ZTagAction;
 import com.zimbra.cs.zclient.ZFilterCondition.AddressBookOp;
@@ -320,6 +322,23 @@ public class ZFilterRule implements ToZJSONObject {
             } else if (a.equals("redirect")) {
                 if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
                 actions.add(new ZRedirectAction(args[i++]));
+            } else if (a.equals("reply")) {
+                if (i + 1 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                actions.add(new ZReplyAction(args[i++]));
+            } else if (a.equals("notify")) {
+                if (i + 3 > args.length) throw ZClientException.CLIENT_ERROR("missing args", null);
+                String emailAddr = args[i++];
+                String subjectTemplate = args[i++];
+                String bodyTemplate = args[i++];
+                int maxBodyBytes = -1;
+                if (i + 1 <= args.length) {
+                    try {
+                        maxBodyBytes = Integer.valueOf(args[i]);
+                        i++;
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+                actions.add(new ZNotifyAction(emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes));
             } else if (a.equals("stop")) {
                 actions.add(new ZStopAction());
             } else {

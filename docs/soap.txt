@@ -2716,6 +2716,12 @@ Actions:
   <actionFlag flagName="{flag}" />
   <actionRedirect a="{email-address}" />
   <actionStop />
+  <actionReply>
+    <content>{body-template}</content>
+  </actionReply>
+  <actionNotify a="email-address" [su="subject-template"] [maxBodySize="{num-bytes}"]>
+    <content>{body-template}</content> ?
+  </actionReply>
 
 Each action has an optional "index" attribute which specifies a guaranteed order
 for the action elements.
@@ -2734,6 +2740,8 @@ method values: anyrequest, anyreply, publish, request, reply, add, cancel, refre
 <mimeHeaderTest>: behaves just like <headerTest>, but matches headers on
   all MIME parts, instead of just the top-level headers.
 <currentDayOfWeekTest>: 0=Sunday, 6=Saturday
+body-template/subject-template: Can contain variables such as ${SUBJECT}, ${TO}, ${CC}, etc
+  (basically ${any-header-name}; case not important), plus ${BODY} (text body of the message).
 
 ---------------------------
 

@@ -14,11 +14,6 @@
  */
 package com.zimbra.cs.filter;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -29,6 +24,11 @@ import com.zimbra.cs.filter.FilterUtil.DateComparison;
 import com.zimbra.cs.filter.FilterUtil.Flag;
 import com.zimbra.cs.filter.FilterUtil.NumberComparison;
 import com.zimbra.cs.filter.FilterUtil.StringComparison;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class SoapToSieve {
     
@@ -163,6 +163,8 @@ public class SoapToSieve {
                                     new StringBuilder().append('[').
                                             append(StringUtil.join(",", daysOfWeek)).
                                             append(']').toString());
+        } else if (name.equals(MailConstants.E_TRUE_TEST)) {
+            snippet = "true";
         } else {
             ZimbraLog.soap.debug("Ignoring unexpected test %s.", name);
         }
@@ -240,11 +242,30 @@ public class SoapToSieve {
         } else if (name.equals(MailConstants.E_ACTION_REDIRECT)) {
             String address = action.getAttribute(MailConstants.A_ADDRESS);
             return String.format("redirect \"%s\"", FilterUtil.escape(address));
+        } else if (name.equals(MailConstants.E_ACTION_REPLY)) {
+            String bodyTemplate = action.getAttribute(MailConstants.E_CONTENT);
+            return new StringBuilder("reply text:\r\n").
+                    append(getDotStuffed(bodyTemplate)).
+                    append("\r\n.\r\n").toString();
+        } else if (name.equals(MailConstants.E_ACTION_NOTIFY)) {
+            String emailAddr = action.getAttribute(MailConstants.A_ADDRESS);
+            String subjectTemplate = action.getAttribute(MailConstants.A_SUBJECT, "");
+            String bodyTemplate = action.getAttribute(MailConstants.E_CONTENT, "");
+            int maxBodyBytes = action.getAttributeInt(MailConstants.A_MAX_BODY_SIZE, -1);
+            return new StringBuilder("notify ").
+                    append(StringUtil.enclose(emailAddr, '"')).append(" ").
+                    append(StringUtil.enclose(subjectTemplate, '"')).append(" ").
+                    append("text:\r\n").append(getDotStuffed(bodyTemplate)).append("\r\n.\r\n").
+                    append(maxBodyBytes == -1 ? "" : " " + maxBodyBytes).toString();
         } else if (name.equals(MailConstants.E_ACTION_STOP)) {
             return "stop";
         } else {
             ZimbraLog.soap.debug("Ignoring unexpected action '%s'", name);
         }
         return null;
+    }
+
+    private static String getDotStuffed(String bodyTemplate) {
+        return bodyTemplate.replaceAll("\r\n\\.", "\r\n..");
     }
 }

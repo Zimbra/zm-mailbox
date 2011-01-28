@@ -30,6 +30,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.service.util.SpamHandler.SpamReport;
 
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.util.Collection;
@@ -129,7 +130,18 @@ extends FilterHandler {
     @Override
     public void redirect(String destinationAddress)
     throws ServiceException {
-        FilterUtil.redirect(mailbox, parsedMessage.getMimeMessage(), destinationAddress);
+        FilterUtil.redirect(octxt, mailbox, parsedMessage.getMimeMessage(), destinationAddress);
+    }
+
+    @Override
+    public void reply(String bodyTemplate) throws ServiceException, MessagingException {
+        FilterUtil.reply(octxt, mailbox, parsedMessage, bodyTemplate);
+    }
+
+    @Override
+    public void notify(String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes)
+            throws ServiceException, MessagingException {
+        FilterUtil.notify(octxt, mailbox, parsedMessage, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes);
     }
 
     @Override

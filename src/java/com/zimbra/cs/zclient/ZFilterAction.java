@@ -35,6 +35,8 @@ public abstract class ZFilterAction implements ToZJSONObject {
     public static final String A_FLAG = "flag";
     public static final String A_KEEP = "keep";
     public static final String A_REDIRECT = "redirect";
+    public static final String A_REPLY = "reply";
+    public static final String A_NOTIFY = "notify";
     public static final String A_STOP = "stop";
     public static final String A_TAG = "tag";
 
@@ -99,6 +101,15 @@ public abstract class ZFilterAction implements ToZJSONObject {
         } else if (n.equals(MailConstants.E_ACTION_REDIRECT)) {
             String address = actionElement.getAttribute(MailConstants.A_ADDRESS);
             return new ZRedirectAction(address);
+        } else if (n.equals(MailConstants.E_ACTION_REPLY)) {
+            String bodyTemplate = actionElement.getAttribute(MailConstants.E_CONTENT);
+            return new ZReplyAction(bodyTemplate);
+        } else if (n.equals(MailConstants.E_ACTION_NOTIFY)) {
+            String emailAddr = actionElement.getAttribute(MailConstants.A_ADDRESS);
+            String subjectTemplate = actionElement.getAttribute(MailConstants.A_SUBJECT, "");
+            String bodyTemplate = actionElement.getAttribute(MailConstants.E_CONTENT, "");
+            int maxBodyBytes = actionElement.getAttributeInt(MailConstants.A_MAX_BODY_SIZE, -1);
+            return new ZNotifyAction(emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes);
         } else if (n.equals(MailConstants.E_ACTION_FLAG)) {
             Flag flag = Flag.fromString(actionElement.getAttribute(MailConstants.A_FLAG_NAME));
             MarkOp op = (flag == Flag.flagged ? MarkOp.FLAGGED : MarkOp.READ); 
@@ -190,6 +201,63 @@ public abstract class ZFilterAction implements ToZJSONObject {
         Element toElement(Element parent) {
             Element action = parent.addElement(MailConstants.E_ACTION_REDIRECT);
             action.addAttribute(MailConstants.A_ADDRESS, getAddress());
+            return action;
+        }
+    }
+
+    public static class ZReplyAction extends ZFilterAction {
+        public ZReplyAction(String bodyTemplate) { super(A_REPLY, bodyTemplate); }
+        public String getBodyTemplate() { return mArgs.get(0); }
+        public String toActionString() { return "reply " + getBodyTemplate(); }
+
+        Element toElement(Element parent) {
+            Element action = parent.addElement(MailConstants.E_ACTION_REPLY);
+            action.addElement(MailConstants.E_CONTENT).addText(getBodyTemplate());
+            return action;
+        }
+    }
+
+    public static class ZNotifyAction extends ZFilterAction {
+        public ZNotifyAction(String emailAddr, String subjectTemplate, String bodyTemplate) {
+            this(emailAddr, subjectTemplate, bodyTemplate, -1);
+        }
+
+        public ZNotifyAction(String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes) {
+            super(A_NOTIFY, emailAddr, subjectTemplate, bodyTemplate, Integer.toString(maxBodyBytes));
+        }
+
+        public String getEmailAddr() {
+            return mArgs.get(0);
+        }
+
+        public String getSubjectTemplate() {
+            return mArgs.get(1);
+        }
+
+        public String getBodyTemplate() {
+            return mArgs.get(2);
+        }
+
+        public int getMaxBodyBytes() {
+            return Integer.valueOf(mArgs.get(3));
+        }
+
+        public String toActionString() {
+            return "notify " + getEmailAddr() + " " +
+                    (StringUtil.enclose(getSubjectTemplate(), '"')) + " " +
+                    (StringUtil.enclose(getBodyTemplate(), '"')) +
+                    (getMaxBodyBytes() == -1 ? "" : " " + getMaxBodyBytes());
+        }
+
+        Element toElement(Element parent) {
+            Element action = parent.addElement(MailConstants.E_ACTION_NOTIFY);
+            action.addAttribute(MailConstants.A_ADDRESS, getEmailAddr());
+            if (!StringUtil.isNullOrEmpty(getSubjectTemplate()))
+                action.addAttribute(MailConstants.A_SUBJECT, getSubjectTemplate());
+            if (!StringUtil.isNullOrEmpty(getBodyTemplate()))
+                action.addElement(MailConstants.E_CONTENT).addText(getBodyTemplate());
+            if (getMaxBodyBytes() != -1)
+                action.addAttribute(MailConstants.A_MAX_BODY_SIZE, getMaxBodyBytes());
             return action;
         }
     }

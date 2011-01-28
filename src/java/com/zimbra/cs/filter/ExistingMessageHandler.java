@@ -216,6 +216,16 @@ public class ExistingMessageHandler extends FilterHandler {
     }
 
     @Override
+    public void reply(String bodyTemplate) {
+        ZimbraLog.filter.debug("Ignoring attempt to reply to existing message %d", messageId);
+    }
+
+    @Override
+    public void notify(String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes) {
+        ZimbraLog.filter.debug("Ignoring attempt to notify for existing message %d", messageId);
+    }
+
+    @Override
     public void afterFiltering() throws ServiceException {
         if (filed && !kept) {
             ZimbraLog.filter.info("Deleting original message %d after filing to another folder.", messageId);

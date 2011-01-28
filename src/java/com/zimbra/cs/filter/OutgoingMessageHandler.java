@@ -3,6 +3,7 @@ package com.zimbra.cs.filter;
 import java.io.IOException;
 import java.util.Collection;
 
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.zimbra.common.service.ServiceException;
@@ -40,10 +41,12 @@ public class OutgoingMessageHandler extends FilterHandler {
         this.octxt = octxt;
     }
 
+    @Override
     public MimeMessage getMimeMessage() {
         return parsedMessage.getMimeMessage();
     }
 
+    @Override
     public int getMessageSize() {
         try {
             return parsedMessage.getMimeMessage().getSize();
@@ -53,10 +56,12 @@ public class OutgoingMessageHandler extends FilterHandler {
         }
     }
 
+    @Override
     public ParsedMessage getParsedMessage() {
         return parsedMessage;
     }
 
+    @Override
     public String getDefaultFolderPath()
     throws ServiceException {
         return mailbox.getFolderById(octxt, defaultFolderId).getPath();
@@ -77,7 +82,18 @@ public class OutgoingMessageHandler extends FilterHandler {
     @Override
     public void redirect(String destinationAddress)
     throws ServiceException {
-        FilterUtil.redirect(mailbox, parsedMessage.getMimeMessage(), destinationAddress);
+        FilterUtil.redirect(octxt, mailbox, parsedMessage.getMimeMessage(), destinationAddress);
+    }
+
+    @Override
+    public void reply(String bodyTemplate) {
+        ZimbraLog.filter.debug("Ignoring attempt to reply to outgoing message");
+    }
+
+    @Override
+    public void notify(String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes)
+            throws ServiceException, MessagingException {
+        FilterUtil.notify(octxt, mailbox, parsedMessage, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes);
     }
 
     @Override

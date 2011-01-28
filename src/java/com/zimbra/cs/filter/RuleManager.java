@@ -72,14 +72,13 @@ public class RuleManager {
         try {
             ConfigurationManager configurationManager = new ConfigurationManager();
             
-            @SuppressWarnings("unchecked")
             Map<String, String> commandMap = configurationManager.getCommandMap();
             commandMap.put("disabled_if", com.zimbra.cs.filter.jsieve.DisabledIf.class.getName());
             commandMap.put("tag", com.zimbra.cs.filter.jsieve.Tag.class.getName());
             commandMap.put("flag", com.zimbra.cs.filter.jsieve.Flag.class.getName());
             commandMap.put("reply", com.zimbra.cs.filter.jsieve.Reply.class.getName());
-            
-            @SuppressWarnings("unchecked")
+            commandMap.put("notify", com.zimbra.cs.filter.jsieve.Notify.class.getName());
+
             Map<String, String> testMap = configurationManager.getTestMap();
             testMap.put("date", com.zimbra.cs.filter.jsieve.DateTest.class.getName());
             testMap.put("body", com.zimbra.cs.filter.jsieve.BodyTest.class.getName());

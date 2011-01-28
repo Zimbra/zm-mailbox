@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.filter;
 
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -36,22 +38,29 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 import org.apache.jsieve.mail.Action;
 
 import javax.mail.Address;
+import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
 
 public class FilterUtil {
@@ -344,7 +353,7 @@ public class FilterUtil {
 
     public static final String HEADER_FORWARDED = "X-Zimbra-Forwarded";
 
-    public static void redirect(Mailbox sourceMbox, MimeMessage msg, String destinationAddress)
+    public static void redirect(OperationContext octxt, Mailbox sourceMbox, MimeMessage msg, String destinationAddress)
     throws ServiceException {
         MimeMessage outgoingMsg;
 
@@ -391,7 +400,105 @@ public class FilterUtil {
             }
         }
         sender.setRecipients(destinationAddress);
-        sender.sendMimeMessage(null, sourceMbox, outgoingMsg);
+        sender.sendMimeMessage(octxt, sourceMbox, outgoingMsg);
+    }
+
+    public static void reply(OperationContext octxt, Mailbox mailbox, ParsedMessage parsedMessage, String bodyTemplate)
+            throws MessagingException, ServiceException {
+        MimeMessage mimeMessage = parsedMessage.getMimeMessage();
+        if (isMailLoop(mailbox, mimeMessage)) {
+            String error = String.format("Detected a mail loop for message %s.", Mime.getMessageID(mimeMessage));
+            throw ServiceException.FAILURE(error, null);
+        }
+
+        MimeMessage replyMsg = new Mime.FixedMimeMessage(JMSession.getSession());
+        replyMsg.setHeader(HEADER_FORWARDED, mailbox.getAccount().getName());
+
+        String to = mimeMessage.getHeader("Reply-To", null);
+        if (StringUtil.isNullOrEmpty(to))
+            to = Mime.getSender(mimeMessage);
+        if (StringUtil.isNullOrEmpty(to))
+            throw new MessagingException("Can't locate the address to reply to");
+        replyMsg.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(to));
+
+        String subject = mimeMessage.getSubject();
+        if (!subject.toLowerCase().startsWith("re:"))
+            subject = "Re: " + subject;
+        replyMsg.setSubject(subject);
+
+        Map<String, String> vars = getVarsMap(mailbox, parsedMessage, mimeMessage);
+        replyMsg.setText(StringUtil.fillTemplate(bodyTemplate, vars));
+
+        String origMsgId = mimeMessage.getMessageID();
+        if (!StringUtil.isNullOrEmpty(origMsgId))
+            replyMsg.setHeader("In-Reply-To", origMsgId);
+        replyMsg.setSentDate(new Date());
+        replyMsg.saveChanges();
+
+        MailSender mailSender = mailbox.getMailSender();
+        mailSender.setReplyType(MailSender.MSGTYPE_REPLY);
+        mailSender.sendMimeMessage(octxt, mailbox, replyMsg);
+    }
+
+    public static void notify(OperationContext octxt, Mailbox mailbox, ParsedMessage parsedMessage,
+                              String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes)
+        throws MessagingException, ServiceException {
+        MimeMessage mimeMessage = parsedMessage.getMimeMessage();
+        if (isMailLoop(mailbox, mimeMessage)) {
+            String error = String.format("Detected a mail loop for message %s.", Mime.getMessageID(mimeMessage));
+            throw ServiceException.FAILURE(error, null);
+        }
+
+        MimeMessage notification = new Mime.FixedMimeMessage(JMSession.getSession());
+        notification.setHeader(HEADER_FORWARDED, mailbox.getAccount().getName());
+
+        notification.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(emailAddr));
+
+        Map<String, String> vars = getVarsMap(mailbox, parsedMessage, mimeMessage);
+
+        if (!StringUtil.isNullOrEmpty(subjectTemplate))
+            notification.setSubject(StringUtil.fillTemplate(subjectTemplate, vars));
+
+        String body = StringUtil.fillTemplate(bodyTemplate, vars);
+        try {
+            if (maxBodyBytes > -1 && body.getBytes(MimeConstants.P_CHARSET_UTF8).length > maxBodyBytes)
+                // truncate body
+                body = new String(body.getBytes(MimeConstants.P_CHARSET_UTF8),
+                                  0, maxBodyBytes, MimeConstants.P_CHARSET_UTF8);
+        } catch (UnsupportedEncodingException e) {
+            ZimbraLog.filter.error("Error while truncating body", e);
+            body = "";
+        }
+        notification.setText(body);
+
+        notification.setSentDate(new Date());
+        notification.saveChanges();
+
+        MailSender mailSender = mailbox.getMailSender();
+        mailSender.sendMimeMessage(octxt, mailbox, notification);
+    }
+
+    private static Map<String, String> getVarsMap(Mailbox mailbox, ParsedMessage parsedMessage, MimeMessage mimeMessage)
+            throws MessagingException, ServiceException {
+        Map<String, String> vars = new HashMap<String, String>() {
+            @Override
+            public String get(Object key) {
+                return super.get(((String) key).toLowerCase());
+            }
+        };
+        Enumeration enumeration = mimeMessage.getAllHeaders();
+        while (enumeration.hasMoreElements()) {
+            Header header = (Header) enumeration.nextElement();
+            vars.put(header.getName().toLowerCase(), mimeMessage.getHeader(header.getName(), ","));
+        }
+        MPartInfo bodyPart = Mime.getTextBody(parsedMessage.getMessageParts(), false);
+        try {
+            vars.put("body",
+                     Mime.getStringContent(bodyPart.getMimePart(), mailbox.getAccount().getPrefMailDefaultCharset()));
+        } catch (IOException e) {
+            ZimbraLog.filter.warn("Error in reading text body", e);
+        }
+        return vars;
     }
 
     private static MimeMessage createRedirectMsgOnError(final MimeMessage originalMsg) throws MessagingException {
