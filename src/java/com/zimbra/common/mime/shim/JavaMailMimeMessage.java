@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -53,8 +53,8 @@ public class JavaMailMimeMessage extends MimeMessage implements JavaMailShim {
     private com.zimbra.common.mime.MimeMessage zmessage;
     private Object jmcontent; // JavaMailMimeMultipart or JavaMailMimeMessage or null
 
-    JavaMailMimeMessage(com.zimbra.common.mime.MimeMessage mm) {
-        super(Session.getInstance(new Properties()));
+    public JavaMailMimeMessage(com.zimbra.common.mime.MimeMessage mm) {
+        super(Session.getInstance(mm.getProperties()));
         zmessage = mm;
     }
 
