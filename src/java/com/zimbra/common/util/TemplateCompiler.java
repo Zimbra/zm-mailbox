@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -169,11 +169,9 @@ public class TemplateCompiler {
 	        if (matcher.find()) {
 	            boolean first = true;
 	            do {
-	                Map<String,String> attrs = parseAttrs(matcher.group(1));
-	                String body = matcher.group(2);
-	                String stripWsAttr = attrs.get(A_XML_SPACE);
-	                String packageId = pkg;
+                    Map<String,String> attrs = parseAttrs(matcher.group(1));
 	                String templateId = attrs.get("id");
+                    String packageId = pkg;
 	                // NOTE: Template ids can be specified absolutely (i.e.
 	                //       overriding the default package) if the id starts
 	                //       with a forward slash (/), or if the id contains
@@ -187,24 +185,30 @@ public class TemplateCompiler {
 	                    templateId = templateId.replaceAll("^.*#", "");
 	                }
 	                String id = templateId != null && !templateId.equals("") ? packageId+"#"+templateId : packageId;
-		            if (isProperties) {
-			            // TODO: convert to properties
-			            printEscaped(out, id);
-			            if (body.indexOf('\n') == -1) {
-				            out.print(" = ");
-				            printEscaped(out, body);
-			            }
-			            else {
-				            out.print(" =");
-				            String[] bodylines = body.split("\n");
-				            for (String bodyline : bodylines) {
-				                out.print("\\\n\t");
-					            printEscaped(out, bodyline);
-				            }
-			            }
-			            out.println();
-			            continue;
-		            }
+
+                    // copy to .properties file
+                    if (isProperties) {
+                        printEscaped(out, id);
+                        String body = lines.substring(matcher.start(),matcher.end());
+                        if (body.indexOf('\n') == -1) {
+                            out.print(" = ");
+                            printEscaped(out, body);
+                        }
+                        else {
+                            out.print(" =");
+                            String[] bodylines = body.split("\n");
+                            for (String bodyline : bodylines) {
+                                out.print("\\\n\t");
+                                printEscaped(out, bodyline);
+                            }
+                        }
+                        out.println();
+                        continue;
+                    }
+
+                    // compile to JavaScript
+	                String body = matcher.group(2);
+	                String stripWsAttr = attrs.get(A_XML_SPACE);
 		            if (stripWsAttr == null || !stripWsAttr.equals(V_XML_SPACE_PRESERVE)) {
 		                body = body.replaceAll(S_GT_LINESEP_LT, "><").trim();
 		            }
