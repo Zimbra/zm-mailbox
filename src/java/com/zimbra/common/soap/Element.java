@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -48,6 +48,23 @@ public abstract class Element implements Cloneable {
     protected Element mParent;
     protected Map<String, Object> mAttributes;
     protected Map<String, String> mNamespaces;
+
+    /** Cache one DocumentFactory per thread to avoid unnecessarily recreating
+     *  them for every XML parse. */
+    private static final ThreadLocal<javax.xml.parsers.DocumentBuilder> w3DomBuilderTL =
+        new ThreadLocal<javax.xml.parsers.DocumentBuilder>() {
+            @Override protected javax.xml.parsers.DocumentBuilder initialValue() {
+                try {
+                    return
+                        javax.xml.parsers.DocumentBuilderFactory.newInstance()
+                            .newDocumentBuilder();
+                } catch (javax.xml.parsers.ParserConfigurationException pce) {
+                    ZimbraLog.misc.error(
+                            "Problem creating w3c DOM document", pce);
+                    return null;
+                }
+            }
+    };
 
     /** Cache one DocumentFactory per thread to avoid unnecessarily recreating
      *  them for every XML parse. */
@@ -170,7 +187,6 @@ public abstract class Element implements Cloneable {
     public String getName()           { return mName; }
     public String getQualifiedName()  { return (mPrefix != null && !mPrefix.equals("") ? mPrefix + ':' + mName : mName); }
     public QName getQName()           { String uri = getNamespaceURI(mPrefix);  return (uri == null ? QName.get(mName) : QName.get(getQualifiedName(), uri)); }
-
     public static QName getQName(String qualifiedName)  { String[] parts = qualifiedName.split("\\.");  return new QName(parts[parts.length - 1]); }
 
     public Element getParent()        { return mParent; }
@@ -329,6 +345,38 @@ public abstract class Element implements Cloneable {
             elt.toXML(d4elt);
         d4elt.setText(getText());
         return d4elt;
+    }
+
+    /**
+     * Intended to produce XML suitable for use with JAXB objects.
+     * @return
+     */
+    public org.w3c.dom.Document toW3cDom() {
+        javax.xml.parsers.DocumentBuilder w3DomBuilder = w3DomBuilderTL.get();
+        w3DomBuilder.reset();
+        org.w3c.dom.Document doc = w3DomBuilder.newDocument();  
+        doc.appendChild(toW3cDom(doc, null));
+        return doc;
+    }
+
+    private org.w3c.dom.Node toW3cDom(org.w3c.dom.Document doc,
+            org.w3c.dom.Element parent) {
+        String uri = getNamespaceURI(mPrefix);
+        if (uri.equals("urn:zimbraSoap"))
+            uri = null;
+        org.w3c.dom.Element elem;
+        elem = doc.createElementNS(uri, getQualifiedName());
+        elem.setTextContent(getText());
+        if (parent != null) {
+            parent.appendChild(elem);
+        }
+
+        for (Attribute attr : listAttributes()) {
+            elem.setAttribute(attr.getKey(), attr.getValue());
+        }
+        for (Element elt : listElements())
+            elt.toW3cDom(doc, elem);
+        return elem;
     }
 
     /** Return the attribute value that is at the specified path, or null if
