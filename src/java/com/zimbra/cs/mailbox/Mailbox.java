@@ -5402,32 +5402,29 @@ public class Mailbox {
     }
 
     private <T extends MailItem> T trainSpamFilter(OperationContext octxt, T item, Folder target, String opDescription) {
-        // don't re-train filter on replayed operation
-        if (mCurrentChange.getRedoPlayer() != null)
+        if (mCurrentChange.getRedoPlayer() != null) { // don't re-train filter on replayed operation
             return item;
-
+        }
         TargetConstraint tcon = getOperationTargetConstraint();
 
         try {
-            List<? extends MailItem> items;
-            if (item instanceof Conversation)
-                items = ((Conversation) item).getMessages();
-            else
-                items = Arrays.asList((MailItem) item);
-
+            List<? extends MailItem> items = item instanceof Conversation ?
+                    ((Conversation) item).getMessages() : Arrays.asList((MailItem) item);
+            List<Folder> trashAliases = getTrashAliases(octxt);
             for (MailItem candidate : items) {
                 // if it's not a move into or out of Spam, no training is necessary
                 //   (moves from Spam to Trash also do not train the filter)
                 boolean fromSpam = candidate.inSpam();
                 boolean toSpam = target.inSpam();
-                if (!fromSpam && !toSpam)
+                if (!fromSpam && !toSpam) {
                     continue;
-                if (fromSpam && (toSpam || target.inTrash()))
+                }
+                if (fromSpam && (toSpam || target.inTrash() || inFolder(trashAliases, target))) {
                     continue;
-
-                if (!TargetConstraint.checkItem(tcon, item) || !item.canAccess(ACL.RIGHT_READ))
+                }
+                if (!TargetConstraint.checkItem(tcon, item) || !item.canAccess(ACL.RIGHT_READ)) {
                     continue;
-
+                }
                 try {
                     SpamReport report = new SpamReport(toSpam, opDescription, target.getPath());
                     Folder source = item.getFolder();
@@ -5444,6 +5441,27 @@ public class Mailbox {
         }
 
         return item;
+    }
+
+    private List<Folder> getTrashAliases(OperationContext octx) throws ServiceException {
+        String[] aliases = Provisioning.getInstance().getConfig().getSpamTrashAlias();
+        List<Folder> result = new ArrayList<Folder>(aliases.length);
+        for (String path : aliases) {
+            try {
+                result.add(getFolderByPath(octx, path));
+            } catch (ServiceException ignore) { // NO_SUCH_FOLDER
+            }
+        }
+        return result;
+    }
+
+    private boolean inFolder(List<Folder> base, Folder target) throws ServiceException {
+        for (Folder folder : base) {
+            if (folder.getId() == target.getId() || folder.isDescendant(target)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Moves an item from one folder into another in the same Mailbox.  The

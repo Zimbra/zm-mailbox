@@ -40,7 +40,7 @@ public class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20110125-1611 */
+    /* build: 7.0.0_BETA1_1111 ysasaki 20110126-1147 */
 
     /**
      * RFC2256: descriptive information
@@ -11327,6 +11327,158 @@ public class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetSmtpTimeout(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSmtpTimeout, "");
+        return attrs;
+    }
+
+    /**
+     * Aliases of Trash folder. In case some IMAP clients use different
+     * folder names other than Trash, the spam filter still special-cases
+     * those folders as if they are Trash.
+     *
+     * @return zimbraSpamTrashAlias, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1167)
+    public String[] getSpamTrashAlias() {
+        return getMultiAttr(Provisioning.A_zimbraSpamTrashAlias);
+    }
+
+    /**
+     * Aliases of Trash folder. In case some IMAP clients use different
+     * folder names other than Trash, the spam filter still special-cases
+     * those folders as if they are Trash.
+     *
+     * @param zimbraSpamTrashAlias new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1167)
+    public void setSpamTrashAlias(String[] zimbraSpamTrashAlias) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamTrashAlias, zimbraSpamTrashAlias);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Aliases of Trash folder. In case some IMAP clients use different
+     * folder names other than Trash, the spam filter still special-cases
+     * those folders as if they are Trash.
+     *
+     * @param zimbraSpamTrashAlias new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1167)
+    public Map<String,Object> setSpamTrashAlias(String[] zimbraSpamTrashAlias, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamTrashAlias, zimbraSpamTrashAlias);
+        return attrs;
+    }
+
+    /**
+     * Aliases of Trash folder. In case some IMAP clients use different
+     * folder names other than Trash, the spam filter still special-cases
+     * those folders as if they are Trash.
+     *
+     * @param zimbraSpamTrashAlias new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1167)
+    public void addSpamTrashAlias(String zimbraSpamTrashAlias) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSpamTrashAlias, zimbraSpamTrashAlias);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Aliases of Trash folder. In case some IMAP clients use different
+     * folder names other than Trash, the spam filter still special-cases
+     * those folders as if they are Trash.
+     *
+     * @param zimbraSpamTrashAlias new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1167)
+    public Map<String,Object> addSpamTrashAlias(String zimbraSpamTrashAlias, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraSpamTrashAlias, zimbraSpamTrashAlias);
+        return attrs;
+    }
+
+    /**
+     * Aliases of Trash folder. In case some IMAP clients use different
+     * folder names other than Trash, the spam filter still special-cases
+     * those folders as if they are Trash.
+     *
+     * @param zimbraSpamTrashAlias existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1167)
+    public void removeSpamTrashAlias(String zimbraSpamTrashAlias) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSpamTrashAlias, zimbraSpamTrashAlias);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Aliases of Trash folder. In case some IMAP clients use different
+     * folder names other than Trash, the spam filter still special-cases
+     * those folders as if they are Trash.
+     *
+     * @param zimbraSpamTrashAlias existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1167)
+    public Map<String,Object> removeSpamTrashAlias(String zimbraSpamTrashAlias, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraSpamTrashAlias, zimbraSpamTrashAlias);
+        return attrs;
+    }
+
+    /**
+     * Aliases of Trash folder. In case some IMAP clients use different
+     * folder names other than Trash, the spam filter still special-cases
+     * those folders as if they are Trash.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1167)
+    public void unsetSpamTrashAlias() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamTrashAlias, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Aliases of Trash folder. In case some IMAP clients use different
+     * folder names other than Trash, the spam filter still special-cases
+     * those folders as if they are Trash.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1167)
+    public Map<String,Object> unsetSpamTrashAlias(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamTrashAlias, "");
         return attrs;
     }
 

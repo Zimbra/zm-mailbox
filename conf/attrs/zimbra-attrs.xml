@@ -5353,5 +5353,13 @@ TODO: delete them permerntly from here
   <desc>whether or not to include spam messages in POP3 access</desc>
 </attr>
 
+<attr id="1167" name="zimbraSpamTrashAlias" type="string" max="128" cardinality="multi" optionalIn="globalConfig,domain" since="8.0.0">
+  <globalConfigValue>/Deleted Messages</globalConfigValue>
+  <desc>
+    Aliases of Trash folder. In case some IMAP clients use different folder names other than Trash, the spam filter
+    still special-cases those folders as if they are Trash.
+  </desc>
+</attr>
+
 </attrs>
 

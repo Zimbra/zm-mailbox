@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20110125-1611 */
+    /* build: 7.0.0_BETA1_1111 ysasaki 20110126-1147 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -8221,6 +8221,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=204)
     public static final String A_zimbraSpamTagPercent = "zimbraSpamTagPercent";
+
+    /**
+     * Aliases of Trash folder. In case some IMAP clients use different
+     * folder names other than Trash, the spam filter still special-cases
+     * those folders as if they are Trash.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1167)
+    public static final String A_zimbraSpamTrashAlias = "zimbraSpamTrashAlias";
 
     /**
      * The list of available dictionaries that can be used for spell
