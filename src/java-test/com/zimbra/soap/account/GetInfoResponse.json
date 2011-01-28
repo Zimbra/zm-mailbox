@@ -1,0 +1,1057 @@
+{
+  "docSizeLimit": "10485760",
+  "attSizeLimit": "10240000",
+  "version": [{
+      "_content": "7.0.0_BETA1_1111 ysasaki 20101007-1516"
+    }],
+  "id": [{
+      "_content": "add0c6cd-7d8a-467b-ae6e-67b9644d9c2a"
+    }],
+  "name": [{
+      "_content": "user1@ysasaki.local"
+    }],
+  "crumb": [{
+      "_content": "3e6b7385171cccf079f69ba6a23aad45"
+    }],
+  "lifetime": [{
+      "_content": "3599991"
+    }],
+  "rest": [{
+      "_content": "http://ysasaki.local:7070/home/user1@ysasaki.local"
+    }],
+  "used": [{
+      "_content": "10644979"
+    }],
+  "prevSession": [{
+      "_content": "1286489932000"
+    }],
+  "accessed": [{
+      "_content": "1286489932000"
+    }],
+  "recent": [{
+      "_content": "0"
+    }],
+  "cos": [{
+      "id": "e00428a1-0c00-11d9-836a-000d93afea2a",
+      "name": "default"
+    }],
+  "prefs": [{
+      "pref": [
+        {
+          "name": "zimbraPrefMailFlashTitle",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefIMToasterEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefCalendarApptAllowAtendeeEdit",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefCalendarReminderYMessenger",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefReadingPaneEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefDeleteInviteOnReply",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefSharedAddrBookAutoCompleteEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefForwardIncludeOriginalText",
+          "_content": "includeBody"
+        },
+        {
+          "name": "zimbraPrefShowFragments",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefHtmlEditorDefaultFontFamily",
+          "_content": "Times New Roman"
+        },
+        {
+          "name": "zimbraPrefAutoAddAddressEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefIMFlashTitle",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefComposeFormat",
+          "_content": "text"
+        },
+        {
+          "name": "zimbraPrefAutoSaveDraftInterval",
+          "_content": "30s"
+        },
+        {
+          "name": "zimbraPrefCalendarReminderSendEmail",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefCalendarReminderFlashTitle",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefContactsInitialView",
+          "_content": "list"
+        },
+        {
+          "name": "zimbraPrefCalendarAlwaysShowMiniCal",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefSearchTreeOpen",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefCalendarReminderDuration1",
+          "_content": "-PT15M"
+        },
+        {
+          "name": "zimbraPrefCalendarReminderMobile",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefIMReportIdle",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefCalendarApptReminderWarningTime",
+          "_content": "5"
+        },
+        {
+          "name": "zimbraPrefContactsPerPage",
+          "_content": "25"
+        },
+        {
+          "name": "zimbraPrefWarnOnExit",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefGetMailAction",
+          "_content": "default"
+        },
+        {
+          "name": "zimbraPrefIMInstantNotify",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefOutOfOfficeCacheDuration",
+          "_content": "7d"
+        },
+        {
+          "name": "zimbraPrefConversationOrder",
+          "_content": "dateDesc"
+        },
+        {
+          "name": "zimbraPrefIMHideBlockedBuddies",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefIMIdleTimeout",
+          "_content": "10"
+        },
+        {
+          "name": "zimbraPrefAccountTreeOpen",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefShowCalendarWeek",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefIncludeTrashInSearch",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefGalSearchEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefIMHideOfflineBuddies",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefZimletTreeOpen",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefComposeInNewWindow",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefCalendarAllowPublishMethodInvite",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefFolderTreeOpen",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefCalendarDayHourStart",
+          "_content": "8"
+        },
+        {
+          "name": "zimbraPrefUseKeyboardShortcuts",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefUseRfc2231",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefMailSelectAfterDelete",
+          "_content": "next"
+        },
+        {
+          "name": "zimbraPrefDedupeMessagesSentToSelf",
+          "_content": "dedupeNone"
+        },
+        {
+          "name": "zimbraPrefSaveToSent",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefCalendarInitialView",
+          "_content": "workWeek"
+        },
+        {
+          "name": "zimbraPrefIMLogChatsEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefUseTimeZoneListInCalendar",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefJunkLifetime",
+          "_content": "0"
+        },
+        {
+          "name": "zimbraPrefForwardReplyPrefixChar",
+          "_content": "\u003E"
+        },
+        {
+          "name": "zimbraPrefCalendarNotifyDelegatedChanges",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefMailSignatureStyle",
+          "_content": "outlook"
+        },
+        {
+          "name": "zimbraPrefFolderColorEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefAdminConsoleWarnOnExit",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefMessageViewHtmlPreferred",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefCalendarSendInviteDeniedAutoReply",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefConvReadingPaneLocation",
+          "_content": "bottom"
+        },
+        {
+          "name": "zimbraPrefItemsPerVirtualPage",
+          "_content": "50"
+        },
+        {
+          "name": "zimbraPrefShowSelectionCheckbox",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefSentLifetime",
+          "_content": "0"
+        },
+        {
+          "name": "zimbraPrefGroupMailBy",
+          "_content": "conversation"
+        },
+        {
+          "name": "zimbraPrefContactsExpandAppleContactGroups",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefGalAutoCompleteEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefSentMailFolder",
+          "_content": "sent"
+        },
+        {
+          "name": "zimbraPrefAdvancedClientEnforceMinDisplay",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefImapSearchFoldersEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefContactsDisableAutocompleteOnContactGroupMembers",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefIMLogChats",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefCalendarAutoAddInvites",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefInboxReadLifetime",
+          "_content": "0"
+        },
+        {
+          "name": "zimbraPrefVoiceItemsPerPage",
+          "_content": "25"
+        },
+        {
+          "name": "zimbraPrefShowSearchString",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefForwardReplyInOriginalFormat",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefDefaultPrintFontSize",
+          "_content": "12pt"
+        },
+        {
+          "name": "zimbraPrefIMNotifyPresence",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefHtmlEditorDefaultFontColor",
+          "_content": "#000000"
+        },
+        {
+          "name": "zimbraPrefOpenMailInNewWindow",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefTimeZoneId",
+          "_content": "America/Los_Angeles"
+        },
+        {
+          "name": "zimbraPrefClientType",
+          "_content": "advanced"
+        },
+        {
+          "name": "zimbraPrefReadingPaneLocation",
+          "_content": "bottom"
+        },
+        {
+          "name": "zimbraPrefStandardClientAccessibilityMode",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefMailFlashIcon",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefMailToasterEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefInboxUnreadLifetime",
+          "_content": "0"
+        },
+        {
+          "name": "zimbraPrefMailSendReadReceipts",
+          "_content": "never"
+        },
+        {
+          "name": "zimbraPrefAutoCompleteQuickCompletionOnComma",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefTagTreeOpen",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefMailSoundsEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefHtmlEditorDefaultFontSize",
+          "_content": "12pt"
+        },
+        {
+          "name": "zimbraPrefCalendarAllowForwardedInvite",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefIncludeSpamInSearch",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefMailItemsPerPage",
+          "_content": "25"
+        },
+        {
+          "name": "zimbraPrefMarkMsgRead",
+          "_content": "0"
+        },
+        {
+          "name": "zimbraPrefReplyIncludeOriginalText",
+          "_content": "includeBody"
+        },
+        {
+          "name": "zimbraPrefSkin",
+          "_content": "beach"
+        },
+        {
+          "name": "zimbraPrefCalendarFirstDayOfWeek",
+          "_content": "0"
+        },
+        {
+          "name": "zimbraPrefMailInitialSearch",
+          "_content": "in:inbox"
+        },
+        {
+          "name": "zimbraPrefCalendarAllowCancelEmailToSelf",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefCalendarReminderSoundsEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefMailPollingInterval",
+          "_content": "12h"
+        },
+        {
+          "name": "zimbraPrefIMNotifyStatus",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefTrashLifetime",
+          "_content": "0"
+        },
+        {
+          "name": "zimbraPrefDisplayExternalImages",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefCalendarWorkingHours",
+          "_content": "1:N:0800:1700,2:Y:0800:1700,3:Y:0800:1700,4:Y:0800:1700,5:Y:0800:1700,6:Y:0800:1700,7:N:0800:1700"
+        },
+        {
+          "name": "zimbraPrefCalendarDayHourEnd",
+          "_content": "18"
+        },
+        {
+          "name": "zimbraPrefIMSoundsEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefCalendarShowPastDueReminders",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefMandatorySpellCheckEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefIMIdleStatus",
+          "_content": "away"
+        },
+        {
+          "name": "zimbraPrefIMAutoLogin",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefIMFlashIcon",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefCalendarToasterEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPrefCalendarApptVisibility",
+          "_content": "public"
+        },
+        {
+          "name": "zimbraPrefCalendarUseQuickAdd",
+          "_content": "TRUE"
+        }]
+    }],
+  "attrs": [{
+      "attr": [
+        {
+          "name": "zimbraFeatureNotebookEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraFeatureSkinChangeEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraMailForwardingAddressMaxNumAddrs",
+          "_content": "100"
+        },
+        {
+          "name": "zimbraFeatureConversationsEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraZimletAvailableZimlets",
+          "_content": "+com_zimbra_email"
+        },
+        {
+          "name": "zimbraZimletAvailableZimlets",
+          "_content": "+com_zimbra_url"
+        },
+        {
+          "name": "zimbraZimletAvailableZimlets",
+          "_content": "+com_zimbra_date"
+        },
+        {
+          "name": "zimbraZimletAvailableZimlets",
+          "_content": "+com_zimbra_webex"
+        },
+        {
+          "name": "zimbraZimletAvailableZimlets",
+          "_content": "+com_zimbra_ymemoticons"
+        },
+        {
+          "name": "zimbraZimletAvailableZimlets",
+          "_content": "+com_zimbra_dnd"
+        },
+        {
+          "name": "zimbraZimletAvailableZimlets",
+          "_content": "+com_zimbra_srchhighlighter"
+        },
+        {
+          "name": "zimbraZimletAvailableZimlets",
+          "_content": "+com_zimbra_phone"
+        },
+        {
+          "name": "zimbraZimletAvailableZimlets",
+          "_content": "+com_zimbra_attachmail"
+        },
+        {
+          "name": "zimbraZimletAvailableZimlets",
+          "_content": "+com_zimbra_attachcontacts"
+        },
+        {
+          "name": "zimbraZimletAvailableZimlets",
+          "_content": "+com_zimbra_social"
+        },
+        {
+          "name": "zimbraMailTrustedSenderListMaxNumEntries",
+          "_content": "100"
+        },
+        {
+          "name": "zimbraPrefConvReadingPaneLocation",
+          "_content": "bottom"
+        },
+        {
+          "name": "zimbraPrefReadingPaneEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureOutOfOfficeReplyEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureFlaggingEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureMobilePolicyEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPasswordMinUpperCaseChars",
+          "_content": "0"
+        },
+        {
+          "name": "zimbraAllowAnyFromAddress",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraFeatureDistributionListExpandMembersEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureBriefcasesEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureContactsEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPasswordMinLowerCaseChars",
+          "_content": "0"
+        },
+        {
+          "name": "zimbraMailMessageLifetime",
+          "_content": "0"
+        },
+        {
+          "name": "zimbraFeatureInitialSearchPreferenceEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraMailForwardingAddressMaxLength",
+          "_content": "4096"
+        },
+        {
+          "name": "zimbraLocale",
+          "_content": "en_US"
+        },
+        {
+          "name": "zimbraPrefIMLogChats",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraMailDumpsterLifetime",
+          "_content": "30d"
+        },
+        {
+          "name": "zimbraFeatureMailForwardingEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureIMEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraFeatureVoiceEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraFeatureVoiceChangePinEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureReadReceiptsEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraSignatureMaxNumEntries",
+          "_content": "20"
+        },
+        {
+          "name": "zimbraMaxContactsPerPage",
+          "_content": "100"
+        },
+        {
+          "name": "zimbraFeatureSignaturesEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraMailSpamLifetime",
+          "_content": "30d"
+        },
+        {
+          "name": "zimbraPasswordMinNumericChars",
+          "_content": "0"
+        },
+        {
+          "name": "zimbraFeaturePeopleSearchEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureMailPollingIntervalPreferenceEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureCalendarEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraContactAutoCompleteMaxResults",
+          "_content": "20"
+        },
+        {
+          "name": "zimbraPrefReadingPaneLocation",
+          "_content": "bottom"
+        },
+        {
+          "name": "zimbraFeatureTaggingEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureMailUpsellEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraFeaturePortalEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraMailIdleSessionTimeout",
+          "_content": "0"
+        },
+        {
+          "name": "zimbraIdentityMaxNumEntries",
+          "_content": "20"
+        },
+        {
+          "name": "zimbraFeatureMobileSyncEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraFeaturePop3DataSourceEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureDiscardInFiltersEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureNewMailNotificationEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraMaxVoiceItemsPerPage",
+          "_content": "100"
+        },
+        {
+          "name": "zimbraMailBlacklistMaxNumEntries",
+          "_content": "100"
+        },
+        {
+          "name": "zimbraFeatureMailForwardingInFiltersEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraMailTrashLifetime",
+          "_content": "30d"
+        },
+        {
+          "name": "uid",
+          "_content": "user1"
+        },
+        {
+          "name": "zimbraFeatureZimbraAssistantEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraMailWhitelistMaxNumEntries",
+          "_content": "100"
+        },
+        {
+          "name": "zimbraFeatureOptionsEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureConfirmationPageEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraId",
+          "_content": "add0c6cd-7d8a-467b-ae6e-67b9644d9c2a"
+        },
+        {
+          "name": "zimbraDataSourceRssPollingInterval",
+          "_content": "12h"
+        },
+        {
+          "name": "zimbraFeatureGalSyncEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureSharingEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraWebClientShowOfflineLink",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraMailQuota",
+          "_content": "62914560"
+        },
+        {
+          "name": "zimbraFeatureTasksEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureAdvancedSearchEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureBriefcaseDocsEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureGalAutoCompleteEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPasswordMaxLength",
+          "_content": "64"
+        },
+        {
+          "name": "zimbraFeatureShortcutAliasesEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureCalendarUpsellEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraFeatureGalEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureMailSendLaterEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraFeatureInstantNotify",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureImapDataSourceEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureGroupCalendarEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureChangePasswordEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraMailSignatureMaxLength",
+          "_content": "10240"
+        },
+        {
+          "name": "zimbraFeatureMailEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureMailPriorityEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraDumpsterEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraFeatureViewInHtmlEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPasswordMinPunctuationChars",
+          "_content": "0"
+        },
+        {
+          "name": "zimbraFeatureHtmlComposeEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "cn",
+          "_content": "Demo User One"
+        },
+        {
+          "name": "zimbraDataSourceMaxNumEntries",
+          "_content": "20"
+        },
+        {
+          "name": "zimbraDataSourceCalendarPollingInterval",
+          "_content": "12h"
+        },
+        {
+          "name": "zimbraIMService",
+          "_content": "zimbra"
+        },
+        {
+          "name": "zimbraFeatureContactsUpsellEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraMailMinPollingInterval",
+          "_content": "2m"
+        },
+        {
+          "name": "zimbraFeatureVoiceUpsellEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraPortalName",
+          "_content": "example"
+        },
+        {
+          "name": "zimbraFeatureMAPIConnectorEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraSmtpRestrictEnvelopeFrom",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureImportExportFolderEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraAttachmentsBlocked",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraFeatureSavedSearchesEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraCalendarResourceDoubleBookingAllowed",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureIdentitiesEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraContactMaxNumEntries",
+          "_content": "10000"
+        },
+        {
+          "name": "zimbraFeatureOpenMailInNewWindowEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraCalendarShowResourceTabs",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureBriefcaseSpreadsheetEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraDataSourceMinPollingInterval",
+          "_content": "1m"
+        },
+        {
+          "name": "zimbraFeatureFiltersEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureBriefcaseSlidesEnabled",
+          "_content": "FALSE"
+        },
+        {
+          "name": "zimbraFeatureWebSearchEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraMaxMailItemsPerPage",
+          "_content": "100"
+        },
+        {
+          "name": "zimbraSignatureMinNumEntries",
+          "_content": "1"
+        },
+        {
+          "name": "zimbraFeatureManageZimlets",
+          "_content": "TRUE"
+        },
+        {
+          "name": "zimbraFeatureNewAddrBookEnabled",
+          "_content": "TRUE"
+        },
+        {
+          "name": "displayName",
+          "_content": "Demo User One"
+        },
+        {
+          "name": "zimbraPasswordMinLength",
+          "_content": "6"
+        },
+        {
+          "name": "zimbraFeatureComposeInNewWindowEnabled",
+          "_content": "TRUE"
+        }]
+    }],
+  "soapURL": [{
+      "_content": "http://ysasaki.local:7070/service/soap/"
+    }],
+  "publicURL": [{
+      "_content": "http://ysasaki.local:7070"
+    }],
+  "identities": [{
+      "identity": [{
+          "id": "add0c6cd-7d8a-467b-ae6e-67b9644d9c2a",
+          "name": "DEFAULT",
+          "a": [
+            {
+              "name": "zimbraPrefIdentityId",
+              "_content": "add0c6cd-7d8a-467b-ae6e-67b9644d9c2a"
+            },
+            {
+              "name": "zimbraPrefForwardReplyPrefixChar",
+              "_content": "\u003E"
+            },
+            {
+              "name": "zimbraPrefSaveToSent",
+              "_content": "TRUE"
+            },
+            {
+              "name": "zimbraPrefSentMailFolder",
+              "_content": "sent"
+            },
+            {
+              "name": "zimbraPrefFromDisplay",
+              "_content": "Demo User One"
+            },
+            {
+              "name": "zimbraPrefForwardIncludeOriginalText",
+              "_content": "includeBody"
+            },
+            {
+              "name": "zimbraPrefForwardReplyFormat",
+              "_content": "text"
+            },
+            {
+              "name": "zimbraPrefMailSignatureStyle",
+              "_content": "outlook"
+            },
+            {
+              "name": "zimbraPrefIdentityName",
+              "_content": "DEFAULT"
+            },
+            {
+              "name": "zimbraPrefReplyIncludeOriginalText",
+              "_content": "includeBody"
+            },
+            {
+              "name": "zimbraCreateTimestamp",
+              "_content": "20101007221807Z"
+            },
+            {
+              "name": "zimbraPrefFromAddress",
+              "_content": "user1@ysasaki.local"
+            }]
+        }]
+    }],
+  "signatures": [{}],
+  "dataSources": [{}],
+  "props": [{}],
+  "_jsns": "urn:zimbraAccount"
+}

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010-2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -22,9 +22,20 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.TransformerFactoryConfigurationError;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
+import org.dom4j.Document;
+import org.dom4j.io.DocumentResult;
+import org.dom4j.io.DocumentSource;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
@@ -87,31 +98,66 @@ public final class JaxbUtil {
     private JaxbUtil() {
     }
 
-    public static Element jaxbToElement(Object o)
+    /**
+     * @param o
+     * @param factory - e.g. XmlElement.mFactory or JSONElement.mFactory 
+     * @return
+     * @throws ServiceException
+     */
+    public static Element jaxbToElement(Object o, Element.ElementFactory factory)
     throws ServiceException {
         try {
             Marshaller marshaller = getContext().createMarshaller();
             // marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            marshaller.marshal(o, out);
-            byte[] content = out.toByteArray();
-            return Element.parseXML(new ByteArrayInputStream(content));
+            DocumentResult dr = new DocumentResult();
+            marshaller.marshal(o, dr); 
+            Document theDoc = dr.getDocument();
+            org.dom4j.Element rootElem = theDoc.getRootElement();
+            return Element.convertDOM(rootElem, factory);
         } catch (Exception e) {
-            throw ServiceException.FAILURE("Unable to convert " + o.getClass().getName() + " to Element", e);
+            throw ServiceException.FAILURE("Unable to convert " +
+                    o.getClass().getName() + " to Element", e);
         }
     }
 
+    public static Element jaxbToElement(Object o)
+    throws ServiceException {
+        return jaxbToElement(o, XMLElement.mFactory);
+    }
+
+    /**
+     * Return a JAXB object.  This implementation uses a org.w3c.dom.Document 
+     * as an intermediate representation.  This appears to be more reliable
+     * than using a DocumentSource based on org.dom4j.Element
+     */
     @SuppressWarnings("unchecked")
     public static <T> T elementToJaxb(Element e)
     throws ServiceException {
         try {
             Unmarshaller unmarshaller = getContext().createUnmarshaller();
-            String responseXml = e.prettyPrint();
-            return (T) unmarshaller.unmarshal(new ByteArrayInputStream(responseXml.getBytes()));
+            org.w3c.dom.Document doc = e.toW3cDom();
+            return (T) unmarshaller.unmarshal(doc);
         } catch (JAXBException ex) {
-            throw ServiceException.FAILURE("Unable to unmarshal response for " + e.getName(), ex);
+            throw ServiceException.FAILURE(
+                    "Unable to unmarshal response for " + e.getName(), ex);
         }
+    }
 
+    public static String domToString(org.w3c.dom.Document document) {
+        try {
+            Source xmlSource = new DOMSource(document);
+            StreamResult result = new StreamResult(new ByteArrayOutputStream());
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            transformer.setOutputProperty("indent", "yes"); //Java XML Indent
+            transformer.transform(xmlSource, result);
+            return result.getOutputStream().toString();
+        } catch (TransformerFactoryConfigurationError factoryError) {
+            ZimbraLog.soap.error("Error creating TransformerFactory", factoryError);
+        } catch (TransformerException transformerError) {
+            ZimbraLog.soap.error( "Error transforming document", transformerError);
+        }
+        return null;
     }
 
     private static JAXBContext getContext()
