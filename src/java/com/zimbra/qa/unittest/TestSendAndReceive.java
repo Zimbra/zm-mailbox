@@ -85,6 +85,10 @@ public class TestSendAndReceive extends TestCase {
         String subject = NAME_PREFIX + " autoSendDraft";
         outgoingMsg.setSubject(subject);
 
+        // before sending..
+        int numEmailedContacts =
+                TestUtil.search(mbox, "in:\"Emailed Contacts\" " + rcptAddr, ZSearchParams.TYPE_CONTACT).size();
+
         // auto-send after 0.5 sec
         mbox.saveDraft(outgoingMsg, null, Integer.toString(Mailbox.ID_FOLDER_DRAFTS), System.currentTimeMillis() + 500);
 
@@ -96,8 +100,9 @@ public class TestSendAndReceive extends TestCase {
                    TestUtil.search(mbox, "in:Drafts " + subject).isEmpty());
 
         // make sure recipient address has been added to Emailed Contacts
-        assertTrue("Recipient address has not been added to Emailed Contacts",
-                   TestUtil.search(mbox, "in:\"Emailed Contacts\" " + rcptAddr, ZSearchParams.TYPE_CONTACT).size() == 1);
+        assertEquals("Recipient address has not been added to Emailed Contacts",
+                     TestUtil.search(mbox, "in:\"Emailed Contacts\" " + rcptAddr, ZSearchParams.TYPE_CONTACT).size(),
+                     numEmailedContacts + 1);
     }
     
     /**
