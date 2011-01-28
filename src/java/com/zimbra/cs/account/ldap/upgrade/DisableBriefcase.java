@@ -1,10 +1,7 @@
 package com.zimbra.cs.account.ldap.upgrade;
 
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
-import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.BasicAttributes;
@@ -20,7 +17,7 @@ public class DisableBriefcase extends LdapUpgrade {
 
     private static String ATTR_SPREADSHEET = Provisioning.A_zimbraFeatureBriefcaseSpreadsheetEnabled;
     private static String ATTR_SLIDES = Provisioning.A_zimbraFeatureBriefcaseSlidesEnabled;
-   
+    private static String ATTR_NOTEBOOK = Provisioning.A_zimbraFeatureNotebookEnabled;
     
     DisableBriefcase() throws ServiceException {
     }
@@ -54,6 +51,9 @@ public class DisableBriefcase extends LdapUpgrade {
                 if (LdapUtil.getAttrString(ldapAttrs, ATTR_SLIDES) != null)
                     modAttrs.put(ATTR_SLIDES, LdapUtil.LDAP_FALSE);
                 
+                if (LdapUtil.getAttrString(ldapAttrs, ATTR_NOTEBOOK) != null)
+                    modAttrs.put(ATTR_NOTEBOOK, LdapUtil.LDAP_FALSE);
+                
                 if (modAttrs.size() > 0) {
                     System.out.println("Modifying " + dn);
                     mModZlc.replaceAttributes(dn, modAttrs);
@@ -69,7 +69,7 @@ public class DisableBriefcase extends LdapUpgrade {
     private void upgrade(ZimbraLdapContext modZlc, String bases[], String query) {
         SearchLdapVisitor visitor = new DisableBriefcaseVisitor(modZlc);
 
-        String attrs[] = new String[] {ATTR_SPREADSHEET, ATTR_SLIDES};
+        String attrs[] = new String[] {ATTR_SPREADSHEET, ATTR_SLIDES, ATTR_NOTEBOOK};
         
         for (String base : bases) {
             try {
@@ -83,7 +83,10 @@ public class DisableBriefcase extends LdapUpgrade {
     }
     
     private String query() {
-        return "(|(" + ATTR_SPREADSHEET + "=" + LdapUtil.LDAP_TRUE + ")" + "(" + ATTR_SLIDES + "=" + LdapUtil.LDAP_TRUE + "))";
+        return "(|(" + ATTR_SPREADSHEET + "=" + LdapUtil.LDAP_TRUE + ")" + 
+                 "(" + ATTR_SLIDES + "=" + LdapUtil.LDAP_TRUE + ")" + 
+                 "(" + ATTR_NOTEBOOK + "=" + LdapUtil.LDAP_TRUE + ")" +
+               ")";
     }
     
     private void doCos(ZimbraLdapContext modZlc) {
