@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.index;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.lucene.index.IndexWriter;
 
 /**
@@ -25,7 +27,7 @@ final class IndexWriterRef {
 
     private final LuceneIndex index;
     private final IndexWriter writer;
-    private int count = 1;
+    private final AtomicInteger count = new AtomicInteger(1); // ref counter
 
     IndexWriterRef(LuceneIndex index, IndexWriter writer) {
         this.index = index;
@@ -40,15 +42,12 @@ final class IndexWriterRef {
         return index;
     }
 
-    synchronized void inc() {
-        assert(count > 0);
-        count++;
+    void inc() {
+        count.incrementAndGet();
     }
 
-    synchronized void dec() {
-        assert(count > 0);
-        count--;
-        if (count == 0) {
+    void dec() {
+        if (count.decrementAndGet() <= 0) {
             index.closeWriter();
         }
     }

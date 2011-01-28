@@ -670,7 +670,9 @@ public final class LuceneIndex {
      * Called by {@link IndexWriterRef#dec()}. Can be called by the thread that opened the writer or the merge thread.
      */
     synchronized void closeWriter() {
-        assert(writerRef != null);
+        if (writerRef == null) {
+            return;
+        }
 
         ZimbraLog.index.debug("Close IndexWriter");
 
