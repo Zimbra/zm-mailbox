@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20110126-1147 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110128-1113 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2964,6 +2964,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=138)
     public static final String A_zimbraFeatureAdvancedSearchEnabled = "zimbraFeatureAdvancedSearchEnabled";
+
+    /**
+     * whether the Junk folder and actions should be exposed in the web UI,
+     * and whether the Junk folder should be exposed to IMAP/POP clients.
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1168)
+    public static final String A_zimbraFeatureAntispamEnabled = "zimbraFeatureAntispamEnabled";
 
     /**
      * Docs features enabled in briefcase

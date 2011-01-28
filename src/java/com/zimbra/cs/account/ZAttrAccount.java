@@ -34,7 +34,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20110126-1147 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110128-1113 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -8243,6 +8243,83 @@ public class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureAdvancedSearchEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureAdvancedSearchEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * whether the Junk folder and actions should be exposed in the web UI,
+     * and whether the Junk folder should be exposed to IMAP/POP clients.
+     *
+     * @return zimbraFeatureAntispamEnabled, or true if unset
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1168)
+    public boolean isFeatureAntispamEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureAntispamEnabled, true);
+    }
+
+    /**
+     * whether the Junk folder and actions should be exposed in the web UI,
+     * and whether the Junk folder should be exposed to IMAP/POP clients.
+     *
+     * @param zimbraFeatureAntispamEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1168)
+    public void setFeatureAntispamEnabled(boolean zimbraFeatureAntispamEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAntispamEnabled, zimbraFeatureAntispamEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the Junk folder and actions should be exposed in the web UI,
+     * and whether the Junk folder should be exposed to IMAP/POP clients.
+     *
+     * @param zimbraFeatureAntispamEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1168)
+    public Map<String,Object> setFeatureAntispamEnabled(boolean zimbraFeatureAntispamEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAntispamEnabled, zimbraFeatureAntispamEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether the Junk folder and actions should be exposed in the web UI,
+     * and whether the Junk folder should be exposed to IMAP/POP clients.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1168)
+    public void unsetFeatureAntispamEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAntispamEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the Junk folder and actions should be exposed in the web UI,
+     * and whether the Junk folder should be exposed to IMAP/POP clients.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1168)
+    public Map<String,Object> unsetFeatureAntispamEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureAntispamEnabled, "");
         return attrs;
     }
 
