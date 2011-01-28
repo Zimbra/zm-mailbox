@@ -205,7 +205,7 @@ public class InternetAddressTest {
                 "=?us-ascii?Q?Bob_th?= (Bob) =?us-ascii?Q?e_Builder?= <bob@example.com>",
                 "Bob the Builder", "bob@example.com");
         test("joining two 2047 encoded-words split by a comment containing an encoded-word",
-                "=?us-ascii?Q?Bob_th?= (=?us-ascii?Q?Bob=) =?us-ascii?Q?e_Builder?= <bob@example.com>",
+                "=?us-ascii?Q?Bob_th?= (=?us-ascii?Q?Bob?=) =?us-ascii?Q?e_Builder?= <bob@example.com>",
                 "Bob the Builder", "bob@example.com");
         test("joining two 2047 encoded-words with an encoded trailing space",
                 "=?us-ascii?q?Bob_?=\t=?us-ascii?Q?the_Builder?= <bob@example.com>",
@@ -240,6 +240,12 @@ public class InternetAddressTest {
         test("non-encoded double spaces inside encoded-word",
                 "=?us-ascii?Q?Bob the  Builder?= <bob@example.com>",
                 "Bob the Builder", "bob@example.com");
+        test("double quotes inside encoded-word",
+                "=?us-ascii?Q?\"Bob\"_the_Builder?= <bob@example.com>",
+                "\"Bob\" the Builder", "bob@example.com");
+        test("parentheses inside encoded-word",
+                "=?us-ascii?Q?(Bob)_the_Builder?= <bob@example.com>",
+                "(Bob) the Builder", "bob@example.com");
         test("spaces at end of encoded-word",
                 "=?us-ascii?Q?Bob the ?= Builder <bob@example.com>",
                 "Bob the  Builder", "bob@example.com");
