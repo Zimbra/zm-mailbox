@@ -539,6 +539,7 @@ public class MailConstants {
     public static final String E_FILTER_TESTS = "filterTests";
     
     public static final String E_HEADER_TEST = "headerTest";
+    public static final String E_TRUE_TEST = "trueTest";
     public static final String E_HEADER_EXISTS_TEST = "headerExistsTest";
     public static final String E_MIME_HEADER_TEST = "mimeHeaderTest";
     public static final String E_SIZE_TEST = "sizeTest";
@@ -558,6 +559,8 @@ public class MailConstants {
     public static final String E_ACTION_TAG = "actionTag";
     public static final String E_ACTION_FLAG = "actionFlag";
     public static final String E_ACTION_REDIRECT = "actionRedirect";
+    public static final String E_ACTION_REPLY = "actionReply";
+    public static final String E_ACTION_NOTIFY = "actionNotify";
     public static final String E_ACTION_STOP = "actionStop";
 
     public static final String A_STRING_COMPARISON = "stringComparison";
@@ -571,6 +574,7 @@ public class MailConstants {
     public static final String A_TAG_NAME = "tagName";
     public static final String A_INDEX = "index";
     public static final String A_TIME = "time";
+    public static final String A_MAX_BODY_SIZE = "maxBodySize";
 
     // grants and shares
     public static final String E_ACL = "acl";

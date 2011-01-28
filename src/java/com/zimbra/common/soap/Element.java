@@ -231,15 +231,47 @@ public abstract class Element implements Cloneable {
     abstract String getRawText();
     public String getTextTrim()  { return getText().trim().replaceAll("\\s+", " "); }
 
-    public String getAttribute(String key) throws ServiceException        { return checkNull(key, getAttribute(key, null)); }
-    public long getAttributeLong(String key) throws ServiceException      { return parseLong(key, checkNull(key, getAttribute(key, null))); }
-    public double getAttributeDouble(String key) throws ServiceException  { return parseDouble(key, checkNull(key, getAttribute(key, null))); }
-    public boolean getAttributeBool(String key) throws ServiceException   { return parseBool(key, checkNull(key, getAttribute(key, null))); }
+    public String getAttribute(String key) throws ServiceException {
+        return checkNull(key, getAttribute(key, null));
+    }
+
+    public int getAttributeInt(String key) throws ServiceException {
+        return parseInt(key, checkNull(key, getAttribute(key, null)));
+    }
+
+    public long getAttributeLong(String key) throws ServiceException {
+        return parseLong(key, checkNull(key, getAttribute(key, null)));
+    }
+
+    public double getAttributeDouble(String key) throws ServiceException {
+        return parseDouble(key, checkNull(key, getAttribute(key, null)));
+    }
+
+    public boolean getAttributeBool(String key) throws ServiceException {
+        return parseBool(key, checkNull(key, getAttribute(key, null)));
+    }
 
     public abstract String getAttribute(String key, String defaultValue);
-    public long getAttributeLong(String key, long defaultValue) throws ServiceException        { String raw = getAttribute(key, null); return (raw == null ? defaultValue : parseLong(key, raw)); }
-    public double getAttributeDouble(String key, double defaultValue) throws ServiceException  { String raw = getAttribute(key, null); return (raw == null ? defaultValue : parseDouble(key, raw)); }
-    public boolean getAttributeBool(String key, boolean defaultValue) throws ServiceException  { String raw = getAttribute(key, null); return (raw == null ? defaultValue : parseBool(key, raw)); }
+
+    public long getAttributeLong(String key, long defaultValue) throws ServiceException {
+        String raw = getAttribute(key, null);
+        return (raw == null ? defaultValue : parseLong(key, raw));
+    }
+
+    public int getAttributeInt(String key, int defaultValue) throws ServiceException {
+        String raw = getAttribute(key, null);
+        return (raw == null ? defaultValue : parseInt(key, raw));
+    }
+
+    public double getAttributeDouble(String key, double defaultValue) throws ServiceException {
+        String raw = getAttribute(key, null);
+        return (raw == null ? defaultValue : parseDouble(key, raw));
+    }
+
+    public boolean getAttributeBool(String key, boolean defaultValue) throws ServiceException {
+        String raw = getAttribute(key, null);
+        return (raw == null ? defaultValue : parseBool(key, raw));
+    }
 
     protected String getNamespaceURI(String prefix) {
         if (mNamespaces != null) {
