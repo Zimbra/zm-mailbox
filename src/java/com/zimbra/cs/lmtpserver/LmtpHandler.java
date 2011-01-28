@@ -29,7 +29,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.server.ProtocolHandler;
 import com.zimbra.cs.util.Config;
-import com.zimbra.cs.store.Blob;
 
 public abstract class LmtpHandler extends ProtocolHandler {
     // Connection specific data
@@ -357,11 +356,6 @@ public abstract class LmtpHandler extends ProtocolHandler {
     }
 
     protected abstract void continueDATA() throws IOException;
-
-    protected void processMessageData(Blob blob) throws IOException {
-        mConfig.getLmtpBackend().deliver(mEnvelope, blob);
-        finishMessageData(blob.getRawSize());
-    }
 
     protected void processMessageData(LmtpMessageInputStream in) throws UnrecoverableLmtpException {
         // TODO cleanup: add Date if not present
