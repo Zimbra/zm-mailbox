@@ -344,7 +344,7 @@ public class InternetAddress implements Cloneable {
                     if (angle) {
                         address = builder.appendTo(address);
                     } else if (builder.indexOf((byte) '=') != -1) {
-                        base = (base == null ? "" : base) +  MimeHeader.decode(builder.toByteArray(), charset);
+                        base = (base == null ? "" : base) + MimeHeader.decode(builder.toByteArray(), charset);
                     } else {
                         base = builder.appendTo(base);
                     }
@@ -385,8 +385,8 @@ public class InternetAddress implements Cloneable {
                     wsp = false;  encwspenc = valid ? null : Boolean.FALSE;
                 }
                 encoded = false;  builder.reset();
-            } else if (c == '(' || clevel > 0) {
-                // handle comments outside of quoted strings, even where they're not actually permitted
+            } else if ((c == '(' && !encoded) || clevel > 0) {
+                // handle comments outside of quoted strings/encoded words, even where they're not actually permitted
                 if (!escaped && c == '\\') {
                     escaped = true;
                 } else if (!escaped && c == '(' && clevel++ == 0) {
@@ -421,7 +421,7 @@ public class InternetAddress implements Cloneable {
                 }
             } else if (slop) {
                 // we're in the post-address state, so we can safely ignore this character
-            } else if (c == '"') {
+            } else if (c == '"' && !encoded) {
                 if (!builder.isEmpty()) {
                     if (angle)  address = builder.appendTo(address);
                     else        base = builder.appendTo(base);
