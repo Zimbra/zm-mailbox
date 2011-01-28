@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -43,27 +43,27 @@ public class MimeMessage extends MimePart {
             }
         }
 
-    private Properties mProperties;
-    private MimePart mBody;
+    private Properties properties;
+    private MimePart body;
 
     public MimeMessage(MimeMessage mm) {
         super(mm);
-        mProperties = mm.mProperties == null ? null : (Properties) mm.mProperties.clone();
-        mBody = mm.mBody == null ? null : mm.mBody.clone().setParent(this);
+        setProperties(mm.properties == null ? null : (Properties) mm.properties.clone());
+        body = mm.body == null ? null : mm.body.clone().setParent(this);
     }
 
     public MimeMessage(Properties props) {
         super(new ContentType(ContentType.MESSAGE_RFC822));
-        mProperties = props;
+        setProperties(props);
 
-        mBody = new MimeBodyPart((ContentType) null);
+        body = new MimeBodyPart((ContentType) null);
         setHeader("Message-ID", '<' + UUID.randomUUID().toString() + '@' + sHostname + '>');
         setHeader("MIME-Version", "1.0");
     }
 
     MimeMessage(MimePart body, Properties props) {
         super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
-        mProperties = props;
+        setProperties(props);
 
         setBodyPart(body);
     }
@@ -80,7 +80,7 @@ public class MimeMessage extends MimePart {
      *  retained so that the content is accessible on demand. */
     public MimeMessage(File file, Properties props) throws IOException {
         super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
-        mProperties = props;
+        setProperties(props);
 
         parse(new PartSource(file));
     }
@@ -97,7 +97,7 @@ public class MimeMessage extends MimePart {
      *  retained so that the message content can be retrieved. */
     public MimeMessage(byte[] body, Properties props) {
         super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
-        mProperties = props;
+        setProperties(props);
 
         try {
             parse(new PartSource(body));
@@ -121,7 +121,7 @@ public class MimeMessage extends MimePart {
      *  {@link #readStructure(InputStream, Properties)} instead. */
     public MimeMessage(InputStream is, Properties props) throws IOException {
         super(new ContentType(ContentType.MESSAGE_RFC822), null, 0, 0, null);
-        mProperties = props;
+        setProperties(props);
 
         parse(is instanceof InputStreamSource ? new PartSource((InputStreamSource) is) : new PartSource(ByteUtil.getContent(is, -1)));
     }
@@ -145,7 +145,8 @@ public class MimeMessage extends MimePart {
     }
 
 
-    @Override protected MimeMessage clone() {
+    @Override
+    protected MimeMessage clone() {
         return new MimeMessage(this);
     }
 
@@ -154,7 +155,7 @@ public class MimeMessage extends MimePart {
      *  and in almost all other cases it will be a {@link MimeBodyPart}.
      * @see #setBodyPart(MimePart) */
     public MimePart getBodyPart() {
-        return mBody;
+        return body;
     }
 
     /** Sets the given part as this {@code MimeMessage}'s body part.  The part
@@ -164,29 +165,30 @@ public class MimeMessage extends MimePart {
      *  and "<tt>Content-Type</tt>") are transferred to the new one.
      * @see #getBodyPart() */
     public MimeMessage setBodyPart(MimePart newBody) {
-        if (mBody == newBody) {
+        if (body == newBody) {
             return this;
         }
 
-        if (mBody != null) {
+        if (body != null) {
             transferMessageHeaders(newBody);
-            mBody.detach();
+            body.detach();
         }
         newBody.setParent(this);
-        mBody = newBody;
+        body = newBody;
         // almost certainly unnecessary due to header transfer, but don't cost nothin'
         markDirty(Dirty.CONTENT);
         return this;
     }
 
-    @Override void removeChild(MimePart mp) {
-        if (mp == mBody) {
-            mBody = transferMessageHeaders(new MimeBodyPart((ContentType) null));
+    @Override
+    void removeChild(MimePart mp) {
+        if (mp == body) {
+            body = transferMessageHeaders(new MimeBodyPart((ContentType) null));
         }
     }
 
     private MimePart transferMessageHeaders(MimePart newBody) {
-        for (Iterator<MimeHeader> it = mBody.getMimeHeaderBlock().iterator(); it.hasNext(); ) {
+        for (Iterator<MimeHeader> it = body.getMimeHeaderBlock().iterator(); it.hasNext(); ) {
             MimeHeader header = it.next();
             String lcname = header.getName().toLowerCase();
             if (!lcname.equals("content-type") && !lcname.equals("content-transfer-encoding")) {
@@ -198,30 +200,36 @@ public class MimeMessage extends MimePart {
         return newBody;
     }
 
-    @Override Properties getProperties() {
-        return mProperties != null || getParent() == null ? mProperties : getParent().getProperties();
+    @Override
+    public Properties getProperties() {
+        return properties != null ? properties : super.getProperties();
+    }
+
+    private void setProperties(Properties props) {
+        properties = props == null ? new Properties() : props;
     }
 
 
-    @Override public MimePart getSubpart(String part) {
+    @Override
+    public MimePart getSubpart(String part) {
         if (part == null || part.equals("")) {
             return this;
-        } else if (mBody == null) {
+        } else if (body == null) {
             return null;
         }
 
-        boolean isMultipart = mBody instanceof MimeMultipart;
+        boolean isMultipart = body instanceof MimeMultipart;
         if (part.equalsIgnoreCase("TEXT")) {
-            return isMultipart ? mBody : null;
+            return isMultipart ? body : null;
         } else if (isMultipart) {
-            return mBody.getSubpart(part);
+            return body.getSubpart(part);
         }
 
         int dot = part.indexOf('.');
         if (dot == part.length() - 1 || !"1".equals(dot == -1 ? part : part.substring(0, dot))) {
             return null;
         } else {
-            return mBody.getSubpart(dot == -1 ? "" : part.substring(dot + 1));
+            return body.getSubpart(dot == -1 ? "" : part.substring(dot + 1));
         }
     }
 
@@ -236,21 +244,22 @@ public class MimeMessage extends MimePart {
         return listMimeParts(parts, "");
     }
 
-    @Override Map<String, MimePart> listMimeParts(Map<String, MimePart> parts, String parentName) {
-        boolean isMultipart = mBody instanceof MimeMultipart;
+    @Override
+    Map<String, MimePart> listMimeParts(Map<String, MimePart> parts, String parentName) {
+        boolean isMultipart = body instanceof MimeMultipart;
         boolean topLevel = parentName.isEmpty();
 
-        parts.put(parentName + (topLevel ? "" : ".") + (isMultipart ? "TEXT" : "1"), mBody);
-        return mBody.listMimeParts(parts, parentName + (isMultipart ? "" : (topLevel ? "" : ".") + "1"));
+        parts.put(parentName + (topLevel ? "" : ".") + (isMultipart ? "TEXT" : "1"), body);
+        return body.listMimeParts(parts, parentName + (isMultipart ? "" : (topLevel ? "" : ".") + "1"));
     }
 
 
     public String getHeader(String name) {
-        return mBody.getMimeHeader(name);
+        return body.getMimeHeader(name);
     }
 
     public byte[] getRawHeader(String name) {
-        return mBody.getRawMimeHeader(name);
+        return body.getRawMimeHeader(name);
     }
 
     public void setHeader(String name, String value) {
@@ -258,11 +267,11 @@ public class MimeMessage extends MimePart {
     }
 
     public void setHeader(String name, String value, String charset) {
-        mBody.setMimeHeader(name, value, charset);
+        body.setMimeHeader(name, value, charset);
     }
 
     public void setHeader(String name, MimeHeader header) {
-        mBody.setMimeHeader(name, header);
+        body.setMimeHeader(name, header);
     }
 
 //    public void addHeader(String name, String value) {
@@ -278,7 +287,7 @@ public class MimeMessage extends MimePart {
     }
 
     public List<InternetAddress> getAddressHeader(String name) {
-        MimeHeader header = mBody.getMimeHeaderBlock().get(name);
+        MimeHeader header = body.getMimeHeaderBlock().get(name);
         if (header == null) {
             return null;
         } else if (header instanceof MimeAddressHeader) {
@@ -308,7 +317,8 @@ public class MimeMessage extends MimePart {
         return DateUtil.parseRFC2822Date(getHeader("Date"), null);
     }
 
-    @Override ContentType updateContentType(ContentType ctype) {
+    @Override
+    ContentType updateContentType(ContentType ctype) {
         if (ctype != null && !ctype.getContentType().equals(ContentType.MESSAGE_RFC822)) {
             throw new UnsupportedOperationException("cannot change a message to text:" + ctype);
         }
@@ -316,28 +326,31 @@ public class MimeMessage extends MimePart {
     }
 
 
-    @Override public long getSize() throws IOException {
+    @Override
+    public long getSize() throws IOException {
         long size = super.getSize();
-        if (size == -1 && mBody != null) {
-            size = recordSize(mBody.getMimeHeaderBlock().getLength() + mBody.getSize());
+        if (size == -1 && body != null) {
+            size = recordSize(body.getMimeHeaderBlock().getLength() + body.getSize());
         }
         return size;
     }
 
-    @Override public InputStream getInputStream() throws IOException {
-        return getParent() != null ? super.getInputStream() : mBody.getInputStream();
+    @Override
+    public InputStream getInputStream() throws IOException {
+        return getParent() != null ? super.getInputStream() : body.getInputStream();
     }
 
-    @Override public InputStream getRawContentStream() throws IOException {
-        return getParent() != null || isDirty() ? mBody.getInputStream() : super.getRawContentStream();
+    @Override
+    public InputStream getRawContentStream() throws IOException {
+        return getParent() != null || isDirty() ? body.getInputStream() : super.getRawContentStream();
     }
 
     public InputStream getRawContentStream(String[] omitHeaders) throws IOException {
-        MimeHeaderBlock headers = mBody.getMimeHeaderBlock();
+        MimeHeaderBlock headers = body.getMimeHeaderBlock();
         for (String name : omitHeaders) {
             if (headers.containsHeader(name)) {
                 MimeHeaderBlock trimmed = new MimeHeaderBlock(headers, omitHeaders);
-                return new VectorInputStream(trimmed.toByteArray(), mBody.getRawContentStream());
+                return new VectorInputStream(trimmed.toByteArray(), body.getRawContentStream());
             }
         }
         return getRawContentStream();
@@ -348,8 +361,8 @@ public class MimeMessage extends MimePart {
     }
 
     public MimeMessage setText(String text, String charset, String subtype, ContentTransferEncoding cte) throws IOException {
-        if (mBody instanceof MimeBodyPart) {
-            ((MimeBodyPart) mBody).setText(text, charset, subtype, cte);
+        if (body instanceof MimeBodyPart) {
+            ((MimeBodyPart) body).setText(text, charset, subtype, cte);
         } else {
             setBodyPart(new MimeBodyPart(new ContentType("text/plain")).setText(text, charset, subtype, cte));
         }
