@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -123,11 +123,11 @@ public class SearchConv extends Search {
             } finally {
                 results.doneWithSearchResults();
             }
-            
+
             if (request.getAttributeBool(MailConstants.A_NEED_EXP, false))
                 ToXML.encodeConvAddrsWithGroupInfo(request, response, getRequestedAccount(zsc), getAuthenticatedAccount(zsc));
             return response;
-            
+
         } else { // remote
             Element proxyRequest = zsc.createElement(MailConstants.SEARCH_CONV_REQUEST);
 
@@ -144,7 +144,7 @@ public class SearchConv extends Search {
                 // ZimbraQuery APIs...
                 String rewrittenQueryString = mbox.getRewrittenQueryString(octxt, params);
                 proxyRequest.addAttribute(MailConstants.E_QUERY, rewrittenQueryString, Element.Disposition.CONTENT);
-                    
+
                 // proxy to remote account
                 Account target = Provisioning.getInstance().get(AccountBy.id, cid.getAccountId(), zsc.getAuthToken());
                 response = proxyRequest(proxyRequest, context, target.getId());
@@ -201,7 +201,7 @@ public class SearchConv extends Search {
                 // we only bother checking the messages between offset and
                 // offset + iterLen, since only they are getting returned.
                 for (int i = offset; i < offset + iterLen; i++) {
-                    if (hit.getItemId() == msgs.get(i).getId()) {
+                    if (hit.getParsedItemID().equals(new ItemId(msgs.get(i)))) {
                         matched[i - offset] = hit;
                         break;
                     }
