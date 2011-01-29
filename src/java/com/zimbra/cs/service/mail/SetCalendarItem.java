@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -92,7 +92,7 @@ public class SetCalendarItem extends CalendarRequest {
         }
     };
 
-
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
@@ -100,7 +100,7 @@ public class SetCalendarItem extends CalendarRequest {
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         String flagsStr = request.getAttribute(MailConstants.A_FLAGS, null);
-        int flags = flagsStr != null ? Flag.flagsToBitmask(flagsStr) : 0;
+        int flags = flagsStr != null ? Flag.toBitmask(flagsStr) : 0;
         String tagsStr = request.getAttribute(MailConstants.A_TAGS, null);
         long tags = tagsStr != null ? Tag.tagsToBitmask(tagsStr) : 0;
 

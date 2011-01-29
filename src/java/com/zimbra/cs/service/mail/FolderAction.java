@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -133,19 +133,19 @@ public class FolderAction extends ItemAction {
             mbox.importFeed(octxt, iid.getId(), url, false);
         } else if (operation.equals(OP_FREEBUSY)) {
             boolean fb = action.getAttributeBool(MailConstants.A_EXCLUDE_FREEBUSY, false);
-            mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, fb);
+            mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_EXCLUDE_FREEBUSY, fb);
             FreeBusyProvider.mailboxChanged(zsc.getRequestedAccountId());
         } else if (operation.equals(OP_CHECK) || operation.equals(OP_UNCHECK)) {
-            mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_FLAG_CHECKED, operation.equals(OP_CHECK));
+            mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_CHECKED, operation.equals(OP_CHECK));
         } else if (operation.equals(OP_SET_URL)) {
             String url = action.getAttribute(MailConstants.A_URL, "");
             mbox.setFolderUrl(octxt, iid.getId(), url);
-            if (!url.equals(""))
+            if (!url.equals("")) {
                 mbox.synchronizeFolder(octxt, iid.getId());
-
+            }
             if (action.getAttribute(MailConstants.A_EXCLUDE_FREEBUSY, null) != null) {
                 boolean fb = action.getAttributeBool(MailConstants.A_EXCLUDE_FREEBUSY, false);
-                mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_FLAG_EXCLUDE_FREEBUSY, fb);
+                mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_EXCLUDE_FREEBUSY, fb);
             }
         } else if (operation.equals(OP_REVOKE)) {
             String zid = action.getAttribute(MailConstants.A_ZIMBRA_ID);
@@ -238,7 +238,7 @@ public class FolderAction extends ItemAction {
                 mbox.move(octxt, iid.getId(), MailItem.Type.FOLDER, iidFolder.getId(), null);
             }
         } else if (operation.equals(OP_SYNCON) || operation.equals(OP_SYNCOFF)) {
-            mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_FLAG_SYNC, operation.equals(OP_SYNCON));
+            mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_SYNC, operation.equals(OP_SYNCON));
         } else {
             throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
         }

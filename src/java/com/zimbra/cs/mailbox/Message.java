@@ -199,7 +199,7 @@ public class Message extends MailItem {
      *  can only be set when the Message is created; it cannot be altered
      *  thereafter. */
     public boolean isDraft() {
-        return isTagged(Flag.ID_FLAG_DRAFT);
+        return isTagged(Flag.ID_DRAFT);
     }
 
     /** Returns the <code>To:</code> header of the message, if the message
@@ -408,7 +408,7 @@ public class Message extends MailItem {
 
     @Override
     boolean isMutable() {
-        return isTagged(Flag.ID_FLAG_DRAFT);
+        return isTagged(Flag.ID_DRAFT);
     }
 
     @Override
@@ -1139,7 +1139,7 @@ public class Message extends MailItem {
         }
         if (hadAttachment != pm.hasAttachments()) {
             markItemModified(Change.MODIFIED_FLAGS);
-            parent.tagChanged(mMailbox.getFlagById(Flag.ID_FLAG_ATTACHED), pm.hasAttachments());
+            parent.tagChanged(mMailbox.getFlagById(Flag.ID_ATTACHED), pm.hasAttachments());
         }
 
         // make sure the "urgency" FLAGs are correct
@@ -1149,10 +1149,12 @@ public class Message extends MailItem {
         mData.flags |= urgency;
         if (oldUrgency != urgency) {
             markItemModified(Change.MODIFIED_FLAGS);
-            if (urgency == Flag.BITMASK_HIGH_PRIORITY || oldUrgency == Flag.BITMASK_HIGH_PRIORITY)
-                parent.tagChanged(mMailbox.getFlagById(Flag.ID_FLAG_HIGH_PRIORITY), urgency == Flag.BITMASK_HIGH_PRIORITY);
-            if (urgency == Flag.BITMASK_LOW_PRIORITY || oldUrgency == Flag.BITMASK_LOW_PRIORITY)
-                parent.tagChanged(mMailbox.getFlagById(Flag.ID_FLAG_LOW_PRIORITY), urgency == Flag.BITMASK_LOW_PRIORITY);
+            if (urgency == Flag.BITMASK_HIGH_PRIORITY || oldUrgency == Flag.BITMASK_HIGH_PRIORITY) {
+                parent.tagChanged(mMailbox.getFlagById(Flag.ID_HIGH_PRIORITY), urgency == Flag.BITMASK_HIGH_PRIORITY);
+            }
+            if (urgency == Flag.BITMASK_LOW_PRIORITY || oldUrgency == Flag.BITMASK_LOW_PRIORITY) {
+                parent.tagChanged(mMailbox.getFlagById(Flag.ID_LOW_PRIORITY), urgency == Flag.BITMASK_LOW_PRIORITY);
+            }
         }
 
         // update the SIZE and METADATA

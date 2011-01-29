@@ -49,7 +49,7 @@ public class AutoSendDraftTask extends ScheduledTask<Object> {
             ZimbraLog.scheduler.warn("Message with id %s is not a Draft scheduled to be auto-sent", draftId);
             return null;
         }
-        if (msg.isTagged(Flag.ID_FLAG_DELETED) || msg.inTrash()) {
+        if (msg.isTagged(Flag.ID_DELETED) || msg.inTrash()) {
             ZimbraLog.scheduler.debug("Draft with id %s is deleted", draftId);
             return null;
         }

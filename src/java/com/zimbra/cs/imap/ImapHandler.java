@@ -1555,12 +1555,14 @@ abstract class ImapHandler {
             path.canonicalize();
 
             if (path.belongsTo(credentials)) {
-                if (!path.isVisible())
+                if (!path.isVisible()) {
                     throw ImapServiceException.FOLDER_NOT_VISIBLE(path.asImapPath());
+                }
                 Mailbox mbox = (Mailbox) path.getOwnerMailbox();
                 Folder folder = (Folder) path.getFolder();
-                if (!folder.isTagged(Flag.ID_FLAG_SUBSCRIBED))
-                    mbox.alterTag(getContext(), folder.getId(), MailItem.Type.FOLDER, Flag.ID_FLAG_SUBSCRIBED, true);
+                if (!folder.isTagged(Flag.ID_SUBSCRIBED)) {
+                    mbox.alterTag(getContext(), folder.getId(), MailItem.Type.FOLDER, Flag.ID_SUBSCRIBED, true);
+                }
             } else {
                 credentials.subscribe(path);
             }
@@ -1591,10 +1593,11 @@ abstract class ImapHandler {
                 try {
                     Mailbox mbox = credentials.getMailbox();
                     Folder folder = (Folder) path.getFolder();
-                    if (folder.isTagged(Flag.ID_FLAG_SUBSCRIBED)) {
-                        mbox.alterTag(getContext(), folder.getId(), MailItem.Type.FOLDER, Flag.ID_FLAG_SUBSCRIBED, false);
+                    if (folder.isTagged(Flag.ID_SUBSCRIBED)) {
+                        mbox.alterTag(getContext(), folder.getId(), MailItem.Type.FOLDER, Flag.ID_SUBSCRIBED, false);
                     }
-                } catch (NoSuchItemException nsie) { }
+                } catch (NoSuchItemException e) {
+                }
             }
 
             // always check for remote subscriptions -- the path might be an old mountpoint...
@@ -1918,11 +1921,12 @@ abstract class ImapHandler {
     private boolean isPathSubscribed(ImapPath path, Set<String> subscriptions) throws ServiceException {
         if (path.belongsTo(credentials)) {
             Folder folder = (Folder) path.getFolder();
-            return folder.isTagged(Flag.ID_FLAG_SUBSCRIBED);
+            return folder.isTagged(Flag.ID_SUBSCRIBED);
         } else if (subscriptions != null && !subscriptions.isEmpty()) {
             for (String sub : subscriptions) {
-                if (sub.equalsIgnoreCase(path.asImapPath()))
+                if (sub.equalsIgnoreCase(path.asImapPath())) {
                     return true;
+                }
             }
         }
         return false;
@@ -1949,7 +1953,7 @@ abstract class ImapHandler {
                 if (owner == null) {
                     Mailbox mbox = credentials.getMailbox();
                     for (Folder folder : mbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy()) {
-                        if (folder.isTagged(Flag.ID_FLAG_SUBSCRIBED)) {
+                        if (folder.isTagged(Flag.ID_SUBSCRIBED)) {
                             checkSubscription(new ImapPath(null, folder, credentials), pattern, childPattern, hits);
                         }
                     }
@@ -3311,8 +3315,9 @@ abstract class ImapHandler {
                 // 6.4.5: "The \Seen flag is implicitly set; if this causes the flags to
                 //         change, they SHOULD be included as part of the FETCH responses."
                 // FIXME: optimize by doing a single mark-read op on multiple messages
-                if (markMessage)
-                    mbox.alterTag(getContext(), i4msg.msgId, i4msg.getType(), Flag.ID_FLAG_UNREAD, false, null);
+                if (markMessage) {
+                    mbox.alterTag(getContext(), i4msg.msgId, i4msg.getType(), Flag.ID_UNREAD, false, null);
+                }
                 ImapFolder.DirtyMessage unsolicited = i4folder.undirtyMessage(i4msg);
                 if ((attributes & FETCH_FLAGS) != 0 || unsolicited != null) {
                     result.print(empty ? "" : " ");  result.print(i4msg.getFlags(i4folder));  empty = false;
@@ -3466,12 +3471,14 @@ abstract class ImapHandler {
 
             if (operation != StoreAction.REMOVE) {
                 for (ImapFlag i4flag : i4flags) {
-                    if (i4flag.mId == Flag.ID_FLAG_DELETED) {
-                        if (!i4folder.getPath().isWritable(ACL.RIGHT_DELETE))
+                    if (i4flag.mId == Flag.ID_DELETED) {
+                        if (!i4folder.getPath().isWritable(ACL.RIGHT_DELETE)) {
                             throw ServiceException.PERM_DENIED("you do not have permission to set the \\Deleted flag");
+                        }
                     } else if (i4flag.mPermanent) {
-                        if (!i4folder.getPath().isWritable(ACL.RIGHT_WRITE))
+                        if (!i4folder.getPath().isWritable(ACL.RIGHT_WRITE)) {
                             throw ServiceException.PERM_DENIED("you do not have permission to set the " + i4flag.mName + " flag");
+                        }
                     }
                 }
             }

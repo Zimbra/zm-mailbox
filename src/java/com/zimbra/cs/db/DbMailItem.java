@@ -453,7 +453,7 @@ public class DbMailItem {
             stmt.executeUpdate();
             stmt.close();
 
-            boolean needsTag = shared && !source.isTagged(Flag.ID_FLAG_COPIED);
+            boolean needsTag = shared && !source.isTagged(Flag.ID_COPIED);
 
             if (needsTag && areFlagsetsLoaded(mbox))
                 getFlagsetCache(conn, mbox).addTagset(source.getInternalFlagBitmask() | Flag.BITMASK_COPIED);
@@ -1282,11 +1282,12 @@ public class DbMailItem {
 
     public static void alterTag(MailItem item, Tag tag, boolean add) throws ServiceException {
         Mailbox mbox = item.getMailbox();
-        if (mbox != tag.getMailbox())
+        if (mbox != tag.getMailbox()) {
             throw MailServiceException.WRONG_MAILBOX();
-        if (tag.getId() == Flag.ID_FLAG_UNREAD)
+        }
+        if (tag.getId() == Flag.ID_UNREAD) {
             throw ServiceException.FAILURE("unread state must be updated with alterUnread()", null);
-
+        }
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         Connection conn = mbox.getOperationConnection();
@@ -3234,9 +3235,9 @@ public class DbMailItem {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         List<UnderlyingData> dlist = new ArrayList<UnderlyingData>();
-        if (!item.isTagged(Flag.ID_FLAG_VERSIONED))
+        if (!item.isTagged(Flag.ID_VERSIONED)) {
             return dlist;
-
+        }
         Connection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;

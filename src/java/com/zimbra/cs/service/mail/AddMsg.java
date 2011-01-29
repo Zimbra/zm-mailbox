@@ -1,20 +1,16 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Sep 29, 2004
  */
 package com.zimbra.cs.service.mail;
 
@@ -45,20 +41,27 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.soap.ZimbraSoapContext;
 
+/**
+ * @since Sep 29, 2004
+ */
 public class AddMsg extends MailDocumentHandler {
     private static Log mLog = LogFactory.getLog(AddMsg.class);
     private static Pattern sNumeric = Pattern.compile("\\d+");
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_MSG, MailConstants.A_FOLDER };
+
+    @Override
     protected String[] getProxiedIdPath(Element request) {
         String folder = getXPath(request, TARGET_FOLDER_PATH);
         return folder != null && (folder.indexOf(':') > 0 || sNumeric.matcher(folder).matches()) ? TARGET_FOLDER_PATH : null;
     }
-    protected boolean checkMountpointProxy(Element request)  { return true; }
 
-    /* (non-Javadoc)
-     * @see com.zimbra.soap.DocumentHandler#handle(org.dom4j.Element, java.util.Map)
-     */
+    @Override
+    protected boolean checkMountpointProxy(Element request) {
+        return true;
+    }
+
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
@@ -66,7 +69,7 @@ public class AddMsg extends MailDocumentHandler {
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
         Element msgElem = request.getElement(MailConstants.E_MSG);
-        
+
         String flagsStr = msgElem.getAttribute(MailConstants.A_FLAGS, null);
         String tagsStr = msgElem.getAttribute(MailConstants.A_TAGS, null);
         String folderStr = msgElem.getAttribute(MailConstants.A_FOLDER);
@@ -110,19 +113,19 @@ public class AddMsg extends MailDocumentHandler {
         }
         if (mLog.isDebugEnabled())
             mLog.debug("folder = " + folder.getName());
-        
+
         // check to see whether the entire message has been uploaded under separate cover
         String attachment = msgElem.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
-        
+
         ParseMimeMessage.MimeMessageData mimeData = new ParseMimeMessage.MimeMessageData();
         MimeMessage mm;
         if (attachment != null)
             mm = SendMsg.parseUploadedMessage(zsc, attachment, mimeData);
         else
             mm = ParseMimeMessage.importMsgSoap(msgElem);
-        
+
         Message msg;
-        int flagsBitMask = Flag.flagsToBitmask(flagsStr);
+        int flagsBitMask = Flag.toBitmask(flagsStr);
         try {
             ParsedMessage pm = new ParsedMessage(mm, date, mbox.attachmentsIndexingEnabled());
             if (filterSent && !DebugConfig.disableOutgoingFilter && folderId == MailSender.getSentFolderId(mbox) &&
@@ -137,15 +140,15 @@ public class AddMsg extends MailDocumentHandler {
         } catch(IOException ioe) {
             throw ServiceException.FAILURE("Error While Delivering Message", ioe);
         }
-        
+
         // we can now purge the uploaded attachments
         if (mimeData.uploads != null)
             FileUploadServlet.deleteUploads(mimeData.uploads);
-        
+
         Element response = zsc.createElement(MailConstants.ADD_MSG_RESPONSE);
         if (msg != null)
             ToXML.encodeMessageSummary(response, ifmt, octxt, msg, null, GetMsgMetadata.SUMMARY_FIELDS);
-        
+
         return response;
     }
 }

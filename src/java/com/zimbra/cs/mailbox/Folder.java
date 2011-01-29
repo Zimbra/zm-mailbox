@@ -328,7 +328,7 @@ public class Folder extends MailItem {
         if (granted != null)
             return (short) (granted.shortValue() & rightsNeeded);
         // no ACLs apply; can we check parent folder for inherited rights?
-        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.ID_FLAG_NO_INHERIT))
+        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.ID_NO_INHERIT))
             return 0;
         return mParent.checkACL(rightsNeeded, authuser, asAdmin);
     }
@@ -351,7 +351,7 @@ public class Folder extends MailItem {
             throw ServiceException.PERM_DENIED("cannot grant access to the owner of the folder");
 
         // if there's an ACL on the folder, the folder does not inherit from its parent
-        alterTag(mMailbox.getFlagById(Flag.ID_FLAG_NO_INHERIT), true);
+        alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
 
         markItemModified(Change.MODIFIED_ACL);
         if (mRights == null)
@@ -381,7 +381,7 @@ public class Folder extends MailItem {
             return;
 
         // if there's an ACL on the folder, the folder does not inherit from its parent
-        alterTag(mMailbox.getFlagById(Flag.ID_FLAG_NO_INHERIT), true);
+        alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
 
         markItemModified(Change.MODIFIED_ACL);
         mRights.revokeAccess(zimbraId);
@@ -390,8 +390,7 @@ public class Folder extends MailItem {
         saveMetadata();
     }
 
-    /** Replaces the folder's {@link ACL} with the supplied one and updates
-     *  the database accordingly.
+    /** Replaces the folder's {@link ACL} with the supplied one and updates the database accordingly.
      *
      * @param acl  The new ACL being applied (<tt>null</tt> is OK).
      * @perms {@link ACL#RIGHT_ADMIN} on the folder
@@ -400,23 +399,19 @@ public class Folder extends MailItem {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
     void setPermissions(ACL acl) throws ServiceException {
-        if (!canAccess(ACL.RIGHT_ADMIN))
+        if (!canAccess(ACL.RIGHT_ADMIN)) {
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
-
-//        if (acl != null) {
-//            for (ACL.Grant grant : acl.getGrants())
-//                if (grant.getGranteeType() == ACL.GRANTEE_USER && grant.getGranteeId().equalsIgnoreCase(getMailbox().getAccountId()))
-//                    throw ServiceException.PERM_DENIED("cannot grant access to the owner of the folder");
-//        }
-
+        }
         // if we're setting an ACL on the folder, the folder does not inherit from its parent
-        alterTag(mMailbox.getFlagById(Flag.ID_FLAG_NO_INHERIT), true);
+        alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
 
         markItemModified(Change.MODIFIED_ACL);
-        if (acl != null && acl.isEmpty())
+        if (acl != null && acl.isEmpty()) {
             acl = null;
-        if (acl == null && mRights == null)
+        }
+        if (acl == null && mRights == null) {
             return;
+        }
         mRights = acl;
         saveMetadata();
     }
@@ -430,8 +425,9 @@ public class Folder extends MailItem {
     /** Returns a copy of the ACL that applies to the folder (possibly
      *  inherited from a parent), or <tt>null</tt> if one is not set. */
     public ACL getEffectiveACL() {
-        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.ID_FLAG_NO_INHERIT) || mParent == null)
+        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.ID_NO_INHERIT) || mParent == null) {
             return getACL();
+        }
         return mParent.getEffectiveACL();
     }
 
@@ -933,7 +929,7 @@ public class Folder extends MailItem {
         for (UnderlyingData data : unreaddata) {
             Message msg = mMailbox.getMessage(data);
             if (msg.checkChangeID() || !msg.canAccess(ACL.RIGHT_WRITE)) {
-                msg.updateUnread(-1, msg.isTagged(Flag.ID_FLAG_DELETED) ? -1 : 0);
+                msg.updateUnread(-1, msg.isTagged(Flag.ID_DELETED) ? -1 : 0);
                 msg.mData.metadataChanged(mMailbox);
                 targets.add(msg.getId());
             } else {
@@ -971,31 +967,32 @@ public class Folder extends MailItem {
      *  inheritance and hence clears the folder's ACL as a side-effect.
      *
      * @perms {@link ACL#RIGHT_WRITE} on the folder */
-    @Override void alterTag(Tag tag, boolean newValue) throws ServiceException {
+    @Override
+    void alterTag(Tag tag, boolean newValue) throws ServiceException {
         // folder flags are applied to the folder, not the contents
-        if (!(tag instanceof Flag) || !((Flag) tag).isFolderOnly()) {
+        if (!(tag instanceof Flag) || (((Flag) tag).toBitmask() & Flag.FLAGS_FOLDER) == 0) {
             super.alterTag(tag, newValue);
             return;
         }
 
-        if (newValue == isTagged(tag))
+        if (newValue == isTagged(tag)) {
             return;
-
-        boolean isNoInheritFlag = tag.getId() == Flag.ID_FLAG_NO_INHERIT;
-        if (!canAccess(isNoInheritFlag ? ACL.RIGHT_ADMIN : ACL.RIGHT_WRITE))
+        }
+        boolean isNoInheritFlag = tag.getId() == Flag.ID_NO_INHERIT;
+        if (!canAccess(isNoInheritFlag ? ACL.RIGHT_ADMIN : ACL.RIGHT_WRITE)) {
             throw ServiceException.PERM_DENIED("you do not have the necessary privileges on the folder");
-
+        }
         ACL effectiveACL = isNoInheritFlag ? getEffectiveACL() : null;
-        if (effectiveACL != null && effectiveACL.isEmpty())
+        if (effectiveACL != null && effectiveACL.isEmpty()) {
             effectiveACL = null;
-
+        }
         // change the tag on the Folder itself, not on its contents
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
         tagChanged(tag, newValue);
 
-        if (ZimbraLog.mailop.isDebugEnabled())
+        if (ZimbraLog.mailop.isDebugEnabled()) {
             ZimbraLog.mailop.debug("setting " + getMailopContext(tag) + " for " + getMailopContext(this));
-
+        }
         DbMailItem.alterTag(tag, Arrays.asList(mId), newValue);
 
         if (isNoInheritFlag) {
@@ -1277,15 +1274,17 @@ public class Folder extends MailItem {
         mDeletedCount       = (int) meta.getLong(Metadata.FN_DELETED, 0);
         mDeletedUnreadCount = (int) meta.getLong(Metadata.FN_DELETED_UNREAD, 0);
 
-        if (meta.containsKey(Metadata.FN_URL) || meta.containsKey(Metadata.FN_SYNC_DATE))
-            mSyncData = new SyncData(meta.get(Metadata.FN_URL, null), meta.get(Metadata.FN_SYNC_GUID, null), meta.getLong(Metadata.FN_SYNC_DATE, 0));
-
+        if (meta.containsKey(Metadata.FN_URL) || meta.containsKey(Metadata.FN_SYNC_DATE)) {
+            mSyncData = new SyncData(meta.get(Metadata.FN_URL, null), meta.get(Metadata.FN_SYNC_GUID, null),
+                    meta.getLong(Metadata.FN_SYNC_DATE, 0));
+        }
         MetadataList mlistACL = meta.getList(Metadata.FN_RIGHTS, true);
         if (mlistACL != null) {
             ACL acl = new ACL(mlistACL);
             mRights = acl.isEmpty() ? null : acl;
-            if (!isTagged(Flag.ID_FLAG_NO_INHERIT))
-                alterTag(mMailbox.getFlagById(Flag.ID_FLAG_NO_INHERIT), true);
+            if (!isTagged(Flag.ID_NO_INHERIT)) {
+                alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
+            }
         }
     }
 

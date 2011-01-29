@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -41,11 +41,24 @@ public class CreateMountpoint extends MailDocumentHandler {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_MOUNT, MailConstants.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
-    @Override protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
-    @Override protected boolean checkMountpointProxy(Element request)  { return true; }
-    @Override protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
-    @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    @Override
+    protected String[] getProxiedIdPath(Element request) {
+        return TARGET_FOLDER_PATH;
+    }
+
+    @Override
+    protected boolean checkMountpointProxy(Element request) {
+        return true;
+    }
+
+    @Override
+    protected String[] getResponseItemPath() {
+        return RESPONSE_ITEM_PATH;
+    }
+
+    @Override
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
@@ -84,7 +97,7 @@ public class CreateMountpoint extends MailDocumentHandler {
         try {
             MailItem.Color itemColor = rgb != null ? new MailItem.Color(rgb) : new MailItem.Color(color);
             mpt = mbox.createMountpoint(octxt, iidParent.getId(), name, ownerId, remoteId, MailItem.Type.of(view),
-                    Flag.flagsToBitmask(flags), itemColor);
+                    Flag.toBitmask(flags), itemColor);
         } catch (ServiceException se) {
             if (se.getCode() == MailServiceException.ALREADY_EXISTS && fetchIfExists) {
                 Folder folder = mbox.getFolderByName(octxt, iidParent.getId(), name);

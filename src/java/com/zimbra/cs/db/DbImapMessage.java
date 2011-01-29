@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -46,8 +46,8 @@ public class DbImapMessage {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         ZimbraLog.datasource.debug(
-            "Storing IMAP message tracker: mboxId=%d, localFolderId=%d, remoteUid=%d, localItemId=%d flags=%s",
-            mbox.getId(), localFolderId, remoteUid, localItemId, Flag.bitmaskToFlags(flags));
+                "Storing IMAP message tracker: mboxId=%d, localFolderId=%d, remoteUid=%d, localItemId=%d flags=%s",
+                mbox.getId(), localFolderId, remoteUid, localItemId, Flag.toString(flags));
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -138,13 +138,11 @@ public class DbImapMessage {
         }
     }
 
-    public static void setFlags(Mailbox mbox, int itemId, int flags)
-    throws ServiceException {
+    public static void setFlags(Mailbox mbox, int itemId, int flags) throws ServiceException {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
-        ZimbraLog.datasource.debug(
-            "Updating IMAP message tracker flags: mboxId=%d, localItemId=%d flags=%s",
-            mbox.getId(), itemId, Flag.bitmaskToFlags(flags));
+        ZimbraLog.datasource.debug("Updating IMAP message tracker flags: mboxId=%d, localItemId=%d flags=%s",
+                mbox.getId(), itemId, Flag.toString(flags));
 
         Connection conn = null;
         PreparedStatement stmt = null;

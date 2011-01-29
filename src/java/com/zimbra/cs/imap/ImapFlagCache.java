@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -108,14 +108,14 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag>, java.io.
     static ImapFlagCache getSystemFlags(Mailbox mbox) throws ServiceException {
         ImapFlagCache i4cache = new ImapFlagCache();
 
-        i4cache.cache(new ImapFlag("\\Answered", mbox.getFlagById(Flag.ID_FLAG_REPLIED),   true));
-        i4cache.cache(new ImapFlag("\\Deleted",  mbox.getFlagById(Flag.ID_FLAG_DELETED),   true));
-        i4cache.cache(new ImapFlag("\\Draft",    mbox.getFlagById(Flag.ID_FLAG_DRAFT),     true));
-        i4cache.cache(new ImapFlag("\\Flagged",  mbox.getFlagById(Flag.ID_FLAG_FLAGGED),   true));
-        i4cache.cache(new ImapFlag("\\Seen",     mbox.getFlagById(Flag.ID_FLAG_UNREAD),    false));
-        i4cache.cache(new ImapFlag("$Forwarded", mbox.getFlagById(Flag.ID_FLAG_FORWARDED), true));
-        i4cache.cache(new ImapFlag("$MDNSent",   mbox.getFlagById(Flag.ID_FLAG_NOTIFIED),  true));
-        i4cache.cache(new ImapFlag("Forwarded",  mbox.getFlagById(Flag.ID_FLAG_FORWARDED), true));
+        i4cache.cache(new ImapFlag("\\Answered", mbox.getFlagById(Flag.ID_REPLIED),   true));
+        i4cache.cache(new ImapFlag("\\Deleted",  mbox.getFlagById(Flag.ID_DELETED),   true));
+        i4cache.cache(new ImapFlag("\\Draft",    mbox.getFlagById(Flag.ID_DRAFT),     true));
+        i4cache.cache(new ImapFlag("\\Flagged",  mbox.getFlagById(Flag.ID_FLAGGED),   true));
+        i4cache.cache(new ImapFlag("\\Seen",     mbox.getFlagById(Flag.ID_UNREAD),    false));
+        i4cache.cache(new ImapFlag("$Forwarded", mbox.getFlagById(Flag.ID_FORWARDED), true));
+        i4cache.cache(new ImapFlag("$MDNSent",   mbox.getFlagById(Flag.ID_NOTIFIED),  true));
+        i4cache.cache(new ImapFlag("Forwarded",  mbox.getFlagById(Flag.ID_FORWARDED), true));
 
         i4cache.cache(new ImapFlag("\\Recent",     ImapMessage.FLAG_RECENT,       ImapFlag.HIDDEN));
         i4cache.cache(new ImapFlag("$Junk",        ImapMessage.FLAG_SPAM,         ImapFlag.VISIBLE));

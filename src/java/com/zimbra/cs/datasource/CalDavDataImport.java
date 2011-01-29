@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -60,7 +60,7 @@ public class CalDavDataImport extends MailItemImport {
     private static final String METADATA_TYPE_APPOINTMENT = "a";
     private static final String METADATA_KEY_ETAG = "e";
     private static final String METADATA_KEY_CTAG = "c";
-    private static final int DEFAULT_FOLDER_FLAGS = Flag.flagsToBitmask("#");
+    private static final int DEFAULT_FOLDER_FLAGS = Flag.BITMASK_CHECKED;
 
     private CalDavClient mClient;
 
@@ -314,7 +314,7 @@ public class CalDavDataImport extends MailItemImport {
         ZimbraLog.datasource.debug("deleteRemoteFolder: deleting remote folder %s", url);
         getClient().sendRequest(DavRequest.DELETE(url));
     }
-    private boolean pushDelete(Collection<Integer> itemIds) throws ServiceException, IOException, DavException {
+    private boolean pushDelete(Collection<Integer> itemIds) throws ServiceException {
         DataSource ds = getDataSource();
         boolean deleted = false;
         ArrayList<Integer> toDelete = new ArrayList<Integer>();

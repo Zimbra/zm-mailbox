@@ -387,7 +387,7 @@ public final class IndexHelper {
                 List<SearchResult> items = new ArrayList<SearchResult>();
                 DbSearchConstraints c = new DbSearchConstraints();
                 c.tags = new HashSet<Tag>();
-                c.tags.add(mailbox.getFlagById(Flag.ID_FLAG_INDEXING_DEFERRED));
+                c.tags.add(mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED));
                 DbSearch.search(items, mailbox.getOperationConnection(), c, mailbox,
                         SortBy.NONE, SearchResult.ExtraData.NONE);
 
@@ -411,13 +411,13 @@ public final class IndexHelper {
                             List<SearchResult> items = new ArrayList<SearchResult>();
                             DbSearchConstraints c = new DbSearchConstraints();
                             c.tags = new HashSet<Tag>();
-                            c.tags.add(mailbox.getFlagById(Flag.ID_FLAG_INDEXING_DEFERRED));
+                            c.tags.add(mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED));
                             DbSearch.search(items, mailbox.getOperationConnection(), c, mailbox,
                                             SortBy.NONE, SearchResult.ExtraData.MODCONTENT);
 
                             List<Integer> deferredTagsToClear = new ArrayList<Integer>();
 
-                            Flag indexingDeferredFlag = mailbox.getFlagById(Flag.ID_FLAG_INDEXING_DEFERRED);
+                            Flag indexingDeferredFlag = mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED);
 
                             for (SearchResult sr : items) {
                                 MailItem item = mailbox.getItemById(sr.id, MailItem.Type.of(sr.type));

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -298,8 +298,7 @@ public class FilterUtil {
                     throw ServiceException.FAILURE("Unable to get message content", e);
                 }
                 String msgId = remoteMbox.addMessage(remoteFolder.getId(),
-                    com.zimbra.cs.mailbox.Flag.bitmaskToFlags(flags),
-                    null, 0, content, false);
+                        com.zimbra.cs.mailbox.Flag.toString(flags), null, 0, content, false);
                 return new ItemId(msgId, remoteAccountId);
             } else {
                 String msg = String.format("Unable to find remote folder %s for mountpoint %s.",

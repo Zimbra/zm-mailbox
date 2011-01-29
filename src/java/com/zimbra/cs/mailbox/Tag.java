@@ -218,7 +218,7 @@ public class Tag extends MailItem {
             Message msg = mMailbox.getMessage(data);
             if (msg.checkChangeID() || !msg.canAccess(ACL.RIGHT_WRITE)) {
                 int delta = unread ? 1 : -1;
-                msg.updateUnread(delta, isTagged(Flag.ID_FLAG_DELETED) ? delta : 0);
+                msg.updateUnread(delta, isTagged(Flag.ID_DELETED) ? delta : 0);
                 msg.mData.metadataChanged(mMailbox);
                 targets.add(msg.getId());
             } else {

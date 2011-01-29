@@ -110,7 +110,7 @@ class DbLeafNode extends DbSearchConstraints implements IConstraints {
 
     @Override
     public boolean tryDbFirst(Mailbox mbox) throws ServiceException {
-        return (convId != 0 || (tags != null && tags.contains(mbox.getFlagById(Flag.ID_FLAG_UNREAD))));
+        return (convId != 0 || (tags != null && tags.contains(mbox.getFlagById(Flag.ID_UNREAD))));
     }
 
     @Override

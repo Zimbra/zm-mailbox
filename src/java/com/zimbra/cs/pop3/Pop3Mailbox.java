@@ -85,7 +85,7 @@ final class Pop3Mailbox {
                     if (hit instanceof MessageHit) {
                         MessageHit mh = (MessageHit) hit;
                         Message msg = mh.getMessage();
-                        if (!msg.isTagged(Flag.ID_FLAG_POPPED)) {
+                        if (!msg.isTagged(Flag.ID_POPPED)) {
                             totalSize += msg.getSize();
                             messages.add(new Pop3Message(msg));
                         }

@@ -414,10 +414,10 @@ public class ParseMimeMessage {
             }
 
             String flagStr = msgElem.getAttribute(MailConstants.A_FLAGS, "");
-            if (flagStr.indexOf(Flag.getAbbreviation(Flag.ID_FLAG_HIGH_PRIORITY)) != -1) {
+            if (flagStr.indexOf(Flag.toChar(Flag.ID_HIGH_PRIORITY)) != -1) {
                 mm.addHeader("X-Priority", "1");
                 mm.addHeader("Importance", "high");
-            } else if (flagStr.indexOf(Flag.getAbbreviation(Flag.ID_FLAG_LOW_PRIORITY)) != -1) {
+            } else if (flagStr.indexOf(Flag.toChar(Flag.ID_LOW_PRIORITY)) != -1) {
                 mm.addHeader("X-Priority", "5");
                 mm.addHeader("Importance", "low");
             }

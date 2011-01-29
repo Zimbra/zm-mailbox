@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -39,8 +39,7 @@ import com.zimbra.cs.mailbox.Tag;
 /**
  * @author bburtin
  */
-public class TestUnread extends TestCase
-{
+public class TestUnread extends TestCase {
     private Mailbox mMbox;
     private Account mAccount;
 
@@ -451,15 +450,14 @@ public class TestUnread extends TestCase
         assertEquals("Found " + numRows + " items with old unread flag set", 0, numRows);
     }
 
-    private void verifyUnreadFlag(MailItem item)
-    throws Exception {
+    private void verifyUnreadFlag(MailItem item) throws Exception {
         String flagString = item.getFlagString();
         if (item.isUnread()) {
             assertTrue("unread bit test: " + item.getFlagBitmask(), (item.getFlagBitmask() & Flag.BITMASK_UNREAD) > 0);
-            assertTrue("unread flag string: " + flagString, flagString.indexOf(Flag.getAbbreviation(Flag.ID_FLAG_UNREAD)) >= 0);
+            assertTrue("unread flag string: " + flagString, flagString.indexOf(Flag.toChar(Flag.ID_UNREAD)) >= 0);
         } else {
             assertTrue("read bit test: " + item.getFlagBitmask(), (item.getFlagBitmask() & Flag.BITMASK_UNREAD) == 0);
-            assertTrue("read flag string: " + flagString, flagString.indexOf(Flag.getAbbreviation(Flag.ID_FLAG_UNREAD)) == -1);
+            assertTrue("read flag string: " + flagString, flagString.indexOf(Flag.toChar(Flag.ID_UNREAD)) == -1);
         }
 
 //        if (item.getType() == MailItem.TYPE_MESSAGE || item.getType() == MailItem.TYPE_INVITE) {
@@ -488,9 +486,8 @@ public class TestUnread extends TestCase
         verifyAllUnreadFlags();
     }
 
-    private void setUnread(MailItem item, boolean unread)
-    throws Exception {
-        mMbox.alterTag(null, item.getId(), item.getType(), Flag.ID_FLAG_UNREAD, unread);
+    private void setUnread(MailItem item, boolean unread) throws Exception {
+        mMbox.alterTag(null, item.getId(), item.getType(), Flag.ID_UNREAD, unread);
         item = mMbox.getItemById(null, item.getId(), item.getType());
         verifyUnreadFlag(item);
     }

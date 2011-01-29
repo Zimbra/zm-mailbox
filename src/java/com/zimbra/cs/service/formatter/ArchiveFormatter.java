@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -341,85 +341,84 @@ public abstract class ArchiveFormatter extends Formatter {
         String metaParam = context.params.get(UserServlet.QP_META);
         boolean meta = metaParam == null ? getDefaultMeta() : !metaParam.equals("0");
 
-        if (!version && mi.isTagged(Flag.ID_FLAG_VERSIONED)) {
-            for (MailItem rev : context.targetMailbox.getAllRevisions(
-                context.opContext, mi.getId(), mi.getType())) {
-                if (mi.getVersion() != rev.getVersion())
-                    aos = saveItem(context, rev, fldrs, cnts, names, true,
-                            aos, charsetEncoder);
+        if (!version && mi.isTagged(Flag.ID_VERSIONED)) {
+            for (MailItem rev : context.targetMailbox.getAllRevisions( context.opContext, mi.getId(), mi.getType())) {
+                if (mi.getVersion() != rev.getVersion()) {
+                    aos = saveItem(context, rev, fldrs, cnts, names, true, aos, charsetEncoder);
+                }
             }
         }
         switch (mi.getType()) {
-        case APPOINTMENT:
-            Appointment appt = (Appointment)mi;
+            case APPOINTMENT:
+                Appointment appt = (Appointment)mi;
 
-            if (!appt.isPublic() && !appt.allowPrivateAccess(context.authAccount,
-                context.isUsingAdminPrivileges()))
-                return aos;
-            if (meta) {
-                name = appt.getSubject();
-                ext = "appt";
-            } else {
-                ext = "ics";
-            }
-            break;
-        case CHAT:
-            ext = "chat";
-            break;
-        case CONTACT:
-            Contact ct = (Contact)mi;
-
-            name = ct.getFileAsString();
-            if (!meta)
-                ext = "vcf";
-            break;
-        case FLAG:
-            return aos;
-        case FOLDER:
-        case MOUNTPOINT:
-        case SEARCHFOLDER:
-            if (mi.getId() == Mailbox.ID_FOLDER_ROOT) {
-                name = "ROOT";
-            } else if (mi.getId() == Mailbox.ID_FOLDER_USER_ROOT) {
-                name = "USER_ROOT";
-            } else {
-                name = mi.getName();
-            }
-            break;
-        case MESSAGE:
-            Message msg = (Message)mi;
-
-            if (msg.hasCalendarItemInfos()) {
-                Set<Integer> calItems = new HashSet<Integer>();
-
-                for (Iterator<CalendarItemInfo> it = msg.getCalendarItemInfoIterator();
-                    it.hasNext(); )
-                    calItems.add(it.next().getCalendarItemId());
-                for (Integer i : calItems) {
-                    if (extra == null)
-                        extra = "calendar=" + i.toString();
-                    else
-                        extra += ',' + i.toString();
+                if (!appt.isPublic() && !appt.allowPrivateAccess(context.authAccount,
+                    context.isUsingAdminPrivileges()))
+                    return aos;
+                if (meta) {
+                    name = appt.getSubject();
+                    ext = "appt";
+                } else {
+                    ext = "ics";
                 }
-            }
-            ext = "eml";
-            break;
-        case NOTE:
-            ext = "note";
-            break;
-        case TASK:
-            Task task = (Task)mi;
+                break;
+            case CHAT:
+                ext = "chat";
+                break;
+            case CONTACT:
+                Contact ct = (Contact)mi;
 
-            if (!task.isPublic() && !task.allowPrivateAccess(context.authAccount,
-                context.isUsingAdminPrivileges()))
+                name = ct.getFileAsString();
+                if (!meta)
+                    ext = "vcf";
+                break;
+            case FLAG:
                 return aos;
-            ext = "task";
-            break;
-        case VIRTUAL_CONVERSATION:
-            return aos;
-        case WIKI:
-            ext = "wiki";
-            break;
+            case FOLDER:
+            case MOUNTPOINT:
+            case SEARCHFOLDER:
+                if (mi.getId() == Mailbox.ID_FOLDER_ROOT) {
+                    name = "ROOT";
+                } else if (mi.getId() == Mailbox.ID_FOLDER_USER_ROOT) {
+                    name = "USER_ROOT";
+                } else {
+                    name = mi.getName();
+                }
+                break;
+            case MESSAGE:
+                Message msg = (Message)mi;
+
+                if (msg.hasCalendarItemInfos()) {
+                    Set<Integer> calItems = new HashSet<Integer>();
+
+                    for (Iterator<CalendarItemInfo> it = msg.getCalendarItemInfoIterator();
+                        it.hasNext(); )
+                        calItems.add(it.next().getCalendarItemId());
+                    for (Integer i : calItems) {
+                        if (extra == null)
+                            extra = "calendar=" + i.toString();
+                        else
+                            extra += ',' + i.toString();
+                    }
+                }
+                ext = "eml";
+                break;
+            case NOTE:
+                ext = "note";
+                break;
+            case TASK:
+                Task task = (Task)mi;
+
+                if (!task.isPublic() && !task.allowPrivateAccess(context.authAccount,
+                    context.isUsingAdminPrivileges()))
+                    return aos;
+                ext = "task";
+                break;
+            case VIRTUAL_CONVERSATION:
+                return aos;
+            case WIKI:
+                ext = "wiki";
+                break;
         }
         fldr = fldrs.get(fid);
         if (fldr == null) {
@@ -463,9 +462,9 @@ public abstract class ArchiveFormatter extends Formatter {
                 aos = getOutputStream(context, charsetEncoder.charset().name());
             }
             aoe = aos.newOutputEntry(path + ".meta", mi.getType().toString(), mi.getType().toByte(), mi.getDate());
-            if (mi instanceof Message && (mi.getFlagBitmask() &
-                Flag.ID_FLAG_UNREAD) != 0)
+            if (mi instanceof Message && (mi.getFlagBitmask() & Flag.ID_UNREAD) != 0) {
                 aoe.setUnread();
+            }
             if (meta) {
                 byte[] metaData = new ItemData(mi, extra).encode();
 
@@ -608,8 +607,9 @@ public abstract class ArchiveFormatter extends Formatter {
         } else if (name.length() > 121) {
             name = name.substring(0, 120);
         }
-        if (mi.isTagged(Flag.ID_FLAG_VERSIONED))
+        if (mi.isTagged(Flag.ID_VERSIONED)) {
             name += String.format("-%05d", mi.getVersion());
+        }
         name = ILLEGAL_FILE_CHARS.matcher(name).replaceAll("_").trim();
         while (name.endsWith(".")) {
             name = name.substring(0, name.length() - 1).trim();
@@ -1315,22 +1315,21 @@ public abstract class ArchiveFormatter extends Formatter {
                 return;
             }
             if (newItem != null) {
-                if (mi.getColor() != newItem.getColor())
-                    mbox.setColor(oc, newItem.getId(), newItem.getType(),
-                        mi.getColor());
-
-                if (!id.flags.equals(newItem.getFlagString()) || !id.tagsEqual(newItem))
-                    mbox.setTags(oc, newItem.getId(), newItem.getType(),
-                        Flag.flagsToBitmask(id.flags), getTagBitmask(oc, mbox, id),
-                        null);
+                if (mi.getColor() != newItem.getColor()) {
+                    mbox.setColor(oc, newItem.getId(), newItem.getType(), mi.getColor());
+                }
+                if (!id.flags.equals(newItem.getFlagString()) || !id.tagsEqual(newItem)) {
+                    mbox.setTags(oc, newItem.getId(), newItem.getType(), Flag.toBitmask(id.flags),
+                            getTagBitmask(oc, mbox, id), null);
+                }
             } else if (oldItem != null && r == Resolve.Modify) {
-                if (mi.getColor() != oldItem.getColor())
-                    mbox.setColor(oc, oldItem.getId(), oldItem.getType(),
-                        mi.getColor());
-                if (!id.flags.equals(oldItem.getFlagString()) || !id.tagsEqual(oldItem))
-                    mbox.setTags(oc, oldItem.getId(), oldItem.getType(),
-                        Flag.flagsToBitmask(id.flags), getTagBitmask(oc, mbox, id),
-                        null);
+                if (mi.getColor() != oldItem.getColor()) {
+                    mbox.setColor(oc, oldItem.getId(), oldItem.getType(), mi.getColor());
+                }
+                if (!id.flags.equals(oldItem.getFlagString()) || !id.tagsEqual(oldItem)) {
+                    mbox.setTags(oc, oldItem.getId(), oldItem.getType(), Flag.toBitmask(id.flags),
+                            getTagBitmask(oc, mbox, id), null);
+                }
             }
         } catch (MailServiceException e) {
             if (e.getCode() == MailServiceException.QUOTA_EXCEEDED) {

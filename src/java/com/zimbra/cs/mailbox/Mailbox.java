@@ -1226,17 +1226,18 @@ public class Mailbox {
     }
 
     void cache(MailItem item) throws ServiceException {
-        if (item == null || item.isTagged(Flag.ID_FLAG_UNCACHED))
+        if (item == null || item.isTagged(Flag.ID_UNCACHED)) {
             return;
-
+        }
         if (item instanceof Tag) {
             if (mTagCache != null) {
                 mTagCache.put(item.getId(), (Tag) item);
                 mTagCache.put(item.getName().toLowerCase(), (Tag) item);
             }
         } else if (item instanceof Folder) {
-            if (mFolderCache != null)
+            if (mFolderCache != null) {
                 mFolderCache.put(item.getId(), (Folder) item);
+            }
         } else {
             getItemCache().put(item.getId(), item);
         }
@@ -1802,9 +1803,9 @@ public class Mailbox {
      * @see #snapshotFolders() */
     @SuppressWarnings("unchecked")
     private <T extends MailItem> T snapshotItem(T item) throws ServiceException {
-        if (item == null || item.isTagged(Flag.ID_FLAG_UNCACHED) || mCurrentChange.depth != 1)
+        if (item == null || item.isTagged(Flag.ID_UNCACHED) || mCurrentChange.depth != 1) {
             return item;
-
+        }
         if (item instanceof Folder) {
             return mFolderCache == null ? item : (T) snapshotFolders().get(item.getId());
         } else if (item instanceof VirtualConversation) {
@@ -2121,15 +2122,18 @@ public class Mailbox {
     /** retrieve an item from the Mailbox's caches; return null if no item found */
     MailItem getCachedItem(Integer key) throws ServiceException {
         MailItem item = null;
-        if (key < 0)
-            item = Flag.getFlag(this, key);
-        if (item == null && mTagCache != null)
+        if (key < 0) {
+            item = Flag.of(this, key);
+        }
+        if (item == null && mTagCache != null) {
             item = mTagCache.get(key);
-        if (item == null && mFolderCache != null)
+        }
+        if (item == null && mFolderCache != null) {
             item = mFolderCache.get(key);
-        if (item == null)
+        }
+        if (item == null) {
             item = getItemCache().get(key);
-
+        }
         logCacheActivity(key, item == null ? MailItem.Type.UNKNOWN : item.getType(), item);
         return item;
     }
@@ -2142,7 +2146,7 @@ public class Mailbox {
             case FLAG:
             case TAG:
                 if (key < 0) {
-                    item = Flag.getFlag(this, key);
+                    item = Flag.of(this, key);
                 } else if (mTagCache != null) {
                     item = mTagCache.get(key);
                 }
@@ -2420,7 +2424,7 @@ public class Mailbox {
                     if (folderId != -1 && folderId != ID_FOLDER_TAGS) {
                         return Collections.emptyList();
                     }
-                    List<Flag> allFlags = Flag.getAllFlags(this);
+                    List<Flag> allFlags = Flag.allOf(this);
                     result = new ArrayList<MailItem>(allFlags.size());
                     for (Flag flag : allFlags) {
                         result.add(flag);
@@ -2799,14 +2803,15 @@ public class Mailbox {
 
 
     public Flag getFlagById(int flagId) throws ServiceException {
-        Flag flag = Flag.getFlag(this, flagId);
-        if (flag == null)
+        Flag flag = Flag.of(this, flagId);
+        if (flag == null) {
             throw MailServiceException.NO_SUCH_TAG(flagId);
+        }
         return flag;
     }
 
     public List<Flag> getFlagList() throws ServiceException {
-        return Flag.getAllFlags(this);
+        return Flag.allOf(this);
     }
 
     public synchronized Tag getTagById(OperationContext octxt, int id) throws ServiceException {
@@ -2841,8 +2846,7 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("getTagByName", null);
-            Tag tag = name.charAt(0) == '\\' ?
-                    Flag.getFlag(this, name) : mTagCache.get(name.toLowerCase());
+            Tag tag = name.charAt(0) == '\\' ? Flag.of(this, name) : mTagCache.get(name.toLowerCase());
             if (tag == null) {
                 throw MailServiceException.NO_SUCH_TAG(name);
             }
@@ -4977,11 +4981,12 @@ public class Mailbox {
                 SaveDraft redoPlayer = (SaveDraft) mCurrentChange.getRedoPlayer();
 
                 Message msg = getMessageById(id);
-                if (!msg.isTagged(Flag.ID_FLAG_DRAFT))
+                if (!msg.isTagged(Flag.ID_DRAFT)) {
                     throw MailServiceException.IMMUTABLE_OBJECT(id);
-                if (!checkItemChangeID(msg))
+                }
+                if (!checkItemChangeID(msg)) {
                     throw MailServiceException.MODIFY_CONFLICT();
-
+                }
                 // content changed, so we're obliged to change the IMAP uid
                 int imapID = getNextItemId(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getImapId());
                 redoRecorder.setImapId(imapID);
@@ -5175,13 +5180,14 @@ public class Mailbox {
             }
 
             for (MailItem item : items) {
-                if (item == null)
+                if (item == null) {
                     continue;
-
-                if (tagId == Flag.ID_FLAG_UNREAD)
+                }
+                if (tagId == Flag.ID_UNREAD) {
                     item.alterUnread(addTag);
-                else
+                } else {
                     item.alterTag(tag, addTag);
+                }
             }
             success = true;
         } finally {
@@ -5196,14 +5202,14 @@ public class Mailbox {
 
     public synchronized void setTags(OperationContext octxt, int itemId, MailItem.Type type, String flagStr,
             String tagIDs, TargetConstraint tcon) throws ServiceException {
-        int flags = (flagStr == null ? MailItem.FLAG_UNCHANGED : Flag.flagsToBitmask(flagStr));
+        int flags = (flagStr == null ? MailItem.FLAG_UNCHANGED : Flag.toBitmask(flagStr));
         long tags = (tagIDs == null ? MailItem.TAG_UNCHANGED : Tag.tagsToBitmask(tagIDs));
         setTags(octxt, itemId, type, flags, tags, tcon);
     }
 
     public synchronized void setTags(OperationContext octxt, int[] itemIds, MailItem.Type type, String flagStr,
             String tagIDs, TargetConstraint tcon) throws ServiceException {
-        int flags = (flagStr == null ? MailItem.FLAG_UNCHANGED : Flag.flagsToBitmask(flagStr));
+        int flags = (flagStr == null ? MailItem.FLAG_UNCHANGED : Flag.toBitmask(flagStr));
         long tags = (tagIDs == null ? MailItem.TAG_UNCHANGED : Tag.tagsToBitmask(tagIDs));
         setTags(octxt, itemIds, type, flags, tags, tcon);
     }
@@ -5230,7 +5236,7 @@ public class Mailbox {
             for (MailItem item : items)
                 checkItemChangeID(item);
 
-            Flag unreadFlag = getFlagById(Flag.ID_FLAG_UNREAD);
+            Flag unreadFlag = getFlagById(Flag.ID_UNREAD);
 
             for (MailItem item : items) {
                 if (item == null)

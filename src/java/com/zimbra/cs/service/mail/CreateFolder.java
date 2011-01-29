@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -69,9 +69,9 @@ public class CreateFolder extends MailDocumentHandler {
             MailItem.Color itemColor = rgb != null ? new MailItem.Color(rgb) : new MailItem.Color(color);
             if (iidParent != null) {
                 folder = mbox.createFolder(octxt, name, iidParent.getId(), (byte) 0, MailItem.Type.of(view),
-                        Flag.flagsToBitmask(flags), itemColor, url);
+                        Flag.toBitmask(flags), itemColor, url);
             } else {
-                folder = mbox.createFolder(octxt, name, (byte) 0, MailItem.Type.of(view), Flag.flagsToBitmask(flags),
+                folder = mbox.createFolder(octxt, name, (byte) 0, MailItem.Type.of(view), Flag.toBitmask(flags),
                         itemColor, url);
             }
             if (!folder.getUrl().equals("") && syncToUrl) {

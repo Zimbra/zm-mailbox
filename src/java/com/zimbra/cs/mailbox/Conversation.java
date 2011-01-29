@@ -335,7 +335,7 @@ public class Conversation extends MailItem {
             }
 
             int delta = unread ? 1 : -1;
-            msg.updateUnread(delta, msg.isTagged(Flag.ID_FLAG_DELETED) ? delta : 0);
+            msg.updateUnread(delta, msg.isTagged(Flag.ID_DELETED) ? delta : 0);
             msg.mData.metadataChanged(mMailbox);
             targets.add(msg.getId());
         }
@@ -369,16 +369,19 @@ public class Conversation extends MailItem {
      * @perms {@link ACL#RIGHT_WRITE} on all the messages */
     @Override
     void alterTag(Tag tag, boolean add) throws ServiceException {
-        if (tag == null)
+        if (tag == null) {
             throw ServiceException.FAILURE("missing tag argument", null);
-        if (!add && !isTagged(tag))
+        }
+        if (!add && !isTagged(tag)) {
             return;
-        if (tag.getId() == Flag.ID_FLAG_UNREAD)
+        }
+        if (tag.getId() == Flag.ID_UNREAD) {
             throw ServiceException.FAILURE("unread state must be set with alterUnread", null);
+        }
         // don't let the user tag things as "has attachments" or "draft"
-        if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0)
+        if (tag instanceof Flag && (tag.getBitmask() & Flag.FLAG_SYSTEM) != 0) {
             throw MailServiceException.CANNOT_TAG(tag, this);
-
+        }
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
 
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
@@ -404,11 +407,11 @@ public class Conversation extends MailItem {
             // since we're adding/removing a tag, the tag's unread count may change
             int delta = add ? 1 : -1;
             if (tag.trackUnread() && msg.isUnread()) {
-                tag.updateUnread(delta, isTagged(Flag.ID_FLAG_DELETED) ? delta : 0);
+                tag.updateUnread(delta, isTagged(Flag.ID_DELETED) ? delta : 0);
             }
 
             // if we're adding/removing the \Deleted flag, update the folder and tag "deleted" and "deleted unread" counts
-            if (tag.getId() == Flag.ID_FLAG_DELETED) {
+            if (tag.getId() == Flag.ID_DELETED) {
                 getFolder().updateSize(0, delta, 0);
                 // note that Message.updateUnread() calls updateTagUnread()
                 if (msg.isUnread()) {
@@ -518,7 +521,7 @@ public class Conversation extends MailItem {
                 continue;
             }
 
-            boolean isDeleted = msg.isTagged(Flag.ID_FLAG_DELETED);
+            boolean isDeleted = msg.isTagged(Flag.ID_DELETED);
             if (msg.isUnread()) {
                 if (!toTrash || msg.inTrash()) {
                     source.updateUnread(-1, isDeleted ? -1 : 0);
@@ -609,7 +612,7 @@ public class Conversation extends MailItem {
         // update unread counts
         if (msg.isUnread()) {
             markItemModified(Change.MODIFIED_UNREAD);
-            updateUnread(child.mData.unreadCount, child.isTagged(Flag.ID_FLAG_DELETED) ? child.mData.unreadCount : 0);
+            updateUnread(child.mData.unreadCount, child.isTagged(Flag.ID_DELETED) ? child.mData.unreadCount : 0);
         }
 
         markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_SENDERS | Change.MODIFIED_METADATA);
@@ -662,7 +665,7 @@ public class Conversation extends MailItem {
             // update unread counts
             if (child.isUnread()) {
                 markItemModified(Change.MODIFIED_UNREAD);
-                updateUnread(-child.mData.unreadCount, child.isTagged(Flag.ID_FLAG_DELETED) ? -child.mData.unreadCount : 0);
+                updateUnread(-child.mData.unreadCount, child.isTagged(Flag.ID_DELETED) ? -child.mData.unreadCount : 0);
             }
 
             // update inherited tags, if applicable

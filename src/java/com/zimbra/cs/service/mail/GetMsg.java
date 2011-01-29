@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -129,12 +129,13 @@ public class GetMsg extends MailDocumentHandler {
         Message msg = mbox.getMessageById(octxt, iid.getId());
         if (read && msg.isUnread() && !RedoLogProvider.getInstance().isSlave()) {
             try {
-                mbox.alterTag(octxt, msg.getId(), MailItem.Type.MESSAGE, Flag.ID_FLAG_UNREAD, false);
+                mbox.alterTag(octxt, msg.getId(), MailItem.Type.MESSAGE, Flag.ID_UNREAD, false);
             } catch (ServiceException e) {
-                if (e.getCode().equals(ServiceException.PERM_DENIED))
+                if (e.getCode().equals(ServiceException.PERM_DENIED)) {
                     ZimbraLog.mailbox.info("no permissions to mark message as read (ignored): " + msg.getId());
-                else
+                } else {
                     ZimbraLog.mailbox.warn("problem marking message as read (ignored): " + msg.getId(), e);
+                }
             }
         }
         return msg;
@@ -150,7 +151,7 @@ public class GetMsg extends MailDocumentHandler {
         for (MailItem item : mbox.getItemById(octxt, msgIdArray, MailItem.Type.MESSAGE)) {
             toRet.add((Message) item);
             if (read && item.isUnread() && !RedoLogProvider.getInstance().isSlave()) {
-                mbox.alterTag(octxt, item.getId(), MailItem.Type.MESSAGE, Flag.ID_FLAG_UNREAD, false);
+                mbox.alterTag(octxt, item.getId(), MailItem.Type.MESSAGE, Flag.ID_UNREAD, false);
             }
         }
         return toRet;

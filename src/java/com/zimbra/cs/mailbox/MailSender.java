@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -86,8 +86,8 @@ import com.zimbra.cs.zclient.ZSearchResult;
 
 public class MailSender {
 
-    public static final String MSGTYPE_REPLY = Flag.getAbbreviation(Flag.ID_FLAG_REPLIED) + "";
-    public static final String MSGTYPE_FORWARD = Flag.getAbbreviation(Flag.ID_FLAG_FORWARDED) + "";
+    public static final String MSGTYPE_REPLY = String.valueOf(Flag.toChar(Flag.ID_REPLIED));
+    public static final String MSGTYPE_FORWARD = String.valueOf(Flag.toChar(Flag.ID_FORWARDED));
 
     private Boolean mSaveToSent;
     private Collection<InternetAddress> mSaveContacts;
@@ -359,7 +359,7 @@ public class MailSender {
 
     /**
      * Get recipient addresses from either the member variable or the message.
-     * @throws MessagingException 
+     * @throws MessagingException
      */
     protected Address[] getRecipients(final MimeMessage mm) throws MessagingException {
         Address[] rcptAddresses = null;
@@ -373,7 +373,7 @@ public class MailSender {
         }
         return rcptAddresses;
     }
-    
+
     /**
      * Getter for Collection of uploads - exposed for OfflineMailSender
      */
@@ -931,16 +931,16 @@ public class MailSender {
             if (target instanceof Mailbox) {
                 Mailbox mbox = (Mailbox) target;
                 if (MSGTYPE_REPLY.equals(mReplyType)) {
-                    mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.Type.MESSAGE, Flag.ID_FLAG_REPLIED, true);
+                    mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.Type.MESSAGE, Flag.ID_REPLIED, true);
                 } else if (MSGTYPE_FORWARD.equals(mReplyType)) {
-                    mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.Type.MESSAGE, Flag.ID_FLAG_FORWARDED, true);
+                    mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.Type.MESSAGE, Flag.ID_FORWARDED, true);
                 }
             } else if (target instanceof ZMailbox) {
                 ZMailbox zmbx = (ZMailbox) target;
                 if (MSGTYPE_REPLY.equals(mReplyType)) {
-                    zmbx.tagMessage(mOriginalMessageId.toString(), "" + Flag.ID_FLAG_REPLIED, true);
+                    zmbx.tagMessage(mOriginalMessageId.toString(), "" + Flag.ID_REPLIED, true);
                 } else if (MSGTYPE_FORWARD.equals(mReplyType)) {
-                    zmbx.tagMessage(mOriginalMessageId.toString(), "" + Flag.ID_FLAG_FORWARDED, true);
+                    zmbx.tagMessage(mOriginalMessageId.toString(), "" + Flag.ID_FORWARDED, true);
                 }
             }
         } catch (ServiceException e) {

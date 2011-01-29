@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -223,8 +223,7 @@ public class SearchResponse {
         if (inline && msg.isUnread() && params.getMarkRead()) {
             // Mark the message as READ
             try {
-                msg.getMailbox().alterTag(octxt, msg.getId(), msg.getType(),
-                        Flag.ID_FLAG_UNREAD, false);
+                msg.getMailbox().alterTag(octxt, msg.getId(), msg.getType(), Flag.ID_UNREAD, false);
             } catch (ServiceException e) {
                 if (e.getCode().equals(ServiceException.PERM_DENIED)) {
                     LOG.info("no permissions to mark message as read (ignored): " +

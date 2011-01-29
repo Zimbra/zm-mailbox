@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -523,16 +523,20 @@ public class ImapPath implements Comparable<ImapPath> {
 
         if (mFolder instanceof Folder) {
             Folder folder = (Folder) mFolder;
-            if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT)
+            if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT) {
                 return false;
-            if (folder.isTagged(Flag.ID_FLAG_DELETED))
+            }
+            if (folder.isTagged(Flag.ID_DELETED)) {
                 return false;
+            }
         } else {
             ZFolder zfolder = (ZFolder) mFolder;
-            if (new ItemId(zfolder.getId(), (String) null).getId() == Mailbox.ID_FOLDER_USER_ROOT)
+            if (new ItemId(zfolder.getId(), (String) null).getId() == Mailbox.ID_FOLDER_USER_ROOT) {
                 return false;
-            if (zfolder.isIMAPDeleted())
+            }
+            if (zfolder.isIMAPDeleted()) {
                 return false;
+            }
         }
         return (mReferent == this ? true : mReferent.isSelectable());
     }

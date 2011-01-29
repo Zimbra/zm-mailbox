@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -203,8 +203,9 @@ public class ToXML {
         if (canAdminister) {
             // return full ACLs for folders we have admin rights on
             if (needToOutput(fields, Change.MODIFIED_ACL)) {
-                if (fields != NOTIFY_FIELDS || folder.isTagged(Flag.ID_FLAG_NO_INHERIT))
+                if (fields != NOTIFY_FIELDS || folder.isTagged(Flag.ID_NO_INHERIT)) {
                     encodeACL(octxt, elem, folder.getEffectiveACL(), exposeAclAccessKey);
+                }
             }
         }
         return elem;
@@ -626,12 +627,14 @@ public class ToXML {
 
         ExpandResults expand = params.getInlineRule();
         for (Message msg : msgs) {
-            if (msg.isTagged(Flag.ID_FLAG_DELETED))
+            if (msg.isTagged(Flag.ID_DELETED)) {
                 continue;
+            }
             if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL || expand.matches(msg)) {
                 encodeMessageAsMP(c, ifmt, octxt, msg, null, params.getMaxInlinedLength(), params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true);
-                if (expand == ExpandResults.FIRST)
+                if (expand == ExpandResults.FIRST) {
                     expand = ExpandResults.NONE;
+                }
             } else {
                 Element m = c.addElement(MailConstants.E_MSG);
                 m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
@@ -676,9 +679,9 @@ public class ToXML {
         if (octxt != null && octxt.isDelegatedRequest(mbox)) {
             isDelegatedNonAccessible = !AccessManager.getInstance().canAccessAccount(octxt.getAuthenticatedUser(), conv.getAccount(), octxt.isUsingAdminPrivileges());
         }
-        if (isDelegatedNonAccessible || conv.isTagged(Flag.ID_FLAG_DELETED))
+        if (isDelegatedNonAccessible || conv.isTagged(Flag.ID_DELETED)) {
             msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASCENDING);
-
+        }
         boolean noneVisible = msgs != null && msgs.isEmpty();
         Element c = noneVisible && !alwaysSerialize ? null : encodeConversationCommon(parent, ifmt, conv, msgs, fields);
         if (noneVisible)
@@ -700,8 +703,9 @@ public class ToXML {
                 if (msgs != null) {
                     sl = new SenderList();
                     for (Message msg : msgs) {
-                        if (!msg.isTagged(Flag.ID_FLAG_DELETED))
+                        if (!msg.isTagged(Flag.ID_DELETED)) {
                             sl.add(msg);
+                        }
                     }
                 } else {
                     sl = mbox.getConversationSenderList(conv.getId());
@@ -739,8 +743,9 @@ public class ToXML {
             if (msgs != null) {
                 count = nondeleted = msgs.size();
                 for (Message msg : msgs) {
-                    if (msg.isTagged(Flag.ID_FLAG_DELETED))
+                    if (msg.isTagged(Flag.ID_DELETED)) {
                         nondeleted--;
+                    }
                 }
             }
 
@@ -754,13 +759,14 @@ public class ToXML {
         } else if (needToOutput(fields, Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD | Change.MODIFIED_TAGS)) {
             int flags = 0;  long tags = 0;
             for (Message msg : msgs) {
-                if (!msg.isTagged(Flag.ID_FLAG_DELETED)) {
+                if (!msg.isTagged(Flag.ID_DELETED)) {
                     flags |= msg.getFlagBitmask();  tags |= msg.getTagBitmask();
                 }
             }
             if (needToOutput(fields, Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) {
-                if (fields != NOTIFY_FIELDS || flags != 0)
-                    c.addAttribute(MailConstants.A_FLAGS, Flag.bitmaskToFlags(flags));
+                if (fields != NOTIFY_FIELDS || flags != 0) {
+                    c.addAttribute(MailConstants.A_FLAGS, Flag.toString(flags));
+                }
             }
             if (needToOutput(fields, Change.MODIFIED_TAGS)) {
                 if (fields != NOTIFY_FIELDS || tags != 0)
@@ -2408,7 +2414,7 @@ public class ToXML {
         Element eMsg = response.getOptionalElement(MailConstants.E_MSG);
         if (eMsg != null) {
             encodeAddrsWithGroupInfo(prov, eMsg, MailConstants.E_EMAIL, requestedAcct, authedAcct);
-            
+
             Element eInvite = eMsg.getOptionalElement(MailConstants.E_INVITE);
             if (eInvite != null) {
                 Element eComp = eInvite.getOptionalElement(MailConstants.E_INVITE_COMPONENT);

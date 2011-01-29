@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -51,12 +51,12 @@ final class LocalFolder {
         }
     }
 
-    LocalFolder(Mailbox mbox, String path) throws ServiceException {
+    LocalFolder(Mailbox mbox, String path) {
         this.mbox = mbox;
         this.path = path;
     }
 
-    LocalFolder(Mailbox mbox, Folder folder) throws ServiceException {
+    LocalFolder(Mailbox mbox, Folder folder) {
         this.mbox = mbox;
         this.path = folder.getPath();
         this.folder = folder;
@@ -86,13 +86,13 @@ final class LocalFolder {
         int bits = folder.getFlagBitmask();
         if (((bits & Flag.BITMASK_NO_INFERIORS) != 0) != noinferiors) {
             debug("Setting NO_INFERIORS flag to " + noinferiors);
-            alterTag(Flag.ID_FLAG_NO_INFERIORS, noinferiors);
+            alterTag(Flag.ID_NO_INFERIORS, noinferiors);
         }
         boolean sync = !flags.isNoselect();
         if (((bits & Flag.BITMASK_SYNCFOLDER) != 0) != sync) {
             debug("Setting sync flag to " + sync);
-            alterTag(Flag.ID_FLAG_SYNCFOLDER, sync);
-            alterTag(Flag.ID_FLAG_SYNC, sync);
+            alterTag(Flag.ID_SYNCFOLDER, sync);
+            alterTag(Flag.ID_SYNC, sync);
         }
         if (folder.getDefaultView() != MailItem.Type.MESSAGE) {
             debug("Setting default view to TYPE_MESSAGE");

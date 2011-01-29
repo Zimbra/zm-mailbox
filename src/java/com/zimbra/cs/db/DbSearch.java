@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -783,14 +783,6 @@ public class DbSearch {
         return param;
     }
 
-    private static final int setBytes(PreparedStatement stmt, int param, Collection<Byte> c) throws SQLException {
-        if (!ListUtil.isEmpty(c)) {
-            for (byte b: c)
-                stmt.setByte(param++, b);
-        }
-        return param;
-    }
-
     private static final int setIntegers(PreparedStatement stmt, int param, Collection<Integer> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
             for (int i: c)
@@ -1042,7 +1034,7 @@ public class DbSearch {
 
             if (!ListUtil.isEmpty(c.tags)) {
                 for (Tag tag : c.tags) {
-                    if (tag.getId() == Flag.ID_FLAG_UNREAD) {
+                    if (tag.getId() == Flag.ID_UNREAD) {
                         tc.unread = Boolean.TRUE;
                     } else if (tag instanceof Flag) {
                         setFlagMask |= tag.getBitmask();
@@ -1057,26 +1049,29 @@ public class DbSearch {
 
             if (!ListUtil.isEmpty(c.excludeTags)) {
                 for (Tag tag : c.excludeTags) {
-                    if (tag.getId() == Flag.ID_FLAG_UNREAD) {
-                        if (tc.unread == Boolean.TRUE)
+                    if (tag.getId() == Flag.ID_UNREAD) {
+                        if (tc.unread == Boolean.TRUE) {
                             tc.noMatches = true;
+                        }
                         tc.unread = Boolean.FALSE;
                     } else if (tag instanceof Flag) {
-                        if ((setFlagMask & tag.getBitmask()) != 0)
+                        if ((setFlagMask & tag.getBitmask()) != 0) {
                             tc.noMatches = true;
+                        }
                         flagMask |= tag.getBitmask();
                     } else {
-                        if ((setTagMask & tag.getBitmask()) != 0)
+                        if ((setTagMask & tag.getBitmask()) != 0) {
                             tc.noMatches = true;
+                        }
                         tagMask |= tag.getBitmask();
                     }
                 }
             }
 
             // if we know we have no matches (e.g. "is:flagged and is:unflagged"), just stop here...
-            if (tc.noMatches)
+            if (tc.noMatches) {
                 return tc;
-
+            }
             TagsetCache tcFlags = DbMailItem.getFlagsetCache(conn, mbox);
             TagsetCache tcTags  = DbMailItem.getTagsetCache(conn, mbox);
             if (setTagMask != 0 || tagMask != 0) {
@@ -1178,7 +1173,7 @@ public class DbSearch {
         inTrash.folders = folders;
 
         DbSearchConstraints isUnread = new DbSearchConstraints();
-        Set<Tag> tags = new HashSet<Tag>();  tags.add(mbox.getFlagById(Flag.ID_FLAG_UNREAD));
+        Set<Tag> tags = new HashSet<Tag>();  tags.add(mbox.getFlagById(Flag.ID_UNREAD));
         isUnread.tags = tags;
 
         DbSearchConstraintsInnerNode orClause = DbSearchConstraintsInnerNode.OR();

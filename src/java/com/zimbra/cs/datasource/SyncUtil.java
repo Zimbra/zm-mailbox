@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -108,10 +108,8 @@ public final class SyncUtil {
         return date != null ? date : new Date(msg.getDate());
     }
 
-    public static void setSyncEnabled(Mailbox mbox, int folderId, boolean enabled)
-        throws ServiceException {
-        mbox.alterTag(new OperationContext(mbox), folderId,
-                      MailItem.Type.FOLDER, Flag.ID_FLAG_SYNC, enabled);
+    public static void setSyncEnabled(Mailbox mbox, int folderId, boolean enabled) throws ServiceException {
+        mbox.alterTag(new OperationContext(mbox), folderId, MailItem.Type.FOLDER, Flag.ID_SYNC, enabled);
     }
 
     public static Log getTraceLogger(Log parent, String id) {

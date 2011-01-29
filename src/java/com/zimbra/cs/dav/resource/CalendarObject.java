@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -189,18 +189,21 @@ public interface CalendarObject {
             buf.append("END:VCALENDAR\r\n");
             return buf.toString();
         }
-        @Override public InputStream getContent(DavContext ctxt) throws IOException, DavException {
+        @Override
+        public InputStream getContent(DavContext ctxt) throws IOException, DavException {
             return new ByteArrayInputStream(getVcalendar(ctxt, null).getBytes("UTF-8"));
         }
-        @Override public boolean isCollection() {
+        @Override
+        public boolean isCollection() {
             return false;
         }
         // work around for bug 45241
         // mark appointment invite email read instead of moving to trash.
-        @Override public void delete(DavContext ctxt) throws DavException {
+        @Override
+        public void delete(DavContext ctxt) throws DavException {
             try {
                 Mailbox mbox = getMailbox(ctxt);
-                mbox.alterTag(ctxt.getOperationContext(), mId, MailItem.Type.MESSAGE, Flag.ID_FLAG_UNREAD, false);
+                mbox.alterTag(ctxt.getOperationContext(), mId, MailItem.Type.MESSAGE, Flag.ID_UNREAD, false);
             } catch (ServiceException se) {
                 int resCode = se instanceof MailServiceException.NoSuchItemException ?
                         HttpServletResponse.SC_NOT_FOUND : HttpServletResponse.SC_FORBIDDEN;

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,7 +16,6 @@
 package com.zimbra.qa.unittest;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -41,8 +40,7 @@ import com.zimbra.common.util.ZimbraLog;
 /**
  * @author bburtin
  */
-public class TestTags extends TestCase
-{
+public class TestTags extends TestCase {
     private Connection mConn;
     private Mailbox mMbox;
     private Account mAccount;
@@ -182,12 +180,11 @@ public class TestTags extends TestCase
         assertEquals("6: search should have returned no results", 0, ids.size());
     }
 
-    public void testFlagSearch()
-    throws Exception {
+    public void testFlagSearch() throws Exception {
         // Look up flags
-        Flag replied = mMbox.getFlagById(Flag.ID_FLAG_REPLIED);
-        Flag flagged = mMbox.getFlagById(Flag.ID_FLAG_FLAGGED);
-        Flag forwarded = mMbox.getFlagById(Flag.ID_FLAG_FORWARDED);
+        Flag replied = mMbox.getFlagById(Flag.ID_REPLIED);
+        Flag flagged = mMbox.getFlagById(Flag.ID_FLAGGED);
+        Flag forwarded = mMbox.getFlagById(Flag.ID_FORWARDED);
 
         // First assign T1 to the entire conversation, then remove it from M2-M4
         mMbox.alterTag(null, mConv.getId(), mConv.getType(), replied.getId(), true);

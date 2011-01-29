@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -359,10 +359,10 @@ public class ItemActionHelper {
         // iterate over the local items and perform the requested operation
         switch (mOperation) {
             case FLAG:
-                getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.ID_FLAG_FLAGGED, mFlagValue, mTargetConstraint);
+                getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.ID_FLAGGED, mFlagValue, mTargetConstraint);
                 break;
             case READ:
-                getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.ID_FLAG_UNREAD, !mFlagValue, mTargetConstraint);
+                getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.ID_UNREAD, !mFlagValue, mTargetConstraint);
                 break;
             case TAG:
                 getMailbox().alterTag(getOpCtxt(), mIds, type, mTagId, mFlagValue, mTargetConstraint);
