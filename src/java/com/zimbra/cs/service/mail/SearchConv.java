@@ -202,7 +202,7 @@ public class SearchConv extends Search {
                 // we only bother checking the messages between offset and
                 // offset + iterLen, since only they are getting returned.
                 for (int i = offset; i < offset + iterLen; i++) {
-                    if (hit.getItemId() == msgs.get(i).getId()) {
+                    if (hit.getParsedItemID().equals(new ItemId(msgs.get(i)))) {
                         matched[i - offset] = hit;
                         break;
                     }
