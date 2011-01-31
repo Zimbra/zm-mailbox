@@ -30,25 +30,34 @@
     <a n="co"/>
     <a n="company"/>
     <a n="description"/>
+    <a n="destinationIndicator"/>
     <a n="displayName"/>
+    <a n="facsimileTelephoneNumber"/>
     <a n="givenName"/>
     <a n="gn"/>
     <a n="homePhone"/>
     <a n="initials"/>
+    <a n="internationaliSDNNumber"/>
     <a n="l"/>
     <a n="mobile"/>
     <a n="o"/>
     <a n="ou"/>
     <a n="pager"/>
     <a n="physicalDeliveryOfficeName"/>
+    <a n="postOfficeBox"/>
     <a n="postalAddress"/>
     <a n="postalCode"/>
+    <a n="preferredDeliveryMethod"/>
+    <a n="registeredAddress"/>
     <a n="sn"/>
     <a n="st"/>
     <a n="street"/>
     <a n="streetAddress"/>
     <a n="telephoneNumber"/>
+    <a n="teletexTerminalIdentifier"/>
+    <a n="telexNumber"/>
     <a n="title"/>
+    <a n="x121Address"/>
     <a n="zimbraAccountCalendarUserType"/>
     <a n="zimbraAccountStatus"/>
     <a n="zimbraAdminAuthTokenLifetime"/>
@@ -92,6 +101,7 @@
     <a n="zimbraExternalPop3Port"/>
     <a n="zimbraExternalPop3SSLHostname"/>
     <a n="zimbraExternalPop3SSLPort"/>
+    <a n="zimbraFeatureAntispamEnabled"/>
     <a n="zimbraFeatureCalendarUpsellURL"/>
     <a n="zimbraFeatureContactsUpsellURL"/>
     <a n="zimbraFeatureDiscardInFiltersEnabled"/>
@@ -128,6 +138,7 @@
     <a n="zimbraMailQuota"/>
     <a n="zimbraMailSpamLifetime"/>
     <a n="zimbraMailStatus"/>
+    <a n="zimbraMailThreadingAlgorithm"/>
     <a n="zimbraMailTrashLifetime"/>
     <a n="zimbraMailTrustedSenderListMaxNumEntries"/>
     <a n="zimbraMaxContactsPerPage"/>
@@ -137,6 +148,7 @@
     <a n="zimbraNewMailNotificationFrom"/>
     <a n="zimbraNewMailNotificationSubject"/>
     <a n="zimbraNotes"/>
+    <a n="zimbraPasswordAllowedChars"/>
     <a n="zimbraPasswordEnforceHistory"/>
     <a n="zimbraPasswordLocked"/>
     <a n="zimbraPasswordLockoutDuration"/>
@@ -148,6 +160,7 @@
     <a n="zimbraPasswordMaxAge"/>
     <a n="zimbraPasswordMaxLength"/>
     <a n="zimbraPasswordMinAge"/>
+    <a n="zimbraPasswordMinAlphaChars"/>
     <a n="zimbraPasswordMinLength"/>
     <a n="zimbraPasswordMinLowerCaseChars"/>
     <a n="zimbraPasswordMinNumericChars"/>
@@ -289,7 +302,9 @@
     <a n="zimbraPrefOutOfOfficeReply"/>
     <a n="zimbraPrefOutOfOfficeReplyEnabled"/>
     <a n="zimbraPrefOutOfOfficeUntilDate"/>
+    <a n="zimbraPrefPop3DeleteOption"/>
     <a n="zimbraPrefPop3DownloadSince"/>
+    <a n="zimbraPrefPop3IncludeSpam"/>
     <a n="zimbraPrefReadReceiptsToAddress"/>
     <a n="zimbraPrefReadingPaneEnabled"/>
     <a n="zimbraPrefReadingPaneLocation"/>
@@ -455,7 +470,6 @@
         <r n="getAccountMembership"/>
         <r n="getMailboxInfo"/>
         <r n="listAccount"/>
-        <r n="purgeAccountCalendarCache"/>
         <r n="reindexMailbox"/>
         <r n="removeAccountAlias"/>
         <r n="renameAccount"/>
@@ -464,7 +478,7 @@
         <r n="setDomainAdminAccountAndCalendarResourceAttrs"/>
         <r n="viewAccountAdminUI"/>
         <r n="viewAdminSavedSearch"/>
-        <r n="viewPasswordStrength"/>
+        <r n="checkPasswordStrength"/>
       </rights>
     </right>
     <right type="combo" name="domainAdminCalendarResourceRights">
@@ -476,7 +490,6 @@
         <r n="getCalendarResource"/>
         <r n="getCalendarResourceInfo"/>
         <r n="listCalendarResource"/>
-        <r n="purgeCalendarResourceCalendarCache"/>
         <r n="reindexCalendarResourceMailbox"/>
         <r n="removeCalendarResourceAlias"/>
         <r n="renameCalendarResource"/>
@@ -485,7 +498,7 @@
         <r n="setDomainAdminAccountAndCalendarResourceAttrs"/>
         <r n="setDomainAdminCalendarResourceAttrs"/>
         <r n="viewAdminSavedSearch"/>
-        <r n="viewPasswordStrength"/>
+        <r n="checkPasswordStrength"/>
       </rights>
     </right>
     <right type="combo" name="domainAdminCosRights">
@@ -494,7 +507,7 @@
         <r n="assignCos"/>
         <r n="getCos"/>
         <r n="listCos"/>
-        <r n="viewPasswordStrength"/>
+        <r n="checkPasswordStrength"/>
       </rights>
     </right>
     <right type="combo" name="domainAdminDistributionListRights">

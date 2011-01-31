@@ -43,7 +43,7 @@
 </right>
 
 <right name="getAccountInfo" type="preset" targetType="account">
-  <desc>get account id, home server, cos id and name, and access URL</desc>
+  <desc>get basic account info: account id, home server, and access URLs</desc>
 </right>
 
 <right name="getAccountMembership" type="preset" targetType="account">
@@ -51,24 +51,23 @@
 </right>
 
 <right name="adminLoginAs" type="preset" targetType="account" cache="1">
-  <desc>login as the user as an admin.
-        This is different from the loginAs user right as follows:
-            - loginAs is effective only when login as an user
-            - adminLoginAs is effective only when login as an admin (i.e. present an admn auth token)
-        
-        For example:
-            If an admin account has the adminLoginAs right on user1,
-            the adminLoginAs is effective only when the admin account login as an admin.
-            It is not effective when the admin account login as a regular user.
-            
-            Likewise if an user granted the loginAs right to an admin account, the 
-            right is effective when the account account login as a regular user, 
-            it is not effective when the admin account login as an admin.
+  <desc>
+    login as the user as an admin.
+    This is different from the loginAs user right:
+        - loginAs is effective only when authenticated as an user
+        - adminLoginAs is effective only when authenticated as an admin (i.e. has an admin auth token)
+    For example:
+    If an admin account has the adminLoginAs right on user1,
+    the adminLoginAs is effective only when the admin account login as an admin.
+    It is not effective when the admin account login as a regular user.
+    Likewise if an user granted the loginAs right to an admin account, the 
+    right is effective when the account account login as a regular user, 
+    it is not effective when the admin account login as an admin.
   </desc>
 </right>
 
 <right name="checkRightUsr" type="preset" targetType="account">
-  <desc>check if the account has a specific or any effective rights</desc>
+  <desc>check if the account has any effective rights</desc>
 </right> 
 
 <right name="getMailboxInfo" type="preset" targetType="account">
@@ -83,14 +82,6 @@
   <desc>reindex mailbox</desc>
 </right> 
 
-<right name="purgeAccountCalendarCache" type="preset" targetType="account">
-  <desc>purge account calendar cache</desc>
-</right>   
-
-<right name="publishAccountShareInfo" type="preset" targetType="account">
-  <desc>publish share info on account</desc>
-</right>  
-
 <right name="getAccountShareInfo" type="preset" targetType="account">
   <desc>get share info on account</desc>
 </right>  
@@ -98,38 +89,13 @@
 <right name="moveAccountMailbox" type="preset" targetType="account">
   <desc>move account mailbox</desc>
 </right>        
-
-<!--
-    TODO:      
-          - getMailboxDump                     : get mailbox dump for legal intercept
--->
  
 <right name="setAccountPassword" type="preset" targetType="account">
   <desc>set account password</desc>
 </right>
 
-<right name="viewPasswordStrength" type="getAttrs" targetType="account,calresource,cos">
-  <desc>view password strength</desc>
-  <attrs>
-      <a n="zimbraPasswordMinLength"/>
-      <a n="zimbraPasswordMaxLength"/>
-      <a n="zimbraPasswordMinUpperCaseChars"/>
-      <a n="zimbraPasswordMinLowerCaseChars"/>
-      <a n="zimbraPasswordMinNumericChars"/>
-      <a n="zimbraPasswordMinPunctuationChars"/>
-  </attrs>
-</right>
-
-<right name="configurePasswordStrength" type="setAttrs" targetType="account,calresource,cos">
-  <desc>configure password strength</desc>
-  <attrs>
-      <a n="zimbraPasswordMinLength"/>
-      <a n="zimbraPasswordMaxLength"/>
-      <a n="zimbraPasswordMinUpperCaseChars"/>
-      <a n="zimbraPasswordMinLowerCaseChars"/>
-      <a n="zimbraPasswordMinNumericChars"/>
-      <a n="zimbraPasswordMinPunctuationChars"/>
-  </attrs>
+<right name="checkPasswordStrength" type="preset" targetType="account">
+  <desc>check password strength</desc>
 </right>
 
 <right name="viewAdminSavedSearch" type="getAttrs" targetType="account,calresource">
@@ -145,40 +111,18 @@
       <a n="zimbraAdminSavedSearches"/>
   </attrs>
 </right>   
-          
-<right name="configureQuota" type="setAttrs" targetType="account,cos">
-  <desc>configure quota</desc>
-  <attrs>
-      <a n="zimbraMailQuota"/>
-      <a n="zimbraQuotaWarnPercent"/>
-      <a n="zimbraQuotaWarnInterval"/>
-      <a n="zimbraQuotaWarnMessage"/>
-  </attrs>
-</right>
 
 <right name="viewAccountAdminUI" type="preset" targetType="account">
-  <desc>right to run the GetAdminConsoleUIComp SOAP call when an account 
-        other than the authenticated account is provided.  
-        Note, this is a preset right instead of a getAttrs right,
-        because it carries extra meanings than simply get the zimbraAdminConsoleUIComponents 
-        attribute on the account.  GetAdminConsoleUIComp return the union of 
-        zimbraAdminConsoleUIComponents on the account and that on all admin 
-        groups the account belongs.  Instead of checking get attr right for 
-        zimbraAdminConsoleUIComponents on the account and on all admin groups 
-        it belong, GetAdminConsoleUICompRequest just checks the viewAccountAdminUI right.
+  <desc>
+    execute the GetAdminConsoleUIComp SOAP when an account 
+    other than the authenticated account is specified in the request.  
   </desc>
 </right>
 
 <right name="viewDistributionListAdminUI" type="preset" targetType="dl">
-  <desc>right to run the GetAdminConsoleUIComp SOAP call when a distribution
-        list is provided.  
-        Note, this is a preset right instead of a getAttrs right,
-        because it carries extra meanings than simply get the zimbraAdminConsoleUIComponents 
-        attribute on the distribution list.  GetAdminConsoleUIComp return the union of 
-        zimbraAdminConsoleUIComponents on the dl and that on all admin 
-        groups the dl belongs.  Instead of checking get attr right for 
-        zimbraAdminConsoleUIComponents on the dl and on all admin groups 
-        it belong, GetAdminConsoleUICompRequest just checks the viewDistributionListAdminUI right.
+  <desc>
+    execute the GetAdminConsoleUIComp SOAP when a distribution list 
+    is specified in the request.  
   </desc>
 </right>
 
@@ -188,19 +132,6 @@
     <a n="zimbraAdminConsoleUIComponents"/>
   </attrs>
 </right>
-
-
-          
-<!-- 
-    TODO:     
-          - configureFeature                   : enable/disable features
-          - configurePasswordRule              : configure password rules
-          - configureLoginPolicy               : configure login/lockout policies
-          - configureZimlet                    : configure available zimlets
-          - configureTheme                     : configure available themes(skins)
-
--->
-
 
 <!-- 
 ========================================================
@@ -239,12 +170,6 @@
 <right name="adminLoginCalendarResourceAs" type="preset" targetType="calresource">
   <desc>login to the calendar resource as an admin.</desc>
 </right>
-
-<!-- 
-   TODO:
-
-          - getMailboxDump                     : get mailbox dump for legal intercept
--->
        
 <right name="getCalendarResourceInfo" type="preset" targetType="calresource">
   <desc>get account id, home server, cos id and name, and access URL</desc>
@@ -257,14 +182,6 @@
 <right name="reindexCalendarResourceMailbox" type="preset" targetType="calresource">
   <desc>reindex mailbox</desc>
 </right> 
-
-<right name="purgeCalendarResourceCalendarCache" type="preset" targetType="calresource">
-  <desc>purge calendar resource calendar cache</desc>
-</right>
-
-<right name="publishCalendarResourceShareInfo" type="preset" targetType="calresource">
-  <desc>publish share info on calendar resource</desc>
-</right>
 
 <right name="getCalendarResourceShareInfo" type="preset" targetType="calresource">
   <desc>get share info on calendar resource</desc>
@@ -314,17 +231,6 @@
     <a n="zimbraConstraint"/>
   </attrs>
 </right>
-
-<!-- 
-  TODO:         
-          - configureQuota                     : configure quota
-          - configureFeature                   : enable/disable features
-          - configurePasswordRule              : configure password rules
-          - configureLoginPolicy               : configure login/lockout policies
-          - configureZimlet                    : configure available zimlets
-          - configureTheme                     : configure available themes(skins)
--->
-
 
 <!-- 
 ========================================================
@@ -622,22 +528,23 @@
 <right name="createMigrationTask" type="preset" targetType="server">
     <desc>create bulk migration task on a server</desc>
 </right>
-<!-- 
-  TODO:
-          - deployAdminExtension             : deploy admin extensions
-          - editAdminExtension               : edit admin extensions
-          - removeAdminExtension             : remove admin extensions
-          
-          - manageCertificate                : manage certificates
-          - deployZimlets                    : deploy zimlets
 
-          - configureMTA                     : configure MTA
-          - configurePOP3                    : configure POP3
-          - configureIMAP                    : configure IMAP
-          - configurePOPProxy                : configure POP3 proxy
-          - configureIMAPProxy               : configure IMAP proxy
-          - configureServiceEnabled          : configure services enabled
--->
+<right name="getCertificateInfo" type="preset" targetType="server">
+    <desc>view SSL certificates installed on the target server</desc>
+</right>
+
+<right name="installCertificate" type="preset" targetType="server">
+    <desc>install SSL certificates on the target server</desc>
+</right>
+
+<right name="getCSR" type="preset" targetType="server">
+    <desc>get CSR from the target server</desc>
+</right>  
+   
+<right name="generateCSR" type="preset" targetType="server">
+    <desc>generate CSR on the target server</desc>
+</right>
+
 
 <!-- 
 ========================================================
@@ -712,6 +619,18 @@
   <desc>create zimlet</desc>
 </right>
 
+<right name="installZCSLicense" type="preset" targetType="global">
+    <desc>install Zimbra License file on the target server</desc>
+</right>
+   
+<right name="getAllFreeBusyProviders" type="preset" targetType="global">
+    <desc>Retrieve a list of Free/Busy providers via GetAllFreeBusyProvidersRequest SOAP request</desc>
+</right>
+
+<right name="checkSoftwareUpdates" type="preset" targetType="global">
+    <desc>check for Zimbra software updates</desc>
+</right>
+
 <!-- 
 ========================================================
                     misc rights
@@ -726,57 +645,38 @@
 <right name="viewGrants" type="getAttrs" targetType="account,calresource,cos,dl,domain,server,xmppcomponent,zimlet,config,global">
   <desc>view grants on all target types</desc>
   <doc>
-	  Use just the one same right on all target types for now.
-	     
-	   e.g. If this right is granted on a domain, the grantee 
-	        can see zimbraACE on the domain, all DLs, and all 
-	        accounts in the domain.
-	        
-	        To do things like:
-	        "can see grants granted on all accounts in the domain
-	         but cannot see any grants on the domain entry itself"
-	        
-	        grant an inline right on the domain entry, like:
-	            get:account:zimbraACE
-	        and do not grant this right.
-	        
-	        This right the equivalent of the sum of the following inline
-	        rights:
-	            get.account.zimbraACE
-	            get.calresource.zimbraACE
-	            get.cos.zimbraACE
-	            get.dl.zimbraACE
-	            get.domain.zimbraACE
-	            get.server.zimbraACE
-	            get.xmppcomponent.zimbraACE
-	            get.zimlet.zimbraACE
-	            get.config.zimbraACE
-	            get.global.zimbraACE
+      Use just the one same right on all target types for now.
+         
+      e.g. If this right is granted on a domain, the grantee 
+            can see zimbraACE on the domain, all DLs, and all 
+            accounts in the domain.
+            
+            To do things like:
+            "can see grants granted on all accounts in the domain
+             but cannot see any grants on the domain entry itself"
+            
+            grant an inline right on the domain entry, like:
+                get:account:zimbraACE
+            and do not grant this right.
+            
+            This right the equivalent of the sum of the following inline
+            rights:
+                get.account.zimbraACE
+                get.calresource.zimbraACE
+                get.cos.zimbraACE
+                get.dl.zimbraACE
+                get.domain.zimbraACE
+                get.server.zimbraACE
+                get.xmppcomponent.zimbraACE
+                get.zimlet.zimbraACE
+                get.config.zimbraACE
+                get.global.zimbraACE
   </doc>
   <attrs>
       <a n="zimbraACE"/>
   </attrs>
 </right>
 
-<right name="getCertificateInfo" type="preset" targetType="server">
-	<desc>view SSL certificates installed on the target server</desc>
-</right>
-<right name="installCertificate" type="preset" targetType="server">
-	<desc>install SSL certificates on the target server</desc>
-</right>
-<right name="getCSR" type="preset" targetType="server">
-	<desc>get CSR from the target server</desc>
-</right>	 
-<right name="generateCSR" type="preset" targetType="server">
-	<desc>generate CSR on the target server</desc>
-</right>	
-<right name="installZCSLicense" type="preset" targetType="global">
-	<desc>install Zimbra License file on the target server</desc>
-</right>     
-<right name="getAllFreeBusyProviders" type="preset" targetType="global">
-	<desc>Retrieve a list of Free/Busy providers via GetAllFreeBusyProvidersRequest SOAP request</desc>
-</right>
-<right name="checkSoftwareUpdates" type="preset" targetType="global">
-	<desc>check for Zimbra software updates</desc>
-</right>
+
+
 </rights>

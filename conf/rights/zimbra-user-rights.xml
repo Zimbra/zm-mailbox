@@ -9,12 +9,7 @@
 -->
 
 <right name="invite" userRight="1" fallback="InviteFallback" cache="1">
-  <desc>
-    automatically add meeting invites from grantee to the target's calendar.
-    e.g. (1) When user Y is invited to a meeting, an appointment is added to his calendar automatically(tentatively) 
-             only if invite is from A, B, C or anyone in group G.
-         (2) Conf room Y can only be booked by users A, B, C and group G.
-  </desc>
+  <desc>automatically add meeting invites from grantee to the target's calendar</desc>
   <default>allow</default>
 </right>
 
@@ -24,7 +19,7 @@
 </right>
 
 <right name="loginAs" userRight="1" cache="1">
-  <desc>login as another user.  Currently this is only honored for imap/pop3 login</desc>
+  <desc>login as another user.  Currently this is only honored for imap/pop3 login.</desc>
 </right>
 
 <right name="sendAs" userRight="1" cache="1">

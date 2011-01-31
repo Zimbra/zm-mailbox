@@ -71,7 +71,6 @@ ${DOMAIN_ATTRS}
         <r n="getAccountMembership"/>
         <r n="getMailboxInfo"/>
         <r n="listAccount"/>
-        <r n="purgeAccountCalendarCache"/>
         <r n="reindexMailbox"/>
         <r n="removeAccountAlias"/>
         <r n="renameAccount"/>
@@ -80,7 +79,7 @@ ${DOMAIN_ATTRS}
         <r n="setDomainAdminAccountAndCalendarResourceAttrs"/>
         <r n="viewAccountAdminUI"/>
         <r n="viewAdminSavedSearch"/>
-        <r n="viewPasswordStrength"/>
+        <r n="checkPasswordStrength"/>
       </rights>
     </right>
     <right type="combo" name="domainAdminCalendarResourceRights">
@@ -92,7 +91,6 @@ ${DOMAIN_ATTRS}
         <r n="getCalendarResource"/>
         <r n="getCalendarResourceInfo"/>
         <r n="listCalendarResource"/>
-        <r n="purgeCalendarResourceCalendarCache"/>
         <r n="reindexCalendarResourceMailbox"/>
         <r n="removeCalendarResourceAlias"/>
         <r n="renameCalendarResource"/>
@@ -101,7 +99,7 @@ ${DOMAIN_ATTRS}
         <r n="setDomainAdminAccountAndCalendarResourceAttrs"/>
         <r n="setDomainAdminCalendarResourceAttrs"/>
         <r n="viewAdminSavedSearch"/>
-        <r n="viewPasswordStrength"/>
+        <r n="checkPasswordStrength"/>
       </rights>
     </right>
     <right type="combo" name="domainAdminCosRights">
@@ -110,7 +108,7 @@ ${DOMAIN_ATTRS}
         <r n="assignCos"/>
         <r n="getCos"/>
         <r n="listCos"/>
-        <r n="viewPasswordStrength"/>
+        <r n="checkPasswordStrength"/>
       </rights>
     </right>
     <right type="combo" name="domainAdminDistributionListRights">
