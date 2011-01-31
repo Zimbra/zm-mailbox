@@ -647,7 +647,6 @@
     <r n="renameCalendarResource"/>
     <r n="deleteCalendarResource"/>
     <r n="setCalendarResourcePassword"/>
-    <r n="publishCalendarResourceShareInfo"/>
     <r n="getCalendarResourceShareInfo"/>
   </rights>
 </right>
