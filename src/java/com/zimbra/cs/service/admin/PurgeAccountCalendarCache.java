@@ -48,19 +48,16 @@ public class PurgeAccountCalendarCache extends AdminDocumentHandler {
 
     @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        // allow only system admin for now
+        checkRight(zsc, context, null, AdminRight.PR_SYSTEM_ADMIN_ONLY);
+        
         Provisioning prov = Provisioning.getInstance();
 
         String id = request.getAttribute(AdminConstants.A_ID);
         Account account = prov.get(AccountBy.id, id, zsc.getAuthToken());
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
-
-        if (account.isCalendarResource()) {
-            // need a CalendarResource instance for RightChecker
-            CalendarResource resource = prov.get(CalendarResourceBy.id, id);
-            checkCalendarResourceRight(zsc, resource, Admin.R_purgeCalendarResourceCalendarCache);
-        } else
-            checkAccountRight(zsc, account, Admin.R_purgeAccountCalendarCache);
         
         if (!Provisioning.onLocalServer(account))
             throw ServiceException.WRONG_HOST(account.getAttr(Provisioning.A_zimbraMailHost), null);
@@ -76,7 +73,6 @@ public class PurgeAccountCalendarCache extends AdminDocumentHandler {
     
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_purgeAccountCalendarCache);
-        relatedRights.add(Admin.R_purgeCalendarResourceCalendarCache);
+        notes.add(AdminRightCheckPoint.Notes.SYSTEM_ADMINS_ONLY);
     }
 }

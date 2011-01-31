@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110106-1444 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110128-1139 */
 
 
     /*
@@ -36,16 +36,13 @@ public class RightConsts {
 
     /**
      * automatically add meeting invites from grantee to the target&#039;s
-     * calendar. e.g. (1) When user Y is invited to a meeting, an appointment
-     * is added to his calendar automatically(tentatively) only if invite is
-     * from A, B, C or anyone in group G. (2) Conf room Y can only be booked
-     * by users A, B, C and group G.
+     * calendar
      */
     public static final String RT_invite = "invite";
 
     /**
      * login as another user. Currently this is only honored for imap/pop3
-     * login
+     * login.
      */
     public static final String RT_loginAs = "loginAs";
 
@@ -506,15 +503,15 @@ public class RightConsts {
 
     /**
      * login as the user as an admin. This is different from the loginAs user
-     * right as follows: - loginAs is effective only when login as an user -
-     * adminLoginAs is effective only when login as an admin (i.e. present an
-     * admn auth token) For example: If an admin account has the adminLoginAs
-     * right on user1, the adminLoginAs is effective only when the admin
-     * account login as an admin. It is not effective when the admin account
-     * login as a regular user. Likewise if an user granted the loginAs right
-     * to an admin account, the right is effective when the account account
-     * login as a regular user, it is not effective when the admin account
-     * login as an admin.
+     * right: - loginAs is effective only when authenticated as an user -
+     * adminLoginAs is effective only when authenticated as an admin (i.e.
+     * has an admin auth token) For example: If an admin account has the
+     * adminLoginAs right on user1, the adminLoginAs is effective only when
+     * the admin account login as an admin. It is not effective when the
+     * admin account login as a regular user. Likewise if an user granted the
+     * loginAs right to an admin account, the right is effective when the
+     * account account login as a regular user, it is not effective when the
+     * admin account login as an admin.
      */
     public static final String RT_adminLoginAs = "adminLoginAs";
 
@@ -554,12 +551,17 @@ public class RightConsts {
     public static final String RT_checkHealth = "checkHealth";
 
     /**
+     * check password strength
+     */
+    public static final String RT_checkPasswordStrength = "checkPasswordStrength";
+
+    /**
      * check if the group has any effective rights
      */
     public static final String RT_checkRightGrp = "checkRightGrp";
 
     /**
-     * check if the account has a specific or any effective rights
+     * check if the account has any effective rights
      */
     public static final String RT_checkRightUsr = "checkRightUsr";
 
@@ -592,16 +594,6 @@ public class RightConsts {
      * configure global config constraint
      */
     public static final String RT_configureGlobalConfigConstraint = "configureGlobalConfigConstraint";
-
-    /**
-     * configure password strength
-     */
-    public static final String RT_configurePasswordStrength = "configurePasswordStrength";
-
-    /**
-     * configure quota
-     */
-    public static final String RT_configureQuota = "configureQuota";
 
     /**
      * configure attributes for wiki account
@@ -894,7 +886,7 @@ public class RightConsts {
     public static final String RT_getAccount = "getAccount";
 
     /**
-     * get account id, home server, cos id and name, and access URL
+     * get basic account info: account id, home server, and access URLs
      */
     public static final String RT_getAccountInfo = "getAccountInfo";
 
@@ -1186,29 +1178,9 @@ public class RightConsts {
     public static final String RT_moveMailboxToServer = "moveMailboxToServer";
 
     /**
-     * publish share info on account
-     */
-    public static final String RT_publishAccountShareInfo = "publishAccountShareInfo";
-
-    /**
-     * publish share info on calendar resource
-     */
-    public static final String RT_publishCalendarResourceShareInfo = "publishCalendarResourceShareInfo";
-
-    /**
      * publish share info on distribution list
      */
     public static final String RT_publishDistributionListShareInfo = "publishDistributionListShareInfo";
-
-    /**
-     * purge account calendar cache
-     */
-    public static final String RT_purgeAccountCalendarCache = "purgeAccountCalendarCache";
-
-    /**
-     * purge calendar resource calendar cache
-     */
-    public static final String RT_purgeCalendarResourceCalendarCache = "purgeCalendarResourceCalendarCache";
 
     /**
      * purge messages of an account
@@ -1681,22 +1653,8 @@ public class RightConsts {
     public static final String RT_setDomainAdminDomainAttrs = "setDomainAdminDomainAttrs";
 
     /**
-     * Admin Task that defines right needed to allow Set Password in the
-     * admin console
-     */
-    public static final String RT_taskSetPassword = "taskSetPassword";
-
-    /**
-     * right to run the GetAdminConsoleUIComp SOAP call when an account other
-     * than the authenticated account is provided. Note, this is a preset
-     * right instead of a getAttrs right, because it carries extra meanings
-     * than simply get the zimbraAdminConsoleUIComponents attribute on the
-     * account. GetAdminConsoleUIComp return the union of
-     * zimbraAdminConsoleUIComponents on the account and that on all admin
-     * groups the account belongs. Instead of checking get attr right for
-     * zimbraAdminConsoleUIComponents on the account and on all admin groups
-     * it belong, GetAdminConsoleUICompRequest just checks the
-     * viewAccountAdminUI right.
+     * execute the GetAdminConsoleUIComp SOAP when an account other than the
+     * authenticated account is specified in the request.
      */
     public static final String RT_viewAccountAdminUI = "viewAccountAdminUI";
 
@@ -2011,16 +1969,8 @@ public class RightConsts {
     public static final String RT_viewAdminSavedSearch = "viewAdminSavedSearch";
 
     /**
-     * right to run the GetAdminConsoleUIComp SOAP call when a distribution
-     * list is provided. Note, this is a preset right instead of a getAttrs
-     * right, because it carries extra meanings than simply get the
-     * zimbraAdminConsoleUIComponents attribute on the distribution list.
-     * GetAdminConsoleUIComp return the union of
-     * zimbraAdminConsoleUIComponents on the dl and that on all admin groups
-     * the dl belongs. Instead of checking get attr right for
-     * zimbraAdminConsoleUIComponents on the dl and on all admin groups it
-     * belong, GetAdminConsoleUICompRequest just checks the
-     * viewDistributionListAdminUI right.
+     * execute the GetAdminConsoleUIComp SOAP when a distribution list is
+     * specified in the request.
      */
     public static final String RT_viewDistributionListAdminUI = "viewDistributionListAdminUI";
 
@@ -2100,11 +2050,6 @@ public class RightConsts {
      * view grants on all target types
      */
     public static final String RT_viewGrants = "viewGrants";
-
-    /**
-     * view password strength
-     */
-    public static final String RT_viewPasswordStrength = "viewPasswordStrength";
 
     ///// END-AUTO-GEN-REPLACE
 }

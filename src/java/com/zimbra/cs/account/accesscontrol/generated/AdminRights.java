@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110106-1444 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110128-1139 */
 
 
     public static AdminRight R_accessGAL;
@@ -126,6 +126,7 @@ public class AdminRights {
     public static AdminRight R_checkDomainMXRecord;
     public static AdminRight R_checkExchangeAuthConfig;
     public static AdminRight R_checkHealth;
+    public static AdminRight R_checkPasswordStrength;
     public static AdminRight R_checkRightGrp;
     public static AdminRight R_checkRightUsr;
     public static AdminRight R_checkSoftwareUpdates;
@@ -134,8 +135,6 @@ public class AdminRights {
     public static AdminRight R_configureExternalAuth;
     public static AdminRight R_configureExternalGAL;
     public static AdminRight R_configureGlobalConfigConstraint;
-    public static AdminRight R_configurePasswordStrength;
-    public static AdminRight R_configureQuota;
     public static AdminRight R_configureWikiAccount;
     public static AdminRight R_countAccount;
     public static AdminRight R_createAccount;
@@ -252,11 +251,7 @@ public class AdminRights {
     public static AdminRight R_moveCalendarResourceMailbox;
     public static AdminRight R_moveMailboxFromServer;
     public static AdminRight R_moveMailboxToServer;
-    public static AdminRight R_publishAccountShareInfo;
-    public static AdminRight R_publishCalendarResourceShareInfo;
     public static AdminRight R_publishDistributionListShareInfo;
-    public static AdminRight R_purgeAccountCalendarCache;
-    public static AdminRight R_purgeCalendarResourceCalendarCache;
     public static AdminRight R_purgeMessages;
     public static AdminRight R_reindexCalendarResourceMailbox;
     public static AdminRight R_reindexMailbox;
@@ -350,7 +345,6 @@ public class AdminRights {
     public static AdminRight R_setDomainAdminConsoleResourcesPropertiesTab;
     public static AdminRight R_setDomainAdminDistributionListAttrs;
     public static AdminRight R_setDomainAdminDomainAttrs;
-    public static AdminRight R_taskSetPassword;
     public static AdminRight R_viewAccountAdminUI;
     public static AdminRight R_viewAdminConsoleAccountsACLTab;
     public static AdminRight R_viewAdminConsoleAccountsAliasesTab;
@@ -430,7 +424,6 @@ public class AdminRights {
     public static AdminRight R_viewDomainAdminConsoleResourcesContactTab;
     public static AdminRight R_viewDomainAdminConsoleResourcesPropertiesTab;
     public static AdminRight R_viewGrants;
-    public static AdminRight R_viewPasswordStrength;
 
 
     public static void init(RightManager rm) throws ServiceException {
@@ -527,6 +520,7 @@ public class AdminRights {
         R_checkDomainMXRecord                  = rm.getAdminRight(Right.RT_checkDomainMXRecord);
         R_checkExchangeAuthConfig              = rm.getAdminRight(Right.RT_checkExchangeAuthConfig);
         R_checkHealth                          = rm.getAdminRight(Right.RT_checkHealth);
+        R_checkPasswordStrength                = rm.getAdminRight(Right.RT_checkPasswordStrength);
         R_checkRightGrp                        = rm.getAdminRight(Right.RT_checkRightGrp);
         R_checkRightUsr                        = rm.getAdminRight(Right.RT_checkRightUsr);
         R_checkSoftwareUpdates                 = rm.getAdminRight(Right.RT_checkSoftwareUpdates);
@@ -535,8 +529,6 @@ public class AdminRights {
         R_configureExternalAuth                = rm.getAdminRight(Right.RT_configureExternalAuth);
         R_configureExternalGAL                 = rm.getAdminRight(Right.RT_configureExternalGAL);
         R_configureGlobalConfigConstraint      = rm.getAdminRight(Right.RT_configureGlobalConfigConstraint);
-        R_configurePasswordStrength            = rm.getAdminRight(Right.RT_configurePasswordStrength);
-        R_configureQuota                       = rm.getAdminRight(Right.RT_configureQuota);
         R_configureWikiAccount                 = rm.getAdminRight(Right.RT_configureWikiAccount);
         R_countAccount                         = rm.getAdminRight(Right.RT_countAccount);
         R_createAccount                        = rm.getAdminRight(Right.RT_createAccount);
@@ -653,11 +645,7 @@ public class AdminRights {
         R_moveCalendarResourceMailbox          = rm.getAdminRight(Right.RT_moveCalendarResourceMailbox);
         R_moveMailboxFromServer                = rm.getAdminRight(Right.RT_moveMailboxFromServer);
         R_moveMailboxToServer                  = rm.getAdminRight(Right.RT_moveMailboxToServer);
-        R_publishAccountShareInfo              = rm.getAdminRight(Right.RT_publishAccountShareInfo);
-        R_publishCalendarResourceShareInfo     = rm.getAdminRight(Right.RT_publishCalendarResourceShareInfo);
         R_publishDistributionListShareInfo     = rm.getAdminRight(Right.RT_publishDistributionListShareInfo);
-        R_purgeAccountCalendarCache            = rm.getAdminRight(Right.RT_purgeAccountCalendarCache);
-        R_purgeCalendarResourceCalendarCache   = rm.getAdminRight(Right.RT_purgeCalendarResourceCalendarCache);
         R_purgeMessages                        = rm.getAdminRight(Right.RT_purgeMessages);
         R_reindexCalendarResourceMailbox       = rm.getAdminRight(Right.RT_reindexCalendarResourceMailbox);
         R_reindexMailbox                       = rm.getAdminRight(Right.RT_reindexMailbox);
@@ -751,7 +739,6 @@ public class AdminRights {
         R_setDomainAdminConsoleResourcesPropertiesTab = rm.getAdminRight(Right.RT_setDomainAdminConsoleResourcesPropertiesTab);
         R_setDomainAdminDistributionListAttrs  = rm.getAdminRight(Right.RT_setDomainAdminDistributionListAttrs);
         R_setDomainAdminDomainAttrs            = rm.getAdminRight(Right.RT_setDomainAdminDomainAttrs);
-        R_taskSetPassword                      = rm.getAdminRight(Right.RT_taskSetPassword);
         R_viewAccountAdminUI                   = rm.getAdminRight(Right.RT_viewAccountAdminUI);
         R_viewAdminConsoleAccountsACLTab       = rm.getAdminRight(Right.RT_viewAdminConsoleAccountsACLTab);
         R_viewAdminConsoleAccountsAliasesTab   = rm.getAdminRight(Right.RT_viewAdminConsoleAccountsAliasesTab);
@@ -831,7 +818,6 @@ public class AdminRights {
         R_viewDomainAdminConsoleResourcesContactTab = rm.getAdminRight(Right.RT_viewDomainAdminConsoleResourcesContactTab);
         R_viewDomainAdminConsoleResourcesPropertiesTab = rm.getAdminRight(Right.RT_viewDomainAdminConsoleResourcesPropertiesTab);
         R_viewGrants                           = rm.getAdminRight(Right.RT_viewGrants);
-        R_viewPasswordStrength                 = rm.getAdminRight(Right.RT_viewPasswordStrength);
     }
 
     ///// END-AUTO-GEN-REPLACE
