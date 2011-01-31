@@ -35,57 +35,57 @@ public class Flag extends Tag {
     private static final Map<String, FlagInfo> NAME2FLAG = new HashMap<String, FlagInfo>();
 
     private enum FlagInfo {
-        FROM_ME(-1, 1 << 0, "\\Sent", 's'),
-        ATTACHED(-2, 1 << 1, "\\Attached", 'a'),
-        REPLIED(-3, 1 << 2, "\\Answered", 'r'),
-        FORWARDED(-4, 1 << 3, "\\Forwarded", 'w'),
-        COPIED(-5, 1 << 4, "\\Copied", HIDDEN),
-        FLAGGED(-6, 1 << 5, "\\Flagged", 'f'),
-        DRAFT(-7, 1 << 6, "\\Draft", 'd'),
-        DELETED(-8, 1 << 7, "\\Deleted", 'x'),
-        NOTIFIED(-9, 1 << 8, "\\Notified", 'n'),
+        FROM_ME(-1, "\\Sent", 's'),
+        ATTACHED(-2, "\\Attached", 'a'),
+        REPLIED(-3, "\\Answered", 'r'),
+        FORWARDED(-4, "\\Forwarded", 'w'),
+        COPIED(-5, "\\Copied", HIDDEN),
+        FLAGGED(-6, "\\Flagged", 'f'),
+        DRAFT(-7, "\\Draft", 'd'),
+        DELETED(-8, "\\Deleted", 'x'),
+        NOTIFIED(-9, "\\Notified", 'n'),
         /**
          * Callers of {@link Mailbox} methods treat {@code UNREAD} like the other flags. Internally, we break it out into
          * a separate variable, {@code unreadCount}. It's also persisted in a separate indexed column for fast lookups of
          * unread {@link MailItem}s.
          */
-        UNREAD(-10, 1 << 9, "\\Unread", 'u'),
-        HIGH_PRIORITY(-11, 1 << 10, "\\Urgent", '!'),
-        LOW_PRIORITY(-12, 1 << 11, "\\Bulk", '?'),
-        VERSIONED(-13, 1 << 12, "\\Versioned", '/'),
+        UNREAD(-10, "\\Unread", 'u'),
+        HIGH_PRIORITY(-11, "\\Urgent", '!'),
+        LOW_PRIORITY(-12, "\\Bulk", '?'),
+        VERSIONED(-13, "\\Versioned", '/'),
         /**
          * @deprecated Use indexId = 0
          */
         @Deprecated
-        INDEXING_DEFERRED(-14, 1 << 13, "\\IdxDeferred", HIDDEN),
-        POPPED(-15, 1 << 14, "\\Popped", 'p'),
-        SUBSCRIBED(-20, 1 << 19, "\\Subscribed", '*'),
-        EXCLUDE_FREEBUSY(-21, 1 << 20, "\\ExcludeFB", 'b'),
-        CHECKED(-22, 1 << 21, "\\Checked", '#'),
-        NO_INHERIT(-23, 1 << 22, "\\NoInherit", 'i'),
-        INVITE(-24, 1 << 23, "\\Invite", 'v'),
-        SYNCFOLDER(-25, 1 << 24, "\\SyncFolder", 'y'),
-        SYNC(-26, 1 << 25, "\\Sync", '~'),
-        NO_INFERIORS(-27, 1 << 26, "\\Noinferiors", 'o'),
+        INDEXING_DEFERRED(-14, "\\IdxDeferred", HIDDEN),
+        POPPED(-15, "\\Popped", 'p'),
+        SUBSCRIBED(-20, "\\Subscribed", '*'),
+        EXCLUDE_FREEBUSY(-21, "\\ExcludeFB", 'b'),
+        CHECKED(-22, "\\Checked", '#'),
+        NO_INHERIT(-23, "\\NoInherit", 'i'),
+        INVITE(-24, "\\Invite", 'v'),
+        SYNCFOLDER(-25, "\\SyncFolder", 'y'),
+        SYNC(-26, "\\Sync", '~'),
+        NO_INFERIORS(-27, "\\Noinferiors", 'o'),
         /**
          * @deprecated support for ZD 1.x local data migration
          */
         @Deprecated
-        ARCHIVED(-28, 1 << 27, "\\Archived", '@'),
-        GLOBAL(-29, 1 << 28, "\\Global", 'g'),
-        IN_DUMPSTER(-30,  1 << 29, "\\InDumpster", HIDDEN),
-        UNCACHED(-31, 1 << 30, "\\Uncached", HIDDEN);
+        ARCHIVED(-28, "\\Archived", '@'),
+        GLOBAL(-29, "\\Global", 'g'),
+        IN_DUMPSTER(-30,  "\\InDumpster", HIDDEN),
+        UNCACHED(-31, "\\Uncached", HIDDEN);
 
         private final String name;
         private final int id;
         private final char ch;
         private final int bitmask;
 
-        private FlagInfo(int id, int bitmask, String name, char ch) {
+        private FlagInfo(int id, String name, char ch) {
             this.id = id;
-            this.bitmask = bitmask;
             this.name = name;
             this.ch = ch;
+            bitmask = 1 << (-id - 1);
 
             INDEX2FLAG[getIndex(id)] = this;
             NAME2FLAG.put(name.toLowerCase(), this);
