@@ -87,7 +87,7 @@ public class BodyTest extends AbstractTest {
             Object argument = argumentsIter.next();
             if (argument instanceof StringListArgument) {
                 StringListArgument strList = (StringListArgument) argument;
-                key = (String) strList.getList().get(0);
+                key = strList.getList().get(0);
             }
         }
         if (null == key)
@@ -117,7 +117,7 @@ public class BodyTest extends AbstractTest {
         Account acct = null;
         try {
             acct = zimbraMail.getMailbox().getAccount();
-        } catch (ServiceException e) { }
+        } catch (ServiceException ignored) { }
         String charset = (acct == null ? null : acct.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null));
 
         for (MPartInfo mpi : pm.getMessageParts()) {
@@ -163,16 +163,20 @@ public class BodyTest extends AbstractTest {
     throws IOException {
         int matchIndex = 0;
         substring = substring.toLowerCase(); // Do case-insensitive matching, like we do with headers.
-        PushbackReader pb = new PushbackReader(reader);
-        int c = -1;
+        PushbackReader pb = new PushbackReader(reader, substring.length() - 1);
+        char[] substringArray = substring.toCharArray();
+        int c;
         while ((c = getNextChar(pb)) > 0) {
             if (substring.charAt(matchIndex) == Character.toLowerCase(c)) {
                 matchIndex++;
-            } else {
+                if (matchIndex == substring.length())
+                    return true;
+            } else if (matchIndex > 0) {
+                // unread this non-matching char
+                pb.unread(c);
+                // unread matched chars except the first char that matched
+                pb.unread(substringArray, 1, matchIndex - 1);
                 matchIndex = 0;
-            }
-            if (matchIndex == substring.length()) {
-                return true;
             }
         }
         return false;
