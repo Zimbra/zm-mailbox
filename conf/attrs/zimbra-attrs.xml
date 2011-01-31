@@ -5372,7 +5372,10 @@ TODO: delete them permerntly from here
   <desc>certificate to be used for validating the SAML assertions received from myonelogin (tricipher)</desc>
 </attr>
 
-
+<attr id="1170" name="zimbraFeatureAdminMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.1">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>whether email features/tab enabled in the web client if it is accessed from the admin console</desc>
+</attr>
 
 </attrs>
 

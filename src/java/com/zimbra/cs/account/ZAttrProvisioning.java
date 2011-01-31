@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110128-2119 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110131-1350 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2958,6 +2958,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=781)
     public static final String A_zimbraExternalPop3SSLPort = "zimbraExternalPop3SSLPort";
+
+    /**
+     * whether email features/tab enabled in the web client if it is accessed
+     * from the admin console
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1170)
+    public static final String A_zimbraFeatureAdminMailEnabled = "zimbraFeatureAdminMailEnabled";
 
     /**
      * advanced search button enabled
