@@ -86,6 +86,11 @@ public class NamedEntryCache<E extends NamedEntry> {
             mIdCache.put(entry.getId(), cacheEntry);
         }
     }
+    
+    public synchronized void replace(E entry) {
+        remove(entry);
+        put(entry);
+    }
 
     public synchronized void put(List<E> entries, boolean clear) {
         if (entries != null) {
