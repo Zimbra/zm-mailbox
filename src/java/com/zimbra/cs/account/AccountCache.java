@@ -84,6 +84,11 @@ public class AccountCache {
                 mForeignPrincipalCache.put(fp, cacheEntry);            
         }
     }
+    
+    public synchronized void replace(Account entry) {
+        remove(entry);
+        put(entry);
+    }
 
     private Account get(String key, LRUMap cache) {
         CacheEntry ce = (CacheEntry) cache.get(key);
