@@ -60,8 +60,8 @@ public class CheckPasswordStrength extends AdminDocumentHandler {
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(id);
         
-        checkAccountRight(zsc, account, Admin.R_viewPasswordStrength);
- 
+        checkAccountRight(zsc, account, Admin.R_checkPasswordStrength);
+        
         prov.checkPasswordStrength(account, password);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
@@ -73,7 +73,7 @@ public class CheckPasswordStrength extends AdminDocumentHandler {
     
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
-        relatedRights.add(Admin.R_viewPasswordStrength);
+        relatedRights.add(Admin.R_checkPasswordStrength);
     }
 
 }
