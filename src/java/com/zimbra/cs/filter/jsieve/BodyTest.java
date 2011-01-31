@@ -194,17 +194,21 @@ public class BodyTest extends AbstractTest {
         int matchIndex = 0;
         if (!caseSensitive)
             substring = substring.toLowerCase();
-        PushbackReader pb = new PushbackReader(reader);
+        PushbackReader pb = new PushbackReader(reader, substring.length() - 1);
+        char[] substringArray = substring.toCharArray();
         int c;
         while ((c = getNextChar(pb)) > 0) {
             if ((!caseSensitive && substring.charAt(matchIndex) == Character.toLowerCase(c)) ||
                     (caseSensitive && substring.charAt(matchIndex) == c)) {
                 matchIndex++;
-            } else {
+                if (matchIndex == substring.length())
+                    return true;
+            } else if (matchIndex > 0) {
+                // unread this non-matching char
+                pb.unread(c);
+                // unread matched chars except the first char that matched
+                pb.unread(substringArray, 1, matchIndex - 1);
                 matchIndex = 0;
-            }
-            if (matchIndex == substring.length()) {
-                return true;
             }
         }
         return false;

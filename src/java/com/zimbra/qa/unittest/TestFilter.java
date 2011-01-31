@@ -1016,6 +1016,30 @@ extends TestCase {
     }
 
     /**
+     * Tests fix for bug 55927.
+     */
+    public void testFullMatchAfterPartialMatch()
+    throws Exception {
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+
+        conditions.add(new ZBodyCondition(BodyOp.CONTAINS, "MatchThis"));
+        actions.add(new ZMarkAction(MarkOp.FLAGGED));
+        rules.add(new ZFilterRule("testFullMatchAfterPartialMatch", true, false, conditions, actions));
+
+        ZFilterRules zRules = new ZFilterRules(rules);
+        saveIncomingRules(mMbox, zRules);
+
+        // Add a message and test the flagged state.
+        String subject = NAME_PREFIX + " testFullMatchAfterPartialMatch";
+        String content = new MessageBuilder().withSubject(subject).withBody("MatchMatchThis").create();
+        TestUtil.addMessageLmtp(new String[] { USER_NAME }, USER_NAME, content);
+        ZMessage msg = TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
+        assertTrue("Unexpected message flag state", msg.isFlagged());
+    }
+
+    /**
      * Tests the redirect filter action and confirms that the X-ZimbraForwarded
      * header is set on the redirected message.
      */
