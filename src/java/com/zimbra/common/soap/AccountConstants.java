@@ -163,6 +163,7 @@ public class AccountConstants {
     public static final QName GET_VERSION_INFO_RESPONSE = QName.get(E_GET_VERSION_INFO_RESPONSE, NAMESPACE);
 
     public static final String E_ACTION = "action";
+    public static final String E_ADMIN_DELEGATED = "adminDelegated";
     public static final String E_AUTH_TOKEN = "authToken";
     public static final String E_CRUMB = "crumb";
     public static final String E_REFERRAL = "refer";
