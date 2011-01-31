@@ -406,6 +406,7 @@ public class LdapProvisioning extends Provisioning {
             else
                 entry.setAttrs(attrs, defaults, secondaryDefaults);
 
+            extendLifeInCache(entry);
         } catch (NamingException e) {
             throw ServiceException.FAILURE("unable to refresh entry", e);
         } finally {
@@ -415,6 +416,25 @@ public class LdapProvisioning extends Provisioning {
 
     }
 
+    public void extendLifeInCache(Entry entry) {
+        if (entry instanceof Account) {
+            sAccountCache.replace((Account)entry);
+        } else if (entry instanceof LdapCos) {
+            sCosCache.replace((LdapCos)entry);
+        } else if (entry instanceof Domain) {
+            sDomainCache.replace((Domain)entry);
+        } else if (entry instanceof DistributionList) {
+            sAclGroupCache.replace((DistributionList)entry);
+            sDLCache.replace((DistributionList)entry);
+        } else if (entry instanceof Server) {
+            sServerCache.replace((Server)entry);
+        } else if (entry instanceof XMPPComponent) {
+            sXMPPComponentCache.replace((XMPPComponent)entry);
+        } else if (entry instanceof LdapZimlet) {
+            sZimletCache.replace((LdapZimlet)entry);
+        }
+    }
+    
     // TODO: not in use, delete after the new code is settled for a while
     void refreshEntry_old(Entry entry, ZimbraLdapContext initZlc, LdapProvisioning prov)
     throws ServiceException {

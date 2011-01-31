@@ -238,6 +238,11 @@ public class DomainCache {
         }
     }
     
+    public synchronized void replace(Domain entry) {
+        remove(entry);
+        put(DomainBy.id, entry.getId(), entry);
+    }
+    
     public synchronized void removeFromNegativeCache(DomainBy domainBy, String key) {
         mNegativeCache.remove(domainBy, key);
     }
