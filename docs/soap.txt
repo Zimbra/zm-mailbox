@@ -498,7 +498,8 @@ effect if called in a <nosession> context.
    <id>{account-id}</id>
    <name>{account-name}</name>
    <lifetime>...</lifetime>
-   [<rest>{account-base-REST-url}</rest>
+   [<adminDelegated>{admin-delegated}</adminDelegated>
+    <rest>{account-base-REST-url}</rest>
     <used>{used}</used>
     <prevSession>{previous-SOAP-session}</prevSession>
     <accessed>{last-SOAP-access}</accessed>
@@ -563,7 +564,9 @@ effect if called in a <nosession> context.
   {version} = server version: <major>[.<minor>[.<maintenance>]][build] <release> <date>[ <type>]
   {account-name} = email address (user@domain)
   {life-time} = number of milliseconds until auth token expires
+  {admin-delegated} = "1" if the auth token is a delegated auth token issued to an admin account
   {account-base-REST-url} = base REST URL for the requested account
+  
 
   returned only if the command successfully executes on the target user's home mail server:
     {used} = mailbox quota used in bytes
