@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -27,6 +28,7 @@ import java.util.TreeMap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccessManager;
@@ -1320,14 +1322,18 @@ public class RightCommand {
         }
     }
 
-    public static Element rightToXML(Element parent, Right right, boolean expandAllAtrts) throws ServiceException {
+    public static Element rightToXML(Element parent, Right right, boolean expandAllAtrts, Locale locale) throws ServiceException {
         Element eRight = parent.addElement(AdminConstants.E_RIGHT);
         eRight.addAttribute(AdminConstants.E_NAME, right.getName());
         eRight.addAttribute(AdminConstants.A_TYPE, right.getRightType().name());
         eRight.addAttribute(AdminConstants.A_TARGET_TYPE, right.getTargetTypeStr());
         eRight.addAttribute(AdminConstants.A_RIGHT_CLASS, right.getRightClass().name());
             
-        eRight.addElement(AdminConstants.E_DESC).setText(right.getDesc());
+        String desc = L10nUtil.getMessage(L10nUtil.MSG_RIGHTS_FILE_BASENAME, right.getName(), locale);
+        if (desc == null) {
+            desc = right.getDesc();
+        }
+        eRight.addElement(AdminConstants.E_DESC).setText(desc);
             
         if (right.isPresetRight()) {
             // nothing to do here

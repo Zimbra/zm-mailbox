@@ -20,6 +20,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightClass;
@@ -31,7 +32,8 @@ public class GetAllRights extends RightDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context)
             throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
+        ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account account = getRequestedAccount(zsc);
         
         String targetType = request.getAttribute(AdminConstants.A_TARGET_TYPE, null);
         boolean expandAllAtrts = request.getAttributeBool(AdminConstants.A_EXPAND_ALL_ATTRS, false);
@@ -39,9 +41,9 @@ public class GetAllRights extends RightDocumentHandler {
         
         List<Right> rights = RightCommand.getAllRights(targetType, rightClass);
         
-        Element response = lc.createElement(AdminConstants.GET_ALL_RIGHTS_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.GET_ALL_RIGHTS_RESPONSE);
         for (Right right : rights)
-            RightCommand.rightToXML(response, right, expandAllAtrts);
+            RightCommand.rightToXML(response, right, expandAllAtrts, account.getLocale());
         
         return response;
     }

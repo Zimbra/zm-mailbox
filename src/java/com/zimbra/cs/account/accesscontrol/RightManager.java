@@ -722,7 +722,7 @@ public class RightManager {
             else if ("genDomainAdminSetAttrsRights".equals(action)) {
                 String templateFile = cl.getOptionValue('t');
                 genDomainAdminSetAttrsRights(regenFile, templateFile);
-            } else if ("genMessagePrperties".equals(action)) {
+            } else if ("genMessageProperties".equals(action)) {
                 FileGenUtil.replaceFile(regenFile, rm.genMessageProperties());
             } else if ("validate".equals(action)) {
                 // do nothing, all we need is that new RightManager(inputDir) works,
