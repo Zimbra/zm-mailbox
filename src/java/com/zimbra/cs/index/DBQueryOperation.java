@@ -273,13 +273,15 @@ public class DBQueryOperation extends QueryOperation {
         mAllResultsQuery = false;
         if (itemId.belongsTo(mbox)) {
             // LOCAL
+            assert mQueryTarget.isCompatibleLocal() : topLevelAndedConstraint() + "," + itemId;
+            mQueryTarget = QueryTarget.LOCAL;
             topLevelAndedConstraint().addItemIdClause(itemId.getId(), truth);
         } else {
             // REMOTE
+            assert mQueryTarget != QueryTarget.LOCAL : topLevelAndedConstraint() + "," + itemId;
+            mQueryTarget = new QueryTarget(itemId.getAccountId());
             topLevelAndedConstraint().addRemoteItemIdClause(itemId, truth);
-
         }
-
     }
 
     public void addDateClause(long lowestDate, boolean lowestEq, long highestDate, boolean highestEq, boolean truth)  {
