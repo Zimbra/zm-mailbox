@@ -39,7 +39,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 7.0.0_BETA1_1111 pshao 20110131-1020 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -6959,9 +6959,9 @@ public class ZAttrServer extends NamedEntry {
      *
      * @return zimbraMailKeepOutWebCrawlers, or false if unset
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 7.0.1
      */
-    @ZAttr(id=1160)
+    @ZAttr(id=1161)
     public boolean isMailKeepOutWebCrawlers() {
         return getBooleanAttr(Provisioning.A_zimbraMailKeepOutWebCrawlers, false);
     }
@@ -6973,9 +6973,9 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraMailKeepOutWebCrawlers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 7.0.1
      */
-    @ZAttr(id=1160)
+    @ZAttr(id=1161)
     public void setMailKeepOutWebCrawlers(boolean zimbraMailKeepOutWebCrawlers) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailKeepOutWebCrawlers, zimbraMailKeepOutWebCrawlers ? Provisioning.TRUE : Provisioning.FALSE);
@@ -6990,9 +6990,9 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 7.0.1
      */
-    @ZAttr(id=1160)
+    @ZAttr(id=1161)
     public Map<String,Object> setMailKeepOutWebCrawlers(boolean zimbraMailKeepOutWebCrawlers, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailKeepOutWebCrawlers, zimbraMailKeepOutWebCrawlers ? Provisioning.TRUE : Provisioning.FALSE);
@@ -7005,9 +7005,9 @@ public class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 7.0.1
      */
-    @ZAttr(id=1160)
+    @ZAttr(id=1161)
     public void unsetMailKeepOutWebCrawlers() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailKeepOutWebCrawlers, "");
@@ -7021,9 +7021,9 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 7.0.0
+     * @since ZCS 7.0.1
      */
-    @ZAttr(id=1160)
+    @ZAttr(id=1161)
     public Map<String,Object> unsetMailKeepOutWebCrawlers(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailKeepOutWebCrawlers, "");
