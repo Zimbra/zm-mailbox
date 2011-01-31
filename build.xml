@@ -2103,9 +2103,17 @@
     </java>
   </target>
 
+  <target name="generate-rights-message-properties" depends="set-buildinfo-vars,compile">
+    <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
+      <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+      <arg line="-a genMessageProperties -i conf/rights -r conf/msgs/ZsMsgRights.properties"/>
+    </java>
+  </target>
+	
   <target name="generate-rights">
     <antcall target="generate-domainadmin-rights-xml"/>
     <antcall target="generate-rights-java"/>
+  	<antcall target="generate-rights-message-properties"/>
   </target>
 
   <target name="generate-rights-txt">
