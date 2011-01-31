@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110128-1113 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110128-2119 */
 
     /**
      * RFC2256: descriptive information
@@ -18741,6 +18741,83 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMtaTlsSecurityLevel(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMtaTlsSecurityLevel, "");
+        return attrs;
+    }
+
+    /**
+     * certificate to be used for validating the SAML assertions received
+     * from myonelogin (tricipher)
+     *
+     * @return zimbraMyoneloginSamlSigningCert, or null if unset
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1169)
+    public String getMyoneloginSamlSigningCert() {
+        return getAttr(Provisioning.A_zimbraMyoneloginSamlSigningCert, null);
+    }
+
+    /**
+     * certificate to be used for validating the SAML assertions received
+     * from myonelogin (tricipher)
+     *
+     * @param zimbraMyoneloginSamlSigningCert new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1169)
+    public void setMyoneloginSamlSigningCert(String zimbraMyoneloginSamlSigningCert) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMyoneloginSamlSigningCert, zimbraMyoneloginSamlSigningCert);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * certificate to be used for validating the SAML assertions received
+     * from myonelogin (tricipher)
+     *
+     * @param zimbraMyoneloginSamlSigningCert new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1169)
+    public Map<String,Object> setMyoneloginSamlSigningCert(String zimbraMyoneloginSamlSigningCert, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMyoneloginSamlSigningCert, zimbraMyoneloginSamlSigningCert);
+        return attrs;
+    }
+
+    /**
+     * certificate to be used for validating the SAML assertions received
+     * from myonelogin (tricipher)
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1169)
+    public void unsetMyoneloginSamlSigningCert() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMyoneloginSamlSigningCert, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * certificate to be used for validating the SAML assertions received
+     * from myonelogin (tricipher)
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1169)
+    public Map<String,Object> unsetMyoneloginSamlSigningCert(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMyoneloginSamlSigningCert, "");
         return attrs;
     }
 

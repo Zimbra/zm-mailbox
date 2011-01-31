@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110128-1113 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110128-2119 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5455,6 +5455,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=795)
     public static final String A_zimbraMtaTlsSecurityLevel = "zimbraMtaTlsSecurityLevel";
+
+    /**
+     * certificate to be used for validating the SAML assertions received
+     * from myonelogin (tricipher)
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1169)
+    public static final String A_zimbraMyoneloginSamlSigningCert = "zimbraMyoneloginSamlSigningCert";
 
     /**
      * A signed activation key that authorizes this installation.

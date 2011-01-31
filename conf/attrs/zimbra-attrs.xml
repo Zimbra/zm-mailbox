@@ -5368,5 +5368,11 @@ TODO: delete them permerntly from here
     and whether the Junk folder should be exposed to IMAP/POP clients.</desc>
 </attr>
 
+<attr id="1169" name="zimbraMyoneloginSamlSigningCert"  type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.1">
+  <desc>certificate to be used for validating the SAML assertions received from myonelogin (tricipher)</desc>
+</attr>
+
+
+
 </attrs>
 
