@@ -1,5 +1,5 @@
 Query Syntax
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
   content:(TEXT)
   subject:[>,<,>=,<=](TEXT)
   msgid:(TEXT) // Message-Id: field from mime header
@@ -76,7 +76,7 @@ DB_MSG_ID: ??
 NUM: ([<>])?n+
 
 
-----------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 Test Cases
 ----------
@@ -95,11 +95,62 @@ not in:junk
 - is a synonym for "not" and may immediately precede a field
 
 Fields
---------
-content-related
+------------------------------------------------------------------------------------------------------------------------
+CONTENT:
 
-  content:  # this should be the default field
+ CONTENT field (e.g. email message body) is tokenized by word. We deem the following Unicode ranges are CJK characters.
 
+ * 2E80-2EFF CJK Radicals Supplement
+ * 2F00-2FDF Kangxi Radicals
+ * 2FF0-2FFF Ideographic Description Characters
+ *------------------------------------------------------------------------------
+ * 3000-303F [EXCLUDE] CJK Symbols and Punctuation
+ *------------------------------------------------------------------------------
+ * 3040-309F Hiragana
+ * 30A0-30FF Katakana
+ * 3100-312F Bopomofo
+ * 3130-318F Hangul Compatibility Jamo
+ * 3190-319F Kanbun
+ * 31A0-31BF Bopomofo Extended
+ * 31C0-31EF CJK Strokes
+ * 31F0-31FF Katakana Phonetic Extensions
+ * 3200-32FF Enclosed CJK Letters and Months
+ * 3300-33FF CJK Compatibility
+ * 3400-4DBF CJK Unified Ideographs Extension A
+ * 4DC0-4DFF Yijing Hexagram Symbols
+ * 4E00-9FFF CJK Unified Ideographs
+ *------------------------------------------------------------------------------
+ * AC00-D7AF Hangul Syllables
+ * D7B0-D7FF Hangul Jamo Extended-B
+ *------------------------------------------------------------------------------
+ * FF00-FFEF Halfwidth and Fullwidth Forms
+
+ To CJK character sequences, we apply the bigram tokenization where words are constructed by every subsequence of 2
+ characters (e.g. ABCD consists of AB, BC and CD) regardless of the grammatical structure. Therefore, CJK character
+ sequences are searchable by a subsequence of 2 characters or a combination of those. For example, suppose you have
+ a text content: "ABCDEFG". Searching by "AB", "BC", "BCD", "BCDE" are all hits even if "ABCDEFG" are grammatically
+ tokenized into "ABC" "DEF", and "G".
+
+ To non CJK character sequences, words are split by whitespace [\r|\n|\t|\f] or punctuation [_|-|/|.|,] with some
+ exceptions:
+ * We recognize email addresses by a pattern of "*@*.*[.*]".
+ * We recognize host names by a pattern of "*.*[.*]".
+ * We recognize numbers by a pattern of "*[0-9]([_|-|/|.|,][0-9])*".
+ After tokenization, all words become case-insensitive, and the following common English words are trimmed.
+
+ "a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "if", "in", "into", "is", "it", "no", "not", "of", "on",
+ "or", "such", "that", "the", "their", "then", "there", "these", "they", "this", "to", "was", "will", "with"
+
+ Therefore, non CJK character sequences are only searchable by a word or a combination of words. For example, suppose
+ you have a text content: "3401 Hillview Ave, Palo Alto, CA 94304 USA". Searching by "3401", "ave" and "palo alto" are
+ all hits. But, substrings of each word such as "hill", "view", "94" or "US" are not hits.
+
+ Wildcards (*) are only supported at the end of word, and the search works as if it's a prefix search.
+
+CONTACT:
+
+ CONTACT field works in the same manner as CONTENT field besides it's also seachable by stop words and always translated
+ to a prefix search.
 
 header-related
 
@@ -248,7 +299,7 @@ date-related fields
   last year and older:  before:0year
 
 appointment search operators
-----------------------------
+------------------------------------------------------------------------------------------------------------------------
   appt-start:  appt-end:
      Search based on the start and end times of the appointment.
      For non-recurring appointments, this is basically what you
@@ -337,7 +388,7 @@ other-mime-specific fields
 
 
 Structured-Data Searching
---------------------------------
+------------------------------------------------------------------------------------------------------------------------
 Search/Indexing now has the ability to analyze and store data in
 Name-Value pairs in such a way that they can be searched for in a
 structured way by the query language.
