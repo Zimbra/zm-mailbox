@@ -345,8 +345,6 @@ public class TestDataSource extends TestCase {
         mbox.deleteFolder(rssFolder.getId());
         mbox.importData(list);
 
-        // XXX reenable after fixing bug 56010
-        /*
         for (int i = 1; i <= 10; i++) {
             ds = (ZRssDataSource) getDataSource(mbox, rssFolder.getId());
             if (ds == null) {
@@ -354,7 +352,7 @@ public class TestDataSource extends TestCase {
             }
             Thread.sleep(500);
         }
-        */
+        assertNull(ds);
     }
 
     // XXX bburtin: disabled test due to bug 37222 (unable to parse Google calendar).
