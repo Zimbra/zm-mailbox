@@ -978,6 +978,8 @@ public final class LC {
     public static final KnownKey data_source_eas_sync_tasks = KnownKey.newKey(true);
     public static final KnownKey data_source_eas_window_size = KnownKey.newKey(50);
     public static final KnownKey data_source_eas_mime_truncation = KnownKey.newKey(4);
+    
+    public static final KnownKey zimbra_activesync_contact_image_size = KnownKey.newKey(2*1024*1024);
 
     public static final KnownKey zimbra_slow_logging_enabled = KnownKey.newKey(false);
     public static final KnownKey zimbra_slow_logging_threshold = KnownKey.newKey(5000);
