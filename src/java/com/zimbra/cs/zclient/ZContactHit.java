@@ -43,6 +43,8 @@ public class ZContactHit implements ZSearchHit {
     private long mMetaDataDate;
     private long mDate;
     private String mFullName;
+    private String mFileAs;
+    private String mNickname;
     private String mNamePrefix;
     private String mFirstName;
     private String mPhoneticFirstName;
@@ -83,6 +85,8 @@ public class ZContactHit implements ZSearchHit {
 
         mDlist = attrs.get(ContactConstants.A_dlist);
         mFullName = attrs.get(ContactConstants.A_fullName);
+        mFileAs = attrs.get(ContactConstants.A_fileAs);
+        mNickname = attrs.get(ContactConstants.A_nickname);
         mNamePrefix = attrs.get(ContactConstants.A_namePrefix);
         mFirstName = attrs.get(ContactConstants.A_firstName);
         mPhoneticFirstName = attrs.get(ContactConstants.A_phoneticFirstName);
@@ -222,6 +226,8 @@ public class ZContactHit implements ZSearchHit {
         return mFullName;
     }
 
+    public String getFileAs() { return mFileAs; }
+    public String getNickname() { return mNickname; }
     public String getNamePrefix() { return mNamePrefix; }
     public String getFirstName() { return mFirstName; };
     public String getPhoneticFirstName() { return mPhoneticFirstName; }
@@ -249,7 +255,21 @@ public class ZContactHit implements ZSearchHit {
                 Map<String, String> attrs = cevent.getAttrs(null);
                 String dlist = attrs != null ? attrs.get(ContactConstants.A_dlist) : null;
                 if (dlist != null) mDlist = dlist;
+                mFullName = get(attrs, ContactConstants.A_fullName, mFullName);
+                mFileAs = get(attrs, ContactConstants.A_fileAs, mFileAs);
+                mNickname = get(attrs, ContactConstants.A_nickname, mNickname);
+                mFirstName = get(attrs, ContactConstants.A_firstName, mFirstName);
+                mPhoneticFirstName = get(attrs, ContactConstants.A_phoneticFirstName, mPhoneticFirstName);
+                mLastName = get(attrs, ContactConstants.A_lastName, mLastName);
+                mPhoneticLastName = get(attrs, ContactConstants.A_phoneticLastName, mPhoneticLastName);
+                mCompany = get(attrs, ContactConstants.A_company, mCompany);
+                mPhoneticCompany = get(attrs, ContactConstants.A_phoneticCompany, mPhoneticCompany);
             }
         }
 	}
+
+    private String get(Map<String,String> attrs, String key, String defaultValue) {
+        String value = attrs != null ? attrs.get(key) : null;
+        return value != null ? value : defaultValue;
+    }
 }
