@@ -15,6 +15,20 @@
     <part name="parameters" element="tns:AddAccountAliasResponse"/>
   </message>
 
+  <message name="addDistributionListAliasRequest">
+    <part name="parameters" element="tns:AddDistributionListAliasRequest"/>
+  </message>
+  <message name="addDistributionListAliasResponse">
+    <part name="parameters" element="tns:AddDistributionListAliasResponse"/>
+  </message>
+
+  <message name="addDistributionListMemberRequest">
+    <part name="parameters" element="tns:AddDistributionListMemberRequest"/>
+  </message>
+  <message name="addDistributionListMemberResponse">
+    <part name="parameters" element="tns:AddDistributionListMemberResponse"/>
+  </message>
+
   <message name="authRequest">
     <part name="parameters" element="tns:AuthRequest"/>
   </message>
@@ -22,11 +36,39 @@
     <part name="parameters" element="tns:AuthResponse"/>
   </message>
 
+  <message name="checkAuthConfigRequest">
+    <part name="parameters" element="tns:CheckAuthConfigRequest"/>
+  </message>
+  <message name="checkAuthConfigResponse">
+    <part name="parameters" element="tns:CheckAuthConfigResponse"/>
+  </message>
+
+  <message name="checkDomainMXRecordRequest">
+    <part name="parameters" element="tns:CheckDomainMXRecordRequest"/>
+  </message>
+  <message name="checkDomainMXRecordResponse">
+    <part name="parameters" element="tns:CheckDomainMXRecordResponse"/>
+  </message>
+
+  <message name="checkGalConfigRequest">
+    <part name="parameters" element="tns:CheckGalConfigRequest"/>
+  </message>
+  <message name="checkGalConfigResponse">
+    <part name="parameters" element="tns:CheckGalConfigResponse"/>
+  </message>
+
   <message name="checkHealthRequest">
     <part name="parameters" element="tns:CheckHealthRequest"/>
   </message>
   <message name="checkHealthResponse">
     <part name="parameters" element="tns:CheckHealthResponse"/>
+  </message>
+
+  <message name="checkHostnameResolveRequest">
+    <part name="parameters" element="tns:CheckHostnameResolveRequest"/>
+  </message>
+  <message name="checkHostnameResolveResponse">
+    <part name="parameters" element="tns:CheckHostnameResolveResponse"/>
   </message>
 
   <message name="checkPasswordStrengthRequest">
@@ -64,6 +106,13 @@
     <part name="parameters" element="tns:CreateCosResponse"/>
   </message>
 
+  <message name="createDistributionListRequest">
+    <part name="parameters" element="tns:CreateDistributionListRequest"/>
+  </message>
+  <message name="createDistributionListResponse">
+    <part name="parameters" element="tns:CreateDistributionListResponse"/>
+  </message>
+
   <message name="createDomainRequest">
     <part name="parameters" element="tns:CreateDomainRequest"/>
   </message>
@@ -76,6 +125,13 @@
   </message>
   <message name="createServerResponse">
     <part name="parameters" element="tns:CreateServerResponse"/>
+  </message>
+
+  <message name="createVolumeRequest">
+    <part name="parameters" element="tns:CreateVolumeRequest"/>
+  </message>
+  <message name="createVolumeResponse">
+    <part name="parameters" element="tns:CreateVolumeResponse"/>
   </message>
 
   <message name="delegateAuthRequest">
@@ -99,6 +155,13 @@
     <part name="parameters" element="tns:DeleteCosResponse"/>
   </message>
 
+  <message name="deleteDistributionListRequest">
+    <part name="parameters" element="tns:DeleteDistributionListRequest"/>
+  </message>
+  <message name="deleteDistributionListResponse">
+    <part name="parameters" element="tns:DeleteDistributionListResponse"/>
+  </message>
+
   <message name="deleteDomainRequest">
     <part name="parameters" element="tns:DeleteDomainRequest"/>
   </message>
@@ -118,6 +181,13 @@
   </message>
   <message name="deleteServerResponse">
     <part name="parameters" element="tns:DeleteServerResponse"/>
+  </message>
+
+  <message name="deleteVolumeRequest">
+    <part name="parameters" element="tns:DeleteVolumeRequest"/>
+  </message>
+  <message name="deleteVolumeResponse">
+    <part name="parameters" element="tns:DeleteVolumeResponse"/>
   </message>
 
   <message name="flushCacheRequest">
@@ -176,6 +246,13 @@
     <part name="parameters" element="tns:GetAllCosResponse"/>
   </message>
 
+  <message name="getAllDistributionListsRequest">
+    <part name="parameters" element="tns:GetAllDistributionListsRequest"/>
+  </message>
+  <message name="getAllDistributionListsResponse">
+    <part name="parameters" element="tns:GetAllDistributionListsResponse"/>
+  </message>
+
   <message name="getAllDomainsRequest">
     <part name="parameters" element="tns:GetAllDomainsRequest"/>
   </message>
@@ -204,6 +281,13 @@
     <part name="parameters" element="tns:GetAllServersResponse"/>
   </message>
 
+  <message name="getAllVolumesRequest">
+    <part name="parameters" element="tns:GetAllVolumesRequest"/>
+  </message>
+  <message name="getAllVolumesResponse">
+    <part name="parameters" element="tns:GetAllVolumesResponse"/>
+  </message>
+
   <message name="getConfigRequest">
     <part name="parameters" element="tns:GetConfigRequest"/>
   </message>
@@ -216,6 +300,27 @@
   </message>
   <message name="getCosResponse">
     <part name="parameters" element="tns:GetCosResponse"/>
+  </message>
+
+  <message name="getCurrentVolumesRequest">
+    <part name="parameters" element="tns:GetCurrentVolumesRequest"/>
+  </message>
+  <message name="getCurrentVolumesResponse">
+    <part name="parameters" element="tns:GetCurrentVolumesResponse"/>
+  </message>
+
+  <message name="getDistributionListMembershipRequest">
+    <part name="parameters" element="tns:GetDistributionListMembershipRequest"/>
+  </message>
+  <message name="getDistributionListMembershipResponse">
+    <part name="parameters" element="tns:GetDistributionListMembershipResponse"/>
+  </message>
+
+  <message name="getDistributionListRequest">
+    <part name="parameters" element="tns:GetDistributionListRequest"/>
+  </message>
+  <message name="getDistributionListResponse">
+    <part name="parameters" element="tns:GetDistributionListResponse"/>
   </message>
 
   <message name="getDomainInfoRequest">
@@ -267,6 +372,13 @@
     <part name="parameters" element="tns:GetServiceStatusResponse"/>
   </message>
 
+  <message name="getVolumeRequest">
+    <part name="parameters" element="tns:GetVolumeRequest"/>
+  </message>
+  <message name="getVolumeResponse">
+    <part name="parameters" element="tns:GetVolumeResponse"/>
+  </message>
+
   <message name="modifyAccountRequest">
     <part name="parameters" element="tns:ModifyAccountRequest"/>
   </message>
@@ -288,6 +400,13 @@
     <part name="parameters" element="tns:ModifyCosResponse"/>
   </message>
 
+  <message name="modifyDistributionListRequest">
+    <part name="parameters" element="tns:ModifyDistributionListRequest"/>
+  </message>
+  <message name="modifyDistributionListResponse">
+    <part name="parameters" element="tns:ModifyDistributionListResponse"/>
+  </message>
+
   <message name="modifyDomainRequest">
     <part name="parameters" element="tns:ModifyDomainRequest"/>
   </message>
@@ -302,6 +421,13 @@
     <part name="parameters" element="tns:ModifyServerResponse"/>
   </message>
 
+  <message name="modifyVolumeRequest">
+    <part name="parameters" element="tns:ModifyVolumeRequest"/>
+  </message>
+  <message name="modifyVolumeResponse">
+    <part name="parameters" element="tns:ModifyVolumeResponse"/>
+  </message>
+
   <message name="noOpRequest">
     <part name="parameters" element="tns:NoOpRequest"/>
   </message>
@@ -314,6 +440,13 @@
   </message>
   <message name="pingResponse">
     <part name="parameters" element="tns:PingResponse"/>
+  </message>
+
+  <message name="purgeMessagesRequest">
+    <part name="parameters" element="tns:PurgeMessagesRequest"/>
+  </message>
+  <message name="purgeMessagesResponse">
+    <part name="parameters" element="tns:PurgeMessagesResponse"/>
   </message>
 
   <message name="recalculateMailboxCountsRequest">
@@ -337,6 +470,20 @@
     <part name="parameters" element="tns:RemoveAccountAliasResponse"/>
   </message>
 
+  <message name="removeDistributionListAliasRequest">
+    <part name="parameters" element="tns:RemoveDistributionListAliasRequest"/>
+  </message>
+  <message name="removeDistributionListAliasResponse">
+    <part name="parameters" element="tns:RemoveDistributionListAliasResponse"/>
+  </message>
+
+  <message name="removeDistributionListMemberRequest">
+    <part name="parameters" element="tns:RemoveDistributionListMemberRequest"/>
+  </message>
+  <message name="removeDistributionListMemberResponse">
+    <part name="parameters" element="tns:RemoveDistributionListMemberResponse"/>
+  </message>
+
   <message name="renameAccountRequest">
     <part name="parameters" element="tns:RenameAccountRequest"/>
   </message>
@@ -351,11 +498,25 @@
     <part name="parameters" element="tns:RenameCosResponse"/>
   </message>
 
+  <message name="renameDistributionListRequest">
+    <part name="parameters" element="tns:RenameDistributionListRequest"/>
+  </message>
+  <message name="renameDistributionListResponse">
+    <part name="parameters" element="tns:RenameDistributionListResponse"/>
+  </message>
+
   <message name="searchDirectoryRequest">
     <part name="parameters" element="tns:SearchDirectoryRequest"/>
   </message>
   <message name="searchDirectoryResponse">
     <part name="parameters" element="tns:SearchDirectoryResponse"/>
+  </message>
+
+  <message name="setCurrentVolumeRequest">
+    <part name="parameters" element="tns:SetCurrentVolumeRequest"/>
+  </message>
+  <message name="setCurrentVolumeResponse">
+    <part name="parameters" element="tns:SetCurrentVolumeResponse"/>
   </message>
 
   <message name="setPasswordRequest">
@@ -374,13 +535,37 @@
       <input message="tns:addAccountAliasRequest"/>
       <output message="tns:addAccountAliasResponse"/>
     </operation>
+    <operation name="addDistributionListAliasRequest">
+      <input message="tns:addDistributionListAliasRequest"/>
+      <output message="tns:addDistributionListAliasResponse"/>
+    </operation>
+    <operation name="addDistributionListMemberRequest">
+      <input message="tns:addDistributionListMemberRequest"/>
+      <output message="tns:addDistributionListMemberResponse"/>
+    </operation>
     <operation name="authRequest">
       <input message="tns:authRequest"/>
       <output message="tns:authResponse"/>
     </operation>
+    <operation name="checkAuthConfigRequest">
+      <input message="tns:checkAuthConfigRequest"/>
+      <output message="tns:checkAuthConfigResponse"/>
+    </operation>
+    <operation name="checkDomainMXRecordRequest">
+      <input message="tns:checkDomainMXRecordRequest"/>
+      <output message="tns:checkDomainMXRecordResponse"/>
+    </operation>
+    <operation name="checkGalConfigRequest">
+      <input message="tns:checkGalConfigRequest"/>
+      <output message="tns:checkGalConfigResponse"/>
+    </operation>
     <operation name="checkHealthRequest">
       <input message="tns:checkHealthRequest"/>
       <output message="tns:checkHealthResponse"/>
+    </operation>
+    <operation name="checkHostnameResolveRequest">
+      <input message="tns:checkHostnameResolveRequest"/>
+      <output message="tns:checkHostnameResolveResponse"/>
     </operation>
     <operation name="checkPasswordStrengthRequest">
       <input message="tns:checkPasswordStrengthRequest"/>
@@ -402,6 +587,10 @@
       <input message="tns:createCosRequest"/>
       <output message="tns:createCosResponse"/>
     </operation>
+    <operation name="createDistributionListRequest">
+      <input message="tns:createDistributionListRequest"/>
+      <output message="tns:createDistributionListResponse"/>
+    </operation>
     <operation name="createDomainRequest">
       <input message="tns:createDomainRequest"/>
       <output message="tns:createDomainResponse"/>
@@ -409,6 +598,10 @@
     <operation name="createServerRequest">
       <input message="tns:createServerRequest"/>
       <output message="tns:createServerResponse"/>
+    </operation>
+    <operation name="createVolumeRequest">
+      <input message="tns:createVolumeRequest"/>
+      <output message="tns:createVolumeResponse"/>
     </operation>
     <operation name="delegateAuthRequest">
       <input message="tns:delegateAuthRequest"/>
@@ -422,6 +615,10 @@
       <input message="tns:deleteCosRequest"/>
       <output message="tns:deleteCosResponse"/>
     </operation>
+    <operation name="deleteDistributionListRequest">
+      <input message="tns:deleteDistributionListRequest"/>
+      <output message="tns:deleteDistributionListResponse"/>
+    </operation>
     <operation name="deleteDomainRequest">
       <input message="tns:deleteDomainRequest"/>
       <output message="tns:deleteDomainResponse"/>
@@ -433,6 +630,10 @@
     <operation name="deleteServerRequest">
       <input message="tns:deleteServerRequest"/>
       <output message="tns:deleteServerResponse"/>
+    </operation>
+    <operation name="deleteVolumeRequest">
+      <input message="tns:deleteVolumeRequest"/>
+      <output message="tns:deleteVolumeResponse"/>
     </operation>
     <operation name="flushCacheRequest">
       <input message="tns:flushCacheRequest"/>
@@ -466,6 +667,10 @@
       <input message="tns:getAllCosRequest"/>
       <output message="tns:getAllCosResponse"/>
     </operation>
+    <operation name="getAllDistributionListsRequest">
+      <input message="tns:getAllDistributionListsRequest"/>
+      <output message="tns:getAllDistributionListsResponse"/>
+    </operation>
     <operation name="getAllDomainsRequest">
       <input message="tns:getAllDomainsRequest"/>
       <output message="tns:getAllDomainsResponse"/>
@@ -482,6 +687,10 @@
       <input message="tns:getAllServersRequest"/>
       <output message="tns:getAllServersResponse"/>
     </operation>
+    <operation name="getAllVolumesRequest">
+      <input message="tns:getAllVolumesRequest"/>
+      <output message="tns:getAllVolumesResponse"/>
+    </operation>
     <operation name="getConfigRequest">
       <input message="tns:getConfigRequest"/>
       <output message="tns:getConfigResponse"/>
@@ -489,6 +698,18 @@
     <operation name="getCosRequest">
       <input message="tns:getCosRequest"/>
       <output message="tns:getCosResponse"/>
+    </operation>
+    <operation name="getCurrentVolumesRequest">
+      <input message="tns:getCurrentVolumesRequest"/>
+      <output message="tns:getCurrentVolumesResponse"/>
+    </operation>
+    <operation name="getDistributionListMembershipRequest">
+      <input message="tns:getDistributionListMembershipRequest"/>
+      <output message="tns:getDistributionListMembershipResponse"/>
+    </operation>
+    <operation name="getDistributionListRequest">
+      <input message="tns:getDistributionListRequest"/>
+      <output message="tns:getDistributionListResponse"/>
     </operation>
     <operation name="getDomainInfoRequest">
       <input message="tns:getDomainInfoRequest"/>
@@ -518,6 +739,10 @@
       <input message="tns:getServiceStatusRequest"/>
       <output message="tns:getServiceStatusResponse"/>
     </operation>
+    <operation name="getVolumeRequest">
+      <input message="tns:getVolumeRequest"/>
+      <output message="tns:getVolumeResponse"/>
+    </operation>
     <operation name="modifyAccountRequest">
       <input message="tns:modifyAccountRequest"/>
       <output message="tns:modifyAccountResponse"/>
@@ -530,6 +755,10 @@
       <input message="tns:modifyCosRequest"/>
       <output message="tns:modifyCosResponse"/>
     </operation>
+    <operation name="modifyDistributionListRequest">
+      <input message="tns:modifyDistributionListRequest"/>
+      <output message="tns:modifyDistributionListResponse"/>
+    </operation>
     <operation name="modifyDomainRequest">
       <input message="tns:modifyDomainRequest"/>
       <output message="tns:modifyDomainResponse"/>
@@ -538,6 +767,10 @@
       <input message="tns:modifyServerRequest"/>
       <output message="tns:modifyServerResponse"/>
     </operation>
+    <operation name="modifyVolumeRequest">
+      <input message="tns:modifyVolumeRequest"/>
+      <output message="tns:modifyVolumeResponse"/>
+    </operation>
     <operation name="noOpRequest">
       <input message="tns:noOpRequest"/>
       <output message="tns:noOpResponse"/>
@@ -545,6 +778,10 @@
     <operation name="pingRequest">
       <input message="tns:pingRequest"/>
       <output message="tns:pingResponse"/>
+    </operation>
+    <operation name="purgeMessagesRequest">
+      <input message="tns:purgeMessagesRequest"/>
+      <output message="tns:purgeMessagesResponse"/>
     </operation>
     <operation name="recalculateMailboxCountsRequest">
       <input message="tns:recalculateMailboxCountsRequest"/>
@@ -558,6 +795,14 @@
       <input message="tns:removeAccountAliasRequest"/>
       <output message="tns:removeAccountAliasResponse"/>
     </operation>
+    <operation name="removeDistributionListAliasRequest">
+      <input message="tns:removeDistributionListAliasRequest"/>
+      <output message="tns:removeDistributionListAliasResponse"/>
+    </operation>
+    <operation name="removeDistributionListMemberRequest">
+      <input message="tns:removeDistributionListMemberRequest"/>
+      <output message="tns:removeDistributionListMemberResponse"/>
+    </operation>
     <operation name="renameAccountRequest">
       <input message="tns:renameAccountRequest"/>
       <output message="tns:renameAccountResponse"/>
@@ -566,9 +811,17 @@
       <input message="tns:renameCosRequest"/>
       <output message="tns:renameCosResponse"/>
     </operation>
+    <operation name="renameDistributionListRequest">
+      <input message="tns:renameDistributionListRequest"/>
+      <output message="tns:renameDistributionListResponse"/>
+    </operation>
     <operation name="searchDirectoryRequest">
       <input message="tns:searchDirectoryRequest"/>
       <output message="tns:searchDirectoryResponse"/>
+    </operation>
+    <operation name="setCurrentVolumeRequest">
+      <input message="tns:setCurrentVolumeRequest"/>
+      <output message="tns:setCurrentVolumeResponse"/>
     </operation>
     <operation name="setPasswordRequest">
       <input message="tns:setPasswordRequest"/>
@@ -590,6 +843,28 @@
       </output>
     </operation>
 
+    <operation name="addDistributionListAliasRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/AddDistributionListAlias" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="addDistributionListMemberRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/AddDistributionListMember" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="authRequest">
       <soap:operation soapAction="urn:zimbraAdmin/Auth" style="document"/>
       <input>
@@ -601,8 +876,52 @@
       </output>
     </operation>
 
+    <operation name="checkAuthConfigRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/CheckAuthConfig" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="checkDomainMXRecordRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/CheckDomainMXRecord" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="checkGalConfigRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/CheckGalConfig" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="checkHealthRequest">
       <soap:operation soapAction="urn:zimbraAdmin/CheckHealth" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="checkHostnameResolveRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/CheckHostnameResolve" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -667,6 +986,17 @@
       </output>
     </operation>
 
+    <operation name="createDistributionListRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/CreateDistributionList" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="createDomainRequest">
       <soap:operation soapAction="urn:zimbraAdmin/CreateDomain" style="document"/>
       <input>
@@ -680,6 +1010,17 @@
 
     <operation name="createServerRequest">
       <soap:operation soapAction="urn:zimbraAdmin/CreateServer" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="createVolumeRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/CreateVolume" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -722,6 +1063,17 @@
       </output>
     </operation>
 
+    <operation name="deleteDistributionListRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/DeleteDistributionList" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="deleteDomainRequest">
       <soap:operation soapAction="urn:zimbraAdmin/DeleteDomain" style="document"/>
       <input>
@@ -746,6 +1098,17 @@
 
     <operation name="deleteServerRequest">
       <soap:operation soapAction="urn:zimbraAdmin/DeleteServer" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="deleteVolumeRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/DeleteVolume" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -843,6 +1206,17 @@
       </output>
     </operation>
 
+    <operation name="getAllDistributionListsRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetAllDistributionLists" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="getAllDomainsRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetAllDomains" style="document"/>
       <input>
@@ -887,6 +1261,17 @@
       </output>
     </operation>
 
+    <operation name="getAllVolumesRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetAllVolumes" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="getConfigRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetConfig" style="document"/>
       <input>
@@ -900,6 +1285,39 @@
 
     <operation name="getCosRequest">
       <soap:operation soapAction="urn:zimbraAdmin/GetCos" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getCurrentVolumesRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetCurrentVolumes" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getDistributionListMembershipRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetDistributionListMembership" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="getDistributionListRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetDistributionList" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -986,6 +1404,17 @@
       </output>
     </operation>
 
+    <operation name="getVolumeRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/GetVolume" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="modifyAccountRequest">
       <soap:operation soapAction="urn:zimbraAdmin/ModifyAccount" style="document"/>
       <input>
@@ -1019,6 +1448,17 @@
       </output>
     </operation>
 
+    <operation name="modifyDistributionListRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/ModifyDistributionList" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="modifyDomainRequest">
       <soap:operation soapAction="urn:zimbraAdmin/ModifyDomain" style="document"/>
       <input>
@@ -1041,6 +1481,17 @@
       </output>
     </operation>
 
+    <operation name="modifyVolumeRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/ModifyVolume" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="noOpRequest">
       <soap:operation soapAction="urn:zimbraAdmin/NoOp" style="document"/>
       <input>
@@ -1054,6 +1505,17 @@
 
     <operation name="pingRequest">
       <soap:operation soapAction="urn:zimbraAdmin/Ping" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="purgeMessagesRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/PurgeMessages" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
@@ -1096,6 +1558,28 @@
       </output>
     </operation>
 
+    <operation name="removeDistributionListAliasRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/RemoveDistributionListAlias" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="removeDistributionListMemberRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/RemoveDistributionListMember" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="renameAccountRequest">
       <soap:operation soapAction="urn:zimbraAdmin/RenameAccount" style="document"/>
       <input>
@@ -1118,8 +1602,30 @@
       </output>
     </operation>
 
+    <operation name="renameDistributionListRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/RenameDistributionList" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
     <operation name="searchDirectoryRequest">
       <soap:operation soapAction="urn:zimbraAdmin/SearchDirectory" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+        <soap:header message="tns:soapHdrContext" part="context" use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+
+    <operation name="setCurrentVolumeRequest">
+      <soap:operation soapAction="urn:zimbraAdmin/SetCurrentVolume" style="document"/>
       <input>
         <soap:body use="literal"/>
         <soap:header message="tns:soapHdrContext" part="context" use="literal"/>

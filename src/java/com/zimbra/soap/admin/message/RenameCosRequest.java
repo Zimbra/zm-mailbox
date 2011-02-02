@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -28,16 +28,23 @@ import com.zimbra.common.soap.AdminConstants;
 @XmlType(propOrder = {})
 public class RenameCosRequest {
 
-    @XmlAttribute(name=AdminConstants.E_ID, required=true)
-    private String id;
+    @XmlAttribute(name=AdminConstants.A_ID, required=true)
+    private final String id;
     @XmlAttribute(name=AdminConstants.E_NEW_NAME, required=true)
-    private String newName;
+    private final String newName;
 
-    public RenameCosRequest() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private RenameCosRequest() {
+        this(null, null);
     }
 
-    public void setId(String id) { this.id = id; }
-    public void setNewName(String newName) { this.newName = newName; }
+    public RenameCosRequest(String id, String newName) {
+        this.id = id;
+        this.newName = newName;
+    }
 
     public String getId() { return id; }
     public String getNewName() { return newName; }

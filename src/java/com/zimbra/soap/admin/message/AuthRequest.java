@@ -44,9 +44,13 @@ public class AuthRequest {
     @XmlElement(name=AccountConstants.E_VIRTUAL_HOST, required=false)
     private String virtualHost;
     public AuthRequest() {
+        this((String)null, (String)null);
+    }
+
+    public AuthRequest(String name, String password) {
         this.authToken = null;
-        this.name = null;
-        this.password = null;
+        this.name = name;
+        this.password = password;
         this.account = null;
         this.virtualHost = null;
     }

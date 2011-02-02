@@ -17,33 +17,39 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADD_ACCOUNT_ALIAS_REQUEST)
-public class AddAccountAliasRequest {
+@XmlRootElement(name=AdminConstants.E_CHECK_AUTH_CONFIG_RESPONSE)
+@XmlType(propOrder = {"code", "message", "bindDn"})
+public class CheckAuthConfigResponse {
 
-    @XmlAttribute(name=AdminConstants.E_ID, required=true)
-    private final String id;
-    @XmlAttribute(name=AdminConstants.E_ALIAS, required=true)
-    private final String alias;
+    @XmlElement(name=AdminConstants.E_CODE, required=true)
+    private final String code;
+    @XmlElement(name=AdminConstants.E_MESSAGE, required=false)
+    private final String message;
+    @XmlElement(name=AdminConstants.E_BINDDN, required=true)
+    private final String bindDn;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AddAccountAliasRequest() {
-        this((String)null, (String)null);
+    private CheckAuthConfigResponse() {
+        this(null, null, null);
     }
 
-    public AddAccountAliasRequest(String id, String alias) {
-        this.id = id;
-        this.alias = alias;
+    public CheckAuthConfigResponse(String code, String message, String bindDn) {
+        this.code = code;
+        this.message = message;
+        this.bindDn = bindDn;
     }
 
-    public String getId() { return id; }
-    public String getAlias() { return alias; }
+    public String getCode() { return code; }
+    public String getMessage() { return message; }
+    public String getBindDn() { return bindDn; }
 }

@@ -23,27 +23,27 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADD_ACCOUNT_ALIAS_REQUEST)
-public class AddAccountAliasRequest {
+@XmlRootElement(name=AdminConstants.E_RENAME_DISTRIBUTION_LIST_REQUEST)
+public class RenameDistributionListRequest {
 
     @XmlAttribute(name=AdminConstants.E_ID, required=true)
     private final String id;
-    @XmlAttribute(name=AdminConstants.E_ALIAS, required=true)
-    private final String alias;
+    @XmlAttribute(name=AdminConstants.E_NEW_NAME, required=true)
+    private final String newName;
 
     /**
      * no-argument constructor wanted by JAXB
      */
-    @SuppressWarnings("unused")
-    private AddAccountAliasRequest() {
+     @SuppressWarnings("unused")
+    private RenameDistributionListRequest() {
         this((String)null, (String)null);
     }
 
-    public AddAccountAliasRequest(String id, String alias) {
+    public RenameDistributionListRequest(String id, String newName) {
         this.id = id;
-        this.alias = alias;
+        this.newName = newName;
     }
 
     public String getId() { return id; }
-    public String getAlias() { return alias; }
+    public String getNewName() { return newName; }
 }

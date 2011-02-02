@@ -29,18 +29,23 @@ import com.zimbra.common.soap.AdminConstants;
 public class SetPasswordRequest {
 
     @XmlAttribute(name=AdminConstants.E_ID, required=true)
-    private String id;
+    private final String id;
     @XmlAttribute(name=AdminConstants.E_NEW_PASSWORD, required=true)
-    private String newPassword;
+    private final String newPassword;
 
+    /**
+     * no-argument constructor wanted by JAXB
+     */
     public SetPasswordRequest() {
+        this(null, null);
     }
 
-    public void setId(String id) { this.id = id; }
-    public void setNewPassword(String newPassword) {
+    public SetPasswordRequest(String id, String newPassword) {
+        this.id = id;
         this.newPassword = newPassword;
     }
 
     public String getId() { return id; }
     public String getNewPassword() { return newPassword; }
+
 }

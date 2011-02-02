@@ -17,16 +17,29 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_SET_PASSWORD_RESPONSE)
-@XmlType(propOrder = {})
 public class SetPasswordResponse {
 
-    public SetPasswordResponse() {
+    @XmlElement(name=AdminConstants.E_MESSAGE, required=false)
+    private final String message;
+
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private SetPasswordResponse() {
+        this(null);
     }
+
+    public SetPasswordResponse(String message) {
+        this.message = message;
+    }
+
+    public String getMessage() { return message; }
 }

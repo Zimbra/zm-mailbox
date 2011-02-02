@@ -17,33 +17,30 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.DomainSelector;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADD_ACCOUNT_ALIAS_REQUEST)
-public class AddAccountAliasRequest {
+@XmlRootElement(name=AdminConstants.E_CHECK_DOMAIN_MX_RECORD_REQUEST)
+public class CheckDomainMXRecordRequest {
 
-    @XmlAttribute(name=AdminConstants.E_ID, required=true)
-    private final String id;
-    @XmlAttribute(name=AdminConstants.E_ALIAS, required=true)
-    private final String alias;
+    @XmlElement(name=AdminConstants.E_DOMAIN, required=false)
+    private final DomainSelector domain;
 
     /**
      * no-argument constructor wanted by JAXB
      */
-    @SuppressWarnings("unused")
-    private AddAccountAliasRequest() {
-        this((String)null, (String)null);
+     @SuppressWarnings("unused")
+    private CheckDomainMXRecordRequest() {
+        this((DomainSelector)null);
     }
 
-    public AddAccountAliasRequest(String id, String alias) {
-        this.id = id;
-        this.alias = alias;
+    public CheckDomainMXRecordRequest(DomainSelector domain) {
+        this.domain = domain;
     }
 
-    public String getId() { return id; }
-    public String getAlias() { return alias; }
+    public DomainSelector getDomain() { return domain; }
 }

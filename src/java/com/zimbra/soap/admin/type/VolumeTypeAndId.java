@@ -13,37 +13,35 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.admin.type;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADD_ACCOUNT_ALIAS_REQUEST)
-public class AddAccountAliasRequest {
+public class VolumeTypeAndId {
 
-    @XmlAttribute(name=AdminConstants.E_ID, required=true)
-    private final String id;
-    @XmlAttribute(name=AdminConstants.E_ALIAS, required=true)
-    private final String alias;
+    @XmlAttribute(name=AdminConstants.A_VOLUME_TYPE, required=true)
+    short volType;
+    @XmlAttribute(name=AdminConstants.A_ID, required=true)
+    short id;
 
     /**
      * no-argument constructor wanted by JAXB
      */
-    @SuppressWarnings("unused")
-    private AddAccountAliasRequest() {
-        this((String)null, (String)null);
+     @SuppressWarnings("unused")
+    private VolumeTypeAndId() {
+        this((short)0, (short)-1);
     }
 
-    public AddAccountAliasRequest(String id, String alias) {
+    public VolumeTypeAndId(short volType, short id) {
+        this.volType = volType;
         this.id = id;
-        this.alias = alias;
     }
 
-    public String getId() { return id; }
-    public String getAlias() { return alias; }
+    public short getVolType() { return volType; }
+    public short getId() { return id; }
 }

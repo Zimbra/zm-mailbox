@@ -13,37 +13,37 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.admin.type;
+
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlValue;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADD_ACCOUNT_ALIAS_REQUEST)
-public class AddAccountAliasRequest {
+public class LimitedQuery {
 
-    @XmlAttribute(name=AdminConstants.E_ID, required=true)
-    private final String id;
-    @XmlAttribute(name=AdminConstants.E_ALIAS, required=true)
-    private final String alias;
+    @XmlValue private final String text;
+    @XmlAttribute(name=AdminConstants.A_LIMIT)
+    private final Long limit;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AddAccountAliasRequest() {
-        this((String)null, (String)null);
+    private LimitedQuery() {
+        this((String) null, (Long) null);
     }
 
-    public AddAccountAliasRequest(String id, String alias) {
-        this.id = id;
-        this.alias = alias;
+    public LimitedQuery(String text, Long limit) {
+        this.text = text;
+        this.limit = limit;
     }
 
-    public String getId() { return id; }
-    public String getAlias() { return alias; }
+    public String getText() { return text; }
+    public Long getLimit() { return limit; }
 }

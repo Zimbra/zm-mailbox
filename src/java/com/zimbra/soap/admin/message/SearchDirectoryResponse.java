@@ -69,6 +69,14 @@ public class SearchDirectoryResponse {
         return this;
     }
 
+    public void setMore(boolean more) {
+        this.more = more;
+    }
+
+    public void setSearchTotal(long searchTotal) {
+        this.searchTotal = searchTotal;
+    }
+
     public SearchDirectoryResponse addEntry(AdminObjectInfo entry) {
         entries.add(entry);
         return this;
@@ -78,15 +86,60 @@ public class SearchDirectoryResponse {
         return Collections.unmodifiableList(entries);
     }
 
-    public void setMore(boolean more) {
-        this.more = more;
-    }
-
-    public void setSearchTotal(long searchTotal) {
-        this.searchTotal = searchTotal;
-    }
-
     public long getSearchTotal() { return searchTotal; }
     public boolean isMore() { return more; }
 
+    public List<CalendarResourceInfo> getCalendarResources() {
+        List<CalendarResourceInfo> subset = Lists.newArrayList();
+        for (AdminObjectInfo entry : entries) {
+            if (entry instanceof CalendarResourceInfo)
+                subset.add((CalendarResourceInfo) entry);
+        }
+        return Collections.unmodifiableList(subset);
+    }
+
+    public List<DistributionListInfo> getDistributionLists() {
+        List<DistributionListInfo> subset = Lists.newArrayList();
+        for (AdminObjectInfo entry : entries) {
+            if (entry instanceof DistributionListInfo)
+                subset.add((DistributionListInfo) entry);
+        }
+        return Collections.unmodifiableList(subset);
+    }
+
+    public List<AliasInfo> getAliases() {
+        List<AliasInfo> subset = Lists.newArrayList();
+        for (AdminObjectInfo entry : entries) {
+            if (entry instanceof AliasInfo)
+                subset.add((AliasInfo) entry);
+        }
+        return Collections.unmodifiableList(subset);
+    }
+
+    public List<AccountInfo> getAccounts() {
+        List<AccountInfo> subset = Lists.newArrayList();
+        for (AdminObjectInfo entry : entries) {
+            if (entry instanceof AccountInfo)
+                subset.add((AccountInfo) entry);
+        }
+        return Collections.unmodifiableList(subset);
+    }
+
+    public List<DomainInfo> getDomains() {
+        List<DomainInfo> subset = Lists.newArrayList();
+        for (AdminObjectInfo entry : entries) {
+            if (entry instanceof DomainInfo)
+                subset.add((DomainInfo) entry);
+        }
+        return Collections.unmodifiableList(subset);
+    }
+
+    public List<CosInfo> getCOSes() {
+        List<CosInfo> subset = Lists.newArrayList();
+        for (AdminObjectInfo entry : entries) {
+            if (entry instanceof CosInfo)
+                subset.add((CosInfo) entry);
+        }
+        return Collections.unmodifiableList(subset);
+    }
 }

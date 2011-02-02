@@ -33,11 +33,16 @@ public class CheckPasswordStrengthRequest {
     @XmlAttribute(name=AdminConstants.E_PASSWORD, required=true)
     private String password;
 
+    /**
+     * no-argument constructor wanted by JAXB
+     */
     public CheckPasswordStrengthRequest() {
     }
 
-    public void setId(String id) { this.id = id; }
-    public void setPassword(String password) { this.password = password; }
+    public CheckPasswordStrengthRequest(String id, String password) {
+        this.id = id; 
+        this.password = password;
+    }
 
     public String getId() { return id; }
     public String getPassword() { return password; }

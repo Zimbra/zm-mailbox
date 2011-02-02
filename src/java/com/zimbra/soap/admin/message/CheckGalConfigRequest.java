@@ -22,27 +22,32 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.CacheSelector;
+import com.zimbra.soap.admin.type.AdminAttrsImpl;
+import com.zimbra.soap.admin.type.LimitedQuery;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_FLUSH_CACHE_REQUEST)
-@XmlType(propOrder = {})
-public class FlushCacheRequest {
+@XmlRootElement(name=AdminConstants.E_CHECK_GAL_CONFIG_REQUEST)
+@XmlType(propOrder = {"query", "action"})
+public class CheckGalConfigRequest extends AdminAttrsImpl {
 
-    @XmlElement(name=AdminConstants.E_CACHE, required=false)
-    private final CacheSelector cache;
+    @XmlElement(name=AdminConstants.E_QUERY)
+    private LimitedQuery query;
+    @XmlElement(name=AdminConstants.E_ACTION)
+    private String action;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private FlushCacheRequest() {
-        this((CacheSelector) null);
+    public CheckGalConfigRequest() {
+        this((LimitedQuery)null, (String)null);
     }
 
-    public FlushCacheRequest(CacheSelector cache) {
-        this.cache = cache;
+    public CheckGalConfigRequest(LimitedQuery query, String action) {
+        this.query = query;
+        this.action = action;
     }
 
-    public CacheSelector getCache() { return cache; }
+    public void setQuery(LimitedQuery query) { this.query = query; }
+
+    public LimitedQuery getQuery() { return query; }
+    public void setAction(String action) { this.action = action; }
+
+    public String getAction() { return action; }
 }

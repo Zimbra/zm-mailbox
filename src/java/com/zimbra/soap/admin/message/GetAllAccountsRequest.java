@@ -36,6 +36,7 @@ public class GetAllAccountsRequest {
     private DomainSelector domain;
 
     public GetAllAccountsRequest() {
+        this(null, null);
     }
 
     public GetAllAccountsRequest(ServerSelector server, DomainSelector domain) {

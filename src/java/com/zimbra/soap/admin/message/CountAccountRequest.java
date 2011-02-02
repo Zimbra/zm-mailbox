@@ -30,12 +30,17 @@ import com.zimbra.soap.admin.type.DomainSelector;
 public class CountAccountRequest {
 
     @XmlElement(name=AdminConstants.E_DOMAIN, required=false)
-    private DomainSelector domain;
+    private final DomainSelector domain;
 
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
     public CountAccountRequest() {
+        this(null);
     }
 
-    public void setDomain(DomainSelector domain) {
+    public CountAccountRequest(DomainSelector domain) {
         this.domain = domain;
     }
 

@@ -17,33 +17,35 @@ package com.zimbra.soap.admin.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADD_ACCOUNT_ALIAS_REQUEST)
-public class AddAccountAliasRequest {
+@XmlRootElement(name=AdminConstants.E_CHECK_HOSTNAME_RESOLVE_RESPONSE)
+@XmlType(propOrder = {"code", "message"})
+public class CheckHostnameResolveResponse {
 
-    @XmlAttribute(name=AdminConstants.E_ID, required=true)
-    private final String id;
-    @XmlAttribute(name=AdminConstants.E_ALIAS, required=true)
-    private final String alias;
+    @XmlElement(name=AdminConstants.E_CODE, required=true)
+    private String code;
+    @XmlElement(name=AdminConstants.E_MESSAGE, required=false)
+    private String message;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AddAccountAliasRequest() {
+    private CheckHostnameResolveResponse() {
         this((String)null, (String)null);
     }
 
-    public AddAccountAliasRequest(String id, String alias) {
-        this.id = id;
-        this.alias = alias;
+    public CheckHostnameResolveResponse(String code, String message) {
+        this.code = code;
+        this.message = message;
     }
 
-    public String getId() { return id; }
-    public String getAlias() { return alias; }
+    public String getCode() { return code; }
+    public String getMessage() { return message; }
 }

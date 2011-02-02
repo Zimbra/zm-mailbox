@@ -15,36 +15,45 @@
 
 package com.zimbra.soap.admin.message;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.collect.Lists;
+
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.MailboxByAccountIdSelector;
+import com.zimbra.soap.admin.type.MailboxWithMailboxId;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_DELETE_MAILBOX_REQUEST)
-public class DeleteMailboxRequest {
+@XmlRootElement(name=AdminConstants.E_PURGE_MESSAGES_RESPONSE)
+public class PurgeMessagesResponse {
 
     @XmlElement(name=AdminConstants.E_MAILBOX, required=false)
-    private final MailboxByAccountIdSelector mbox;
+    private List <MailboxWithMailboxId> mailboxes = Lists.newArrayList();
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private DeleteMailboxRequest() {
-        this((MailboxByAccountIdSelector) null);
+    public PurgeMessagesResponse() {
     }
 
-    public DeleteMailboxRequest(String accountId) {
-        this(new MailboxByAccountIdSelector(accountId));
+    public PurgeMessagesResponse setMailboxes(
+            Collection<MailboxWithMailboxId> mailboxes) {
+        this.mailboxes.clear();
+        if (mailboxes != null) {
+            this.mailboxes.addAll(mailboxes);
+        }
+        return this;
     }
 
-    public DeleteMailboxRequest(MailboxByAccountIdSelector mbox) {
-        this.mbox = mbox;
+    public PurgeMessagesResponse addMailbox(MailboxWithMailboxId attr) {
+        mailboxes.add(attr);
+        return this;
     }
 
-    public MailboxByAccountIdSelector getMbox() { return mbox; }
+    public List<MailboxWithMailboxId> getMailboxes() {
+        return Collections.unmodifiableList(mailboxes);
+    }
 }

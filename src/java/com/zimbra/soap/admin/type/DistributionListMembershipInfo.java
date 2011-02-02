@@ -13,37 +13,44 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.admin.type;
 
+import java.util.Collection;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADD_ACCOUNT_ALIAS_REQUEST)
-public class AddAccountAliasRequest {
+public class DistributionListMembershipInfo {
 
-    @XmlAttribute(name=AdminConstants.E_ID, required=true)
+    @XmlAttribute(name=AdminConstants.A_ID, required=true)
     private final String id;
-    @XmlAttribute(name=AdminConstants.E_ALIAS, required=true)
-    private final String alias;
-
+    @XmlAttribute(name=AdminConstants.A_NAME, required=true)
+    private final String name;
+    @XmlAttribute(name=AdminConstants.A_VIA, required=false)
+    private final String via;
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AddAccountAliasRequest() {
-        this((String)null, (String)null);
+    private DistributionListMembershipInfo() {
+        this(null, null, null);
     }
 
-    public AddAccountAliasRequest(String id, String alias) {
+    public DistributionListMembershipInfo(String id, String name) {
+        this(id, name, null);
+    }
+
+    public DistributionListMembershipInfo(String id, String name, String via) {
         this.id = id;
-        this.alias = alias;
+        this.name = name;
+        this.via = via;
     }
 
     public String getId() { return id; }
-    public String getAlias() { return alias; }
+    public String getName() { return name; }
+    public String getVia() { return via; }
 }

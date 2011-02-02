@@ -28,16 +28,23 @@ import com.zimbra.common.soap.AdminConstants;
 @XmlType(propOrder = {})
 public class RemoveAccountAliasRequest {
 
-    @XmlAttribute(name=AdminConstants.E_ID, required=true)
-    private String id;
+    @XmlAttribute(name=AdminConstants.E_ID, required=false)
+    private final String id;
     @XmlAttribute(name=AdminConstants.E_ALIAS, required=true)
-    private String alias;
+    private final String alias;
 
-    public RemoveAccountAliasRequest() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+     @SuppressWarnings("unused")
+    private RemoveAccountAliasRequest() {
+        this(null, null);
     }
 
-    public void setId(String id) { this.id = id; }
-    public void setAlias(String alias) { this.alias = alias; }
+    public RemoveAccountAliasRequest(String id, String alias) {
+        this.id = id;
+        this.alias = alias;
+    }
 
     public String getId() { return id; }
     public String getAlias() { return alias; }

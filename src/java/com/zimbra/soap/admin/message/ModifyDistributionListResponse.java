@@ -18,32 +18,28 @@ package com.zimbra.soap.admin.message;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.DistributionListInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADD_ACCOUNT_ALIAS_REQUEST)
-public class AddAccountAliasRequest {
+@XmlRootElement(name=AdminConstants.E_MODIFY_DISTRIBUTION_LIST_RESPONSE)
+public class ModifyDistributionListResponse {
 
-    @XmlAttribute(name=AdminConstants.E_ID, required=true)
-    private final String id;
-    @XmlAttribute(name=AdminConstants.E_ALIAS, required=true)
-    private final String alias;
+    @XmlElement(name=AdminConstants.E_DL, required=false)
+    DistributionListInfo dl;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private AddAccountAliasRequest() {
-        this((String)null, (String)null);
+    public ModifyDistributionListResponse() {
+        this((DistributionListInfo)null);
     }
 
-    public AddAccountAliasRequest(String id, String alias) {
-        this.id = id;
-        this.alias = alias;
+    public ModifyDistributionListResponse(DistributionListInfo dl) {
+        setDl(dl);
     }
 
-    public String getId() { return id; }
-    public String getAlias() { return alias; }
+    public void setDl(DistributionListInfo dl) { this.dl = dl; }
+
+    public DistributionListInfo getDl() { return dl; }
 }

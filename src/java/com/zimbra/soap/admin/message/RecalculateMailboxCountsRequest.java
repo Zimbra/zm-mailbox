@@ -30,7 +30,7 @@ public class RecalculateMailboxCountsRequest {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    public RecalculateMailboxCountsRequest() {
+    private RecalculateMailboxCountsRequest() {
         this(null);
     }
 

@@ -21,29 +21,28 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.AdminAttrsImpl;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADD_ACCOUNT_ALIAS_REQUEST)
-public class AddAccountAliasRequest {
+@XmlRootElement(name=AdminConstants.E_CHECK_AUTH_CONFIG_REQUEST)
+public class CheckAuthConfigRequest extends AdminAttrsImpl {
 
-    @XmlAttribute(name=AdminConstants.E_ID, required=true)
-    private final String id;
-    @XmlAttribute(name=AdminConstants.E_ALIAS, required=true)
-    private final String alias;
+    @XmlAttribute(name=AdminConstants.E_NAME, required=true)
+    private String name;
+    @XmlAttribute(name=AdminConstants.E_PASSWORD, required=true)
+    private String password;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private AddAccountAliasRequest() {
-        this((String)null, (String)null);
+    public CheckAuthConfigRequest() {
+        this(null, null);
     }
 
-    public AddAccountAliasRequest(String id, String alias) {
-        this.id = id;
-        this.alias = alias;
+    public CheckAuthConfigRequest(String name, String password) {
+        this.name = name;
+        this.password = password;
     }
 
-    public String getId() { return id; }
-    public String getAlias() { return alias; }
+    public void setName(String name) { this.name = name; }
+    public void setPassword(String password) { this.password = password; }
+    public String getName() { return name; }
+    public String getPassword() { return password; }
 }

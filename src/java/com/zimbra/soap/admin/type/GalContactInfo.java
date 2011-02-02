@@ -13,37 +13,28 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.admin.type;
+
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_ADD_ACCOUNT_ALIAS_REQUEST)
-public class AddAccountAliasRequest {
+public class GalContactInfo extends AdminAttrsImpl {
 
-    @XmlAttribute(name=AdminConstants.E_ID, required=true)
-    private final String id;
-    @XmlAttribute(name=AdminConstants.E_ALIAS, required=true)
-    private final String alias;
+    @XmlAttribute(name=AdminConstants.A_ID, required=true)
+    private String id;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private AddAccountAliasRequest() {
-        this((String)null, (String)null);
+    public GalContactInfo() {
+        this((String) null);
     }
 
-    public AddAccountAliasRequest(String id, String alias) {
-        this.id = id;
-        this.alias = alias;
-    }
+    public GalContactInfo(String id) { this.id = id; }
 
+    public void setId(String id) { this.id = id; }
     public String getId() { return id; }
-    public String getAlias() { return alias; }
 }
