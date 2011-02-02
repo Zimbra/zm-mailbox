@@ -915,7 +915,7 @@ public class Message extends MailItem {
                         Invite invCalItem = firstCalItem.getInvite(invites.get(0).getRecurId());
                         if (invCalItem == null)
                             invCalItem = firstCalItem.getDefaultInviteOrNull();
-                        if (invCalItem != null) {
+                        if (invCalItem != null && invCalItem.isOrganizer()) {
                             ZOrganizer org = invCalItem.getOrganizer();
                             if (org.hasSentBy()) {
                                 forwardTo = new String[] { org.getSentBy() };
