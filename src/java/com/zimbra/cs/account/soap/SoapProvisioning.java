@@ -976,6 +976,13 @@ public class SoapProvisioning extends Provisioning {
         return new SoapConfig(invoke(req), this);
     }
     
+    @Override
+    public Config getConfig(String attr) throws ServiceException {
+        XMLElement req = new XMLElement(AdminConstants.GET_CONFIG_REQUEST);
+        req.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, attr);
+        return new SoapConfig(invoke(req), this);
+    }
+    
     public GlobalGrant getGlobalGrant() throws ServiceException {
         throw ServiceException.FAILURE("not supported", null);
     }
