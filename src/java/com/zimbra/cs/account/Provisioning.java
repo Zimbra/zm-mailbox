@@ -564,6 +564,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract boolean healthCheck() throws ServiceException;
 
     public abstract Config getConfig() throws ServiceException;
+    
+    public Config getConfig(String attr) throws ServiceException {
+        return getConfig();
+    }
 
     public abstract GlobalGrant getGlobalGrant() throws ServiceException;
 

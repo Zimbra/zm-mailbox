@@ -1693,12 +1693,9 @@ public class ProvUtil implements HttpDebugListener {
 
     private void doGetConfig(String[] args) throws ServiceException {
         String key = args[1];
-        String value[] = mProv.getConfig().getMultiAttr(key);
-        if (value != null && value.length != 0) {
-            Map<String, Object> map = new HashMap<String, Object>();
-            map.put(key, value);
-            dumpAttrs(map, null);
-        }
+        Set<String> needAttr = new HashSet<String>();
+        needAttr.add(key);
+        dumpAttrs(mProv.getConfig(key).getAttrs(), needAttr);
     }
 
     /*

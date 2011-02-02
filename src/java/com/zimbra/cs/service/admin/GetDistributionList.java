@@ -17,6 +17,7 @@ package com.zimbra.cs.service.admin;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -123,40 +124,15 @@ public class GetDistributionList extends AdminDocumentHandler {
         Element distributionList = e.addElement(AdminConstants.E_DL);
         distributionList.addAttribute(AdminConstants.A_NAME, d.getUnicodeName());
         distributionList.addAttribute(AdminConstants.A_ID,d.getId());
-        encodeDistributionListAttrs(distributionList, d.getUnicodeAttrs(), hideZMFA, reqAttrs, attrRightChecker);
-        return distributionList;
-    }
-
-    static void encodeDistributionListAttrs(Element e, Map attrs, boolean hideZMFA, Set<String> reqAttrs, AttrRightChecker attrRightChecker) 
-    throws ServiceException {
-        AttributeManager attrMgr = AttributeManager.getInstance();
         
-        for (Iterator mit = attrs.entrySet().iterator(); mit.hasNext(); ) {
-            Map.Entry entry = (Entry) mit.next();
-            String name = (String) entry.getKey();
-            Object value = entry.getValue();
-           
-            // Hide the postfix lookup table attr - should we though?
-            if (hideZMFA && name.equals(Provisioning.A_zimbraMailForwardingAddress)) {
-                continue;
-            }
-            
-            // only return requested attrs
-            if (reqAttrs != null && !reqAttrs.contains(name))
-                continue;
-            
-            boolean allowed = attrRightChecker == null ? true : attrRightChecker.allowAttr(name);
-            
-            IDNType idnType = AttributeManager.idnType(attrMgr, name);
-            
-            if (value instanceof String[]) {
-                String sv[] = (String[]) value;
-                for (int i = 0; i < sv.length; i++)
-                    ToXML.encodeAttr(e, name, sv[i], AdminConstants.E_A, AdminConstants.A_N, idnType, allowed);
-            } else if (value instanceof String) {
-                ToXML.encodeAttr(e, name, (String)value, AdminConstants.E_A, AdminConstants.A_N, idnType, allowed);
-            } 
+        Set<String> hideAttrs = null;
+        if (hideZMFA) {
+            hideAttrs = new HashSet<String>();
+            hideAttrs.add(Provisioning.A_zimbraMailForwardingAddress);
         }
+        ToXML.encodeAttrs(distributionList, d.getUnicodeAttrs(), AdminConstants.A_N, reqAttrs, hideAttrs, attrRightChecker);
+        
+        return distributionList;
     }
 
     @Override

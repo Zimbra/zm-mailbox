@@ -15,6 +15,7 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.Iterator;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
@@ -89,7 +90,13 @@ public class ToXML {
         encodeAttrs(e, attrs, AdminConstants.A_N, reqAttrs, attrRightChecker);
     }
     
-    private static void encodeAttrs(Element e, Map attrs, String key, Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
+    public static void encodeAttrs(Element e, Map attrs, String key, 
+            Set<String> reqAttrs, AttrRightChecker attrRightChecker) {
+        encodeAttrs(e, attrs, key, reqAttrs, null, attrRightChecker);
+    }
+    
+    public static void encodeAttrs(Element e, Map attrs, String key, 
+            Set<String> reqAttrs, Set<String> hideAttrs, AttrRightChecker attrRightChecker) {
         AttributeManager attrMgr = null;
         try {
             attrMgr = AttributeManager.getInstance();
@@ -103,16 +110,24 @@ public class ToXML {
             Object value = entry.getValue();
 
             // Never return data source passwords
-            if (name.equalsIgnoreCase(Provisioning.A_zimbraDataSourcePassword))
+            if (name.equalsIgnoreCase(Provisioning.A_zimbraDataSourcePassword)) {
                 continue;
-
-            // Never return password.
-            if (name.equalsIgnoreCase(Provisioning.A_userPassword))
-                value = "VALUE-BLOCKED";
+            }
             
             // only returns requested attrs
-            if (reqAttrs != null && !reqAttrs.contains(name))
+            if (reqAttrs != null && !reqAttrs.contains(name)) {
                 continue;
+            }
+            
+            // do not return attrs hidden by protocol
+            if (hideAttrs != null && hideAttrs.contains(name)) {
+                continue;
+            }
+
+            // Never return password.
+            if (name.equalsIgnoreCase(Provisioning.A_userPassword)) {
+                value = "VALUE-BLOCKED";
+            }
             
             boolean allowed = attrRightChecker == null ? true : attrRightChecker.allowAttr(name);
             

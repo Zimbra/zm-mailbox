@@ -89,6 +89,8 @@ import com.zimbra.soap.admin.message.GetAllDomainsRequest;
 import com.zimbra.soap.admin.message.GetAllDomainsResponse;
 import com.zimbra.soap.admin.message.GetAllServersRequest;
 import com.zimbra.soap.admin.message.GetAllServersResponse;
+import com.zimbra.soap.admin.message.GetConfigRequest;
+import com.zimbra.soap.admin.message.GetConfigResponse;
 import com.zimbra.soap.admin.message.GetCosRequest;
 import com.zimbra.soap.admin.message.GetCosResponse;
 import com.zimbra.soap.admin.message.GetDomainInfoRequest;
@@ -103,6 +105,7 @@ import com.zimbra.soap.admin.message.RecalculateMailboxCountsRequest;
 import com.zimbra.soap.admin.message.RecalculateMailboxCountsResponse;
 import com.zimbra.soap.admin.type.AccountInfo;
 import com.zimbra.soap.admin.type.AccountSelector;
+import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.admin.type.CosInfo;
 import com.zimbra.soap.admin.type.CosSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
@@ -1060,6 +1063,16 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public Config getConfig() throws ServiceException {
         GetAllConfigResponse resp = invokeJaxb(new GetAllConfigRequest());
+        return new SoapConfig(resp, this);
+    }
+    
+    @Override
+    public Config getConfig(String needAttr) throws ServiceException {
+        GetConfigRequest req = new GetConfigRequest();
+        Attr attr = new Attr();
+        attr.setN(needAttr);
+        req.setAttr(attr);
+        GetConfigResponse resp = invokeJaxb(req);
         return new SoapConfig(resp, this);
     }
 

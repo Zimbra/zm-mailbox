@@ -24,6 +24,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.soap.admin.message.GetAllConfigResponse;
+import com.zimbra.soap.admin.message.GetConfigResponse;
 import com.zimbra.soap.admin.type.Attr;
 
 class SoapConfig extends Config implements SoapEntry {
@@ -33,6 +34,11 @@ class SoapConfig extends Config implements SoapEntry {
     }
 
     SoapConfig(GetAllConfigResponse resp, Provisioning provisioning)
+    throws ServiceException {
+        super(Attr.collectionToMap(resp.getAttrs()), provisioning);
+    }
+    
+    SoapConfig(GetConfigResponse resp, Provisioning provisioning)
     throws ServiceException {
         super(Attr.collectionToMap(resp.getAttrs()), provisioning);
     }
