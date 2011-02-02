@@ -58,6 +58,15 @@ final class MemcachedImapCache implements ImapSessionManager.Cache {
         }
     }
 
+    @Override
+    public void remove(String key) {
+        try {
+            map.remove(new ImapMemcachedKey(key));
+        } catch (ServiceException e) {
+            ZimbraLog.imap.warn("Failed to remove from cache", e);
+        }
+    }
+
     private static final class ImapMemcachedKey implements MemcachedKey {
         private final String key;
 
@@ -77,6 +86,7 @@ final class MemcachedImapCache implements ImapSessionManager.Cache {
     }
 
     private static final class ImapMemcachedSerializer implements MemcachedSerializer<ImapFolder> {
+        ImapMemcachedSerializer()  { }
 
         @Override
         public Object serialize(ImapFolder folder) throws ServiceException {

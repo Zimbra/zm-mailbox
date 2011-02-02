@@ -124,4 +124,9 @@ final class DiskImapCache implements ImapSessionManager.Cache {
         }
     }
 
+    @Override
+    public void remove(String key) {
+        File pagefile = new File(CACHE_DIR, key + IMAP_CACHEFILE_SUFFIX);
+        pagefile.delete();
+    }
 }
