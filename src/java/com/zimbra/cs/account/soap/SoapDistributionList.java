@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,6 +16,7 @@
 package com.zimbra.cs.account.soap;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
@@ -25,6 +26,8 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DistributionListBy;
 import com.zimbra.common.soap.Element.XMLElement;
+import com.zimbra.soap.admin.type.Attr;
+import com.zimbra.soap.admin.type.DistributionListInfo;
 
 class SoapDistributionList extends DistributionList implements SoapEntry {
 
@@ -32,9 +35,21 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
         super(name, id, attrs, prov);
     }
 
+    SoapDistributionList(DistributionListInfo dlInfo, Provisioning prov)
+    throws ServiceException {
+        super(dlInfo.getName(), dlInfo.getId(), 
+                Attr.collectionToMap(dlInfo.getAttrList()), prov);
+        addDlm(dlInfo.getMembers(), getRawAttrs());
+    }
+
     SoapDistributionList(Element e, Provisioning prov) throws ServiceException {
         super(e.getAttribute(AdminConstants.A_NAME), e.getAttribute(AdminConstants.A_ID), SoapProvisioning.getAttrs(e), prov);
         addDlm(e, getRawAttrs());
+    }
+
+    private void addDlm(List <String> members, Map<String, Object> attrs) {
+        attrs.put(Provisioning.A_zimbraMailForwardingAddress,
+                members.toArray(new String[members.size()]));
     }
 
     private void addDlm(Element e, Map<String, Object> attrs) {
@@ -42,7 +57,7 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
         for (Element dlm : e.listElements(AdminConstants.E_DLM)) {
             list.add(dlm.getText());
         }
-        attrs.put(Provisioning.A_zimbraMailForwardingAddress, list.toArray(new String[list.size()]));
+        addDlm(list, attrs);
     }
 
     public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {

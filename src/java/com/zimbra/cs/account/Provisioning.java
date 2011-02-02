@@ -33,7 +33,9 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.soap.admin.type.AccountSelector;
+import com.zimbra.soap.admin.type.CacheEntrySelector;
 import com.zimbra.soap.admin.type.CosSelector;
+import com.zimbra.soap.admin.type.DistributionListSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.ServerSelector;
 
@@ -1099,6 +1101,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
             }
         }
 
+        /* Convert to equivalent JAXB object */
+        public static DistributionListSelector.DistributionListBy toJaxb(
+                DistributionListBy provDistributionListBy)
+        throws ServiceException {
+            return DistributionListSelector.DistributionListBy.fromString(
+                    provDistributionListBy.toString());
+        }
     }
 
     public abstract DistributionList get(DistributionListBy keyType, String key) throws ServiceException;
@@ -1932,6 +1941,14 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
         // case must match protocol
         id, name;
+
+        /* Convert to equivalent JAXB object */
+        public static CacheEntrySelector.CacheEntryBy toJaxb(
+                CacheEntryBy provCacheEntryBy)
+        throws ServiceException {
+            return CacheEntrySelector.CacheEntryBy.fromString(
+                    provCacheEntryBy.toString());
+        }
     }
 
     public static class CacheEntry {
