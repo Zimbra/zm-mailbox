@@ -15,6 +15,7 @@
 package com.zimbra.cs.account;
 
 public enum AttributeServerType {
+    all,
     antivirus,
     antispam,
     archiving,

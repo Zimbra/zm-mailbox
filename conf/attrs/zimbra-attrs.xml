@@ -139,6 +139,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   requiresRestart: server(s) need be to restarted after changing this attribute.
                    values are comma-separated if more than one servers need to be restarted.
                    valid servers:
+                        all
                         antivirus
                         antispam
                         archiving
@@ -5376,6 +5377,12 @@ TODO: delete them permerntly from here
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether email features/tab enabled in the web client if it is accessed from the admin console</desc>
 </attr>
+
+<attr id="1171" name="zimbraIPMode" type="enum" value="ipv4,ipv6,both" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="all" since="7.1">
+  <globalConfigValue>both</globalConfigValue>
+  <desc>supported IP mode</desc>
+</attr>
+
 
 </attrs>
 

@@ -40,7 +40,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110131-1350 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110201-2112 */
 
     /**
      * RFC2256: descriptive information
@@ -10633,6 +10633,137 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetHttpSSLNumThreads(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraHttpSSLNumThreads, "");
+        return attrs;
+    }
+
+    /**
+     * supported IP mode
+     *
+     * <p>Valid values: [both, ipv6, ipv4]
+     *
+     * @return zimbraIPMode, or ZAttrProvisioning.IPMode.both if unset and/or has invalid value
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1171)
+    public ZAttrProvisioning.IPMode getIPMode() {
+        try { String v = getAttr(Provisioning.A_zimbraIPMode); return v == null ? ZAttrProvisioning.IPMode.both : ZAttrProvisioning.IPMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.IPMode.both; }
+    }
+
+    /**
+     * supported IP mode
+     *
+     * <p>Valid values: [both, ipv6, ipv4]
+     *
+     * @return zimbraIPMode, or "both" if unset
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1171)
+    public String getIPModeAsString() {
+        return getAttr(Provisioning.A_zimbraIPMode, "both");
+    }
+
+    /**
+     * supported IP mode
+     *
+     * <p>Valid values: [both, ipv6, ipv4]
+     *
+     * @param zimbraIPMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1171)
+    public void setIPMode(ZAttrProvisioning.IPMode zimbraIPMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIPMode, zimbraIPMode.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * supported IP mode
+     *
+     * <p>Valid values: [both, ipv6, ipv4]
+     *
+     * @param zimbraIPMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1171)
+    public Map<String,Object> setIPMode(ZAttrProvisioning.IPMode zimbraIPMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIPMode, zimbraIPMode.toString());
+        return attrs;
+    }
+
+    /**
+     * supported IP mode
+     *
+     * <p>Valid values: [both, ipv6, ipv4]
+     *
+     * @param zimbraIPMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1171)
+    public void setIPModeAsString(String zimbraIPMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIPMode, zimbraIPMode);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * supported IP mode
+     *
+     * <p>Valid values: [both, ipv6, ipv4]
+     *
+     * @param zimbraIPMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1171)
+    public Map<String,Object> setIPModeAsString(String zimbraIPMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIPMode, zimbraIPMode);
+        return attrs;
+    }
+
+    /**
+     * supported IP mode
+     *
+     * <p>Valid values: [both, ipv6, ipv4]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1171)
+    public void unsetIPMode() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIPMode, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * supported IP mode
+     *
+     * <p>Valid values: [both, ipv6, ipv4]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1
+     */
+    @ZAttr(id=1171)
+    public Map<String,Object> unsetIPMode(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIPMode, "");
         return attrs;
     }
 
