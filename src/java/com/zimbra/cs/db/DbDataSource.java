@@ -124,22 +124,42 @@ public class DbDataSource {
             Connection conn = null;
             PreparedStatement stmt = null;
             try {
-                conn = DbPool.getConnection(mbox);
-                StringBuilder sb = new StringBuilder();
-                sb.append("UPDATE ");
-                sb.append(getTableName(mbox));
-                sb.append(" SET folder_id = ?, remote_id = ?, metadata = ? WHERE ");
-                sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
-                sb.append(" item_id = ?");
-                stmt = conn.prepareStatement(sb.toString());
-                int i = 1;
-                stmt.setInt(i++, item.folderId);
-                stmt.setString(i++, item.remoteId);
-                stmt.setString(i++, DbMailItem.checkMetadataLength((item.md == null) ? null : item.md.toString()));
-                i = DbMailItem.setMailboxId(stmt, mbox, i);
-                stmt.setInt(i++, item.itemId);
-                stmt.executeUpdate();
-                conn.commit();
+                if (!Db.supports(Db.Capability.ON_DUPLICATE_KEY) && !hasMapping(ds, item.itemId)) {
+                    //if we need to update due to unique remoteId then itemid isn't going to be the same
+                    conn = DbPool.getConnection(mbox);
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("UPDATE ");
+                    sb.append(getTableName(mbox));
+                    sb.append(" SET folder_id = ?, item_id = ?, metadata = ? WHERE ");
+                    sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
+                    sb.append(" remote_id = ?");
+                    stmt = conn.prepareStatement(sb.toString());
+                    int i = 1;
+                    stmt.setInt(i++, item.folderId);
+                    stmt.setInt(i++, item.itemId);
+                    stmt.setString(i++, DbMailItem.checkMetadataLength((item.md == null) ? null : item.md.toString()));
+                    i = DbMailItem.setMailboxId(stmt, mbox, i);
+                    stmt.setString(i++, item.remoteId);
+                    stmt.executeUpdate();
+                    conn.commit();
+                } else {
+                    conn = DbPool.getConnection(mbox);
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("UPDATE ");
+                    sb.append(getTableName(mbox));
+                    sb.append(" SET folder_id = ?, remote_id = ?, metadata = ? WHERE ");
+                    sb.append(DbMailItem.IN_THIS_MAILBOX_AND);
+                    sb.append(" item_id = ?");
+                    stmt = conn.prepareStatement(sb.toString());
+                    int i = 1;
+                    stmt.setInt(i++, item.folderId);
+                    stmt.setString(i++, item.remoteId);
+                    stmt.setString(i++, DbMailItem.checkMetadataLength((item.md == null) ? null : item.md.toString()));
+                    i = DbMailItem.setMailboxId(stmt, mbox, i);
+                    stmt.setInt(i++, item.itemId);
+                    stmt.executeUpdate();
+                    conn.commit();
+                }
             } catch (SQLException e) {
                 throw ServiceException.FAILURE("Unable to update mapping for dataSource "+ds.getName(), e);
             } finally {

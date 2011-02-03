@@ -80,6 +80,7 @@ class ImapFolderSync {
     private boolean completed;
     private int totalErrors;
     private boolean fullSync;
+    private boolean localDeleted;
 
     private static final Log LOG = ZimbraLog.datasource;
 
@@ -473,8 +474,15 @@ class ImapFolderSync {
             LOG.debug("Local folder '%s' was deleted", tracker.getLocalPath());
             if (deleteRemoteFolder(remoteFolder, tracker.getItemId())) {
                 imapSync.deleteFolderTracker(tracker);
+                tracker = null;
+            } else if (localDeleted) {
+                LOG.error("Unable to delete remote folder, creating local folder with sync off");
+                createLocalFolder(ld);
+                SyncUtil.setSyncEnabled(mailbox, localFolder.getId(), false);
+                localDeleted = false;
+            } else {
+                tracker = null;
             }
-            tracker = null;
         } else if (!localFolder.getPath().equals(tracker.getLocalPath())) {
             // Local folder was renamed
             renameFolder(ld, localFolder.getId());
@@ -1100,6 +1108,7 @@ class ImapFolderSync {
                     }
                 } catch (MailServiceException.NoSuchItemException ex) {
                     // Ignore if local folder has been deleted
+                    localDeleted = true;
                 }
                 // Clear error state in case folder sync reenabled
                 clearError(itemId);
