@@ -96,7 +96,7 @@ public class ZFeatures {
 
     public boolean getSkinChange() { return getBool(Provisioning.A_zimbraFeatureSkinChangeEnabled); }
 
-    public boolean getNotebook() { return getBool(Provisioning.A_zimbraFeatureNotebookEnabled); }
+    public boolean getNotebook() { return false; } //bug:56196 getBool(Provisioning.A_zimbraFeatureNotebookEnabled);
 
     public boolean getBriefcases() { return getBool(Provisioning.A_zimbraFeatureBriefcasesEnabled); }
 
