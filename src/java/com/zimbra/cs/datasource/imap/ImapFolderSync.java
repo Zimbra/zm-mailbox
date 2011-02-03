@@ -634,6 +634,7 @@ class ImapFolderSync {
                 if (msg != null) {
                     try {
                         appender.appendMessage(msg);
+                        localFolder.deleteMessage(id);
                     } catch (Exception e) {
                         syncMessageFailed(id, "Append message failed", e);
                     }
