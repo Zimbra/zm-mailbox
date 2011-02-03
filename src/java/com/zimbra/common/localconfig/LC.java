@@ -472,7 +472,7 @@ public final class LC {
     
     @Supported
     public static final KnownKey gal_group_cache_maxsize_per_domain = KnownKey.newKey(0);
-	
+
     @Supported
     public static final KnownKey gal_group_cache_maxsize_domains = KnownKey.newKey(10);
     
@@ -777,6 +777,7 @@ public final class LC {
     public static final KnownKey zimbra_class_attrmanager = KnownKey.newKey("com.zimbra.cs.account.AttributeManager");
     public static final KnownKey zimbra_class_soapsessionfactory = KnownKey.newKey("com.zimbra.soap.SoapSessionFactory");
     public static final KnownKey zimbra_class_dbconnfactory = KnownKey.newKey("com.zimbra.cs.db.ZimbraConnectionFactory");
+    public static final KnownKey zimbra_class_customproxyselector = KnownKey.newKey(""); //intentionally has no value; set one if u want to use a custom proxy selector 
 
     // XXX REMOVE AND RELEASE NOTE
     public static final KnownKey data_source_trust_self_signed_certs = KnownKey.newKey(false);

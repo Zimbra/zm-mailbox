@@ -14,9 +14,6 @@
  */
 package com.zimbra.common.net;
 
-import com.zimbra.znative.ProxyInfo;
-import com.zimbra.znative.Util;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
@@ -28,13 +25,18 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.znative.ProxyInfo;
+import com.zimbra.znative.Util;
+
 /**
  * Factory class for various ProxySelector types.
  */
 public final class ProxySelectors {
     private static final ProxySelector systemProxySelector;
     private static final ProxySelector nativeProxySelector;
-    private static final ProxySelector defaultProxySelector;
+    private static ProxySelector defaultProxySelector;
 
     static {
         systemProxySelector = ProxySelector.getDefault();
@@ -44,6 +46,16 @@ public final class ProxySelectors {
         } else {
             nativeProxySelector = null;
             defaultProxySelector = new CustomProxySelector(systemProxySelector);
+        }
+        String className = LC.zimbra_class_customproxyselector.value();
+        if (className != null && !className.equals("")) {
+            try {
+                CustomProxySelector selector = (CustomProxySelector) Class.forName(className).newInstance();
+                selector.setDefaultProxySelector(defaultProxySelector);
+                defaultProxySelector = selector;
+            } catch (Exception e) {
+                ZimbraLog.net.error("could not instantiate ConditionalProxySelector interface of class '" + className + "'; defaulting to system proxy settings", e);
+            }
         }
     }
 
@@ -145,10 +157,14 @@ public final class ProxySelectors {
      * invalid proxy results (i.e. invalid port) which works around issues
      * on Linux hosts with incorrect settings.
      */
-    private static class CustomProxySelector extends ProxySelector {
-        private final ProxySelector ps;
+    public static class CustomProxySelector extends ProxySelector {
+        protected ProxySelector ps;
 
-        CustomProxySelector(ProxySelector ps) {
+        protected CustomProxySelector(ProxySelector ps) {
+            this.ps = ps;
+        }
+        
+        protected void setDefaultProxySelector(ProxySelector ps) {
             this.ps = ps;
         }
 
