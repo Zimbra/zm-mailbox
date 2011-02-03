@@ -7,10 +7,13 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 
+import com.zimbra.common.net.ProxyHostConfiguration;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 
 public class HttpClientUtil {
@@ -23,7 +26,17 @@ public class HttpClientUtil {
     }
 
     public static int executeMethod(HttpClient client, HttpMethod method, HttpState state) throws HttpException, IOException {
-        return client.executeMethod(HttpProxyConfig.getProxyConfig(client.getHostConfiguration(), method.getURI().toString()), method, state);
+        ProxyHostConfiguration proxyConfig = HttpProxyConfig.getProxyConfig(client.getHostConfiguration(), method.getURI().toString());
+        if (proxyConfig != null && proxyConfig.getUsername() != null && proxyConfig.getPassword() != null) {
+            if (state == null) {
+                state = client.getState();
+                if (state == null) {
+                    state = new HttpState();
+                }
+            }
+            state.setProxyCredentials(new AuthScope(proxyConfig.getHost(), proxyConfig.getPort()), new UsernamePasswordCredentials(proxyConfig.getUsername(), proxyConfig.getPassword()));
+        }
+        return client.executeMethod(proxyConfig, method, state);
     }
     
     public static <T extends EntityEnclosingMethod> T addInputStreamToHttpMethod(T method, InputStream is, long size, String contentType) {

@@ -30,11 +30,12 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpState;
 import org.apache.commons.httpclient.HttpVersion;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
@@ -43,6 +44,7 @@ import org.dom4j.ElementHandler;
 
 import com.zimbra.common.httpclient.HttpProxyConfig;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.net.ProxyHostConfiguration;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.RemoteIP;
@@ -51,7 +53,7 @@ import com.zimbra.common.util.ZimbraHttpConnectionManager;
 public class SoapHttpTransport extends SoapTransport {
     private HttpClient mClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient();
     private Map<String, String> mCustomHeaders;
-    private HostConfiguration mHostConfig = null;
+    private ProxyHostConfiguration mHostConfig = null;
     private HttpDebugListener mHttpDebugListener;
     private boolean mKeepAlive = defaultKeepAlive;
     private int mRetryCount = defaultRetryCount;
@@ -233,6 +235,11 @@ public class SoapHttpTransport extends SoapTransport {
             params.setVersion(HttpVersion.HTTP_1_1);
             method.setRequestHeader("Connection", mKeepAlive ? "Keep-alive" : "Close");
 
+            if (mHostConfig != null && mHostConfig.getUsername() != null && mHostConfig.getPassword() != null) {
+                if (state == null)
+                    state = new HttpState();
+                state.setProxyCredentials(new AuthScope(null, -1), new UsernamePasswordCredentials(mHostConfig.getUsername(), mHostConfig.getPassword()));
+            } 
             int responseCode = mClient.executeMethod(mHostConfig, method, state);
             // SOAP allows for "200" on success and "500" on failure;
             //   real server issues will probably be "503" or "404"
