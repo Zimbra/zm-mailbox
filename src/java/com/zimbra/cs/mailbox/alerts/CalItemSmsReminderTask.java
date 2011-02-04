@@ -4,6 +4,7 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -73,6 +74,8 @@ public class CalItemSmsReminderTask extends CalItemReminderTaskBase {
         }
 
         String location = invite.getLocation();
+        if (StringUtil.isNullOrEmpty(location))
+            location = L10nUtil.getMessage(L10nUtil.MsgKey.noLocation);
 
         String organizer = null;
         ZOrganizer zOrganizer = invite.getOrganizer();
