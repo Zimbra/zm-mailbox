@@ -5366,8 +5366,10 @@ TODO: delete them permerntly from here
 <attr id="1168" name="zimbraFeatureAntispamEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>
-    whether the Junk folder and actions should be exposed in the web UI,
-    and whether the Junk folder should be exposed to IMAP/POP clients.</desc>
+    whether or not to enable rerouting spam messages to Junk folder in ZCS, 
+    exposing Junk folder and actions in the web UI, and 
+    exposing Junk folder to IMAP clients.
+  </desc>
 </attr>
 
 <attr id="1169" name="zimbraMyoneloginSamlSigningCert"  type="astring" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="7.0.1">
@@ -5376,7 +5378,7 @@ TODO: delete them permerntly from here
 
 <attr id="1170" name="zimbraFeatureAdminMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.1">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>whether email features/tab enabled in the web client if it is accessed from the admin console</desc>
+  <desc>whether email featuresand tabs are enabled in the web client if it is accessed from the admin console</desc>
 </attr>
 
 <attr id="1171" name="zimbraIPMode" type="enum" value="ipv4,ipv6,both" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="all" since="7.1">

@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110201-2112 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110203-1725 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2978,8 +2978,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalPop3SSLPort = "zimbraExternalPop3SSLPort";
 
     /**
-     * whether email features/tab enabled in the web client if it is accessed
-     * from the admin console
+     * whether email featuresand tabs are enabled in the web client if it is
+     * accessed from the admin console
      *
      * @since ZCS 7.1
      */
@@ -2993,8 +2993,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureAdvancedSearchEnabled = "zimbraFeatureAdvancedSearchEnabled";
 
     /**
-     * whether the Junk folder and actions should be exposed in the web UI,
-     * and whether the Junk folder should be exposed to IMAP/POP clients.
+     * whether or not to enable rerouting spam messages to Junk folder in
+     * ZCS, exposing Junk folder and actions in the web UI, and exposing Junk
+     * folder to IMAP clients.
      *
      * @since ZCS 7.1
      */

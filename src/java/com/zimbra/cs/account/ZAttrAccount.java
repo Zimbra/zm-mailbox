@@ -35,7 +35,7 @@ public class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110201-2112 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110203-1725 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -8186,8 +8186,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether email features/tab enabled in the web client if it is accessed
-     * from the admin console
+     * whether email featuresand tabs are enabled in the web client if it is
+     * accessed from the admin console
      *
      * @return zimbraFeatureAdminMailEnabled, or true if unset
      *
@@ -8199,8 +8199,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether email features/tab enabled in the web client if it is accessed
-     * from the admin console
+     * whether email featuresand tabs are enabled in the web client if it is
+     * accessed from the admin console
      *
      * @param zimbraFeatureAdminMailEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8215,8 +8215,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether email features/tab enabled in the web client if it is accessed
-     * from the admin console
+     * whether email featuresand tabs are enabled in the web client if it is
+     * accessed from the admin console
      *
      * @param zimbraFeatureAdminMailEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8232,8 +8232,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether email features/tab enabled in the web client if it is accessed
-     * from the admin console
+     * whether email featuresand tabs are enabled in the web client if it is
+     * accessed from the admin console
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -8247,8 +8247,8 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether email features/tab enabled in the web client if it is accessed
-     * from the admin console
+     * whether email featuresand tabs are enabled in the web client if it is
+     * accessed from the admin console
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -8325,8 +8325,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether the Junk folder and actions should be exposed in the web UI,
-     * and whether the Junk folder should be exposed to IMAP/POP clients.
+     * whether or not to enable rerouting spam messages to Junk folder in
+     * ZCS, exposing Junk folder and actions in the web UI, and exposing Junk
+     * folder to IMAP clients.
      *
      * @return zimbraFeatureAntispamEnabled, or true if unset
      *
@@ -8338,8 +8339,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether the Junk folder and actions should be exposed in the web UI,
-     * and whether the Junk folder should be exposed to IMAP/POP clients.
+     * whether or not to enable rerouting spam messages to Junk folder in
+     * ZCS, exposing Junk folder and actions in the web UI, and exposing Junk
+     * folder to IMAP clients.
      *
      * @param zimbraFeatureAntispamEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8354,8 +8356,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether the Junk folder and actions should be exposed in the web UI,
-     * and whether the Junk folder should be exposed to IMAP/POP clients.
+     * whether or not to enable rerouting spam messages to Junk folder in
+     * ZCS, exposing Junk folder and actions in the web UI, and exposing Junk
+     * folder to IMAP clients.
      *
      * @param zimbraFeatureAntispamEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8371,8 +8374,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether the Junk folder and actions should be exposed in the web UI,
-     * and whether the Junk folder should be exposed to IMAP/POP clients.
+     * whether or not to enable rerouting spam messages to Junk folder in
+     * ZCS, exposing Junk folder and actions in the web UI, and exposing Junk
+     * folder to IMAP clients.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -8386,8 +8390,9 @@ public class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether the Junk folder and actions should be exposed in the web UI,
-     * and whether the Junk folder should be exposed to IMAP/POP clients.
+     * whether or not to enable rerouting spam messages to Junk folder in
+     * ZCS, exposing Junk folder and actions in the web UI, and exposing Junk
+     * folder to IMAP clients.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
