@@ -1054,6 +1054,9 @@ public final class LC {
     public static final KnownKey ldap_dit_naming_rdn_attr_zimlet       = KnownKey.newKey("");
     // LDAP Custom DIT base DN for LDAP admin entries
     public static final KnownKey ldap_dit_base_dn_admin         = KnownKey.newKey("");
+    
+    @Supported
+    public static final KnownKey zmprov_tmp_directory = KnownKey.newKey("${zimbra_tmp_directory}/zmprov");
 
     public static final KnownKey command_line_editing_enabled = KnownKey.newKey(true);
     public static final KnownKey thread_pool_warn_percent = KnownKey.newKey(100);
