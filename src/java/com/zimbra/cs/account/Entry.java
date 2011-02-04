@@ -16,17 +16,20 @@
 package com.zimbra.cs.account;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.zclient.ToZJSONObject;
 import com.zimbra.cs.zclient.ZJSONObject;
 import org.json.JSONException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -40,11 +43,13 @@ public abstract class Entry implements ToZJSONObject {
     private Map<String,Object> mSecondaryDefaults;
     private Map<String, Object> mData;
     private Map<String, Set<String>> mMultiAttrSetCache;
+    private Map<String, Set<byte[]>> mMultiBinaryAttrSetCache;
     private Locale mLocale;
     private Provisioning mProvisioning;
     private AttributeManager mAttrMgr;
     
     protected static String[] sEmptyMulti = new String[0];
+    protected static List<byte[]> sEmptyListMulti = new ArrayList<byte[]>();
 
     /*
     protected Entry(Map<String,Object> attrs, Map<String,Object> defaults) {
@@ -283,7 +288,12 @@ public abstract class Entry implements ToZJSONObject {
         String v = getAttr(name);
         return v == null ? defaultValue : Provisioning.TRUE.equals(v);
     }
-
+    
+    public byte[] getBinaryAttr(String name) {
+        String v = getAttr(name);
+        return v == null ? null : ByteUtil.decodeLDAPBase64(v);
+    }
+    
     /**
      * 
      * @param name name of the attribute to retreive. 
@@ -352,6 +362,10 @@ public abstract class Entry implements ToZJSONObject {
         return getMultiAttr(name, true);
     }
     
+    public List<byte[]> getMultiBinaryAttr(String name) {
+        return getMultiBinaryAttr(name, true);
+    }
+    
     /**
      * Returns the set of values for the given attribute, or an empty
      * array if no values are defined.
@@ -376,11 +390,25 @@ public abstract class Entry implements ToZJSONObject {
      */
     public String[] getMultiAttr(String name, boolean applyDefaults) {
         Object v = getObject(name, applyDefaults);
-        if (v instanceof String) return new String[]{(String) v};
-        else if (v instanceof String[]) {
+        if (v instanceof String) {
+            return new String[]{(String) v};
+        } else if (v instanceof String[]) {
             return (String[]) v;
         } else {
             return sEmptyMulti;
+        }
+    }
+    
+    public List<byte[]> getMultiBinaryAttr(String name, boolean applyDefaults) {
+        String[] values = getMultiAttr(name, applyDefaults);
+        if (values.length > 0) {
+            List<byte[]> list = new ArrayList<byte[]>();
+            for (String value : values) {
+                list.add(ByteUtil.decodeLDAPBase64(value));
+            }
+            return list;
+        } else {
+            return sEmptyListMulti;
         }
     }
 
@@ -395,6 +423,18 @@ public abstract class Entry implements ToZJSONObject {
         if (result == null) {
             result = new HashSet<String>(Arrays.asList(getMultiAttr(name)));
             mMultiAttrSetCache.put(name, result);
+        }
+        return result;
+    }
+
+    
+    public Set<byte[]> getMultiBinaryAttrSet(String name) {
+        if (mMultiBinaryAttrSetCache == null)        
+            mMultiBinaryAttrSetCache = new HashMap<String, Set<byte[]>>();        
+        Set<byte[]> result = mMultiBinaryAttrSetCache.get(name);
+        if (result == null) {
+            result = new HashSet<byte[]>(getMultiBinaryAttr(name));
+            mMultiBinaryAttrSetCache.put(name, result);
         }
         return result;
     }

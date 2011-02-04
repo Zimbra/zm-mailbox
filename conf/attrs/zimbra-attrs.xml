@@ -76,6 +76,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
   type:
     boolean.....TRUE|FALSE
+    binary......binary data
     duration....^\d+([hmsd]|ms)?$.  If ([hmsd]|ms) is not specified, the default
                 is seconds.
     gentime.....time expressed as \d{14}[zZ]
@@ -5382,7 +5383,6 @@ TODO: delete them permerntly from here
   <globalConfigValue>both</globalConfigValue>
   <desc>supported IP mode</desc>
 </attr>
-
-
+    
 </attrs>
 

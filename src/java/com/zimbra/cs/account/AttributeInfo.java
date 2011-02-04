@@ -26,6 +26,7 @@ import javax.mail.internet.InternetAddress;
 
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.Version;
@@ -299,6 +300,11 @@ public class AttributeInfo {
                 return;
             else
                 throw AccountServiceException.INVALID_ATTR_VALUE(mName+" must be TRUE or FALSE", null);
+        case TYPE_BINARY:
+            byte[] binary = ByteUtil.decodeLDAPBase64(value);
+            if (binary.length > mMax)
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+binary.length+") larger then max allowed: "+mMax, null);
+            return;
         case TYPE_DURATION:
             if (!DURATION_PATTERN.matcher(value).matches())
                 throw AccountServiceException.INVALID_ATTR_VALUE(mName + " " + DURATION_PATTERN_DOC, null);
