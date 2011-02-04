@@ -88,6 +88,7 @@ public class L10nUtil {
         taskReminderEmailBody,
         taskReminderEmailBodyHtml,
 
+        noLocation,
         apptReminderSmsText,
         taskReminderSmsText,
         deviceSendVerificationCodeText,
