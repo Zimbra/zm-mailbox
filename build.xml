@@ -633,6 +633,7 @@
           <include name="ant-tar*.jar"/>
           <include name="icu4j-*.jar"/>
           <include name="mina-*.jar"/>
+          <include name="ews.jar"/> 
         </lib>
         <lib dir="${im.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
