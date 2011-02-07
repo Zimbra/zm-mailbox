@@ -536,7 +536,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                             findItemByProp(folderFB.getFolderId(),
                                 UnindexedFieldURIType.ITEM_SUBJECT,
                                 "USER-/CN=RECIPIENTS/CN=" +
-                                    getDisplayName(accountId),
+                                getForeignPrincipal(accountId),
                                 DefaultShapeNamesType.ALL_PROPERTIES);
                         if (resultMessage != null && resultMessage.size() > 0) {
                             // edit message
@@ -621,7 +621,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                             PostItemType itemMessage = new PostItemType();
 
                             itemMessage.setSubject("USER-/CN=RECIPIENTS/CN=" +
-                                getDisplayName(accountId));
+                            	getForeignPrincipal(accountId));
                             itemMessage.setItemClass("IPM.Post");
 
                             Map<PathToExtendedFieldType, NonEmptyArrayOfPropertyValuesType> props =
@@ -940,13 +940,24 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         return Provisioning.FP_PREFIX_AD;
     }
 
-    protected String getDisplayName(String accountId) throws ServiceException {
+    protected String getForeignPrincipal(String accountId) throws ServiceException {
+    	String ret = null;
         Account acct =
             Provisioning.getInstance()
                 .get(Provisioning.AccountBy.id, accountId);
         if (acct == null)
             return null;
-        return acct.getDisplayName();
+        String[] fps = acct.getForeignPrincipal();//TEMP
+        for (String fp : fps) {
+            if (fp.startsWith(Provisioning.FP_PREFIX_AD)) {
+                int idx = fp.indexOf(':');
+                if (idx != -1) {
+                    ret = fp.substring(idx + 1);
+                    break;
+                }
+            }
+        }        
+        return ret;
     }
 
     @Override
