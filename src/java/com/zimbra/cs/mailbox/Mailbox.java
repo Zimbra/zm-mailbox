@@ -41,6 +41,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -2901,32 +2902,27 @@ public class Mailbox {
      * If the returned folder is a Mountpoint, then it can be assumed that the remaining part is a subfolder in
      * the remote mailbox.
      *
-     * @param octxt
-     * @param startingFolderId Folder to start from (pass Mailbox.ID_FOLDER_ROOT to start from the root)
-     * @param path
-     * @return
-     * @throws ServiceException if the folder with <tt>startingFolderId</tt> does not exist
-     * or <tt>path</tt> is <tt>null</tt> or empty.
+     * @param baseFolderId Folder to start from (pass Mailbox.ID_FOLDER_ROOT to start from the root)
+     * @throws ServiceException if the folder with {@code startingFolderId} does not exist or {@code path} is
+     * {@code null} or empty.
      */
-    public synchronized Pair<Folder, String> getFolderByPathLongestMatch(OperationContext octxt, int startingFolderId, String path) throws ServiceException {
-        if (path == null)
+    public synchronized Pair<Folder, String> getFolderByPathLongestMatch(OperationContext octxt, int baseFolderId,
+            String path) throws ServiceException {
+        if (Strings.isNullOrEmpty(path)) {
             throw MailServiceException.NO_SUCH_FOLDER(path);
-        while (path.startsWith("/"))
-            path = path.substring(1);                         // strip off the optional leading "/"
-        while (path.endsWith("/"))
-            path = path.substring(0, path.length() - 1);      // strip off the optional trailing "/"
-
-        if (path.length() == 0)
-            throw MailServiceException.NO_SUCH_FOLDER("/" + path);
-
-        Folder folder = getFolderById(null, startingFolderId);
+        }
+        Folder folder = getFolderById(octxt, baseFolderId);
         assert(folder != null);
+        path = CharMatcher.is('/').trimFrom(path); // trim leading and trailing '/'
+        if (path.isEmpty()) { // relative root to the base folder
+            return new Pair<Folder, String>(checkAccess(folder), null);
+        }
 
         boolean success = false;
         try {
             beginTransaction("getFolderByPathLongestMatch", octxt);
-
-            String unmatched = null, segments[] = path.split("/");
+            String unmatched = null;
+            String[] segments = path.split("/");
             for (int i = 0; i < segments.length; i++) {
                 Folder subfolder = folder.findSubfolder(segments[i]);
                 if (subfolder == null) {
