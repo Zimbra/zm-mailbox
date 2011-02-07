@@ -2711,7 +2711,7 @@ public class Mailbox {
         try {
             beginTransaction("getModifiedItems", octxt);
 
-            Set<Integer> visible = getVisibleFolderIds();
+            Set<Integer> visible = Folder.toId(getAccessibleFolders(ACL.RIGHT_READ));
             if (folderIds == null)
                 folderIds = visible;
             else if (visible != null)
@@ -2727,14 +2727,17 @@ public class Mailbox {
         }
     }
 
-    /** Returns a list of all <code>Folder</code>s the authenticated user has
-     *  {@link ACL#RIGHT_READ} access to.  Returns <tt>null</tt> if the
-     *  authenticated user has read access to the entire Mailbox. */
+    /**
+     * Returns a list of all {@link Folder}s the authenticated user has {@link ACL#RIGHT_READ} access to. Returns
+     * {@code null} if the authenticated user has read access to the entire Mailbox.
+     *
+     * @see #getAccessibleFolders(short)
+     */
     public synchronized Set<Folder> getVisibleFolders(OperationContext octxt) throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getVisibleFolders", octxt);
-            Set<Folder> visible = getVisibleFolders();
+            Set<Folder> visible = getAccessibleFolders(ACL.RIGHT_READ);
             success = true;
             return visible;
         } finally {
@@ -2742,65 +2745,32 @@ public class Mailbox {
         }
     }
 
-    /** Returns a list of all <code>Folder</code>s that the authenticated user
-     *  from the current transaction has {@link ACL#RIGHT_READ} access to.
-     *  Returns <tt>null</tt> if the authenticated user has read access to
-     *  the entire Mailbox. */
-    Set<Folder> getVisibleFolders() throws ServiceException {
-        return getAccessibleFolders(ACL.RIGHT_READ);
-    }
-
-    /** Returns a list of all <code>Folder</code>s that the authenticated user
-     *  from the current transaction has a certain set of rights on.  Returns
-     *  <tt>null</tt> if the authenticated user has the required access on the
-     *  entire Mailbox.
-     * @param rights  The bitmask representing the required permissions. */
+    /**
+     * Returns a list of all {@link Folder}s that the authenticated user from the current transaction has a certain set
+     * of rights on. Returns {@code null} if the authenticated user has the required access on the entire Mailbox.
+     * Unless zimbraFeatureAntispamEnabled account/CoS attribute is TRUE, Spam folder is not visible.
+     *
+     * @param rights bitmask representing the required permissions
+     */
     Set<Folder> getAccessibleFolders(short rights) throws ServiceException {
-        if (!mCurrentChange.isActive())
+        if (!mCurrentChange.isActive()) {
             throw ServiceException.FAILURE("cannot get visible hierarchy outside transaction", null);
-        if (hasFullAccess())
+        }
+        boolean includeSpamFolder = getAccount().isFeatureAntispamEnabled();
+        if (hasFullAccess() && includeSpamFolder) {
             return null;
-
+        }
         boolean incomplete = false;
         Set<Folder> visible = new HashSet<Folder>();
-        for (Folder folder : mFolderCache.values())
-            if (folder.canAccess(rights))
+        for (Folder folder : mFolderCache.values()) {
+            if (folder.canAccess(rights) && (includeSpamFolder || folder.getId() != ID_FOLDER_SPAM)) {
                 visible.add(folder);
-            else
+            } else {
                 incomplete = true;
+            }
+        }
         return incomplete ? visible : null;
     }
-
-    /** Returns a list of the IDs of all <code>Folder</code>s that the
-     *  current transaction's authenticated user has {@link ACL#RIGHT_READ}
-     *  access on.  Returns <tt>null</tt> if the authenticated user has read
-     *  access on the entire Mailbox. */
-    public synchronized Set<Integer> getVisibleFolderIds(OperationContext octxt) throws ServiceException {
-        boolean success = false;
-        try {
-            beginTransaction("getVisibleFolderIds", octxt);
-            Set<Integer> visible = getVisibleFolderIds();
-            success = true;
-            return visible;
-        } finally {
-            endTransaction(success);
-        }
-    }
-
-    /** Returns a list of the IDs of all <code>Folder</code>s that the
-     *  current transaction's authenticated user has {@link ACL#RIGHT_READ}
-     *  access on.  Returns <tt>null</tt> if the authenticated user has read
-     *  access on the entire Mailbox. */
-    Set<Integer> getVisibleFolderIds() throws ServiceException {
-        Set<Folder> folders = getVisibleFolders();
-        if (folders == null)
-            return null;
-        Set<Integer> visible = new HashSet<Integer>(folders.size());
-        for (Folder folder : folders)
-            visible.add(folder.getId());
-        return visible;
-    }
-
 
     public Flag getFlagById(int flagId) throws ServiceException {
         Flag flag = Flag.of(this, flagId);

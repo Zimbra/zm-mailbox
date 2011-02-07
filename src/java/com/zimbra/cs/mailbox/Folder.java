@@ -244,16 +244,25 @@ public class Folder extends MailItem {
         return (mId == Mailbox.ID_FOLDER_SPAM);
     }
 
-    /** Returns whether the folder is client-visible.  Folders below
-     *  the user root folder ({@link Mailbox#ID_FOLDER_USER_ROOT}) are
-     *  visible; all others are hidden.
+    /**
+     * Returns whether the folder is client-visible.
+     * <ul>
+     *  <li>Folders below the user root folder ({@link Mailbox#ID_FOLDER_USER_ROOT}) are visible; all others are hidden.
+     *  <li>Spam folder ({@link Mailbox#ID_FOLDER_SPAM}) is hidden if AntiSpam feature is disabled.
+     * </ul>
      *
-     * @see Mailbox#initialize() */
-    public boolean isHidden() {
+     * @see Mailbox#initialize()
+     */
+    public boolean isHidden() throws ServiceException {
         switch (mId) {
-            case Mailbox.ID_FOLDER_USER_ROOT:  return false;
-            case Mailbox.ID_FOLDER_ROOT:       return true;
-            default:                           return mParent.isHidden();
+            case Mailbox.ID_FOLDER_USER_ROOT:
+                return false;
+            case Mailbox.ID_FOLDER_ROOT:
+                return true;
+            case Mailbox.ID_FOLDER_SPAM:
+                return !getAccount().isFeatureAntispamEnabled();
+            default:
+                return mParent.isHidden();
         }
     }
 
@@ -674,7 +683,7 @@ public class Folder extends MailItem {
      *  sure to avoid any cycles of folders.
      *
      * @param child  The {@link MailItem} object to check. */
-    boolean canContain(MailItem child) {
+    boolean canContain(MailItem child) throws ServiceException {
         if (!canContain(child.getType())) {
             return false;
         } else if (child instanceof Folder) {
@@ -685,24 +694,29 @@ public class Folder extends MailItem {
         }
         return true;
     }
-    /** Returns whether the folder can contain objects of the given type.
-     *  In general, any folder can contain any object.  The exceptions are
-     *  that the Tags folder can only contain {@link Tag}s (and vice versa),
-     *  the Conversations folder can only contain {@link Conversation}s
-     *  (and vice versa), and the Spam folder can't have subfolders.
+
+    /**
+     * Returns whether the folder can contain objects of the given type. In general, any folder can contain any object.
+     * The exceptions are:
+     * <ul>
+     *  <li>The Tags folder can only contain {@link Tag}s (and vice versa)
+     *  <li>The Conversations folder can only contain {@link Conversation}s (and vice versa)
+     *  <li>The Spam folder can't have subfolders.
+     *  <li>The Spam folder can't contain anything if AntiSpam feature is disabled.
+     * <ul>
      *
-     * @param type  The type of object, e.g. {@link MailItem#TYPE_TAG}. */
-    boolean canContain(Type type) {
+     * @param type the type of object, e.g. {@link MailItem#TYPE_TAG}
+     */
+    boolean canContain(Type type) throws ServiceException {
         if ((type == Type.TAG) != (mId == Mailbox.ID_FOLDER_TAGS)) {
             return false;
         } else if ((type == Type.CONVERSATION) != (mId == Mailbox.ID_FOLDER_CONVERSATIONS)) {
             return false;
-        } else if (type == Type.FOLDER && mId == Mailbox.ID_FOLDER_SPAM) {
+        } else if (mId == Mailbox.ID_FOLDER_SPAM && (type == Type.FOLDER || !getAccount().isFeatureAntispamEnabled())) {
             return false;
         }
         return true;
     }
-
 
     /** Creates a new Folder and persists it to the database.  A real
      *  nonnegative item ID must be supplied from a previous call to
@@ -1350,5 +1364,16 @@ public class Folder extends MailItem {
         helper.add(CN_DELETED_UNREAD, mDeletedUnreadCount);
         helper.add(CN_ATTRIBUTES, mAttributes);
         return helper.toString();
+    }
+
+    public static Set<Integer> toId(Set<Folder> folders) {
+        if (folders == null) {
+            return null;
+        }
+        Set<Integer> result = new HashSet<Integer>(folders.size());
+        for (Folder folder : folders) {
+            result.add(folder.getId());
+        }
+        return result;
     }
 }

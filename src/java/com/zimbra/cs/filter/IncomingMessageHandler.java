@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -111,9 +111,9 @@ extends FilterHandler {
     }
 
     @Override
-    public Message implicitKeep(Collection<ActionFlag> flagActions, String tags)
-    throws ServiceException {
-        int folderId = SpamHandler.isSpam(getMimeMessage()) ? Mailbox.ID_FOLDER_SPAM : defaultFolderId;
+    public Message implicitKeep(Collection<ActionFlag> flagActions, String tags) throws ServiceException {
+        int folderId = mailbox.getAccount().isFeatureAntispamEnabled() && SpamHandler.isSpam(getMimeMessage()) ?
+                Mailbox.ID_FOLDER_SPAM : defaultFolderId;
         return addMessage(folderId, flagActions, tags);
     }
 
