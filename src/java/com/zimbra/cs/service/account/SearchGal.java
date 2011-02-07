@@ -32,6 +32,11 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class SearchGal extends GalDocumentHandler {
 
     @Override
+    public boolean needsAuth(Map<String, Object> context) {
+        return true;
+    }
+    
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(getZimbraSoapContext(context));
@@ -58,10 +63,5 @@ public class SearchGal extends GalDocumentHandler {
         GalSearchControl gal = new GalSearchControl(params);
         gal.search();
         return params.getResultCallback().getResponse();
-    }
-
-    @Override
-    public boolean needsAuth(Map<String, Object> context) {
-        return true;
     }
 }

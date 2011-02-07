@@ -30,6 +30,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.gal.GalExtraSearchFilter;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -65,7 +66,7 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         String attrsStr = request.getAttribute(AdminConstants.A_ATTRS, null);
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
-        EntrySearchFilter filter = com.zimbra.cs.service.account.SearchCalendarResources.parseSearchFilter(request);
+        EntrySearchFilter filter = GalExtraSearchFilter.parseSearchFilter(request);
 
         // if we are a domain admin only, restrict to domain
         //

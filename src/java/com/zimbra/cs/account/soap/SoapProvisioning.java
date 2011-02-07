@@ -360,11 +360,11 @@ public class SoapProvisioning extends Provisioning {
         }
     }
 
-    static Map<String, Object> getAttrs(Element e) throws ServiceException {
+    public static Map<String, Object> getAttrs(Element e) throws ServiceException {
         return getAttrs(e, AdminConstants.A_N);
     }
 
-    static Map<String, Object> getAttrs(Element e, String nameAttr) throws ServiceException {
+    public static Map<String, Object> getAttrs(Element e, String nameAttr) throws ServiceException {
         Map<String, Object> result = new HashMap<String,Object>();
         for (Element a : e.listElements(AdminConstants.E_A)) {
             StringUtil.addToMultiMap(result, a.getAttribute(nameAttr), a.getText());
