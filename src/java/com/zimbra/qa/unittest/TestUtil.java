@@ -142,7 +142,7 @@ extends Assert {
 
     public static String getDomain()
     throws ServiceException {
-        Config config = Provisioning.getInstance().getConfig();
+        Config config = Provisioning.getInstance().getConfig(Provisioning.A_zimbraDefaultDomainName);
         String domain = config.getAttr(Provisioning.A_zimbraDefaultDomainName, null);
         assert(domain != null && domain.length() > 0);
         return domain;
