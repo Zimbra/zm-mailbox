@@ -1317,10 +1317,11 @@ public class Mailbox {
     }
 
     private void clearItemCache() {
-        if (mCurrentChange.isActive())
+        if (mCurrentChange.isActive()) {
             mCurrentChange.itemCache.clear();
-        else
+        } else {
             mItemCache.clear();
+        }
     }
 
     void cache(MailItem item) throws ServiceException {
@@ -1333,14 +1334,14 @@ public class Mailbox {
                 mTagCache.put(item.getName().toLowerCase(), (Tag) item);
             }
         } else if (item instanceof Folder) {
-            if (mFolderCache != null)
+            if (mFolderCache != null) {
                 mFolderCache.put(item.getId(), (Folder) item);
+            }
         } else {
             getItemCache().put(item.getId(), item);
         }
 
-        if (ZimbraLog.cache.isDebugEnabled())
-            ZimbraLog.cache.debug("cached " + MailItem.getNameForType(item) + " " + item.getId() + " in mailbox " + getId());
+        ZimbraLog.cache.debug("cached %s %d in mailbox %d", MailItem.getNameForType(item), item.getId(), getId());
     }
 
     protected void uncache(MailItem item) throws ServiceException {
@@ -1905,43 +1906,46 @@ public class Mailbox {
         throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
     }
 
-    /** Makes a copy of the given item with {@link Flag#BITMASK_UNCACHED} set.                                                                                                                                                 
-     *  This copy is not linked to its {@code Mailbox} and thus will not change                                                                                                                                                
-     *  when modifications are subsequently made to the original item.  The                                                                                                                                                    
-     *  original item is unchanged.                                                                                                                                                                                            
-     *  <p>                                                                                                                                                                                                                    
-     *  This method should only be called <i>immediately</i> before returning                                                                                                                                                  
-     *  an item from a public {@code Mailbox} method.  In order to handle                                                                                                                                                      
-     *  recursive calls, item duplication occurs only when we're in a top-level                                                                                                                                                
-     *  transaction; otherwise, the original item is returned.                                                                                                                                                                 
+    /** Makes a copy of the given item with {@link Flag#BITMASK_UNCACHED} set.
+     *  This copy is not linked to its {@code Mailbox} and thus will not change
+     *  when modifications are subsequently made to the original item.  The
+     *  original item is unchanged.
+     *  <p>
+     *  This method should only be called <i>immediately</i> before returning
+     *  an item from a public {@code Mailbox} method.  In order to handle
+     *  recursive calls, item duplication occurs only when we're in a top-level
+     *  transaction; otherwise, the original item is returned.
      * @see #snapshotFolders() */
     @SuppressWarnings("unchecked")
     private <T extends MailItem> T snapshotItem(T item) throws ServiceException {
-        if (item == null || item.isTagged(Flag.ID_FLAG_UNCACHED) || mCurrentChange.depth != 1)
+        if (item == null || item.isTagged(Flag.ID_FLAG_UNCACHED) || mCurrentChange.depth > 1) {
             return item;
+        }
 
         if (item instanceof Folder) {
             return mFolderCache == null ? item : (T) snapshotFolders().get(item.getId());
-        } else if (item instanceof VirtualConversation) {
-            // snapshotting the wrapped message passes BITMASK_UNCACHED onto the virual conversation                                                                                                                           
-            return (T) new VirtualConversation(this, snapshotItem(((VirtualConversation) item).getMessage()));
         }
 
         MailItem.UnderlyingData data = item.getUnderlyingData().clone();
         data.flags   |= Flag.BITMASK_UNCACHED;
         data.metadata = item.encodeMetadata();
-        return (T) MailItem.constructItem(this, data);
+        if (item instanceof VirtualConversation) {
+            // VirtualConversations need to be special-cased since MailItem.constructItem() returns null for them
+            return (T) new VirtualConversation(this, data);
+        } else {
+            return (T) MailItem.constructItem(this, data);
+        }
     }
 
-    /** Makes a copy of the {@code Mailbox}'s entire {@code Folder} tree with                                                                                                                                                  
-     *  {@link Flag#BITMASK_UNCACHED} set on each copied folder.  This copy is                                                                                                                                                 
-     *  not linked to its {@code Mailbox} and thus will not change when                                                                                                                                                        
-     *  modifications are subsequently made to any of the folders.  The                                                                                                                                                        
-     *  original folders are unchanged.                                                                                                                                                                                        
-     *  <p>                                                                                                                                                                                                                    
-     *  This method should only be called <i>immediately</i> before returning                                                                                                                                                  
-     *  the folder set from a public {@code Mailbox} method.  In order to                                                                                                                                                      
-     *  handle recursive calls, item duplication occurs only when we're in a                                                                                                                                                   
+    /** Makes a copy of the {@code Mailbox}'s entire {@code Folder} tree with
+     *  {@link Flag#BITMASK_UNCACHED} set on each copied folder.  This copy is
+     *  not linked to its {@code Mailbox} and thus will not change when
+     *  modifications are subsequently made to any of the folders.  The
+     *  original folders are unchanged.
+     *  <p>
+     *  This method should only be called <i>immediately</i> before returning
+     *  the folder set from a public {@code Mailbox} method.  In order to
+     *  handle recursive calls, item duplication occurs only when we're in a
      *  top-level transaction; otherwise, the live folder cache is returned.
      *  <p>
      *  If the {@code Mailbox}'s folder cache is {@code null}, this method will
@@ -1970,15 +1974,15 @@ public class Mailbox {
                                             MailItem.typeToBitmask(MailItem.TYPE_SEARCHFOLDER) |
                                             MailItem.typeToBitmask(MailItem.TYPE_MOUNTPOINT);
 
-    /** Makes a deep copy of the {@code PendingModifications} object with                                                                                                                                                      
-     *  {@link Flag#BITMASK_UNCACHED} set on each {@code MailItem} present in                                                                                                                                                  
-     *  the {@code created} and {@code modified} hashes.  These copied {@code                                                                                                                                                  
-     *  MailItem}s are not linked to their {@code Mailbox} and thus will not                                                                                                                                                   
-     *  change when modifications are subsequently made to the contents of the                                                                                                                                                 
-     *  {@code Mailbox}.  The original {@code PendingModifications} object and                                                                                                                                                 
-     *  the {@code MailItem}s it references are unchanged.                                                                                                                                                                     
-     *  <p>                                                                                                                                                                                                                    
-     *  This method should only be called <i>immediately</i> before notifying                                                                                                                                                  
+    /** Makes a deep copy of the {@code PendingModifications} object with
+     *  {@link Flag#BITMASK_UNCACHED} set on each {@code MailItem} present in
+     *  the {@code created} and {@code modified} hashes.  These copied {@code
+     *  MailItem}s are not linked to their {@code Mailbox} and thus will not
+     *  change when modifications are subsequently made to the contents of the
+     *  {@code Mailbox}.  The original {@code PendingModifications} object and
+     *  the {@code MailItem}s it references are unchanged.
+     *  <p>
+     *  This method should only be called <i>immediately</i> before notifying
      *  listeners of the changes from the currently-ending transaction. */
     private PendingModifications snapshotModifications(PendingModifications pms) throws ServiceException {
         if (pms == null)
@@ -1998,11 +2002,11 @@ public class Mailbox {
             for (MailItem item : pms.created.values()) {
                 if (item instanceof Folder && folders != null) {
                     Folder folder = folders.get(item.getId());
-                    if (folder != null) {
-                        snapshot.recordCreated(folder);
-                    } else {
-                        ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: " + item.getId());
+                    if (folder == null) {
+                        ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: %d", item.getId());
+                        folder = (Folder) item;
                     }
+                    snapshot.recordCreated(folder);
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
                     boolean copy = item instanceof Tag || (cache != null && cache.containsKey(item.getId()));
@@ -2022,11 +2026,11 @@ public class Mailbox {
                 MailItem item = (MailItem) chg.what;
                 if (item instanceof Folder && folders != null) {
                     Folder folder = folders.get(item.getId());
-                    if (folder != null) {
-                        snapshot.recordModified(folder, chg.why);
-                    } else {
-                        ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: " + item.getId());
+                    if (folder == null) {
+                        ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: %d", item.getId());
+                        folder = (Folder) item;
                     }
+                    snapshot.recordModified(folder, chg.why);
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
                     boolean copy = item instanceof Tag || (cache != null && cache.containsKey(item.getId()));
