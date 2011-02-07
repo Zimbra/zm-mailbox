@@ -1219,10 +1219,11 @@ public class Mailbox {
     }
 
     private void clearItemCache() {
-        if (mCurrentChange.isActive())
+        if (mCurrentChange.isActive()) {
             mCurrentChange.itemCache.clear();
-        else
+        } else {
             mItemCache.clear();
+        }
     }
 
     void cache(MailItem item) throws ServiceException {
@@ -1803,20 +1804,22 @@ public class Mailbox {
      * @see #snapshotFolders() */
     @SuppressWarnings("unchecked")
     private <T extends MailItem> T snapshotItem(T item) throws ServiceException {
-        if (item == null || item.isTagged(Flag.ID_UNCACHED) || mCurrentChange.depth != 1) {
+        if (item == null || item.isTagged(Flag.ID_UNCACHED) || mCurrentChange.depth > 1) {
             return item;
         }
         if (item instanceof Folder) {
             return mFolderCache == null ? item : (T) snapshotFolders().get(item.getId());
-        } else if (item instanceof VirtualConversation) {
-            // snapshotting the wrapped message passes BITMASK_UNCACHED onto the virual conversation
-            return (T) new VirtualConversation(this, snapshotItem(((VirtualConversation) item).getMessage()));
         }
 
         MailItem.UnderlyingData data = item.getUnderlyingData().clone();
         data.flags   |= Flag.BITMASK_UNCACHED;
         data.metadata = item.encodeMetadata();
-        return (T) MailItem.constructItem(this, data);
+        if (item instanceof VirtualConversation) {
+            // VirtualConversations need to be special-cased since MailItem.constructItem() returns null for them
+            return (T) new VirtualConversation(this, data);
+        } else {
+            return (T) MailItem.constructItem(this, data);
+        }
     }
 
     /** Makes a copy of the {@code Mailbox}'s entire {@code Folder} tree with
@@ -1882,11 +1885,11 @@ public class Mailbox {
             for (MailItem item : pms.created.values()) {
                 if (item instanceof Folder && folders != null) {
                     Folder folder = folders.get(item.getId());
-                    if (folder != null) {
-                        snapshot.recordCreated(folder);
-                    } else {
-                        ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: " + item.getId());
+                    if (folder == null) {
+                        ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: %d", item.getId());
+                        folder = (Folder) item;
                     }
+                    snapshot.recordCreated(folder);
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
                     boolean copy = item instanceof Tag || (cache != null && cache.containsKey(item.getId()));
@@ -1906,11 +1909,11 @@ public class Mailbox {
                 MailItem item = (MailItem) chg.what;
                 if (item instanceof Folder && folders != null) {
                     Folder folder = folders.get(item.getId());
-                    if (folder != null) {
-                        snapshot.recordModified(folder, chg.why);
-                    } else {
-                        ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: " + item.getId());
+                    if (folder == null) {
+                        ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: %d", item.getId());
+                        folder = (Folder) item;
                     }
+                    snapshot.recordModified(folder, chg.why);
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
                     boolean copy = item instanceof Tag || (cache != null && cache.containsKey(item.getId()));

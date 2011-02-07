@@ -29,7 +29,13 @@ import com.zimbra.cs.session.PendingModifications.Change;
 public class VirtualConversation extends Conversation {
 
     VirtualConversation(Mailbox mbox, Message msg) throws ServiceException {
-        super(mbox, wrapMessage(msg));
+        this(mbox, wrapMessage(msg));
+    }
+
+    VirtualConversation(Mailbox mbox, UnderlyingData data) throws ServiceException {
+        super(mbox, data);
+        if (mData.type != TYPE_VIRTUAL_CONVERSATION)
+            throw new IllegalArgumentException();
     }
 
 
