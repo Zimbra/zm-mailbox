@@ -2751,7 +2751,6 @@ public class Mailbox {
     /**
      * Returns a list of all {@link Folder}s that the authenticated user from the current transaction has a certain set
      * of rights on. Returns {@code null} if the authenticated user has the required access on the entire Mailbox.
-     * Unless zimbraFeatureAntispamEnabled account/CoS attribute is TRUE, Spam folder is not visible.
      *
      * @param rights bitmask representing the required permissions
      */
@@ -2759,14 +2758,13 @@ public class Mailbox {
         if (!mCurrentChange.isActive()) {
             throw ServiceException.FAILURE("cannot get visible hierarchy outside transaction", null);
         }
-        boolean includeSpamFolder = getAccount().isFeatureAntispamEnabled();
-        if (hasFullAccess() && includeSpamFolder) {
+        if (hasFullAccess()) {
             return null;
         }
         boolean incomplete = false;
         Set<Folder> visible = new HashSet<Folder>();
         for (Folder folder : mFolderCache.values()) {
-            if (folder.canAccess(rights) && (includeSpamFolder || folder.getId() != ID_FOLDER_SPAM)) {
+            if (folder.canAccess(rights)) {
                 visible.add(folder);
             } else {
                 incomplete = true;

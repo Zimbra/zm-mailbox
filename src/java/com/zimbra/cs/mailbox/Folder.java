@@ -245,22 +245,17 @@ public class Folder extends MailItem {
     }
 
     /**
-     * Returns whether the folder is client-visible.
-     * <ul>
-     *  <li>Folders below the user root folder ({@link Mailbox#ID_FOLDER_USER_ROOT}) are visible; all others are hidden.
-     *  <li>Spam folder ({@link Mailbox#ID_FOLDER_SPAM}) is hidden if AntiSpam feature is disabled.
-     * </ul>
+     * Returns whether the folder is client-visible. Folders below the user root folder
+     * ({@link Mailbox#ID_FOLDER_USER_ROOT}) are visible; all others are hidden.
      *
      * @see Mailbox#initialize()
      */
-    public boolean isHidden() throws ServiceException {
+    public boolean isHidden() {
         switch (mId) {
             case Mailbox.ID_FOLDER_USER_ROOT:
                 return false;
             case Mailbox.ID_FOLDER_ROOT:
                 return true;
-            case Mailbox.ID_FOLDER_SPAM:
-                return !getAccount().isFeatureAntispamEnabled();
             default:
                 return mParent.isHidden();
         }
@@ -678,12 +673,13 @@ public class Folder extends MailItem {
         return (child instanceof Folder);
     }
 
-    /** Returns whether the folder can contain the given item.  We make
-     *  the same checks as in {@link #canContain(byte)}, and we also make
-     *  sure to avoid any cycles of folders.
+    /**
+     * Returns whether the folder can contain the given item. We make the same checks as in {@link #canContain(byte)},
+     * and we also make sure to avoid any cycles of folders.
      *
-     * @param child  The {@link MailItem} object to check. */
-    boolean canContain(MailItem child) throws ServiceException {
+     * @param child the {@link MailItem} object to check
+     */
+    boolean canContain(MailItem child) {
         if (!canContain(child.getType())) {
             return false;
         } else if (child instanceof Folder) {
@@ -702,17 +698,16 @@ public class Folder extends MailItem {
      *  <li>The Tags folder can only contain {@link Tag}s (and vice versa)
      *  <li>The Conversations folder can only contain {@link Conversation}s (and vice versa)
      *  <li>The Spam folder can't have subfolders.
-     *  <li>The Spam folder can't contain anything if AntiSpam feature is disabled.
      * <ul>
      *
      * @param type the type of object, e.g. {@link MailItem#TYPE_TAG}
      */
-    boolean canContain(Type type) throws ServiceException {
+    boolean canContain(Type type) {
         if ((type == Type.TAG) != (mId == Mailbox.ID_FOLDER_TAGS)) {
             return false;
         } else if ((type == Type.CONVERSATION) != (mId == Mailbox.ID_FOLDER_CONVERSATIONS)) {
             return false;
-        } else if (mId == Mailbox.ID_FOLDER_SPAM && (type == Type.FOLDER || !getAccount().isFeatureAntispamEnabled())) {
+        } else if (mId == Mailbox.ID_FOLDER_SPAM && type == Type.FOLDER) {
             return false;
         }
         return true;

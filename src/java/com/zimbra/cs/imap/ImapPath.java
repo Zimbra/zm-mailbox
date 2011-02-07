@@ -594,33 +594,49 @@ public class ImapPath implements Comparable<ImapPath> {
             if (folder.getId() == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE) {
                 return false;
             }
+            // hide spam folder unless anti-spam feature is enabled.
+            if (folder.getId() == Mailbox.ID_FOLDER_SPAM && !getOwnerAccount().isFeatureAntispamEnabled()) {
+                return false;
+            }
             if (!isVisible(folder.getDefaultView())) {
                 return false;
             }
             // hide subfolders of trashed mountpoints
-            if (mReferent != this && folder.inTrash() && !((Mountpoint) folder).getTarget().equals(mReferent.asItemId()))
+            if (mReferent != this && folder.inTrash() && !((Mountpoint) folder).getTarget().equals(mReferent.asItemId())) {
                 return false;
+            }
             // hide other users' mountpoints and mountpoints that point to the same mailbox
-            if (folder instanceof Mountpoint && mReferent == this && mScope != Scope.UNPARSED)
+            if (folder instanceof Mountpoint && mReferent == this && mScope != Scope.UNPARSED) {
                 return false;
+            }
             // search folder visibility depends on an account setting
-            if (folder instanceof SearchFolder)
+            if (folder instanceof SearchFolder) {
                 return ((SearchFolder) folder).isImapVisible() && ImapFolder.getTypeConstraint((SearchFolder) folder).size() > 0;
+            }
         } else {
             ZFolder zfolder = (ZFolder) mFolder;
+            int folderId = asItemId().getId();
             // the mailbox root folder is not visible
-            if (asItemId().getId() == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE)
+            if (folderId == Mailbox.ID_FOLDER_USER_ROOT && mScope != Scope.REFERENCE) {
                 return false;
+            }
+            // hide spam folder unless anti-spam feature is enabled.
+            if (folderId == Mailbox.ID_FOLDER_SPAM && !getOwnerAccount().isFeatureAntispamEnabled()) {
+                return false;
+            }
             // calendars, briefcases, etc. are not surfaced in IMAP
             ZFolder.View view = zfolder.getDefaultView();
-            if (view == ZFolder.View.appointment || view == ZFolder.View.task || view == ZFolder.View.wiki || view == ZFolder.View.document)
+            if (view == ZFolder.View.appointment || view == ZFolder.View.task || view == ZFolder.View.wiki || view == ZFolder.View.document) {
                 return false;
+            }
             // hide other users' mountpoints and mountpoints that point to the same mailbox
-            if (zfolder instanceof ZMountpoint && mReferent == this && mScope != Scope.UNPARSED)
+            if (zfolder instanceof ZMountpoint && mReferent == this && mScope != Scope.UNPARSED) {
                 return false;
+            }
             // hide all remote searchfolders
-            if (zfolder instanceof ZSearchFolder)
+            if (zfolder instanceof ZSearchFolder) {
                 return false;
+            }
         }
         return (mReferent == this ? true : mReferent.isVisible());
     }
