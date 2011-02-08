@@ -424,8 +424,12 @@ public class LdapProvisioning extends Provisioning {
         } else if (entry instanceof Domain) {
             sDomainCache.replace((Domain)entry);
         } else if (entry instanceof DistributionList) {
-            sAclGroupCache.replace((DistributionList)entry);
-            sDLCache.replace((DistributionList)entry);
+            DistributionList dl = (DistributionList)entry;
+            if (dl.isAclGroup()) {
+                sAclGroupCache.replace((DistributionList)entry);
+            } else {
+                sDLCache.replace((DistributionList)entry);
+            }
         } else if (entry instanceof Server) {
             sServerCache.replace((Server)entry);
         } else if (entry instanceof XMPPComponent) {
