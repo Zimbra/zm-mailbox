@@ -55,6 +55,7 @@ public class SQLite extends Db {
         mErrorCodes.put(Db.Error.NO_SUCH_TABLE, "no such table");
         mErrorCodes.put(Db.Error.FOREIGN_KEY_CHILD_EXISTS, "foreign key");
         mErrorCodes.put(Db.Error.FOREIGN_KEY_NO_PARENT, "foreign key");
+        mErrorCodes.put(Db.Error.TOO_MANY_SQL_PARAMS, "too many SQL variables");
     }
     
     @Override boolean supportsCapability(Db.Capability capability) {
@@ -78,6 +79,7 @@ public class SQLite extends Db {
             case REQUEST_UTF8_UNICODE_COLLATION:  return false;
             case ROW_LEVEL_LOCKING:          return false;
             case UNIQUE_NAME_INDEX:          return false;
+            case SQL_PARAM_LIMIT:            return true;
         }
         return false;
     }

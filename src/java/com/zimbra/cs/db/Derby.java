@@ -90,6 +90,7 @@ public class Derby extends Db {
             case ROW_LEVEL_LOCKING:          return true;
             case UNIQUE_NAME_INDEX:          return false;
             case FORCE_INDEX_EVEN_IF_NO_SORT:return true;
+            case SQL_PARAM_LIMIT:            return false;
         }
         return false;
     }

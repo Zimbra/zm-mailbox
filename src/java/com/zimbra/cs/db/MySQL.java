@@ -69,6 +69,7 @@ public class MySQL extends Db {
             case REQUEST_UTF8_UNICODE_COLLATION:  return true;
             case ROW_LEVEL_LOCKING:          return true;
             case UNIQUE_NAME_INDEX:          return true;
+            case SQL_PARAM_LIMIT:            return false;
         }
         return false;
     }
