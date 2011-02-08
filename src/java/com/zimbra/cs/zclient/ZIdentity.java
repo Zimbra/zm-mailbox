@@ -82,7 +82,7 @@ public class ZIdentity  implements ToZJSONObject {
         return Provisioning.TRUE.equals(get(name));
     }
 
-    public boolean isDefault() { return Provisioning.DEFAULT_IDENTITY_NAME.equals(getName()); }
+    public boolean isDefault() { return Provisioning.DEFAULT_IDENTITY_NAME.equals(getRawName()); }
     
     public String getFromAddress() { return get(Provisioning.A_zimbraPrefFromAddress); }
 
