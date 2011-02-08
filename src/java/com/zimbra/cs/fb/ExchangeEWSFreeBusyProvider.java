@@ -947,7 +947,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                 .get(Provisioning.AccountBy.id, accountId);
         if (acct == null)
             return null;
-        String[] fps = acct.getForeignPrincipal();//TEMP
+        String[] fps = acct.getForeignPrincipal();
         for (String fp : fps) {
             if (fp.startsWith(Provisioning.FP_PREFIX_AD)) {
                 int idx = fp.indexOf(':');
