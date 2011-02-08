@@ -30,11 +30,11 @@ import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
@@ -396,7 +396,7 @@ public class SendShareNotification extends MailDocumentHandler {
             mm = new Mime.FixedMimeMessage(JMSession.getSession());
             
             String subject = L10nUtil.getMessage(MsgKey.shareNotifSubject, locale);
-            mm.setSubject(subject, StringUtil.checkCharset(subject, charset));
+            mm.setSubject(subject, CharsetUtil.checkCharset(subject, charset));
             mm.setSentDate(new Date());
             
             // from the auth account
@@ -446,7 +446,7 @@ public class SendShareNotification extends MailDocumentHandler {
             SMTPMessage notif = new SMTPMessage(JMSession.getSmtpSession());
             
             String subject = L10nUtil.getMessage(MsgKey.shareNotifSubject, locale);
-            notif.setSubject(subject, StringUtil.checkCharset(subject, charset));
+            notif.setSubject(subject, CharsetUtil.checkCharset(subject, charset));
             notif.setSentDate(new Date());
             
             // from the auth account

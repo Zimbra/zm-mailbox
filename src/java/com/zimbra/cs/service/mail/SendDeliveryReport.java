@@ -32,9 +32,9 @@ import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
@@ -101,7 +101,7 @@ public class SendDeliveryReport extends MailDocumentHandler {
 
             SMTPMessage report = new SMTPMessage(JMSession.getSmtpSession());
             String subject = "Read-Receipt: " + msg.getSubject();
-            report.setSubject(subject, StringUtil.checkCharset(subject, charset));
+            report.setSubject(subject, CharsetUtil.checkCharset(subject, charset));
             report.setSentDate(new Date());
             report.setFrom(AccountUtil.getFriendlyEmailAddress(authAccount));
             report.addRecipients(javax.mail.Message.RecipientType.TO, recipients);
@@ -118,7 +118,7 @@ public class SendDeliveryReport extends MailDocumentHandler {
             // part 1: human-readable notification
             String text = generateTextPart(owner, mm, authAccount.getLocale());
             MimeBodyPart mpText = new JavaMailMimeBodyPart();
-            mpText.setText(text, StringUtil.checkCharset(text, charset));
+            mpText.setText(text, CharsetUtil.checkCharset(text, charset));
             multi.addBodyPart(mpText);
 
             // part 2: disposition notification

@@ -31,6 +31,7 @@ import javax.mail.internet.MimeMultipart;
 
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.StringUtil;
@@ -333,7 +334,7 @@ public class Notification implements LmtpCallback {
     
     private String getCharset(Account account, String data) {
         String requestedCharset = account.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
-        return StringUtil.checkCharset(data, requestedCharset);
+        return CharsetUtil.checkCharset(data, requestedCharset);
     }
 
     /**
