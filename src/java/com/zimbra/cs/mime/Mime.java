@@ -59,7 +59,6 @@ import javax.mail.internet.ParseException;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.QCodec;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.ibm.icu.text.CharsetDetector;
@@ -73,6 +72,7 @@ import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.mime.shim.JavaMailShim;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
@@ -117,12 +117,6 @@ public class Mime {
      * give up and wrap the whole multipart in a text/plain.
      */
     private static final int MAX_PREAMBLE_LENGTH = 1024;
-
-    private static final Charset WINDOWS_1252 = toCharset(MimeConstants.P_CHARSET_WINDOWS_1252);
-    private static final Charset GB2312       = toCharset(MimeConstants.P_CHARSET_GB2312);
-    private static final Charset GBK          = toCharset(MimeConstants.P_CHARSET_GBK);
-    private static final Charset WINDOWS_31J  = toCharset(MimeConstants.P_CHARSET_WINDOWS_31J);
-    private static final Charset SHIFT_JIS    = toCharset(MimeConstants.P_CHARSET_SHIFT_JIS);
 
     public static class FixedMimeMessage extends com.zimbra.common.mime.shim.JavaMailMimeMessage {
         public FixedMimeMessage(Session session)  {
@@ -901,52 +895,6 @@ public class Mime {
     }
 
     /**
-     * Returns a {@link Charset} for the name, or null if the name is invalid.
-     *
-     * @param name charset name
-     * @return charset or null
-     */
-    private static Charset toCharset(String name) {
-        if (Strings.isNullOrEmpty(name)) {
-            return null;
-        }
-
-        // "Windows-31J" is supported but "CP932" is not; force the mapping here...
-        if (name.equalsIgnoreCase("cp932") && WINDOWS_31J != null) {
-            return WINDOWS_31J;
-        }
-
-        try {
-            return Charset.forName(name.trim());
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    /**
-     * Returns a superset of the charset if available.
-     *
-     * @param charset charset
-     * @return a superset of the charset, or the same charset
-     */
-    private static Charset normalizeCharset(Charset charset) {
-        // windows-1252 is a superset of iso-8859-1 and they're often confused, so use cp1252 in its place
-        if (WINDOWS_1252 != null && Charsets.ISO_8859_1.equals(charset)) {
-            return WINDOWS_1252;
-        }
-
-        if (GBK != null && charset.equals(GB2312)) {
-            return GBK;
-        }
-
-        if (WINDOWS_31J != null && charset.equals(SHIFT_JIS)) {
-            return WINDOWS_31J;
-        }
-
-        return charset;
-    }
-
-    /**
      * Returns a {@link Reader} that decodes the specified {@link InputStream}.
      * <p>
      * {@code contentType} must of type "text/*". This method tries to detect a charset in the following order.
@@ -962,15 +910,15 @@ public class Mime {
      * @param defaultCharset  The user's default charset preference
      */
     public static Reader getTextReader(InputStream input, String contentType, String defaultCharset) {
-        Charset charset = toCharset(getCharset(contentType));
+        Charset charset = CharsetUtil.toCharset(getCharset(contentType));
         if (charset == null) {
             if (!input.markSupported()) {
                 input = new BufferedInputStream(input);
             }
-            charset = detectCharset(input, toCharset(defaultCharset));
+            charset = detectCharset(input, CharsetUtil.toCharset(defaultCharset));
         }
 
-        return new InputStreamReader(input, normalizeCharset(charset));
+        return new InputStreamReader(input, CharsetUtil.normalizeCharset(charset));
     }
 
     private static Charset detectCharset(InputStream input, Charset defaultCharset) {
