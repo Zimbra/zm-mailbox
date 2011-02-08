@@ -5042,7 +5042,7 @@ public class LdapProvisioning extends Provisioning {
             if (token != null)
                 n = "";
 
-            query = GalUtil.expandFilter(tokenize, queryExpr, n, token, true);
+            query = GalUtil.expandFilter(tokenize, queryExpr, n, token);
         }
 
         SearchGalResult result = SearchGalResult.newSearchGalResult(visitor);

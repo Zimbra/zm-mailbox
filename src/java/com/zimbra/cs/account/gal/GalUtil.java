@@ -23,20 +23,15 @@ import com.zimbra.cs.account.ldap.LdapUtil;
 
 public class GalUtil {
     
-    public static String expandFilter(String tokenize, String filterTemplate, String key, String token, boolean internal) 
+    public static String expandFilter(String tokenize, String filterTemplate, String key, String token) 
     throws ServiceException {
-        return expandFilter(tokenize, filterTemplate, key, token, internal, null);
+        return expandFilter(tokenize, filterTemplate, key, token, null);
     }
     
-    public static String expandFilter(String tokenize, String filterTemplate, String key, String token, boolean internal,
-            String extraQuery) throws ServiceException {
+    public static String expandFilter(String tokenize, String filterTemplate, String key, String token, String extraQuery) 
+    throws ServiceException {
         String query;
         
-        /*
-        Map<String, String> vars = new HashMap<String, String>();
-        vars.put("s", key);
-        query = LdapProvisioning.expandStr(filterTemplate, vars);
-        */
         if (key != null) {
             while (key.startsWith("*")) key = key.substring(1);
             while (key.endsWith("*")) key = key.substring(0,key.length()-1);
