@@ -31,22 +31,22 @@ import com.google.common.collect.ImmutableSet;
 public class JavaMailInternetHeaders extends InternetHeaders implements JavaMailShim {
     private static final boolean ZPARSER = JavaMailMimeMessage.ZPARSER;
 
-    com.zimbra.common.mime.MimeHeaderBlock mHeaders;
-    private String mDefaultCharset;
+    com.zimbra.common.mime.MimeHeaderBlock zheaders;
+    private String defaultCharset;
 
     JavaMailInternetHeaders(com.zimbra.common.mime.MimeHeaderBlock headers) {
         this(headers, null);
     }
 
     JavaMailInternetHeaders(com.zimbra.common.mime.MimeHeaderBlock headers, String charset) {
-        mHeaders = headers;
-        mDefaultCharset = charset;
+        zheaders = headers;
+        defaultCharset = charset;
     }
 
     public JavaMailInternetHeaders() {
         super();
         if (ZPARSER) {
-            mHeaders = new com.zimbra.common.mime.MimeHeaderBlock(false);
+            zheaders = new com.zimbra.common.mime.MimeHeaderBlock(false);
         }
     }
 
@@ -54,7 +54,7 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
         super();
         if (ZPARSER) {
             try {
-                mHeaders = new com.zimbra.common.mime.MimeHeaderBlock(is);
+                zheaders = new com.zimbra.common.mime.MimeHeaderBlock(is);
             } catch (IOException ioe) {
                 throw new MessagingException("error reading InternetHeaders", ioe);
             }
@@ -75,13 +75,13 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
 
 
     com.zimbra.common.mime.MimeHeaderBlock getZimbraMimeHeaderBlock() {
-        return mHeaders;
+        return zheaders;
     }
 
     @Override public void load(InputStream is) throws MessagingException {
         if (ZPARSER) {
             try {
-                mHeaders.appendAll(new com.zimbra.common.mime.MimeHeaderBlock(is));
+                zheaders.appendAll(new com.zimbra.common.mime.MimeHeaderBlock(is));
             } catch (IOException ioe) {
                 throw new MessagingException("error reading header block", ioe);
             }
@@ -92,14 +92,14 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
 
     @Override public String[] getHeader(String name) {
         if (ZPARSER) {
-            List<com.zimbra.common.mime.MimeHeader> matches = mHeaders.getAll(name);
+            List<com.zimbra.common.mime.MimeHeader> matches = zheaders.getAll(name);
             if (matches == null || matches.isEmpty()) {
                 return null;
             } else {
                 int i = 0;
                 String[] values = new String[matches.size()];
                 for (com.zimbra.common.mime.MimeHeader header : matches) {
-                    values[i++] = header.getEncodedValue(mDefaultCharset);
+                    values[i++] = header.getEncodedValue(defaultCharset);
                 }
                 return values;
             }
@@ -124,7 +124,7 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
 
     @Override public void setHeader(String name, String value) {
         if (ZPARSER) {
-            mHeaders.setHeader(name, value.getBytes());
+            zheaders.setHeader(name, value.getBytes());
         } else {
             super.setHeader(name, value);
         }
@@ -137,7 +137,7 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
     @SuppressWarnings("unchecked")
     @Override public void addHeader(String name, String value) {
         if (ZPARSER) {
-            mHeaders.addHeader(name, value.getBytes());
+            zheaders.addHeader(name, value.getBytes());
         } else {
             if (name != null && RESENT_HEADERS.contains(name.toLowerCase())) {
                 headers.add(0, new InternetHeader(name, value));
@@ -149,7 +149,7 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
 
     @Override public void removeHeader(String name) {
         if (ZPARSER) {
-            mHeaders.setHeader(name, (String) null);
+            zheaders.setHeader(name, (String) null);
         } else {
             super.removeHeader(name);
         }
@@ -162,7 +162,7 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
             names = NO_HEADERS;
         }
         List<InternetHeader> jmheaders = new ArrayList<InternetHeader>();
-        for (com.zimbra.common.mime.MimeHeader header : mHeaders) {
+        for (com.zimbra.common.mime.MimeHeader header : zheaders) {
             int i = 0;
             for ( ; i < names.length; i++) {
                 if (header.getName().equalsIgnoreCase(names[i])) {
@@ -170,7 +170,7 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
                 }
             }
             if (match == (i != names.length)) {
-                jmheaders.add(new InternetHeader(header.getName(), header.getValue(null)));
+                jmheaders.add(new InternetHeader(header.getName(), header.getValue(defaultCharset)));
             }
         }
         return new IteratorEnumeration<Header>(jmheaders);
@@ -236,7 +236,7 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
                 }
                 byte[] bvalue = new byte[end - start + 1];
                 System.arraycopy(contents, start, bvalue, 0, end - start + 1);
-                mHeaders.appendHeader(name, bvalue);
+                zheaders.appendHeader(name, bvalue);
             }
         } else {
             super.addHeaderLine(line);
@@ -245,7 +245,7 @@ public class JavaMailInternetHeaders extends InternetHeaders implements JavaMail
 
     private Enumeration<String> enumerateHeaderLines(boolean match, String[] names) {
         List<String> jmheaders = new ArrayList<String>();
-        for (com.zimbra.common.mime.MimeHeader header : mHeaders) {
+        for (com.zimbra.common.mime.MimeHeader header : zheaders) {
             int i = 0;
             for ( ; i < names.length; i++) {
                 if (header.getName().equalsIgnoreCase(names[i])) {

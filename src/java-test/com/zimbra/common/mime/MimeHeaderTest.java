@@ -14,10 +14,13 @@
  */
 package com.zimbra.common.mime;
 
+import java.nio.charset.Charset;
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.zimbra.common.util.CharsetUtil;
 
 public class MimeHeaderTest {
 
@@ -73,12 +76,15 @@ public class MimeHeaderTest {
         Assert.assertEquals("=?utf-8?B?UHJ1w64=?=", MimeHeader.escape(src, null, false));
 
         src = "Pru\u00ee";
-        Assert.assertEquals("=?iso-8859-1?Q?Pru=EE?=", MimeHeader.escape(src, "iso-8859-1", true));
-        Assert.assertEquals("=?iso-8859-1?Q?Pru=EE?=", MimeHeader.escape(src, "iso-8859-1", false));
+        Assert.assertEquals("=?iso-8859-1?Q?Pru=EE?=", MimeHeader.escape(src, CharsetUtil.ISO_8859_1, true));
+        Assert.assertEquals("=?iso-8859-1?Q?Pru=EE?=", MimeHeader.escape(src, CharsetUtil.ISO_8859_1, false));
 
-        src = "Pru\u00ee";
-        Assert.assertEquals("=?utf-8?B?UHJ1w64=?=", MimeHeader.escape(src, "iso-8859-7", true));
-        Assert.assertEquals("=?utf-8?B?UHJ1w64=?=", MimeHeader.escape(src, "iso-8859-7", false));
+        Charset iso_8859_7 = CharsetUtil.toCharset("iso-8859-7");
+        if (iso_8859_7 != null) {
+            src = "Pru\u00ee";
+            Assert.assertEquals("=?utf-8?B?UHJ1w64=?=", MimeHeader.escape(src, iso_8859_7, true));
+            Assert.assertEquals("=?utf-8?B?UHJ1w64=?=", MimeHeader.escape(src, iso_8859_7, false));
+        }
 
         src = "lskdhf lkshfl aksjhlfi ahslkfu Pru\u00ee uey liufhlasuifh haskjhf lkajshf lkajshflkajhslkfj hals\u00e4kjhf laskjhdflaksjh ksjfh ka";
         Assert.assertEquals(
@@ -93,8 +99,8 @@ public class MimeHeaderTest {
         Assert.assertEquals("=?utf-8?B?w6vDrMOtw64=?=", MimeHeader.escape(src, null, false));
 
         src = "\u00eb\u00ec\u00ed\u00ee";
-        Assert.assertEquals("=?iso-8859-1?B?6+zt7g==?=", MimeHeader.escape(src, "iso-8859-1", true));
-        Assert.assertEquals("=?iso-8859-1?B?6+zt7g==?=", MimeHeader.escape(src, "iso-8859-1", false));
+        Assert.assertEquals("=?iso-8859-1?B?6+zt7g==?=", MimeHeader.escape(src, CharsetUtil.ISO_8859_1, true));
+        Assert.assertEquals("=?iso-8859-1?B?6+zt7g==?=", MimeHeader.escape(src, CharsetUtil.ISO_8859_1, false));
 
     }
 
@@ -139,5 +145,23 @@ public class MimeHeaderTest {
         Assert.assertEquals("dog", MimeHeader.unfold("dog\n"));
         Assert.assertEquals("dog", MimeHeader.unfold("\ndog"));
         Assert.assertEquals("dog cat", MimeHeader.unfold("dog\n cat"));
+    }
+
+    @Test
+    public void charsetSuperset() {
+        // decoding should automatically fall back to the superset charset
+        boolean hasWindows1252 = CharsetUtil.toCharset(MimeConstants.P_CHARSET_WINDOWS_1252) != null;
+        String euro200 = "=?ISO-8859-1?Q?=80200?=";
+        byte[] euro300 = new byte[] { (byte) 0x80, '3', '0', '0' };
+        if (hasWindows1252) {
+            Assert.assertEquals("\u20ac200", MimeHeader.decode(euro200));
+            Assert.assertEquals("\u20ac300", new MimeHeader("X-Cost", euro300).getValue("iso-8859-1"));
+        } else {
+            Assert.assertEquals("\u0080200", MimeHeader.decode(euro200));
+            Assert.assertEquals("\u0080300", new MimeHeader("X-Cost", euro300).getValue("iso-8859-1"));
+        }
+
+        // encoding should *not* use a superset charset
+        Assert.assertEquals("=?UTF-8?Q?=E2=82=AC200000?=", MimeHeader.escape("\u20ac200000", CharsetUtil.ISO_8859_1, true).toUpperCase());
     }
 }

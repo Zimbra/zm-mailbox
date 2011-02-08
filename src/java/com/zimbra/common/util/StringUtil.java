@@ -20,7 +20,6 @@ package com.zimbra.common.util;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
 
@@ -29,7 +28,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -757,31 +755,6 @@ public class StringUtil {
             }
         }
         return result.toString();
-    }
-
-    /** Determines whether {@code data} can be encoded using
-     *  {@code requestedCharset}.
-     * @param data              the data to be encoded
-     * @param requestedCharset  the character set
-     * @return {@code requestedCharset} if encoding is supported,
-     *         "<tt>utf-8</tt>" if not, or
-     *         "<tt>us-ascii</tt>" if data is {@code null}.
-     */
-    public static String checkCharset(String data, String requestedCharset) {
-        if (data == null) {
-            return "us-ascii";
-        }
-
-        if (requestedCharset != null && !requestedCharset.isEmpty() && !requestedCharset.equalsIgnoreCase("utf-8")) {
-            try {
-                Charset cset = Charset.forName(requestedCharset);
-                if (cset.canEncode() && cset.newEncoder().canEncode(data)) {
-                    return requestedCharset;
-                }
-            } catch (Exception e) {}
-        }
-
-        return "utf-8";
     }
 
     private static Set<String> sJavaReservedWords =
