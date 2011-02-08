@@ -580,22 +580,41 @@ public class DbSearch {
                         (sort.getCriterion() != SortCriterion.DATE && sort.getCriterion() != SortCriterion.SIZE) ||
                         NodeType.OR != node.getNodeType()) {
             // do it the old way
-            return searchInternal(result, conn, node, mbox, sort, offset, limit, extra, inDumpster);
-        } else {
-            // run each toplevel ORed part as a separate SQL query, then merge
-            // the results in memory
-            List<List<SearchResult>> resultLists = new ArrayList<List<SearchResult>>();
-
-            for (DbSearchConstraintsNode subNode : node.getSubNodes()) {
-                List<SearchResult> subNodeResults = new ArrayList<SearchResult>();
-                search(subNodeResults, conn, subNode, mbox, sort, offset, limit, extra, inDumpster);
-                resultLists.add(subNodeResults);
+            try {
+                return searchInternal(result, conn, node, mbox, sort, offset, limit, extra, inDumpster);
+            } catch (ServiceException se) {
+                boolean trySplitOr = false;
+                if (Db.supports(Db.Capability.SQL_PARAM_LIMIT)) {
+                    Throwable cause = se;
+                    while (cause != null) {
+                        if (cause instanceof SQLException) {
+                            if (Db.errorMatches((SQLException)cause, Db.Error.TOO_MANY_SQL_PARAMS)) {
+                                sLog.debug("Query %s resulted in too many sql params; attempting split OR clauses into individual queries", node);
+                                trySplitOr = true;
+                                break;
+                            }
+                        }
+                        cause = cause.getCause();
+                    }
+                }
+                if (!trySplitOr) {
+                    throw se;
+                }
             }
-
-            Comparator<SearchResult> comp = SearchResult.getComparator(sort);
-            result = mergeSortedLists(result, resultLists, comp);
-            return result;
+        } 
+        // if (where a or b) not supported or if we encountered too many sql params try splitting 
+        // run each toplevel ORed part as a separate SQL query, then merge
+        // the results in memory
+        List<List<SearchResult>> resultLists = new ArrayList<List<SearchResult>>();
+        for (DbSearchConstraintsNode subNode : node.getSubNodes()) {
+            List<SearchResult> subNodeResults = new ArrayList<SearchResult>();
+            search(subNodeResults, conn, subNode, mbox, sort, offset, limit, extra, inDumpster);
+            resultLists.add(subNodeResults);
         }
+
+        Comparator<SearchResult> comp = SearchResult.getComparator(sort);
+        result = mergeSortedLists(result, resultLists, comp);
+        return result;
     }
 
     public static List<SearchResult> searchInternal(List<SearchResult> result, Connection conn,
