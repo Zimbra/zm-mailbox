@@ -15,24 +15,26 @@
 package com.zimbra.common.mime;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.zimbra.common.mime.MimeAddressHeader;
+import com.zimbra.common.util.CharsetUtil;
 
 public class InternetAddress implements Cloneable {
     private String display;
     private String email;
-    private String charset;
+    private Charset charset;
 
     public InternetAddress() {
-        this.charset = "utf-8";
+        this.charset = CharsetUtil.UTF_8;
     }
 
     public InternetAddress(String display, String email) {
         this.display = display;
         this.email = email;
-        this.charset = "utf-8";
+        this.charset = CharsetUtil.UTF_8;
     }
 
     public InternetAddress(InternetAddress iaddr) {
@@ -42,14 +44,8 @@ public class InternetAddress implements Cloneable {
     }
 
     public InternetAddress(String content) {
-        byte[] bvalue;
-        try {
-            this.charset = "utf-8";
-            bvalue = content.getBytes(this.charset);
-        } catch (UnsupportedEncodingException e) {
-            this.charset = null;
-            bvalue = content.getBytes();
-        }
+        this.charset = CharsetUtil.UTF_8;
+        byte[] bvalue = content.getBytes(this.charset);
         parse(bvalue, 0, bvalue.length);
     }
 
@@ -58,16 +54,16 @@ public class InternetAddress implements Cloneable {
     }
 
     public InternetAddress(byte[] content, String charset) {
-        this(content, 0, content.length, charset);
+        this(content, 0, content.length, CharsetUtil.toCharset(charset));
     }
 
-    public InternetAddress(byte[] content, int start, int length, String charset) {
-        if (charset != null && !charset.trim().isEmpty()) {
-            this.charset = charset.trim();
+    InternetAddress(byte[] content, int start, int length, Charset charset) {
+        if (charset != null) {
+            this.charset = charset;
         }
         parse(content, start, length);
         if (this.charset == null) {
-            this.charset = "utf-8";
+            this.charset = CharsetUtil.UTF_8;
         }
     }
 
@@ -85,7 +81,7 @@ public class InternetAddress implements Cloneable {
         return display;
     }
 
-    public String getCharset() {
+    public Charset getCharset() {
         return charset;
     }
 
@@ -100,7 +96,12 @@ public class InternetAddress implements Cloneable {
     }
 
     public InternetAddress setCharset(String charset) {
-        this.charset = charset == null || charset.trim().equals("") ? "utf-8" : charset.trim();
+        this.charset = charset == null || charset.trim().equals("") ? CharsetUtil.UTF_8 : CharsetUtil.toCharset(charset.trim());
+        return this;
+    }
+
+    public InternetAddress setCharset(Charset charset) {
+        this.charset = charset == null ? CharsetUtil.UTF_8 : charset;
         return this;
     }
 
@@ -157,13 +158,8 @@ public class InternetAddress implements Cloneable {
         if (raw == null) {
             return null;
         }
-        try {
-            byte[] array = raw.getBytes("utf-8");
-            return parseHeader(array, 0, array.length, "utf-8");
-        } catch (UnsupportedEncodingException e) {
-            byte[] array = raw.getBytes();
-            return parseHeader(array, 0, array.length);
-        }
+        byte[] content = raw.getBytes(CharsetUtil.UTF_8);
+        return parseHeader(content, 0, content.length, CharsetUtil.UTF_8);
     }
 
     static List<InternetAddress> parseHeader(MimeHeader header) {
@@ -179,7 +175,7 @@ public class InternetAddress implements Cloneable {
         return parseHeader(content, start, length, null);
     }
 
-    public static List<InternetAddress> parseHeader(final byte[] content, final int start, final int length, final String charset) {
+    public static List<InternetAddress> parseHeader(final byte[] content, final int start, final int length, final Charset charset) {
         // FIXME: will split the header incorrectly if there's a ',' in the middle of a domain literal ("@[...]")
         boolean quoted = false, escaped = false, empty = true;
         int pos = start, astart = pos, end = start + length, clevel = 0;
@@ -480,7 +476,7 @@ public class InternetAddress implements Cloneable {
         if (!builder.isEmpty()) {
             if (clevel > 0)   comment = builder.appendTo(comment);
             else if (angle)   address = builder.appendTo(address);
-            else if (quoted)  base = (base == null ? "" : base) +  MimeHeader.decode(builder.toByteArray(), charset);
+            else if (quoted)  base = (base == null ? "" : base) + MimeHeader.decode(builder.toByteArray(), charset);
             else              base = builder.appendTo(base);
         }
 

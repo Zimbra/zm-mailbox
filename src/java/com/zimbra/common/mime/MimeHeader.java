@@ -17,15 +17,14 @@ package com.zimbra.common.mime;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-//import java.nio.charset.Charset;
 
 import com.zimbra.common.mime.HeaderUtils.ByteBuilder;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 public class MimeHeader implements Cloneable {
@@ -69,14 +68,13 @@ public class MimeHeader implements Cloneable {
     /** Creates a new {@code MimeHeader} with {@code value} as the field value.
      *  Header will be serialized as <tt>{name}: {encoded-value}CRLF</tt> after
      *  appropriate RFC 2047 encoded-word encoding and RFC 5322 line folding
-     *  has been performed.  When generating encoded-words, {@code encodingCharset}
+     *  has been performed.  When generating encoded-words, {@code charset}
      *  will be used as the encoding charset if possible, defaulting back to
      *  <tt>utf-8</tt>.  <i>Note: No line folding is done at present.</i> */
-    MimeHeader(final String name, final String value, final String encodingCharset) {
+    MimeHeader(final String name, final String value, final String charset) {
         this.hinfo = HeaderInfo.of(name);
         this.name = hinfo.name == null ? name : hinfo.name;
-        String charset = encodingCharset != null && !encodingCharset.equals("") ? encodingCharset : null;
-        updateContent(escape(value, charset, false).getBytes());
+        updateContent(escape(value, CharsetUtil.toCharset(charset), false).getBytes());
     }
 
     /** Creates a new {@code MimeHeader} serialized as "<tt>{name}:
@@ -160,7 +158,10 @@ public class MimeHeader implements Cloneable {
             return hinfo == null ? DEFAULT : hinfo;
         }
 
-        @Override public String toString()  { return name; }
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 
 
@@ -206,7 +207,7 @@ public class MimeHeader implements Cloneable {
         while (end > valueStart && ((c = content[end-1]) == '\n' || c == '\r')) {
             end--;
         }
-        return decode(content, valueStart, end - valueStart, charset);
+        return decode(content, valueStart, end - valueStart, CharsetUtil.toCharset(charset));
     }
 
     /** Returns the header's value (the bit after the '<tt>:</tt>') as a
@@ -234,15 +235,11 @@ public class MimeHeader implements Cloneable {
         while (end > valueStart && ((c = content[end-1]) == '\n' || c == '\r')) {
             end--;
         }
-        return createString(content, valueStart, end - valueStart, charset);
+        return createString(content, valueStart, end - valueStart, CharsetUtil.toCharset(charset));
     }
 
-    private static String createString(byte[] bytes, int offset, int length, String charsetName) {
-        try {
-            return new String(bytes, offset, length, decodingCharset(charsetName));
-        } catch (UnsupportedEncodingException e) {
-            return new String(bytes, offset, length);
-        }
+    private static String createString(byte[] bytes, int offset, int length, Charset charset) {
+        return new String(bytes, offset, length, decodingCharset(charset));
     }
 
     /** Marks the header as "dirty" and requiring reserialization.  To enforce
@@ -266,27 +263,22 @@ public class MimeHeader implements Cloneable {
     protected void reserialize() {
     }
 
-//    static final String DEFAULT_CHARSET = Charset.defaultCharset().name();
-    static final String DEFAULT_CHARSET = HeaderUtils.normalizeCharset("iso-8859-1");
+    static final Charset DEFAULT_CHARSET = CharsetUtil.normalizeCharset(CharsetUtil.ISO_8859_1);
 
-    static String decodingCharset(String charset) {
-        return charset != null && !charset.trim().isEmpty() ? charset.trim() : DEFAULT_CHARSET;
+    static Charset decodingCharset(Charset charset) {
+        return charset != null ? CharsetUtil.normalizeCharset(charset) : DEFAULT_CHARSET;
     }
 
     public static String decode(final String content) {
-        try {
-            return decode(content.getBytes("utf-8"), "utf-8");
-        } catch (UnsupportedEncodingException e) {
-            return decode(content.getBytes(), DEFAULT_CHARSET);
-        }
+        return decode(content.getBytes(CharsetUtil.UTF_8), CharsetUtil.UTF_8);
     }
 
-    static String decode(final byte[] content, final String charset) {
+    static String decode(final byte[] content, final Charset charset) {
         return decode(content, 0, content.length, charset);
     }
 
     @SuppressWarnings("null")
-    static String decode(final byte[] content, final int start, final int length, final String charset) {
+    static String decode(final byte[] content, final int start, final int length, final Charset charset) {
         // short-circuit if there are only ASCII characters and no "=?"
         final int end = start + length;
         boolean complicated = false;
@@ -377,11 +369,11 @@ public class MimeHeader implements Cloneable {
     }
 
     static class EncodedWord {
-        static String encode(final String value, final String requestedCharset) {
+        static String encode(final String value, final Charset requestedCharset) {
             StringBuilder sb = new StringBuilder();
 
             // FIXME: need to limit encoded-words to 75 bytes
-            String charset = StringUtil.checkCharset(value, requestedCharset);
+            Charset charset = CharsetUtil.checkCharset(value, requestedCharset);
             byte[] content = null;
             try {
                 content = value.getBytes(charset);
@@ -393,10 +385,10 @@ public class MimeHeader implements Cloneable {
                     content = new byte[0];  // never reachable, but averts compiler warnings
                 }
             } catch (Throwable t) {
-                content = value.getBytes();
-                charset = DEFAULT_CHARSET;
+                content = value.getBytes(CharsetUtil.ISO_8859_1);
+                charset = CharsetUtil.ISO_8859_1;
             }
-            sb.append("=?").append(charset);
+            sb.append("=?").append(charset.name().toLowerCase());
 
             int invalidQ = 0;
             for (byte b : content) {
@@ -438,7 +430,8 @@ public class MimeHeader implements Cloneable {
                 setForceEncode(FORCE_ENCODE);
             }
 
-            @Override public int read() throws IOException {
+            @Override
+            public int read() throws IOException {
                 int c = super.read();
                 return c == ' ' ? '_' : c;
             }
@@ -446,12 +439,13 @@ public class MimeHeader implements Cloneable {
 
         private static class B2047Encoder extends ContentTransferEncoding.Base64EncoderStream {
             B2047Encoder(byte[] content) {
-                super(new ByteArrayInputStream(content));  disableFolding();
+                super(new ByteArrayInputStream(content));
+                disableFolding();
             }
         }
     }
 
-    /** Characters that can form part of an RFC 2822 atom. */
+    /** Characters that can form part of an RFC 5322 atom. */
     static final boolean[] ATEXT_VALID = new boolean[128];
     static {
         for (int c : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&'*+-/=?^_`{|}~".getBytes()) {
@@ -459,7 +453,7 @@ public class MimeHeader implements Cloneable {
         }
     }
 
-    public static String escape(final String value, final String charset, final boolean phrase) {
+    public static String escape(final String value, final Charset charset, final boolean phrase) {
         boolean needsQuote = false, wsp = true;
         int needs2047 = 0, needsEscape = 0, cleanTo = 0, cleanFrom = value.length();
         for (int i = 0, len = value.length(); i < len; i++) {

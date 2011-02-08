@@ -18,7 +18,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+
+import com.zimbra.common.util.CharsetUtil;
 
 public class HeaderUtils {
 
@@ -62,7 +65,7 @@ public class HeaderUtils {
         try {
             byte[] dbuffer = new byte[word.length];
             int dsize = decoder.read(dbuffer);
-            return new String(dbuffer, 0, dsize, normalizeCharset(charset));
+            return new String(dbuffer, 0, dsize, CharsetUtil.normalizeCharset(charset));
         } catch (OutOfMemoryError oome) {
             throw oome;
         } catch (Error e) { // bug 40926 - catch java.lang.Error thrown by String class for invalid charset issues 
@@ -70,29 +73,6 @@ public class HeaderUtils {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    private static final String P_CHARSET_CP1252 = "windows-1252";
-    private static final String P_CHARSET_EUC_CN = "euc_cn";
-    private static final String P_CHARSET_GB2312 = "gb2312";
-    private static final String P_CHARSET_GBK    = "gbk";
-    private static final String P_CHARSET_LATIN1 = "iso-8859-1";
-
-    private static final boolean SUPPORTS_CP1252 = Charset.isSupported(P_CHARSET_CP1252);
-    private static final boolean SUPPORTS_GBK    = Charset.isSupported(P_CHARSET_GBK);
-
-    static String normalizeCharset(String enc) {
-        if (enc == null || enc.equals("")) {
-            return enc;
-        }
-
-        String charset = enc.trim(), lccharset = charset.toLowerCase();
-        if (SUPPORTS_CP1252 && lccharset.equals(P_CHARSET_LATIN1)) {
-            return P_CHARSET_CP1252;
-        } else if (SUPPORTS_GBK && (lccharset.equals(P_CHARSET_GB2312) || lccharset.equals(P_CHARSET_EUC_CN))) {
-            return P_CHARSET_GBK;
-        }
-        return charset;
     }
 
     private static class QP2047Decoder extends ContentTransferEncoding.QuotedPrintableDecoderStream {
@@ -110,7 +90,7 @@ public class HeaderUtils {
 
 
     static class ByteBuilder extends ByteArrayOutputStream {
-        private String charset;
+        private Charset charset;
 
         ByteBuilder() {
             super();
@@ -120,14 +100,24 @@ public class HeaderUtils {
             super(size);
         }
 
-        ByteBuilder(String charset) {
+        ByteBuilder(String charset) throws UnsupportedEncodingException {
             this();
-            this.charset = charset;
+            setCharset(charset);
         }
 
-        ByteBuilder(int size, String charset) {
+        ByteBuilder(int size, String charset) throws UnsupportedEncodingException {
             this(size);
-            this.charset = charset;
+            setCharset(charset);
+        }
+
+        ByteBuilder(Charset charset) {
+            this();
+            setCharset(charset);
+        }
+
+        ByteBuilder(int size, Charset charset) {
+            this(size);
+            setCharset(charset);
         }
 
         ByteBuilder(byte[] b) {
@@ -135,15 +125,20 @@ public class HeaderUtils {
             append(b);
         }
 
+        ByteBuilder setCharset(String enc) throws UnsupportedEncodingException {
+            this.charset = CharsetUtil.normalizeCharset(enc);
+            return this;
+        }
+
+        ByteBuilder setCharset(Charset charset) {
+            this.charset = CharsetUtil.normalizeCharset(charset);
+            return this;
+        }
+
         ByteBuilder pop() {
             if (count > 0) {
                 count--;
             }
-            return this;
-        }
-
-        ByteBuilder setCharset(String charset) {
-            this.charset = charset;
             return this;
         }
 
@@ -200,12 +195,7 @@ public class HeaderUtils {
 
         @Override
         public synchronized String toString() {
-            try {
-                if (charset != null && !charset.isEmpty()) {
-                    return super.toString(charset);
-                }
-            } catch (Exception e) { }
-            return super.toString();
+            return charset == null ? super.toString() : new String(buf, 0, count, charset);
         }
 
         String appendTo(String prefix) {

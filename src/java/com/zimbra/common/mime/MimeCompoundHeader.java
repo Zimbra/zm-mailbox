@@ -15,6 +15,7 @@
 package com.zimbra.common.mime;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -26,7 +27,7 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.net.URLCodec;
 
 import com.zimbra.common.mime.HeaderUtils.ByteBuilder;
-import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.CharsetUtil;
 
 public class MimeCompoundHeader extends MimeHeader {
     private boolean use2231Encoding;
@@ -63,11 +64,7 @@ public class MimeCompoundHeader extends MimeHeader {
     }
 
     private static byte[] getBytes(String value) {
-        try {
-            return value == null ? null : value.getBytes(DEFAULT_CHARSET);
-        } catch (UnsupportedEncodingException e) {
-            return value.getBytes();
-        }
+        return value == null ? null : value.getBytes(DEFAULT_CHARSET);
     }
 
 
@@ -307,7 +304,8 @@ public class MimeCompoundHeader extends MimeHeader {
 
     private static final int LINE_WRAP_LENGTH = 76;
 
-    @Override protected void reserialize() {
+    @Override
+    protected void reserialize() {
         if (content != null) {
             return;
         }
@@ -340,7 +338,7 @@ public class MimeCompoundHeader extends MimeHeader {
                 }
             }
 
-            String paramCharset = nonascii ? StringUtil.checkCharset(value, this.charset) : "us-ascii";
+            String paramCharset = nonascii ? CharsetUtil.checkCharset(value, this.charset) : "us-ascii";
 
             ByteBuilder bb = new ByteBuilder();
             if (!nonascii) {
@@ -364,7 +362,8 @@ public class MimeCompoundHeader extends MimeHeader {
                 } catch (UnsupportedEncodingException e) {
                 }
             } else {
-                bb.append(param.getKey()).append('=').append('"').append(MimeHeader.EncodedWord.encode(value, paramCharset)).append('"');
+                String encoded = EncodedWord.encode(value, CharsetUtil.toCharset(paramCharset));
+                bb.append(param.getKey()).append('=').append('"').append(encoded).append('"');
             }
 
             if (position + bb.length() > LINE_WRAP_LENGTH) {
@@ -475,8 +474,8 @@ public class MimeCompoundHeader extends MimeHeader {
                     if (parts == null) {
                         partials.put(pname, parts = new TreeMap<Integer, ParameterContinuation>());
                     }
-                    String encoding = charset == null || charset.isEmpty() ? DEFAULT_CHARSET : decodingCharset(charset.toString());
-                    parts.put(continued, new ParameterContinuation(encoding, encoded, value.toString()));
+                    Charset encoding = charset == null || charset.isEmpty() ? DEFAULT_CHARSET : decodingCharset(CharsetUtil.toCharset(charset.toString()));
+                    parts.put(continued, new ParameterContinuation(encoding.toString(), encoded, value.toString()));
                     attrs.put(pname, null);
                 } else {
                     if (encoded) {
