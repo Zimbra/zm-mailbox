@@ -1240,10 +1240,11 @@ public class Message extends MailItem {
                                          int flags, DraftInfo dinfo,
                                          List<CalendarItemInfo> calItemInfos, String calIntendedFor) {
         // cache the "To" header only for messages sent by the user
-        String recipients = ((flags & Flag.BITMASK_FROM_ME) == 0 ? null : pm.getRecipients());
+        //TODO: Cache To header for all messages because of Priority Inbox prorotype
+        // String recipients = ((flags & Flag.BITMASK_FROM_ME) == 0 ? null : pm.getRecipients());
+        String recipients = pm.getRecipients();
         return encodeMetadata(new Metadata(), color, version, extended, pm.getSender(), recipients, pm.getFragment(),
-                              pm.getNormalizedSubject(), pm.getSubject(), dinfo,
-                              calItemInfos, calIntendedFor).toString();
+                pm.getNormalizedSubject(), pm.getSubject(), dinfo, calItemInfos, calIntendedFor).toString();
     }
 
 

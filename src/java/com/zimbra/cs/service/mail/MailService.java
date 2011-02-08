@@ -1,23 +1,21 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on May 26, 2004
- */
 package com.zimbra.cs.service.mail;
 
+
+import org.dom4j.QName;
 
 import com.zimbra.soap.DocumentDispatcher;
 import com.zimbra.soap.DocumentService;
@@ -25,10 +23,9 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.MailConstants;
 
 /**
- * 
- * @zm-service-description		The Mail Service includes commands for managing
- * mail and calendar information.
- * 
+ * @zm-service-description The Mail Service includes commands for managing mail and calendar information.
+ *
+ * @since May 26, 2004
  * @author schemers
  */
 public class MailService implements DocumentService {
@@ -195,26 +192,29 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.DELETE_DATA_SOURCE_REQUEST, new DeleteDataSource());
         dispatcher.registerHandler(MailConstants.IMPORT_DATA_REQUEST, new ImportData());
         dispatcher.registerHandler(MailConstants.GET_IMPORT_STATUS_REQUEST, new GetImportStatus());
-        
+
         // waitset
         dispatcher.registerHandler(MailConstants.CREATE_WAIT_SET_REQUEST, new CreateWaitSet());
         dispatcher.registerHandler(MailConstants.WAIT_SET_REQUEST, new WaitSetRequest());
         dispatcher.registerHandler(MailConstants.DESTROY_WAIT_SET_REQUEST, new DestroyWaitSet());
-        
+
         // Account ACL
         dispatcher.registerHandler(MailConstants.GET_PERMISSION_REQUEST, new GetPermission());
         dispatcher.registerHandler(MailConstants.CHECK_PERMISSION_REQUEST, new CheckPermission());
         dispatcher.registerHandler(MailConstants.GRANT_PERMISSION_REQUEST, new GrantPermission());
         dispatcher.registerHandler(MailConstants.REVOKE_PERMISSION_REQUEST, new RevokePermission());
-        
+
         // folder ACl
         dispatcher.registerHandler(MailConstants.GET_EFFECTIVE_FOLDER_PERMS_REQUEST, new GetEffectiveFolderPerms());
-        
+
         // yahoo auth
         dispatcher.registerHandler(MailConstants.GET_YAHOO_COOKIE_REQUEST, new GetYahooCookie());
         dispatcher.registerHandler(MailConstants.GET_YAHOO_AUTH_TOKEN_REQUEST, new GetYahooAuthToken());
-        
+
         dispatcher.registerHandler(MailConstants.AUTO_COMPLETE_REQUEST, new AutoComplete());
         dispatcher.registerHandler(MailConstants.RANKING_ACTION_REQUEST, new RankingAction());
+
+        //TODO: Priority Inbox prototype
+        dispatcher.registerHandler(QName.get("PriorityInboxRequest", MailConstants.NAMESPACE), new PriorityInbox());
     }
 }
