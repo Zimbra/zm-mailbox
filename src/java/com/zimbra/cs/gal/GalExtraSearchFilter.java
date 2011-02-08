@@ -83,15 +83,15 @@ public class GalExtraSearchFilter {
         return term;
     }
     
-    public static class GalExtraQueryCallback implements GalSearchQueryCallback {
-        private EntrySearchFilter filter;
+    public static abstract class GalExtraQueryCallback implements GalSearchQueryCallback {
+        protected EntrySearchFilter filter;
         
-        public GalExtraQueryCallback(EntrySearchFilter filter) {
+        protected GalExtraQueryCallback(EntrySearchFilter filter) {
             this.filter = filter;
         }
         
         /*
-         * Supply an extra query for GAL sync account search
+         * Return an extra query for GAL sync account search
          */
         public String getMailboxSearchQuery() {
             GalExtraSearchFilter.MailboxQueryVisitor visitor = new GalExtraSearchFilter.MailboxQueryVisitor();
@@ -100,15 +100,7 @@ public class GalExtraSearchFilter {
             return (StringUtil.isNullOrEmpty(query) ? null : query);
         }
         
-        /*
-         * Supply an extra query for Zimbra GAL LDAP search
-         */
-        public String getZimbraLdapSearchQuery() {
-            LdapQueryVisitor visitor = new LdapQueryVisitor();
-            filter.traverse(visitor);
-            String query = visitor.getFilter();
-            return (StringUtil.isNullOrEmpty(query) ? null : query);
-        }
+        public abstract String getZimbraLdapSearchQuery();
     }
 
     private static class MailboxQueryVisitor implements Visitor {

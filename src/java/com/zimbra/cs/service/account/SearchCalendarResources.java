@@ -26,13 +26,18 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapEntrySearchFilter.LdapQueryVisitor;
 import com.zimbra.cs.gal.GalExtraSearchFilter;
+import com.zimbra.cs.gal.GalExtraSearchFilter.FilteredGalSearchResultCallback;
+import com.zimbra.cs.gal.GalExtraSearchFilter.GalExtraQueryCallback;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.cs.gal.GalSearchQueryCallback;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -54,7 +59,8 @@ public class SearchCalendarResources extends GalDocumentHandler {
         return searchGal(zsc, account, request);
     }
 
-    private static Element searchGal(ZimbraSoapContext zsc, Account account, Element request) throws ServiceException {
+    private static Element searchGal(ZimbraSoapContext zsc, Account account, Element request) 
+    throws ServiceException {
         
         Element name = request.getOptionalElement(AccountConstants.E_NAME);
 
@@ -64,7 +70,7 @@ public class SearchCalendarResources extends GalDocumentHandler {
         params.setQuery(name == null ? null : name.getText());
         
         if (filter != null) {
-            params.setExtraQueryCallback(new GalExtraSearchFilter.GalExtraQueryCallback(filter));
+            params.setExtraQueryCallback(new CalendarResourceExtraQueryCallback(filter));
         }
         
         params.setType(Provisioning.GalSearchType.resource);
@@ -93,7 +99,30 @@ public class SearchCalendarResources extends GalDocumentHandler {
         return params.getResultCallback().getResponse();
     }
     
-    private static class CalendarResourceGalSearchResultCallback extends GalExtraSearchFilter.FilteredGalSearchResultCallback {
+    private static class CalendarResourceExtraQueryCallback 
+    extends GalExtraQueryCallback implements GalSearchQueryCallback {
+        public CalendarResourceExtraQueryCallback(EntrySearchFilter filter) {
+            super(filter);
+        }
+        
+        /*
+         * Return an extra query for Zimbra GAL LDAP search
+         * 
+         * Each terminal term in the filter is mapped to a term in the generated LDAP query as:
+         * ({term.getLhs()} op {term.getRhs()}) 
+         * 
+         * To use this method, getRhs() of each terminal term in the filter must be 
+         * an actual LDAP attribute name 
+         */
+        public String getZimbraLdapSearchQuery() {
+            LdapQueryVisitor visitor = new LdapQueryVisitor();
+            filter.traverse(visitor);
+            String query = visitor.getFilter();
+            return (StringUtil.isNullOrEmpty(query) ? null : query);
+        }
+    }
+    
+    private static class CalendarResourceGalSearchResultCallback extends FilteredGalSearchResultCallback {
         
         private CalendarResourceGalSearchResultCallback(GalSearchParams params, EntrySearchFilter filter, Set<String> attrs) {
             super(params, filter, attrs);

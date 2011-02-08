@@ -19,12 +19,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Domain;
@@ -36,45 +42,24 @@ import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.ZAttrProvisioning.CalResType;
 
-import junit.framework.TestCase;
-
-public class TestSearchCalendarResources extends TestCase {
-
 /*
-<SearchCalendarResourcesRequest>
-    [attrs="a1,a2,a3"] [sortBy="{sortBy}"] [sortAscending="{sortAscending}"] [limit="..."] [offset="..."]>
-
-  [<name>...</name>]
-  <searchFilter>
-    <conds [not="1|0"] [or="1|0"] >
-      [<cond> or <conds>]+
-    </conds>  (exactly one instance of <conds>)
-
-    -- or --
-
-    <cond [not="1|0"] attr="{attr}" op="{op}" value="{value}" />  (exactly one instance of <cond>)
-  </searchFilter>
-
-</SearchCalendarResourcesRequest>
-
-<SearchCalendarResourcesResponse [paginationSupported="1|0"]>
-  <calresource name="{name}" id="{id}">
-    <a n="...">...</a>+
-  </calresource>*
-</SearchCalendarResourcesResponse>
-
+TODO: Add this class to {@link ZimbraSuite} once it supports JUnit 4 annotations.
 */
-    private static final String DOMAIN_LDAP = "ldap.galtest";
-    private static final String DOMAIN_GSA = "gsa.galtest";
-    private static final String USER = "user1";
+
+public class TestSearchCalendarResources {
+
+    private static final String DOMAIN_LDAP = "ldap.search-calendar-resource";
+    private static final String DOMAIN_GSA = "gsa.search-calendar-resource";
+    private static final String AUTHED_USER = "user1";
     
     private static final String KEY_FOR_SEARCH_BY_NAME = "meeting";
     private static final String ROOM_1 = "meeting-room-1";
     private static final String ROOM_2 = "meeting-room-2";
     private static final String ROOM_3 = "meeting-room-3";
-    private static final String SITE = "PaloAlto";
     
-    private boolean mAllDone;
+    private static final String SITE_WORD_1 = "Palo";
+    private static final String SITE_WORD_2 = "Alto";
+    private static final String SITE = SITE_WORD_1 + " " + SITE_WORD_2;
     
     private static class MockCalendarResource extends CalendarResource {
         MockCalendarResource(Element e) throws ServiceException {
@@ -84,9 +69,9 @@ public class TestSearchCalendarResources extends TestCase {
     }
     
    
-    public void searchByName(boolean ldap, String domainName) throws Exception {
+    private void searchByName(boolean ldap, String domainName) throws Exception {
         SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
-        TestSearchGal.authUser(transport, getAddress(USER, domainName));
+        TestSearchGal.authUser(transport, TestUtil.getAddress(AUTHED_USER, domainName));
         
         Element request = Element.create(transport.getRequestProtocol(), AccountConstants.SEARCH_CALENDAR_RESOURCES_REQUEST);
         
@@ -102,22 +87,22 @@ public class TestSearchCalendarResources extends TestCase {
             
         boolean found1 = false;
         boolean found2 = false;
-        boolean found3= false;
+        boolean found3 = false;
         
         List<CalendarResource> resources = new ArrayList<CalendarResource>();
         for (Element eResource: response.listElements(AccountConstants.E_CALENDAR_RESOURCE)) {
             CalendarResource resource = new MockCalendarResource(eResource);
             resources.add(resource);
             
-            if (resource.getName().equals(getAddress(ROOM_1, domainName))) {
+            if (resource.getName().equals(TestUtil.getAddress(ROOM_1, domainName))) {
                 found1 = true;
             }
             
-            if (resource.getName().equals(getAddress(ROOM_2, domainName))) {
+            if (resource.getName().equals(TestUtil.getAddress(ROOM_2, domainName))) {
                 found2 = true;
             }
             
-            if (resource.getName().equals(getAddress(ROOM_3, domainName))) {
+            if (resource.getName().equals(TestUtil.getAddress(ROOM_3, domainName))) {
                 found3 = true;
             }
             
@@ -125,29 +110,29 @@ public class TestSearchCalendarResources extends TestCase {
         
         if (ldap) {
             // pagination is not supported
-            assertFalse(paginationSupported);
+            Assert.assertFalse(paginationSupported);
             
             // offset and limit are not honored
-            assertEquals(3, resources.size());
-            assertTrue(found1);
-            assertTrue(found2);
-            assertTrue(found3);
+            Assert.assertEquals(3, resources.size());
+            Assert.assertTrue(found1);
+            Assert.assertTrue(found2);
+            Assert.assertTrue(found3);
         } else {
             // pagination is supported
-            assertFalse(!paginationSupported);
+            Assert.assertFalse(!paginationSupported);
             
             // offset and limit are honored
-            assertEquals(2, resources.size());
-            assertTrue(found1);
-            assertTrue(found2);
-            assertTrue(!found3); // at offset 0 (gal sync acount mailbox search is by dateDesc order) 
+            Assert.assertEquals(2, resources.size());
+            Assert.assertTrue(found1);
+            Assert.assertTrue(found2);
+            Assert.assertTrue(!found3); // at offset 0 (gal sync acount mailbox search is by dateDesc order) 
                                  // - not within specified offset 
         }
     }
     
-    public void searchByFilter(boolean ldap, String domainName) throws Exception {
+    private void searchByFilter(boolean ldap, String domainName) throws Exception {
         SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
-        TestSearchGal.authUser(transport, getAddress(USER, domainName));
+        TestSearchGal.authUser(transport, TestUtil.getAddress(AUTHED_USER, domainName));
         
         Element request = Element.create(transport.getRequestProtocol(), AccountConstants.SEARCH_CALENDAR_RESOURCES_REQUEST);
         
@@ -170,7 +155,7 @@ public class TestSearchCalendarResources extends TestCase {
         Element eCondResSite = eConds.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND);
         eCondResSite.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_ATTR, "zimbraCalResSite");
         eCondResSite.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_OP, Operator.has.name());
-        eCondResSite.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_VALUE, SITE);
+        eCondResSite.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_VALUE, SITE_WORD_1);
         
         Element response = transport.invoke(request);
         
@@ -178,22 +163,22 @@ public class TestSearchCalendarResources extends TestCase {
         
         boolean found1 = false;
         boolean found2 = false;
-        boolean found3= false;
+        boolean found3 = false;
         
         List<CalendarResource> resources = new ArrayList<CalendarResource>();
         for (Element eResource: response.listElements(AccountConstants.E_CALENDAR_RESOURCE)) {
             CalendarResource resource = new MockCalendarResource(eResource);
             resources.add(resource);
             
-            if (resource.getName().equals(getAddress(ROOM_1, domainName))) {
+            if (resource.getName().equals(TestUtil.getAddress(ROOM_1, domainName))) {
                 found1 = true;
             }
             
-            if (resource.getName().equals(getAddress(ROOM_2, domainName))) {
+            if (resource.getName().equals(TestUtil.getAddress(ROOM_2, domainName))) {
                 found2 = true;
             }
             
-            if (resource.getName().equals(getAddress(ROOM_3, domainName))) {
+            if (resource.getName().equals(TestUtil.getAddress(ROOM_3, domainName))) {
                 found3 = true;
             }
 
@@ -201,65 +186,75 @@ public class TestSearchCalendarResources extends TestCase {
         
         if (ldap) {
             // pagination is not supported
-            assertEquals(ldap, !paginationSupported);
+            Assert.assertEquals(ldap, !paginationSupported);
 
             // offset and limit are not honored
-            assertEquals(2, resources.size());
-            assertTrue(!found1);  // not matching capacity requirement
-            assertTrue(found2); 
-            assertTrue(found3);
+            Assert.assertEquals(2, resources.size());
+            Assert.assertTrue(!found1);  // not matching capacity requirement
+            Assert.assertTrue(found2); 
+            Assert.assertTrue(found3);
         } else {
             // pagination is supported
-            assertEquals(ldap, !paginationSupported);
+            Assert.assertEquals(ldap, !paginationSupported);
             
             // offset and limit are honored
-            assertEquals(1, resources.size());
-            assertTrue(!found1);   // not matching capacity requirement   
-            assertTrue(found2);   
-            assertTrue(!found3);  // at offset 0 (gal sync acount mailbox search is by dateDesc order) 
+            Assert.assertEquals(1, resources.size());
+            Assert.assertTrue(!found1);   // not matching capacity requirement   
+            Assert.assertTrue(found2);   
+            Assert.assertTrue(!found3);  // at offset 0 (gal sync acount mailbox search is by dateDesc order) 
                                   // - not within specified offset  
         }
     }
     
-    private String getAddress(String local, String domain) {
-        return local + "@" + domain;
+    private static void createCalendarResource(String name, String displayName,
+            CalResType type, int capacity, String site) throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_displayName, displayName);
+        attrs.put(Provisioning.A_zimbraCalResType, type.name());
+        attrs.put(Provisioning.A_zimbraCalResCapacity, String.valueOf(capacity));
+        attrs.put(Provisioning.A_zimbraCalResSite, site);
+        
+        prov.createCalendarResource(name, "test123", attrs);
     }
     
-    private void createDomainObjects(String domainName) throws Exception {
+    private static void createDomainObjects(String domainName) throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
         if (prov.get(DomainBy.name, domainName) == null) {
+            ZimbraLog.test.info("Creating domain " + domainName);
             prov.createDomain(domainName, new HashMap<String, Object>());
         }
         
-        if (prov.get(AccountBy.name, getAddress(USER, domainName)) == null) {
-            prov.createAccount(getAddress(USER, domainName), "test123", null);
+        if (prov.get(AccountBy.name, TestUtil.getAddress(AUTHED_USER, domainName)) == null) {
+            prov.createAccount(TestUtil.getAddress(AUTHED_USER, domainName), "test123", null);
         }
         
         String calResName;
         
-        calResName = getAddress(ROOM_1, domainName);
+        calResName = TestUtil.getAddress(ROOM_1, domainName);
         if (prov.get(CalendarResourceBy.name, calResName) == null) {
-            TestSearchGal.createCalendarResource(calResName, ROOM_1, CalResType.Location, 10, SITE);
+            createCalendarResource(calResName, ROOM_1, CalResType.Location, 10, SITE);
         }
         
-        calResName = getAddress(ROOM_2, domainName);
+        calResName = TestUtil.getAddress(ROOM_2, domainName);
         if (prov.get(CalendarResourceBy.name, calResName) == null) {
-            TestSearchGal.createCalendarResource(calResName, ROOM_2, CalResType.Location, 20, SITE);
+            createCalendarResource(calResName, ROOM_2, CalResType.Location, 20, SITE);
         }
         
-        calResName = getAddress(ROOM_3, domainName);
+        calResName = TestUtil.getAddress(ROOM_3, domainName);
         if (prov.get(CalendarResourceBy.name, calResName) == null) {
-            TestSearchGal.createCalendarResource(calResName, ROOM_3, CalResType.Location, 100, SITE);
+            createCalendarResource(calResName, ROOM_3, CalResType.Location, 100, SITE);
         }
     }
     
-    private void deleteDomainObjects(String domainName) throws Exception {
+    private static void deleteDomainObjects(String domainName) throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
         TestSearchGal.disableGalSyncAccount(domainName);
         
-        Account acct = prov.get(AccountBy.name, getAddress(USER, domainName));
+        Account acct = prov.get(AccountBy.name, TestUtil.getAddress(AUTHED_USER, domainName));
         if (acct != null) {
             prov.deleteAccount(acct.getId());
         }
@@ -267,19 +262,19 @@ public class TestSearchCalendarResources extends TestCase {
         CalendarResource resource;
         String calResName;
         
-        calResName = getAddress(ROOM_1, domainName);
+        calResName = TestUtil.getAddress(ROOM_1, domainName);
         resource = prov.get(CalendarResourceBy.name, calResName);
         if (resource != null) {
             prov.deleteCalendarResource(resource.getId());
         }
         
-        calResName = getAddress(ROOM_2, domainName);
+        calResName = TestUtil.getAddress(ROOM_2, domainName);
         resource = prov.get(CalendarResourceBy.name, calResName);
         if (resource != null) {
             prov.deleteCalendarResource(resource.getId());
         }
         
-        calResName = getAddress(ROOM_3, domainName);
+        calResName = TestUtil.getAddress(ROOM_3, domainName);
         resource = prov.get(CalendarResourceBy.name, calResName);
         if (resource != null) {
             prov.deleteCalendarResource(resource.getId());
@@ -287,51 +282,45 @@ public class TestSearchCalendarResources extends TestCase {
         
         Domain domain = prov.get(DomainBy.name, domainName);
         if (domain != null) {
+            ZimbraLog.test.info("Deleting domain " + domainName);
             prov.deleteDomain(domain.getId());
         }
     }
     
-    public void setUp() throws Exception {
+    @BeforeClass 
+    public static void init() throws Exception {
+        TestUtil.cliSetup();
+        
         createDomainObjects(DOMAIN_LDAP);
         createDomainObjects(DOMAIN_GSA);
     }
     
-    public void tearDown() throws Exception {
-        if (!mAllDone) {
-            return;
-        }
-        
+    @AfterClass 
+    public static void cleanup() throws Exception {
         deleteDomainObjects(DOMAIN_LDAP);
         deleteDomainObjects(DOMAIN_GSA);
     }
     
+    @Test
     public void testGalSyncAccountSerarhByName() throws Exception {
         TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
         searchByName(false, DOMAIN_GSA);
     }
     
+    @Test
     public void testGalSyncAccountSerarhByFilter() throws Exception {
         TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
         searchByFilter(false, DOMAIN_GSA);
     }
     
+    @Test
     public void testLdapSerarhByName() throws Exception {
         searchByName(true, DOMAIN_LDAP);
     }
     
+    @Test
     public void testLdapSerarhByFilter() throws Exception {
         searchByFilter(true, DOMAIN_LDAP);
     }
-    
-    public void testDone() throws Exception {
-        mAllDone = true;
-    }
-    
-    
-    public static void main(String[] args)
-    throws Exception {
-        TestUtil.cliSetup();
-        TestUtil.runTest(TestSearchCalendarResources.class);
-    }
-    
+
 }

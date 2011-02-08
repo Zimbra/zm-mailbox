@@ -282,7 +282,7 @@ public class GalSearchParams {
         if (GalSearchConfig.GalType.zimbra == mConfig.getGalType() && mExtraQueryCallback != null) {
             extraQuery = mExtraQueryCallback.getZimbraLdapSearchQuery();
         }
-        return GalUtil.expandFilter(mConfig.getTokenizeKey(), mConfig.getFilter(), mQuery, token, false, extraQuery);
+        return GalUtil.expandFilter(mConfig.getTokenizeKey(), mConfig.getFilter(), mQuery, token, extraQuery);
     }
 
     public void setGalSyncAccount(Account acct) {

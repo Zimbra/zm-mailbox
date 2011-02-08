@@ -110,7 +110,7 @@ public class GalSearchConfig {
 			if (StringUtil.isNullOrEmpty(mFilter))
 			    throw ServiceException.INVALID_REQUEST("missing GAL filter", null);
 			
-			mFilter = GalUtil.expandFilter(null, mFilter, "", null, false);
+			mFilter = GalUtil.expandFilter(null, mFilter, "", null);
 		}
 		private static final String DEFAULT_FILTER = "(&(|(displayName=*)(cn=*)(sn=*)(gn=*)(mail=*)(zimbraMailDeliveryAddress=*)(zimbraMailAlias=*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
 	}

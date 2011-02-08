@@ -161,6 +161,10 @@ extends Assert {
         else
             return userName + "@" + getDomain();
     }
+    
+    public static String getAddress(String userName, String domainName) {
+        return userName + "@" + domainName;
+    }
 
     public static String getSoapUrl() {
         try {

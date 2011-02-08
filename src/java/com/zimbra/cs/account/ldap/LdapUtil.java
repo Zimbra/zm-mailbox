@@ -850,7 +850,7 @@ public class LdapUtil {
             if (queryExpr != null)
                 filter = queryExpr;
         }
-        String query = GalUtil.expandFilter(tokenize, filter, n, token, false);
+        String query = GalUtil.expandFilter(tokenize, filter, n, token);
         
         String authMech = galParams.credential().getAuthMech();
         if (authMech.equals(Provisioning.LDAP_AM_KERBEROS5))
