@@ -80,11 +80,18 @@ public final class AllAccountsWaitSet extends WaitSetBase {
      */
     static AllAccountsWaitSet createWithSeqNo(String ownerAccountId, String id, int defaultInterest, String lastKnownSeqNo) throws ServiceException {
         AllAccountsWaitSet ws = new AllAccountsWaitSet(ownerAccountId, id, defaultInterest, true);
+        boolean success = false;
         try {
             // get us up to date
             ws.syncToCommitId(lastKnownSeqNo);
+            success = true;
         } catch (IOException e) {
             throw ServiceException.FAILURE("Caught IOException when syncing waitset to specified commit ID", e);
+        } finally {
+            if (!success) {
+                ws.destroy();  // Remove from sAllAccountsWaitSets map to prevent memory leak.
+                ws = null;
+            }
         }
         return ws;
     }
@@ -103,7 +110,10 @@ public final class AllAccountsWaitSet extends WaitSetBase {
         // add us to the global set of AllAccounts waitsets, update the global interest mask
         synchronized(sAllAccountsWaitSets) {
             sAllAccountsWaitSets.put(this, "");
-            
+            if (ZimbraLog.session.isDebugEnabled()) {
+                ZimbraLog.session.debug("added: sAllAccountsWaitSets.size() = " + sAllAccountsWaitSets.size());
+            }
+
             // update the static interest mask
             int newMask = 0;
             for (AllAccountsWaitSet ws : sAllAccountsWaitSets.keySet()) {
@@ -228,7 +238,10 @@ public final class AllAccountsWaitSet extends WaitSetBase {
     HashMap<String, WaitSetAccount> destroy() {
         synchronized(sAllAccountsWaitSets) {
             sAllAccountsWaitSets.remove(this);
-            
+            if (ZimbraLog.session.isDebugEnabled()) {
+                ZimbraLog.session.debug("removed: sAllAccountsWaitSets.size() = " + sAllAccountsWaitSets.size());
+            }
+
             // update the static interest mask
             int newMask = 0;
             for (AllAccountsWaitSet ws : sAllAccountsWaitSets.keySet()) {
