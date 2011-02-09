@@ -2911,7 +2911,7 @@ public class Mailbox {
         if (Strings.isNullOrEmpty(path)) {
             throw MailServiceException.NO_SUCH_FOLDER(path);
         }
-        Folder folder = getFolderById(octxt, baseFolderId);
+        Folder folder = getFolderById(null, baseFolderId);  // Null ctxt avoids PERM_DENIED error when requester != owner.
         assert(folder != null);
         path = CharMatcher.is('/').trimFrom(path); // trim leading and trailing '/'
         if (path.isEmpty()) { // relative root to the base folder
