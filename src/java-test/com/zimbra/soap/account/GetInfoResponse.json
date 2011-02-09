@@ -496,6 +496,10 @@
         {
           "name": "zimbraPrefCalendarUseQuickAdd",
           "_content": "TRUE"
+        },
+        {
+          "name": "zimbraPrefMailSignatureHTML",
+          "_content": "\u003Cfont face=\"verdana, helvetica, sans-serif\" size=\"2\"\u003Ef—— utf8 test\u003C/font\u003E"
         }]
     }],
   "attrs": [{

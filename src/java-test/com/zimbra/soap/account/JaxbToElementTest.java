@@ -109,8 +109,8 @@ public class JaxbToElementTest {
             // child of other elements (the "soap" envelop)
             String actual = el.prettyPrint();
             Assert.assertEquals("Top level Element name", "GetInfoResponse", el.getName());
-            // The test file has one extra line ending.
-            Assert.assertEquals(getInfoResponseJSON.substring(0, 27198),
+            // The test file has one extra line ending. 
+            Assert.assertEquals(getInfoResponseJSON.substring(0, 27390),
                     actual);
     }
 
