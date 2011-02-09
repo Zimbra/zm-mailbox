@@ -27,7 +27,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.soap.Element;
 
-public class RdateExdate {
+public class RdateExdate implements Cloneable {
 
     private ICalTok mPropertyName;   // RDATE or EXDATE
     private ICalTok mValueType;      // DATE_TIME, DATE, or PERIOD
@@ -52,6 +52,22 @@ public class RdateExdate {
         mTimeZone = tz;
         setValueType(valueType);
         mValues = new ArrayList<Object>();
+    }
+
+    public Object clone() {
+        RdateExdate copy = null;
+        try {
+            copy = new RdateExdate(mPropertyName, mValueType, mTimeZone);
+        } catch (ServiceException e) {
+            // can't happen
+        }
+        for (Object val : mValues) {
+            if (val instanceof ParsedDateTime)
+                copy.addValue((ParsedDateTime) ((ParsedDateTime) val).clone());
+            else if (val instanceof ParsedDuration)
+                copy.addValue((ParsedDuration) ((ParsedDuration) val).clone());
+        }
+        return copy;
     }
 
     public void setValueType(ICalTok valueType) throws ServiceException {

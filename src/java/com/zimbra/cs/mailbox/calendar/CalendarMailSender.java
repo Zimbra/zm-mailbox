@@ -58,6 +58,7 @@ import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
@@ -919,6 +920,9 @@ public class CalendarMailSender {
             reply.setRecurId(new RecurId(exceptDt, RecurId.RANGE_NONE));
         } else if (oldInv.hasRecurId()) {
             reply.setRecurId(oldInv.getRecurId());
+        } else if (oldInv.isRecurrence()) {
+            // RRULE (BES seems to require it even though it shouldn't)
+            reply.setRecurrence((IRecurrence) oldInv.getRecurrence().clone());  // Must use a cloned object!
         }
 
         // SEQUENCE

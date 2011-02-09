@@ -23,7 +23,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 
-public class InviteInfo implements Comparable<InviteInfo> {
+public class InviteInfo implements Comparable<InviteInfo>, Cloneable {
     private int mMsgId; // ID of the MESSAGE which this invite was originally encoded in 
     private int mComponentId; // component number in that message
     private RecurId mRecurrenceId; // RECURID, in the iCal (rfc2445) sense
@@ -68,6 +68,11 @@ public class InviteInfo implements Comparable<InviteInfo> {
             }
         }
         return toRet;
+    }
+
+    public Object clone() {
+        RecurId rid = mRecurrenceId != null ? (RecurId) mRecurrenceId.clone() : null;
+        return new InviteInfo(mMsgId, mComponentId, rid, mMethod);
     }
 
     private static final String FN_MSGID        ="i";

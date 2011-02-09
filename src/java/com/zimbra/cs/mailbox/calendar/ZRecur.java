@@ -33,7 +33,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.util.Zimbra;
 
-public class ZRecur {
+public class ZRecur implements Cloneable {
 
     public static enum Frequency { DAILY, HOURLY, MINUTELY, MONTHLY, SECONDLY, WEEKLY, YEARLY }
     
@@ -458,7 +458,28 @@ public class ZRecur {
     public ZRecur(String str, TimeZoneMap tzmap) throws ServiceException {
         parse(str, tzmap);
     }
-    
+
+    private ZRecur(ZRecur other) {
+        mByDayList.addAll(other.mByDayList);
+        mByHourList.addAll(other.mByHourList);
+        mByMinuteList.addAll(other.mByMinuteList);
+        mByMonthDayList.addAll(other.mByMonthDayList);
+        mByMonthList.addAll(other.mByMonthList);
+        mBySecondList.addAll(other.mBySecondList);
+        mBySetPosList.addAll(other.mBySetPosList);
+        mByWeekNoList.addAll(other.mByWeekNoList);
+        mByYearDayList.addAll(other.mByYearDayList);
+        mCount = other.mCount;
+        mFreq = other.mFreq;
+        mInterval = other.mInterval;
+        mUntil = other.mUntil == null ? null : (ParsedDateTime) other.mUntil.clone();
+        mWkSt = other.mWkSt;
+    }
+
+    public Object clone() {
+        return new ZRecur(this);
+    }
+
     public List<Integer> getByHourList() {
         return this.mByHourList;
     }
