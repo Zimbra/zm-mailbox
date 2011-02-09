@@ -10,6 +10,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -19,9 +20,11 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.CalendarResourceBy;
 import com.zimbra.cs.account.Provisioning.DomainBy;
@@ -37,12 +40,13 @@ public class TestSearchGal {
     
     private static final String GAL_SYNC_ACCOUNT_NAME = "galsync";
     
-    private static final String DOMAIN_LDAP = "ldap.galtest";
-    private static final String DOMAIN_GSA = "gsa.galtest";
+    private static final String DOMAIN_LDAP = "ldap.searchgaltest";
+    private static final String DOMAIN_GSA = "gsa.searchgaltest";
     private static final String AUTHED_USER = "user1";
     
     private static final String KEY_FOR_SEARCH_BY_NAME = "account";
     private static final String ACCOUNT_PREFIX = "account";
+    private static final String DEPARTMENT_PREFIX = "engineering";
     
     private static final int NUM_ACCOUNTS = 10; 
     
@@ -152,6 +156,77 @@ public class TestSearchGal {
         Thread.sleep(2000);
     }
     
+    // find all
+    private void searchWithDot(boolean ldap, String domainName) throws Exception {
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        TestSearchGal.authUser(transport, TestUtil.getAddress(AUTHED_USER, domainName));
+        
+        Element request = Element.create(transport.getRequestProtocol(), AccountConstants.SEARCH_GAL_REQUEST);
+        request.addElement(AccountConstants.E_NAME).setText(".");
+        
+        Element response = transport.invoke(request);
+        
+        boolean paginationSupported = response.getAttributeBool(AccountConstants.A_PAGINATION_SUPPORTED);
+        
+        List<GalContact> result = new ArrayList<GalContact>();
+        for (Element e: response.listElements(AdminConstants.E_CN)) {
+            result.add(new GalContact(AdminConstants.A_ID, SoapProvisioning.getAttrs(e)));
+        }
+  
+        if (ldap) {
+            // pagination is not supported
+            Assert.assertFalse(paginationSupported);
+        } else {
+            // pagination is supported
+            Assert.assertTrue(paginationSupported);
+        }
+        
+        // should find all account, plus the authed user
+        Assert.assertEquals(NUM_ACCOUNTS + 1, result.size());
+        
+    }
+    
+    private void searchWithOffsetLimit(boolean ldap, String domainName) throws Exception {
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        TestSearchGal.authUser(transport, TestUtil.getAddress(AUTHED_USER, domainName));
+        
+        Element request = Element.create(transport.getRequestProtocol(), AccountConstants.SEARCH_GAL_REQUEST);
+        request.addElement(AccountConstants.E_NAME).setText(".");
+        
+        int offset = 5;
+        int limit = 3;
+        request.addAttribute(MailConstants.A_QUERY_OFFSET, offset);
+        request.addAttribute(MailConstants.A_QUERY_LIMIT, limit);
+        request.addAttribute(MailConstants.A_SORTBY, "nameAsc");
+        
+        Element response = transport.invoke(request);
+        
+        boolean paginationSupported = response.getAttributeBool(AccountConstants.A_PAGINATION_SUPPORTED);
+        
+        List<GalContact> result = new ArrayList<GalContact>();
+        for (Element e: response.listElements(AdminConstants.E_CN)) {
+            result.add(new GalContact(AdminConstants.A_ID, SoapProvisioning.getAttrs(e)));
+        }
+  
+        if (ldap) {
+            // pagination is not supported
+            Assert.assertFalse(paginationSupported);
+            
+            // limit is ignored, ldap search is limited by zimbraGalMaxResults
+            // should find all account, plus the authed user
+            Assert.assertEquals(NUM_ACCOUNTS + 1, result.size());
+        } else {
+            // pagination is supported
+            Assert.assertTrue(paginationSupported);
+            
+            Assert.assertEquals(limit, result.size());
+            for (int i = 0; i < limit; i++) {
+                Assert.assertEquals(getEmail(offset + i, domainName), result.get(i).getSingleAttr(ContactConstants.A_email));
+            }
+        }
+        
+    }
+    
     private void searchByName(boolean ldap, String domainName) throws Exception {
         SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
         TestSearchGal.authUser(transport, TestUtil.getAddress(AUTHED_USER, domainName));
@@ -170,6 +245,49 @@ public class TestSearchGal {
         
     }
     
+    private void searchByFilter(boolean ldap, String domainName) throws Exception {
+        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
+        TestSearchGal.authUser(transport, TestUtil.getAddress(AUTHED_USER, domainName));
+        
+        Element request = Element.create(transport.getRequestProtocol(), AccountConstants.SEARCH_GAL_REQUEST);
+        request.addElement(AccountConstants.E_NAME).setText(".");
+
+        
+        Element eSearchFilter = request.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER);
+        Element eConds = eSearchFilter.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND);
+        
+        int acctToMatch = 8;
+        Element eCondResType = eConds.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND);
+        eCondResType.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_ATTR, ContactConstants.A_email);
+        eCondResType.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_OP, Operator.has.name());
+        eCondResType.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_VALUE, acctToMatch);
+        
+        String matchDepartment = getDepartment(acctToMatch, domainName);
+        Element eCondResSite = eConds.addElement(AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND);
+        eCondResSite.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_ATTR, ContactConstants.A_department);
+        eCondResSite.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_OP, Operator.eq.name());
+        eCondResSite.addAttribute(AccountConstants.A_ENTRY_SEARCH_FILTER_VALUE, matchDepartment);
+        
+        Element response = transport.invoke(request);
+
+        List<GalContact> result = new ArrayList<GalContact>();
+        for (Element e: response.listElements(AdminConstants.E_CN)) {
+            result.add(new GalContact(AdminConstants.A_ID, SoapProvisioning.getAttrs(e)));
+        }
+  
+        Assert.assertEquals(1, result.size());
+        Assert.assertEquals(getEmail(acctToMatch, domainName), result.get(0).getSingleAttr(ContactConstants.A_email));
+    }
+
+    
+    private static String getEmail(int index, String domainName) {
+        return TestUtil.getAddress(ACCOUNT_PREFIX + "-" + index, domainName);
+    }
+    
+    private static String getDepartment(int index, String domainName) {
+        return TestUtil.getAddress(DEPARTMENT_PREFIX + "-" + index, domainName);
+    }
+    
     private static void createDomainObjects(String domainName) throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
@@ -183,9 +301,11 @@ public class TestSearchGal {
         }
         
         for (int i = 0; i < NUM_ACCOUNTS; i++) {
-            String acctName = TestUtil.getAddress(ACCOUNT_PREFIX + "-" + i, domainName);
+            String acctName = getEmail(i, domainName);
             if (prov.get(AccountBy.name, acctName) == null) {
-                prov.createAccount(acctName, "test123", null);
+                Map<String, Object> attrs = new HashMap<String, Object>();
+                attrs.put(Provisioning.A_ou, getDepartment(i, domainName));
+                prov.createAccount(acctName, "test123", attrs);
             }
         }
     }
@@ -201,7 +321,7 @@ public class TestSearchGal {
         }
         
         for (int i = 0; i < NUM_ACCOUNTS; i++) {
-            String acctName = TestUtil.getAddress(ACCOUNT_PREFIX + "-" + i, domainName);
+            String acctName = getEmail(i, domainName);
             acct = prov.get(AccountBy.name, acctName);
             if (acct != null) {
                 prov.deleteAccount(acct.getId());
@@ -227,33 +347,69 @@ public class TestSearchGal {
     public static void cleanup() throws Exception {
         deleteDomainObjects(DOMAIN_LDAP);
         deleteDomainObjects(DOMAIN_GSA);
+        
+        Provisioning prov = Provisioning.getInstance();
+        Config config = prov.getConfig();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        config.removeGalLdapFilterDef("department_eq:(ou=%s)", attrs);
+        config.removeGalLdapFilterDef("email_has:(mail=*%s*)", attrs);
+        prov.modifyAttrs(config, attrs);
+        
     }
     
-    /*
     @Test
-    public void testGalSyncAccountSerarhByName() throws Exception {
+    public void testGSASerarhWithDot() throws Exception {
+        TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
+        searchWithDot(false, DOMAIN_GSA);
+    }
+    
+    @Test
+    public void testGSASerarhWithOffsetlimit() throws Exception {
+        TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
+        searchWithOffsetLimit(false, DOMAIN_GSA);
+    }
+    
+    @Test
+    public void testGSASerarhByName() throws Exception {
         TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
         searchByName(false, DOMAIN_GSA);
     }
-    */
     
-    /*
     @Test
     public void testGalSyncAccountSerarhByFilter() throws Exception {
         TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
         searchByFilter(false, DOMAIN_GSA);
     }
-    */
+
+    @Test
+    public void testLdapSerarhWithDot() throws Exception {
+        searchWithDot(true, DOMAIN_LDAP);
+    }
+    
+    @Test
+    public void testLdapSerarhWithOffsetlimit() throws Exception {
+        searchWithOffsetLimit(true, DOMAIN_LDAP);
+    }
     
     @Test
     public void testLdapSerarhByName() throws Exception {
         searchByName(true, DOMAIN_LDAP);
     }
     
-    /*
     @Test
     public void testLdapSerarhByFilter() throws Exception {
+        /*
+         *   <globalConfigValue>department_eq:(ou=%s)</globalConfigValue>
+         *   <globalConfigValue>email_has:(mail=*%s*)</globalConfigValue>
+         */
+        Provisioning prov = Provisioning.getInstance();
+        Config config = prov.getConfig();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        config.addGalLdapFilterDef("department_eq:(ou=%s)", attrs);
+        config.addGalLdapFilterDef("email_has:(mail=*%s*)", attrs);
+        prov.modifyAttrs(config, attrs);
+        
         searchByFilter(true, DOMAIN_LDAP);
     }
-    */
+
 }

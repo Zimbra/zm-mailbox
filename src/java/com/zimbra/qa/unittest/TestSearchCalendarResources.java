@@ -119,7 +119,7 @@ public class TestSearchCalendarResources {
             Assert.assertTrue(found3);
         } else {
             // pagination is supported
-            Assert.assertFalse(!paginationSupported);
+            Assert.assertTrue(paginationSupported);
             
             // offset and limit are honored
             Assert.assertEquals(2, resources.size());
@@ -186,7 +186,7 @@ public class TestSearchCalendarResources {
         
         if (ldap) {
             // pagination is not supported
-            Assert.assertEquals(ldap, !paginationSupported);
+            Assert.assertFalse(paginationSupported);
 
             // offset and limit are not honored
             Assert.assertEquals(2, resources.size());
@@ -195,7 +195,7 @@ public class TestSearchCalendarResources {
             Assert.assertTrue(found3);
         } else {
             // pagination is supported
-            Assert.assertEquals(ldap, !paginationSupported);
+            Assert.assertTrue(paginationSupported);
             
             // offset and limit are honored
             Assert.assertEquals(1, resources.size());
@@ -302,13 +302,13 @@ public class TestSearchCalendarResources {
     }
     
     @Test
-    public void testGalSyncAccountSerarhByName() throws Exception {
+    public void testGSASerarhByName() throws Exception {
         TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
         searchByName(false, DOMAIN_GSA);
     }
     
     @Test
-    public void testGalSyncAccountSerarhByFilter() throws Exception {
+    public void testGSASerarhByFilter() throws Exception {
         TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
         searchByFilter(false, DOMAIN_GSA);
     }

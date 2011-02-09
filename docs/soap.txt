@@ -658,6 +658,17 @@ import and export of addressbook.
  <SearchGalRequest [type="{type}"] [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"]  [needExp="1|0"]>
   [<cursor id="{prevId}" sortVal="{prevSortValue}" endSortVal="{endSortValue}"/> ]
    <name>...</name>
+   
+   [<searchFilter>
+     <conds [not="1|0"] [or="1|0"] >
+       [<cond> or <conds>]+
+     </conds>  (exactly one instance of <conds>)
+
+     -- or --
+
+     <cond [not="1|0"] attr="{attr}" op="{op}" value="{value}" />  (exactly one instance of <cond>)
+   </searchFilter>]
+   
  </SearchGalRequest>
 
  <SearchGalResponse more="{more}" sortBy="sort-by" offset="..." [tokenizeKey="{tokenize-key-op}"]>
@@ -689,6 +700,8 @@ import and export of addressbook.
        returned only if needExp is 1 in the request and only on group entries (type=group in attrs on a <cn>).
 
   see SearchRequest for use of cursor.
+
+  see SearchCalendarResources for use of searchFilter
 
 ----------------------------
 

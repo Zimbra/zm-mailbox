@@ -209,6 +209,7 @@ public class GalExtraSearchFilter {
         @Override
         public void handleElement(Element e) throws ServiceException {
             // should never be called
+            throw ServiceException.FAILURE("internal error, method should not be called", null);
         }
         
         @Override
