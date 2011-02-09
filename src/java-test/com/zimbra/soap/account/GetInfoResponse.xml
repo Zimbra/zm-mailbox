@@ -126,6 +126,7 @@
     <pref name="zimbraPrefCalendarToasterEnabled">FALSE</pref>
     <pref name="zimbraPrefCalendarApptVisibility">public</pref>
     <pref name="zimbraPrefCalendarUseQuickAdd">TRUE</pref>
+    <pref name="zimbraPrefMailSignatureHTML">&lt;font face="verdana, helvetica, sans-serif" size="2">fóó utf8 test&lt;/font></pref>
   </prefs>
   <attrs>
     <attr name="zimbraFeatureNotebookEnabled">FALSE</attr>

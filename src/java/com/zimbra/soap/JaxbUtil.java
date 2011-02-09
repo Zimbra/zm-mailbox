@@ -17,6 +17,8 @@ package com.zimbra.soap;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -238,11 +240,14 @@ public final class JaxbUtil {
         try {
             Unmarshaller unmarshaller = getContext().createUnmarshaller();
             org.dom4j.Element rootElem = e.toXML();
-            return (T) unmarshaller.unmarshal(new ByteArrayInputStream(rootElem.asXML().getBytes()));
+            return (T) unmarshaller.unmarshal(new ByteArrayInputStream(rootElem.asXML().getBytes("utf-8")));
         } catch (JAXBException ex) {
             throw ServiceException.FAILURE(
                     "Unable to unmarshal response for " + e.getName(), ex);
-        }
+        } catch (UnsupportedEncodingException ex) {
+            throw ServiceException.FAILURE(
+                    "Unable to unmarshal response for " + e.getName(), ex);
+		}
     }
 
     // This appears to work if e is an XMLElement but sometimes fails badly if
