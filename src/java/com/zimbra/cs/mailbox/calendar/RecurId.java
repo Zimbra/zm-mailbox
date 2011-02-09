@@ -27,7 +27,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 
-public class RecurId 
+public class RecurId implements Cloneable
 {
     static public int RANGE_NONE                 = 1;
     public static final int RANGE_THISANDFUTURE = 2;
@@ -105,7 +105,12 @@ public class RecurId
         mRange = range;
         mDateTime = dt;
     }
-    
+
+    public Object clone() {
+        ParsedDateTime dt = mDateTime != null ? (ParsedDateTime) mDateTime.clone() : null;
+        return new RecurId(dt, mRange);
+    }
+
     public String toString() {
         StringBuffer toRet = new StringBuffer(mDateTime.toString());
         String range = getRangeStr();
