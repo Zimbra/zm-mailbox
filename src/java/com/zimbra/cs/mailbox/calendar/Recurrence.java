@@ -460,7 +460,9 @@ public class Recurrence
         }
 
         public Object clone() {
-            return new SingleDates(mRdateExdate, mDefaultDuration, mInvId);
+            return new SingleDates(mRdateExdate == null ? null : (RdateExdate) mRdateExdate.clone(),
+                                   mDefaultDuration == null ? null : (ParsedDuration) mDefaultDuration.clone(),
+                                   mInvId == null ? null : (InviteInfo) mInvId.clone());
         }
 
         private RdateExdate mRdateExdate;
@@ -763,9 +765,11 @@ public class Recurrence
             return meta;
         }
         
-        public Object clone()
-        {
-            return new SimpleRepeatingRule(mDtStart, mDuration, mRecur, mInvId);
+        public Object clone() {
+            return new SimpleRepeatingRule(mDtStart == null ? null : (ParsedDateTime) mDtStart.clone(),
+                                           mDuration == null ? null : (ParsedDuration) mDuration.clone(),
+                                           mRecur == null ? null : (ZRecur) mRecur.clone(),
+                                           mInvId == null ? null : (InviteInfo) mInvId.clone());
         }
         
         public SimpleRepeatingRule(Metadata meta, TimeZoneMap tzmap) throws ServiceException {
@@ -1135,7 +1139,7 @@ public class Recurrence
         }
 
         public Object clone() {
-            return new CancellationRule(mRecurRange);
+            return new CancellationRule(mRecurRange == null ? null : (RecurId) mRecurRange.clone());
         }
         
         public Element toXml(Element parent) {
@@ -1237,11 +1241,12 @@ public class Recurrence
         }
         
         private ExceptionRule(ExceptionRule other) {
-            super(other.mDtStart, other.mDuration,
+            super(other.mDtStart == null ? null : (ParsedDateTime) other.mDtStart.clone(),
+                  other.mDuration == null ? null : (ParsedDuration) other.mDuration.clone(),
                   other.mAddRules == null ? null : (MultiRuleSorter) other.mAddRules.clone(),
                   other.mSubtractRules == null ? null : (MultiRuleSorter) other.mSubtractRules.clone(),
-                  other.mInvId);
-            mRecurRange = other.mRecurRange;
+                  other.mInvId == null ? null : (InviteInfo) other.mInvId.clone());
+            mRecurRange = other.mRecurRange == null ? null : (RecurId) other.mRecurRange.clone();
         }
         
         public Object clone() {
@@ -1471,10 +1476,11 @@ public class Recurrence
         }
         
         private RecurrenceRule(RecurrenceRule other) {
-            super(other.mDtStart, other.mDuration, 
-                  other.mAddRules == null ? null : (MultiRuleSorter)other.mAddRules.clone(), 
-                  other.mSubtractRules == null ? null : (MultiRuleSorter)other.mSubtractRules.clone(), 
-                  other.mInvId);
+            super(other.mDtStart == null ? null : (ParsedDateTime) other.mDtStart.clone(),
+                  other.mDuration == null ? null : (ParsedDuration) other.mDuration.clone(),
+                  other.mAddRules == null ? null : (MultiRuleSorter) other.mAddRules.clone(),
+                  other.mSubtractRules == null ? null : (MultiRuleSorter) other.mSubtractRules.clone(),
+                  other.mInvId == null ? null : (InviteInfo) other.mInvId.clone());
             mExceptions = new ArrayList<IException>();
             for (Iterator iter = other.mExceptions.iterator(); iter.hasNext();) {
                 IException cur = (IException)iter.next();
