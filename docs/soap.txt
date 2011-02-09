@@ -3409,9 +3409,9 @@ granteeType = usr | grp | guest
 
 ----------------------------
 
-<GetEffectivePermsRequest>
+<GetEffectiveFolderPermsRequest>
   <folder l="{folder-id}"/>]
-</GetEffectivePermsRequest>
+</GetEffectiveFolderPermsRequest>
 
 returns the effective permissions of the specified folder
 
