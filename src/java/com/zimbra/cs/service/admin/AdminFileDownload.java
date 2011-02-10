@@ -119,9 +119,9 @@ public class AdminFileDownload  extends ZimbraServlet {
                 resp.setStatus(resp.SC_OK);
                 resp.setContentType("application/x-download");
 		
-		resp.setContentType("text/html;charset=utf-8");   
-		resp.setCharacterEncoding("utf-8");   
-		resp.setHeader("Charset", "utf-8");   
+		//resp.setContentType("text/html;charset=utf-8");   
+		//resp.setCharacterEncoding("utf-8");   
+		//resp.setHeader("Charset", "utf-8");   
 
                 resp.setHeader("Content-Disposition", "attachment; filename=" + filename );
                 writeSearchResults (resp.getOutputStream(), query, domain, types, authToken);
