@@ -58,6 +58,7 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.AuthScheme;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.ExchangeUserResolver;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.ServerInfo;
+import com.zimbra.cs.fb.FreeBusyProvider.FreeBusyUserNotFoundException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
 
@@ -810,7 +811,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         return new ExchangeEWSFreeBusyProvider();
     }
 
-    public void addFreeBusyRequest(Request req) {
+    public void addFreeBusyRequest(Request req) throws FreeBusyUserNotFoundException {
         ServerInfo info = null;
         for (ExchangeUserResolver resolver : sRESOLVERS) {
             String email = req.email;
@@ -828,6 +829,8 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                 break;
             }
         }
+        if (info == null)
+			throw new FreeBusyUserNotFoundException();
         addRequest(info, req);
     }
 
