@@ -499,7 +499,7 @@
         },
         {
           "name": "zimbraPrefMailSignatureHTML",
-          "_content": "\u003Cfont face=\"verdana, helvetica, sans-serif\" size=\"2\"\u003Ef—— utf8 test\u003C/font\u003E"
+          "_content": "\u003Cfont face=\"verdana, helvetica, sans-serif\" size=\"2\"\u003EfÃ³Ã³ utf8 test\u003C/font\u003E"
         }]
     }],
   "attrs": [{
