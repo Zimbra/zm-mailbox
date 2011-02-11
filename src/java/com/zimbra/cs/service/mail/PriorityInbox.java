@@ -231,14 +231,18 @@ public final class PriorityInbox extends MailDocumentHandler {
         String sender = message.getSender();
         if (!Strings.isNullOrEmpty(sender)) {
             for (InternetAddress addr : InternetAddress.parseHeader(sender)) {
-                result.add("from:" + addr.getAddress().toLowerCase());
+                if (addr.getAddress() != null) {
+                    result.add("from:" + addr.getAddress().toLowerCase());
+                }
             }
         }
 
         String rcpts = message.getRecipients();
         if (!Strings.isNullOrEmpty(rcpts)) {
             for (InternetAddress addr : InternetAddress.parseHeader(rcpts)) {
-                result.add("to:" + addr.getAddress().toLowerCase());
+                if (addr.getAddress() != null) {
+                    result.add("to:" + addr.getAddress().toLowerCase());
+                }
             }
         }
 
@@ -249,7 +253,9 @@ public final class PriorityInbox extends MailDocumentHandler {
         List<String> result = new ArrayList<String>();
         if (!Strings.isNullOrEmpty(raw)) {
             for (InternetAddress addr : InternetAddress.parseHeader(raw)) {
-                result.add(addr.getAddress().toLowerCase());
+                if (addr.getAddress() != null) {
+                    result.add(addr.getAddress().toLowerCase());
+                }
             }
         }
         return result;
