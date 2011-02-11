@@ -1171,12 +1171,7 @@ public class ProxyConfGen
             if (!confDir.exists()) {
                 throw new ProxyConfException ("Configuration directory " + confDir.getAbsolutePath() + " does not exist");
             }
-            File wDir = new File(mConfIncludesDir, "");
-            if(!wDir.exists()) {
-                mLog.error("Includes Dir " + mConfIncludesDir + " doesn't exist");
-                exitCode = 1;
-                return (exitCode);
-            }
+            
             expandTemplate(new File(mTemplateDir, getCoreConfTemplate()), new File(mConfDir,getCoreConf())); /* Only core nginx conf goes to mConfDir, rest to mConfIncludesDir */
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("main")), new File(mConfIncludesDir, getConfFileName("main")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("memcache")), new File(mConfIncludesDir,getConfFileName("memcache")));
