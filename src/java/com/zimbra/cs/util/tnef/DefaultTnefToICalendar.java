@@ -525,15 +525,11 @@ public class DefaultTnefToICalendar implements TnefToICalendar {
 
     private void addRecurrenceRelatedProps(ContentHandler icalOutput,
             RecurrenceDefinition recurDef, TimeZoneDefinition tzDef, boolean isAllDayEvent)
-                throws ServiceException, ParserException, URISyntaxException, IOException, ParseException {
-        if  (   method.equals(Method.REPLY) ||
-                method.equals(Method.CANCEL) ||
-                method.equals(Method.COUNTER) ) {
-            // TNEF_to_iCalendar.pdf Spec = exclude RRULE and EXDATE for CANCEL/REPLY/COUNTER
-            // By inference, as we only support EXDATE/RDATE pairs, don't want RDATE either
-            // Note that exception VEVENTs are similarly excluded - see addExceptions
-            return;
-        }
+    throws ServiceException, ParserException, URISyntaxException, IOException, ParseException {
+        // The original TNEF_to_iCalendar.pdf Spec stated that RRULE and EXDATE 
+        // should be excluded for CANCEL/REPLY/COUNTER.  However, BES likes to
+        // have that information available, so now include it instead of
+        // returning at this point for those 3 methods.
         if (recurDef != null) {
             Property recurrenceProp =
                     recurDef.icalRecurrenceProperty(isAllDayEvent, false);
