@@ -5292,7 +5292,10 @@ TODO: delete them permerntly from here
   <desc>certificate to be used for validating the SAML assertions received from myonelogin (tricipher)</desc>
 </attr>
 
-
+<attr id="1173" name="zimbraPrefShortEmailAddress" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since ="7.0.1">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>show just the display name of email addresses in the message header area and compose pane</desc>
+</attr>
 
 </attrs>
 

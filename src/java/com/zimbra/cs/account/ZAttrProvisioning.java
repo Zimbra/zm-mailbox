@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110131-1020 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110211-1457 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6923,6 +6923,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=396)
     public static final String A_zimbraPrefShortcuts = "zimbraPrefShortcuts";
+
+    /**
+     * show just the display name of email addresses in the message header
+     * area and compose pane
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1173)
+    public static final String A_zimbraPrefShortEmailAddress = "zimbraPrefShortEmailAddress";
 
     /**
      * show calendar week in calendar views

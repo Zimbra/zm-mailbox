@@ -39,7 +39,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110131-1020 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110211-1457 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -24447,6 +24447,83 @@ public class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefSharedAddrBookAutoCompleteEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefSharedAddrBookAutoCompleteEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * show just the display name of email addresses in the message header
+     * area and compose pane
+     *
+     * @return zimbraPrefShortEmailAddress, or false if unset
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1173)
+    public boolean isPrefShortEmailAddress() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefShortEmailAddress, false);
+    }
+
+    /**
+     * show just the display name of email addresses in the message header
+     * area and compose pane
+     *
+     * @param zimbraPrefShortEmailAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1173)
+    public void setPrefShortEmailAddress(boolean zimbraPrefShortEmailAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShortEmailAddress, zimbraPrefShortEmailAddress ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * show just the display name of email addresses in the message header
+     * area and compose pane
+     *
+     * @param zimbraPrefShortEmailAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1173)
+    public Map<String,Object> setPrefShortEmailAddress(boolean zimbraPrefShortEmailAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShortEmailAddress, zimbraPrefShortEmailAddress ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * show just the display name of email addresses in the message header
+     * area and compose pane
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1173)
+    public void unsetPrefShortEmailAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShortEmailAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * show just the display name of email addresses in the message header
+     * area and compose pane
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.0.1
+     */
+    @ZAttr(id=1173)
+    public Map<String,Object> unsetPrefShortEmailAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShortEmailAddress, "");
         return attrs;
     }
 
