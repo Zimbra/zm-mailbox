@@ -1129,8 +1129,7 @@
     <target name="install-thirdparty-windows" depends="stop-webserver" description="Installs Jetty on Windows" if="is-windows">
         <delete dir="${jetty.home.dir}"/>
         <delete dir="${zimbra.home.dir}/data/tmp/jetty"/>
-        <gunzip src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" dest="${build.dir}/jetty-${jetty.version}.tar"/>
-        <untar src="${build.dir}/jetty-${jetty.version}.tar" dest="${zimbra.home.dir}" overwrite="true"/>
+        <untar src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" compression="gzip" dest="${zimbra.home.dir}" overwrite="true"/>
         <move toDir="${jetty.home.dir}">
             <fileset dir="${zimbra.home.dir}/jetty-${jetty.version}" />
         </move>
