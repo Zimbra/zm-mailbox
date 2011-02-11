@@ -21,6 +21,11 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
@@ -42,38 +47,8 @@ import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 
-import junit.framework.TestCase;
-
-public class TestZimbraHttpConnectionManager extends TestCase {
+public class TestZimbraHttpConnectionManager {
     
-    // hack before I figure out how to run only the selected tests in the unit test framework
-    enum Test {
-        testReaper(false),
-        testHttpState(false),
-        testSoTimeoutViaHttpMethod(false),
-        testHttpClientConnectionManagerTimeout(false),
-        testSoapProv(false),
-        testAuthenticationPreemptive(true);
-        
-        private boolean mRunIt;
-        Test(boolean runIt) {
-            mRunIt = runIt;
-        }
-        
-        private boolean runIt() {
-            return mRunIt; 
-        }
-    }
-    
-    private boolean runIt() {
-        
-        String testName = getName();
-        if (!Test.valueOf(testName).runIt()) {
-            System.out.println("Skippping test: " + testName);
-            return false;
-        } else
-            return true;
-    }
 
     private static void dumpResponse(int respCode, HttpMethod method, String prefix) throws IOException {
         
@@ -162,9 +137,8 @@ public class TestZimbraHttpConnectionManager extends TestCase {
       </key>
       
     */  
+    // @Test
     public void testReaper() throws Exception {
-        if (!runIt())
-            return;
         
         // create an array of URIs to perform GETs on
         String[] urisToGet = {
@@ -210,21 +184,8 @@ public class TestZimbraHttpConnectionManager extends TestCase {
          * for very long time.
          */
     }
+   
     
-
-    public void testHttpState() throws Exception {
-        if (!runIt())
-            return;
-    }
-    
-    
-    //**************************************************
-    // A simple HTTP Server for testing
-    //    
-    // orig from http://www.devpapers.com/article/99
-    //    
-    //**************************************************
-
     private static class SimpleHttpServer implements Runnable {
         
         // server control vars
@@ -240,10 +201,11 @@ public class TestZimbraHttpConnectionManager extends TestCase {
         
         private synchronized static void start(int port) {
             if (mServerThread != null) {
-                System.out.println("SimpleHttpServer start: server already started");
+                log("start server: server already started");
                 return;
             }
             
+            log("starting server");
             sServer = new SimpleHttpServer(port);
             mServerThread = new Thread(sServer);
             mServerThread.start();
@@ -251,7 +213,7 @@ public class TestZimbraHttpConnectionManager extends TestCase {
         
         private synchronized static void shutdown() {
             if (mServerThread == null) {
-                System.out.println("SimpleHttpServer shutdown: server is not running");
+                log("shutdown server: server is not running");
                 return;
             }
             
@@ -273,16 +235,20 @@ public class TestZimbraHttpConnectionManager extends TestCase {
             }
         }
         
+        private static void log(String msg) {
+            System.out.println("*** SimpleHttpServer: " + msg);
+        }
+        
         public void run() {
             try {
                 //print out the port number for user
                 mServerSocket = new ServerSocket(mPort);
-                System.out.println("SimpleHttpServer: started on port " + mServerSocket.getLocalPort());
+                log("started on port " + mServerSocket.getLocalPort());
                 
                 // server infinite loop
                 while(true && !mShutdownRequested) {
                     Socket socket = mServerSocket.accept();
-                    System.out.println("SimpleHttpServer: new connection accepted " + socket.getInetAddress() + ":" + socket.getPort());
+                    log("new connection accepted " + socket.getInetAddress() + ":" + socket.getPort());
                     
                     // Construct handler to process the HTTP request message.
                     try {
@@ -300,7 +266,7 @@ public class TestZimbraHttpConnectionManager extends TestCase {
                     e.printStackTrace();
                 // else, the IOException is expected
             } finally {
-                System.out.println("SimpleHttpServer: exiting server");
+                log("exiting server");
             }
         }
     }
@@ -332,7 +298,7 @@ public class TestZimbraHttpConnectionManager extends TestCase {
         private void processRequest() throws Exception {
             while(true) {
                 String headerLine = br.readLine();
-                System.out.println(headerLine);
+                SimpleHttpServer.log(headerLine);
                 if(headerLine.equals(CRLF) || headerLine.equals("")) break;
                 
                 StringTokenizer s = new StringTokenizer(headerLine);
@@ -359,7 +325,7 @@ public class TestZimbraHttpConnectionManager extends TestCase {
                     }
 
                     if (waitInServer != 0) {
-                        System.out.println("Waiting " + waitInServer + " milli seconds in SimpleHttpServer");
+                        SimpleHttpServer.log("Waiting " + waitInServer + " milli seconds in SimpleHttpServer");
                         Thread.sleep(waitInServer);
                     }
                 
@@ -443,31 +409,36 @@ public class TestZimbraHttpConnectionManager extends TestCase {
         }
     }
 
+    @Test
     public void testSoTimeoutViaHttpMethod() throws Exception {
-        if (!runIt())
-            return;
         
         int serverPort = 7778;
-        String path = "/Users/pshao/p4/main/ZimbraServer/src/java/com/zimbra/qa/unittest/TestZimbraHttpConnectionManager.java";  // this file
+        String path = "/opt/zimbra/unittest/ldap/binaryContent/rights-unittest.xml";
         int soTimeout = 3000;  // 3 seconds
-        
+            
         // make server take 10 seconds to return
         long waitInServer = 10000;
         String qp = "?" + SimpleHttpServer.WAIT_IN_SERVER + "=" + waitInServer;
         
-        // start a server for testing
+        // start a http server for testing
         SimpleHttpServer.start(serverPort);
         
-        HttpClient httpClient = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
-
+        // HttpClient httpClient = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
+        HttpClient httpClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        
         GetMethod method = new GetMethod("http://localhost:" + serverPort + path + qp);
-        method.getParams().setParameter(HttpConnectionParams.SO_TIMEOUT, Integer.valueOf(soTimeout));
+        
+        // method.getParams().setParameter(HttpConnectionParams.SO_TIMEOUT, Integer.valueOf(soTimeout));
+        method.getParams().setSoTimeout(soTimeout); 
+        
         long startTime = System.currentTimeMillis();
         long endTime;
         try {
-            int respCode = HttpClientUtil.executeMethod(httpClient, method);
+            // int respCode = HttpClientUtil.executeMethod(httpClient, method);
+            int respCode = httpClient.executeMethod(method);
+            
             dumpResponse(respCode, method, "");
-            fail(); // nope, it should haved timed out
+            Assert.fail(); // nope, it should have timed out
         } catch (java.net.SocketTimeoutException e) {
             // good, just what we want
             endTime = System.currentTimeMillis();
@@ -475,7 +446,7 @@ public class TestZimbraHttpConnectionManager extends TestCase {
             System.out.println("Timed out after " + elapsedTime + " msecs");
         } catch (Exception e) {
             e.printStackTrace();
-            fail();
+            Assert.fail();
         } finally {
             method.releaseConnection();
         }
@@ -490,9 +461,8 @@ public class TestZimbraHttpConnectionManager extends TestCase {
      * zmlocalconfig -e httpclient_connmgr_max_total_connections=1  // the connection manager can only hand out one connection
      * zmlocalconfig -e httpclient_client_connection_timeout=5000   // time to get a connection from the connection manager
      */
+    // @Test
     public void testHttpClientConnectionManagerTimeout() throws Exception {
-        if (!runIt())
-            return;
         
         int serverPort = 7778;
         String path = "/Users/pshao/p4/main/ZimbraServer/src/java/com/zimbra/qa/unittest/TestZimbraHttpConnectionManager.java";  // this file
@@ -569,10 +539,8 @@ public class TestZimbraHttpConnectionManager extends TestCase {
         }
     }
     
+    // Test
     public void testSoapProv() throws Exception {
-        if (!runIt())
-            return;
-        
         // runSoapProvSerial(3);
         runSoapProvParallel(3);
         
@@ -614,10 +582,9 @@ public class TestZimbraHttpConnectionManager extends TestCase {
         }
     }
     
+    // @Test
     public void testAuthenticationPreemptive() throws Exception {
-        if (!runIt())
-            return;
-        
+
         ZimbraHttpConnectionManager.startReaperThread();
         
         
@@ -627,15 +594,5 @@ public class TestZimbraHttpConnectionManager extends TestCase {
             runTest(ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient(), "INT"+i, false);
         }
     }
-    
-    
-    public static void main(String[] args) throws Exception {
-        // TestUtil.cliSetup();  uncomment will default to SoapProvisioning
-        CliUtil.toolSetup("INFO");
-        TestUtil.runTest(TestZimbraHttpConnectionManager.class);
 
-        // sleep for a long time
-        System.out.println("Waiting...");
-        Thread.sleep(Constants.MILLIS_PER_DAY);
-    }
 }
