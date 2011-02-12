@@ -58,7 +58,6 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.AuthScheme;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.ExchangeUserResolver;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.ServerInfo;
-import com.zimbra.cs.fb.FreeBusyProvider.FreeBusyUserNotFoundException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
 
@@ -700,11 +699,18 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         return false;// retry
     }
 
+    private List<FreeBusy> getEmptyList(ArrayList<Request> req) {
+		ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
+		for (Request r : req)
+			ret.add(FreeBusy.nodataFreeBusy(r.email, r.start, r.end));
+		return ret;
+	}
+    
     public List<FreeBusy>
         getFreeBusyForHost(String host, ArrayList<Request> req)
             throws IOException {
         ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
-
+        List<FreeBusyResponseType> results = null;
         ArrayOfMailboxData attendees = new ArrayOfMailboxData();
 
         for (Request r : req) {
@@ -763,37 +769,48 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                 serverVersion,
                 availabilityResponse,
                 gfversionInfo);
-            List<FreeBusyResponseType> results =
-                availabilityResponse.value.getFreeBusyResponseArray()
+            results = availabilityResponse.value.getFreeBusyResponseArray()
                     .getFreeBusyResponse();
 
-            int i = 0;
-            for (FreeBusyResponseType attendeeAvailability : results) {
-                if (ResponseClassType.SUCCESS != attendeeAvailability.getResponseMessage()
-                    .getResponseClass()) {
-                    ZimbraLog.fb.warn("Error in response. continuing to next one");
-                    continue;
-                }
-                ZimbraLog.fb.debug("Availability for " +
-                    attendees.getMailboxData().get(i).getEmail().getAddress() +
-                    " [" +
-                    attendeeAvailability.getFreeBusyView().getMergedFreeBusy() +
-                    "]");
-                String fb =
-                    attendeeAvailability.getFreeBusyView().getMergedFreeBusy();
-                ret.add(new ExchangeFreeBusyProvider.ExchangeUserFreeBusy(fb,
-                    attendees.getMailboxData().get(i).getEmail().getAddress(),
-                    FB_INTERVAL,
-                    req.get(0).start,
-                    req.get(0).end));
-                i++;
-            }
         } catch (DatatypeConfigurationException dce) {
             ZimbraLog.fb.warn("getFreeBusyForHost DatatypeConfiguration failure",
                 dce);
+            return getEmptyList(req);
         } catch (Exception e) {
             ZimbraLog.fb.warn("getFreeBusyForHost failure", e);
+            return getEmptyList(req);
         }
+        
+		for (Request re : req) {
+			String fb = "";
+			int i = 0;
+			for (FreeBusyResponseType attendeeAvailability : results) {
+				if (re.email == attendees.getMailboxData().get(i).getEmail()
+						.getAddress()) {
+					if (ResponseClassType.SUCCESS != attendeeAvailability
+							.getResponseMessage().getResponseClass()) {
+						ZimbraLog.fb
+								.warn("Error in response. continuing to next one");
+						i++;
+						continue;
+					}
+					ZimbraLog.fb.debug("Availability for "
+							+ attendees.getMailboxData().get(i).getEmail()
+									.getAddress()
+							+ " ["
+							+ attendeeAvailability.getFreeBusyView()
+									.getMergedFreeBusy() + "]");
+
+					fb = attendeeAvailability.getFreeBusyView().getMergedFreeBusy();
+					break;
+				}
+				
+				i++;
+			}
+
+			ret.add(new ExchangeFreeBusyProvider.ExchangeUserFreeBusy(fb,
+					re.email, FB_INTERVAL, req.get(0).start, req.get(0).end));
+		}  
 
         return ret;
     }
