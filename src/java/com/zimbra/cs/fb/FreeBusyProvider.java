@@ -168,13 +168,24 @@ public abstract class FreeBusyProvider {
 		return mbox.getFreeBusy(null, cachedFreeBusyStartTime(), cachedFreeBusyEndTime(), folderId);
 	}
 	
-	protected String getEmailAddress(String accountId) throws ServiceException {
-		Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.id, accountId);
-		if (acct == null)
+	protected String getEmailAddress(String accountId) {
+		try {
+			Account acct = Provisioning.getInstance().get(Provisioning.AccountBy.id, accountId);
+			if (acct == null)
+				return null;
+			return acct.getName();
+		} catch (ServiceException se) {
 			return null;
-		return acct.getName();
+		}
 	}
 	
+	protected List<FreeBusy> getEmptyList(ArrayList<Request> req) {
+		ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
+		for (Request r : req)
+			ret.add(FreeBusy.nodataFreeBusy(r.email, r.start, r.end));
+		return ret;
+	}
+
 	public FreeBusySyncQueue getSyncQueue() {
 		return sPUSHQUEUES.get(getName());
 	}
