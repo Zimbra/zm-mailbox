@@ -14,6 +14,24 @@
  */
 package com.zimbra.cs.filter;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.mail.Address;
+import javax.mail.Header;
+import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.jsieve.mail.Action;
+
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -47,21 +65,6 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
-import org.apache.jsieve.mail.Action;
-
-import javax.mail.Address;
-import javax.mail.Header;
-import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 
 public class FilterUtil {
 
@@ -383,23 +386,47 @@ public class FilterUtil {
         }
 
         MailSender sender = sourceMbox.getMailSender().setSaveToSent(false).setSkipSendAsCheck(true);
-        if (Provisioning.getInstance().getLocalServer().isMailRedirectSetEnvelopeSender()) {
-            // Set envelope sender to the account name (bug 31309).
-            Account account = sourceMbox.getAccount();
-            sender.setEnvelopeFrom(account.getName());
-        } else {
-            try {
+
+        try {
+            if (Provisioning.getInstance().getLocalServer().isMailRedirectSetEnvelopeSender()) {
+                if (isDeliveryStatusNotification(msg) && LC.filter_null_env_sender_for_dsn_redirect.booleanValue()) {
+                    sender.setEnvelopeFrom("<>");
+                } else {
+                    // Set envelope sender to the account name (bug 31309).
+                    Account account = sourceMbox.getAccount();
+                    sender.setEnvelopeFrom(account.getName());
+                }
+            } else {
                 Address from = ArrayUtil.getFirstElement(outgoingMsg.getFrom());
                 if (from != null) {
-                    sender.setEnvelopeFrom(((InternetAddress) from).getAddress());
+                    String address = ((InternetAddress) from).getAddress();
+                    sender.setEnvelopeFrom(address);
                 }
-            } catch (MessagingException e) {
-                ZimbraLog.filter.warn("Unable to determine From header value.  " +
-                    "Envelope sender will be set to the default value.", e);
             }
+            sender.setRecipients(destinationAddress);
+            sender.sendMimeMessage(null, sourceMbox, outgoingMsg);
+        } catch (MessagingException e) {
+            ZimbraLog.filter.warn("Envelope sender will be set to the default value.", e);
         }
-        sender.setRecipients(destinationAddress);
-        sender.sendMimeMessage(octxt, sourceMbox, outgoingMsg);
+    }
+    
+    private static boolean isDeliveryStatusNotification(MimeMessage msg)
+    throws MessagingException {
+        String envelopeSender = msg.getHeader("Return-Path", null);
+        String ct = Mime.getContentType(msg, "text/plain");
+        ZimbraLog.filter.debug("isDeliveryStatusNotification(): Return-Path=%s, Auto-Submitted=%s, Content-Type=%s.",
+            envelopeSender, msg.getHeader("Auto-Submitted", null), ct);
+        
+        if (StringUtil.isNullOrEmpty(envelopeSender) || envelopeSender.equals("<>")) {
+            return true;
+        }
+        if (Mime.isAutoSubmitted(msg)) {
+            return true;
+        }
+        if (ct.equals("multipart/report")) {
+            return true;
+        }
+        return false;
     }
 
     public static void reply(OperationContext octxt, Mailbox mailbox, ParsedMessage parsedMessage, String bodyTemplate)

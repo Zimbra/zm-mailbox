@@ -22,6 +22,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
@@ -1056,11 +1057,11 @@ extends TestCase {
         
         ZFilterRules zRules = new ZFilterRules(rules);
         saveIncomingRules(mMbox, zRules);
-
+        
         // Add a message.  Set the From header to something bogus to make
         // sure we're not rewriting it
         String from = "joebob@mycompany.com";
-        String subject = NAME_PREFIX + " testRedirect";
+        String subject = NAME_PREFIX + " testRedirect 1";
         TestUtil.addMessageLmtp(subject, USER_NAME, from);
         
         // Confirm that user1 did not receive it.
@@ -1078,9 +1079,7 @@ extends TestCase {
         
         // Check zimbraMailRedirectSetEnvelopeSender=FALSE. 
         int port = 6025;
-        DummySmtpServer smtp = new DummySmtpServer(port);
-        Thread smtpServerThread = new Thread(smtp);
-        smtpServerThread.start();
+        DummySmtpServer smtp = startSmtpServer(port);
         Server server = Provisioning.getInstance().getLocalServer();
         server.setSmtpPort(port);
         server.setMailRedirectSetEnvelopeSender(false);
@@ -1089,15 +1088,50 @@ extends TestCase {
         assertEquals(from, smtp.getMailFrom());
 
         // Check zimbraMailRedirectSetEnvelopeSender=TRUE. 
-        smtp = new DummySmtpServer(port);
-        smtpServerThread = new Thread(smtp);
-        smtpServerThread.start();
+        smtp = startSmtpServer(port);
         server.setMailRedirectSetEnvelopeSender(true);
-        
+        subject = NAME_PREFIX + " testRedirect 2";
         TestUtil.addMessageLmtp(subject, USER_NAME, from);
-        assertEquals(TestUtil.getAddress(USER_NAME), smtp.getMailFrom());
+        String userAddress = TestUtil.getAddress(USER_NAME); 
+        assertEquals(userAddress, smtp.getMailFrom());
+        
+        // Check empty envelope sender.
+        smtp = startSmtpServer(port);
+        subject = NAME_PREFIX + " testRedirect 3";
+        String msgContent = TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null);
+        String[] recipients = new String[] { USER_NAME };
+        TestUtil.addMessageLmtp(recipients, null, msgContent);
+        assertTrue(smtp.getMailFrom(), StringUtil.isNullOrEmpty(smtp.getMailFrom()));
+        
+        // Check Auto-Submitted=yes.
+        smtp = startSmtpServer(port);
+        subject = NAME_PREFIX + " testRedirect 4";
+        msgContent = "Auto-Submitted: yes\r\n" + TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null);
+        TestUtil.addMessageLmtp(recipients, USER_NAME, msgContent);
+        assertTrue(smtp.getMailFrom(), StringUtil.isNullOrEmpty(smtp.getMailFrom()));
+        
+        // Check Auto-Submitted=no.
+        smtp = startSmtpServer(port);
+        subject = NAME_PREFIX + " testRedirect 5";
+        msgContent = "Auto-Submitted: no\r\n" + TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null);
+        TestUtil.addMessageLmtp(recipients, USER_NAME, msgContent);
+        assertEquals(userAddress, smtp.getMailFrom());
+        
+        // Check Content-Type=multipart/report.
+        smtp = startSmtpServer(port);
+        subject = NAME_PREFIX + " testRedirect 6";
+        msgContent = TestUtil.getTestMessage(subject, USER_NAME, USER_NAME, null);
+        msgContent = msgContent.replace("text/plain", "multipart/report");
+        TestUtil.addMessageLmtp(recipients, USER_NAME, msgContent);
+        assertTrue(smtp.getMailFrom(), StringUtil.isNullOrEmpty(smtp.getMailFrom()));
     }
     
+    private DummySmtpServer startSmtpServer(int port) {
+        DummySmtpServer smtp = new DummySmtpServer(port);
+        Thread smtpServerThread = new Thread(smtp);
+        smtpServerThread.start();
+        return smtp;
+    }
     
     /**
      * Confirms that the message gets delivered even when a mail loop occurs.

@@ -1326,6 +1326,24 @@ public class Mime {
         }
         return size;
     }
+    
+    /**
+     * Returns {@code true} if the {@code Auto-Submitted} header is set
+     * to a value other than {@code no}.
+     */
+    public static boolean isAutoSubmitted(MimePart part)
+    throws MessagingException {
+        String[] autoSubmitted = part.getHeader("Auto-Submitted");
+        if (autoSubmitted != null) {
+            for (int i = 0; i < autoSubmitted.length; i++) {
+                if (!autoSubmitted[i].equalsIgnoreCase("no")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
 
     /** Returns the message-ids from the specified message header.  The
      *  enclosing angle brackets and any embedded comments and quoted-strings

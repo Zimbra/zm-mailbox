@@ -246,7 +246,7 @@ extends Assert {
 
     static String addDomainIfNecessary(String user)
     throws ServiceException {
-        if (user == null || user.contains("@")) {
+        if (StringUtil.isNullOrEmpty(user) || user.contains("@")) {
             return user;
         }
         return String.format("%s@%s", user, getDomain());
@@ -272,7 +272,11 @@ extends Assert {
         Provisioning prov = Provisioning.getInstance();
         LmtpClient lmtp = new LmtpClient("localhost", prov.getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, 7025));
         byte[] data = message.getBytes();
-        boolean success = lmtp.sendMessage(new ByteArrayInputStream(data), recipWithDomain, addDomainIfNecessary(sender), "TestUtil", (long) data.length);
+        String senderAddress = "";
+        if (!StringUtil.isNullOrEmpty(sender)) {
+            senderAddress = addDomainIfNecessary(sender);
+        }
+        boolean success = lmtp.sendMessage(new ByteArrayInputStream(data), recipWithDomain, senderAddress, "TestUtil", (long) data.length);
         lmtp.close();
         return success;
     }
