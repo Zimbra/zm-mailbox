@@ -182,15 +182,9 @@ implements LmtpCallback {
         }
         destination = envSender.getAddress();
 
-        // If Auto-Submitted is present and not 'no'
-        String[] autoSubmitted = mm.getHeader("Auto-Submitted");
-        if (autoSubmitted != null) {
-            for (int i = 0; i < autoSubmitted.length; i++) {
-                if (!autoSubmitted[i].equalsIgnoreCase("no")) {
-                    ofailed("auto-submitted not no", destination, rcpt, msg);  
-                    return;
-                }
-            }
+        if (Mime.isAutoSubmitted(mm)) {
+            ofailed("auto-submitted not no", destination, rcpt, msg);  
+            return;
         }
 
         // If precedence is bulk, junk or list
