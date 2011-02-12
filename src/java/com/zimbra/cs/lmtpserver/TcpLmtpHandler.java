@@ -74,6 +74,7 @@ public class TcpLmtpHandler extends LmtpHandler {
         try {
             processMessageData(min);
         } catch (UnrecoverableLmtpException e) {
+            ZimbraLog.lmtp.error("Unrecoverable error while handling DATA command.  Dropping connection.", e);
             dropConnection();
         }
     }
