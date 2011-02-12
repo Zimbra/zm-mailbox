@@ -612,6 +612,12 @@ public class LC {
     public static final KnownKey zdesktop_local_account_id = new KnownKey(
         "zdesktop_local_account_id", null, "ZDesktop special local account");
 
+    public static final KnownKey filter_null_env_sender_for_dsn_redirect = new KnownKey(
+        "filter_null_env_sender_for_dsn_redirect", "true",
+        "If true, sets the envelope sender to null when redirecting a DSN with mail filters.  " +
+        "Setting this key to false may result in mail loops.  See bug 56566.  " +
+        "This key will be removed in 8.x.");
+    
     static {
         @SuppressWarnings("unused")
         final String ZM_MYCNF_CAVEAT = "This value is stored here for use by zmmycnf program.  " +
