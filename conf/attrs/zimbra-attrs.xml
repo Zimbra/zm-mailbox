@@ -4961,5 +4961,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Maximum number of concurrent GAL sync requests allowed on the system / domain.</desc>
 </attr>
 
+<attr id="1174" name="zimbraFreebusyExchangeServerType" type="enum" value="webdav,ews" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainAdminModifiable" since="6.0.11">
+  <globalConfigValue>webdav</globalConfigValue>
+  <desc>Can be set to either webdav for Exchange 2007 or older, or ews for 2010 and newer</desc>
+</attr>
 
 </attrs>
