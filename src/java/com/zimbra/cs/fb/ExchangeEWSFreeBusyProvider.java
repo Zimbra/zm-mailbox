@@ -58,11 +58,13 @@ import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.AuthScheme;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.ExchangeUserResolver;
 import com.zimbra.cs.fb.ExchangeFreeBusyProvider.ServerInfo;
+import com.zimbra.cs.fb.FreeBusyProvider.Request;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
 
 public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     public static final int FB_INTERVAL = 30;
+	public static final String TYPE_EWS = "ews";
     static ExchangeServicePortType service = null;
 
     boolean Initialize(ServerInfo info) throws MalformedURLException {
@@ -169,6 +171,8 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             } catch (ServiceException se) {
                 info.cn = null;
             }
+			String exchangeType = getAttr(Provisioning.A_zimbraFreebusyExchangeServerType, emailAddr);
+			info.enabled = TYPE_EWS.equals(exchangeType);
             return info;
         }
 
@@ -465,10 +469,14 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
     }
 
     public boolean handleMailboxChange(String accountId) {
-        String email;
+        String email = getEmailAddress(accountId);
+		ServerInfo serverInfo = getServerInfo(email);
+		if (email == null || !serverInfo.enabled) {
+			return true;  // no retry
+		}
+		
         FreeBusy fb;
         try {
-            email = getEmailAddress(accountId);
             fb = getFreeBusy(accountId, FreeBusyQuery.CALENDAR_FOLDER_ALL);
         } catch (ServiceException se) {
             ZimbraLog.fb.warn("can't get freebusy for account " + accountId, se);
@@ -480,7 +488,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
                 accountId);
             return true; // no retry
         }
-        ServerInfo serverInfo = getServerInfo(email);
+
         if (serverInfo == null || serverInfo.org == null ||
             serverInfo.cn == null) {
             ZimbraLog.fb.warn("no exchange server info for user " + email);
@@ -699,23 +707,27 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         return false;// retry
     }
 
-    private List<FreeBusy> getEmptyList(ArrayList<Request> req) {
-		ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
-		for (Request r : req)
-			ret.add(FreeBusy.nodataFreeBusy(r.email, r.start, r.end));
-		return ret;
-	}
-    
     public List<FreeBusy>
         getFreeBusyForHost(String host, ArrayList<Request> req)
             throws IOException {
-        ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
         List<FreeBusyResponseType> results = null;
+        ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
+
+		Request r = req.get(0);
+		ServerInfo serverInfo = (ServerInfo) r.data;
+		if (serverInfo == null) {
+			ZimbraLog.fb.warn("no exchange server info for user "+r.email);
+			return ret;
+		}
+		
+		if (!serverInfo.enabled)
+			return ret;
+		
         ArrayOfMailboxData attendees = new ArrayOfMailboxData();
 
-        for (Request r : req) {
+        for (Request request : req) {
             EmailAddress email = new EmailAddress();
-            email.setAddress(r.email);
+            email.setAddress(request.email);
             MailboxData mailbox = new MailboxData();
             mailbox.setEmail(email);
             mailbox.setAttendeeType(MeetingAttendeeType.REQUIRED);
@@ -847,6 +859,8 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
             }
         }
         if (info == null)
+			throw new FreeBusyUserNotFoundException();
+		if (!info.enabled)
 			throw new FreeBusyUserNotFoundException();
         addRequest(info, req);
     }

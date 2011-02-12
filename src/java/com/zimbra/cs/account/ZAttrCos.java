@@ -40,7 +40,7 @@ public class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110210-2258 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -25312,7 +25312,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 7.0.1
      */
-    @ZAttr(id=1073)
+    @ZAttr(id=1173)
     public boolean isPrefShortEmailAddress() {
         return getBooleanAttr(Provisioning.A_zimbraPrefShortEmailAddress, false);
     }
@@ -25326,7 +25326,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 7.0.1
      */
-    @ZAttr(id=1073)
+    @ZAttr(id=1173)
     public void setPrefShortEmailAddress(boolean zimbraPrefShortEmailAddress) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefShortEmailAddress, zimbraPrefShortEmailAddress ? Provisioning.TRUE : Provisioning.FALSE);
@@ -25343,7 +25343,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 7.0.1
      */
-    @ZAttr(id=1073)
+    @ZAttr(id=1173)
     public Map<String,Object> setPrefShortEmailAddress(boolean zimbraPrefShortEmailAddress, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefShortEmailAddress, zimbraPrefShortEmailAddress ? Provisioning.TRUE : Provisioning.FALSE);
@@ -25358,7 +25358,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 7.0.1
      */
-    @ZAttr(id=1073)
+    @ZAttr(id=1173)
     public void unsetPrefShortEmailAddress() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefShortEmailAddress, "");
@@ -25374,7 +25374,7 @@ public class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 7.0.1
      */
-    @ZAttr(id=1073)
+    @ZAttr(id=1173)
     public Map<String,Object> unsetPrefShortEmailAddress(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefShortEmailAddress, "");

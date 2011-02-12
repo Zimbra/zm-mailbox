@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110210-2258 */
+    /* build: unknown unknown unknown unknown */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -244,6 +244,22 @@ public class ZAttrProvisioning {
         }
         public boolean isForm() { return this == form;}
         public boolean isBasic() { return this == basic;}
+    }
+
+    public static enum FreebusyExchangeServerType {
+        webdav("webdav"),
+        ews("ews");
+        private String mValue;
+        private FreebusyExchangeServerType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static FreebusyExchangeServerType fromString(String s) throws ServiceException {
+            for (FreebusyExchangeServerType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isWebdav() { return this == webdav;}
+        public boolean isEws() { return this == ews;}
     }
 
     public static enum GalLdapAuthMech {
@@ -3590,6 +3606,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=620)
     public static final String A_zimbraFreebusyExchangeCachedIntervalStart = "zimbraFreebusyExchangeCachedIntervalStart";
+
+    /**
+     * Can be set to either webdav for Exchange 2007 or older, or ews for
+     * 2010 and newer
+     *
+     * @since ZCS 6.0.11
+     */
+    @ZAttr(id=1174)
+    public static final String A_zimbraFreebusyExchangeServerType = "zimbraFreebusyExchangeServerType";
 
     /**
      * URL to Exchange server for free/busy lookup and propagation
@@ -7110,7 +7135,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 7.0.1
      */
-    @ZAttr(id=1073)
+    @ZAttr(id=1173)
     public static final String A_zimbraPrefShortEmailAddress = "zimbraPrefShortEmailAddress";
 
     /**

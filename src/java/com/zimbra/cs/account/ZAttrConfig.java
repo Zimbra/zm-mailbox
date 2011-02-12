@@ -41,7 +41,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110210-2258 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: descriptive information
@@ -8002,6 +8002,145 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetFreebusyExchangeCachedIntervalStart(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFreebusyExchangeCachedIntervalStart, "");
+        return attrs;
+    }
+
+    /**
+     * Can be set to either webdav for Exchange 2007 or older, or ews for
+     * 2010 and newer
+     *
+     * <p>Valid values: [ews, webdav]
+     *
+     * @return zimbraFreebusyExchangeServerType, or ZAttrProvisioning.FreebusyExchangeServerType.webdav if unset and/or has invalid value
+     *
+     * @since ZCS 6.0.11
+     */
+    @ZAttr(id=1174)
+    public ZAttrProvisioning.FreebusyExchangeServerType getFreebusyExchangeServerType() {
+        try { String v = getAttr(Provisioning.A_zimbraFreebusyExchangeServerType); return v == null ? ZAttrProvisioning.FreebusyExchangeServerType.webdav : ZAttrProvisioning.FreebusyExchangeServerType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.FreebusyExchangeServerType.webdav; }
+    }
+
+    /**
+     * Can be set to either webdav for Exchange 2007 or older, or ews for
+     * 2010 and newer
+     *
+     * <p>Valid values: [ews, webdav]
+     *
+     * @return zimbraFreebusyExchangeServerType, or "webdav" if unset
+     *
+     * @since ZCS 6.0.11
+     */
+    @ZAttr(id=1174)
+    public String getFreebusyExchangeServerTypeAsString() {
+        return getAttr(Provisioning.A_zimbraFreebusyExchangeServerType, "webdav");
+    }
+
+    /**
+     * Can be set to either webdav for Exchange 2007 or older, or ews for
+     * 2010 and newer
+     *
+     * <p>Valid values: [ews, webdav]
+     *
+     * @param zimbraFreebusyExchangeServerType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.11
+     */
+    @ZAttr(id=1174)
+    public void setFreebusyExchangeServerType(ZAttrProvisioning.FreebusyExchangeServerType zimbraFreebusyExchangeServerType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeServerType, zimbraFreebusyExchangeServerType.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Can be set to either webdav for Exchange 2007 or older, or ews for
+     * 2010 and newer
+     *
+     * <p>Valid values: [ews, webdav]
+     *
+     * @param zimbraFreebusyExchangeServerType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.11
+     */
+    @ZAttr(id=1174)
+    public Map<String,Object> setFreebusyExchangeServerType(ZAttrProvisioning.FreebusyExchangeServerType zimbraFreebusyExchangeServerType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeServerType, zimbraFreebusyExchangeServerType.toString());
+        return attrs;
+    }
+
+    /**
+     * Can be set to either webdav for Exchange 2007 or older, or ews for
+     * 2010 and newer
+     *
+     * <p>Valid values: [ews, webdav]
+     *
+     * @param zimbraFreebusyExchangeServerType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.11
+     */
+    @ZAttr(id=1174)
+    public void setFreebusyExchangeServerTypeAsString(String zimbraFreebusyExchangeServerType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeServerType, zimbraFreebusyExchangeServerType);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Can be set to either webdav for Exchange 2007 or older, or ews for
+     * 2010 and newer
+     *
+     * <p>Valid values: [ews, webdav]
+     *
+     * @param zimbraFreebusyExchangeServerType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.11
+     */
+    @ZAttr(id=1174)
+    public Map<String,Object> setFreebusyExchangeServerTypeAsString(String zimbraFreebusyExchangeServerType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeServerType, zimbraFreebusyExchangeServerType);
+        return attrs;
+    }
+
+    /**
+     * Can be set to either webdav for Exchange 2007 or older, or ews for
+     * 2010 and newer
+     *
+     * <p>Valid values: [ews, webdav]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.11
+     */
+    @ZAttr(id=1174)
+    public void unsetFreebusyExchangeServerType() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeServerType, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Can be set to either webdav for Exchange 2007 or older, or ews for
+     * 2010 and newer
+     *
+     * <p>Valid values: [ews, webdav]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.11
+     */
+    @ZAttr(id=1174)
+    public Map<String,Object> unsetFreebusyExchangeServerType(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExchangeServerType, "");
         return attrs;
     }
 
