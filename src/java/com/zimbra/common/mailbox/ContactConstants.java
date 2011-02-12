@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- *
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -77,7 +77,6 @@ public final class ContactConstants {
     public static final String A_jobTitle = Attr.jobTitle.name();
     public static final String A_lastName = Attr.lastName.name();
     public static final String A_phoneticLastName = Attr.phoneticLastName.name();
-    public static final String A_maidenName = Attr.maidenName.name();
     public static final String A_member = Attr.member.name();
     public static final String A_middleName = Attr.middleName.name();
     public static final String A_mobilePhone = Attr.mobilePhone.name();
@@ -176,7 +175,6 @@ public final class ContactConstants {
         jobTitle,
         lastName,
         phoneticLastName,
-        maidenName,
         member,
         middleName,
         mobilePhone,
