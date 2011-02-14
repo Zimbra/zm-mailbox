@@ -34452,13 +34452,13 @@ public class ZAttrAccount  extends MailTarget {
      * show just the display name of email addresses in the message header
      * area and compose pane
      *
-     * @return zimbraPrefShortEmailAddress, or false if unset
+     * @return zimbraPrefShortEmailAddress, or true if unset
      *
      * @since ZCS 7.0.1
      */
     @ZAttr(id=1173)
     public boolean isPrefShortEmailAddress() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefShortEmailAddress, false);
+        return getBooleanAttr(Provisioning.A_zimbraPrefShortEmailAddress, true);
     }
 
     /**

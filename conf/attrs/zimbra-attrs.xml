@@ -5392,7 +5392,7 @@ TODO: delete them permerntly from here
 </attr>
 
 <attr id="1173" name="zimbraPrefShortEmailAddress" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since ="7.0.1">
-  <defaultCOSValue>FALSE</defaultCOSValue>
+  <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>show just the display name of email addresses in the message header area and compose pane</desc>
 </attr>
 
