@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.qa.unittest;
 
 import junit.framework.TestCase;
@@ -5,6 +19,7 @@ import junit.framework.TestCase;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,9 +36,10 @@ import com.zimbra.cs.account.Provisioning;
 public class TestLdapBinary extends TestCase {
     
     /* 
-     * To run this unit test, paste these attributes to zimbra-attrs.xml and run
+     * To run this unit test, paste these attributes to zimbra-attrs.xml and run:
      * ant refresh-ldap-schema
      * ant generate-getters
+     * ant init-unittest
      * 
     <attr id="10000" name="zimbraBinary" type="binary" max="5000" cardinality="single" optionalIn="globalConfig" since="8.0.0">
       <desc>binary data</desc>
@@ -46,7 +62,7 @@ public class TestLdapBinary extends TestCase {
     
     // private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
     
-    private static class Content {
+    static class Content {
         private String string;
         private byte[] binary;
         
@@ -55,24 +71,31 @@ public class TestLdapBinary extends TestCase {
             this.string = ByteUtil.encodeLDAPBase64(content);
         }
         
-        private String getString() {
+        String getString() {
             return string;
         }
         
-        private byte[] getBinary() {
+        byte[] getBinary() {
             return binary;
         }
         
-        private static Content getContent(String contentName) throws IOException {
-            File inFile = new File(contentName);
+        static Content getContentByFileName(String contentFileName) throws IOException {
+            File inFile = new File(contentFileName);
             return new Content(ByteUtil.getContent(inFile));
         }
         
-        private boolean equals(String str) {
+        static Content generateContent(int numBytes) {
+            byte[] content = new byte[numBytes];
+            Random random = new Random();
+            random.nextBytes(content);
+            return new Content(content);
+        }
+        
+        boolean equals(String str) {
             return string.equals(str);
         }
         
-        private boolean equals(byte[] bin) {
+        boolean equals(byte[] bin) {
             if (bin == null) {
                 return false;
             }
@@ -113,7 +136,7 @@ public class TestLdapBinary extends TestCase {
         Config config = prov.getConfig();
         
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(attrName, Content.getContent(contentName).getString());
+        attrs.put(attrName, Content.getContentByFileName(contentName).getString());
         prov.modifyAttrs(config, attrs);
     }
     
@@ -124,7 +147,7 @@ public class TestLdapBinary extends TestCase {
         
         Map<String, Object> attrs = new HashMap<String, Object>();
         for (String contentName : contentNames) {
-            StringUtil.addToMultiMap(attrs, attrName, Content.getContent(contentName).getString());
+            StringUtil.addToMultiMap(attrs, attrName, Content.getContentByFileName(contentName).getString());
         }
         prov.modifyAttrs(config, attrs);
     }
@@ -159,7 +182,7 @@ public class TestLdapBinary extends TestCase {
         String stringValue = config.getAttr(attrName);
         byte[] binaryValue = config.getBinaryAttr(attrName);
         
-        Content content = Content.getContent(contentName);
+        Content content = Content.getContentByFileName(contentName);
         assertTrue(content.equals(stringValue));
         assertTrue(content.equals(binaryValue));
     }
@@ -175,7 +198,7 @@ public class TestLdapBinary extends TestCase {
         assertEquals(numContents, binaryValues.size());
         
         for (int i = 0; i < numContents; i++) {
-            Content content = Content.getContent(contentNames[i]);
+            Content content = Content.getContentByFileName(contentNames[i]);
             
             boolean found = false;
             for (int j = 0; j < stringValues.length && !found; j++) {
@@ -325,7 +348,7 @@ public class TestLdapBinary extends TestCase {
         delete(attrName);
         
         Config config = getConfig();
-        Content content = Content.getContent(CONTENT_NAME);
+        Content content = Content.getContentByFileName(CONTENT_NAME);
         Map<String,Object> attrs = null;
         Object value = null;
         
@@ -358,7 +381,7 @@ public class TestLdapBinary extends TestCase {
         delete(attrName);
         
         Config config = getConfig();
-        Content content = Content.getContent(CONTENT_NAME);
+        Content content = Content.getContentByFileName(CONTENT_NAME);
         Map<String,Object> attrs = null;
         Object value = null;
         
