@@ -38,7 +38,7 @@ public class ParseMailboxIDTest {
     @BeforeClass
     public static void init() throws Exception {
         LC.zimbra_class_provisioning.setDefault(MockProvisioning.class.getName());
-        Provisioning prov = Provisioning.getInstance();
+        MockProvisioning prov = (MockProvisioning) Provisioning.getInstance();
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraId, "0-0-0");
         attrs.put(Provisioning.A_zimbraMailHost, "localhost");
